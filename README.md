@@ -11,7 +11,7 @@ The project is in **Foundation / operational-shell bootstrap**. The repository c
 1. `FOUNDATION.md` — canonical product, architecture and research directive.
 2. `STATE.md` — current milestone, active task and next action.
 3. `AGENTS.md` — executor workflow and clean-room rules.
-4. `tasks/` — active and completed bounded work packages.
+4. `task.md` — the single current task to implement.
 5. `source_notes/` and `knowledge/registry.yaml` — professional knowledge provenance.
 
 ## Product scope
@@ -22,4 +22,4 @@ No real-money trading is authorized.
 
 ## Implementation
 
-Implementation begins with `tasks/WP-001.md`: a deterministic operational/dummy shell. Startup instructions will be added by that work package only after the application actually exists.
+Implementation begins with the current `task.md`: a deterministic operational/dummy shell. The Project & Research Director replaces `task.md` after reviewing each pushed implementation.
