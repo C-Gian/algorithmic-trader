@@ -1,6 +1,6 @@
 # Algorithmic Trader — Foundation
 
-Version: 1.0 accepted · 29 September 2026  
+Version: 1.1 accepted · 29 September 2026  
 Authority: canonical product, architecture and research directive
 
 ## 1. Mandate and authority
@@ -179,7 +179,7 @@ Use only what current work needs:
 - `STATE.md`: accepted commit, milestone, active task, blockers and next action.
 - `source_notes/`: immutable professional source dossiers.
 - `knowledge/registry.yaml` and later `knowledge/concepts/`.
-- `tasks/`: bounded work-package briefs and dispositions.
+- `task.md`: the single active executor handoff. The Director rewrites it after each review; completed task history lives in Git history and `STATE.md`.
 - `src/`, `web/`, `tests/`, `infra/` as implementation begins.
 - `research/` when research cases/data splits/trial ledger become necessary.
 
@@ -189,11 +189,11 @@ Do not create overlapping mission documents or an empty governance bureaucracy.
 
 ## 12. Director–executor workflow
 
-The Director issues one bounded task containing objective, base commit, authorized scope, referenced contracts/concepts, acceptance criteria, prohibited changes and expected evidence.
+The Director maintains exactly one active implementation handoff in `task.md`. Before each executor run, the Owner pulls the latest repository. The executor reads `FOUNDATION.md`, `STATE.md`, `AGENTS.md` and `task.md`, implements only that task in the Owner's local checkout, and does not push unless the Owner explicitly asks. The Owner pushes the completed local work so the Director can inspect the updated repository.
 
-One executor owns implementation on a branch. A second executor may independently review consequential engine/data/risk changes when explicitly tasked. Executors do not choose product direction, redesign research, or weaken acceptance criteria to make work pass.
+A second executor may independently review consequential engine/data/risk changes when explicitly tasked. Executors do not choose product direction, redesign research, or weaken acceptance criteria to make work pass.
 
-Executors report the exact commit, actual checks/results, artifacts and unresolved issues. A self-reported PASS is insufficient. The Director inspects the diff and evidence, independently checks material assumptions, requests correction where necessary, and merges only accepted work. `STATE.md` and task disposition are updated with acceptance.
+After each pushed implementation, the Director inspects the actual diff and evidence, independently checks material assumptions, accepts the work or rewrites `task.md` with corrections/next work, and updates `STATE.md`. A self-reported PASS is insufficient.
 
 Escalate to the Owner only for product intent, material scope/cost, UX preference that meaningfully changes the product, or any capital authorization.
 
@@ -221,7 +221,7 @@ Perpetual futures paper execution and SHORT are explicitly inside scope. Their m
 
 **WP-001: Repository bootstrap and one observable dummy run.**
 
-Preserve the dossiers. Add minimal project instructions/state, provenance registry, pinned toolchain, CI and the first semantic contracts. Implement one synthetic deterministic BTC-perpetual stream, one scripted dummy trader, a minimal risk/account skeleton, durable job execution, artifact persistence and a thin Home/Run interface. This is infrastructure, not the real trader.
+Preserve the dossiers. The active executor brief is maintained in `task.md`. Add minimal project instructions/state, provenance registry, pinned toolchain, CI and the first semantic contracts. Implement one synthetic deterministic BTC-perpetual stream, one scripted dummy trader, a minimal risk/account skeleton, durable job execution, artifact persistence and a thin Home/Run interface. This is infrastructure, not the real trader.
 
 Acceptance requires:
 
@@ -239,4 +239,5 @@ After WP-001 acceptance, the next work package continues the operational shell a
 
 ## Revision history
 
+- 2026-09-29 — v1.1 workflow clarification: one active `task.md`; Owner handles pull/push; executors implement the current task and the Director reviews/replaces it.
 - 2026-09-29 — v1.0 accepted after Owner decisions: BTC perpetual paper execution; LONG/SHORT/NO_TRADE; no leverage (1x exposure cap); short-duration minutes-to-hours trading; broader horizons permitted for context.

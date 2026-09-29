@@ -8,8 +8,8 @@ Before changing anything:
 
 1. Read `FOUNDATION.md` in full.
 2. Read `STATE.md`.
-3. Read the active work package under `tasks/`.
-4. Read only the source/knowledge artifacts explicitly needed by that task.
+3. Read `task.md` in full. It is the single active implementation handoff.
+4. Read only the source/knowledge artifacts explicitly needed by `task.md`.
 5. Inspect the current code and tests in the authorized scope.
 
 If any instruction conflicts with `FOUNDATION.md`, stop and report the conflict.
@@ -31,11 +31,12 @@ Codex/Claude Code are implementation executors. They do not decide:
 - risk policy;
 - whether a failed acceptance criterion may be weakened.
 
-Implement only the active bounded task. Do not opportunistically add trading logic or “improvements” outside scope.
+Implement only `task.md`. Do not opportunistically add trading logic or “improvements” outside scope.
 
 ## Working rules
 
-- Work on a branch from the exact base commit specified by the task/STATE.
+- Assume the Owner has run `git pull` immediately before handing over the task; verify the local checkout is not stale before editing.
+- Do not push to the remote repository unless the Owner explicitly asks; the Owner handles the normal pull/push loop.
 - Preserve `source_notes/` unchanged.
 - Keep domain logic independent of UI/database details where the Foundation requires it.
 - Do not add real-order connectivity.
@@ -48,8 +49,8 @@ Implement only the active bounded task. Do not opportunistically add trading log
 
 Return:
 
-- exact commit SHA;
-- concise diff summary;
+- current base commit SHA and whether any local commit was created;
+- concise working-tree/diff summary;
 - commands/checks actually run and their results;
 - acceptance evidence/artifact locations;
 - any unresolved issue or deviation.

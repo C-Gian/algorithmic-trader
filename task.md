@@ -1,9 +1,10 @@
-# WP-001 — Repository Bootstrap and One Observable Dummy Run
+# Active Task — WP-001: Repository Bootstrap and One Observable Dummy Run
 
 Status: READY  
 Owner: Project & Research Director  
-Executor: one implementation agent  
-Base: accepted Foundation commit recorded in `STATE.md`
+Executor: Claude Code  
+Repository workflow: Owner pulls before execution and pushes after completion. Do not push unless explicitly asked.  
+Base: latest `main` after the Owner's pre-task `git pull`.
 
 ## Objective
 
@@ -171,12 +172,12 @@ Do not:
 
 Return:
 
-- branch and exact final commit SHA;
-- files/components changed;
+- current base commit SHA and whether you created any local commit;
+- files/components changed and concise working-tree/diff summary;
 - startup command;
 - test/check commands and actual results;
 - screenshots or structured runtime artifacts sufficient for Director review;
 - demonstration of interruption/idempotency and speed invariance;
 - unresolved issues or deviations.
 
-Do not mark the work accepted yourself. The Director reviews the actual diff and evidence.
+Do not mark the work accepted yourself. Stop after implementation, checks and the completion report. The Owner will commit/push the result; the Director then reviews the actual repository diff and evidence.
