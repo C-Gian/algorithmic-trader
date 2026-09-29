@@ -1,6 +1,6 @@
 # Algorithmic Trader — Foundation
 
-Version: 1.1 accepted · 29 September 2026  
+Version: 1.2 accepted · 29 September 2026  
 Authority: canonical product, architecture and research directive
 
 ## 1. Mandate and authority
@@ -189,11 +189,11 @@ Do not create overlapping mission documents or an empty governance bureaucracy.
 
 ## 12. Director–executor workflow
 
-The Director maintains exactly one active implementation handoff in `task.md`. Before each executor run, the Owner pulls the latest repository. The executor reads `FOUNDATION.md`, `STATE.md`, `AGENTS.md` and `task.md`, implements only that task in the Owner's local checkout, and does not push unless the Owner explicitly asks. The Owner pushes the completed local work so the Director can inspect the updated repository.
+The Director maintains exactly one active implementation handoff in `task.md`. Before each executor run, the Owner pulls the latest repository. The executor reads `FOUNDATION.md`, `STATE.md`, `AGENTS.md` and `task.md`, implements only that task in the Owner's local checkout, then commits and pushes the completed task unless `task.md` explicitly says otherwise. The executor must never force-push, rewrite shared history or push unrelated local changes.
 
 A second executor may independently review consequential engine/data/risk changes when explicitly tasked. Executors do not choose product direction, redesign research, or weaken acceptance criteria to make work pass.
 
-After each pushed implementation, the Director inspects the actual diff and evidence, independently checks material assumptions, accepts the work or rewrites `task.md` with corrections/next work, and updates `STATE.md`. A self-reported PASS is insufficient.
+After each executor push, the Owner only needs to relay the executor's completion report. The Director inspects the remote diff, CI and evidence directly, independently checks material assumptions, accepts the work or rewrites `task.md` with corrections/next work, and updates `STATE.md`. A self-reported PASS is insufficient.
 
 Escalate to the Owner only for product intent, material scope/cost, UX preference that meaningfully changes the product, or any capital authorization.
 
@@ -239,5 +239,6 @@ After WP-001 acceptance, the next work package continues the operational shell a
 
 ## Revision history
 
-- 2026-09-29 — v1.1 workflow clarification: one active `task.md`; Owner handles pull/push; executors implement the current task and the Director reviews/replaces it.
+- 2026-09-29 — v1.2 workflow clarification: executors commit and push completed bounded tasks; Owner relays the report; Director reviews the remote repository/CI and rewrites `task.md`.
+- 2026-09-29 — v1.1 workflow clarification: one active `task.md`; Owner handled pull/push; superseded by v1.2.
 - 2026-09-29 — v1.0 accepted after Owner decisions: BTC perpetual paper execution; LONG/SHORT/NO_TRADE; no leverage (1x exposure cap); short-duration minutes-to-hours trading; broader horizons permitted for context.
