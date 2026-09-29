@@ -36,7 +36,8 @@ Implement only `task.md`. Do not opportunistically add trading logic or “impro
 ## Working rules
 
 - Assume the Owner has run `git pull` immediately before handing over the task; verify the local checkout is not stale before editing.
-- Do not push to the remote repository unless the Owner explicitly asks; the Owner handles the normal pull/push loop.
+- After implementation and required local checks succeed, commit the complete bounded task with a meaningful commit message and push the current branch to `origin`, unless `task.md` explicitly says not to.
+- Never force-push, rewrite shared history, push secrets, or include unrelated pre-existing local changes. If the push is rejected or the checkout is unexpectedly ahead/diverged, stop and report rather than rewriting history.
 - Preserve `source_notes/` unchanged.
 - Keep domain logic independent of UI/database details where the Foundation requires it.
 - Do not add real-order connectivity.
@@ -49,8 +50,8 @@ Implement only `task.md`. Do not opportunistically add trading logic or “impro
 
 Return:
 
-- current base commit SHA and whether any local commit was created;
-- concise working-tree/diff summary;
+- base commit SHA, final commit SHA and pushed branch;
+- concise diff summary;
 - commands/checks actually run and their results;
 - acceptance evidence/artifact locations;
 - any unresolved issue or deviation.
