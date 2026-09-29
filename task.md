@@ -172,8 +172,8 @@ Do not:
 
 Return:
 
-- branch and exact final commit SHA;
-- files/components changed;
+- current base commit SHA and whether you created any local commit;
+- files/components changed and concise working-tree/diff summary;
 - startup command;
 - test/check commands and actual results;
 - screenshots or structured runtime artifacts sufficient for Director review;
