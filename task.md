@@ -1,0 +1,183 @@
+# Active Task — WP-001: Repository Bootstrap and One Observable Dummy Run
+
+Status: READY  
+Owner: Project & Research Director  
+Executor: Claude Code  
+Repository workflow: Owner pulls before execution and pushes after completion. Do not push unless explicitly asked.  
+Base: latest `main` after the Owner's pre-task `git pull`.
+
+## Objective
+
+Create the first executable vertical slice of the operational shell using a deterministic scripted dummy trader. This work proves product/runtime contracts and observability. It does **not** implement professional BTC trading intelligence.
+
+## Product behavior to demonstrate
+
+The Owner can open the local web application, start a synthetic BTC-perpetual replay, watch the dummy market view and action change over simulated time, close/reopen the browser without losing the job, and inspect the completed run/artifacts.
+
+The deterministic fixture must visibly exercise:
+
+- bullish view -> LONG;
+- bearish view -> SHORT;
+- uncertain/balanced view -> NO_TRADE;
+- at least one HOLD/EXIT or REDUCE transition while exposed;
+- one rejected/blocked action;
+- one missing/stale-data state;
+- one controlled failure/recovery path.
+
+All screens/data must be labeled **DEMO / SYNTHETIC** where a user could otherwise mistake them for market evidence.
+
+## Authorized architecture
+
+Use the Foundation's modular-monolith boundaries.
+
+Toolchain baseline for this work package:
+
+- Python 3.14.x stable.
+- Node.js 24.x LTS.
+- PostgreSQL 18.x.
+- Docker Compose.
+- FastAPI backend/API.
+- React + TypeScript frontend.
+
+Pin exact dependency/container versions in committed lock/config files. Use stable releases, not prereleases.
+
+Create only the code structure needed by this slice. Do not add Redis, Kafka/RabbitMQ, Kubernetes, microservices, a second research engine or external market feeds.
+
+## Required semantic contracts
+
+Implement minimal typed/schema versions of:
+
+- InstrumentIdentity
+- MarketObservation / data-quality state
+- MarketView
+- Scenario
+- TradePlan
+- Decision
+- RiskDecision
+- OrderIntent / Order
+- Fill
+- Position / AccountSnapshot
+- Run / RunProgress
+- RunManifest
+
+Exact field design belongs to implementation, but must preserve the distinctions in `FOUNDATION.md`.
+
+The dummy trader must implement the same interface the future real trader will use. It must not leak UI/database concerns into domain decision logic.
+
+## Durable jobs
+
+A run is owned by a worker, not by the browser request.
+
+Minimum requirements:
+
+- PostgreSQL persisted run state;
+- lease/heartbeat or equivalent single-owner protection;
+- idempotent event/accounting handling;
+- explicit states including queued/running/completed/cancelled/failed and recoverable behavior where implemented;
+- browser refresh/reopen reconstructs state from backend persistence;
+- repeated processing after a controlled interruption cannot duplicate fills/accounting events.
+
+Do not introduce a general distributed-job framework.
+
+## Artifacts
+
+Every completed or cancelled run must leave a manifest and structured machine-readable records sufficient to inspect:
+
+- input fixture/config identity;
+- engine version;
+- simulated timestamps;
+- MarketView history;
+- Decision history;
+- orders/fills;
+- account/position/equity history;
+- final run state;
+- validation/check results.
+
+Large/runtime artifacts should live outside Git. The API/UI must expose retrieval/inspection without requiring the Owner to copy raw logs.
+
+## UI — deliberately thin
+
+Implement only what is needed to validate the product loop:
+
+### Home / current run
+- DEMO/SYNTHETIC banner;
+- current simulation time;
+- simple BTC synthetic price chart;
+- latest market view;
+- latest decision/action and reason;
+- current position;
+- run health/progress.
+
+### Runs
+- start synthetic replay;
+- cancel;
+- run status;
+- progress/elapsed/heartbeat;
+- clear failure text;
+- completed-run access.
+
+Visual polish is secondary to clarity and correctness in WP-001.
+
+## Determinism
+
+Given identical pinned fixture, code/config versions and seed:
+
+- the semantic event trace must be identical;
+- changing replay speed must not change decisions;
+- browser disconnect/reconnect must not change decisions.
+
+Add automated tests for these invariants.
+
+## Minimum CI/checks
+
+At least:
+
+- backend/unit tests;
+- contract/schema tests;
+- account/position transition tests covering long and short;
+- idempotency/recovery test;
+- determinism/speed-invariance test;
+- frontend build/typecheck;
+- end-to-end smoke path proving UI -> run start -> worker -> persisted state -> UI result.
+
+Choose the simplest reliable test tooling. Document exact commands.
+
+## Acceptance criteria
+
+1. One documented startup command brings up the local application stack.
+2. A synthetic replay can be launched from the UI.
+3. The UI shows time, price, MarketView, action/reason, position and progress.
+4. LONG, SHORT, NO_TRADE and one exposed-position management transition are demonstrable.
+5. Closing/reopening the browser preserves the job/results.
+6. Controlled worker interruption has visible, deterministic recovery/failure behavior and cannot create duplicate accounting events.
+7. Identical pinned runs produce identical semantic traces; speed changes do not alter them.
+8. Completion/cancellation leave inspectable manifests and structured artifacts via UI/API.
+9. CI/check suite passes from a clean checkout.
+10. No professional trading logic, real BTC data source, profitability test, optimizer, live exchange credential or real-order connectivity is present.
+
+## Prohibited changes
+
+Do not:
+
+- alter `FOUNDATION.md` or `source_notes/`;
+- select or research a real exchange/venue beyond what is required to name synthetic contracts;
+- implement indicators, trend rules, market structure logic or any real trader;
+- add leverage behavior above 1x;
+- use an LLM in runtime trading;
+- implement funding as if it were validated real-market economics in this dummy fixture;
+- turn dummy P&L into research evidence;
+- expand scope because an adjacent feature is easy.
+
+## Expected executor report
+
+Return:
+
+- branch and exact final commit SHA;
+- files/components changed;
+- startup command;
+- test/check commands and actual results;
+- screenshots or structured runtime artifacts sufficient for Director review;
+- demonstration of interruption/idempotency and speed invariance;
+- unresolved issues or deviations.
+
+Do not mark the work accepted yourself. Stop after implementation, checks and the completion report. The Owner will commit/push the result; the Director then reviews the actual repository diff and evidence.
