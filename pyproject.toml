@@ -1,0 +1,39 @@
+[project]
+name = "algotrader"
+version = "0.1.0"
+description = "Algorithmic Trader - operational shell with deterministic DEMO dummy trader (WP-001)."
+readme = "README.md"
+requires-python = "==3.14.*"
+dependencies = [
+    "fastapi==0.142.0",
+    "psycopg[binary]==3.3.6",
+    "pyarrow==25.0.1",
+    "pydantic==2.13.5",
+    "uvicorn==0.54.0",
+]
+
+[dependency-groups]
+dev = [
+    "httpx==0.28.1",
+    "playwright==1.63.0",
+    "pytest==9.1.1",
+]
+
+[project.scripts]
+algotrader = "algotrader.cli:main"
+
+[build-system]
+requires = ["hatchling==1.32.4"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/algotrader"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra -p no:cacheprovider"
+filterwarnings = ["ignore:Using `httpx` with `starlette.testclient` is deprecated"]
+markers = [
+    "db: requires PostgreSQL (ALGOTRADER_TEST_DATABASE_URL)",
+    "e2e: end-to-end smoke path through the browser UI",
+]

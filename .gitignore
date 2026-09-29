@@ -1,0 +1,12 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Web
+web/node_modules/
+web/dist/
+
+# Local runtime data and run artifacts (kept outside Git)
+var/

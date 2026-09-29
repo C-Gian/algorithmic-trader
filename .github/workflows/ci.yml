@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  checks:
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:18.6-trixie
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 2s --health-timeout 3s --health-retries 30
+    env:
+      ALGOTRADER_TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
+      ALGOTRADER_REQUIRE_DB: "1"
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10
+        with:
+          version: "0.12.10"
+      - run: uv python install
+      - run: uv sync --locked
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+      - name: Web install / typecheck / build
+        run: |
+          npm --prefix web ci
+          npm --prefix web run typecheck
+          npm --prefix web run build
+      - name: Unit, contract, accounting, determinism, idempotency/recovery, API tests
+        run: uv run pytest --ignore=tests/e2e
+      - name: Install Chromium for the end-to-end smoke
+        run: uv run playwright install --with-deps chromium
+      - name: End-to-end smoke (UI -> run start -> worker -> persisted state -> UI)
+        run: uv run pytest tests/e2e
+        env:
+          ALGOTRADER_EVIDENCE_DIR: ${{ github.workspace }}/var/evidence
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: e2e-evidence
+          path: var/evidence
+          if-no-files-found: ignore
+
+  compose-smoke:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - name: Start the documented stack
+        run: docker compose up --build --detach --wait
+      - name: Smoke a synthetic run through the API
+        run: python3 scripts/stack_smoke.py http://127.0.0.1:8000
+      - name: Logs on failure
+        if: failure()
+        run: docker compose logs
+      - run: docker compose down --volumes
+        if: always()
