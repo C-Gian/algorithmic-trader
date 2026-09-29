@@ -17,9 +17,9 @@ Canonical directive: `FOUNDATION.md`
 
 ## Current milestone
 
-**M1 — Foundation and repository workflow**
+**M2 — Operational shell with deterministic dummy trader**
 
-Foundation decisions are resolved and the canonical directive is being established.
+The Foundation and repository workflow baseline are accepted on `main`.
 
 ## Active task
 
@@ -31,16 +31,16 @@ See `tasks/WP-001.md`.
 
 `3bf9de0d88fd97360bff7a6517bbb61544f5db68` — professional dossiers only.
 
+## Accepted foundation/workflow commit
+
+`e424c5cc779f616f1ff757ad6ff250abd279ccc8`
+
 ## Blockers
 
 None at product level.
 
-Initial market/data venue selection is intentionally deferred; it does not block WP-001 because WP-001 uses deterministic synthetic data.
+Initial real market/data venue selection is intentionally deferred; WP-001 uses deterministic synthetic data.
 
 ## Next action
 
-Run WP-001 through an implementation executor, then have the Director independently review its diff, tests and runtime artifacts before acceptance.
-
-## Accepted implementation commit
-
-Pending merge of the Foundation/workflow bootstrap.
+Assign WP-001 to one implementation executor. The executor works from the repository instructions and task brief, then reports a branch/commit plus test/runtime evidence. The Project & Research Director independently reviews the diff and evidence before accepting or requesting corrections.
