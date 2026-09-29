@@ -23,7 +23,7 @@ The Foundation and repository workflow baseline are accepted on `main`.
 
 ## Active task
 
-**WP-001 — Repository bootstrap and one observable dummy run**
+**WP-001R1 — Fix first real CI run before WP-001 acceptance**
 
 See `task.md`.
 
@@ -37,10 +37,8 @@ See `task.md`.
 
 ## Blockers
 
-None at product level.
-
-Initial real market/data venue selection is intentionally deferred; WP-001 uses deterministic synthetic data.
+No product blocker. WP-001 implementation is present, but its first GitHub Actions run failed before the test suite because `astral-sh/setup-uv@v10` is not a resolvable action tag. The independent Docker Compose smoke job passed.
 
 ## Next action
 
-The Owner pulls the latest repository and hands `task.md` to Claude Code. Claude Code implements only that task locally and reports its checks/evidence. The Owner then commits/pushes the completed work. The Project & Research Director reviews the updated repository and either accepts it or replaces `task.md` with corrections/the next bounded task.
+The Owner pulls the Director's updated `task.md` and hands it to Claude Code. Claude Code fixes WP-001R1, runs the required checks, commits and pushes. The Owner relays only Claude's completion report. The Project & Research Director then verifies the pushed commit and GitHub Actions directly before accepting WP-001 or issuing another correction.
