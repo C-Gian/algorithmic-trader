@@ -49,8 +49,8 @@ Implement only `task.md`. Do not opportunistically add trading logic or “impro
 
 Return:
 
-- exact commit SHA;
-- concise diff summary;
+- current base commit SHA and whether any local commit was created;
+- concise working-tree/diff summary;
 - commands/checks actually run and their results;
 - acceptance evidence/artifact locations;
 - any unresolved issue or deviation.
