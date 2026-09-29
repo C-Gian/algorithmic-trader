@@ -25,7 +25,7 @@ The Foundation and repository workflow baseline are accepted on `main`.
 
 **WP-001 — Repository bootstrap and one observable dummy run**
 
-See `tasks/WP-001.md`.
+See `task.md`.
 
 ## Base knowledge snapshot
 
@@ -43,4 +43,4 @@ Initial real market/data venue selection is intentionally deferred; WP-001 uses 
 
 ## Next action
 
-Assign WP-001 to one implementation executor. The executor works from the repository instructions and task brief, then reports a branch/commit plus test/runtime evidence. The Project & Research Director independently reviews the diff and evidence before accepting or requesting corrections.
+The Owner pulls the latest repository and hands `task.md` to Claude Code. Claude Code implements only that task locally and reports its checks/evidence. The Owner then commits/pushes the completed work. The Project & Research Director reviews the updated repository and either accepts it or replaces `task.md` with corrections/the next bounded task.
