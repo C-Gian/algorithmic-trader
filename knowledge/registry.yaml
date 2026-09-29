@@ -1,0 +1,98 @@
+version: 1
+snapshot_commit: 3bf9de0d88fd97360bff7a6517bbb61544f5db68
+policy:
+  source_notes_immutable: true
+  legacy_project_reuse: prohibited_unless_owner_explicitly_authorizes_specific_artifact
+  note: "Registry captures dossier provenance/status only. It does not turn sources into trading rules."
+sources:
+  - id: LIB-001
+    dossier: source_notes/LIB-001-ALGORITHMIC-TRADING-AND-DMA.md
+    status: PARTIALLY_REVIEWED
+    role: execution_microstructure
+    qualification: damaged_source_pages
+  - id: LIB-002
+    dossier: source_notes/LIB-002-EXPECTED-RETURNS.md
+    status: REVIEWED
+    role: expected_returns_signal_combination_context
+  - id: LIB-003
+    dossier: source_notes/LIB-003-QUANTITATIVE-TRADING-ERNEST-CHAN.md
+    status: REVIEWED
+    role: research_backtesting_execution_process
+  - id: LIB-004
+    dossier: source_notes/LIB-004-SYSTEMATIC-TRADING.md
+    status: REVIEWED
+    role: systematic_architecture_forecast_risk_cost
+  - id: LIB-005
+    dossier: source_notes/LIB-005-MARKET-WIZARDS-THE-NEXT-GENERATION.md
+    status: REVIEWED
+    role: practitioner_process_context_risk
+  - id: LIB-006
+    dossier: source_notes/LIB-006-MAN-AHL-TREND-FOLLOWING-EQUITY-AND-BOND-CRISIS-ALPHA.md
+    status: REVIEWED
+    role: trend_external_evidence
+  - id: LIB-007
+    dossier: source_notes/LIB-007-TREND-FOLLOWING-AND-DRAWDOWNS-IS-THIS-TIME-DIFFERENT.md
+    status: REVIEWED
+    role: trend_edge_decay_drawdown
+  - id: LIB-008
+    dossier: source_notes/LIB-008-WHICH-TREND-IS-YOUR-FRIEND.md
+    status: REVIEWED
+    role: trend_filter_redundancy
+  - id: LIB-009
+    dossier: source_notes/LIB-009-A-CENTURY-OF-EVIDENCE-ON-TREND-FOLLOWING-INVESTING.md
+    status: REVIEWED
+    role: trend_external_evidence
+  - id: LIB-010
+    dossier: source_notes/LIB-010-TIME-SERIES-MOMENTUM-FACTORS-MONTHLY.md
+    status: REVIEWED
+    role: trend_dataset_provenance
+    qualification: reconstructed_history_dataset
+  - id: LIB-011
+    dossier: source_notes/LIB-011-TIME-SERIES-MOMENTUM-ORIGINAL-PAPER-DATA.md
+    status: REVIEWED
+    role: trend_dataset_provenance
+  - id: LIB-012
+    dossier: source_notes/LIB-012-ADVANCES-IN-FINANCIAL-MACHINE-LEARNING.md
+    status: REVIEWED
+    role: financial_research_methodology_optional_ml
+  - id: LIB-013
+    dossier: source_notes/LIB-013-DEFLATED-SHARPE-RATIO.md
+    status: REVIEWED
+    role: selection_bias_methodology
+  - id: LIB-014
+    dossier: source_notes/LIB-014-VALUE-AND-MOMENTUM-EVERYWHERE.md
+    status: REVIEWED
+    role: cross_asset_signal_interaction
+    qualification: secondary_summary_not_full_paper
+  - id: LIB-015
+    dossier: source_notes/LIB-015-TIME-SERIES-MOMENTUM.md
+    status: REVIEWED
+    role: trend_external_summary
+    qualification: secondary_summary_not_full_paper
+  - id: LIB-016
+    dossier: source_notes/LIB-016-CROSS-SECTION-OF-EXPECTED-RETURNS.md
+    status: REVIEWED
+    role: multiple_testing_methodology
+  - id: LIB-017
+    dossier: source_notes/LIB-017-MATHEMATICAL-APPENDICES-PROBABILITY-OF-BACKTEST-OVERFITTING.md
+    status: REVIEWED
+    role: backtest_overfitting_methodology
+  - id: LIB-018
+    dossier: source_notes/LIB-018-THE-PROBABILITY-OF-BACKTEST-OVERFITTING.md
+    status: REVIEWED
+    role: backtest_overfitting_methodology
+  - id: LIB-019
+    dossier: source_notes/LIB-019-OPTIONS-FUTURES-AND-OTHER-DERIVATIVES-6E.md
+    status: REVIEWED
+    role: derivatives_risk_interpretation
+  - id: LIB-020
+    dossier: source_notes/LIB-020-TRADING-AND-EXCHANGES-MARKET-MICROSTRUCTURE-FOR-PRACTITIONERS.md
+    status: REVIEWED
+    role: market_microstructure_execution
+knowledge_gaps:
+  - btc_specific_market_mechanisms
+  - btc_perpetual_spot_interaction
+  - formal_support_resistance
+  - retracement_extension_formalization
+  - cyclical_temporal_methodology
+  - modern_crypto_order_flow_and_liquidation_mechanics
