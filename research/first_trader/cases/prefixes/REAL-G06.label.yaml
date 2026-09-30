@@ -1,0 +1,67 @@
+case_id: REAL-G06
+evidence: REAL
+source: "dataset okx-btc-usdt-swap-1m-20260925T0000-20260930T0000-3305612c15aa; prefix REAL-G06.json"
+visible_prefix: REAL-G06.json
+visible_prefix_cutoff: "2026-09-29T20:00Z"
+selection_reason: "Predeclared grid cutoff."
+labeling_method: "Manual application of RP-001B B3/DC-07/DC-30/DC-31 and RP-001A/C; medians via `sort -n`; no swing/level/policy code; interpretation I1 (see REAL-G02). 5m series continued bar by bar from the REAL-G05 state at 11:55 (same epoch)."
+frozen_before: "any outcome export"
+labels:
+  h1_series_continued_from_REAL-G05:
+    new_swings:
+      - {kind: HIGH, price: 84544.9, extremum: "2026-09-29T13:00Z", confirmed_by_bar: "2026-09-29T14:00Z", known_at: "2026-09-29T15:00Z", theta_used: 900.3}
+    down_leg_theta: {scale_at_bar_1400: 463.75, bars: "2026-09-28T15:00..2026-09-29T14:00", theta: 927.5}
+    at_cutoff: {mode: DOWN, provisional_running_low: 82850.8, provisional_low_time: "2026-09-29T16:00Z", confirmation_needs_high_at_or_above: 83778.3, last_complete_1h_close: 83571.7}
+  context:
+    two_latest_highs: [84346.8, 84544.9]   # rising
+    two_latest_lows: [82501.0, 82726.0]    # rising
+    damage_checks: "last 1h close 83571.7 > 82726.0; developing down-leg after 84544.9 has running low 82850.8 > 82726.0 (still above L2 by 124.8)"
+    result: UP
+  P-CTX_long: SATISFIED
+  P-CTX_short: CONTRADICTED
+  setup_5m_long:
+    epoch_origin: "2026-09-29T01:00Z (1h swing LOW 82726.0) - unchanged since REAL-G05: no newer 1h swing LOW confirmed"
+    S5: {median_tr: 86.1, theta: 172.2, impulse_min: 344.4, b: 21.6, e: 43.1, z: 21.6}
+    swings_5m_after_REAL-G05_cutoff:   # [kind, price, extremum, confirming bar, flags]
+      - [HIGH, 84464.8, "11:50", "12:00"]
+      - [LOW, 84089.0, "12:25", "12:35"]     # running low passed through an AMBIGUOUS_PATH extension at 12:15
+      - [HIGH, 84438.4, "12:35", "12:45"]
+      - [LOW, 84210.0, "13:00", "13:05"]
+      - [HIGH, 84544.9, "13:25", "13:30"]
+      - [LOW, 83973.8, "13:35", "13:40", AMBIGUOUS_PATH]
+      - [HIGH, 84290.0, "13:40", "13:45"]
+      - [LOW, 84046.7, "13:45", "13:50"]
+      - [HIGH, 84423.9, "13:55", "14:00", AMBIGUOUS_PATH]
+      - [LOW, 83820.0, "14:15", "14:20", AMBIGUOUS_PATH]
+      - [HIGH, 84043.6, "14:25", "14:30"]
+      - [LOW, 83717.9, "14:35", "14:40"]
+      - [HIGH, 83984.9, "14:45", "14:50", AMBIGUOUS_PATH]
+      - [LOW, 83643.3, "14:50", "14:55"]
+      - [HIGH, 83849.0, "14:55", "15:00"]
+      - [LOW, 82877.3, "15:25", "15:30"]     # running low passed through an AMBIGUOUS_PATH extension at 15:10
+      - [HIGH, 83298.9, "15:45", "15:50"]
+      - [LOW, 82900.0, "15:50", "16:00"]
+      - [HIGH, 83133.1, "16:00", "16:05"]
+      - [LOW, 82937.9, "16:10", "16:15"]
+      - [HIGH, 83274.9, "16:25", "16:40"]
+      - [LOW, 82850.8, "16:55", "17:00"]
+      - [HIGH, 83195.0, "17:30", "17:50"]
+      - [LOW, 82949.3, "17:55", "18:00"]
+      - [HIGH, 83425.4, "18:05", "18:10"]
+      - [LOW, 83252.2, "18:10", "18:15"]
+      - [HIGH, 83677.8, "18:40", "19:30"]
+      - [LOW, 83370.1, "19:45", "19:50", AMBIGUOUS_PATH]
+    at_cutoff: {mode: UP, provisional_running_high: 83622.1, provisional_high_time: "19:50", confirmation_needs_5m_low_at_or_below: 83449.9}
+    epoch_high_water_mark: {price: 84544.9, time: "13:25"}
+    latest_confirmed_up_leg: {A: 83252.2, B: 83677.8, size: 425.6, size_test: ">= 344.4", progress: "83677.8 is NOT above the epoch high-water mark before A (84544.9)"}
+    other_recent_up_legs: {"82949.3->83425.4": "476.1, fails progress", "82850.8->83195.0": "344.2 < 344.4 (fails size by 0.2)"}
+    P-IMP: CONTRADICTED
+    setup_state: NO_IMPULSE
+  public_action: NO_TRADE
+  display_reason: NO_SUPPORTED_SETUP
+  marketview_description: "1h context still labeled UP (HH 84346.8->84544.9, HL 82501->82726), but price has fallen ~1690 USDT from the 84544.9 high to a provisional 1h low 82850.8, only 124.8 above the context-defining low. 5m structure since 13:25 made lower highs and lower lows, then a rebound to 83677.8 that stays far below the epoch high. No qualifying long impulse; no preferred scenario."
+  definition_observations:
+    - "CONTEXT_LABEL_LAG: the UP label survives a ~2% decline that has retraced ~93% of the 1h leg 82726.0->84544.9, because damage is defined only by L2 and the 1h reversal threshold (927.5) has not been reached on the upside to confirm the new low. The label is correct under the frozen rule; whether it is informative in this state is UNRESOLVED."
+    - "In a long-context epoch, all new 5m up-legs below the epoch high-water mark fail DC-31 by construction; after a deep counter-move the method cannot see a long setup until price exceeds 84544.9 or a new 1h swing LOW starts a new epoch."
+    - "5 of 28 new 5m swings carry AMBIGUOUS_PATH (plus 2 ambiguous extensions) at k = 2.0 with S5 = 86.1 during fast 13:30-15:10 bars (5m TR up to 315.0, ~3.7 x S5): the frozen epoch S5 was small relative to the afternoon's bars (scale-staleness case of DC-04)."
+  DC-28_check: "latest complete 5m bar (19:55) TR 83.8 <= 4 x 86.1 = 344.4; current S5 (24 bars 18:00..19:55) = 106.9, ratio 1.24 vs frozen 86.1 (< 2); no arming exists. Not blocked. (During the epoch one bar, 15:50, had TR 348.2 > 344.4 - a transient block at that instant only.)"
