@@ -1,31 +1,60 @@
 # Algorithmic Trader — Foundation
 
-Version: 1.2 accepted · 29 September 2026  
+Version: 2.0 accepted · 30 September 2026  
 Authority: canonical product, architecture and research directive
 
 ## 1. Mandate and authority
 
-Build a personal BTC-only utility that maintains an explicit, current understanding of the market and makes selective, risk-controlled paper trading decisions. The objective is to reproduce, as faithfully as practical, the market-reading and trade-decision process of an excellent professional trader. The project is not primarily an alpha-discovery, indicator-mining or UI project.
+Build a personal BTC-only **market-analysis and trade-decision system** that reproduces, as faithfully as practical, the market-reading and trade-decision process of an excellent professional trader.
 
-The Owner owns product intent and any future capital authorization. The Project & Research Director owns product translation, architecture, research direction, repository/workflow design, UX decisions, tasking, independent acceptance, validation strategy, interpretation of results and next actions. Codex and Claude Code are implementation executors. Astra is used for foundational redesigns and difficult scientific review. The Director does not perform hands-on implementation code.
+The product continuously understands the market, maintains an explicit current view, states what it expects to happen, and decides whether a professional trade opportunity exists.
+
+The core product is **decision support for the human trader**, not autonomous portfolio management or autonomous order execution.
+
+A useful output should answer questions such as:
+
+- What is the market doing and why?
+- What are the plausible scenarios?
+- What is most likely or most relevant next?
+- Is there a trade worth taking now?
+- LONG, SHORT or NO_TRADE?
+- What must happen before entry?
+- Where is the thesis invalidated?
+- What price areas or targets are relevant?
+- What time horizon is the idea about?
+- What evidence supports or contradicts the view?
+- What would change the system's mind?
+
+The Owner remains the human trader. The Owner decides independently whether to act and, if so:
+
+- how much capital to use;
+- position size;
+- leverage;
+- margin/account settings;
+- actual order placement;
+- personal portfolio and capital-risk management.
+
+The system must not present those human capital-allocation choices as part of its professional market opinion.
+
+The Owner owns product intent and any future real-capital authorization. The Project & Research Director owns product translation, architecture, research direction, repository/workflow design, UX decisions, tasking, independent acceptance, validation strategy, interpretation of results and next actions. Codex and Claude Code are implementation executors. Astra is used for foundational redesigns and difficult scientific review. The Director does not perform hands-on implementation code.
 
 Start application design from zero. Import only external professional knowledge and source metadata. Ignore every prescription from the legacy Trading Bot project, including old architectures, terminology, experiments, thresholds, conclusions, tasks, ADRs and workflows. Legacy references embedded inside source dossiers are not current instructions.
 
 ### Accepted product scope
 
 - Asset: BTC only.
-- Operational paper instrument: BTC perpetual futures.
-- Permitted directional actions while flat: LONG, SHORT or NO_TRADE.
-- While exposed, HOLD, REDUCE and EXIT are distinct from NO_TRADE.
-- No leverage: intended exposure is capped at 1x account equity. The system must not depend on leveraged risk taking.
-- One net BTC position at a time.
-- Trading style: short-duration trading, generally minutes to hours; positions are not intended to remain open for days.
-- Broader market horizons may be observed when useful for context even when the trade itself is short-lived.
-- BTC spot may be observed as market context/reference; it is not the initial operational execution instrument.
+- Primary analyzed/trade-reference instrument: BTC perpetual futures.
+- BTC spot and other defensible BTC-related sources may be observed as context/reference when justified.
+- Primary flat-state recommendation: LONG, SHORT or NO_TRADE.
+- An active recommended trade/thesis may later be updated with HOLD, REDUCE/TAKE-PARTIAL, EXIT or INVALIDATED semantics where the professional methodology requires them.
+- Intended opportunity horizon: generally minutes to hours, not days.
+- Broader market horizons may be observed when useful for context.
 - Single user, local-first browser application.
-- Research and paper operation only. No real-money orders or capital without explicit Owner approval.
+- Research, replay and advisory/paper observation only.
+- No autonomous real-money orders.
+- No autonomous leverage selection, position sizing, collateral allocation or account-level portfolio management.
 
-Instrument, venue, contract and quote/settlement semantics are explicit configuration. The Director will select the initial data/execution venue after checking current access, history and contract specifications. Venue selection does not block the operational shell.
+The product may model execution timing/costs **only to evaluate whether a recommendation was realistically actionable and economically meaningful**. That research harness must not become the product's capital-allocation policy.
 
 ## 2. Evidence baseline
 
@@ -33,84 +62,191 @@ The initial professional knowledge snapshot is repository commit `3bf9de0d88fd97
 
 This foundation was reviewed against those dossiers. Their reported source coverage must remain distinct from our own verification. Material qualifications include: LIB-001 is partially reviewed because the source artifact contains damaged pages; LIB-014 and LIB-015 are secondary summaries rather than the full underlying papers; LIB-010 and LIB-011 are related datasets rather than independent confirmations; reconstructed external histories require version pinning.
 
-The knowledge base is an input, not a closed universe. Coverage is comparatively weak for BTC-specific mechanisms, formal support/resistance, retracement/extension concepts and cyclical/temporal timing. If the intended trader genuinely needs a weakly covered concept, open a targeted knowledge-gap study before formalizing it. Do not exclude a necessary professional concept merely because the initial dossiers are incomplete, and do not expand literature without a concrete implementation/research need.
+The knowledge base is an input, not a closed universe. If the intended trader genuinely needs a weakly covered concept, open a targeted knowledge-gap study before formalizing it. Do not exclude a necessary professional concept merely because the initial dossiers are incomplete, and do not expand literature without a concrete implementation/research need.
 
 ## 3. Professional reasoning model
 
-Implement one stateful, deterministic trader whose reasoning sequence is:
+Implement one stateful, deterministic professional reasoning system whose sequence is:
 
-**available observations → contextual market state → competing scenarios → conditional trade plans → independent risk and execution checks → action → observed response and reassessment**
+**available evidence → observable market state → professional interpretation / MarketView → competing scenarios → conditional trade opportunity / plan → recommendation → observed response and reassessment**
 
-Observation, interpretation and decision are distinct records. “Volume increased” is an observation; “participation supports continuation” is an interpretation; “enter after confirmation” is a conditional plan. Unobservable claims about hidden intent or institutional behavior must never be recorded as facts.
+Observation, interpretation, prediction and recommendation are distinct records.
 
-The market state may describe, where justified: structure, trend/persistence, momentum, volatility, location relative to causally identified levels, participation, liquidity, trustworthy order-flow context, temporal/cyclical context, derivatives context, external context and data quality. Every state item has a horizon and freshness. Different horizons may disagree without contradiction. Missing input is not neutral evidence.
+Examples:
 
-Maintain a small set of competing scenarios such as continuation, balance/range persistence and transition/failure. These are hypotheses rather than exhaustive laws. Each scenario carries supporting and opposing observations, applicability conditions, expected behavior, expiry and observable invalidation.
+- “1m traded volume increased” is an observation.
+- “Participation supports continuation” is an interpretation.
+- “The primary scenario is continuation toward X over the next 30–90 minutes” is a market prediction/scenario.
+- “LONG only if price confirms Y; invalid below Z; targets A/B” is a conditional trade recommendation.
+- “NO_TRADE despite bearish view because expected room is too small” is a legitimate decision.
 
-Information has roles rather than equal votes. Structure/trend may organize direction and context; momentum may describe persistence or deterioration; levels/location may define geometry, obstacles and invalidation; participation may qualify price response; volatility may inform expected movement, uncertainty and risk; liquidity/flow may influence timing, executability and sometimes scenario updates. Temporal, derivatives and external context enter only with a sourced mechanism and point-in-time data.
+Unobservable claims about hidden intent or institutional behavior must never be recorded as facts.
 
-Group equivalent transforms under their underlying concept. Multiple trend formulas cannot manufacture independent confirmation. Do not start with a universal weighted score, black-box regime router or LLM making runtime decisions. Begin with transparent state, scenarios and bounded rule tables. Explanations are rendered from structured evidence and state transitions, not invented after outcomes.
+The observable market state may describe, where justified: structure, trend/persistence, momentum, volatility, location relative to causally identified levels, participation, liquidity, trustworthy order-flow context, temporal context, derivatives context, external context and data quality. Every state item has a horizon, provenance and freshness. Different horizons may disagree without contradiction. Missing input is not neutral evidence.
 
-The MarketView is intentionally richer than the set of trade playbooks. The trader may understand a bearish, bullish, balanced or transitional market while still having no worthwhile trade.
+Maintain competing scenarios rather than one unconditional forecast. Each scenario should be explicit enough to evaluate later: supporting and opposing evidence, expected behavior, relevant horizon, expiry and observable invalidation/change conditions.
 
-## 4. Contracts and decision semantics
+Information has roles rather than equal votes. Multiple transforms of the same underlying information cannot manufacture independent confirmation. Do not begin with a flat vote, universal weighted score, black-box regime router or LLM making runtime decisions.
 
-Every published state includes the instrument, simulation/market time, information cutoff, input references, engine/configuration versions and validity/freshness status.
+The MarketView is intentionally richer than the set of trade opportunities. The system may understand the market well while still returning NO_TRADE.
 
-`MarketView` contains horizon-specific state, scenario ordering, uncertainty, relevant levels, expected response and the observations that would change the view. Begin with explicitly qualitative confidence. A numeric score is not a probability. Publish probabilities, return estimates or intervals only after target definition and calibration evidence exist.
+## 4. Product decision semantics
 
-`TradePlan` contains scenario/thesis reference, direction, eligibility, trigger, invalidation, exit logic, expiry, size constraints and cost assumptions. A plan is not an order.
+Every published state/recommendation includes:
 
-`Decision` records proposed action, permitted action, blocking reasons and current exposure. While flat, LONG, SHORT and NO_TRADE are legitimate outputs. While exposed, HOLD, REDUCE and EXIT are explicit management states. A directional market view does not require a trade.
+- instrument/market context;
+- market/simulation time;
+- information cutoff;
+- input/dependency references;
+- engine/configuration versions;
+- validity/freshness;
+- source/model limitations relevant to the conclusion.
 
-Risk policy independently limits exposure, intended loss, accumulated loss and operational uncertainty. No confidence estimate can override hard limits. Exposure must not exceed 1x account equity in V1 paper operation. Before evidentiary paper operation, the Director freezes numeric simulation risk budgets and shutdown rules. Stop prices do not guarantee exact loss caps through discontinuous price moves.
+### MarketView
 
-Account, order and fill records distinguish desired exposure, approved quantity, submitted order, partial/full fill, rejection, cancellation, balance/collateral, position and realized/unrealized P&L. Perpetual-specific economics such as fees, funding and contract mark/index behavior must be explicitly modeled before real-market evidence is trusted. Missing economics or unsafe data can block new exposure without erasing the last valid market view.
+`MarketView` represents the current professional interpretation of the market. It should eventually contain, as justified by the trader specification:
 
-## 5. Components and technical shape
+- horizon-specific state;
+- competing scenarios;
+- directional/structural bias where appropriate;
+- relevant levels/locations;
+- uncertainty;
+- expected response;
+- what would confirm or contradict the current interpretation;
+- what would change the view.
+
+Begin with qualitative confidence. A numeric score is not a probability. Publish probabilities, return estimates or calibrated intervals only after the prediction target and calibration evidence exist.
+
+### TradeOpportunity / TradePlan
+
+A trade opportunity/plan represents a professional market opportunity, not account sizing.
+
+It may contain:
+
+- thesis/scenario reference;
+- LONG or SHORT direction;
+- eligibility;
+- trigger / entry condition or entry zone;
+- invalidation condition/price;
+- target(s) or expected destination/room;
+- expected time horizon / expiry;
+- management logic if part of the professional method;
+- reasons to abstain;
+- execution/cost viability assumptions when relevant.
+
+It must **not** require the product to choose:
+
+- account percentage;
+- leverage;
+- contract quantity;
+- collateral allocation;
+- user-specific portfolio risk.
+
+### Recommendation / Decision
+
+While no recommendation is active, LONG, SHORT and NO_TRADE are legitimate outputs.
+
+A directional MarketView does not require a trade recommendation.
+
+If an opportunity is active, the system may update its recommendation when the thesis evolves, for example HOLD, TAKE_PARTIAL/REDUCE, EXIT or INVALIDATED, but these states refer to the **trade thesis/recommendation**, not to autonomous account management.
+
+A recommendation must remain understandable even if the Owner chooses not to execute it.
+
+## 5. Causal market architecture
 
 Use a modular monolith:
 
-- Python domain engine and backend.
+- Python domain/reasoning engine and backend.
 - FastAPI application API.
 - React/TypeScript web UI.
 - PostgreSQL operational persistence.
 - Immutable Parquet market/run artifacts.
 - Docker Compose for the local application.
 
-Share the same Python engine package between API-facing runtime, replay and worker processes. There must not be a second research implementation with different decision semantics.
+The long-lived market boundary is:
+
+**immutable market evidence → causal availability feed / event clock → centrally owned observable market state → professional reasoning → MarketView / scenarios / trade recommendation**
+
+The trader does not read raw datasets directly.
+
+Heterogeneous source events update one observable state. At a decision point, the professional reasoning layer receives a point-in-time snapshot plus the causally available changes/history it is allowed to know.
+
+This preserves asynchronous sources without forcing them into one flat synchronized feature row and without making each reasoning module reimplement ordering, gaps, revisions and freshness.
 
 Core responsibility boundaries:
 
 | Component | Responsibility |
 |---|---|
-| Data adapters/catalog | Ingest, validate, timestamp, version and expose available observations. |
-| Trader engine | Update observations, market state, scenarios and plans; no UI/database dependency. |
-| Risk/account/execution | Enforce limits, manage orders/positions, simulate fills and reconcile economics. |
+| Data adapters/catalog | Ingest, validate, timestamp, version and preserve market evidence. |
+| Causal feed / availability clock | Deliver source evidence according to recorded or explicitly modeled availability. |
+| Observable market state | Maintain typed family-specific current state, history, freshness, coverage, missingness and descriptive measurements. |
+| Professional reasoning | Interpret observable state into MarketView, scenarios, predictions and trade opportunities. |
+| Recommendation policy | Decide LONG / SHORT / NO_TRADE and manage the life of an active recommendation/thesis. |
+| Evaluation harness | Evaluate prediction quality, opportunity quality and realistic trade outcomes without choosing the Owner's capital allocation. |
 | Run worker | Own clocks, ordered event processing, durable jobs, checkpoints and recovery. |
 | API/projections | Accept commands and expose snapshots, history, progress and artifacts. |
-| Web application | Home, replay, runs and understandable inspection/control. |
-| Evaluation | Score views, decisions, execution and economics from immutable records. |
+| Web application | Home, replay, runs, data and understandable inspection/control. |
 
-Initially use PostgreSQL-backed jobs with leases/heartbeats and idempotent processing. Do not introduce Redis, a distributed broker or microservice fleet without a measured need. Keep a durable append-only decision/order journal plus checkpoints without imposing full event sourcing on every table. Use server-sent events for live UI updates with snapshot recovery.
+PostgreSQL-backed jobs, leases, heartbeats, idempotent processing, immutable artifacts and replay controls from the accepted shell remain valid infrastructure.
 
-The browser never owns a running job. Long runs belong to the application's worker. Optimize measured bottlenecks only; performance changes must preserve causal semantics.
+## 6. Causality, clocks and price roles
 
-## 6. One trader, different clocks
+Historical replay and live observation must share the same market-state/reasoning semantics. Only the source/clock adapter changes. Replay speed must not change the view or recommendation.
 
-Real-time paper and historical replay use the identical engine, risk and accounting logic. Only the clock, event source and execution adapter differ. Simulation speed must not change decisions.
+Track at least:
 
-Track event time and availability time separately. Never backfill revised information into historical decisions. Define warm-up, tie ordering, gaps, duplicate events and late arrivals. Future outcomes enter evaluation only after they mature.
+- market/event/economic time;
+- availability/knowledge time;
+- retrieval/recording/provenance time;
+- deterministic processing order.
 
-The product is intraday/short-duration, but do not freeze an arbitrary holding-period constant at foundation level. Exact market-view cadences, horizons and trade expiry rules belong to the first real-trader specification after the operational shell and data/execution layer exist. Broader context may be slower than the trade horizon.
+Nothing with an availability time after a decision's information cutoff may influence that decision.
 
-Initial historical execution may be conservative bar-based simulation, but it must not pretend candle data provides queue/depth fidelity. No fill may occur from information unavailable at decision time. Passive touch does not automatically imply fill. Fee, spread, slippage, delay, funding and ambiguous within-bar ordering assumptions must be explicit and stressable. Higher-fidelity simulation is justified only by higher-fidelity data.
+Use actual recorded receipt order/timing where available. Historical data with unknown publication latency uses an explicit versioned availability policy; modeled timing is never presented as measured fact.
 
-Persist inputs and versions so a recorded paper session can reproduce its pre-execution decisions in replay. Replay never mutates the original run.
+Traded price, mark price, index price and funding information retain explicit identities and must never be silently substituted.
 
-## 7. Knowledge becomes behavior
+General roles:
 
-Preserve supplied dossiers unchanged. Maintain a compact source registry and a concept catalog, not an indicator shopping list.
+- **traded price / OHLC / typed volumes:** primary evidence of what traded; market reading; later trade-outcome reference where defensible;
+- **mark price:** derivative valuation/reference information and potentially derivatives context; not an execution price;
+- **index price:** external/reference benchmark and possible basis context; not an execution price;
+- **funding:** event/carry context; predictive interpretation requires separate evidence and historically available inputs.
+
+Missing/stale/invalid information invalidates only dependent conclusions where possible. It must not automatically erase unrelated valid parts of the MarketView.
+
+Invalid rows remain evidence for audit but cannot silently enter valid observable state.
+
+Higher-timeframe context derived from lower-timeframe data must preserve causal completion. A forming higher-timeframe bar must never masquerade as completed history.
+
+## 7. Trade-outcome and execution evaluation
+
+The product does not execute trades for the Owner, but recommendations must eventually be tested against realistic actionability.
+
+The evaluation harness may model:
+
+- when a recommendation became known;
+- when an order could first have been submitted/executed;
+- plausible entry/exit reference prices;
+- fees, spread/slippage and delay;
+- gaps and ambiguous intra-bar ordering;
+- whether targets/invalidation were reached;
+- normalized return / price movement / R-like outcomes;
+- sensitivity to reasonable execution assumptions.
+
+It must not model the Owner's personal account as if it were part of the algorithm.
+
+No recommendation may receive a historical fill from a price timestamped before the recommendation was known.
+
+One-minute OHLC cannot prove queue position, depth, passive fills or exact intrabar paths. When the available evidence cannot determine an execution outcome, preserve the ambiguity or use explicitly labeled alternative/stress scenarios rather than inventing precision.
+
+A normalized standard trade unit may be used for evaluation where needed. It is an evaluation convention, not a capital recommendation.
+
+Perpetual fees/funding/contract mechanics may be modeled when they materially affect the economic viability of a recommendation. They are trade-outcome costs, not account-sizing rules.
+
+## 8. Knowledge becomes behavior
+
+Preserve supplied dossiers unchanged. Maintain a compact source registry and concept catalog, not an indicator shopping list.
 
 Each concept records: source/section, evidence type and coverage, mechanism, role, observable inputs, availability/horizon, scope limits, correlated concepts, formalization, examples/counterexamples, failure conditions and evidence status.
 
@@ -119,126 +255,142 @@ Keep separate statuses for:
 - source-supported;
 - formalized;
 - behaviorally verified;
-- economically evaluated.
+- informationally evaluated;
+- economically evaluated where applicable.
 
-None implies the next. A textbook's authority cannot establish BTC profitability.
+None implies the next. A textbook's authority cannot establish BTC predictive value or trade usefulness.
 
-Translate only concepts required by the current work package. Link every implemented professional rule to its concept provenance and every test to the behavior being checked. Preserve unresolved source disagreements.
+Translate only concepts required by the current professional process. Link implemented professional rules to provenance and tests to intended behavior. Preserve unresolved source disagreements.
 
-## 8. Dummy application and long runs
+## 9. Dummy shell and Owner experience
 
-The dummy trader is disposable infrastructure scaffolding. It implements the real contracts with scripted deterministic behavior and is visibly labeled DEMO. It must exercise bullish, bearish, balanced/uncertain views; LONG, SHORT and NO_TRADE; plan activation; HOLD/REDUCE/EXIT; rejection; missing data and failure. Dummy returns/confidence are never research evidence.
+The existing dummy trader/account/risk/execution pieces are accepted **infrastructure scaffolding only**. They must not define the real product's capital-management semantics.
 
-Home should eventually show the BTC chart, current market view and changes, scenarios, permitted action and reasons, position/risk, data freshness and runtime health. Replay should be the same trader experience at historical time with play/pause/step/speed and event inspection. Runs must expose launch, cancel, status, phase, progress, elapsed time, heartbeat, failure explanation and resume where supported. ETA is shown only when defensibly estimable.
+Home should eventually show:
 
-Jobs survive browser closure. Worker failure becomes explicit recoverable/failed state with no silent duplicate accounting events. Each run produces a manifest, structured view/decision/order/fill records, equity series, validation results and a concise report. The UI and Director/executors read the same artifacts. Raw logs remain secondary debugging material.
+- live/current BTC market view;
+- what changed;
+- scenarios and expected behavior;
+- prediction/horizon;
+- LONG / SHORT / NO_TRADE recommendation;
+- conditional entry/trigger or entry zone;
+- invalidation;
+- targets / expected room;
+- reasons and opposing evidence;
+- what would change the view;
+- active recommendation/thesis status where relevant;
+- data freshness/limitations;
+- runtime health.
 
-## 9. Development sequence
+It should not require the product to tell the Owner how much money, leverage or collateral to use.
+
+Replay should be the same analyst/trader experience moving rapidly through historical time with play/pause/step/speed and event inspection.
+
+Long runs remain application-owned and durable. Raw logs remain secondary.
+
+## 10. Development sequence
 
 1. Foundation and workflow.
-2. Complete operational shell with deterministic dummy trader.
-3. Data and execution readiness for BTC perpetual paper operation.
-4. First coherent professional trader.
-5. Integrated development and validation.
-6. Frozen prospective paper evidence.
-7. Any future real-capital discussion only after explicit Owner authorization.
+2. Operational shell with deterministic dummy trader.
+3. Trustworthy market evidence and causal observable-state/replay substrate.
+4. First coherent professional market-reading/trade-decision specification.
+5. First real professional trader implementation.
+6. Integrated development and validation of market views, predictions and trade recommendations.
+7. Prospective advisory/paper-observation evidence.
+8. Any future real-capital or automation discussion only after explicit Owner authorization.
 
-Do not build all possible professional lenses before completing one coherent end-to-end trader. Add another playbook or information source only to resolve a documented limitation or required capability.
+Do not build all possible professional lenses before completing one coherent end-to-end trader.
 
-The operational/dummy shell remains the first implementation milestone. There is no concrete reason from the Foundation review to change this order.
+Add another playbook or information source only to resolve a documented limitation or required capability.
 
-## 10. Validation without indicator mining
+## 11. Validation without indicator mining
 
-Use three distinct questions:
+Use separate questions:
 
 1. Does the software implement the intended professional process?
-2. Does the market assessment contain useful information?
-3. Does the selective trading policy produce useful net outcomes?
+2. Does the MarketView/prediction contain useful information?
+3. Does the recommendation policy identify worthwhile LONG/SHORT opportunities and abstain appropriately?
+4. Are recommended opportunities still worthwhile under realistic execution/cost assumptions?
 
-Develop on declared development data and a case library containing favorable, adverse, ambiguous and no-opportunity episodes. Include synthetic cases for causal and operational invariants. Mask future outcomes while assessing historical reasoning. These cases test process fidelity, not profitability.
+Do not evaluate success by account growth from an arbitrary portfolio-sizing scheme.
 
-Before a research run, record the question, mechanism, changed behavior, bounded alternatives, data exposure, metrics, falsification conditions and stopping rule. Retain unsuccessful and abandoned trials. A coding bug may be fixed immediately; one losing trade is not by itself a reason to redesign a model.
+Useful evaluation may include:
 
-Permit source-grounded development and limited calibration, while keeping protected evaluation materially less adaptive. Once evaluation results influence redesign, that interval becomes exposed evidence and cannot independently certify the successor. Prospective paper evidence remains a stronger evidence class.
+- direction and scenario outcome;
+- target/invalidation behavior;
+- expected-vs-observed response;
+- time-to-resolution;
+- excursion/adverse excursion;
+- recommendation hit/quality metrics once formally defined;
+- abstention quality;
+- normalized trade return / expectancy;
+- execution/cost sensitivity;
+- concentration and regime slices;
+- missed/avoided-opportunity diagnostics.
 
-Evaluate market views at scheduled timestamps including NO_TRADE periods. Evaluate trade policy separately using net expectancy, returns, drawdown/time underwater, turnover, exposure, cost/funding sensitivity, tails, concentration and predefined missed/avoided-opportunity diagnostics. Compare compatible baselines without turning baselines into the objective.
+Develop on declared development data and bounded case libraries with favorable, adverse, ambiguous and no-opportunity episodes. Mask future outcomes during reasoning review.
 
-Use chronological checks, overlap-aware safeguards where necessary, dependence-aware uncertainty, regime slices, cost/delay stress and nearby-parameter sensitivity. Many overlapping forecasts are not independent observations.
+Before a research run, record the question, mechanism, changed behavior, bounded alternatives, data exposure, metrics, falsification conditions and stopping rule. Retain unsuccessful and abandoned trials.
 
-Ablate a component only against its claimed role in the complete trader. A liquidity gate does not need to be profitable as a standalone strategy. DSR/PBO and related methods are diagnostics when their assumptions fit; they are never universal pass scores or optimization targets.
+Protected evaluation and prospective evidence remain distinct from development evidence.
 
-Promotion requires causal correctness, intended behavior, operational reliability and criteria fixed before protected evaluation. “Insufficient evidence” is a valid result. Separate risk suspension from scientific conclusion that a mechanism has died.
+## 12. Repository and workflow
 
-## 11. Minimal repository and working state
+Use:
 
-Use only what current work needs:
-
-- `FOUNDATION.md`: this accepted directive; sole architectural/governance authority.
+- `FOUNDATION.md`: canonical product, architecture and research directive.
 - `README.md`: startup, operation and repository navigation.
 - `AGENTS.md`: reading order, executable checks, clean-room boundary and executor limits.
-- `STATE.md`: accepted commit, milestone, active task, blockers and next action.
+- `STATE.md`: accepted state, milestone, active task, blockers and next action.
 - `source_notes/`: immutable professional source dossiers.
-- `knowledge/registry.yaml` and later `knowledge/concepts/`.
-- `task.md`: the single active executor handoff. The Director rewrites it after each review; completed task history lives in Git history and `STATE.md`.
-- `src/`, `web/`, `tests/`, `infra/` as implementation begins.
-- `research/` when research cases/data splits/trial ledger become necessary.
+- `knowledge/registry.yaml` and `knowledge/concepts/` as needed.
+- `strategic_reviews/`: major advisory reviews and Director dispositions.
+- `task.md`: exactly one active executor handoff.
+- `src/`, `web/`, `tests/` and later `research/` as needed.
 
-Keep large market data and run artifacts outside Git in durable volumes with immutable IDs/hashes; keep manifests and retrieval references in the product. Pin dependencies, datasets, configurations and random seeds when they become executable inputs. CI verifies contracts, causal invariants and the runnable smoke path.
+Keep large market data and run artifacts outside Git in durable volumes with immutable IDs/hashes.
 
-Do not create overlapping mission documents or an empty governance bureaucracy.
+The Director maintains exactly one active implementation handoff. Executors implement only the active task, test, commit and push normally. The Director independently reviews remote diff, CI and evidence before acceptance.
 
-## 12. Director–executor workflow
-
-The Director maintains exactly one active implementation handoff in `task.md`. Before each executor run, the Owner pulls the latest repository. The executor reads `FOUNDATION.md`, `STATE.md`, `AGENTS.md` and `task.md`, implements only that task in the Owner's local checkout, then commits and pushes the completed task unless `task.md` explicitly says otherwise. The executor must never force-push, rewrite shared history or push unrelated local changes.
-
-A second executor may independently review consequential engine/data/risk changes when explicitly tasked. Executors do not choose product direction, redesign research, or weaken acceptance criteria to make work pass.
-
-After each executor push, the Owner only needs to relay the executor's completion report. The Director inspects the remote diff, CI and evidence directly, independently checks material assumptions, accepts the work or rewrites `task.md` with corrections/next work, and updates `STATE.md`. A self-reported PASS is insufficient.
-
-Escalate to the Owner only for product intent, material scope/cost, UX preference that meaningfully changes the product, or any capital authorization.
-
-Hours-scale work belongs to the application worker once available, not a hidden agent shell.
+Escalate to the Owner for product intent, material scope/cost, UX preferences that materially change the product, or capital/automation authorization.
 
 ## 13. Explicitly outside initial product scope
 
-- real-money orders or capital;
-- leverage above 1x exposure;
+- autonomous real-money orders;
+- autonomous position sizing;
+- autonomous leverage choice;
+- autonomous collateral/margin allocation;
+- account-level portfolio optimization;
 - assets other than BTC;
-- multiple simultaneous portfolio positions;
-- HFT/market making/institutional smart routing;
+- HFT / market making / institutional smart routing;
 - pretending order-book reconstruction from candles;
 - autonomous strategy self-modification;
 - online weight optimization;
 - unrestricted parameter sweeps;
-- LLM runtime trading decisions;
+- runtime LLM trading decisions;
 - unsourced cyclical or retracement rules;
 - multi-user SaaS;
 - distributed compute infrastructure.
 
-Perpetual futures paper execution and SHORT are explicitly inside scope. Their market mechanics must be modeled before economic evidence is trusted.
+SHORT recommendations and BTC perpetual analysis are explicitly inside scope.
 
-## 14. First work package after acceptance
+A future user may manually execute recommendations with any capital/leverage choices they independently make. Those choices are outside the algorithm's recommendation semantics.
 
-**WP-001: Repository bootstrap and one observable dummy run.**
+## 14. Accepted-work interpretation
 
-Preserve the dossiers. The active executor brief is maintained in `task.md`. Add minimal project instructions/state, provenance registry, pinned toolchain, CI and the first semantic contracts. Implement one synthetic deterministic BTC-perpetual stream, one scripted dummy trader, a minimal risk/account skeleton, durable job execution, artifact persistence and a thin Home/Run interface. This is infrastructure, not the real trader.
+WP-001, WP-002 and WP-003 remain accepted within their original bounded purposes.
 
-Acceptance requires:
+In particular:
 
-1. One documented startup command opens the local application.
-2. The Owner can start a synthetic replay from the UI and see market/simulation time, dummy MarketView, action/reason and progress.
-3. The deterministic fixture demonstrates at least LONG, SHORT and NO_TRADE and one position-management transition.
-4. Closing/reopening the browser preserves job state/results.
-5. A controlled worker interruption produces visible recovery/failure behavior without duplicate accounting events.
-6. Repeating the same pinned run reproduces the semantic event trace; replay speed does not alter decisions.
-7. Completion and cancellation leave inspectable manifests and structured artifacts through the UI/API.
-8. CI checks core contracts/accounting and an end-to-end smoke path.
-9. No real professional trading rule, BTC profitability claim, optimizer, real market connectivity or live-order connectivity enters WP-001.
-
-After WP-001 acceptance, the next work package continues the operational shell and failure paths before real trader intelligence begins.
+- the durable application shell, worker, checkpoints, replay controls, UI and artifact infrastructure remain valuable;
+- `algotrader.semantic.v1` remains a frozen synthetic-shell baseline, not the final professional trader contract;
+- the dummy account/risk/order/fill path remains DEMO scaffolding and must not constrain the real trader;
+- `algotrader.marketdata.v1` remains the accepted immutable evidence baseline for the initial OKX data;
+- no accepted dummy P&L, account quantity, 1x rule or execution placeholder is project direction for the real trader.
 
 ## Revision history
 
+- 2026-09-30 — **v2.0 product-scope correction after Owner clarification and SR-001 reviews.** The product is a professional BTC market-analysis and trade-decision system. Capital allocation, leverage, account sizing and autonomous execution are explicitly Owner/human responsibilities. Accepted shell/account scaffolding remains DEMO only. Architecture refocused on causal market evidence, observable state, prediction, trade recommendation and normalized outcome evaluation.
 - 2026-09-29 — v1.2 workflow clarification: executors commit and push completed bounded tasks; Owner relays the report; Director reviews the remote repository/CI and rewrites `task.md`.
 - 2026-09-29 — v1.1 workflow clarification: one active `task.md`; Owner handled pull/push; superseded by v1.2.
-- 2026-09-29 — v1.0 accepted after Owner decisions: BTC perpetual paper execution; LONG/SHORT/NO_TRADE; no leverage (1x exposure cap); short-duration minutes-to-hours trading; broader horizons permitted for context.
+- 2026-09-29 — v1.0 initial accepted Foundation; superseded where inconsistent with v2.0 product clarification.

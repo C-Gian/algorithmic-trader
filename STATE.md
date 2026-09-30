@@ -4,107 +4,160 @@ Updated: 2026-09-30
 
 ## Authority
 
-Canonical directive: `FOUNDATION.md`
+Canonical directive: `FOUNDATION.md` — version 2.0.
 
-## Accepted product scope
+## Corrected accepted product scope
 
-- BTC only.
-- Paper execution instrument: BTC perpetual futures.
-- Actions: LONG / SHORT / NO_TRADE; HOLD / REDUCE / EXIT while exposed.
-- No leverage above 1x account-equity exposure.
-- Intended trade duration: minutes to hours, not days.
-- Research/paper only; no real capital.
+Algorithmic Trader is a **BTC market-analysis and trade-decision system**, not an autonomous account-management/trading bot.
+
+The system must:
+
+- maintain a current professional MarketView;
+- state plausible/primary scenarios and expected market behavior;
+- decide LONG / SHORT / NO_TRADE;
+- when a trade exists, expose trigger/entry logic, invalidation, target(s), expected room/time and reasons;
+- keep market understanding distinct from trade recommendation;
+- update the view/recommendation as the market evolves.
+
+The human Owner independently decides:
+
+- capital allocation;
+- position size;
+- leverage;
+- collateral/margin;
+- actual order placement;
+- personal portfolio/account risk.
+
+Those choices are outside the algorithm's recommendation semantics.
 
 ## Current milestone
 
-**M3 — Data and execution readiness for BTC perpetual paper operation**
+**M3 — Trustworthy real-market observation and causal reasoning readiness**
 
-The operational/dummy shell and the first source-auditable BTC-perpetual market-data pipeline are accepted.
+The operational shell and source-auditable OKX market-data evidence layer are accepted.
 
-Before the next implementation package, the project is at a strategic architecture checkpoint: real market data must be connected to replay/trader/execution semantics without carrying the synthetic engine's quantity/accounting assumptions into the real perpetual system.
+The next objective is to create the long-lived causal boundary:
+
+**market evidence → availability feed → observable market state → later professional reasoning**
+
+No real professional trader intelligence enters M3 yet.
 
 ## Accepted work
 
-### WP-001 — Repository bootstrap and one observable dummy run
+### WP-001 — Repository bootstrap and observable dummy run
 Accepted implementation lineage:
 - `92014aa03060332b4c947ef10329b79cde7d51b2`
 - CI correction `a49c0f75be7d9d885c65901c9cc73f3ed3a66a99`
 
-### WP-002 — Complete replay/operations shell and freeze semantic contracts
+The dummy account/risk/order/fill path remains DEMO infrastructure scaffolding only.
+
+### WP-002 — Replay/operations shell and semantic baseline
 Accepted implementation:
 - `803b3f215c5a33499a4d901ae000ee112b75e691`
 
-Accepted outcomes include durable replay control, restart recovery, runtime visibility and frozen `algotrader.semantic.v1`.
+Accepted outcomes include durable replay controls, restart recovery, runtime visibility and frozen `algotrader.semantic.v1`.
 
-### WP-003 — OKX BTC-USDT-SWAP public data provenance and bounded historical dataset
+`algotrader.semantic.v1` is the synthetic-shell baseline, not the final professional trader contract.
+
+### WP-003 — OKX BTC-USDT-SWAP public data provenance
 Accepted implementation:
 - `6b45728074e470bb85b06cce1995dad90f81cb62`
 
 Acceptance evidence:
 - GitHub Actions run `36688980492`: SUCCESS;
-- `checks`: SUCCESS, including all existing tests and market-data/API/UI tests;
+- `checks`: SUCCESS;
 - `compose-smoke`: SUCCESS;
-- Director verified the E2E data view and immutable provenance/hash behavior;
-- live public OKX integration succeeded on both `https://www.okx.com` and `https://eea.okx.com`;
-- `algotrader.marketdata.v1` is separate from and does not mutate `algotrader.semantic.v1`;
-- event time, modeled availability time and retrieval time remain distinct;
-- incomplete candles are rejected and gaps/duplicates are surfaced without silent repair.
+- live public OKX integration succeeded;
+- `algotrader.marketdata.v1` remains separate from semantic contracts;
+- event, modeled availability and retrieval time are distinct;
+- incomplete/invalid/gap/duplicate evidence is surfaced without silent repair.
 
-Accepted WP-003 interpretations:
-- the current `dataset_id` identifies an acquisition/evidence package, not a claim of unique economic content; different base URLs or pagination choices may therefore yield different package IDs;
-- funding `available_time = funding_time` is a labeled causal modeling policy, not a measured historical publication timestamp and not evidence that the rate was known earlier;
-- conflicting duplicate records are conservatively excluded from normalized usable data while their raw source evidence is retained;
-- rows marked `INVALID` remain evidence but must be blocked/excluded by default from real replay consumption;
-- `state != live` is a warning for historical acquisition, not automatic invalidation;
-- the 31-day acquisition cap is a WP-003 operational bound, not a research horizon;
-- live datasets created from a `-dirty` code version are integration evidence only, not canonical research datasets.
+Accepted WP-003 interpretations remain unchanged.
 
-## Initial M3 market-data source
+## SR-001 strategic review
 
-Public/read-only reference source: **OKX `BTC-USDT-SWAP`**.
+Inputs retained:
+
+- `strategic_reviews/ASTRA-SR-001-REVIEW.md`
+- `strategic_reviews/CLAUDE-SR-001-REVIEW.md`
+
+Both were useful. Astra is the primary strategic reviewer; Claude is retained as a secondary independent/technical review.
+
+Director disposition:
+
+`strategic_reviews/SR-001-DIRECTOR-DISPOSITION.md`
+
+The Owner clarified after both reviews that account sizing, leverage and capital allocation are human responsibilities. Foundation v2.0 supersedes inconsistent Foundation v1.x language.
+
+Accepted SR-001 architecture:
+
+- heterogeneous causal events;
+- centrally owned observable market state;
+- per-channel freshness/quality;
+- explicit event/availability/retrieval times;
+- role-specific traded/mark/index/funding information;
+- replay/live parity;
+- no raw dataset access from professional reasoning;
+- no bar-indexed assumption as the long-lived engine boundary.
+
+Rejected as product requirements:
+
+- autonomous 1x account-equity control;
+- leverage selection;
+- position sizing;
+- margin/collateral management;
+- full perpetual account/liquidation modeling.
+
+Trade execution/cost mechanics remain relevant only when needed to fairly evaluate a concrete recommendation.
+
+## Contract strategy
+
+Keep frozen:
+
+- `algotrader.semantic.v1` — synthetic shell;
+- `algotrader.marketdata.v1` — market evidence.
+
+Next introduce:
+
+- provisional `algotrader.feed.v1` — causal deliveries and observable-state contracts.
+
+Do **not** introduce `semantic.v2` until the first real professional trader specification is designed.
+
+## Initial market-data source
+
+Public/read-only reference source:
+
+**OKX `BTC-USDT-SWAP`**
 
 Source decision:
 `knowledge/market_sources/OKX-BTC-USDT-SWAP.md`
 
-This is not a real-money broker selection. No authenticated account or order endpoint is authorized.
+This is a data/reference source choice, not a broker or automated-execution decision.
 
-## Active implementation task
+## Active task
 
-**None — strategic review checkpoint SR-001.**
+**WP-004 — Causal feed and observable market state pure core**
 
-Do not run Claude Code against the old WP-003 task.
-
-Review brief:
-`strategic_reviews/SR-001-PRE-REAL-TRADER-ARCHITECTURE.md`
+See `task.md`.
 
 ## Base knowledge snapshot
 
 `3bf9de0d88fd97360bff7a6517bbb61544f5db68` — professional dossiers only.
 
-## Why implementation is paused
+## Parallel pre-trader research gaps
 
-The current dummy engine still contains synthetic scaffolding that must not be silently generalized:
+Before the first real professional trader specification, the Director must resolve only what the chosen trader actually requires, especially:
 
-- its replay input is a synthetic `Fixture`;
-- its primary semantic observation is a single OHLCV `MarketObservation`;
-- account quantity is effectively treated as BTC units;
-- mark price is the last synthetic traded close;
-- funding is not modeled;
-- fee/slippage values are DEMO placeholders;
-- market orders use a deliberately simplified next-bar-open fill.
+1. professional intraday multi-timeframe context → trigger → invalidation → target/management process;
+2. causal structure/levels/support-resistance formalization;
+3. venue/data mechanics required by that process.
 
-Real OKX linear perpetual semantics instead involve explicit contract units, contract value, mark/index/traded price roles and funding events.
-
-The next architecture determines the long-lived boundary among:
-
-**market-data evidence → causal event/replay source → professional trader inputs → risk → account/perpetual accounting → execution simulation**
-
-This is a high-cost-to-reverse decision and is therefore reviewed by Astra before implementation.
+Broad literature collection, cycle theory, retracement ratios, order flow/L2 and liquidation-flow interpretation are not automatic prerequisites.
 
 ## Next action
 
-Owner sends SR-001 to the Astra strategic-review chat.
+Owner pulls latest `main` after the Director merges this scope correction.
 
-The Project & Research Director then reviews Astra's conclusions, accepts/rejects them explicitly, updates the Foundation/architecture only if warranted, and writes the next bounded Claude Code task.
+Claude Code then implements only WP-004 from `task.md`.
 
-No real trader logic is implemented before that review.
+After WP-004 acceptance, the expected next package is observation-only real replay plus prospective public receipt-time recording. No professional trader logic is introduced before a later trader-design checkpoint.
