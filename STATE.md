@@ -130,9 +130,32 @@ Source decision:
 
 This is a data/reference source choice, not a broker or automated-execution decision.
 
+## WP-005 review status
+
+Implementation under review:
+- `3dc890392223ea2634bda8b0c975b2c99c5ddc33`
+
+Verified by Director:
+- one fast-forward implementation commit over `de5f3cf970f4791ee4cd4ab6c170c3099ee824a0`;
+- GitHub Actions run `36712746921`: `checks` SUCCESS and `compose-smoke` SUCCESS;
+- frozen `algotrader.semantic.v1`, `algotrader.marketdata.v1` and provisional `algotrader.feed.v1` schema blobs are unchanged;
+- recorder contracts are separate as provisional `algotrader.recorder.v1`;
+- append-only journal, crash finalization, receipt-time semantics, first-completed-bar bridge, funding separation and durable recorder job/UI are materially consistent with WP-005;
+- current official OKX documentation supports the public/business WebSocket separation, candlestick channels, funding-rate public channel, system-time endpoint and regional OKX domains.
+
+One blocking correction remains before acceptance:
+
+**source authority validation**.
+
+The recorder currently validates URL scheme/path but does not validate that the configured host is actually an official OKX domain. The API accepts endpoint overrides, so a non-OKX HTTPS/WSS host could produce a session whose manifest still says `source="okx"`. Plain `ws://` is also currently accepted.
+
+The same source-authority weakness exists in the historical OKX public client: its configurable REST base URL validates HTTPS shape but not OKX host authority.
+
+This is a provenance/research-integrity issue, not a recorder-mechanics redesign.
+
 ## Active task
 
-**WP-005 — Prospective OKX public live recorder and measured receipt-time evidence**
+**WP-005-R1 — Enforce official OKX source authority**
 
 See `task.md`.
 
@@ -149,11 +172,12 @@ This evidence only accumulates prospectively, so recording starts before the obs
 
 ## Known non-blocking technical follow-ups
 
-- WP-003 instrument parsing currently maps numeric `ctMult=0` through a fallback to 1; this should be hardened before any future use of multiplier semantics.
+- WP-003 `ctMult` zero/missing hardening was completed in WP-005.
 - WP-004 does not establish expected funding-settlement completeness.
 - current feed freshness defaults are inspection-only.
+- the WP-005 live completion report prose said a host clock ahead by ~0.26 s implied true delays were longer than raw delays; the implemented calculation is the opposite and is correct: with `offset = server - local < 0`, adjusted delay is lower than raw. This was a report-description mistake, not a code defect.
 
-None blocks public receipt-time recording.
+None of these blocks WP-005-R1.
 
 ## Base knowledge snapshot
 
@@ -169,8 +193,8 @@ Before the first real professional trader specification, resolve only what the c
 
 ## Next action
 
-Owner pulls latest `main` after this acceptance package is merged.
+Owner pulls latest `main`.
 
-Claude Code then implements only WP-005 from `task.md`.
+Claude Code implements only WP-005-R1 from `task.md`.
 
-After WP-005 acceptance, the next expected package is durable observation-only real replay/UI integration using the accepted feed/state core and recorded-session evidence.
+After the narrow source-authority correction passes Director review, WP-005 can be accepted without repeating the full recorder implementation. The next expected package is durable observation-only real replay/UI integration using the accepted feed/state core and recorded-session evidence.
