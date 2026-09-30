@@ -149,13 +149,38 @@ Public/read-only reference source:
 
 Official-source validation now applies to both historical acquisition and prospective recording.
 
+### WP-006 — Product-grade application UI redesign
+Accepted implementation:
+- `18242cd39ac9d530a572b3aee962dbc0fdca0d33`
+
+Acceptance evidence:
+- one fast-forward implementation commit over `aefb88c76a81424694c8a3cea05e24f901a3162e`;
+- GitHub Actions run `36724278731`: `checks` SUCCESS and `compose-smoke` SUCCESS;
+- backend/domain code and public contracts were not modified;
+- Market is now the default product cockpit and reads only real operational/evidence endpoints;
+- synthetic DEMO output is isolated in Replay Lab and cannot populate Market;
+- real / synthetic / pending visual materials make implementation truth explicit;
+- Data and Recorder are first-class product workspaces;
+- synthetic account scaffolding is demoted to DEMO internals;
+- E2E covers default Market landing, navigation/deep links, no synthetic leakage, preserved replay/data/recorder behavior and desktop overflow;
+- executor visually reviewed/refined 1440×900, 1920×1080 and 1024×768.
+
+Accepted UI direction:
+- premium dark decision-desk shell;
+- Market reserved for the eventual professional MarketView / scenario / recommendation output;
+- Replay Lab separates real observation replay from synthetic DEMO scaffolding;
+- Data and Recorder remain evidence/operations surfaces, not trader intelligence.
+
+Non-blocking follow-up:
+- global shell health currently degrades for missing run workers but not missing recorder workers; real-replay integration should make the global operational verdict capability-aware rather than imply every subsystem is healthy.
+
 ## Active task
 
-**WP-006 — Product-grade application UI redesign**
+**WP-007 — Durable real-market observation replay and observable-state integration**
 
 See `task.md`.
 
-This task is intentionally scheduled before real replay integration because the UI is the Owner's primary observation/control instrument and the current shell does not meet the required product-quality standard.
+This is the final M3 integration package before the next strategic professional-trader design checkpoint. It must connect accepted real evidence through the accepted causal feed/state core into the durable application experience without introducing interpretation or recommendations.
 
 ## UI product direction
 
@@ -171,15 +196,19 @@ The redesigned information architecture should make the product hierarchy clear:
 
 The synthetic account/position path is DEMO scaffolding and must not dominate the main product experience.
 
-## What comes after WP-006
+## What comes after WP-007
 
-Expected next package:
+If WP-007 is accepted, M3 has the required observation/replay substrate:
 
-**WP-007 — Durable observation-only real replay and observable-market-state integration**
+**real evidence → causal deliveries → centrally owned observable state → durable replay/product visibility**
 
-That package will wire accepted historical/recorded evidence through `feed.v1` / observable state into the durable worker and UI without introducing professional trader intelligence.
+The next action is a strategic professional-trader design checkpoint before any real trader implementation.
 
-After M3 observation/replay readiness, the Director will run the next strategic trader-design checkpoint before `semantic.v2` and the first real professional trader.
+# 🚨🚨🚨 QUESTO VA MANDATO AD ASTRA 🚨🚨🚨
+
+That checkpoint will define the first coherent professional market-reading and trade-decision process and the semantics that justify `semantic.v2`.
+
+Do not implement the professional trader before that checkpoint.
 
 ## Known non-blocking technical follow-ups
 
@@ -204,6 +233,6 @@ Before the first real professional trader specification, resolve only what the s
 
 Owner pulls latest `main`.
 
-Claude Code executes only WP-006 from `task.md`, using its front-end design capability/skill as explicitly required by that task.
+Claude Code executes only WP-007 from `task.md`.
 
-After WP-006 completion, the Director independently reviews product quality, behavior preservation, screenshots and CI before acceptance.
+After WP-007 completion, the Director independently reviews causal correctness, restart/idempotency, real-vs-synthetic separation, UI evidence and CI. If accepted, the project moves to the Astra strategic trader-design checkpoint rather than directly coding trader intelligence.
