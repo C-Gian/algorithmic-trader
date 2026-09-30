@@ -18,11 +18,13 @@ The desired live lens cockpit, full advisory backtest, compact copy report, repo
 
 ## Current work and next action
 
-**Director replan under Foundation v3.0.** See task.md for the single current handoff.
+**PAUSED BY OWNER before the Director issues the next implementation package.**
 
-The Director must replace the old RP-001-only workflow with bounded vertical implementation packages: app launch/report/data usability in parallel with a concise integrated process specification, then complete real advisory behavior and Owner-run evaluation. No new strategic checkpoint is required merely to make this plan.
+The Owner asked the Director to review RP-001 and perform only the necessary closure/record-keeping work, then wait for a further Owner clarification before proceeding.
 
-Codex/Claude must not resume the historical RP-001 mandate or launch long CLI backtests. Normal engineering checks remain authorized within future implementation tasks.
+No executor implementation task is active while this pause is in force.
+
+Codex/Claude must not resume the historical RP-001 mandate, start trader implementation, or launch long CLI backtests.
 
 ## Research retained, not governing
 
@@ -34,6 +36,17 @@ research/first_trader/cases/REAL-LABELING-PROGRESS.md reports:
 - known formatting issues in some frozen label YAML.
 
 These are bounded development findings, not a whole-history profitability/frequency estimate. Retain them to diagnose the translation; do not tune retrospectively to make these cases win. The old conventions and blanket deferrals of cycles/news/additional processes are not current constraints.
+
+Director review:
+- `research/first_trader/RP-001-DIRECTOR-REVIEW.md`
+- status: **CLOSED AS DEVELOPMENT EVIDENCE — NOT ACCEPTED AS PRODUCTION METHOD**;
+- the real-data acquisition is accepted as consistent with the predeclared historical RP-001 selection protocol;
+- the six-case freeze/reveal chronology was independently verified from Git history;
+- `REAL-G02.label.yaml`, `REAL-G03.label.yaml` and `REAL-G05.label.yaml` remain invalid YAML, but Foundation v3.0 requires frozen labels to remain byte-identical, so they will not be edited merely to satisfy the superseded RP-001 checklist;
+- the real cases exposed context lag, single-leg impulse blindness, DC-31 epoch lockout, geometry-floor overrestriction, a target-zone source gap and an unverified cost model;
+- six cutoffs are insufficient to estimate general call frequency or profitability.
+
+RP-001's useful causal/research patterns remain available for selective reuse. Its numeric conventions and pullback-only scope are not production defaults.
 
 ## Unmet product requirements for the next plan
 
