@@ -189,65 +189,108 @@ Public/read-only reference source:
 
 This is a market-evidence/reference decision, not an autonomous broker/execution decision.
 
-## Current strategic checkpoint
+## SR-002 disposition
 
-# 🚨🚨🚨 QUESTO VA MANDATO AD ASTRA 🚨🚨🚨
+Astra review:
+- `strategic_reviews/ASTRA-SR-002-REVIEW.md`
 
-**SR-002 — First Professional Trader Design**
+Director disposition:
+- `strategic_reviews/SR-002-DIRECTOR-DISPOSITION.md`
+
+Status:
+
+**ACCEPTED WITH MODIFICATIONS**
+
+The first professional trader candidate is now bounded to:
+
+**directional context → move/reaction assessment → conditional continuation opportunity → trigger → actionability → LONG/SHORT/NO_TRADE → reassessment**
+
+The initial actionable playbook is **continuation after a controlled pullback/reaction**, implemented for long and short.
+
+This is a candidate professional process, not a profitability claim and not the complete eventual trader.
+
+Accepted architectural direction:
+- separate versioned derived causal observation layer downstream of observable state;
+- typed dependency graph + hierarchical rules + small state machines;
+- no flat indicator voting;
+- MarketView broader than the actionable playbook;
+- causal structure/pullback boundaries/horizontal reference areas only at first;
+- trend/persistence, move/reaction momentum and one volatility scale have distinct roles;
+- volume is not required in the first decision path unless the bounded research establishes a non-redundant role;
+- mark/index/funding stay factual context initially;
+- no numeric confidence/probability initially;
+- scenario, opportunity, recommendation and advisory updates remain distinct;
+- one primary trigger/invalidation/target and one primary actionable thesis at a time for the first release.
+
+Not yet frozen:
+- exact 1h/5m/1m permanence;
+- 120-minute forecast horizon;
+- swing thresholds;
+- zone widths;
+- variability windows;
+- trigger construction;
+- entry band;
+- geometry floor;
+- expiry/deadline values;
+- exact NO_TRADE enum.
+
+`semantic.v2` remains prohibited until the formalization research closes.
+
+## Active research task
+
+**RP-001 — First Professional Trader Formalization Research**
 
 Brief:
-`strategic_reviews/SR-002-FIRST-PROFESSIONAL-TRADER-DESIGN.md`
+- `research/RP-001-FIRST-TRADER-FORMALIZATION.md`
 
-This is not an implementation task.
+RP-001 must close:
+- A — process translation;
+- B — causal structure/reference areas;
+- C — complete advisory policy;
+- D — initial actionability assumptions;
+- E — evaluation registration;
+- a bounded outcome-masked causal case library, including real BTC evidence before acceptance.
 
-Astra must independently challenge the Director's assumptions and define the first coherent, testable professional market-reading and trade-decision process to sit on top of the accepted M3 observation substrate.
+This is research/formalization work, not production trader implementation.
 
-## What SR-002 must decide
+## Initial translation configuration
 
-At minimum:
+Use 1h / 5m / 1m as a predeclared research configuration.
 
-1. the first coherent professional decision process from observable market state to MarketView/scenarios/recommendation;
-2. which professional lenses are essential in v1 of the real trader and which should be deferred;
-3. multi-timeframe/horizon structure;
-4. how context, trigger, invalidation, target and expected horizon interact;
-5. when a directional view should still produce NO_TRADE;
-6. how uncertainty/conflicting evidence is represented without flat voting;
-7. what derived causal features/observations must exist between raw observable state and reasoning;
-8. which existing knowledge gaps must be researched before implementation;
-9. what semantics `semantic.v2` should expose and what it must deliberately omit;
-10. how the first trader will be validated without turning the project into indicator mining or backtest overfitting.
+They are not permanent product invariants.
 
-## Known research gaps entering SR-002
+One pre-outcome change is allowed only for demonstrated behavioral/causal inadequacy, not based on profitability.
 
-Current knowledge registry gaps include:
+## Known deferred research areas
 
-- BTC-specific market mechanisms;
-- BTC perpetual/spot interaction;
-- formal support/resistance;
-- retracement/extension formalization;
-- cyclical/temporal methodology;
-- modern crypto order flow/liquidation mechanics.
+Do not expand RP-001 into:
+- reversal playbooks;
+- range fading;
+- breakout-chasing;
+- cycles;
+- Fibonacci/retracement ratios;
+- VWAP/profile/oscillator systems;
+- OI/liquidation directional models;
+- predictive funding;
+- spot/cross-venue;
+- macro/news;
+- order-book inference;
+- ML optimization.
 
-These are **candidate gaps**, not mandatory features. Astra should require only what the selected coherent process actually needs.
+A future addition requires a documented limitation of the first accepted process.
 
 ## Base professional knowledge snapshot
 
 `3bf9de0d88fd97360bff7a6517bbb61544f5db68`
 
-The `source_notes/` dossiers are the clean-room professional knowledge base. They are evidence inputs, not automatic trading rules.
-
-## Active implementation task
-
-**NONE — strategic review gate is active.**
-
-Claude Code / Codex must not implement trader intelligence, `semantic.v2`, indicators, levels, signals or recommendations until SR-002 is reviewed and disposed by the Project & Research Director.
+The `source_notes/` dossiers remain immutable source-study artifacts.
 
 ## Next action
 
-Owner opens the Astra strategic chat and sends the SR-002 brief.
+Owner pulls latest `main`.
 
-After Astra returns its review, the Project & Research Director will:
-- independently review/challenge it;
-- write the Director disposition;
-- resolve any required targeted research gaps;
-- only then define the next implementation task.
+Claude Code executes only RP-001 from `task.md` and `research/RP-001-FIRST-TRADER-FORMALIZATION.md`.
+
+No production trader code, derived engine, `semantic.v2`, indicators, levels engine or recommendations are authorized.
+
+After RP-001 completion, the Project & Research Director reviews the formalization and cases before deciding whether any professional implementation work may begin.
