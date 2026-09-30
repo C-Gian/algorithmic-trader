@@ -1,0 +1,25 @@
+case_id: REAL-G04
+evidence: REAL
+source: "dataset okx-btc-usdt-swap-1m-20260925T0000-20260930T0000-3305612c15aa; prefix REAL-G04.json"
+visible_prefix: REAL-G04.json
+visible_prefix_cutoff: "2026-09-29T04:00Z"
+selection_reason: "Predeclared grid cutoff."
+labeling_method: "Manual application of RP-001B B3 and RP-001A A1; medians via `sort -n`."
+frozen_before: "viewing REAL-G05..G06 prefixes and any outcome export"
+labels:
+  h1_series_continued_from_REAL-G03:
+    down_leg_theta: {scale_at_bar_92: 413.25, theta: 826.5}
+    new_confirmations: none
+    at_cutoff: {mode: DOWN, provisional_running_low: 82726.0, provisional_low_time: "2026-09-29T01:00Z", confirmation_needs_high_at_or_above: 83552.5, last_complete_1h_close: 83044.3}
+  context:
+    two_latest_highs: [83800.0, 84346.8]   # rising
+    two_latest_lows: [82561.3, 82501.0]    # falling
+    result: NOT_DIRECTIONAL
+  P-CTX_long: CONTRADICTED
+  P-CTX_short: CONTRADICTED
+  setup_5m: "not assessed (no directional context)"
+  public_action: NO_TRADE
+  display_reason: NO_SUPPORTED_SETUP
+  marketview_description: "1h still expanding/overlapping: after the 84346.8 high, eight hours of 1h bars rotating 82726-83626 without a new confirmed swing. No preferred scenario."
+  definition_observations:
+    - "With the scale near 413 USDT per 1h bar, the 1h reversal threshold (826.5) is large relative to the recent 8-hour range (~900); long periods without any new confirmation keep context fixed on older swings."
