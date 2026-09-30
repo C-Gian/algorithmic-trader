@@ -18,25 +18,44 @@ The desired live lens cockpit, full advisory backtest, compact copy report, repo
 
 ## Current work and next action
 
-**Owner clarification received — Foundation v3.0 is confirmed as the governing direction.**
+Foundation v3.0 is confirmed and the Director replan is complete.
 
-The temporary Owner pause is resolved.
+Current integrated delivery plan:
+- `delivery/FOUNDATION-V3-INTEGRATED-PLAN.md`
 
-The Director must now replan from Foundation v3.0, not from the historical RP-001 mandate.
+The long-lived product path is:
 
-Current direction:
-- build an integrated BTC trading adviser whose main feature is a usable, persistent LONG/SHORT call;
-- keep continuous MarketView and professional observations distinct from the trade call;
-- explicitly assess structure/trend/location, momentum/participation/volatility, timing/cyclical concepts, event/news context, and derivatives/liquidity roles rather than silently excluding them;
-- preserve causal evidence/state architecture from M3;
-- support intermittent local operation with catch-up/reconstruction honesty;
-- make substantial backtests Owner-operated from the web application, with visible progress and copyable reports;
-- diagnose low call coverage rather than treating systematic NO_TRADE as success;
-- keep capital, size, leverage, margin and actual execution outside the adviser.
+**available evidence → causal observable state → derived professional observations → integrated MarketView → scenarios → candidate plan → actionability → persistent call / NO_TRADE → reassessment**
 
-RP-001 remains historical development evidence only. Its pullback-only scope and numeric conventions are not production defaults.
+Professional coverage decisions are now explicit:
+- structure/trend/location: required core;
+- movement/momentum: required core;
+- participation/volume: included with limited, non-voting authority;
+- volatility: required context/scale;
+- timing/cyclical analysis: explicit source-closure requirement, not silently omitted;
+- news/event context: explicit data/policy closure requirement, with unknown coverage visible;
+- derivatives/liquidity: current factual context with limited interpretation, expanded only when the integrated method needs it.
 
-No executor implementation task is active until the Director replaces task.md with a bounded package derived from this direction.
+RP-001 remains historical development evidence only. Its useful causal/masking lessons may be reused; its pullback-only scope and numeric conventions are not production defaults.
+
+### Active package
+
+**WP-008 — Owner Evaluation Workbench + Corpus Bootstrap**
+
+See `task.md`.
+
+WP-008 creates the Owner-operated workflow that the future real adviser will reuse:
+- reusable historical corpus planning/preparation;
+- durable app-launched acquisition;
+- initial fixed bootstrap chunk `2025-09-01 → 2025-10-01 UTC`;
+- dedicated Backtest/Evaluation surface;
+- real observation-only historical evaluation using accepted replay;
+- visible progress/candles/controls;
+- compact Copy report for chat + Markdown/JSON.
+
+WP-008 does not implement trader semantics or `semantic.v2`.
+
+After WP-008 acceptance, the Director will close only the specific integrated-method questions required for the first adviser implementation, then authorize the real advisory core.
 
 ## Research retained, not governing
 
