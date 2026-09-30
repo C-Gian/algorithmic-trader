@@ -1,3 +1,5 @@
+> **HISTORICAL SCOPE NOTICE — 30 September 2026.** FOUNDATION.md v3.0 implements the Owner's direct clarification and supersedes inconsistent scope/workflow instructions below. This document is retained as historical/advisory evidence. Its former ACCEPTED/READY/HOLD status is not current authorization. In particular, the mandatory pullback-only path, blanket cycle/news deferrals and RP-001 closure gate are no longer project direction. Reuse compatible findings only through the current task; preserve original evidence and failed cases. See the current FOUNDATION.md, STATE.md and task.md.
+
 # RP-001 — First Professional Trader Formalization (research artifacts)
 
 Brief: [`../RP-001-FIRST-TRADER-FORMALIZATION.md`](../RP-001-FIRST-TRADER-FORMALIZATION.md). Research/specification only: no production trader code, no `semantic.v2`, no swing/level/indicator implementation, no recommendations.

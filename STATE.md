@@ -1,37 +1,55 @@
 # Project State
 
-Updated: 2026-09-30
+Updated: 2026-09-30 — direct Owner product realignment
 
-## Authority
+## Authority and active direction
 
-Canonical directive: `FOUNDATION.md` — version 2.0.
+Canonical directive: **FOUNDATION.md v3.0**. The Owner's direct clarification supersedes the SR-002 mandatory pullback scope and RP-001 completion gate. Historical ACCEPTED/READY/HOLD labels cannot reactivate them.
 
-## Accepted product scope
+Build an integrated BTC adviser with persistent actionable LONG/SHORT calls, entry area, targets, stop/exit guidance and holding horizon. Human capital/size/leverage/orders remain outside the algorithm. Home exposes live reasoning; the Owner launches substantial backtests in the app and copies their reports. Operation must fit an intermittently running local PC.
 
-Algorithmic Trader is a BTC market-analysis and trade-decision system, not an autonomous account-management/trading bot.
+## Current implementation truth
 
-The system must eventually:
+**M3 is COMPLETE.** Accepted real evidence → causal feed → observable state → durable Market Replay remains reusable.
 
-- maintain a current professional MarketView;
-- state plausible/primary scenarios and expected market behavior;
-- decide LONG / SHORT / NO_TRADE;
-- when a trade exists, expose trigger/entry logic, invalidation, target(s), expected room/time and reasons;
-- keep market understanding distinct from trade recommendation;
-- update the view/recommendation as the market evolves.
+No production professional trader, real market prediction or actionable call exists yet. Documentation realignment does not implement one. Existing real replay is observation-only; synthetic trader/account output remains DEMO.
 
-The human Owner independently decides capital allocation, position size, leverage, collateral/margin, actual order placement and personal portfolio/account risk.
+The desired live lens cockpit, full advisory backtest, compact copy report, repository historical pack, practical speed budgets and restart catch-up are requirements to implement/verify, not capabilities claimed complete here.
 
-## Milestone status
+## Current work and next action
 
-**M3 — Trustworthy real-market observation and causal reasoning readiness: COMPLETE**
+**Director replan under Foundation v3.0.** See task.md for the single current handoff.
 
-The project now has an accepted end-to-end observation substrate:
+The Director must replace the old RP-001-only workflow with bounded vertical implementation packages: app launch/report/data usability in parallel with a concise integrated process specification, then complete real advisory behavior and Owner-run evaluation. No new strategic checkpoint is required merely to make this plan.
 
-**immutable real market evidence → causal feed deliveries → centrally owned observable market state → durable replay/product visibility**
+Codex/Claude must not resume the historical RP-001 mandate or launch long CLI backtests. Normal engineering checks remain authorized within future implementation tasks.
 
-M3 intentionally stops before professional market interpretation.
+## Research retained, not governing
 
-No real MarketView, prediction, LONG/SHORT/NO_TRADE recommendation, trigger, invalidation or target logic exists yet.
+RP-001 artifacts exist, including real prefix labels and outcome reveals at the reviewed base commit 38b2fb6bde52714b8875a282e852742bf13df7c0. This documentation change does not accept their rules as production behavior or alter frozen cases.
+
+research/first_trader/cases/REAL-LABELING-PROGRESS.md reports:
+- six grid-cutoff labels, none reaching an actionable call under that candidate;
+- possible structural restrictions from geometry, context-confirmation lag, epoch progress rules and a single-leg impulse definition;
+- known formatting issues in some frozen label YAML.
+
+These are bounded development findings, not a whole-history profitability/frequency estimate. Retain them to diagnose the translation; do not tune retrospectively to make these cases win. The old conventions and blanket deferrals of cycles/news/additional processes are not current constraints.
+
+## Unmet product requirements for the next plan
+
+- Automatic current market reading and changing lens outputs on Home; dominant direction/call panel.
+- Persistent entry validity and separate ongoing-thesis guidance; no assumed human fill.
+- Automatic in-app new-call/change alerts while running.
+- Explicit source-based cycle/timing and event/news coverage decisions in the integrated method.
+- Startup/catch-up from cached history without H24 operation.
+- Fixed reusable historical pack, incremental acquisition and truthful historical coverage.
+- Owner-operated visual backtest with practical speed, pause/resume/recovery, understandable normalized outcomes and Copy report for chat.
+- Coverage/frequency/entry-window/rejection diagnostics: always-NO_TRADE is not product success.
+- A clear READY FOR OWNER BACKTEST handoff; no substantial executor CLI evaluation.
+
+## Accepted implementation history
+
+The records below retain accepted engineering facts. Historical package-local limitations describe what those packages implemented, not permanent exclusions on the product. In particular, former hours-scale correctness-first choices do not waive Foundation v3.0's local-use performance requirements.
 
 ## Accepted work
 
@@ -179,7 +197,7 @@ Accepted but still provisional:
 - `algotrader.recorder.v1` — prospective public receipt-time evidence;
 - `algotrader.observe.v1` — durable real-market observation replay.
 
-Do **not** introduce `semantic.v2` until the strategic trader-design checkpoint defines the first coherent professional trader semantics.
+Introduce advisory semantic.v2 with the next bounded integrated specification under Foundation v3.0; historical RP-001 closure is no longer its gate.
 
 ## Initial market-data source
 
@@ -189,108 +207,7 @@ Public/read-only reference source:
 
 This is a market-evidence/reference decision, not an autonomous broker/execution decision.
 
-## SR-002 disposition
 
-Astra review:
-- `strategic_reviews/ASTRA-SR-002-REVIEW.md`
+## Knowledge baseline
 
-Director disposition:
-- `strategic_reviews/SR-002-DIRECTOR-DISPOSITION.md`
-
-Status:
-
-**ACCEPTED WITH MODIFICATIONS**
-
-The first professional trader candidate is now bounded to:
-
-**directional context → move/reaction assessment → conditional continuation opportunity → trigger → actionability → LONG/SHORT/NO_TRADE → reassessment**
-
-The initial actionable playbook is **continuation after a controlled pullback/reaction**, implemented for long and short.
-
-This is a candidate professional process, not a profitability claim and not the complete eventual trader.
-
-Accepted architectural direction:
-- separate versioned derived causal observation layer downstream of observable state;
-- typed dependency graph + hierarchical rules + small state machines;
-- no flat indicator voting;
-- MarketView broader than the actionable playbook;
-- causal structure/pullback boundaries/horizontal reference areas only at first;
-- trend/persistence, move/reaction momentum and one volatility scale have distinct roles;
-- volume is not required in the first decision path unless the bounded research establishes a non-redundant role;
-- mark/index/funding stay factual context initially;
-- no numeric confidence/probability initially;
-- scenario, opportunity, recommendation and advisory updates remain distinct;
-- one primary trigger/invalidation/target and one primary actionable thesis at a time for the first release.
-
-Not yet frozen:
-- exact 1h/5m/1m permanence;
-- 120-minute forecast horizon;
-- swing thresholds;
-- zone widths;
-- variability windows;
-- trigger construction;
-- entry band;
-- geometry floor;
-- expiry/deadline values;
-- exact NO_TRADE enum.
-
-`semantic.v2` remains prohibited until the formalization research closes.
-
-## Active research task
-
-**RP-001 — First Professional Trader Formalization Research**
-
-Brief:
-- `research/RP-001-FIRST-TRADER-FORMALIZATION.md`
-
-RP-001 must close:
-- A — process translation;
-- B — causal structure/reference areas;
-- C — complete advisory policy;
-- D — initial actionability assumptions;
-- E — evaluation registration;
-- a bounded outcome-masked causal case library, including real BTC evidence before acceptance.
-
-This is research/formalization work, not production trader implementation.
-
-## Initial translation configuration
-
-Use 1h / 5m / 1m as a predeclared research configuration.
-
-They are not permanent product invariants.
-
-One pre-outcome change is allowed only for demonstrated behavioral/causal inadequacy, not based on profitability.
-
-## Known deferred research areas
-
-Do not expand RP-001 into:
-- reversal playbooks;
-- range fading;
-- breakout-chasing;
-- cycles;
-- Fibonacci/retracement ratios;
-- VWAP/profile/oscillator systems;
-- OI/liquidation directional models;
-- predictive funding;
-- spot/cross-venue;
-- macro/news;
-- order-book inference;
-- ML optimization.
-
-A future addition requires a documented limitation of the first accepted process.
-
-## Base professional knowledge snapshot
-
-`3bf9de0d88fd97360bff7a6517bbb61544f5db68`
-
-The `source_notes/` dossiers remain immutable source-study artifacts.
-
-## Next action
-
-Owner pulls latest `main`.
-
-Claude Code executes only RP-001 from `task.md` and `research/RP-001-FIRST-TRADER-FORMALIZATION.md`.
-
-No production trader code, derived engine, `semantic.v2`, indicators, levels engine or recommendations are authorized.
-
-After RP-001 completion, the Project & Research Director reviews the formalization and cases before deciding whether any professional implementation work may begin.
+Professional dossiers: source_notes/ and knowledge/registry.yaml; initial snapshot 3bf9de0d88fd97360bff7a6517bbb61544f5db68. Preserve these and frozen RP-001 cases unchanged. Sources are evidence, not automatic BTC efficacy or active workflow instructions.

@@ -1,3 +1,7 @@
+# HISTORICAL RP-001 CANDIDATE — NOT ACTIVE PRODUCTION CONFIGURATION.
+# Superseded authority: FOUNDATION.md v3.0 (Owner clarification, 2026-09-30).
+# Preserve prior conventions as evidence; current task must explicitly authorize any reuse.
+
 version: 1
 status: PROPOSED_FOR_DIRECTOR_REVIEW
 frozen_before_real_data: true   # written and committed before any real BTC prefix/outcome was exported (see cases/SELECTION-PROTOCOL.md)

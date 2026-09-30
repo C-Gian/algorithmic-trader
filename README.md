@@ -1,10 +1,18 @@
 # Algorithmic Trader
 
-Algorithmic Trader is a clean-room BTC-only research and paper-trading project whose goal is to translate professional market-reading and trade-decision practice into a deterministic, inspectable software trader.
+Algorithmic Trader is a clean-room, local BTC trading adviser: professional market reading and persistent trade calls for a human who independently chooses capital, size, leverage and orders. FOUNDATION.md v3.0 is the canonical direction.
 
 ## Current state
 
-Algorithmic Trader is a BTC **market-analysis and trade-decision** system (Foundation v2.0): capital, position size, leverage and order placement remain the human Owner's decisions. The operational shell (WP-001/WP-002) and the OKX BTC-USDT-SWAP market-data evidence layer (WP-003) are accepted. The project is in **M3 — trustworthy real-market observation and causal reasoning readiness**; WP-004–WP-006 add the causal feed/observable-state core, the prospective public recorder and the product UI; WP-007 connects real evidence to the application as a durable, observation-only Market Replay. The runnable shell still uses a scripted **DEMO dummy trader** on a **synthetic** fixture; its account/order path is DEMO scaffolding only. No professional trader exists yet, and nothing the DEMO replay shows is market data or research evidence. Acquired OKX datasets are real public market data, not trading results.
+**M3 is complete:** immutable real evidence, causal feed/state, public recorder and durable observation replay are implemented. **No production professional analyst or trade-call engine exists yet.** Synthetic trader/account output is DEMO.
+
+The 30 September Owner clarification supersedes the mandatory pullback-only/RP-001 research path. Read FOUNDATION.md v3.0 and task.md for the current Director handoff. Old reviews/research are historical evidence, not current work authorization.
+
+### Required next product capabilities — not yet implemented
+
+Live Home chart and changing professional-lens results, dominant directional view and persistent entry-valid call; integrated context including explicit cycle/event decisions; optional local sessions with catch-up; fixed repository historical pack; Owner-operated advisory backtests and compact copy/export reports.
+
+The Owner launches substantial evaluations from the app. Executors run bounded engineering checks, then hand off **READY FOR OWNER BACKTEST**. Never mistake the existing observation-only replay for evaluation of a real trader.
 
 ## Read first
 
@@ -16,9 +24,9 @@ Algorithmic Trader is a BTC **market-analysis and trade-decision** system (Found
 
 ## Product scope
 
-Initial advisory/research operation is **BTC perpetual futures**, with LONG/SHORT/NO_TRADE as the eventual primary recommendation states. Intended opportunities are generally minutes to hours, while broader horizons may inform market context.
+Initial advisory/research operation is **BTC perpetual futures**, with LONG/SHORT/NO_TRADE as the eventual primary recommendation states. Intended opportunities are generally minutes to hours, while broader horizons may inform market context. Calls stay entry-valid while their current conditions/room remain worthwhile, not merely for the first signal instant.
 
-Capital allocation, position size, leverage, margin/collateral and actual order placement are human Owner decisions outside the algorithm's recommendation semantics. No real-money trading is authorized.
+Capital allocation, position size, leverage, margin/collateral and actual order placement are human Owner decisions outside the algorithm's recommendation semantics. The application never places orders or chooses account exposure; the Owner's manual decisions are outside its scope.
 
 ## Start the application
 
@@ -41,7 +49,7 @@ uv run algotrader serve          # migrates, starts supervised run/recorder/obse
 
 Useful environment variables: `ALGOTRADER_ARTIFACT_ROOT` (default `./var/artifacts`, outside Git), `ALGOTRADER_PORT`, `ALGOTRADER_LEASE_SECONDS`.
 
-## Operation
+## Implemented operation (synthetic controls unless specified)
 
 - **Runs**: start (replay speed, optional DEMO fault injection), cancel, status, progress, elapsed time, heartbeat, attempt, failure text and recovery log.
 - **Replay controls** (UI buttons; `POST /api/runs/{id}/pause|resume|step|cancel`, `POST /api/runs/{id}/speed {"speed": n}`): all control state is persisted in PostgreSQL and survives browser close and API/worker restarts.
@@ -54,7 +62,7 @@ Useful environment variables: `ALGOTRADER_ARTIFACT_ROOT` (default `./var/artifac
 - **Current DEMO replay**: synthetic fixture, synthetic chart, dummy MarketView/decision scaffolding and legacy paper-account traces used only to exercise the shell. These are not the product's future capital-management semantics.
 - **Artifacts**: every completed/cancelled/failed run writes `manifest.json`, Parquet records (events, market views, decisions, risk decisions, plans, orders, fills, account/equity, observations), `validation.json` and `report.md` under `<artifact root>/runs/<run_id>/`. They are listed and viewable in the UI and via `GET /api/runs/{id}/manifest` and `/api/runs/{id}/artifacts[/{name}[?format=json]]`.
 - **Fault injection (DEMO)**: `crash worker once` kills the worker process mid-step; after the lease expires a restarted worker resumes from the last committed checkpoint. `crash worker every attempt` ends as `failed` with an explanation after 3 attempts.
-- `uv run algotrader replay` runs the engine in-process and prints the semantic trace hash.
+- `uv run algotrader replay` is a bounded DEMO engineering diagnostic, not the Owner's evaluation workflow or permission for long CLI backtests.
 
 ## Checks
 
@@ -86,7 +94,7 @@ uv run algotrader data live-check --minutes 30  # manual live integration check 
 ```
 
 - **Base URL** is configuration (`--base-url` or `ALGOTRADER_OKX_BASE_URL`; default `https://www.okx.com`). OKX documents regional domains (e.g. `https://my.okx.com`, `https://eea.okx.com`, `https://us.okx.com`); none is assumed valid everywhere. Only official OKX hosts (`okx.com` or `*.okx.com`) over `https` with no path/query/fragment/userinfo and port 443 or none are accepted; anything else is rejected before any request (`marketdata/okx_authority.py`).
-- **Datasets** live outside Git under `ALGOTRADER_DATA_ROOT` (default `./var/data`; Docker volume `marketdata`) in `datasets/<dataset_id>/`. Each has the exact raw source responses, a request/page log, the normalized instrument snapshot, normalized Parquet per family, `quality.json` and `manifest.json` with SHA-256 for every file.
+- **Current acquired datasets** live outside Git under `ALGOTRADER_DATA_ROOT` (default `./var/data`; Docker volume `marketdata`) in `datasets/<dataset_id>/`. Each has the exact raw source responses, a request/page log, the normalized instrument snapshot, normalized Parquet per family, `quality.json` and `manifest.json` with SHA-256 for every file.
 - **Identity/immutability**: `dataset_id` is derived from the logical request, the market-data schema version, the availability policy and the SHA-256 of every raw response. Re-fetching identical source bytes reuses the existing dataset untouched. Changed source bytes create a new dataset, whose manifest lists the earlier versions in `prior_versions`. Existing dataset directories are never overwritten.
 - **Time semantics**: candles keep the source `open_time`, a computed `close_time`, the modeled `available_time` and `retrieved_at` as separate fields. `available_time` follows the labelled modeling policy `okx.completed_1m_bar_available_at_close.v1` (bar close), which is not a measured publication time. Funding events keep the source `funding_time` and are never made available earlier. Unconfirmed candles (`confirm=0`) are rejected and reported.
 - **Units**: traded candles keep contract volume, base-currency volume and quote-currency volume as separate fields with their currencies. Mark and index candles have no volume fields. Prices, rates and volumes are exact decimals (stored as the source decimal strings).
@@ -94,9 +102,15 @@ uv run algotrader data live-check --minutes 30  # manual live integration check 
 - **Data view**: the UI's **Data** workspace (`#data`) (and `GET /api/datasets[/{id}[/verify|/files/{name}]]`) shows source, instrument, coverage, row counts, quality and gaps, retrieval time, schema version, hashes and provenance files.
 - Contracts are versioned separately as **`algotrader.marketdata.v1`** (`schemas/algotrader.marketdata.v1.json`, same frozen-baseline rules as below). Exchange-advertised leverage is stored as venue metadata only; it is not a recommendation or product risk policy. Funding is recorded as market evidence.
 
+### Fixed local corpus requirement
+
+Foundation v3.0 requires an immutable reusable repository historical pack (planning target: 2025-09-01 through 2026-09-01 UTC, end exclusive), subject to verified coverage and size. That pack is **not included yet**. Existing acquisition commands below/above describe implemented operations, not a requirement to redownload data for every run. Keep raw acquisition archives and run artifacts outside ordinary Git history; commit bounded data chunks/manifests where practical. Explain any necessary LFS/pinned-archive fallback before adopting it.
+
+Local startup catch-up and the complete advisory backtest/report workflow are pending. Current recorder sessions work only while the local processes run; no H24 operation is required by the product.
+
 ## Causal feed and observable market state (WP-004, `algotrader.feed.v1` PROVISIONAL)
 
-A pure domain core (`src/algotrader/feed/`), with no UI, database, worker, trader, account or execution dependency. It sits at the boundary **market evidence → causal availability feed → observable market state**. It is not yet wired into the worker or browser.
+A pure domain core (`src/algotrader/feed/`), with no UI, database, worker, trader, account or execution dependency. It sits at the boundary **market evidence → causal availability feed → observable market state**. WP-007 now connects it to the durable observation worker and Market Replay browser view.
 
 ```sh
 uv run algotrader feed inspect <dataset_id> --cutoff 2026-09-30T08:00Z [--bar-delay-seconds 15] [--history 240] [--json]
@@ -172,7 +186,7 @@ A separate operational path from the synthetic `semantic.v1` shell: **verified e
 The public semantic contracts (`src/algotrader/contracts.py`: journal payloads such as MarketObservation, MarketView, TradePlan, RiskDecision, Decision, OrderIntent, Order, Fill and AccountSnapshot, plus Run, RunConfig, ReplayControl and RunManifest) are frozen as **`algotrader.semantic.v1`**. Their JSON Schema is checked in at `schemas/algotrader.semantic.v1.json`, and every run manifest records the version in `schema_version`.
 
 - `uv run algotrader schema` checks that the code still matches the baseline; `tests/test_schema.py` does the same in CI and fails on any drift.
-- An intentional breaking change never edits a published baseline. Bump `SCHEMA_VERSION` (e.g. `algotrader.semantic.v2`) and run `uv run algotrader schema --write` to add a new file next to the old one; `--write` refuses to overwrite an existing baseline whose content differs.
+- An intentional breaking change never edits a published baseline. The real advisory semantic.v2 must be introduced separately under the active task; do not turn the DEMO account/order schema into the real trader contract. Existing schema generation refuses to overwrite a differing baseline.
 - The PostgreSQL schema is migrated separately and in place (`db.MIGRATIONS`, recorded in `schema_migrations`).
 
 Without `ALGOTRADER_TEST_DATABASE_URL` the database tests are skipped (CI sets `ALGOTRADER_REQUIRE_DB=1`, which turns that into a failure). CI (`.github/workflows/ci.yml`) runs all of the above and a Docker Compose smoke.
@@ -181,10 +195,10 @@ Without `ALGOTRADER_TEST_DATABASE_URL` the database tests are skipped (CI sets `
 
 | Path | Contents |
 |---|---|
-| `src/algotrader/contracts.py` | Semantic contracts (instrument, observation, MarketView, scenario, plan, decision, risk, order, fill, account, run, manifest) |
+| `src/algotrader/contracts.py` | DEMO semantic contracts (instrument, observation, MarketView, scenario, plan, decision, risk, order, fill, account, run, manifest) |
 | `src/algotrader/synthetic.py` | Deterministic synthetic BTC-perpetual fixture |
 | `src/algotrader/trader.py` | Trader interface + scripted DEMO dummy trader |
-| `src/algotrader/risk.py`, `account.py` | Independent risk skeleton (1x cap); paper account and next-bar-open fill model |
+| `src/algotrader/risk.py`, `account.py` | DEMO-only risk skeleton (1x cap), paper account and next-bar-open fill model; not adviser policy |
 | `src/algotrader/engine.py` | Pure, deterministic step engine and semantic trace hash |
 | `src/algotrader/worker.py`, `db.py` | PostgreSQL-backed durable worker (leases, fencing, checkpoints, idempotent journal, parking of paused runs) and migrations |
 | `src/algotrader/control.py` | Durable replay-control commands (pause/resume/step/speed/cancel) |

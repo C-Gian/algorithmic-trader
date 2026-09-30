@@ -1,59 +1,42 @@
 # Agent Instructions
 
-This repository is the clean-room **Algorithmic Trader** project.
+This is the clean-room Algorithmic Trader project.
 
-## Required reading order
+## Required reading and authority
 
-Before changing anything:
+Read FOUNDATION.md in full, then STATE.md, this file and task.md. Read only the compatible specifications/sources required for that task.
 
-1. Read `FOUNDATION.md` in full.
-2. Read `STATE.md`.
-3. Read `task.md` in full. It is the single active implementation handoff.
-4. Read only the source/knowledge artifacts explicitly needed by `task.md`.
-5. Inspect the current code and tests in the authorized scope.
+Current Owner instructions supersede earlier project documents. FOUNDATION.md v3.0 implements the 30 September direct clarification. Historical ACCEPTED/READY/HOLD labels in strategic_reviews/ and research/ do not authorize work; the current task must explicitly activate compatible scope. Report unresolved conflicts instead of silently choosing an old instruction.
 
-If any instruction conflicts with `FOUNDATION.md`, stop and report the conflict.
+## Roles and scope
 
-## Clean-room boundary
+Codex/Claude implement the single active task. Do not independently change product scope, integrated method, evidence criteria or risk policy. The Director owns these choices. An explicit Owner assignment can authorize strategic/documentation work, as in the v3.0 realignment.
 
-Do not import, reconstruct, search for or reuse the previous Trading Bot project's architecture, terminology, G1/G2/R experiments, results, thresholds, conclusions, tasks, ADRs, implementation decisions or research workflow.
+Never import/reconstruct the legacy Trading Bot architecture, terminology, experiments, thresholds, results or conclusions. Preserve source_notes/ unchanged. Preserve frozen research cases/labels; do not “fix” a historical outcome to support a new method.
 
-References to legacy designs inside historical dossiers are not project instructions.
+Capital, quantity, leverage, margin and orders are human decisions. No real-order connectivity. Do not claim dummy outputs are professional analysis.
 
-## Executor role
+## Local workflow and backtests
 
-Codex/Claude Code are implementation executors. They do not decide:
+- Verify the current remote base; normally git pull --ff-only origin main before editing. Do not overwrite unrelated local changes.
+- Build only the bounded task. Preserve public contract versioning and M3 causal guarantees.
+- Run required unit/integration/causality checks and bounded engineering smoke tests.
+- **Do not launch substantial historical profitability runs, parameter sweeps or long research/backtests in an agent CLI.**
+- Hand those evaluations to the Owner through the application: **READY FOR OWNER BACKTEST**, exact preset/config, expected time, purpose and where Copy report for chat is available.
+- If the required app controls/reporting are missing, identify/implement them within an authorized task. Do not send the Owner raw-log or Python-command chores.
+- Reuse fixed local datasets. No routine redownload or mandatory H24 collection.
+- Always-NO_TRADE is not successful acceptance: expose coverage/candidate/rejection diagnostics. Do not force calls or weaken rules just to raise frequency.
 
-- product scope;
-- research direction;
-- professional trading architecture;
-- evidence thresholds;
-- risk policy;
-- whether a failed acceptance criterion may be weakened.
+## Git and reporting
 
-Implement only `task.md`. Do not opportunistically add trading logic or “improvements” outside scope.
+After bounded changes and required checks succeed, commit and push normally unless the task says otherwise. No force-push, history rewrite, secrets or unrelated changes. Stop on unexpected divergence; do not reconstruct main from a stale parent.
 
-## Working rules
+Report:
+- base/final SHA and branch;
+- what changed and why;
+- checks actually run and results;
+- implemented versus still planned capability;
+- evidence/artifact locations and unresolved issues;
+- Owner app backtest handoff when applicable.
 
-- Assume the Owner has run `git pull` immediately before handing over the task; verify the local checkout is not stale before editing.
-- After implementation and required local checks succeed, commit the complete bounded task with a meaningful commit message and push the current branch to `origin`, unless `task.md` explicitly says not to.
-- Never force-push, rewrite shared history, push secrets, or include unrelated pre-existing local changes. If the push is rejected or the checkout is unexpectedly ahead/diverged, stop and report rather than rewriting history.
-- Preserve `source_notes/` unchanged.
-- Keep domain logic independent of UI/database details where the Foundation requires it.
-- Do not add real-order connectivity.
-- Do not claim profitability from dummy or test fixtures.
-- Do not silently change public contracts once accepted.
-- Prefer the simplest implementation that satisfies the task and architectural boundaries.
-- Record deterministic inputs/configuration where the task requires reproducibility.
-
-## Completion report
-
-Return:
-
-- base commit SHA, final commit SHA and pushed branch;
-- concise diff summary;
-- commands/checks actually run and their results;
-- acceptance evidence/artifact locations;
-- any unresolved issue or deviation.
-
-A self-declared PASS does not constitute acceptance. The Project & Research Director reviews and accepts or requests corrections.
+The Director independently reviews; an executor's PASS is not acceptance.

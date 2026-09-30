@@ -1,138 +1,48 @@
-# Active Task — RP-001: First Professional Trader Formalization Research
+# Current Handoff — Owner Realignment / Director Delivery Plan
 
-Status: READY  
-Owner: Project & Research Director  
-Executor: Claude Code  
-Type: bounded research / formalization — **NO PRODUCTION TRADER CODE**
+Status: **READY FOR DIRECTOR ACTION — replaces RP-001 as the active handoff**  
+Authority: FOUNDATION.md v3.0, direct Owner clarification of 30 September 2026  
+Scope now: product/workflow planning; no old research mandate is active.
 
 ## Read first
 
-Read in full:
+1. FOUNDATION.md in full.
+2. STATE.md and AGENTS.md.
+3. strategic_reviews/OWNER-REALIGNMENT-2026-09-30.md.
+4. README.md for implemented operations.
+5. RP-001 findings only as development evidence where needed; its old hard stops and excluded-lens lists are superseded.
 
-1. `FOUNDATION.md`
-2. `STATE.md`
-3. `AGENTS.md`
-4. `strategic_reviews/ASTRA-SR-002-REVIEW.md`
-5. `strategic_reviews/SR-002-DIRECTOR-DISPOSITION.md`
-6. `research/RP-001-FIRST-TRADER-FORMALIZATION.md`
+## Director's immediate output
 
-Then follow the reading/source instructions inside RP-001.
+Produce one concise integrated delivery specification and replace this task with the first bounded implementation package. This is ordinary Director work, not a request for another Astra strategic review or an open-ended research programme.
 
-## Objective
+The plan must:
+- define the whole professional observe → interpret → scenario → actionability → persistent call → reassess process;
+- make explicit decisions about structure, momentum/participation, volatility, timing/cycles, event/news and derivatives/liquidity roles, using professional sources and actual causal input availability;
+- assess which RP-001 ideas can be reused, changed or discarded; no mandatory pullback-only method;
+- specify call entry-validity reassessment, targets, stop guidance, horizon and continued thesis updates without account responsibilities;
+- identify only specific missing definitions/source questions, each with a bounded closure and implementation consequence;
+- pair methodology work with the visible app/data/report gaps, preserving existing M3 work;
+- name the first end-to-end version and the exact Owner-run diagnostic used to judge it, including frequency/coverage rather than only successful examples.
 
-Execute only RP-001.
+## First delivery package to prepare
 
-The accepted first professional trader **candidate** is:
+Prioritize the Owner-operable local evaluation path: reusable historical input selection/acquisition, visual replay controls and clear progress, bounded runtime/restart behavior, Copy report for chat and downloadable details. Reuse existing real Market Replay and workers.
 
-**directional context → move/reaction assessment → conditional continuation opportunity → trigger → actionability → LONG/SHORT/NO_TRADE → reassessment**
+Do not label observation replay a trader backtest before real reasoning exists. The initial report must honestly identify unavailable call/outcome fields. Then connect the complete first advisory model to the same launch/report experience; infrastructure polish must not become another indefinite detour.
 
-The first actionable playbook candidate is continuation after a controlled pullback/reaction.
+Select a bounded initial data chunk and run preset within the Foundation corpus target; expand the fixed corpus without repeated downloads. Verify storage/coverage before committing data. No full-year fetch or long backtest is authorized by this planning handoff.
 
-Your job is to make that process explicit, causal, falsifiable and auditable before implementation.
+The Director should write concrete acceptance criteria and scope into the next task, not ask the Owner which signals to implement or require manual technical logs.
 
-## Hard stop
+## Executor boundary
 
-Do not create or modify production trader behavior.
+If Codex/Claude receives this file before the Director has replaced it with an implementation package, report: **Director delivery plan required; RP-001 is no longer the active task.** Do not continue old research, change trading rules or start long runs.
 
-Do not:
+This is a workflow handoff, not a scientific HOLD awaiting more market signals. The Director can issue the next bounded task immediately from the requirements above.
 
-- create `semantic.v2`;
-- implement a derived-observation engine;
-- implement swing/level/indicator code;
-- generate real MarketViews or recommendations;
-- add LONG/SHORT logic to the application;
-- run profitability optimization;
-- perform threshold/timeframe sweeps;
-- modify `source_notes/`;
-- add account sizing/leverage/execution;
-- import legacy Trading Bot artifacts.
+For future tasks: run required engineering checks; stop at **READY FOR OWNER BACKTEST** before substantial evaluation, with app preset/config, estimated time and purpose. The Owner launches and copies the result.
 
-This task produces research/specification/case artifacts only.
+## Completion of the replan
 
-## Required outputs
-
-Produce all deliverables specified by:
-
-`research/RP-001-FIRST-TRADER-FORMALIZATION.md`
-
-including:
-- RP-001A process translation;
-- RP-001B causal structure/levels;
-- RP-001C complete advisory policy;
-- RP-001D actionability assumptions;
-- RP-001E evaluation registration;
-- causal case register and separate prefix/outcome case files;
-- external source registry;
-- real-case data requirement if adequate immutable BTC evidence is unavailable.
-
-## Research configuration
-
-Start with:
-- 1h context;
-- 5m setup;
-- 1m trigger/reassessment;
-- traded price for structural/trigger predicates.
-
-These are research conventions, not proven parameters.
-
-Do not change them because of outcomes.
-
-If they cannot express the intended professional distinctions causally, document the failure before any outcome analysis. Do not choose replacements without Director review.
-
-## Source discipline
-
-Clearly mark:
-- SOURCE-SUPPORTED;
-- PROJECT ADAPTATION;
-- DESIGN_CONVENTION;
-- UNRESOLVED.
-
-Do not convert a practitioner statement or an FX result into BTC evidence.
-
-If external source retrieval is unavailable, state that explicitly instead of inventing content.
-
-## Case discipline
-
-Case selection is for concept formalization, not performance.
-
-Must include:
-- favorable;
-- failed;
-- ambiguous;
-- insufficient-data;
-- both long and short.
-
-Outcome masking is mandatory.
-
-Do not silently revise a prefix classification after seeing its suffix.
-
-## Git workflow
-
-Before editing:
-
-`git pull --ff-only origin main`
-
-Then perform only the RP-001 work, commit and push normally to `main`.
-
-No force-push, reset or shared-history rewrite.
-
-## Checks
-
-Follow RP-001's lightweight checks.
-
-No full product redesign or unrelated refactor.
-
-## Completion report
-
-Return exactly the completion information requested by RP-001, including:
-- source verification status;
-- design conventions;
-- case counts/types;
-- real-case gate;
-- unresolved ambiguities;
-- closure status for A–E;
-- recommendation: ACCEPT / ACCEPT WITH SPECIFIC FOLLOW-UP / HOLD-REVISE / REJECT candidate.
-
-Do not declare RP-001 accepted.
-
-Final research acceptance and any authorization to implement the real trader belong to the Project & Research Director.
+Update STATE.md and task.md together. Preserve superseded notices on historical reviews/research and keep source dossiers/frozen cases byte-identical. Commit/push normally, no force-push. Distinguish already implemented capabilities from requirements.
