@@ -32,7 +32,15 @@ from algotrader.recorder.journal import (
     recover,
     verify,
 )
-from algotrader.recorder.okx_live import FORBIDDEN_HEADERS, REST_ALLOWED_PATHS, make_config, validate_endpoints
+from algotrader.recorder.contracts import Endpoints
+from algotrader.recorder.okx_live import (
+    DEFAULT_ENDPOINTS,
+    FORBIDDEN_HEADERS,
+    REST_ALLOWED_PATHS,
+    Recorder,
+    make_config,
+    validate_endpoints,
+)
 
 FRESH = default_freshness()
 TRADE_BAR_1 = 1790768640000  # bar open ms (fixture)
@@ -335,14 +343,109 @@ def test_recorded_feed_prefix_invariance(tmp_path):
     assert build_recorded_feed(path).feed.manifest.ordered_event_hash == full.manifest.ordered_event_hash
 
 
-def test_endpoint_validation_rejects_private_and_non_public_urls():
+OFFICIAL_ENDPOINT_SETS = [
+    # global
+    ("wss://ws.okx.com:8443/ws/v5/public", "wss://ws.okx.com:8443/ws/v5/business", "https://www.okx.com"),
+    ("wss://ws.okx.com:8443/ws/v5/public", "wss://ws.okx.com:8443/ws/v5/business", "https://openapi.okx.com/"),
+    # EEA
+    ("wss://wseea.okx.com:8443/ws/v5/public", "wss://wseea.okx.com:8443/ws/v5/business", "https://eea.okx.com"),
+    # US
+    ("wss://wsus.okx.com:8443/ws/v5/public", "wss://wsus.okx.com:8443/ws/v5/business", "https://us.okx.com"),
+    # other legitimate *.okx.com regional host, explicit default port, case-insensitive host
+    ("wss://WS.OKX.COM:8443/ws/v5/public", "wss://ws.okx.com:8443/ws/v5/business", "https://tr.okx.com:443"),
+    ("wss://ws.okx.com:8443/ws/v5/public", "wss://ws.okx.com:8443/ws/v5/business", "https://my.okx.com"),
+]
+
+BAD_WS_PUBLIC = [
+    "wss://example.com/ws/v5/public",  # arbitrary host
+    "wss://example.com:8443/ws/v5/public",
+    "wss://okx.com.evil.example:8443/ws/v5/public",  # deceptive suffix
+    "wss://evilokx.com:8443/ws/v5/public",
+    "wss://ws.okx.com.:8443/ws/v5/public",  # trailing-dot host
+    "wss://ws..okx.com:8443/ws/v5/public",
+    "wss://-ws.okx.com:8443/ws/v5/public",
+    "ws://ws.okx.com:8443/ws/v5/public",  # plain ws
+    "https://ws.okx.com:8443/ws/v5/public",
+    "wss://user:pw@ws.okx.com:8443/ws/v5/public",  # userinfo
+    "wss://evil.example@ws.okx.com:8443/ws/v5/public",
+    "wss://ws.okx.com@evil.example:8443/ws/v5/public",
+    "wss://ws.okx.com:8443/ws/v5/public?x=1",  # query
+    "wss://ws.okx.com:8443/ws/v5/public?",
+    "wss://ws.okx.com:8443/ws/v5/public#frag",  # fragment
+    "wss://ws.okx.com:8443/ws/v5/private",  # private
+    "wss://ws.okx.com:8443/ws/v5/business",  # business path on the public endpoint
+    "wss://ws.okx.com:8443/evil/ws/v5/public",  # wrong path (suffix match only)
+    "wss://ws.okx.com:8443/ws/v5/public/",
+    "wss://ws.okx.com:8443/other",
+    "wss://ws.okx.com:9443/ws/v5/public",  # arbitrary port
+    "wss://ws.okx.com:443/ws/v5/public",
+    "wss://ws.okx.com/ws/v5/public",  # undocumented portless form
+    "wss://ws.okx.com:notaport/ws/v5/public",
+    " wss://ws.okx.com:8443/ws/v5/public",
+    "wss://ws.okx.com\\@evil.example:8443/ws/v5/public",
+]
+
+BAD_WS_BUSINESS = [
+    "wss://okx.com.evil.example/ws/v5/business",
+    "wss://example.com:8443/ws/v5/business",
+    "ws://ws.okx.com:8443/ws/v5/business",
+    "wss://ws.okx.com:8443/ws/v5/public",
+    "wss://ws.okx.com:8443/ws/v5/private",
+    "wss://ws.okx.com:1234/ws/v5/business",
+]
+
+BAD_REST = [
+    "https://example.com",  # arbitrary host
+    "https://okx.com.evil.example",
+    "https://evilokx.com",
+    "https://www.okx.com.",
+    "http://www.okx.com",  # plain http
+    "wss://www.okx.com",
+    "https://user@www.okx.com",  # userinfo
+    "https://user:pw@www.okx.com",
+    "https://www.okx.com?x=1",  # query
+    "https://www.okx.com#frag",  # fragment
+    "https://www.okx.com/api",  # path
+    "https://www.okx.com/api/v5/public/time",
+    "https://www.okx.com:8443",  # arbitrary port
+    "https://www.okx.com:8080",
+    "www.okx.com",
+    "",
+]
+
+
+def test_endpoint_validation_accepts_official_regional_endpoints():
     validate_endpoints(ENDPOINTS)
-    bad = [ENDPOINTS.model_copy(update={"ws_public_url": "wss://ws.okx.com:8443/ws/v5/private"}),
-           ENDPOINTS.model_copy(update={"ws_business_url": "wss://ws.okx.com:8443/other"}),
-           ENDPOINTS.model_copy(update={"rest_base_url": "http://www.okx.com"})]
-    for ep in bad:
-        with pytest.raises(ValueError):
-            validate_endpoints(ep)
+    validate_endpoints(DEFAULT_ENDPOINTS)
+    for pub, bus, rest in OFFICIAL_ENDPOINT_SETS:
+        validate_endpoints(Endpoints(ws_public_url=pub, ws_business_url=bus, rest_base_url=rest))
+
+
+@pytest.mark.parametrize("field,url", [("ws_public_url", u) for u in BAD_WS_PUBLIC]
+                         + [("ws_business_url", u) for u in BAD_WS_BUSINESS]
+                         + [("rest_base_url", u) for u in BAD_REST])
+def test_endpoint_validation_rejects_non_official_or_insecure_endpoints(field, url):
+    with pytest.raises(ValueError):
+        validate_endpoints(ENDPOINTS.model_copy(update={field: url}))
+
+
+def test_non_okx_host_cannot_produce_an_okx_recording(tmp_path):
+    for field, url in (("ws_public_url", "wss://example.com:8443/ws/v5/public"),
+                       ("ws_business_url", "wss://okx.com.evil.example:8443/ws/v5/business"),
+                       ("rest_base_url", "https://evilokx.com")):
+        config = make_config("rec-evil", endpoints=ENDPOINTS.model_copy(update={field: url}))
+        with pytest.raises(ValueError, match="official OKX host"):
+            SessionWriter(tmp_path, config, FakeClock(0))  # refused before any session artifact is written
+        good = SessionWriter(tmp_path / "ok", make_config(f"rec-ok-{field}", endpoints=ENDPOINTS), FakeClock(0))
+        try:
+            with pytest.raises(ValueError, match="official OKX host"):
+                Recorder(config, good)  # and the recorder itself refuses before any network call
+        finally:
+            good.close()
+    assert not any(p.name == "rec-evil" for p in tmp_path.rglob("*"))
+
+
+def test_recorder_source_has_no_private_or_account_access():
     src = "\n".join(p.read_text(encoding="utf-8") for p in Path("src/algotrader/recorder").glob("*.py"))
     for forbidden in ('"op": "login"', "OK-ACCESS-KEY", "/api/v5/trade", "/api/v5/account", "secret"):
         assert forbidden not in src

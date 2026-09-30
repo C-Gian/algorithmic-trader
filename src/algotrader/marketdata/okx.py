@@ -37,6 +37,7 @@ from .contracts import (
     RowQuality,
     TradeCandle1m,
 )
+from .okx_authority import validate_okx_rest_base_url
 
 DEFAULT_BASE_URL = "https://www.okx.com"
 # Regional domains documented by OKX (e.g. EEA users). Configure, never assume.
@@ -119,9 +120,7 @@ class OkxPublicClient:
         monotonic: Callable[[], float] = time.monotonic,
         clock: Callable[[], datetime] = lambda: datetime.now(UTC),
     ) -> None:
-        parsed = urllib.parse.urlsplit(base_url)
-        if parsed.scheme != "https" or not parsed.netloc or parsed.path not in ("", "/"):
-            raise ValueError(f"base URL must be https://host, got {base_url!r}")
+        parsed = validate_okx_rest_base_url(base_url)  # official OKX host only; rejected, never rewritten
         self.base_url = f"https://{parsed.netloc}"
         self.transport = transport
         self.timeout = timeout

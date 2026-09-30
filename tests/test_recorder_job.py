@@ -71,6 +71,23 @@ def test_api_start_worker_record_stop_and_inspect(api, database_url, tmp_path):
     assert api.get("/api/recorder/sessions").json()["sessions"][0]["session_id"] == s["session_id"]
 
 
+def test_api_endpoint_overrides_are_validated_not_rewritten(api):
+    eea = {"ws_public_url": "wss://wseea.okx.com:8443/ws/v5/public",
+           "ws_business_url": "wss://wseea.okx.com:8443/ws/v5/business", "rest_base_url": "https://eea.okx.com"}
+    created = api.post("/api/recorder/sessions", json=eea)
+    assert created.status_code == 201 and created.json()["endpoints"] == eea  # recorded exactly as used
+    api.post(f"/api/recorder/sessions/{created.json()['session_id']}/stop")
+    for override in ({"ws_public_url": "wss://example.com:8443/ws/v5/public"},
+                     {"ws_business_url": "wss://okx.com.evil.example:8443/ws/v5/business"},
+                     {"ws_public_url": "ws://ws.okx.com:8443/ws/v5/public"},
+                     {"rest_base_url": "https://evilokx.com"},
+                     {"rest_base_url": "https://example.com"}):
+        r = api.post("/api/recorder/sessions", json=override)
+        assert r.status_code == 422, override
+    sessions = api.get("/api/recorder/sessions").json()["sessions"]
+    assert [s["endpoints"] for s in sessions] == [eea]  # nothing persisted for rejected overrides
+
+
 def test_api_rejects_private_endpoints_and_stop_of_queued_cancels(api):
     assert api.post("/api/recorder/sessions", json={"ws_public_url": "wss://ws.okx.com:8443/ws/v5/private"}
                     ).status_code == 422

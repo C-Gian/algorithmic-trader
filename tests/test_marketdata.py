@@ -272,6 +272,32 @@ def test_client_is_read_only_paced_and_identified():
     assert OkxPublicClient(base_url="https://eea.okx.com/").base_url == "https://eea.okx.com"
 
 
+@pytest.mark.parametrize("url", ["https://www.okx.com", "https://openapi.okx.com", "https://eea.okx.com",
+                                 "https://us.okx.com", "https://tr.okx.com", "https://my.okx.com",
+                                 "https://okx.com", "https://www.okx.com:443", "https://EEA.OKX.com/"])
+def test_client_accepts_official_okx_rest_bases(url):
+    OkxPublicClient(base_url=url, transport=FakeOkx())
+
+
+@pytest.mark.parametrize("url", ["https://example.com", "https://okx.com.evil.example", "https://evilokx.com",
+                                 "https://www.okx.com.", "http://www.okx.com", "https://user:pw@www.okx.com",
+                                 "https://evil.example@www.okx.com", "https://www.okx.com@evil.example",
+                                 "https://www.okx.com?x=1", "https://www.okx.com#f", "https://www.okx.com:8443",
+                                 "https://www.okx.com/api/v5", "wss://ws.okx.com:8443"])
+def test_client_rejects_non_official_rest_bases(url):
+    with pytest.raises(ValueError):
+        OkxPublicClient(base_url=url, transport=FakeOkx())
+
+
+def test_non_okx_host_cannot_produce_an_okx_dataset(tmp_path):
+    fake = FakeOkx()
+    for url in ("https://example.com", "https://okx.com.evil.example", "https://evilokx.com"):
+        with pytest.raises(ValueError, match="official OKX host"):
+            acquire(OkxPublicClient(base_url=url, transport=fake, clock=FixedClock()),
+                    tmp_path, FIXTURE_START, FIXTURE_END)
+    assert fake.calls == [] and not any(tmp_path.rglob("*"))  # refused before any network call or artifact
+
+
 def test_raw_response_hash_is_of_exact_bytes():
     fake = FakeOkx()
     r = client(fake).instrument("BTC-USDT-SWAP")

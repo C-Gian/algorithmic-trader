@@ -18,9 +18,10 @@ from algotrader.recorder.okx_live import Recorder, make_config
 from algotrader.recorder.journal import SessionWriter
 
 FIX = Path(__file__).parent / "fixtures"
-PUBLIC = "wss://ws.test.invalid:8443/ws/v5/public"
-BUSINESS = "wss://ws.test.invalid:8443/ws/v5/business"
-REST = "https://rest.test.invalid"
+# Official endpoint forms (source-authority validation is never weakened for tests); the network is faked.
+PUBLIC = "wss://ws.okx.com:8443/ws/v5/public"
+BUSINESS = "wss://ws.okx.com:8443/ws/v5/business"
+REST = "https://www.okx.com"
 ENDPOINTS = Endpoints(ws_public_url=PUBLIC, ws_business_url=BUSINESS, rest_base_url=REST)
 
 

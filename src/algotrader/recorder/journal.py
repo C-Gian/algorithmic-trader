@@ -85,6 +85,9 @@ class SessionWriter:
     """Single-writer append-only journal for one recording session."""
 
     def __init__(self, root: Path, config: SessionConfig, clock: Clock) -> None:
+        from .okx_live import validate_endpoints  # local: okx_live imports this module
+
+        validate_endpoints(config.endpoints)  # no session artifact is created for a non-official OKX source
         self.dir = recordings_dir(root) / config.session_id
         if self.dir.exists():
             raise RecordingError(f"session {config.session_id} already exists; sessions are never reopened")

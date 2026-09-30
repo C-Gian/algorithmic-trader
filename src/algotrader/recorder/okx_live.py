@@ -28,6 +28,7 @@ from datetime import timedelta
 from typing import Any, Protocol
 
 from ..marketdata.okx import USER_AGENT, urllib_transport
+from ..marketdata.okx_authority import validate_okx_rest_base_url, validate_okx_ws_url
 from .contracts import (
     ChannelFamily,
     ChannelSpec,
@@ -46,7 +47,8 @@ DEFAULT_ENDPOINTS = Endpoints(
 )
 # Regional domains documented by OKX differ (e.g. EEA); configure, never assume one hostname.
 REST_ALLOWED_PATHS = frozenset({"/api/v5/public/time", "/api/v5/public/instruments", "/api/v5/public/funding-rate"})
-WS_ALLOWED_PATH_SUFFIXES = ("/ws/v5/public", "/ws/v5/business")
+WS_PUBLIC_PATH = "/ws/v5/public"
+WS_BUSINESS_PATH = "/ws/v5/business"
 FORBIDDEN_HEADERS = frozenset({"ok-access-key", "ok-access-sign", "ok-access-passphrase", "ok-access-timestamp",
                                "authorization"})
 
@@ -87,15 +89,10 @@ def make_config(session_id: str, endpoints: Endpoints = DEFAULT_ENDPOINTS, max_d
 
 
 def validate_endpoints(ep: Endpoints) -> None:
-    for url in (ep.ws_public_url, ep.ws_business_url):
-        u = urllib.parse.urlsplit(url)
-        if u.scheme not in ("wss", "ws") or not u.path.endswith(WS_ALLOWED_PATH_SUFFIXES) or u.query:
-            raise ValueError(f"not an OKX public/business WebSocket URL: {url!r}")
-        if "private" in u.path:
-            raise ValueError("private WebSocket endpoints are not allowed")
-    r = urllib.parse.urlsplit(ep.rest_base_url)
-    if r.scheme != "https" or not r.netloc or r.path not in ("", "/"):
-        raise ValueError(f"REST base URL must be https://host, got {ep.rest_base_url!r}")
+    """Reject any endpoint that is not an official secure OKX public/business form (see okx_authority)."""
+    validate_okx_ws_url(ep.ws_public_url, (WS_PUBLIC_PATH,))
+    validate_okx_ws_url(ep.ws_business_url, (WS_BUSINESS_PATH,))
+    validate_okx_rest_base_url(ep.rest_base_url)
 
 
 # ---------------------------------------------------------------------------
