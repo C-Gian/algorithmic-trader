@@ -1,0 +1,63 @@
+case_id: REAL-G05
+evidence: REAL
+source: "dataset okx-btc-usdt-swap-1m-20260925T0000-20260930T0000-3305612c15aa; prefix REAL-G05.json"
+visible_prefix: REAL-G05.json
+visible_prefix_cutoff: "2026-09-29T12:00Z"
+selection_reason: "Predeclared grid cutoff."
+labeling_method: "Manual application of RP-001B B3/DC-30/DC-31 and RP-001A/C; medians via `sort -n`; no swing/level/policy code; interpretation I1 (see REAL-G02)."
+frozen_before: "viewing REAL-G06 prefix and any outcome export"
+labels:
+  h1_series_continued_from_REAL-G04:
+    - {kind: LOW, price: 82726.0, extremum: "2026-09-29T01:00Z", confirmed_by_bar: "2026-09-29T06:00Z", known_at: "2026-09-29T07:00Z", theta_used: 826.5}
+    up_leg_theta: {scale_at_bar_103: 450.15, theta: 900.3}
+    at_cutoff: {mode: UP, provisional_running_high: 84464.8, provisional_high_time: "2026-09-29T11:00Z", last_complete_1h_close: 84310.7}
+  context:
+    two_latest_highs: [83800.0, 84346.8]   # rising
+    two_latest_lows: [82501.0, 82726.0]    # rising
+    damage_checks: "last 1h close 84310.7 > 82726.0; current leg is UP (no developing down-leg)"
+    result: UP
+  P-CTX_long: SATISFIED
+  P-CTX_short: CONTRADICTED
+  setup_5m_long:
+    epoch_origin: "2026-09-29T01:00Z (1h swing LOW 82726.0), per I1"
+    S5: {bars: "2026-09-28T23:00..2026-09-29T00:55", median_tr: 86.1, theta: 172.2, impulse_min: 344.4, b: 21.6, e: 43.1, z: 21.6}
+    swings_5m:   # [kind, price, extremum, confirming bar, flags]
+      - [HIGH, 83200.5, "01:00", "01:05"]
+      - [LOW, 82777.9, "01:15", "01:20"]
+      - [HIGH, 83021.0, "01:20", "01:25"]
+      - [LOW, 82726.0, "01:35", "01:40"]
+      - [HIGH, 83055.0, "01:45", "01:50"]
+      - [LOW, 82868.0, "01:50", "01:55"]
+      - [HIGH, 83072.0, "01:55", "02:10"]
+      - [LOW, 82867.2, "02:10", "02:15"]
+      - [HIGH, 83123.9, "02:20", "02:25", AMBIGUOUS_PATH]
+      - [LOW, 82856.8, "02:35", "02:45"]
+      - [HIGH, 83086.8, "02:45", "02:50"]
+      - [LOW, 82830.0, "03:15", "03:20"]
+      - [HIGH, 83188.8, "03:25", "03:55"]
+      - [LOW, 82999.8, "04:00", "04:15"]
+      - [HIGH, 83265.5, "04:20", "04:35"]
+      - [LOW, 83039.8, "04:45", "05:00"]
+      - [HIGH, 83318.0, "05:20", "05:30"]
+      - [LOW, 82933.0, "05:35", "05:40"]
+      - [HIGH, 84169.9, "07:35", "07:40"]
+      - [LOW, 83928.2, "07:55", "08:20"]
+      - [HIGH, 84338.2, "08:20", "08:25"]
+      - [LOW, 83729.0, "09:00", "09:30"]
+      - [HIGH, 84290.0, "09:55", "10:00"]
+      - [LOW, 84110.6, "10:00", "10:10"]
+      - [HIGH, 84288.0, "10:10", "10:15"]
+      - [LOW, 83890.2, "11:05", "11:30"]
+    at_cutoff: {mode: UP, provisional_running_high: 84464.8, provisional_high_time: "11:50", confirmation_needs_5m_low_at_or_below: 84292.6}
+    latest_confirmed_up_leg: {A: 84110.6, B: 84288.0, size: 177.4, verdict: "< 344.4"}
+    earlier_large_up_leg: {A: 83729.0, B: 84290.0, size: 561.0, progress: "84290.0 is NOT above the epoch high-water mark before A (84338.2 at 08:20)"}
+    developing_leg: {A: 83890.2, running_high: 84464.8, size_so_far: 574.6, beyond_high_water_mark: "84464.8 > 84338.2"}
+    P-IMP: CONTRADICTED
+    setup_state: IMPULSE_DEVELOPING
+  public_action: NO_TRADE
+  display_reason: NO_SUPPORTED_SETUP
+  marketview_description: "1h context UP (higher highs 83800->84346.8, higher lows 82501->82726). 5m: a new up-leg from 83890.2 has made a provisional high 84464.8 above all earlier epoch highs; its end is not yet confirmable (needs a reaction to <= 84292.6). Conditional watch only: if the leg is confirmed and a controlled pullback follows, a long continuation setup could form."
+  pre_registered_consequence: "Any long setup from the developing impulse (574.6 so far) has room at most ~ D x I <= 0.5 x I (~287 USDT ~ 34 bps unless the impulse extends) versus the 64 bps VIABLE threshold (DC-26/27): at best COST_OR_DELAY_VIABILITY_UNRESOLVED."
+  definition_observations:
+    - "The 5m directional-change rule produced 26 swings in 11 hours at k = 2.0; most legs are 200-450 USDT. Only one developing leg exceeds the impulse minimum."
+    - "The 'most recent confirmed leg' rule ignores an earlier, larger qualifying-size leg (83729->84290) because it fails the progress test; consistent with A1/A2."
