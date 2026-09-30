@@ -2,7 +2,8 @@
 
     algotrader migrate            create/upgrade the PostgreSQL schema
     algotrader api                run the FastAPI app (serves the built web UI)
-    algotrader worker             run a durable run worker
+    algotrader worker             run a durable run worker (synthetic DEMO replay)
+    algotrader observe-worker     run a durable real-market observation-replay worker
     algotrader serve              migrate + supervised worker + api (local, no Docker)
     algotrader replay             run the engine in-process and print the trace hash
     algotrader schema [--write]   check / write the semantic contract JSON Schema baseline
@@ -46,6 +47,7 @@ def _serve(args: argparse.Namespace) -> None:
     cmds = [
         [sys.executable, "-m", "algotrader.cli", "worker", "--lease-seconds", str(args.lease_seconds)],
         [sys.executable, "-m", "algotrader.cli", "recorder-worker"],
+        [sys.executable, "-m", "algotrader.cli", "observe-worker", "--lease-seconds", str(args.lease_seconds)],
     ]
 
     def supervise(cmd: list[str]) -> None:
@@ -69,6 +71,13 @@ def _serve(args: argparse.Namespace) -> None:
         stop.set()
         for t in threads:
             t.join(15)
+
+
+def _observe_worker(args: argparse.Namespace) -> None:
+    from .observe.worker import ObservationWorker
+
+    ObservationWorker(data_root=args.root, lease_seconds=args.lease_seconds,
+                      poll_interval=args.poll_interval).run_forever()
 
 
 def _recorder_worker(args: argparse.Namespace) -> None:
@@ -324,6 +333,11 @@ def main(argv: list[str] | None = None) -> None:
     rw.add_argument("--lease-seconds", type=float, default=30.0)
     rw.add_argument("--root", type=Path, default=None, help="data root (ALGOTRADER_DATA_ROOT)")
     rw.set_defaults(fn=_recorder_worker)
+    ow = sub.add_parser("observe-worker", help="durable real-market observation-replay worker (no interpretation)")
+    ow.add_argument("--lease-seconds", type=float, default=float(os.environ.get("ALGOTRADER_LEASE_SECONDS", 10)))
+    ow.add_argument("--poll-interval", type=float, default=0.5)
+    ow.add_argument("--root", type=Path, default=None, help="data root (ALGOTRADER_DATA_ROOT)")
+    ow.set_defaults(fn=_observe_worker)
     rec = sub.add_parser("recorder", help="public market recorder tools (no trading)")
     rsub = rec.add_subparsers(dest="recorder_cmd", required=True)
     rr = rsub.add_parser("run", help="foreground bounded public recording session (integration check)")

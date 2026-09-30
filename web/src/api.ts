@@ -67,6 +67,8 @@ export interface Health {
     alive: number;
     recent: { worker_id: string; current_session: string | null; heartbeat_age_seconds: number }[];
   };
+  observation_workers?: { alive: number };
+  capabilities?: Record<"core" | "market_replay" | "recorder" | "synthetic_replay", Capability>;
   workers: {
     alive: number;
     alive_threshold_seconds: number;
@@ -290,3 +292,242 @@ export const recorderApi = {
     req<RecorderSession>("/api/recorder/sessions", { method: "POST", body: JSON.stringify({ max_duration_minutes: minutes }) }),
   stop: (id: string) => req<RecorderSession>(`/api/recorder/sessions/${id}/stop`, { method: "POST" }),
 };
+
+// ---- Real-market observation replay (algotrader.observe.v1; observation only) ----
+
+export type ReplayRuntimeState =
+  | "queued" | "running" | "pausing" | "paused" | "stepping" | "recovering"
+  | "cancel_requested" | "completed" | "cancelled" | "failed";
+
+export interface ChannelCoverage {
+  channel: { source: string; family: string; series_id: string };
+  covered_from: string;
+  covered_until: string;
+  expected_cadence: string | null;
+}
+
+export interface ObsSourceSummary {
+  kind: "dataset" | "recording";
+  source_id: string;
+  source_schema: string;
+  inst_id: string;
+  index_id: string;
+  source_status: string;
+  coverage: ChannelCoverage[];
+  warnings: string[];
+  exclusions: string[];
+  notes: string[];
+}
+
+export interface Availability {
+  basis: "MODELED" | "RECORDED";
+  policy_id: string;
+  measured: boolean;
+  label: string;
+  note: string;
+}
+
+export interface FeedIdentity {
+  schema_version: string;
+  contract_status: string;
+  schema_revision: number;
+  content_identity: string;
+  ordered_event_hash: string;
+  ordering_policy_id: string;
+  event_count: number;
+  event_counts: Record<string, number>;
+}
+
+export interface Verification {
+  verified: boolean;
+  method: string;
+  problems: string[];
+  checked_at: string;
+}
+
+export interface ReplayableSource {
+  kind: "dataset" | "recording";
+  source_id: string;
+  inst_id: string | null;
+  coverage_from: string | null;
+  coverage_until: string | null;
+  status: string;
+  availability_basis: "MODELED" | "RECORDED";
+  replayable: boolean;
+  reason: string | null;
+}
+
+export interface Preflight {
+  source: ObsSourceSummary;
+  verification: Verification;
+  feed: FeedIdentity;
+  availability: Availability;
+  reference: string;
+}
+
+export interface ObsReplay {
+  replay_id: string;
+  kind: string;
+  status: string;
+  runtime_state: ReplayRuntimeState;
+  runtime_detail: string;
+  source: ObsSourceSummary;
+  verification: Verification;
+  availability: Availability;
+  freshness_policy: { policy_id: string; note: string; bar_max_age: string; history_limit: number };
+  feed: FeedIdentity;
+  clock_policy: string;
+  control: { paused: boolean; step_budget: number; speed: number; unit: string };
+  created_at: string;
+  started_at: string | null;
+  finished_at: string | null;
+  cancel_requested: boolean;
+  attempt: number;
+  max_attempts: number;
+  recovery_log: RecoveryEntry[];
+  control_log: ControlEntry[];
+  error: string | null;
+  lease_owner: string | null;
+  lease_expired: boolean;
+  has_manifest: boolean;
+  validation_passed: boolean | null;
+  progress: {
+    applied_events: number;
+    total_events: number;
+    information_time: string | null;
+    last_event_id: string | null;
+    snapshot_id: string | null;
+    snapshot_digest: string | null;
+    heartbeat_age_seconds: number | null;
+    elapsed_seconds: number | null;
+    eta_seconds: number | null;
+    eta_basis: string;
+  };
+  code_version: string | null;
+  labels: string[];
+}
+
+export interface FeedEventLite {
+  event_id: string;
+  channel: { source: string; family: string; series_id: string };
+  kind: string;
+  event_time: string;
+  event_end_time: string | null;
+  available_time: string;
+  availability_basis: string;
+  payload: Record<string, string | null> & { payload_type: string; reason?: string; detail?: string };
+}
+
+export interface ChannelState {
+  channel: { source: string; family: string; series_id: string };
+  channel_id: string;
+  condition: "NEVER_SEEN" | "VALID" | "GAP" | "REJECTED" | "INVALID_ONLY";
+  freshness: "UNKNOWN" | "FRESH" | "STALE" | "NOT_APPLICABLE";
+  latest_valid: FeedEventLite | null;
+  age_since_available: string | null;
+  age_since_event_end: string | null;
+  latest_slot_time: string | null;
+  last_quality: FeedEventLite | null;
+  quality_slots_since_valid: number;
+  counts: Record<string, number>;
+  beyond_coverage: boolean;
+  history_len: number;
+}
+
+export interface ObservableState {
+  snapshot_id: string;
+  content_digest: string;
+  as_of: string;
+  information_cutoff: string;
+  cursor: { applied_events: number; last_event_id: string | null };
+  availability_policy_id: string;
+  freshness_policy_id: string;
+  feed_content_identity: string;
+  channels: ChannelState[];
+  labels: string[];
+}
+
+export interface ChannelChange {
+  channel_id: string;
+  new_events: number;
+  condition_before: string;
+  condition_after: string;
+  freshness_before: string;
+  freshness_after: string;
+  latest_valid_before: string | null;
+  latest_valid_after: string | null;
+}
+
+export interface Delivery {
+  seq: number;
+  event_id: string;
+  channel_id: string;
+  family: string;
+  kind: string;
+  event_time: string;
+  event_end_time: string | null;
+  available_time: string;
+  quality_reason: string | null;
+  snapshot_digest: string;
+  changes: ChannelChange[];
+  payload: Record<string, string | null> | null;
+}
+
+export interface TradedBar {
+  seq: number;
+  event_time: string;
+  available_time: string;
+  kind: string;
+  quality_reason: string | null;
+  open?: string;
+  high?: string;
+  low?: string;
+  close?: string;
+  volume_base?: string;
+  volume_base_ccy?: string;
+}
+
+export interface ObsManifest {
+  replay_id: string;
+  status: string;
+  applied_events: number;
+  total_events: number;
+  final_as_of: string;
+  final_snapshot_id: string;
+  final_content_digest: string;
+  source_reference: string;
+  validation: { passed: boolean; checks: { name: string; passed: boolean; detail: string }[] };
+  artifacts: { name: string; sha256: string; bytes: number; lines: number | null }[];
+}
+
+export interface ObsStateDoc {
+  replay: ObsReplay;
+  state: ObservableState | null;
+}
+
+const O = "/api/observations";
+
+export const obsApi = {
+  sources: () => req<{ data_root: string; datasets: ReplayableSource[]; recordings: ReplayableSource[] }>(`${O}/sources`),
+  preflight: (kind: string, id: string) => req<Preflight>(`${O}/sources/${kind}/${encodeURIComponent(id)}`),
+  start: (kind: string, id: string, speed: number) =>
+    req<ObsReplay>(O, { method: "POST", body: JSON.stringify({ source_kind: kind, source_id: id, speed }) }),
+  list: () => req<ObsReplay[]>(O),
+  state: (id: string) => req<ObsStateDoc>(`${O}/${id}/state`),
+  deliveries: (id: string, latest: number) => req<Delivery[]>(`${O}/${id}/deliveries?latest=${latest}`),
+  bars: (id: string) => req<{ information_time: string | null; bars: TradedBar[] }>(`${O}/${id}/traded-bars`),
+  manifest: (id: string) => req<ObsManifest>(`${O}/${id}/manifest`),
+  pause: (id: string) => req<ObsReplay>(`${O}/${id}/pause`, { method: "POST" }),
+  resume: (id: string) => req<ObsReplay>(`${O}/${id}/resume`, { method: "POST" }),
+  step: (id: string) => req<ObsReplay>(`${O}/${id}/step`, { method: "POST" }),
+  cancel: (id: string) => req<ObsReplay>(`${O}/${id}/cancel`, { method: "POST" }),
+  setSpeed: (id: string, speed: number) =>
+    req<ObsReplay>(`${O}/${id}/speed`, { method: "POST", body: JSON.stringify({ speed }) }),
+};
+
+export interface Capability {
+  label: string;
+  status: "available" | "unavailable" | "stalled";
+  workers_alive: number | null;
+  active_jobs: number | null;
+}

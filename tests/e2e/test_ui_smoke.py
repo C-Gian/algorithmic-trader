@@ -55,6 +55,9 @@ class Stack:
         self.api = self._spawn("api", ["api", "--port", str(self.port)])
         self.worker: subprocess.Popen | None = None
         self.start_worker()
+        # real-market observation-replay worker (separate process and capability)
+        self.observer = self._spawn("observer", ["observe-worker", "--lease-seconds", LEASE_SECONDS,
+                                                 "--poll-interval", "0.2"])
         deadline = time.monotonic() + 30
         while time.monotonic() < deadline:
             try:
@@ -74,7 +77,7 @@ class Stack:
         self.worker = self._spawn("worker", ["worker", "--lease-seconds", LEASE_SECONDS, "--poll-interval", "0.2"])
 
     def stop(self) -> None:
-        for proc in (self.worker, self.api):
+        for proc in (self.observer, self.worker, self.api):
             if proc and proc.poll() is None:
                 proc.terminate()
                 proc.wait(10)
@@ -85,6 +88,8 @@ class Stack:
         for proc in (self.worker, self.api):
             proc.kill()
             codes.append(proc.wait(10))
+        self.observer.kill()
+        self.observer.wait(10)
         return codes
 
     def get(self, path: str):
@@ -124,7 +129,7 @@ def panel_status(page: Page):
 
 
 def start_from_ui(page: Page, base: str, speed: str, fault: str = "none") -> str:
-    page.goto(base + "/#replay")  # the synthetic replay lives in the Replay Lab (Market is the landing page)
+    page.goto(base + "/#replay/demo")  # Synthetic Demo mode of the Replay Lab (Market is the landing page)
     expect(page.get_by_test_id("demo-banner")).to_contain_text("DEMO / SYNTHETIC")
     page.get_by_test_id("speed").select_option(speed)
     page.get_by_test_id("fault").select_option(fault)
@@ -157,7 +162,7 @@ def test_ui_run_survives_browser_close_and_completes(stack, browser, evidence_di
 
     ctx = browser.new_context(viewport={"width": 1400, "height": 1100})
     page = ctx.new_page()
-    page.goto(stack.base + "/#replay")  # fresh browser, no run hash: reconstructs from backend
+    page.goto(stack.base + "/#replay/demo")  # fresh browser, no run hash: reconstructs from backend
     expect(page.get_by_test_id("run-panel")).to_contain_text(run_id)
     expect(panel_status(page)).to_have_text("COMPLETED", timeout=30_000)
     expect(page.get_by_test_id("validation")).to_have_text("PASS", timeout=10_000)
@@ -267,7 +272,7 @@ def test_ui_pause_step_speed_resume_survive_browser_reconnect(stack, browser, ev
 
     ctx = browser.new_context(viewport={"width": 1400, "height": 1200})
     page = ctx.new_page()
-    page.goto(stack.base + "/#replay")  # fresh browser (no run hash) reconstructs the paused run from the backend
+    page.goto(stack.base + "/#replay/demo")  # fresh browser (no run hash) reconstructs the paused run from the backend
     expect(page.get_by_test_id("run-panel")).to_contain_text(run_id)
     expect(panel_status(page)).to_have_text("PAUSED")
     expect(page.get_by_test_id("progress")).to_have_text(f"{paused_at}/120")
@@ -340,7 +345,7 @@ def test_full_api_and_worker_restart_preserves_run(stack, browser, evidence_dir,
     try:
         ctx = browser.new_context(viewport={"width": 1400, "height": 1200})
         page = ctx.new_page()
-        page.goto(fresh.base + "/#replay")  # fresh browser, no run hash
+        page.goto(fresh.base + "/#replay/demo")  # fresh browser, no run hash
         expect(page.get_by_test_id("run-panel")).to_contain_text(run_id)
         expect(panel_status(page)).to_have_text("COMPLETED", timeout=45_000)
         expect(page.get_by_test_id("recovery-log")).to_contain_text("lease_expired_reclaimed")
@@ -516,8 +521,12 @@ def test_shell_market_overview_is_default_honest_and_navigable(stack, browser, e
         page.wait_for_timeout(300)
         assert no_horizontal_overflow(page), section
     page.get_by_test_id("nav-replay").click()
+    expect(page.get_by_test_id("market-replay")).to_be_visible()  # real Market Replay is the primary mode
+    expect(page.get_by_test_id("mode-market")).to_have_attribute("aria-selected", "true")
+    page.get_by_test_id("mode-demo").click()
     expect(page.get_by_test_id("demo-banner")).to_contain_text("DEMO / SYNTHETIC")
     expect(page.get_by_test_id("run-panel")).to_contain_text(run_id)
+    expect(page.get_by_test_id("market-replay")).to_have_count(0)
     page.get_by_test_id("nav-data").click()
     page.reload()  # section deep link survives refresh
     expect(page.get_by_test_id("page-data")).to_be_visible()
@@ -536,3 +545,143 @@ def test_shell_market_overview_is_default_honest_and_navigable(stack, browser, e
     ctx.close()
     record(evidence_dir, "e2e-shell-overview", {"synthetic_run": run_id, "pending_areas": list(PENDING_TRADER_AREAS),
                                                 "sections": list(SECTIONS)})
+
+
+def obs(stack, rid: str) -> dict:
+    return stack.get(f"/api/observations/{rid}")
+
+
+def test_ui_market_replay_dataset_and_recording_observation_only(stack, browser, evidence_dir):
+    """Real-market observation replay from the browser (offline fixtures): launch, REAL/MODELED labelling,
+    pause, one-event step, refresh, resume, completion, channel state, artifacts, RECORDED recording replay,
+    and strict separation from the synthetic DEMO."""
+    sys.path.insert(0, str(ROOT / "tests"))
+    from okx_fake import FIXTURE_END, FIXTURE_START, FakeOkx, client
+    from recorder_fake import BUSINESS as FB, PUBLIC as FP, captured_script, record_session
+
+    from algotrader.marketdata.dataset import acquire
+    from algotrader.recorder.journal import finalize
+
+    import threading as _threading
+
+    ds = acquire(client(FakeOkx()), stack.data_root, FIXTURE_START, FIXTURE_END).manifest.dataset_id
+    made: list = []  # record_session runs its own asyncio loop: keep it off Playwright's (sync API) thread
+    t = _threading.Thread(target=lambda: made.append(record_session(
+        stack.data_root, {FP: [captured_script("public")], FB: [captured_script("business")]}, session_id="rec-e2e")))
+    t.start()
+    t.join(60)
+    finalize(made[0][0], "e2e fixture", False, "test-host", 1, None)
+
+    ctx = browser.new_context(viewport={"width": 1440, "height": 900})
+    page = ctx.new_page()
+    page.goto(stack.base)
+    page.get_by_test_id("nav-replay").click()
+    expect(page.get_by_test_id("market-replay")).to_be_visible()
+    expect(page.get_by_test_id("real-banner")).to_contain_text("REAL MARKET EVIDENCE")
+    page.get_by_test_id("obs-kind-dataset").click()
+    page.get_by_test_id("obs-source").select_option(ds)
+    expect(page.get_by_test_id("obs-preflight-availability")).to_contain_text("Modeled availability", timeout=10_000)
+    expect(page.get_by_test_id("obs-preflight")).to_contain_text("not measured publication timing")
+    page.get_by_test_id("obs-start-speed").select_option("1")  # 1 event/s: slow enough to pause mid-replay
+    page.get_by_test_id("obs-start").click()
+    panel = page.get_by_test_id("obs-panel")
+    expect(panel).to_be_visible()
+    page.wait_for_function("() => /obs=obs-/.test(window.location.hash)")
+    rid = page.evaluate("() => window.location.hash.split('obs=')[1]")
+    expect(page.get_by_test_id("obs-real-badge")).to_contain_text("Real market evidence")
+    expect(page.get_by_test_id("obs-availability")).to_contain_text("Modeled availability")
+    expect(page.get_by_test_id("obs-availability-label")).to_contain_text("MODELED")
+    expect(page.get_by_test_id("obs-availability-label")).to_contain_text("not measured publication timing")
+    expect(page.get_by_test_id("intelligence-boundary")).to_contain_text(
+        "Professional interpretation and LONG/SHORT/NO_TRADE are not connected yet")
+    wait_for(lambda: obs(stack, rid)["progress"]["applied_events"] >= 2, timeout=20)
+
+    page.get_by_test_id("obs-pause").click()
+    expect(panel.get_by_test_id("obs-status")).to_have_text("PAUSED", timeout=10_000)
+    paused = obs(stack, rid)
+    at, total = paused["progress"]["applied_events"], paused["progress"]["total_events"]
+    assert paused["status"] == "paused" and paused["lease_owner"] is None
+    time.sleep(2.0)  # a parked replay applies nothing
+    assert obs(stack, rid)["progress"]["applied_events"] == at
+    expect(page.get_by_test_id("obs-cursor")).to_have_text(f"{at}/{total}")
+
+    page.get_by_test_id("obs-step").click()  # exactly one feed delivery
+
+    def stepped() -> bool:
+        r = obs(stack, rid)
+        return r["status"] == "paused" and r["progress"]["applied_events"] == at + 1
+
+    wait_for(stepped)
+    expect(page.get_by_test_id("obs-cursor")).to_have_text(f"{at + 1}/{total}", timeout=10_000)
+    deliveries = stack.get(f"/api/observations/{rid}/deliveries?latest=1000")
+    assert [d["seq"] for d in deliveries] == list(range(at + 1))
+    page.screenshot(path=str(evidence_dir / "14-market-replay-paused-stepped.png"), full_page=True)
+
+    page.reload()  # refresh / reconnect: state reconstructed from the backend
+    expect(page.get_by_test_id("obs-panel").get_by_test_id("obs-status")).to_have_text("PAUSED", timeout=10_000)
+    expect(page.get_by_test_id("obs-cursor")).to_have_text(f"{at + 1}/{total}")
+    expect(page.get_by_test_id("observable-state")).to_be_visible()
+
+    page.get_by_test_id("obs-speed").select_option("0")  # pacing change (max) while paused
+    expect(page.get_by_test_id("obs-speed-now")).to_have_text("max", timeout=10_000)
+    page.get_by_test_id("obs-resume").click()
+    expect(page.get_by_test_id("obs-panel").get_by_test_id("obs-status")).to_have_text("COMPLETED", timeout=30_000)
+    expect(page.get_by_test_id("obs-validation")).to_have_text("PASS", timeout=10_000)
+    expect(page.get_by_test_id("obs-cursor")).to_have_text(f"{total}/{total}")
+
+    # per-channel observable state: explicit roles, never substituted
+    trade = page.get_by_test_id("channel-trade_bar_1m")
+    expect(trade).to_contain_text("Traded price")
+    expect(trade.get_by_test_id("channel-condition")).not_to_have_text("NEVER SEEN")
+    expect(page.get_by_test_id("channel-mark_bar_1m")).to_contain_text("not an execution price")
+    expect(page.get_by_test_id("channel-index_bar_1m")).to_contain_text("not an execution price")
+    expect(page.get_by_test_id("channel-funding_settlement")).to_contain_text("Settled funding")
+    expect(page.get_by_test_id("delivery-timeline").get_by_test_id("delivery-row").first).to_be_visible()
+    expect(page.get_by_test_id("market-chart")).to_be_visible()
+    expect(page.get_by_test_id("obs-artifacts")).to_contain_text("deliveries.jsonl")
+    expect(page.get_by_test_id("obs-artifacts")).to_contain_text("final_snapshot.json")
+    assert no_horizontal_overflow(page)
+    page.screenshot(path=str(evidence_dir / "15-market-replay-completed-dataset.png"), full_page=True)
+    manifest = stack.get(f"/api/observations/{rid}/manifest")
+    assert manifest["validation"]["passed"] and manifest["applied_events"] == manifest["total_events"] == total
+    commands = [e["command"] for e in manifest["control_log"]]
+    assert commands[0] == "start" and "pause" in commands and "step" in commands and "resume" in commands
+    quality = [d for d in stack.get(f"/api/observations/{rid}/deliveries?latest=1000") if d["kind"] == "slot_quality"]
+    assert quality  # the degraded fixture's missing/rejected slots are delivered as quality evidence, never filled
+
+    # recorded session: RECORDED (client-observed receipt) availability
+    page.get_by_test_id("obs-kind-recording").click()
+    page.get_by_test_id("obs-source").select_option("rec-e2e")
+    expect(page.get_by_test_id("obs-preflight-availability")).to_contain_text("Recorded availability", timeout=10_000)
+    page.get_by_test_id("obs-start-speed").select_option("0")
+    page.get_by_test_id("obs-start").click()
+    page.wait_for_function("(rid) => /obs=obs-/.test(window.location.hash) && !window.location.hash.includes(rid)", arg=rid)
+    rid2 = page.evaluate("() => window.location.hash.split('obs=')[1]")
+    expect(page.get_by_test_id("obs-panel").get_by_test_id("obs-status")).to_have_text("COMPLETED", timeout=30_000)
+    expect(page.get_by_test_id("obs-availability")).to_contain_text("Recorded availability")
+    expect(page.get_by_test_id("obs-availability-label")).to_contain_text("client-observed receipt")
+    expect(page.get_by_test_id("obs-source-id")).to_contain_text("recording · rec-e2e")
+    expect(page.get_by_test_id("obs-validation")).to_have_text("PASS", timeout=10_000)
+    page.screenshot(path=str(evidence_dir / "16-market-replay-recording.png"), full_page=True)
+    assert obs(stack, rid2)["availability"]["basis"] == "RECORDED"
+
+    # synthetic DEMO stays separate: no runs were created, and the demo mode shows none of the real replays
+    assert stack.get("/api/runs") == []
+    page.get_by_test_id("mode-demo").click()
+    expect(page.get_by_test_id("demo-banner")).to_contain_text("DEMO / SYNTHETIC")
+    expect(page.get_by_test_id("synthetic-demo")).not_to_contain_text(rid)
+    expect(page.get_by_test_id("market-replay")).to_have_count(0)
+
+    # launch affordance from Data preselects the dataset in Market Replay (no replay logic in Data)
+    page.goto(f"{stack.base}/#data={ds}")
+    page.get_by_test_id("dataset-replay").click()
+    expect(page.get_by_test_id("market-replay")).to_be_visible()
+    expect(page.get_by_test_id("obs-source")).to_have_value(ds, timeout=10_000)
+    ctx.close()
+    record(evidence_dir, "e2e-market-replay", {
+        "note": "offline fixtures (captured OKX public responses/messages); not live data; observation only",
+        "dataset_replay": {"replay_id": rid, "paused_at": at, "stepped_to": at + 1, "total_events": total,
+                           "quality_deliveries": len(quality), "validation": manifest["validation"],
+                           "final_content_digest": manifest["final_content_digest"], "control_log": commands},
+        "recording_replay": {"replay_id": rid2, "availability": obs(stack, rid2)["availability"]},
+    })

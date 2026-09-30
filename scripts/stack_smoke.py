@@ -60,6 +60,16 @@ def main() -> None:
         time.sleep(1)
     assert call("/api/health")["recorder_workers"]["alive"] >= 1, "recorder worker not heartbeating"
     print(f"recorder sessions: {len(call('/api/recorder/sessions')['sessions'])}")
+    # real-market observation replay: worker alive, capability-aware health and source catalog reachable
+    for _ in range(30):
+        if call("/api/health")["observation_workers"]["alive"] >= 1:
+            break
+        time.sleep(1)
+    health = call("/api/health")
+    assert health["capabilities"]["market_replay"]["status"] == "available", health["capabilities"]
+    sources = call("/api/observations/sources")
+    print(f"observation sources: {len(sources['datasets'])} dataset(s), {len(sources['recordings'])} recording(s); "
+          f"replays: {len(call('/api/observations'))}")
     print("stack smoke OK")
 
 

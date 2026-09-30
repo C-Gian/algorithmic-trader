@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { recorderApi, RecorderSession } from "../api";
 import { fmtInt, fmtNs, fmtSecs, fmtTime } from "../lib/format";
+import { replaySource } from "../lib/route";
 import { useHealth } from "../shell/health";
 import { Icon } from "../ui/Icon";
 import { Badge, Button, Card, cx, EmptyState, Field, Metric, Notice, PageHeader, Skeleton, statusTone } from "../ui/primitives";
@@ -106,6 +107,12 @@ function SessionCard({ s, detail, onStop }: { s: RecorderSession; detail: Record
           {s.stop_requested && s.status === "running" && <span className="muted small-text">stopping…</span>}
           {active && !s.stop_requested && (
             <Button variant="danger" icon="stop" onClick={onStop} data-testid="recorder-stop">Stop</Button>
+          )}
+          {!active && s.manifest_status && s.manifest_status !== "failed" && (
+            <Button variant="secondary" icon="play" onClick={() => replaySource("recording", s.session_id)}
+                    data-testid="recorder-replay" title="Open Market Replay with this recording preselected">
+              Replay recording
+            </Button>
           )}
         </div>
       </div>

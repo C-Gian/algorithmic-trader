@@ -24,6 +24,30 @@ export function runFromHash(hash: string = window.location.hash): string | null 
   return m ? m[1] : null;
 }
 
+// Replay Lab modes:
+//   #replay | #replay/obs=<id> | #replay/src=<kind>:<id>   → Market Replay (real evidence; default)
+//   #replay/demo | #replay/demo/run=<id> | legacy #run=<id> → Synthetic Demo
+export type ReplayMode = "market" | "demo";
+
+export function replayModeFromHash(hash: string = window.location.hash): ReplayMode {
+  const h = hash.replace(/^#\/?/, "");
+  return h.startsWith("replay/demo") || h.startsWith("run=") ? "demo" : "market";
+}
+
+export function obsFromHash(hash: string = window.location.hash): string | null {
+  const m = hash.match(/obs=([\w-]+)/);
+  return m ? m[1] : null;
+}
+
+export function sourceFromHash(hash: string = window.location.hash): { kind: "dataset" | "recording"; id: string } | null {
+  const m = hash.match(/src=(dataset|recording):([\w.-]+)/);
+  return m ? { kind: m[1] as "dataset" | "recording", id: m[2] } : null;
+}
+
+export function replaySource(kind: "dataset" | "recording", id: string): void {
+  window.location.hash = `replay/src=${kind}:${id}`;
+}
+
 export function datasetFromHash(hash: string = window.location.hash): string | null {
   const m = hash.match(/^#data=([\w.-]+)/);
   return m ? m[1] : null;

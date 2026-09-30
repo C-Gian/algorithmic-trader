@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { dataApi, DatasetDetail, DatasetFamily, DatasetSummary } from "../api";
 import { fmtBytes, fmtInt, fmtTime } from "../lib/format";
-import { datasetFromHash, replaceHash } from "../lib/route";
+import { datasetFromHash, replaceHash, replaySource } from "../lib/route";
 import { usePoll } from "../lib/usePoll";
 import { Icon } from "../ui/Icon";
 import { Badge, Button, Card, cx, EmptyState, Metric, Notice, PageHeader, Skeleton, statusTone, Tone } from "../ui/primitives";
@@ -69,6 +69,10 @@ function Detail({ id }: { id: string }) {
           </div>
           <div className="dataset-hero-actions">
             <QualityBadge status={s.quality_status} testid="dataset-quality" />
+            <Button variant="secondary" icon="play" onClick={() => replaySource("dataset", s.dataset_id)}
+                    data-testid="dataset-replay" title="Open Market Replay with this dataset preselected">
+              Replay dataset
+            </Button>
             <Button variant="secondary" icon="shield" onClick={runVerify} disabled={verify.state === "running"} data-testid="dataset-verify">
               {verify.state === "running" ? "Verifying…" : "Verify hashes"}
             </Button>

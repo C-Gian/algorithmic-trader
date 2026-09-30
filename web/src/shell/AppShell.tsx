@@ -2,7 +2,9 @@ import { ReactNode, useEffect, useState } from "react";
 import { navigate, Section } from "../lib/route";
 import { Icon, IconName } from "../ui/Icon";
 import { cx } from "../ui/primitives";
-import { systemVerdict, useHealth } from "./health";
+import { CAPABILITY_ORDER, capabilityLabel, capabilityTone, systemVerdict, useHealth } from "./health";
+
+const CAP_SHORT = { market_replay: "Market replay", recorder: "Recorder", synthetic_replay: "Synthetic demo" } as const;
 
 interface NavItem {
   id: Section;
@@ -20,7 +22,7 @@ const NAV: { group: string; items: NavItem[] }[] = [
   {
     group: "Workbench",
     items: [
-      { id: "replay", label: "Replay Lab", icon: "flask", hint: "Synthetic demo replay", chip: { text: "Demo", tone: "synthetic" } },
+      { id: "replay", label: "Replay Lab", icon: "replay", hint: "Real-market observation replay and synthetic demo" },
       { id: "data", label: "Data", icon: "data", hint: "Historical evidence datasets" },
       { id: "recorder", label: "Recorder", icon: "recorder", hint: "Public live evidence collection" },
     ],
@@ -71,8 +73,17 @@ function GlobalHealth() {
       </div>
       <div className="side-health-detail">{v.detail}</div>
       <dl className="side-health-rows">
-        <div><dt>Run workers</dt><dd className="mono">{h ? h.workers.alive : "—"}</dd></div>
-        <div><dt>Recorder workers</dt><dd className="mono">{h?.recorder_workers ? h.recorder_workers.alive : "—"}</dd></div>
+        {CAPABILITY_ORDER.map((k) => {
+          const c = h?.capabilities?.[k];
+          return (
+            <div key={k} data-testid={`capability-${k}`} title={c ? `${c.label}: ${capabilityLabel(c)}` : undefined}>
+              <dt>{CAP_SHORT[k]}</dt>
+              <dd className={cx("cap-state", `tone-${capabilityTone(c)}`)}>
+                <span className="cap-dot" aria-hidden />{c ? (c.status === "available" ? "up" : c.status === "stalled" ? "stalled" : "off") : "—"}
+              </dd>
+            </div>
+          );
+        })}
         <div><dt>Build</dt><dd className="mono">{h?.version ?? "—"}</dd></div>
       </dl>
     </div>

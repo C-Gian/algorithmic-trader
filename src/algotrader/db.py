@@ -114,7 +114,69 @@ CREATE TABLE IF NOT EXISTS recorder_sessions (
 CREATE INDEX IF NOT EXISTS recorder_sessions_status_idx ON recorder_sessions (status, created_at);
 """
 
-MIGRATIONS: dict[int, str] = {1: SCHEMA_V1, 2: SCHEMA_V2, 3: SCHEMA_V3}
+# Real-market observation replay (algotrader.observe.v1): a separate operational path.
+# No semantic.v1 run/event rows are ever written for it.
+SCHEMA_V4 = """
+CREATE TABLE IF NOT EXISTS observation_replays (
+    replay_id          text PRIMARY KEY,
+    created_at         timestamptz NOT NULL DEFAULT now(),
+    status             text NOT NULL CHECK (status IN
+                         ('queued','running','paused','completed','cancelled','failed')),
+    source_kind        text NOT NULL CHECK (source_kind IN ('dataset','recording')),
+    source_id          text NOT NULL,
+    config             jsonb NOT NULL,
+    total_events       integer NOT NULL CHECK (total_events >= 0),
+    paused             boolean NOT NULL DEFAULT false,
+    step_budget        integer NOT NULL DEFAULT 0 CHECK (step_budget >= 0),
+    speed              double precision NOT NULL DEFAULT 20 CHECK (speed >= 0 AND speed <= 10000),
+    cancel_requested   boolean NOT NULL DEFAULT false,
+    lease_owner        text,
+    lease_expires_at   timestamptz,
+    heartbeat_at       timestamptz,
+    attempt            integer NOT NULL DEFAULT 0,
+    max_attempts       integer NOT NULL DEFAULT 3,
+    interruptions      integer NOT NULL DEFAULT 0,
+    recovery_log       jsonb NOT NULL DEFAULT '[]'::jsonb,
+    control_log        jsonb NOT NULL DEFAULT '[]'::jsonb,
+    throughput_since   timestamptz,
+    throughput_base    integer,
+    started_at         timestamptz,
+    finished_at        timestamptz,
+    error              text,
+    manifest           jsonb
+);
+CREATE INDEX IF NOT EXISTS observation_replays_status_idx ON observation_replays (status, created_at);
+
+-- One row per replay: the committed feed cursor and the snapshot it produced.
+CREATE TABLE IF NOT EXISTS observation_checkpoints (
+    replay_id        text PRIMARY KEY REFERENCES observation_replays(replay_id) ON DELETE CASCADE,
+    cursor           integer NOT NULL CHECK (cursor >= 0),
+    info_time        timestamptz NOT NULL,
+    last_event_id    text,
+    snapshot_id      text NOT NULL,
+    snapshot_digest  text NOT NULL,
+    snapshot_view    jsonb NOT NULL,
+    updated_at       timestamptz NOT NULL DEFAULT now()
+);
+
+-- Append-only committed deliveries. (replay_id, seq) and (replay_id, event_id) are idempotency keys.
+CREATE TABLE IF NOT EXISTS observation_deliveries (
+    replay_id        text NOT NULL REFERENCES observation_replays(replay_id) ON DELETE CASCADE,
+    seq              integer NOT NULL CHECK (seq >= 0),
+    event_id         text NOT NULL,
+    family           text NOT NULL,
+    kind             text NOT NULL,
+    available_time   timestamptz NOT NULL,
+    record           jsonb NOT NULL,
+    payload          jsonb,  -- normalized feed payload (values only for valid observations)
+    committed_at     timestamptz NOT NULL DEFAULT now(),
+    PRIMARY KEY (replay_id, seq),
+    UNIQUE (replay_id, event_id)
+);
+CREATE INDEX IF NOT EXISTS observation_deliveries_family_idx ON observation_deliveries (replay_id, family, seq);
+"""
+
+MIGRATIONS: dict[int, str] = {1: SCHEMA_V1, 2: SCHEMA_V2, 3: SCHEMA_V3, 4: SCHEMA_V4}
 SCHEMA_VERSION = max(MIGRATIONS)
 
 

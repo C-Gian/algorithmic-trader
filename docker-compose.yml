@@ -1,4 +1,4 @@
-# Local application stack (DEMO / SYNTHETIC shell).
+# Local application stack.
 #   docker compose up --build     then open http://localhost:8000
 name: algotrader
 
@@ -71,6 +71,18 @@ services:
       migrate:
         condition: service_completed_successfully
     # A crashed recorder is restarted; its interrupted session is recovered as PARTIAL (not resumed).
+    restart: unless-stopped
+
+  observer:
+    <<: *app
+    # Real-market observation replay (observation only; no interpretation, no trading). Replays
+    # verified datasets / finalized recordings from the data volume through the causal feed.
+    command: ["algotrader", "observe-worker", "--lease-seconds", "10"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    # A dead observer is restarted; it reclaims the replay after the lease expires and resumes
+    # after the last committed feed cursor.
     restart: unless-stopped
 
 volumes:

@@ -25,6 +25,7 @@ from .contracts import SCHEMA_VERSION, FaultMode, ReplayControl, Run, RunConfig,
 from .control import TERMINAL
 from .marketdata.contracts import MARKETDATA_SCHEMA_VERSION, DatasetManifest, QualityReport
 from .marketdata.dataset import dataset_path, default_data_root, list_manifests, load_manifest, load_quality, verify
+from .observe.api import build_router as observation_router
 from .recorder import job as recorder_job
 from .recorder import journal as rec_journal
 from .worker import default_artifact_root, fetch_events
@@ -158,6 +159,14 @@ FROM runs r LEFT JOIN run_checkpoints c USING (run_id)
 """
 
 
+def _capability(label: str, workers_alive: int, active_jobs: int) -> dict[str, Any]:
+    if workers_alive:
+        status = "available"
+    else:
+        status = "stalled" if active_jobs else "unavailable"  # jobs waiting with no worker vs. simply idle/off
+    return {"label": label, "status": status, "workers_alive": workers_alive, "active_jobs": active_jobs}
+
+
 def _dataset_summary(m: DatasetManifest, q: QualityReport) -> dict[str, Any]:
     return {
         "dataset_id": m.dataset_id,
@@ -230,7 +239,8 @@ def create_app(
                 """
                 SELECT worker_id, host, pid, started_at, current_run,
                        extract(epoch FROM now() - heartbeat_at)::float8 AS age
-                FROM workers WHERE worker_id NOT LIKE 'recorder:%%' ORDER BY heartbeat_at DESC LIMIT 10
+                FROM workers WHERE worker_id NOT LIKE 'recorder:%%' AND worker_id NOT LIKE 'observe:%%'
+                ORDER BY heartbeat_at DESC LIMIT 10
                 """
             ).fetchall()
             recorders = c.execute(
@@ -239,10 +249,39 @@ def create_app(
                 FROM workers WHERE worker_id LIKE 'recorder:%%' ORDER BY heartbeat_at DESC LIMIT 5
                 """
             ).fetchall()
+            observers = c.execute(
+                """
+                SELECT worker_id, current_run, extract(epoch FROM now() - heartbeat_at)::float8 AS age
+                FROM workers WHERE worker_id LIKE 'observe:%%' ORDER BY heartbeat_at DESC LIMIT 5
+                """
+            ).fetchall()
+            active = c.execute(
+                """
+                SELECT (SELECT count(*) FROM runs WHERE status IN ('queued','running')) AS runs,
+                       (SELECT count(*) FROM recorder_sessions WHERE status IN ('queued','running')) AS recordings,
+                       (SELECT count(*) FROM observation_replays WHERE status IN ('queued','running')) AS observations
+                """
+            ).fetchone()
         alive = [w for w in workers if w["age"] < WORKER_ALIVE_SECONDS]
+        rec_alive = sum(1 for r in recorders if r["age"] < WORKER_ALIVE_SECONDS)
+        obs_alive = sum(1 for r in observers if r["age"] < WORKER_ALIVE_SECONDS)
         return {
+            # Capability-aware health: each capability has its own worker; a missing optional worker
+            # limits that capability only (it is not a whole-system outage).
+            "capabilities": {
+                "core": {"label": "API and database", "status": "available", "workers_alive": None,
+                         "active_jobs": None},
+                "market_replay": _capability("Real-market observation replay", obs_alive, active["observations"]),
+                "recorder": _capability("Public market recorder", rec_alive, active["recordings"]),
+                "synthetic_replay": _capability("Synthetic DEMO replay", len(alive), active["runs"]),
+            },
+            "observation_workers": {
+                "alive": obs_alive,
+                "recent": [{"worker_id": r["worker_id"], "current_replay": r["current_run"],
+                            "heartbeat_age_seconds": round(r["age"], 3)} for r in observers],
+            },
             "recorder_workers": {
-                "alive": sum(1 for r in recorders if r["age"] < WORKER_ALIVE_SECONDS),
+                "alive": rec_alive,
                 "recent": [{"worker_id": r["worker_id"], "current_session": r["current_run"],
                             "heartbeat_age_seconds": round(r["age"], 3)} for r in recorders],
             },
@@ -510,6 +549,10 @@ def create_app(
         if name != "manifest.json" and name not in {f.name for f in m.files}:
             raise HTTPException(404, f"no file {name} in recording {session_id}")
         return FileResponse(path / name, filename=Path(name).name)
+
+    # -- real-market observation replay (separate path; algotrader.observe.v1) --
+
+    app.include_router(observation_router(conn, md_root, art_root))
 
     # -- market-data datasets (read-only inspection of the data root) ---------
 

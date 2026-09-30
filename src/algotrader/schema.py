@@ -127,10 +127,34 @@ def recorder_baseline() -> dict[str, Any]:
     }
 
 
+def observe_baseline() -> dict[str, Any]:
+    """PROVISIONAL baseline for real-market observation replay (``algotrader.observe.v1``)."""
+    from .observe import contracts as oc
+
+    models = sorted(oc.PUBLIC_CONTRACTS, key=lambda m: m.__name__)
+    refs, schema = models_json_schema(
+        [(m, "serialization") for m in models], ref_template="#/$defs/{model}"
+    )
+    return {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "title": f"Algorithmic Trader observation-replay contracts ({oc.OBSERVE_SCHEMA_VERSION}, "
+                 f"{oc.OBSERVE_CONTRACT_STATUS})",
+        "schema_version": oc.OBSERVE_SCHEMA_VERSION,
+        "status": oc.OBSERVE_CONTRACT_STATUS,
+        "revision": oc.OBSERVE_SCHEMA_REVISION,
+        "changelog": [{"revision": r, "date": d, "note": n} for r, d, n in oc.OBSERVE_CHANGELOG],
+        "clock_policy": oc.CLOCK_POLICY,
+        "labels": list(oc.LABELS),
+        "public_contracts": {m.__name__: refs[(m, "serialization")]["$ref"] for m in models},
+        "$defs": schema["$defs"],
+    }
+
+
 def baselines() -> dict[str, Any]:
     """Every current contract baseline, keyed by schema version."""
     from .feed.contracts import FEED_SCHEMA_VERSION
     from .marketdata.contracts import MARKETDATA_SCHEMA_VERSION
+    from .observe.contracts import OBSERVE_SCHEMA_VERSION
     from .recorder.contracts import RECORDER_SCHEMA_VERSION
 
     return {
@@ -138,6 +162,7 @@ def baselines() -> dict[str, Any]:
         MARKETDATA_SCHEMA_VERSION: marketdata_baseline,
         FEED_SCHEMA_VERSION: feed_baseline,
         RECORDER_SCHEMA_VERSION: recorder_baseline,
+        OBSERVE_SCHEMA_VERSION: observe_baseline,
     }
 
 

@@ -1,14 +1,14 @@
-import { dataApi, DatasetSummary, recorderApi, RecorderSession } from "../api";
+import { Capability, dataApi, DatasetSummary, recorderApi, RecorderSession } from "../api";
 import { fmtInt, fmtNs, fmtSecs, fmtTime } from "../lib/format";
 import { navigate } from "../lib/route";
 import { usePoll } from "../lib/usePoll";
-import { systemVerdict, useHealth } from "../shell/health";
+import { CAPABILITY_ORDER, capabilityLabel, capabilityTone, systemVerdict, useHealth } from "../shell/health";
 import { Icon, IconName } from "../ui/Icon";
 import { Badge, Button, Card, cx, Metric, Mono, PageHeader, Skeleton, statusTone, Tone } from "../ui/primitives";
 
 // The Market overview is the future professional trader cockpit. The trader engine does not exist yet, so
-// every trader-intelligence area renders an explicit pending state. Nothing here reads the synthetic
-// Replay Lab: only /api/health, /api/datasets and /api/recorder/sessions (real operational state).
+// every trader-intelligence area renders an explicit pending state. Nothing here reads replay output (real
+// or synthetic): only /api/health, /api/datasets and /api/recorder/sessions (real operational state).
 
 const PENDING_EYEBROW = "Trader engine · pending";
 
@@ -50,7 +50,12 @@ interface Stage {
   dev?: string;
 }
 
-function pipeline(datasets: number | null, recorderReady: boolean): Stage[] {
+function pipeline(datasets: number | null, recorder: Capability | undefined, replay: Capability | undefined): Stage[] {
+  const cap = (c: Capability | undefined, up: string): [string, Tone] =>
+    !c ? ["Checking", "neutral"] : c.status === "available" ? [up, "pos"]
+      : c.status === "stalled" ? ["Jobs waiting · no worker", "warn"] : ["Available · worker offline", "warn"];
+  const [recState, recTone] = cap(recorder, "Available");
+  const [repState, repTone] = cap(replay, "Available");
   return [
     {
       label: "Historical market evidence",
@@ -60,28 +65,28 @@ function pipeline(datasets: number | null, recorderReady: boolean): Stage[] {
     },
     {
       label: "Live public recording",
-      state: recorderReady ? "Available" : "Available · worker offline",
-      tone: recorderReady ? "pos" : "warn",
+      state: recState,
+      tone: recTone,
       detail: "Prospective capture with measured client-side receipt times.",
     },
     {
       label: "Causal feed & observable state",
-      state: "Built · not connected",
-      tone: "info",
-      detail: "Deterministic core exists; not yet wired into the application.",
+      state: "Connected",
+      tone: "pos",
+      detail: "Evidence reaches the app only through causal feed deliveries and the pure state reducer.",
     },
     {
-      label: "Real-market replay in the app",
-      state: "Pending",
-      tone: "pending",
-      detail: "Observation-only replay of recorded and historical evidence.",
-      dev: "Next development package (WP-007)",
+      label: "Real-market observation replay",
+      state: repState,
+      tone: repTone,
+      detail: "Durable replay of datasets (modeled availability) and recordings (recorded receipt times) in Replay Lab.",
     },
     {
       label: "Professional trader engine",
       state: "Not implemented",
       tone: "pending",
       detail: "Market view, scenarios and LONG / SHORT / NO_TRADE decisions.",
+      dev: "After the strategic trader-design checkpoint",
     },
   ];
 }
@@ -157,7 +162,7 @@ export function Overview() {
   const dsList = datasets.data?.datasets ?? null;
   const sessions = recordings.data?.sessions ?? null;
   const latestSession = sessions?.[0];
-  const recorderReady = (h?.recorder_workers?.alive ?? 0) > 0;
+  const caps = h?.capabilities;
   const lastReceipt = sessions?.find((s) => s.stats?.last_recv_utc_ns)?.stats?.last_recv_utc_ns ?? null;
 
   return (
@@ -198,8 +203,8 @@ export function Overview() {
           </div>
           <p>
             The cockpit below is the reserved layout for the real engine. Every trader area stays empty until that engine
-            publishes a view. Nothing on this page is derived from the synthetic Replay Lab, and no signal, price level or
-            confidence is shown before it exists.
+            publishes a view. Nothing on this page is derived from the synthetic demo or from observable-state
+            heuristics, and no signal, price level or confidence is shown before it exists.
           </p>
         </div>
       </section>
@@ -265,16 +270,28 @@ export function Overview() {
             <h2 className="section-title">System & data readiness</h2>
           </div>
 
-          <Card title="Runtime" icon="cpu" testid="readiness-runtime">
-            <div className="metric-row">
-              <Metric label="API" value={<Badge tone={h ? "pos" : verdict.tone} dot>{h ? "Up" : verdict.label}</Badge>} mono={false} />
-              <Metric label="Run workers" value={h ? h.workers.alive : "—"} testid="overview-run-workers" />
-              <Metric label="Recorder workers" value={h?.recorder_workers ? h.recorder_workers.alive : "—"} testid="overview-recorder-workers" />
-            </div>
+          <Card title="Runtime" icon="cpu" testid="readiness-runtime"
+                actions={<Badge tone={h ? "pos" : verdict.tone} dot>{h ? "API up" : verdict.label}</Badge>}>
+            <ul className="cap-list" data-testid="overview-capabilities">
+              {CAPABILITY_ORDER.map((k) => {
+                const c = caps?.[k];
+                const n = k === "synthetic_replay" ? h?.workers.alive : k === "recorder" ? h?.recorder_workers?.alive
+                  : h?.observation_workers?.alive;
+                const testid = { synthetic_replay: "overview-run-workers", recorder: "overview-recorder-workers",
+                                 market_replay: "overview-observation-workers" }[k];
+                return (
+                  <li key={k}>
+                    <span className="cap-name">{c?.label ?? k}</span>
+                    <span className="cap-count"><span className="mono" data-testid={testid}>{n ?? "—"}</span> worker{n === 1 ? "" : "s"}</span>
+                    <Badge tone={capabilityTone(c)} dot>{capabilityLabel(c)}</Badge>
+                  </li>
+                );
+              })}
+            </ul>
           </Card>
 
           <Card title="Evidence pipeline" icon="layers">
-            <Pipeline stages={pipeline(dsList ? dsList.length : null, recorderReady)} />
+            <Pipeline stages={pipeline(dsList ? dsList.length : null, caps?.recorder, caps?.market_replay)} />
           </Card>
 
           <Card title="Latest historical dataset" icon="data" testid="readiness-dataset"
@@ -291,11 +308,12 @@ export function Overview() {
               <LatestRecording s={latestSession} />}
           </Card>
 
-          <Card material="synthetic" title="Replay Lab" icon="flask" eyebrow="Synthetic · demo scaffolding"
+          <Card title="Replay Lab" icon="replay" eyebrow="Real observation replay · synthetic demo"
                 actions={<Button variant="ghost" onClick={() => navigate("replay")}>Open lab</Button>}>
             <p className="muted small-text">
-              Exercises the durable run/replay machinery with a scripted dummy trader on synthetic data. It is not market
-              evidence and never feeds this cockpit.
+              Market Replay steps through verified real evidence and shows the observable market state at each instant —
+              evidence only, never interpretation. The separate synthetic demo exercises the shell and never feeds this
+              cockpit.
             </p>
           </Card>
         </aside>

@@ -4,7 +4,7 @@ Algorithmic Trader is a clean-room BTC-only research and paper-trading project w
 
 ## Current state
 
-Algorithmic Trader is a BTC **market-analysis and trade-decision** system (Foundation v2.0): capital, position size, leverage and order placement remain the human Owner's decisions. The operational shell (WP-001/WP-002) and the OKX BTC-USDT-SWAP market-data evidence layer (WP-003) are accepted. The project is in **M3 — trustworthy real-market observation and causal reasoning readiness**; WP-004 adds the causal feed and observable market state pure core. The runnable shell still uses a scripted **DEMO dummy trader** on a **synthetic** fixture; its account/order path is DEMO scaffolding only. No professional trader exists yet, and nothing the DEMO replay shows is market data or research evidence. Acquired OKX datasets are real public market data, not trading results.
+Algorithmic Trader is a BTC **market-analysis and trade-decision** system (Foundation v2.0): capital, position size, leverage and order placement remain the human Owner's decisions. The operational shell (WP-001/WP-002) and the OKX BTC-USDT-SWAP market-data evidence layer (WP-003) are accepted. The project is in **M3 — trustworthy real-market observation and causal reasoning readiness**; WP-004–WP-006 add the causal feed/observable-state core, the prospective public recorder and the product UI; WP-007 connects real evidence to the application as a durable, observation-only Market Replay. The runnable shell still uses a scripted **DEMO dummy trader** on a **synthetic** fixture; its account/order path is DEMO scaffolding only. No professional trader exists yet, and nothing the DEMO replay shows is market data or research evidence. Acquired OKX datasets are real public market data, not trading results.
 
 ## Read first
 
@@ -28,7 +28,7 @@ One command (Docker + Docker Compose required):
 docker compose up --build
 ```
 
-Then open <http://localhost:8000>. The app opens on **Market** (the future trader cockpit, with real system/data readiness and clearly pending trader areas). Navigate with the sidebar: **Replay Lab** (synthetic DEMO replay), **Data** (historical datasets) and **Recorder** (public evidence collection). In Replay Lab, click **Start synthetic replay** to launch a run; the worker executes it independently of the browser. `docker compose down` stops the stack (add `--volumes` to delete the database and run artifacts).
+Then open <http://localhost:8000>. The app opens on **Market** (the future trader cockpit, with real system/data readiness and clearly pending trader areas). Navigate with the sidebar: **Replay Lab** (**Market Replay** of real evidence — the primary mode — and the secondary **Synthetic Demo**), **Data** (historical datasets) and **Recorder** (public evidence collection). In Replay Lab, pick a dataset or finalized recording and click **Start market replay**, or switch to *Synthetic Demo* and click **Start synthetic replay**; the workers execute replays independently of the browser. `docker compose down` stops the stack (add `--volumes` to delete the database and run artifacts).
 
 Without Docker (local PostgreSQL 18, Python via `uv`, Node 24):
 
@@ -36,7 +36,7 @@ Without Docker (local PostgreSQL 18, Python via `uv`, Node 24):
 uv sync --locked
 npm --prefix web ci && npm --prefix web run build
 export ALGOTRADER_DATABASE_URL=postgresql://USER:PASS@localhost:5432/algotrader   # existing, empty database
-uv run algotrader serve          # migrates, starts a supervised worker + API on http://127.0.0.1:8000
+uv run algotrader serve          # migrates, starts supervised run/recorder/observation workers + API on :8000
 ```
 
 Useful environment variables: `ALGOTRADER_ARTIFACT_ROOT` (default `./var/artifacts`, outside Git), `ALGOTRADER_PORT`, `ALGOTRADER_LEASE_SECONDS`.
@@ -156,6 +156,17 @@ This component prospectively records **public, unauthenticated** OKX BTC-USDT-SW
 - **Operation**: the **Recorder** view (`#recorder`, *Public market evidence collection — no trading*) has start (max duration), stop, status, elapsed time, heartbeat, connection states, subscribed channels, counts, last receipt, reconnects/errors, output path and the measured-timing summary. The `recorder` Docker Compose service (or `algotrader serve`) runs `algotrader recorder-worker`; the browser does not own the recording.
   - CLI: `algotrader recorder run --minutes N` (foreground bounded session) and `algotrader recorder inspect <session_id>`.
 
+## Real-market observation replay (WP-007, `algotrader.observe.v1` PROVISIONAL) — observation only
+
+A separate operational path from the synthetic `semantic.v1` shell: **verified evidence → `feed.v1` causal deliveries → pure observable-state reducer → durable replay/product visibility**. It never creates MarketViews, decisions, orders, fills or account records and never imports the synthetic trader/risk/account/engine modules.
+
+- **Sources**: a verified `marketdata.v1` dataset (feed built with the accepted adapter and the explicit zero-extra-delay **MODELED** availability convention — *not measured publication timing*), or a finalized CLEAN/PARTIAL `recorder.v1` session (accepted bridge; **RECORDED** availability = first completed push's *client-observed* local receipt time). Sources are re-verified (hashes, identity) before launch and on every worker claim; FAILED/unusable sessions cannot launch; PARTIAL outages are listed as recorder availability loss, never as market gaps; bridge exclusions stay visible.
+- **Clock**: one step = one causal feed delivery in the accepted total order; information time = that delivery's `available_time`. Pacing is **events/s** (`max` allowed) and never changes order, state or digests. Freshness uses the named inspection default (`feed.freshness.v1(...)`), persisted per replay.
+- **Durability**: `observe-worker` processes (`observe:` worker ids; Compose service `observer`) own replays under a lease. Each delivery commits atomically: cursor compare-and-set (`k → k+1`) + snapshot digest/view + append-only delivery row (unique per `(replay, seq)` and `(replay, event_id)`). On claim the state is rebuilt as the pure feed prefix and must match the persisted digest, otherwise the replay fails explicitly. Pause parks at a committed cursor; *Step one event* applies exactly one delivery; 3 consecutive interruptions without progress fail the replay.
+- **API**: `/api/observations` (`sources`, `sources/{kind}/{id}` preflight, create/list/get, `state`, `deliveries`, `traded-bars`, `pause|resume|step|speed|cancel`, `stream` (SSE), `manifest`, `files/{name}`).
+- **Artifacts** (`<artifact root>/observations/<replay_id>/`): `config.json`, `deliveries.jsonl`, `final_snapshot.json`, `validation.json` (independent re-derivation from the immutable source: order, no duplicates, per-delivery digests, no future knowledge, final = `snapshot_at`) and `manifest.json` (hashes; source evidence referenced, not copied).
+- **Health** (`GET /api/health` → `capabilities`) is capability-aware: core, market replay, recorder and synthetic replay each report `available`, `unavailable` (worker offline; limits that capability only) or `stalled` (jobs waiting with no worker).
+
 ## Semantic contract baseline
 
 The public semantic contracts (`src/algotrader/contracts.py`: journal payloads such as MarketObservation, MarketView, TradePlan, RiskDecision, Decision, OrderIntent, Order, Fill and AccountSnapshot, plus Run, RunConfig, ReplayControl and RunManifest) are frozen as **`algotrader.semantic.v1`**. Their JSON Schema is checked in at `schemas/algotrader.semantic.v1.json`, and every run manifest records the version in `schema_version`.
@@ -180,6 +191,7 @@ Without `ALGOTRADER_TEST_DATABASE_URL` the database tests are skipped (CI sets `
 | `src/algotrader/schema.py`, `schemas/` | Semantic and market-data contract JSON Schema baselines and their generator |
 | `src/algotrader/marketdata/` | Market-data contracts, OKX public REST adapter, bounded dataset acquisition/quality/verification |
 | `src/algotrader/recorder/` | Public live recorder: contracts (provisional), OKX WS/REST adapter, append-only journal, analysis/report, recorded→feed bridge, durable job |
+| `src/algotrader/observe/` | Real-market observation replay (provisional contracts, sources/verification, pure event-driven core, durable worker/control, artifacts/validation, API) |
 | `src/algotrader/feed/` | Causal feed contracts (provisional), dataset→feed adapter, ordering/availability policies, pure observable-state reducer, snapshots/deltas |
 | `tests/fixtures/okx/` | Small captured OKX public responses (see `PROVENANCE.json`) for offline tests |
 | `src/algotrader/artifacts.py`, `validation.py` | Immutable run artifacts and validation checks |

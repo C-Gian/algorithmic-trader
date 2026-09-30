@@ -1,0 +1,859 @@
+{
+  "$defs": {
+    "ArtifactFile": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "lines": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Lines"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "sha256": {
+          "title": "Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "sha256",
+        "bytes",
+        "lines"
+      ],
+      "title": "ArtifactFile",
+      "type": "object"
+    },
+    "AvailabilityBasis": {
+      "enum": [
+        "MODELED",
+        "RECORDED"
+      ],
+      "title": "AvailabilityBasis",
+      "type": "string"
+    },
+    "AvailabilityPolicy": {
+      "additionalProperties": false,
+      "description": "Feed-layer availability transformation. Never changes event time.",
+      "properties": {
+        "bar_delay": {
+          "format": "duration",
+          "title": "Bar Delay",
+          "type": "string"
+        },
+        "base_policy_id": {
+          "title": "Base Policy Id",
+          "type": "string"
+        },
+        "basis": {
+          "$ref": "#/$defs/AvailabilityBasis"
+        },
+        "funding_delay": {
+          "format": "duration",
+          "title": "Funding Delay",
+          "type": "string"
+        },
+        "measured": {
+          "title": "Measured",
+          "type": "boolean"
+        },
+        "note": {
+          "title": "Note",
+          "type": "string"
+        },
+        "policy_id": {
+          "title": "Policy Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "policy_id",
+        "basis",
+        "base_policy_id",
+        "bar_delay",
+        "funding_delay",
+        "measured",
+        "note"
+      ],
+      "title": "AvailabilityPolicy",
+      "type": "object"
+    },
+    "ChannelChange": {
+      "additionalProperties": false,
+      "properties": {
+        "channel_id": {
+          "title": "Channel Id",
+          "type": "string"
+        },
+        "condition_after": {
+          "$ref": "#/$defs/ChannelCondition"
+        },
+        "condition_before": {
+          "$ref": "#/$defs/ChannelCondition"
+        },
+        "freshness_after": {
+          "$ref": "#/$defs/Freshness"
+        },
+        "freshness_before": {
+          "$ref": "#/$defs/Freshness"
+        },
+        "latest_valid_after": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Latest Valid After"
+        },
+        "latest_valid_before": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Latest Valid Before"
+        },
+        "new_events": {
+          "title": "New Events",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "channel_id",
+        "new_events",
+        "condition_before",
+        "condition_after",
+        "freshness_before",
+        "freshness_after",
+        "latest_valid_before",
+        "latest_valid_after"
+      ],
+      "title": "ChannelChange",
+      "type": "object"
+    },
+    "ChannelCondition": {
+      "description": "What the latest slot evidence says (independent of timing).",
+      "enum": [
+        "NEVER_SEEN",
+        "VALID",
+        "GAP",
+        "REJECTED",
+        "INVALID_ONLY"
+      ],
+      "title": "ChannelCondition",
+      "type": "string"
+    },
+    "ChannelCoverage": {
+      "additionalProperties": false,
+      "description": "Event-time window for which the evidence package can speak about this channel.",
+      "properties": {
+        "channel": {
+          "$ref": "#/$defs/ChannelRef"
+        },
+        "covered_from": {
+          "format": "date-time",
+          "title": "Covered From",
+          "type": "string"
+        },
+        "covered_until": {
+          "format": "date-time",
+          "title": "Covered Until",
+          "type": "string"
+        },
+        "expected_cadence": {
+          "anyOf": [
+            {
+              "format": "duration",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Expected Cadence"
+        }
+      },
+      "required": [
+        "channel",
+        "covered_from",
+        "covered_until",
+        "expected_cadence"
+      ],
+      "title": "ChannelCoverage",
+      "type": "object"
+    },
+    "ChannelRef": {
+      "additionalProperties": false,
+      "properties": {
+        "family": {
+          "$ref": "#/$defs/Family"
+        },
+        "series_id": {
+          "title": "Series Id",
+          "type": "string"
+        },
+        "source": {
+          "title": "Source",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source",
+        "family",
+        "series_id"
+      ],
+      "title": "ChannelRef",
+      "type": "object"
+    },
+    "DeliveryRecord": {
+      "additionalProperties": false,
+      "description": "One committed causal feed delivery (the replay journal).",
+      "properties": {
+        "available_time": {
+          "format": "date-time",
+          "title": "Available Time",
+          "type": "string"
+        },
+        "changes": {
+          "items": {
+            "$ref": "#/$defs/ChannelChange"
+          },
+          "title": "Changes",
+          "type": "array"
+        },
+        "channel_id": {
+          "title": "Channel Id",
+          "type": "string"
+        },
+        "event_end_time": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Event End Time"
+        },
+        "event_id": {
+          "title": "Event Id",
+          "type": "string"
+        },
+        "event_time": {
+          "format": "date-time",
+          "title": "Event Time",
+          "type": "string"
+        },
+        "family": {
+          "$ref": "#/$defs/Family"
+        },
+        "kind": {
+          "$ref": "#/$defs/EventKind"
+        },
+        "quality_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Quality Reason"
+        },
+        "seq": {
+          "title": "Seq",
+          "type": "integer"
+        },
+        "snapshot_digest": {
+          "title": "Snapshot Digest",
+          "type": "string"
+        },
+        "snapshot_id": {
+          "title": "Snapshot Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "seq",
+        "event_id",
+        "channel_id",
+        "family",
+        "kind",
+        "event_time",
+        "event_end_time",
+        "available_time",
+        "quality_reason",
+        "snapshot_id",
+        "snapshot_digest",
+        "changes"
+      ],
+      "title": "DeliveryRecord",
+      "type": "object"
+    },
+    "EventKind": {
+      "enum": [
+        "bar_observation",
+        "funding_observation",
+        "slot_quality"
+      ],
+      "title": "EventKind",
+      "type": "string"
+    },
+    "Family": {
+      "description": "Role-specific source families. No generic 'price' channel exists.",
+      "enum": [
+        "trade_bar_1m",
+        "mark_bar_1m",
+        "index_bar_1m",
+        "funding_settlement"
+      ],
+      "title": "Family",
+      "type": "string"
+    },
+    "FeedIdentity": {
+      "additionalProperties": false,
+      "properties": {
+        "content_identity": {
+          "title": "Content Identity",
+          "type": "string"
+        },
+        "contract_status": {
+          "title": "Contract Status",
+          "type": "string"
+        },
+        "event_count": {
+          "title": "Event Count",
+          "type": "integer"
+        },
+        "event_counts": {
+          "additionalProperties": {
+            "type": "integer"
+          },
+          "title": "Event Counts",
+          "type": "object"
+        },
+        "ordered_event_hash": {
+          "title": "Ordered Event Hash",
+          "type": "string"
+        },
+        "ordering_policy_id": {
+          "title": "Ordering Policy Id",
+          "type": "string"
+        },
+        "schema_revision": {
+          "title": "Schema Revision",
+          "type": "integer"
+        },
+        "schema_version": {
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema_version",
+        "contract_status",
+        "schema_revision",
+        "content_identity",
+        "ordered_event_hash",
+        "ordering_policy_id",
+        "event_count",
+        "event_counts"
+      ],
+      "title": "FeedIdentity",
+      "type": "object"
+    },
+    "Freshness": {
+      "enum": [
+        "UNKNOWN",
+        "FRESH",
+        "STALE",
+        "NOT_APPLICABLE"
+      ],
+      "title": "Freshness",
+      "type": "string"
+    },
+    "FreshnessPolicy": {
+      "additionalProperties": false,
+      "description": "Per-family freshness thresholds. Configuration, not universal constants.",
+      "properties": {
+        "bar_max_age": {
+          "format": "duration",
+          "title": "Bar Max Age",
+          "type": "string"
+        },
+        "funding_max_age": {
+          "anyOf": [
+            {
+              "format": "duration",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Funding Max Age"
+        },
+        "history_limit": {
+          "minimum": 1,
+          "title": "History Limit",
+          "type": "integer"
+        },
+        "note": {
+          "title": "Note",
+          "type": "string"
+        },
+        "policy_id": {
+          "title": "Policy Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "policy_id",
+        "bar_max_age",
+        "funding_max_age",
+        "history_limit",
+        "note"
+      ],
+      "title": "FreshnessPolicy",
+      "type": "object"
+    },
+    "ObservationReplayConfig": {
+      "additionalProperties": false,
+      "description": "Everything a replay depends on; fixed at creation and re-checked by every worker claim.",
+      "properties": {
+        "availability_label": {
+          "title": "Availability Label",
+          "type": "string"
+        },
+        "availability_policy": {
+          "$ref": "#/$defs/AvailabilityPolicy"
+        },
+        "clock_policy": {
+          "title": "Clock Policy",
+          "type": "string"
+        },
+        "code_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Code Version"
+        },
+        "feed": {
+          "$ref": "#/$defs/FeedIdentity"
+        },
+        "freshness_policy": {
+          "$ref": "#/$defs/FreshnessPolicy"
+        },
+        "labels": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Labels",
+          "type": "array"
+        },
+        "replay_id": {
+          "title": "Replay Id",
+          "type": "string"
+        },
+        "schema_version": {
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "source": {
+          "$ref": "#/$defs/SourceSummary"
+        },
+        "verification": {
+          "$ref": "#/$defs/SourceVerification"
+        }
+      },
+      "required": [
+        "schema_version",
+        "replay_id",
+        "source",
+        "verification",
+        "feed",
+        "availability_policy",
+        "availability_label",
+        "freshness_policy",
+        "clock_policy",
+        "code_version",
+        "labels"
+      ],
+      "title": "ObservationReplayConfig",
+      "type": "object"
+    },
+    "ObservationReplayManifest": {
+      "additionalProperties": false,
+      "properties": {
+        "applied_events": {
+          "title": "Applied Events",
+          "type": "integer"
+        },
+        "artifacts": {
+          "items": {
+            "$ref": "#/$defs/ArtifactFile"
+          },
+          "title": "Artifacts",
+          "type": "array"
+        },
+        "attempts": {
+          "title": "Attempts",
+          "type": "integer"
+        },
+        "config": {
+          "$ref": "#/$defs/ObservationReplayConfig"
+        },
+        "contract_status": {
+          "title": "Contract Status",
+          "type": "string"
+        },
+        "control_log": {
+          "items": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "title": "Control Log",
+          "type": "array"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Error"
+        },
+        "final_as_of": {
+          "format": "date-time",
+          "title": "Final As Of",
+          "type": "string"
+        },
+        "final_content_digest": {
+          "title": "Final Content Digest",
+          "type": "string"
+        },
+        "final_snapshot_id": {
+          "title": "Final Snapshot Id",
+          "type": "string"
+        },
+        "finished_at": {
+          "format": "date-time",
+          "title": "Finished At",
+          "type": "string"
+        },
+        "labels": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Labels",
+          "type": "array"
+        },
+        "recovery_log": {
+          "items": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "title": "Recovery Log",
+          "type": "array"
+        },
+        "replay_id": {
+          "title": "Replay Id",
+          "type": "string"
+        },
+        "schema_revision": {
+          "title": "Schema Revision",
+          "type": "integer"
+        },
+        "schema_version": {
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "source_reference": {
+          "title": "Source Reference",
+          "type": "string"
+        },
+        "started_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Started At"
+        },
+        "status": {
+          "$ref": "#/$defs/ReplayStatus"
+        },
+        "total_events": {
+          "title": "Total Events",
+          "type": "integer"
+        },
+        "validation": {
+          "$ref": "#/$defs/ReplayValidation"
+        }
+      },
+      "required": [
+        "schema_version",
+        "contract_status",
+        "schema_revision",
+        "replay_id",
+        "status",
+        "labels",
+        "config",
+        "created_at",
+        "started_at",
+        "finished_at",
+        "applied_events",
+        "total_events",
+        "final_as_of",
+        "final_snapshot_id",
+        "final_content_digest",
+        "attempts",
+        "recovery_log",
+        "control_log",
+        "error",
+        "validation",
+        "source_reference",
+        "artifacts"
+      ],
+      "title": "ObservationReplayManifest",
+      "type": "object"
+    },
+    "ReplayStatus": {
+      "enum": [
+        "queued",
+        "running",
+        "paused",
+        "completed",
+        "cancelled",
+        "failed"
+      ],
+      "title": "ReplayStatus",
+      "type": "string"
+    },
+    "ReplayValidation": {
+      "additionalProperties": false,
+      "properties": {
+        "checks": {
+          "items": {
+            "$ref": "#/$defs/ValidationCheck"
+          },
+          "title": "Checks",
+          "type": "array"
+        },
+        "passed": {
+          "title": "Passed",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "passed",
+        "checks"
+      ],
+      "title": "ReplayValidation",
+      "type": "object"
+    },
+    "SourceKind": {
+      "enum": [
+        "dataset",
+        "recording"
+      ],
+      "title": "SourceKind",
+      "type": "string"
+    },
+    "SourceSummary": {
+      "additionalProperties": false,
+      "properties": {
+        "coverage": {
+          "items": {
+            "$ref": "#/$defs/ChannelCoverage"
+          },
+          "title": "Coverage",
+          "type": "array"
+        },
+        "exclusions": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Exclusions",
+          "type": "array"
+        },
+        "index_id": {
+          "title": "Index Id",
+          "type": "string"
+        },
+        "inst_id": {
+          "title": "Inst Id",
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/SourceKind"
+        },
+        "notes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Notes",
+          "type": "array"
+        },
+        "source_id": {
+          "title": "Source Id",
+          "type": "string"
+        },
+        "source_schema": {
+          "title": "Source Schema",
+          "type": "string"
+        },
+        "source_status": {
+          "title": "Source Status",
+          "type": "string"
+        },
+        "warnings": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Warnings",
+          "type": "array"
+        }
+      },
+      "required": [
+        "kind",
+        "source_id",
+        "source_schema",
+        "inst_id",
+        "index_id",
+        "source_status",
+        "coverage",
+        "warnings",
+        "exclusions",
+        "notes"
+      ],
+      "title": "SourceSummary",
+      "type": "object"
+    },
+    "SourceVerification": {
+      "additionalProperties": false,
+      "properties": {
+        "checked_at": {
+          "format": "date-time",
+          "title": "Checked At",
+          "type": "string"
+        },
+        "method": {
+          "title": "Method",
+          "type": "string"
+        },
+        "problems": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Problems",
+          "type": "array"
+        },
+        "verified": {
+          "title": "Verified",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "verified",
+        "method",
+        "problems",
+        "checked_at"
+      ],
+      "title": "SourceVerification",
+      "type": "object"
+    },
+    "ValidationCheck": {
+      "additionalProperties": false,
+      "properties": {
+        "detail": {
+          "title": "Detail",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "passed": {
+          "title": "Passed",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "name",
+        "passed",
+        "detail"
+      ],
+      "title": "ValidationCheck",
+      "type": "object"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "changelog": [
+    {
+      "date": "2026-09-30",
+      "note": "Initial provisional baseline (WP-007): observation-replay config, source verification, feed identity, committed delivery records, manifest and validation.",
+      "revision": 1
+    }
+  ],
+  "clock_policy": "Event-driven replay clock: one step applies exactly one causal feed delivery, in the accepted feed.v1 total order; replay/information time becomes that delivery's available_time. Pacing (events/s) is operational only and never changes order, state or digests.",
+  "labels": [
+    "REAL_MARKET_EVIDENCE",
+    "OBSERVATION_ONLY",
+    "NO_INTERPRETATION",
+    "NO_TRADING"
+  ],
+  "public_contracts": {
+    "ArtifactFile": "#/$defs/ArtifactFile",
+    "DeliveryRecord": "#/$defs/DeliveryRecord",
+    "FeedIdentity": "#/$defs/FeedIdentity",
+    "ObservationReplayConfig": "#/$defs/ObservationReplayConfig",
+    "ObservationReplayManifest": "#/$defs/ObservationReplayManifest",
+    "ReplayValidation": "#/$defs/ReplayValidation",
+    "SourceSummary": "#/$defs/SourceSummary",
+    "SourceVerification": "#/$defs/SourceVerification",
+    "ValidationCheck": "#/$defs/ValidationCheck"
+  },
+  "revision": 1,
+  "schema_version": "algotrader.observe.v1",
+  "status": "PROVISIONAL",
+  "title": "Algorithmic Trader observation-replay contracts (algotrader.observe.v1, PROVISIONAL)"
+}
