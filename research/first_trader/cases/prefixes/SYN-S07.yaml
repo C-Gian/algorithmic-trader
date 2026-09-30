@@ -1,0 +1,10 @@
+case_id: SYN-S07
+evidence: SYNTHETIC
+category: target_invalidation_order_ambiguity
+direction: SHORT
+question: "After activation, one 1m bar spans both the target and the invalidation: which came first?"
+visible_prefix_cutoff: "2000-01-01T10:52Z"
+declared_inputs: "Identical to SYN-S01 through the trigger (scenario activated 10:52; V 84195, T_near 83965; NO_TRADE COST_OR_DELAY_VIABILITY_UNRESOLVED)."
+frozen_labels:
+  same_as: SYN-S01
+  scenario: "CONTINUATION activated 10:52"

@@ -1,0 +1,20 @@
+case_id: SYN-S08
+evidence: SYNTHETIC
+category: missing_or_stale_evidence
+direction: SHORT
+question: "A recorder outage while ARMED hides minutes that could contain the trigger or the invalidation: can a later visible trigger be used?"
+visible_prefix_cutoff: "2000-01-01T10:58Z"
+declared_inputs:
+  base: "SYN-S01 through ARMED at 10:50 (K 84110, band [84080, 84110], V 84195, T_near 83965)"
+  source_kind: "recorded session (RECORDED availability)"
+  outage: "business WebSocket disconnected 10:50:05-10:57:30; traded 1m slots 10:50-10:56 have no events (RECORDER_OUTAGE, not market gaps)"
+bars_1m:
+  - ["10:57", 84100.0, 84104.0, 84082.0, 84090.0]   # known 10:58
+frozen_labels:
+  at_10_53_timer: {newest_traded_1m_event_end: "10:50", age_s: 180, P-DATA: UNKNOWN, public: "NO_TRADE WARMUP_OR_REQUIRED_DATA_UNAVAILABLE"}
+  at_10_58: {bar_10_57: "close 84090 <= 84109.9 would satisfy the trigger", hidden_minutes: "10:50-10:56 unknown", P-TRIG: UNKNOWN, P-INTACT: UNKNOWN, P-VALIDITY: UNKNOWN}
+  opportunity: "ARMED held (UNKNOWN); no SHORT; if the hidden minutes stay unknown, EXPIRED at 11:50 with data flag"
+  scenario: "not activated while UNKNOWN"
+  public_action: NO_TRADE
+  display_reason: WARMUP_OR_REQUIRED_DATA_UNAVAILABLE
+  note: "Outage is recorder coverage loss; no MISSING market-gap events are fabricated (WP-005/WP-007 semantics)."

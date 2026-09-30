@@ -1,0 +1,94 @@
+version: 1
+purpose: >
+  Targeted external sources actually used by RP-001 (first professional trader formalization).
+  Separate from knowledge/registry.yaml (immutable source-study snapshot), which is unchanged.
+policy:
+  note: "Registration records provenance and limits only. It does not turn a source into a trading rule or BTC evidence."
+  retrieval_method: "Raw HTTP retrieval by the RP-001 executor (curl), read directly as text/PDF text; no summarizing intermediary."
+sources:
+  - id: EXT-001
+    title: "Fundamental Trading Patterns"
+    author: "Adam H. Grimes"
+    url: "https://www.adamhgrimes.com/fundamental-trading-patterns/"
+    retrieved: "2026-09-30T15:54Z"
+    source_type: practitioner_web_page
+    informs:
+      - "RP-001A: pullback as a with-trend entry after a counter-trend leg (alternation of with-trend legs and pullbacks)"
+      - "RP-001A/C: entry styles 'as the market turns back into the trend (on a breakout of the pattern)' vs 'near the bottom (failure test)'"
+      - "RP-001A: simple vs complex (multi-leg) pullbacks; first resumption attempt can fail"
+    verification: VERIFIED_PRIMARY_TEXT
+    verified_content: >
+      Page text read in full. Defines simple pullback (one counter-trend leg), complex pullback (two or more
+      counter-trend legs, a failed first resumption attempt), failure test, 'Antis', breakouts. No numeric
+      thresholds, no timeframes, no statistics.
+    transfer_limitations:
+      - "Practitioner description, not a controlled study; no BTC, no crypto, no intraday perpetual evidence."
+      - "Failure-test text attributes behavior to stop orders/trapped traders (hidden intent); RP-001 does not adopt that as fact."
+      - "Does not supply swing thresholds, depth limits, trigger boundaries, targets or deadlines."
+  - id: EXT-002
+    title: "One step ahead..."
+    author: "Adam H. Grimes"
+    url: "https://www.adamhgrimes.com/one-step-ahead/"
+    retrieved: "2026-09-30T15:54Z"
+    source_type: practitioner_blog_post
+    informs:
+      - "RP-001A: move->reaction framing; the character of the reaction (how far, how quickly, dull/flat, turning back) discriminates the next swing"
+      - "RP-001B/E: explicit practitioner skepticism that support/resistance, moving averages and retracement ratios carry predictive value"
+    verification: VERIFIED_PRIMARY_TEXT
+    verified_content: >
+      Post read in full. Swing trading is 'not a timeframe'. Example on S&P 500 cash index: after a strong move,
+      a strong reaction supports a swing in its direction; 'dull and flat, or even turns back down' favors the other
+      side. States the author's quantitative work suggests support/resistance are 'mostly coincidence' and
+      retracement ratios 'don't really work'. The page's post date is not shown in the retrieved text; SR-002 cites
+      8 October 2014 (not independently confirmed here).
+    transfer_limitations:
+      - "Illustrative discretionary judgement on one S&P episode; no rule, threshold or statistics."
+      - "'Conviction behind the move' is an interpretation; RP-001 records only displacement, speed and depth."
+      - "The skepticism is the author's summary of unpublished work; it constrains claims, it is not a proof of absence."
+  - id: EXT-003
+    title: "Support for Resistance: Technical Analysis and Intraday Exchange Rates"
+    author: "Carol L. Osler"
+    url: "https://www.newyorkfed.org/research/epr/00v06n2/0007osle.html"
+    full_text_url: "https://www.newyorkfed.org/medialibrary/media/research/epr/00v06n2/0007osle.pdf"
+    published: "FRBNY Economic Policy Review, July 2000, vol. 6 no. 2"
+    retrieved: "2026-09-30T15:54Z (abstract page) / 2026-09-30 (16-page PDF)"
+    source_type: primary_empirical_research
+    informs:
+      - "RP-001B: a prior level can be a plausible location for trend interruption (obstacle/destination), not a certainty"
+      - "RP-001B: hit/bounce definitions use a small price tolerance (0.01%) and a fixed look-ahead (15 or 30 minutes)"
+      - "RP-001E: evaluation design idea - compare behavior at defined levels against many arbitrary levels (bootstrap control)"
+      - "RP-001B: publisher 'strength' ratings were not meaningful; cross-firm agreement added no reliable power"
+    verification: VERIFIED_PRIMARY_TEXT
+    verified_content: >
+      Full PDF text read. Levels published by six FX firms, Jan 1996-Mar 1998, USD vs DEM/JPY/GBP, indicative
+      Reuters quotes at 1-minute intervals 09:00-16:00 NY. Bounce frequency 60.8% at published levels vs 56.2% at
+      arbitrary levels on average; significant for most firm-currency pairs; varied by firm and currency; weaker in
+      the higher-volatility second half; persisted about five business days; strength ratings not meaningful;
+      agreement across firms not materially more predictive. Levels came from analyst judgement (prior
+      highs/lows, trendlines, round numbers, order information), not from a published algorithm. Profitability
+      not evaluated.
+    transfer_limitations:
+      - "FX 1996-98 major pairs, dealer-published levels; not BTC, not perpetuals, not algorithmically generated swing zones."
+      - "Tests trend interruption (reversal), not continuation after a pullback."
+      - "Indicative quotes, New York session only; no transaction costs; no profitability claim."
+  - id: EXT-004
+    title: "Currency Orders and Exchange-Rate Dynamics: Explaining the Success of Technical Analysis"
+    author: "Carol L. Osler"
+    url: "https://www.newyorkfed.org/research/staff_reports/sr125.html"
+    full_text_url: "https://www.newyorkfed.org/medialibrary/media/research/staff_reports/sr125.pdf"
+    published: "FRBNY Staff Report 125, April 2001 (published version: Journal of Finance 58(5), 2003)"
+    retrieved: "2026-09-30 (abstract page and 45-page PDF)"
+    source_type: primary_empirical_research
+    informs:
+      - "RP-001B: a documented mechanism (clustered take-profit vs stop-loss orders, strongly at round numbers) for level effects in one bank's FX order book"
+      - "RP-001B (scope): why round-number levels and 'acceleration after crossing' are deferred rather than inferred from candles"
+    verification: VERIFIED_PRIMARY_TEXT_PARTIAL_READ
+    verified_content: >
+      Abstract, introduction and conclusions read from the PDF text; the data/simulation sections were scanned
+      by heading only. About 9,700 stop-loss/take-profit orders at one large dealing bank, Sep 1999-Apr 2000;
+      take-profit orders cluster more at round numbers (partially reflecting barriers); stop-loss orders cluster
+      just beyond round numbers (trend intensification after crossing). Silent on profitability/efficiency.
+    transfer_limitations:
+      - "Requires order-book/order-placement data that OKX public candles do not contain; RP-001 cannot observe order clusters."
+      - "One FX bank; mechanism evidence, not a BTC level effect."
+      - "Round-number levels are explicitly deferred by SR-002; not used in RP-001 rules."

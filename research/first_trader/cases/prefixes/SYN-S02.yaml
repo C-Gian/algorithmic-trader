@@ -1,0 +1,41 @@
+case_id: SYN-S02
+evidence: SYNTHETIC
+category: failed_recovery
+direction: SHORT
+question: "Short mirror of SYN-L05 with SHORT issued; the outcome tests post-activation invalidation. Variant EXCL: the same trigger while a long thesis is tracking."
+visible_prefix_cutoff: "2000-01-01T14:07Z"
+declared_inputs:
+  context: CTX-DOWN-2
+  S5: 60.0
+  epoch_low_water_before_A: 85600.0
+  swing_A: [HIGH, 86200.0, "12:00 bar"]
+  impulse_extreme_B_bar: "13:20 (low 84600.0)"
+  impulse_bars_n_I: 16
+  note: "Reaction is the price mirror of SYN-L05 (offsets from B identical); first ARMED at 13:50; no earlier trigger (declared)."
+bars_5m:
+  - ["13:25", 84650.0, 84750.0, 84630.0, 84730.0]
+  - ["13:30", 84730.0, 84840.0, 84710.0, 84820.0]
+  - ["13:35", 84820.0, 84920.0, 84800.0, 84900.0]
+  - ["13:40", 84900.0, 85000.0, 84870.0, 84980.0]
+  - ["13:45", 84980.0, 85080.0, 84950.0, 85060.0]
+  - ["13:50", 85060.0, 85170.0, 85040.0, 85150.0]
+  - ["13:55", 85150.0, 85240.0, 85130.0, 85220.0]
+  - ["14:00", 85220.0, 85300.0, 85220.0, 85240.0]
+bars_1m:
+  - ["14:05", 85230.0, 85255.0, 85222.0, 85228.0]
+  - ["14:06", 85228.0, 85232.0, 85200.0, 85205.0]
+frozen_labels:
+  context: DOWN
+  impulse: {I: 1600.0, v_I: 100.0, progress: "84600 < 85600 SATISFIED"}
+  at_14_05: {R: 85300.0, anchor: "14:00", K: 85220.0, band: [85190.0, 85220.0], V: 85315.0, T_near: 84615.0, G: 575.0, Rd: 125.0, D: 0.4375, rho: 0.875, cost: "67.5 bps VIABLE (16 <= 16.9)", state: ARMED}
+  at_14_07: {event: "P-TRIG SATISFIED by 14:06 close 85205 <= 85219.9; P-BAND SATISFIED", public: SHORT, entry_window_until: "14:17", thesis_expiry: "16:07", checkpoint: "14:37 needs 1m low <= 84917.5"}
+  public_action: SHORT
+variants:
+  EXCL:
+    added_state: "A LONG thesis from an earlier episode is TRACKING at 14:07 (context has since turned DOWN; the long thesis is not auto-invalidated)."
+    frozen_labels:
+      P-EXCL: CONTRADICTED
+      opportunity: "TRIGGERED -> CLOSED_TO_ENTRY"
+      scenario: "CONTINUATION activated and tracked"
+      public_action: NO_TRADE
+      display_reason: EXISTING_THESIS_NO_NEW_ENTRY

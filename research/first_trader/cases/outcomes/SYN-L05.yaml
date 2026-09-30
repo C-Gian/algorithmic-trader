@@ -1,0 +1,17 @@
+case_id: SYN-L05
+evidence: SYNTHETIC
+suffix_1m_key_bars:
+  - ["14:07", 83795.0, 83812.0, 83790.0, 83805.0]
+  - ["14:08", 83806.0, 83835.0, 83800.0, 83828.0]
+  - ["14:10", 83840.0, 83860.0, 83835.0, 83855.0]
+  - ["14:30", 84060.0, 84100.0, 84050.0, 84090.0]
+  - ["14:52", 84370.0, 84390.0, 84360.0, 84380.0]
+declared: "No 1m low <= 83685 between 14:07 and 14:52 (minimum 83790)."
+resolution_under_frozen_rules:
+  entry_window: "14:08 close 83828 > 83810 -> CLOSED_TO_ENTRY known 14:09; public NO_TRADE EXISTING_THESIS_NO_NEW_ENTRY; thesis TRACKING"
+  reference_delta_60s: "t_ref 14:08 -> 14:08 open 83806 within [83780, 83810] -> reference entry 83806"
+  reference_delta_180s: "t_ref 14:10; entry window already closed at 14:09 -> MISSED_ENTRY_WINDOW"
+  checkpoint_14_37: "RESPONDING (high 84100 >= 84082.5 by 14:30)"
+  thesis: "TARGET_BEFORE_INVALIDATION (14:52 high 84390 >= 84385; known 14:53)"
+  reference_trade_delta_60s: "TARGET_BEFORE_INVALIDATION; gross (84385 - 83806) / 83806 = 69.1 bps; net 53.1 to 64.1 bps under c_high / c_low (arithmetic illustration of the harness, not evidence)"
+assessment: "Supports mechanics: delay changes a recommended opportunity into a missed entry; the entry window closes on the first close outside the band."

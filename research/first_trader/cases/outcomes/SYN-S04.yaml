@@ -1,0 +1,6 @@
+case_id: SYN-S04
+evidence: SYNTHETIC
+suffix: "Declared: rotation continues 83800-84300."
+resolution_under_frozen_rules:
+  scenario_outcome: "none (no setup)"
+assessment: "Supports mechanics."

@@ -1,0 +1,6 @@
+case_id: SYN-S06
+evidence: SYNTHETIC
+suffix: "Declared: price continues higher to 84450 by 10:30."
+resolution_under_frozen_rules:
+  scenario_outcome: "none (no opportunity)"
+assessment: "Supports mechanics: opposing initiative is described in the MarketView; no reversal entry is created."

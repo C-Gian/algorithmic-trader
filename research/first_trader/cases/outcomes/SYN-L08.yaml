@@ -1,0 +1,6 @@
+case_id: SYN-L08
+evidence: SYNTHETIC
+suffix: "Not evaluated: no opportunity existed. A new clean 5m swing confirmation after the gap is required before any setup."
+resolution_under_frozen_rules:
+  scenario_outcome: none
+assessment: "Reveals a missing-data requirement: a single missing minute blocks the whole dependent chain (fails closed)."

@@ -1,0 +1,34 @@
+case_id: SYN-S01
+evidence: SYNTHETIC
+category: clean_continuation
+direction: SHORT
+question: "Exact short mirror of SYN-L01: does every inequality flip correctly?"
+visible_prefix_cutoff: "2000-01-01T10:52Z"
+declared_inputs:
+  context: CTX-DOWN-1
+  S5: 60.0
+  epoch_origin: "2000-01-01T04:00Z"
+  epoch_low_water_before_A: 84020.0
+  swing_A: [HIGH, 84600.0, "10:00 bar"]
+  impulse_extreme_B_bar: "10:25 (low 83950.0)"
+  impulse_bars_n_I: 5
+bars_5m:
+  - ["10:25", 84020.0, 84030.0, 83950.0, 83970.0]
+  - ["10:30", 83980.0, 84050.0, 83970.0, 84040.0]
+  - ["10:35", 84040.0, 84100.0, 84030.0, 84080.0]
+  - ["10:40", 84080.0, 84170.0, 84060.0, 84150.0]
+  - ["10:45", 84150.0, 84180.0, 84110.0, 84120.0]
+bars_1m:
+  - ["10:50", 84120.0, 84128.0, 84105.0, 84115.0]
+  - ["10:51", 84114.0, 84118.0, 84092.0, 84098.0]
+frozen_labels:
+  context: DOWN
+  impulse: {A: 84600.0, B: 83950.0, I: 650.0, n_I: 5, v_I: 130.0, progress: "83950 < 84020 SATISFIED"}
+  B_confirmation: "10:35 bar high 84100 >= 83950 + 120 = 84070 -> confirmed, known 10:40"
+  timeline:
+    - {at: "10:40", R: 84100.0, anchor: "10:35", K: 84030.0, band: [84000.0, 84030.0], V: 84115.0, T_near: 83965.0, G: 35.0, Rd: 115.0, state: WATCHING}
+    - {at: "10:45", R: 84170.0, anchor: "10:40", K: 84060.0, band: [84030.0, 84060.0], V: 84185.0, G: 65.0, Rd: 155.0, state: WATCHING}
+    - {at: "10:50", R: 84180.0, anchor: "10:45", K: 84110.0, band: [84080.0, 84110.0], V: 84195.0, T_near: 83965.0, G: 115.0, Rd: 115.0, D: 0.354, n_R: 4, rho: 0.442, cost: "13.7 bps UNRESOLVED", state: ARMED, public: "NO_TRADE COST_OR_DELAY_VIABILITY_UNRESOLVED (watch_direction SHORT)"}
+    - {at: "10:52", event: "P-TRIG SATISFIED by 10:51 close 84098 <= 84109.9; P-BAND SATISFIED (84098 >= 84080)", state: "TRIGGERED -> CLOSED_TO_ENTRY", scenario: "CONTINUATION activated 10:52 (83965 before 84195 before 12:52)", checkpoint: "11:22 needs 1m low <= 84037.5"}
+  public_action: NO_TRADE
+  display_reason: COST_OR_DELAY_VIABILITY_UNRESOLVED

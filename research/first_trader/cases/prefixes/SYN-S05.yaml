@@ -1,0 +1,27 @@
+case_id: SYN-S05
+evidence: SYNTHETIC
+category: overlapping_indecisive
+direction: SHORT
+question: "Depth and speed exactly at their limits (D = 0.50, rho = 1.0 at n_R = 3): does the strict rule classify deterministically, and is the sensitivity flagged?"
+visible_prefix_cutoff: "2000-01-01T09:20Z"
+declared_inputs:
+  context: CTX-DOWN-1
+  S5: 60.0
+  epoch_low_water_before_A: 84050.0
+  swing_A: [HIGH, 84480.0, "08:30 bar"]
+  impulse_extreme_B_bar: "09:00 (low 84000.0)"
+  impulse_bars_n_I: 6
+bars_5m:
+  - ["09:00", 84060.0, 84070.0, 84000.0, 84030.0]
+  - ["09:05", 84030.0, 84120.0, 84020.0, 84110.0]
+  - ["09:10", 84110.0, 84180.0, 84100.0, 84170.0]
+  - ["09:15", 84170.0, 84240.0, 84160.0, 84200.0]
+frozen_labels:
+  impulse: {A: 84480.0, B: 84000.0, I: 480.0, n_I: 6, v_I: 80.0, progress: "84000 < 84050 SATISFIED"}
+  B_confirmation: "09:05 bar high 84120 >= 84000 + 120 (equality reaches the threshold) -> known 09:10"
+  at_09_10: {R: 84120.0, n_R: 1, D: 0.25, speed: "not assessed (D <= 0.25, n_R < 3)", setup_state: REACTION_CONTROLLED}
+  at_09_15: {R: 84180.0, n_R: 2, D: 0.375, speed: "not assessed (n_R < 3)", setup_state: REACTION_CONTROLLED}
+  at_09_20: {R: 84240.0, n_R: 3, D: 0.50, v_R: 80.0, rho: 1.0, P-REACT: "SATISFIED at both boundaries (D <= 0.50, rho <= 1.0)", flag: SENSITIVE_BOUNDARY, anchor: "09:15", K: 84160.0, band: [84130.0, 84160.0], V: 84255.0, T_near: 84015.0, G: 115.0, Rd: 125.0, P-GEOM: CONTRADICTED, state: WATCHING}
+  public_action: NO_TRADE
+  display_reason: INSUFFICIENT_ROOM_OR_GEOMETRY
+  counterfactual: "R one tick higher (84240.1): D 0.5002 > 0.50 and assessed rho 1.0004 > 1.0 -> OPPOSING_INITIATIVE (precedence over DEEP) -> SCENARIOS_CONTESTED"

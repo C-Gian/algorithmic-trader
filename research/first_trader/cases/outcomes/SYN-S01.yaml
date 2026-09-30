@@ -1,0 +1,10 @@
+case_id: SYN-S01
+evidence: SYNTHETIC
+suffix_1m_key_bars:
+  - ["11:02", 84050.0, 84058.0, 84030.0, 84040.0]
+  - ["11:14", 83975.0, 83982.0, 83960.0, 83970.0]
+declared: "No 1m high >= 84195 between 10:52 and 11:14 (maximum 84120)."
+resolution_under_frozen_rules:
+  checkpoint_11_22: "RESPONDING (low 84030 <= 84037.5 at 11:02)"
+  thesis: "TARGET_BEFORE_INVALIDATION (11:14 low 83960 <= 83965; known 11:15)"
+assessment: "Supports the exact short mirror."

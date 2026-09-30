@@ -1,0 +1,264 @@
+version: 1
+status: PROPOSED_FOR_DIRECTOR_REVIEW
+frozen_before_real_data: true   # written and committed before any real BTC prefix/outcome was exported (see cases/SELECTION-PROTOCOL.md)
+rule: >
+  Every numeric value here is a DESIGN_CONVENTION: not source-supported, not calibrated on outcomes, not an
+  optimized parameter. It exists to make a behavioral distinction explicit and reproducible. Values may be
+  revised only with a new version, a recorded reason, before economic outcomes are inspected, and never by
+  threshold search.
+price_units:
+  price_role: traded   # trade_bar_1m OHLC; mark/index/funding never satisfy these predicates
+  tick_size: "0.1 USDT (OKX BTC-USDT-SWAP instrument snapshot)"
+conventions:
+  - id: DC-01
+    name: sampling_roles_and_alignment
+    value: "context = completed 1h bars; setup = completed 5m bars; trigger/reassessment = completed 1m bars; UTC-aligned half-open windows [t, t+w)"
+    source: "Research configuration imposed by RP-001/SR-002 (not proven parameters)"
+    why: "Gives the three process roles a concrete, causal sampling language without a timeframe tournament."
+    distinction: "Context (where) vs setup (move/reaction) vs trigger (response timing) stay separate roles."
+    alternatives: ["15m setup / 4h context", "event-based (range) bars"]
+    sensitivity: "Alignment shift (e.g., 5m windows offset by 2 minutes) can move swing confirmations by one bar; must be tested as a stability check, not optimized."
+  - id: DC-02
+    name: derived_bar_completeness
+    value: "A 5m/1h bar is COMPLETE only when every constituent 1m slot has a VALID traded observation known at or before the evaluation cutoff; known_at = max(constituent available_time). Any constituent SLOT_QUALITY -> bar QUALITY_AFFECTED (never bridged); any constituent not yet known -> PENDING."
+    source: "PROJECT ADAPTATION of SR-002 s.5 aggregation rule"
+    why: "Prevents a forming or holed higher-timeframe bar masquerading as completed history."
+    distinction: "complete vs pending vs quality-affected."
+    alternatives: ["allow bridging one missing minute with flag"]
+    sensitivity: "Strict rule makes rare single-minute gaps block a whole 1h bar; acceptable for v1 (fails closed)."
+  - id: DC-03
+    name: variability_scale
+    value: "S = median true range of the last 24 COMPLETE bars of that sampling role ending at or before the reference bar (5m: 2 h; 1h: 24 h). TR = max(high, prev_close) - min(low, prev_close); if the previous bar is not complete, TR = high - low. If fewer than 24 contiguous complete bars exist -> scale UNAVAILABLE."
+    source: "PROJECT ADAPTATION (SR-002 s.4: one transparent trailing range scale; robust TR summary acceptable)"
+    why: "One scale normalizes impulse size, reversal threshold, tolerances and buffers so the same rules apply across volatility states."
+    distinction: "Ordinary bar-to-bar variation vs a meaningful move/reaction."
+    alternatives: ["mean TR (ATR) over 14/24 bars", "window 12 or 48 bars"]
+    sensitivity: "Median resists single spike bars; a 12-bar window would react faster but make thresholds unstable. Not to be tuned on outcomes."
+  - id: DC-04
+    name: scale_freeze
+    value: "1h swing legs: threshold uses S1h frozen at the confirmation that started the leg. 5m swings: threshold uses S5 frozen at the start of the 5m structure epoch (DC-30) for the whole epoch. A zone's tolerance uses S at zone creation; an opportunity's geometry uses S5 frozen at its (re)arming revision; an issued recommendation's geometry is immutable."
+    source: "PROJECT ADAPTATION of SR-002 s.4 / s.10"
+    why: "An expanding range must not retroactively widen an invalidation or relabel history."
+    distinction: "Known-at-the-time geometry vs hindsight rescue."
+    alternatives: ["re-estimate S every bar for developing legs"]
+    sensitivity: "Frozen scale can be stale after a regime jump; the MOVEMENT_OUTSIDE_SUPPORTED_SCALE blocker covers extreme cases (DC-28)."
+  - id: DC-05
+    name: reversal_multiple
+    value: "k = 2.0: a running extremum is confirmed as a swing only after a subsequent reversal of at least 2.0 x S (frozen), for both 5m and 1h."
+    source: "DESIGN_CONVENTION (directional-change procedure is a PROJECT ADAPTATION candidate)"
+    why: "A single typical bar (about 1 x S) must not create a swing; two typical bars of counter-movement is the smallest reaction treated as structure."
+    distinction: "Noise wiggle vs structural swing."
+    alternatives: ["k = 1.5", "k = 3.0"]
+    sensitivity: "Lower k multiplies swings (more setups, more noise); higher k delays confirmation and hides shallow pullbacks (see RP-001B limitation L-B2)."
+  - id: DC-06
+    name: equal_extreme_tie
+    value: "A bar whose high equals the running high does not extend it; the earliest extremum time is kept (mirror for lows)."
+    source: "DESIGN_CONVENTION"
+    why: "Deterministic extremum time."
+    distinction: "Stable extremum identity."
+    alternatives: ["latest equal extreme wins"]
+    sensitivity: "Affects extremum time only, not price levels."
+  - id: DC-07
+    name: same_bar_path_ambiguity
+    value: "If one bar both exceeds the running extreme and reaches the reversal threshold measured from the prior extreme, the order is unknowable: treat the bar as an extension, flag AMBIGUOUS_PATH, and require a later bar to confirm. Confirmation is never backdated."
+    source: "PROJECT ADAPTATION of SR-002 s.7 (postpone under one predeclared policy)"
+    why: "OHLC cannot reveal intrabar order; postponing can only make knowledge later, never earlier."
+    distinction: "Knowable vs unknowable swing confirmation."
+    alternatives: ["mark swing UNASSESSABLE and restart tracking"]
+    sensitivity: "Delays confirmation by >= 1 bar in wide-range bars; ambiguity frequency must be reported."
+  - id: DC-08
+    name: tick_rounding
+    value: "Distances derived from S are rounded up to the next 0.1 USDT tick; comparisons use the stricter side (a threshold must be reached, not approximately reached)."
+    source: "DESIGN_CONVENTION"
+    why: "Deterministic, price-representable boundaries."
+    distinction: "Exact predicate evaluation."
+    alternatives: ["round half-even"]
+    sensitivity: "Negligible at BTC prices (1 tick ~ 0.001%)."
+  - id: DC-09
+    name: context_lookback_and_warmup
+    value: "The 1h procedure runs incrementally (DC-30); context considers only confirmed 1h swings whose extremum lies within the last 48 complete 1h bars. Assessable only with >= 2 confirmed swing highs and >= 2 confirmed swing lows in that window and >= 72 contiguous complete 1h bars of history (24 warm-up + 48)."
+    source: "DESIGN_CONVENTION"
+    why: "Directional context needs at least a higher-high/higher-low pair; bounded history keeps the claim local and reproducible."
+    distinction: "Established context vs insufficient history (UNKNOWN, not neutral)."
+    alternatives: ["24-bar lookback", "unbounded history"]
+    sensitivity: "Longer lookback admits stale structure; shorter lookback often yields UNKNOWN. Report UNKNOWN frequency."
+  - id: DC-10
+    name: impulse_minimum_size
+    value: "A 5m impulse leg must measure >= 4.0 x S5 (frozen at the leg's start) from origin swing to extreme."
+    source: "DESIGN_CONVENTION (EXT-002 supports 'sharp/strong move' qualitatively only)"
+    why: "Only a move clearly larger than the reversal threshold (2 x S) can host a pullback that is both confirmable and controlled (<= half the move)."
+    distinction: "Impulse worth reacting to vs ordinary swing."
+    alternatives: ["3.0 x S5", "5.0 x S5"]
+    sensitivity: "Directly sets how many setups exist; must never be chosen by P&L."
+  - id: DC-11
+    name: controlled_depth_limit
+    value: "Reaction depth D = (impulse extreme - reaction extreme) / impulse size. CONTROLLED requires D <= 0.50; 0.50 < D < 1.00 is DEEP; a completed 5m close beyond the impulse origin is STRUCTURAL_FAILURE."
+    source: "DESIGN_CONVENTION. 0.50 carries only the meaning 'the majority of the impulse's progress is still retained'; no claim that 0.50 is a privileged or predictive ratio (EXT-002 skepticism; no Fibonacci values used)."
+    why: "Separates a correction that preserves most of the move from one that has erased most of it."
+    distinction: "Controlled pullback vs deep reaction vs structural failure."
+    alternatives: ["0.40", "0.60 (not Fibonacci 0.618)"]
+    sensitivity: "Most sensitive setup parameter; evaluate only via predeclared contrast, never search."
+  - id: DC-12
+    name: reaction_speed_ratio
+    value: "rho = (reaction displacement / n_R) / (impulse size / n_I), n_R = completed 5m bars from B's bar to the bar holding R. rho is ASSESSED only when D > 0.25 and n_R >= 3. When assessed: CONTROLLED requires rho <= 1.0; rho > 1.0 -> OPPOSING_INITIATIVE, which is sticky for the rest of that reaction (a later slower bar cannot relabel it controlled). While not assessed, speed neither supports nor contradicts."
+    source: "DESIGN_CONVENTION (EXT-002: 'how far ... how quickly' as the dimensions of reaction character)."
+    revisions:
+      - "r1: CONTROLLED requires rho <= 1.0 always."
+      - "r2 (pre-data, found computing SYN-L05): assess only when D > 0.25 - the bar confirming B (a 2 x S5 reversal) exceeds the per-bar speed of slower impulses, so almost every setup was born non-controlled, and rho > 1 with D <= 0.25 had no state."
+      - "r3 (pre-data, found computing SYN-L10/S05/S06): also require n_R >= 3 and make OPPOSING sticky - with n_R = 1-2 a single bar's move is compared with a multi-bar average (structurally unfair, noisy), and averaging later bars could flip a sharp first counter-move back to 'controlled'."
+    why: "A counter-move faster than the impulse over a comparable span is behaving like an impulse in the other direction."
+    distinction: "Correction vs opposing initiative."
+    alternatives: ["compare fastest 3-bar windows of impulse and reaction", "ratio on closes instead of extremes"]
+    sensitivity: "The first three reaction bars are speed-unassessed; a very sharp 1-2 bar counter-move is caught only by depth (DEEP / D >= 1.0) until then."
+  - id: DC-13
+    name: stall_duration
+    value: "Reaction duration (completed 5m bars since the impulse extreme) > 3 x impulse duration -> INDECISIVE (stall), unless a trigger already confirmed."
+    source: "DESIGN_CONVENTION (EXT-002: 'dull and flat' reaction favors the other side)"
+    why: "A reaction that goes nowhere for much longer than the impulse took has lost the move/reaction relationship."
+    distinction: "Pullback vs overlapping indecision."
+    alternatives: ["2 x", "fixed 12 bars"]
+    sensitivity: "Fast impulses (2-3 bars) give short allowances; interacts with setup expiry DC-17."
+  - id: DC-14
+    name: invalidation_buffer
+    value: "Local invalidation V = reaction extreme -/+ b, b = max(1 tick, 0.25 x S5 frozen at arming); crossing is evaluated on completed 1m lows (long) / highs (short)."
+    source: "DESIGN_CONVENTION"
+    why: "A marginal new extreme by one tick should not be a different verdict than an exact retest; a buffer larger than 0.25 x S5 would be a stop-placement tactic, not a thesis boundary."
+    distinction: "Retest vs defeat of the pullback's low."
+    alternatives: ["b = 0", "b = 0.5 x S5"]
+    sensitivity: "Affects geometry (risk distance) and invalidation frequency."
+  - id: DC-15
+    name: entry_band_width
+    value: "Entry interval = [K, K + e] (long) / [K - e, K] (short), e = 0.5 x S5 frozen at arming, K = recovery boundary."
+    source: "DESIGN_CONVENTION"
+    why: "Beyond about half a typical 5m bar past the trigger boundary, the entry is chasing and the geometry no longer matches the plan."
+    distinction: "Timely entry vs lost location."
+    alternatives: ["e = 0.25 x S5", "e = 1.0 x S5"]
+    sensitivity: "Directly controls ENTRY_LOCATION_LOST frequency; interacts with human delay (RP-001D)."
+  - id: DC-16
+    name: zone_tolerance
+    value: "A horizontal reference zone around a confirmed swing extreme P extends inward by z = 0.25 x S (scale of the swing's sampling role at confirmation): swing high -> [P - z, P]; swing low -> [P, P + z]."
+    source: "DESIGN_CONVENTION (EXT-003 used a 0.01% hit tolerance for published FX levels; not transferred)"
+    why: "Measurement/location tolerance so a target is 'reached' when price comes within a small distance of the prior extreme."
+    distinction: "Reaching a destination area vs falling short."
+    alternatives: ["z = 0", "z = 0.5 x S"]
+    sensitivity: "Larger z makes targets easier to reach and room smaller; never widened after creation."
+  - id: DC-17
+    name: geometry_floor
+    value: "Conservative room G = target_zone_near_edge - worst entry (band edge); risk distance Rd = worst entry - V. Require G >= 1.0 x Rd (long; mirror short)."
+    source: "DESIGN_CONVENTION (explicitly not the 2:1 folklore; SR-002 s.9)"
+    why: "An opportunity whose first destination is nearer than its own invalidation at the worst allowed entry has no room to be a with-trend continuation idea."
+    distinction: "Room available vs obstacle-bound setup."
+    alternatives: ["0.75", "1.5"]
+    sensitivity: "Geometry gives payoff structure, not probability; sensitivity to be reported, not optimized."
+  - id: DC-18
+    name: setup_expiry
+    value: "An opportunity that reached ARMED expires if no trigger is confirmed within 60 minutes (12 completed 5m bars) of its FIRST arming (re-anchoring does not reset the clock)."
+    source: "DESIGN_CONVENTION"
+    why: "A conditional plan cannot wait indefinitely; the move/reaction relationship ages."
+    distinction: "Live setup vs stale setup."
+    alternatives: ["30 min", "90 min", "tie to impulse duration"]
+    sensitivity: "Interacts with DC-13; report expiry frequency."
+  - id: DC-19
+    name: entry_validity
+    value: "After trigger confirmation is known, the entry opportunity is OPEN_FOR_ENTRY for at most 10 minutes, and closes earlier on a completed 1m close outside the entry band or on invalidation."
+    source: "DESIGN_CONVENTION"
+    why: "A human needs time to act; an old trigger is not a new signal."
+    distinction: "Actionable now vs historical trigger."
+    alternatives: ["5 min", "15 min"]
+    sensitivity: "Must be wider than the evaluated human delay range (RP-001D: 1-3 min)."
+  - id: DC-20
+    name: response_checkpoint
+    value: "30 minutes after scenario activation, the expected response is: some completed 1m high (long) has reached K + 0.5 x (T_near - K). Otherwise RESPONSE_ABSENT (advisory weakening, not invalidation)."
+    source: "DESIGN_CONVENTION (LIB-005: expected vs observed response; time stops as information)"
+    why: "A continuation that has not made half its planned progress in 30 minutes is not behaving as expected."
+    distinction: "Responding thesis vs stalled thesis."
+    alternatives: ["checkpoint 20/45 min", "one-third of the room"]
+    sensitivity: "Descriptive in v1 (no automatic exit); evaluated as a separate outcome."
+  - id: DC-21
+    name: thesis_forecast_expiry
+    value: "Continuation scenario/thesis terminal horizon = 120 minutes after activation (trigger known-at). Neither boundary by then -> EXPIRED_UNRESOLVED."
+    source: "Candidate primary horizon from SR-002 (not an accepted constant); DESIGN_CONVENTION"
+    why: "Bounded, scoreable claim at the minutes-to-hours product horizon."
+    distinction: "Resolved vs unresolved within the claim window."
+    alternatives: ["60 min", "240 min"]
+    sensitivity: "Must not be moved after outcomes; later horizons need a new registered version."
+  - id: DC-22
+    name: zone_retirement
+    value: "5m-origin zones retire 24 h after confirmation; 1h-origin zones 7 days after confirmation; any zone is BROKEN (ineligible as target) after a completed 5m close beyond its anchor."
+    source: "DESIGN_CONVENTION (EXT-003 found published-level predictive power lasting about five business days in FX; not transferred)"
+    why: "Bounded relevance and no role flip: a broken level is not recycled as support."
+    distinction: "Eligible destination vs historical reference."
+    alternatives: ["retire after N interactions"]
+    sensitivity: "Affects target availability; report NO_TARGET frequency."
+  - id: DC-23
+    name: trigger_strictness
+    value: "Long trigger: a completed 1m close >= K + 1 tick; short: <= K - 1 tick."
+    source: "DESIGN_CONVENTION (EXT-001 'enter as the market turns back into the trend, on a breakout of the pattern')"
+    why: "A close through, not a touch; avoids equality ambiguity."
+    distinction: "Recovery confirmed vs boundary merely touched."
+    alternatives: ["5m close through K"]
+    sensitivity: "1m closes are noisier than 5m; accepted to keep entries human-timely."
+  - id: DC-24
+    name: data_currency_for_action
+    value: "Recommendation-grade evidence requires: the newest traded 1m bar's event end within 120 s of the evaluation time (age_since_event_end), all required 5m/1h bars COMPLETE, no traded 1m slot with quality or pending state since arming."
+    source: "DESIGN_CONVENTION (SR-002 s.6: FRESH-by-availability is not sufficient)"
+    why: "An old bar received recently is still old."
+    distinction: "Usable vs stale/missing required evidence."
+    alternatives: ["60 s", "180 s"]
+    sensitivity: "MODELED historical availability equals bar close, so staleness only arises from gaps/outages in replay; live RECORDED receipt delays (~1-2 s observed in WP-005 fixtures) are well inside 120 s."
+  - id: DC-25
+    name: human_response_delay
+    value: "Evaluate delays {60 s, 180 s} after decision-known time; 120 s nominal for display."
+    source: "DESIGN_CONVENTION (SR-002 s.14: a small fixed range, never the best per trade)"
+    why: "Recommendations are for a human, not an agent."
+    distinction: "Actionable by a person vs only by an instant executor."
+    alternatives: ["{30 s, 300 s}"]
+    sensitivity: "Larger delays increase missed entries; both values always reported."
+  - id: DC-26
+    name: cost_envelope
+    value: "Round-trip normalized cost envelope c_low = 5 bps, c_high = 16 bps (per side: taker fee 2-5 bps + spread/slippage 0.5-3 bps). UNVERIFIED: the public OKX fee schedule was not retrieved in RP-001; no personal fee tier."
+    source: "DESIGN_CONVENTION / UNRESOLVED"
+    why: "Makes cost dominance explicit before any outcome is seen."
+    distinction: "Room that survives costs vs room consumed by costs."
+    alternatives: ["maker-entry scenario (not assumed)"]
+    sensitivity: "At BTC ~84,000 USDT, 16 bps ~ 134 USDT; small 5m geometries may be cost-dominated (flagged in RP-001D)."
+  - id: DC-27
+    name: cost_viability_states
+    value: "Let G_bps = conservative room in bps of the worst entry. VIABLE if c_high <= 0.25 x G_bps; DOMINATES if c_low >= 0.50 x G_bps; otherwise UNRESOLVED."
+    source: "DESIGN_CONVENTION"
+    why: "Three-state honesty: viable under pessimistic costs, not viable even under optimistic costs, or undecidable without quote evidence."
+    distinction: "COST_OR_DELAY_VIABILITY_UNRESOLVED vs COST_OR_DELAY_DOMINATES."
+    alternatives: ["0.2/0.6 split"]
+    sensitivity: "Determines how often quotes become necessary (RP-001D)."
+  - id: DC-28
+    name: supported_scale_band
+    value: "If the latest complete 5m bar's TR > 4 x S5 (frozen), or S5 has changed by more than a factor of 2 versus the frozen arming scale, new arming/issuance is blocked with MOVEMENT_OUTSIDE_SUPPORTED_SCALE."
+    source: "DESIGN_CONVENTION"
+    why: "Frozen-scale geometry is not meaningful in a sudden volatility regime jump."
+    distinction: "Model applicable vs outside its supported scale."
+    alternatives: ["3 x", "no such gate"]
+    sensitivity: "Rare in ordinary conditions; must be reported, not tuned."
+  - id: DC-30
+    name: setup_structure_epoch
+    value: "5m swing extraction runs in epochs. For a long assessment the epoch origin is the extremum bar of the most recent confirmed 1h swing LOW (short: swing HIGH) known at the evaluation instant; the 5m procedure starts there in INIT mode with S5 = median TR of the 24 complete 5m bars ending at the origin bar. A new epoch starts only when a newer 1h swing in that role is confirmed (a recorded event). The 1h procedure itself runs incrementally from the start of contiguous history (after 24-bar warm-up); it never restarts on a sliding window."
+    source: "DESIGN_CONVENTION (revision recorded before any real data was exported: RP-001B originally restarted 5m tracking on a sliding lookback, which would relabel past swings as the window moved)"
+    why: "Setup structure is measured inside the current context leg, deterministically from the prefix; labels cannot flicker with a moving window."
+    distinction: "Stable, prefix-determined setup structure vs window-start artifacts."
+    alternatives: ["incremental 5m tracking from stream start (prefix-invariant but unbounded history)", "fixed calendar epochs (UTC day)"]
+    sensitivity: "A new 1h confirmation restarts 5m structure; objects of the previous epoch remain in history but are not used for new setups. Epoch restarts must be counted."
+  - id: DC-31
+    name: impulse_progress_reference
+    value: "Progress test for an impulse A->B (long): B exceeds every completed 5m high of the current epoch before A's bar (the epoch high-water mark). Short mirrors with lows."
+    source: "DESIGN_CONVENTION"
+    why: "Defines 'new progress relative to earlier known structure' even for the first swings of an epoch."
+    distinction: "A leg that extends the context leg vs one that stays inside earlier range."
+    alternatives: ["B beyond the most recent confirmed same-direction 5m swing only"]
+    sensitivity: "Epoch origin choice affects the reference; tied to DC-30."
+  - id: DC-29
+    name: audit_cadence
+    value: "MarketView/scenario audit sample = every completed 5m bar close (including NO_TRADE periods), independent of runtime update cadence."
+    source: "PROJECT ADAPTATION of SR-002 s.14.B"
+    why: "Prevents scoring only at attractive triggers."
+    distinction: "Whole-view coverage vs cherry-picked moments."
+    alternatives: ["every 15 min"]
+    sensitivity: "Dense overlapping audits are dependent; handled by block uncertainty (RP-001E)."

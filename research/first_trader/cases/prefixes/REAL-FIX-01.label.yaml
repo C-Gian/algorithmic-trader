@@ -1,0 +1,17 @@
+case_id: REAL-FIX-01
+evidence: REAL
+source: "Accepted captured OKX public responses (tests/fixtures/okx, see its PROVENANCE.json), acquired offline into dataset okx-btc-usdt-swap-1m-20260930T0750-20260930T0810-6db571d2bdcf (quality DEGRADED); feed/provenance hashes in REAL-FIX-01.json"
+visible_prefix: REAL-FIX-01.json
+visible_prefix_cutoff: "2026-09-30T08:10Z"
+selection_reason: "The only real accepted evidence available before RP-001 data acquisition; exercises warm-up and quality handling. Not selected by outcome (no outcome exists in the evidence)."
+frozen_at: "committed with RP-001 definitions, before any other real evidence was acquired"
+labels:
+  bars_1h: "07:00 bar BEYOND_COVERAGE (evidence starts 07:50); no complete 1h bar"
+  S1h: UNAVAILABLE
+  context: UNKNOWN            # needs >= 72 contiguous complete 1h bars (DC-09)
+  S5: "UNAVAILABLE (3 complete 5m bars < 24 required, DC-03)"
+  bar_5m_08_05: "QUALITY_AFFECTED (1m slot 08:09 INCOMPLETE_REJECTED: only an unconfirmed candle existed)"
+  predicates: {P-SCALE: UNKNOWN, P-CTX: UNKNOWN, P-SCALEBAND: UNKNOWN, P-IMP: UNKNOWN}
+  public_action: NO_TRADE
+  display_reason: WARMUP_OR_REQUIRED_DATA_UNAVAILABLE
+  factual_context_note: "mark 83193.0 / index 83237.1 / settled funding 0.0000337200721784 are recorded in the prefix but satisfy no predicate"

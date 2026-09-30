@@ -1,0 +1,37 @@
+case_id: SYN-L06
+evidence: SYNTHETIC
+category: overlapping_indecisive
+direction: LONG
+question: "A fast impulse followed by a sideways reaction that never arms: does the stall rule end the setup without inventing a direction?"
+visible_prefix_cutoff: "2000-01-01T11:10Z"
+declared_inputs:
+  context: CTX-UP-1
+  S5: 60.0
+  epoch_high_water_before_A: 83990.0
+  swing_A: [LOW, 83760.0, "10:00 bar"]
+  impulse_extreme_B_bar: "10:15 (high 84080.0)"
+  impulse_bars_n_I: 3
+bars_5m:
+  - ["10:15", 84020.0, 84080.0, 84010.0, 84060.0]
+  - ["10:20", 84060.0, 84065.0, 83960.0, 83980.0]
+  - ["10:25", 83980.0, 84010.0, 83955.0, 83990.0]
+  - ["10:30", 83990.0, 84000.0, 83950.0, 83985.0]
+  - ["10:35", 83985.0, 84030.0, 83970.0, 84010.0]
+  - ["10:40", 84010.0, 84040.0, 83990.0, 84000.0]
+  - ["10:45", 84000.0, 84020.0, 83965.0, 83980.0]
+  - ["10:50", 83980.0, 84025.0, 83970.0, 84015.0]
+  - ["10:55", 84015.0, 84035.0, 83985.0, 83995.0]
+  - ["11:00", 83995.0, 84030.0, 83975.0, 84020.0]
+  - ["11:05", 84020.0, 84038.0, 83990.0, 84005.0]
+frozen_labels:
+  context: UP
+  impulse: {A: 83760.0, B: 84080.0, I: 320.0, n_I: 3, v_I: 106.7}
+  B_confirmation: "10:20 bar low 83960 = 84080 - 120 -> confirmed, known 10:25"
+  reaction: {R: 83950.0, R_bar: "10:30", n_R_to_R: 3, D: 0.406, v_R: 43.3, rho: 0.41, state: "CONTROLLED (D > 0.25 so speed assessed; rho <= 1.0)"}
+  geometry_at_10_35: {K: 84000.0, band: [84000.0, 84030.0], V: 83935.0, T_near: 84065.0, G: 35.0, Rd: 95.0, state: WATCHING}
+  stall_limit: "n_R > 3 x 3 = 9 bars since the 10:15 bar"
+  at_11_10: {completed_bars_since_B_bar: 10, setup_state: INDECISIVE, P-REACT: CONTRADICTED, opportunity: "INVALIDATED (setup contradicted: stall)"}
+  setup_expiry: "never started (never ARMED)"
+  scenario: NOT_ACTIVATED
+  public_action: NO_TRADE
+  display_reason: NO_SUPPORTED_SETUP

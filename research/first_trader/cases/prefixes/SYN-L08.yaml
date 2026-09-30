@@ -1,0 +1,24 @@
+case_id: SYN-L08
+evidence: SYNTHETIC
+category: missing_or_stale_evidence
+direction: LONG
+question: "A single missing traded minute inside the impulse: can the impulse and everything depending on it be assessed?"
+visible_prefix_cutoff: "2000-01-01T10:50Z"
+declared_inputs:
+  context: CTX-UP-1
+  S5: 60.0
+  swing_A: [LOW, 83750.0, "10:00 bar"]
+  impulse_path: "5m bars 10:00-10:25 rise to a running high 84400 at 10:25"
+  quality_event: "traded 1m slot 10:12 = SLOT_QUALITY MISSING (no source record)"
+  reaction_5m: "10:30-10:45 bars identical to SYN-L01"
+frozen_labels:
+  derived_5m_bar_10_10: QUALITY_AFFECTED
+  swing_series: "suspended at 10:10; running extreme GAP_AFFECTED; B (84400) confirmed at 10:40 carries GAP_AFFECTED"
+  P-IMP: UNKNOWN
+  P-REACT: UNKNOWN   # depends on I and n_I
+  P-TGT: UNKNOWN      # B's zone derives from a gap-affected swing
+  P-GEOM: UNKNOWN
+  opportunity: "none created (setup UNKNOWN)"
+  public_action: NO_TRADE
+  display_reason: WARMUP_OR_REQUIRED_DATA_UNAVAILABLE
+  note: "The missing minute is not forward-filled; it could have held a lower low than A or a higher high than B."

@@ -1,0 +1,35 @@
+case_id: SYN-L01
+evidence: SYNTHETIC
+category: clean_continuation
+direction: LONG
+question: "Full long path to trigger when geometry passes the floor but cost viability is UNRESOLVED."
+visible_prefix_cutoff: "2000-01-01T10:52Z"
+declared_inputs:
+  context: CTX-UP-1
+  S5: 60.0
+  epoch_origin: "2000-01-01T04:00Z"
+  epoch_high_water_before_A: 83980.0
+  swing_A: [LOW, 83750.0, "2000-01-01T10:00Z bar", "confirmed earlier (declared)"]
+  impulse_extreme_B_bar: "2000-01-01T10:25Z (high 84400.0)"
+  impulse_bars_n_I: 5
+bars_5m:   # [open_time, open, high, low, close]; all COMPLETE; known_at = open_time + 5 min
+  - ["10:25", 84330.0, 84400.0, 84320.0, 84380.0]
+  - ["10:30", 84370.0, 84380.0, 84300.0, 84310.0]
+  - ["10:35", 84310.0, 84320.0, 84250.0, 84270.0]
+  - ["10:40", 84270.0, 84290.0, 84180.0, 84200.0]
+  - ["10:45", 84200.0, 84240.0, 84170.0, 84230.0]
+bars_1m:
+  - ["10:50", 84230.0, 84245.0, 84215.0, 84238.0]
+  - ["10:51", 84238.0, 84262.0, 84232.0, 84255.0]
+frozen_labels:
+  context: UP
+  impulse: {A: 83750.0, B: 84400.0, I: 650.0, n_I: 5, v_I: 130.0, progress: "84400 > 83980 SATISFIED", size: "650 >= 240 SATISFIED"}
+  B_confirmation: "10:35 bar low 84250 <= 84400 - 120 -> confirmed, known 10:40"
+  timeline:
+    - {at: "10:40", rev: 0, R: 84250.0, anchor: "10:35", K: 84320.0, V: 84235.0, band: [84320.0, 84350.0], T_near: 84385.0, G: 35.0, Rd: 115.0, D: 0.231, n_R: 2, speed: "not assessed", state: WATCHING, public: "NO_TRADE INSUFFICIENT_ROOM_OR_GEOMETRY"}
+    - {at: "10:45", rev: 1, R: 84180.0, anchor: "10:40", K: 84290.0, V: 84165.0, band: [84290.0, 84320.0], T_near: 84385.0, G: 65.0, Rd: 155.0, D: 0.338, rho: 0.564, state: WATCHING, public: "NO_TRADE INSUFFICIENT_ROOM_OR_GEOMETRY"}
+    - {at: "10:50", rev: 2, R: 84170.0, anchor: "10:45", K: 84240.0, V: 84155.0, band: [84240.0, 84270.0], T_near: 84385.0, G: 115.0, Rd: 115.0, D: 0.354, n_R: 4, rho: 0.442, cost: "G_bps 13.6 -> UNRESOLVED", state: ARMED, public: "NO_TRADE COST_OR_DELAY_VIABILITY_UNRESOLVED (watch_direction LONG)", setup_expiry: "11:50"}
+    - {at: "10:52", event: "P-TRIG SATISFIED by 10:51 close 84255.0 >= 84240.1; P-BAND SATISFIED (84255 <= 84270)", state: "TRIGGERED -> CLOSED_TO_ENTRY", public: "NO_TRADE COST_OR_DELAY_VIABILITY_UNRESOLVED", scenario: "CONTINUATION activated 10:52 (target 84385 before 84155 before 12:52)", checkpoint: "11:22 needs 1m high >= 84312.5"}
+  predicates_at_trigger: {P-DATA: SATISFIED, P-SCALE: SATISFIED, P-SCALEBAND: SATISFIED, P-CTX: SATISFIED, P-IMP: SATISFIED, P-REACT: SATISFIED, P-NOFAIL: SATISFIED, P-TGT: SATISFIED, P-GEOM: SATISFIED, P-COST: UNRESOLVED, P-TRIG: SATISFIED, P-BAND: SATISFIED, P-INTACT: SATISFIED, P-EXCL: SATISFIED}
+  public_action: NO_TRADE
+  display_reason: COST_OR_DELAY_VIABILITY_UNRESOLVED

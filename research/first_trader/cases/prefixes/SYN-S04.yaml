@@ -1,0 +1,20 @@
+case_id: SYN-S04
+evidence: SYNTHETIC
+category: overlapping_indecisive
+direction: SHORT
+question: "Mixed 1h structure and small 5m legs: does the method refuse to manufacture a short (or long) setup?"
+visible_prefix_cutoff: "2000-01-01T10:00Z"
+declared_inputs:
+  context: CTX-MIXED-1
+  S5: 60.0
+  latest_confirmed_5m_legs: "sizes 150, 190, 170, 200 USDT alternating up/down since 06:00 (declared); all < 240"
+frozen_labels:
+  context: NOT_DIRECTIONAL      # lower high 84300 < 84400 with higher low 83800 > 83700
+  P-CTX_short: CONTRADICTED
+  P-CTX_long: CONTRADICTED
+  P-IMP: "CONTRADICTED (latest legs < 4 x S5 = 240)"
+  setup_state: NO_IMPULSE
+  opportunity: none
+  public_action: NO_TRADE
+  display_reason: NO_SUPPORTED_SETUP
+  marketview: "1h overlapping (lower high, higher low); 5m rotation within 83800-84300; no preferred scenario"

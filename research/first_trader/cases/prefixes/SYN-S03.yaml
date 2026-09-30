@@ -1,0 +1,31 @@
+case_id: SYN-S03
+evidence: SYNTHETIC
+category: insufficient_room_obstacle
+direction: SHORT
+question: "An earlier 5m swing low that the impulse only wicked through remains an unbroken nearer destination: does it block the setup as an obstacle?"
+visible_prefix_cutoff: "2000-01-01T10:45Z"
+declared_inputs:
+  context: CTX-DOWN-1
+  S5: 60.0
+  swing_P1: [LOW, 83880.0, "08:30 bar", "confirmed 08:45"]   # 5m zone [83880.0, 83895.0]
+  epoch_low_water_before_A: 83880.0
+  swing_A: [HIGH, 84600.0, "10:00 bar"]
+  impulse_bars_n_I: 6
+  note: "Every completed 5m close before 10:30 was >= 83880 (declared)."
+bars_5m:
+  - ["10:25", 84010.0, 84020.0, 83890.0, 83900.0]
+  - ["10:30", 83900.0, 83905.0, 83700.0, 83890.0]   # B bar: wick to 83700, close 83890 (not below 83880)
+  - ["10:35", 83880.0, 83960.0, 83850.0, 83940.0]   # confirms B (83960 >= 83700 + 120); low 83850 only penetrates P1 zone
+  - ["10:40", 83940.0, 83980.0, 83930.0, 83950.0]
+frozen_labels:
+  impulse: {A: 84600.0, B: 83700.0, I: 900.0, n_I: 6, v_I: 150.0, progress: "83700 < 83880 SATISFIED"}
+  zone_P1: "NOT BROKEN (no completed 5m close < 83880); eligible"
+  at_10_45: {R: 83980.0, anchor: "10:40", K: 83930.0, band: [83900.0, 83930.0], V: 83995.0, D: 0.311, n_R: 2, speed: "not assessed (n_R < 3)", candidates: {P1_zone_near_edge: 83895.0, B_zone_near_edge: 83715.0}, T_near: 83895.0, G: 5.0, Rd: 95.0, P-GEOM: CONTRADICTED, state: WATCHING}
+  public_action: NO_TRADE
+  display_reason: INSUFFICIENT_ROOM_OR_GEOMETRY
+variants:
+  NOTGT:
+    question: "Band already at or beyond every eligible destination."
+    bars_5m_changed: [["10:35", 83800.0, 83830.0, 83705.0, 83800.0]]
+    frozen_labels:
+      at_10_40: {R: 83830.0, anchor: "10:35", K: 83705.0, band: [83675.0, 83705.0], eligible_below_band: "none (B zone near edge 83715 and P1 83895 are not below 83675)", P-TGT: CONTRADICTED, sub_reason: NO_TARGET, public: "NO_TRADE INSUFFICIENT_ROOM_OR_GEOMETRY"}

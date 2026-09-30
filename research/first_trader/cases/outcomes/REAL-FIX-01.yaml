@@ -1,0 +1,4 @@
+case_id: REAL-FIX-01
+evidence: REAL
+suffix: "None: the accepted fixture evidence ends at the cutoff (2026-09-30T08:10Z). No outcome exists to reveal."
+assessment: "Supports the warm-up/quality semantics (fails closed on 20 minutes of evidence; the rejected 08:09 candle blocks its 5m bar). Reveals the data requirement that motivated RP-001 real acquisition: >= 72 contiguous complete hours before any context-dependent label."

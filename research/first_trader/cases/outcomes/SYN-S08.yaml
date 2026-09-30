@@ -1,0 +1,7 @@
+case_id: SYN-S08
+evidence: SYNTHETIC
+suffix: "Declared: after the outage, 1m bars resume normally from 10:57; the hidden minutes 10:50-10:56 remain unknown."
+resolution_under_frozen_rules:
+  opportunity: "EXPIRED at 11:50 with data flag (trigger/invalidation could not be established)"
+  scenario_outcome: UNASSESSABLE_DATA
+assessment: "Reveals a design sensitivity (U-C2): holding UNKNOWN until expiry is conservative; an alternative (restart arming after N clean minutes) is left to Director review."

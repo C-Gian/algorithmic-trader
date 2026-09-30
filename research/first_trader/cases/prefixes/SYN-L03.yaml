@@ -1,0 +1,33 @@
+case_id: SYN-L03
+evidence: SYNTHETIC
+category: deep_reversal
+direction: LONG
+question: "A reaction that passes from controlled to deep while ARMED: does the policy withdraw before any trigger, and label it contested rather than bullish?"
+visible_prefix_cutoff: "2000-01-01T10:55Z"
+declared_inputs:
+  context: CTX-UP-1
+  S5: 60.0
+  epoch_high_water_before_A: 83980.0
+  swing_A: [LOW, 83750.0, "10:00 bar"]
+  impulse_extreme_B_bar: "10:25 (high 84400.0)"
+  impulse_bars_n_I: 5
+  note: "No 1m close between 10:50 and 10:55 reached K + tick of the armed revision (declared)."
+bars_5m:
+  - ["10:25", 84330.0, 84400.0, 84320.0, 84380.0]
+  - ["10:30", 84370.0, 84380.0, 84300.0, 84310.0]
+  - ["10:35", 84310.0, 84320.0, 84250.0, 84270.0]
+  - ["10:40", 84240.0, 84240.0, 84150.0, 84170.0]
+  - ["10:45", 84170.0, 84170.0, 84080.0, 84100.0]
+  - ["10:50", 84100.0, 84110.0, 84000.0, 84020.0]
+frozen_labels:
+  context: UP
+  impulse: {I: 650.0, v_I: 130.0}
+  timeline:
+    - {at: "10:45", R: 84150.0, D: 0.385, n_R: 3, rho: 0.64, K: 84240.0, band: [84240.0, 84270.0], V: 84135.0, T_near: 84385.0, G: 115.0, Rd: 135.0, state: WATCHING}
+    - {at: "10:50", R: 84080.0, D: 0.492, n_R: 4, rho: 0.615, K: 84170.0, band: [84170.0, 84200.0], V: 84065.0, G: 185.0, Rd: 135.0, cost: "22.0 bps UNRESOLVED", state: ARMED}
+    - {at: "10:54", event: "declared 1m bar 10:53 low 84000 <= V 84065", P-INTACT: CONTRADICTED, opportunity: "INVALIDATED (local invalidation before trigger)"}
+    - {at: "10:55", R: 84000.0, D: 0.615, n_R: 5, rho: 0.615, P-REACT: "CONTRADICTED (D > 0.50)", setup_state: REACTION_DEEP, note: "no new opportunity can arm on this reaction (C13)"}
+  scenario: NOT_ACTIVATED
+  public_action: NO_TRADE
+  display_reason: SCENARIOS_CONTESTED
+  marketview: "1h context UP; 5m reaction DEEP (most of the impulse given back); continuation and failure both open; no preferred scenario"

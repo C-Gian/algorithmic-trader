@@ -1,0 +1,7 @@
+case_id: SYN-L07
+evidence: SYNTHETIC
+suffix: "Declared: price later recovers to 84250 by 11:40 without a new 5m swing high above 84400."
+resolution_under_frozen_rules:
+  scenario_outcome: NOT_ACTIVATED
+  note: "No re-arming on the same reaction (C13); a new opportunity would need a new impulse."
+assessment: "Exposes ambiguity: a wick-only violation of the origin is labeled OPPOSING_INITIATIVE (D >= 1.0) but not STRUCTURAL_FAILURE; whether wicks should count is recorded as U-C1 for Director review."

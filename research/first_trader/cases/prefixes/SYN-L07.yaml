@@ -1,0 +1,18 @@
+case_id: SYN-L07
+evidence: SYNTHETIC
+category: deep_reversal
+direction: LONG
+question: "A wick below the impulse origin that closes back above it: structural failure or not?"
+visible_prefix_cutoff: "2000-01-01T10:55Z"
+declared_inputs: "As SYN-L03 (CTX-UP-1, S5 60.0, A 83750 at 10:00, B 84400 at 10:25, n_I 5, 5m bars 10:25-10:45 identical)."
+bars_5m_changed:
+  - ["10:50", 84100.0, 84110.0, 83740.0, 83790.0]
+frozen_labels:
+  P-NOFAIL: "SATISFIED (completed close 83790 > A 83750; the wick to 83740 is not a close beyond A)"
+  D: 1.015
+  setup_state: OPPOSING_INITIATIVE   # A5: D >= 1.0 without a completed close beyond A
+  opportunity: "INVALIDATED (setup contradicted; the armed revision's V 84065 was also crossed)"
+  scenario: NOT_ACTIVATED
+  public_action: NO_TRADE
+  display_reason: SCENARIOS_CONTESTED
+  flag: "Sensitive to close-vs-wick convention (A6); recorded, not resolved by outcome."

@@ -1,0 +1,9 @@
+case_id: SYN-S07
+evidence: SYNTHETIC
+suffix_1m_key_bars:
+  - ["10:58", 84090.0, 84200.0, 83960.0, 84000.0]
+declared: "No 1m bar between 10:52 and 10:57 reached 84195 or 83965."
+resolution_under_frozen_rules:
+  thesis: "AMBIGUOUS_ORDER (high 84200 >= V 84195 and low 83960 <= T_near 83965 in one bar)"
+  reporting: "both admissible outcomes kept (target-first / invalidation-first); counted in the unresolved fraction"
+assessment: "Supports mechanics; never scored as target-first."

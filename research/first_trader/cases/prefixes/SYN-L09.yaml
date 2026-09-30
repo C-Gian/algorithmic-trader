@@ -1,0 +1,18 @@
+case_id: SYN-L09
+evidence: SYNTHETIC
+category: target_invalidation_order_ambiguity
+direction: LONG
+question: "One completed 1m bar reaches the invalidation and closes through the trigger boundary: trigger or invalidation?"
+visible_prefix_cutoff: "2000-01-01T14:06Z"
+declared_inputs: "As SYN-L05 through the 14:05 re-anchor (K 83780, V 83685, band [83780, 83810], VIABLE)."
+bars_1m:
+  - ["14:05", 83770.0, 83795.0, 83680.0, 83790.0]
+frozen_labels:
+  event: "low 83680 <= V 83685 and close 83790 >= 83780.1 in the same bar; intrabar order unknowable"
+  P-INTACT: UNKNOWN
+  P-TRIG: UNKNOWN
+  opportunity: "UNASSESSABLE (SAME_BAR_AMBIGUITY) -> withdrawn"
+  scenario: "NOT_ACTIVATED (flag SAME_BAR_AMBIGUITY)"
+  public_action: NO_TRADE
+  display_reason: EXPIRED_OR_INVALIDATED
+  note: "Never resolved as trigger-first; no LONG."

@@ -1,0 +1,27 @@
+case_id: SYN-L10
+evidence: SYNTHETIC
+category: insufficient_room_cost
+direction: LONG
+question: "A structurally valid setup in a quiet market: geometry passes the floor, but is the room worth anything after costs?"
+visible_prefix_cutoff: "2000-01-01T10:40Z"
+declared_inputs:
+  context: CTX-UP-1
+  S5: 20.0   # quiet market; theta 40, impulse minimum 80, b 5, e 10, z 5
+  epoch_high_water_before_A: 84100.0
+  swing_A: [LOW, 84000.0, "10:00 bar"]
+  impulse_extreme_B_bar: "10:20 (high 84120.0)"
+  impulse_bars_n_I: 4
+bars_5m:
+  - ["10:20", 84090.0, 84120.0, 84085.0, 84110.0]
+  - ["10:25", 84110.0, 84112.0, 84075.0, 84080.0]
+  - ["10:30", 84080.0, 84090.0, 84070.0, 84085.0]
+  - ["10:35", 84070.0, 84072.0, 84065.0, 84071.0]
+frozen_labels:
+  impulse: {I: 120.0, v_I: 30.0, size: "120 >= 80 SATISFIED", progress: "84120 > 84100 SATISFIED"}
+  B_confirmation: "10:25 bar low 84075 <= 84080 -> known 10:30"
+  reaction_at_10_40: {R: 84065.0, n_R: 3, D: 0.458, rho: 0.61, state: CONTROLLED}
+  geometry: {K: 84072.0, band: [84072.0, 84082.0], V: 84060.0, T_near: 84115.0, G: 33.0, Rd: 22.0, P-GEOM: SATISFIED}
+  cost: {G_bps: 3.9, rule: "c_low 5 >= 0.5 x 3.9 = 2.0", state: DOMINATES}
+  opportunity: "WATCHING (not ARMED: P-COST DOMINATES)"
+  public_action: NO_TRADE
+  display_reason: COST_OR_DELAY_DOMINATES

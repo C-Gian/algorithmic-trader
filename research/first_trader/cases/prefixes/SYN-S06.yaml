@@ -1,0 +1,35 @@
+case_id: SYN-S06
+evidence: SYNTHETIC
+category: deep_reversal
+direction: SHORT
+question: "A counter-move faster than the impulse over a comparable span while still shallower than half the impulse: opposing initiative, not a pullback. Variant SCALE: an outsized 5m bar."
+visible_prefix_cutoff: "2000-01-01T09:50Z"
+declared_inputs:
+  context: CTX-DOWN-1
+  S5: 60.0
+  epoch_low_water_before_A: 84050.0
+  swing_A: [HIGH, 84600.0, "08:40 bar"]
+  impulse_extreme_B_bar: "09:30 (low 84000.0)"
+  impulse_bars_n_I: 10
+bars_5m:
+  - ["09:30", 84050.0, 84060.0, 84000.0, 84020.0]
+  - ["09:35", 84020.0, 84120.0, 84010.0, 84110.0]
+  - ["09:40", 84110.0, 84190.0, 84100.0, 84180.0]
+  - ["09:45", 84180.0, 84240.0, 84170.0, 84230.0]
+frozen_labels:
+  impulse: {I: 600.0, n_I: 10, v_I: 60.0}
+  B_confirmation: "09:35 bar high 84120 >= 84120 -> known 09:40"
+  at_09_40: {R: 84120.0, n_R: 1, D: 0.20, speed: "not assessed", setup_state: REACTION_CONTROLLED}
+  at_09_45: {R: 84190.0, n_R: 2, D: 0.317, speed: "not assessed (n_R < 3)", setup_state: REACTION_CONTROLLED}
+  at_09_50: {R: 84240.0, n_R: 3, D: 0.40, v_R: 80.0, rho: 1.333, setup_state: "OPPOSING_INITIATIVE (sticky for this reaction)", note: "D <= 0.50: distinct from REACTION_DEEP"}
+  opportunity: "any WATCHING revision is INVALIDATED at 09:50 (P-REACT CONTRADICTED)"
+  public_action: NO_TRADE
+  display_reason: SCENARIOS_CONTESTED
+  marketview: "1h context DOWN; 5m counter-move faster than the preceding impulse over three bars; failure of the down-leg is a live alternative; no reversal trade (out of scope)"
+variants:
+  SCALE:
+    bars_5m_changed: [["09:45", 84180.0, 84460.0, 84160.0, 84440.0]]
+    frozen_labels:
+      TR: "300 > 4 x S5 = 240"
+      P-SCALEBAND: CONTRADICTED
+      display_reason: MOVEMENT_OUTSIDE_SUPPORTED_SCALE   # precedence 3 over SCENARIOS_CONTESTED (5)

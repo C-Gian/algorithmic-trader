@@ -1,0 +1,7 @@
+case_id: SYN-L09
+evidence: SYNTHETIC
+suffix: "Declared: 14:06-14:30 price rises to 83950."
+resolution_under_frozen_rules:
+  scenario_outcome: "NOT_ACTIVATED (SAME_BAR_AMBIGUITY)"
+  note: "The later rise is not credited to the method; the ambiguous bar is never resolved as trigger-first."
+assessment: "Supports mechanics; the frequency of such bars must be reported in evaluation."

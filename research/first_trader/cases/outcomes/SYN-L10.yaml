@@ -1,0 +1,8 @@
+case_id: SYN-L10
+evidence: SYNTHETIC
+suffix_1m_key_bars:
+  - ["10:52", 84110.0, 84118.0, 84108.0, 84116.0]
+resolution_under_frozen_rules:
+  scenario_outcome: "NOT_ACTIVATED (never ARMED: cost DOMINATES)"
+  descriptive: "Price did reach the B-zone near edge 84115 at 10:52 - a structurally correct continuation too small to survive costs."
+assessment: "Supports mechanics: cost dominance withholds action even when structure and the later price path agree."

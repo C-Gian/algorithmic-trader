@@ -1,0 +1,278 @@
+{
+ "kind": "RP-001 visible prefix (causally known at cutoff)",
+ "visible_prefix_cutoff": "2026-09-30T08:10Z",
+ "provenance": {
+  "dataset_id": "okx-btc-usdt-swap-1m-20260930T0750-20260930T0810-6db571d2bdcf",
+  "dataset_manifest_sha256": "d84d6e0a642ac72b74b485f150e5ac0eabb8fc031502b55f287f79e16aa2541d",
+  "source": "okx https://www.okx.com BTC-USDT-SWAP",
+  "requested": [
+   "2026-09-30T07:50Z",
+   "2026-09-30T08:10Z"
+  ],
+  "feed_content_identity": "feedcontent.v1:9e2c6b8bf5bc082e92a292fd54f57b02f0c450c477e73afc4a135e0a17e10c3d",
+  "feed_ordered_event_hash": "852a8323bbc37c461208b282c6f8919ec98be3e56fbe4bf93aacaf54875c2661",
+  "availability_policy": "feed.modeled.v1(bar+PT0S,funding+PT0S)",
+  "availability_basis": "MODELED",
+  "price_role": "traded (trade_bar_1m)",
+  "tool": "research/first_trader/tools/export_case_excerpt.py"
+ },
+ "bars_1h": [
+  {
+   "t": "2026-09-30T07:00Z",
+   "status": "BEYOND_COVERAGE"
+  }
+ ],
+ "bars_5m": [
+  {
+   "t": "2026-09-30T07:50Z",
+   "status": "COMPLETE",
+   "ohlc": [
+    83382.8,
+    83429.0,
+    83341.9,
+    83349.9
+   ],
+   "tr": 87.1,
+   "known_at": "2026-09-30T07:55Z"
+  },
+  {
+   "t": "2026-09-30T07:55Z",
+   "status": "COMPLETE",
+   "ohlc": [
+    83349.9,
+    83359.3,
+    83248.3,
+    83248.4
+   ],
+   "tr": 111.0,
+   "known_at": "2026-09-30T08:00Z"
+  },
+  {
+   "t": "2026-09-30T08:00Z",
+   "status": "COMPLETE",
+   "ohlc": [
+    83248.4,
+    83299.0,
+    83189.3,
+    83250.0
+   ],
+   "tr": 109.7,
+   "known_at": "2026-09-30T08:05Z"
+  },
+  {
+   "t": "2026-09-30T08:05Z",
+   "status": "QUALITY_AFFECTED"
+  }
+ ],
+ "bars_1m": [
+  {
+   "t": "2026-09-30T07:50Z",
+   "status": "VALID",
+   "ohlc": [
+    83382.8,
+    83429.0,
+    83382.7,
+    83425.7
+   ]
+  },
+  {
+   "t": "2026-09-30T07:51Z",
+   "status": "VALID",
+   "ohlc": [
+    83425.7,
+    83426.4,
+    83376.2,
+    83392.0
+   ]
+  },
+  {
+   "t": "2026-09-30T07:52Z",
+   "status": "VALID",
+   "ohlc": [
+    83391.9,
+    83402.2,
+    83385.1,
+    83385.1
+   ]
+  },
+  {
+   "t": "2026-09-30T07:53Z",
+   "status": "VALID",
+   "ohlc": [
+    83385.2,
+    83402.2,
+    83376.0,
+    83388.2
+   ]
+  },
+  {
+   "t": "2026-09-30T07:54Z",
+   "status": "VALID",
+   "ohlc": [
+    83388.3,
+    83404.4,
+    83341.9,
+    83349.9
+   ]
+  },
+  {
+   "t": "2026-09-30T07:55Z",
+   "status": "VALID",
+   "ohlc": [
+    83349.9,
+    83359.3,
+    83341.1,
+    83341.1
+   ]
+  },
+  {
+   "t": "2026-09-30T07:56Z",
+   "status": "VALID",
+   "ohlc": [
+    83341.2,
+    83341.2,
+    83289.4,
+    83299.9
+   ]
+  },
+  {
+   "t": "2026-09-30T07:57Z",
+   "status": "VALID",
+   "ohlc": [
+    83300.0,
+    83308.3,
+    83275.5,
+    83282.0
+   ]
+  },
+  {
+   "t": "2026-09-30T07:58Z",
+   "status": "VALID",
+   "ohlc": [
+    83282.0,
+    83315.0,
+    83281.9,
+    83299.3
+   ]
+  },
+  {
+   "t": "2026-09-30T07:59Z",
+   "status": "VALID",
+   "ohlc": [
+    83299.3,
+    83299.3,
+    83248.3,
+    83248.4
+   ]
+  },
+  {
+   "t": "2026-09-30T08:00Z",
+   "status": "VALID",
+   "ohlc": [
+    83248.4,
+    83258.7,
+    83228.6,
+    83242.0
+   ]
+  },
+  {
+   "t": "2026-09-30T08:01Z",
+   "status": "VALID",
+   "ohlc": [
+    83242.0,
+    83254.6,
+    83199.9,
+    83213.1
+   ]
+  },
+  {
+   "t": "2026-09-30T08:02Z",
+   "status": "VALID",
+   "ohlc": [
+    83213.0,
+    83226.5,
+    83189.3,
+    83226.5
+   ]
+  },
+  {
+   "t": "2026-09-30T08:03Z",
+   "status": "VALID",
+   "ohlc": [
+    83226.5,
+    83288.4,
+    83226.4,
+    83288.4
+   ]
+  },
+  {
+   "t": "2026-09-30T08:04Z",
+   "status": "VALID",
+   "ohlc": [
+    83288.4,
+    83299.0,
+    83230.4,
+    83250.0
+   ]
+  },
+  {
+   "t": "2026-09-30T08:05Z",
+   "status": "VALID",
+   "ohlc": [
+    83250.0,
+    83260.0,
+    83201.6,
+    83221.6
+   ]
+  },
+  {
+   "t": "2026-09-30T08:06Z",
+   "status": "VALID",
+   "ohlc": [
+    83221.7,
+    83241.1,
+    83221.6,
+    83228.5
+   ]
+  },
+  {
+   "t": "2026-09-30T08:07Z",
+   "status": "VALID",
+   "ohlc": [
+    83228.5,
+    83228.5,
+    83175.5,
+    83179.8
+   ]
+  },
+  {
+   "t": "2026-09-30T08:08Z",
+   "status": "VALID",
+   "ohlc": [
+    83179.7,
+    83202.5,
+    83179.7,
+    83193.3
+   ]
+  },
+  {
+   "t": "2026-09-30T08:09Z",
+   "status": "QUALITY",
+   "reason": "INCOMPLETE_REJECTED"
+  }
+ ],
+ "factual_context_not_used_in_predicates": {
+  "mark_bar_1m": {
+   "bar_open": "2026-09-30T08:08Z",
+   "close": 83193.0
+  },
+  "index_bar_1m": {
+   "bar_open": "2026-09-30T08:08Z",
+   "close": 83237.1
+  },
+  "funding_settlement": {
+   "funding_time": "2026-09-30T08:00Z",
+   "rate": "0.0000337200721784"
+  }
+ }
+}

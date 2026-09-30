@@ -1,0 +1,6 @@
+case_id: SYN-S05
+evidence: SYNTHETIC
+suffix: "Declared: 09:20-11:20 price oscillates 84050-84230; never armed."
+resolution_under_frozen_rules:
+  scenario_outcome: "NOT_ACTIVATED (never ARMED)"
+assessment: "Exposes sensitivity: a one-tick change flips CONTROLLED to OPPOSING_INITIATIVE. The strict rule is deterministic; boundary frequency must be reported (DC-11/DC-12)."

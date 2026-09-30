@@ -1,0 +1,7 @@
+case_id: SYN-L06
+evidence: SYNTHETIC
+suffix: "Declared: after 11:10 price continues to rotate 83950-84040 until 12:00."
+resolution_under_frozen_rules:
+  scenario_outcome: NOT_ACTIVATED
+  marketview: "stall observed; no preferred scenario"
+assessment: "Supports mechanics: the stall rule ends a setup that never became actionable without predicting direction."

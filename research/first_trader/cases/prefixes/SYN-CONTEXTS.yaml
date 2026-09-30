@@ -1,0 +1,57 @@
+# Declared 1h contexts shared by SYNTHETIC cases (predicate mechanics only; not market evidence).
+# Dates in the year 2000 are deliberately artificial. Prices in USDT, tick 0.1.
+# Each swing: [kind, price, extremum_time, confirmed_at]. S1h = 300.0 for all contexts.
+contexts:
+  CTX-UP-1:
+    S1h: 300.0
+    swings: [[LOW, 82900.0, "1999-12-31T02:00Z", "1999-12-31T05:00Z"],
+             [HIGH, 83650.0, "1999-12-31T09:00Z", "1999-12-31T12:00Z"],
+             [LOW, 83200.0, "1999-12-31T15:00Z", "1999-12-31T18:00Z"],
+             [HIGH, 83950.0, "1999-12-31T21:00Z", "2000-01-01T01:00Z"],
+             [LOW, 83600.0, "2000-01-01T04:00Z", "2000-01-01T07:00Z"]]
+    last_complete_1h_close: 84000.0   # 09:00-10:00 bar
+    expected_context: UP          # highs 83650 < 83950, lows 83200 < 83600, close 84000 > 83600
+    long_epoch_origin: "2000-01-01T04:00Z"
+    zones_note: "1h zone of HIGH 83950 ([83875, 83950]) is BROKEN by later 5m closes above 83950 (declared)."
+  CTX-UP-2:
+    S1h: 300.0
+    swings: [[LOW, 81800.0, "1999-12-31T02:00Z", "1999-12-31T05:00Z"],
+             [HIGH, 82900.0, "1999-12-31T09:00Z", "1999-12-31T12:00Z"],
+             [LOW, 82300.0, "1999-12-31T15:00Z", "1999-12-31T18:00Z"],
+             [HIGH, 83200.0, "1999-12-31T21:00Z", "2000-01-01T01:00Z"],
+             [LOW, 82700.0, "2000-01-01T04:00Z", "2000-01-01T07:00Z"]]
+    last_complete_1h_close: 84000.0
+    expected_context: UP
+    long_epoch_origin: "2000-01-01T04:00Z"
+    zones_note: "1h zones of HIGH 82900 and 83200 are BROKEN (declared)."
+  CTX-DOWN-1:
+    S1h: 300.0
+    swings: [[HIGH, 85300.0, "1999-12-31T02:00Z", "1999-12-31T05:00Z"],
+             [LOW, 84500.0, "1999-12-31T09:00Z", "1999-12-31T12:00Z"],
+             [HIGH, 84950.0, "1999-12-31T15:00Z", "1999-12-31T18:00Z"],
+             [LOW, 84100.0, "1999-12-31T21:00Z", "2000-01-01T01:00Z"],
+             [HIGH, 84700.0, "2000-01-01T04:00Z", "2000-01-01T07:00Z"]]
+    last_complete_1h_close: 84000.0
+    expected_context: DOWN        # highs 84950 > 84700, lows 84500 > 84100, close 84000 < 84700
+    short_epoch_origin: "2000-01-01T04:00Z"
+    zones_note: "1h zone of LOW 84100 ([84100, 84175]) is BROKEN by later 5m closes below 84100 (declared)."
+  CTX-DOWN-2:
+    S1h: 300.0
+    swings: [[HIGH, 87200.0, "1999-12-31T02:00Z", "1999-12-31T05:00Z"],
+             [LOW, 86100.0, "1999-12-31T09:00Z", "1999-12-31T12:00Z"],
+             [HIGH, 86800.0, "1999-12-31T15:00Z", "1999-12-31T18:00Z"],
+             [LOW, 85700.0, "1999-12-31T21:00Z", "2000-01-01T01:00Z"],
+             [HIGH, 86300.0, "2000-01-01T04:00Z", "2000-01-01T07:00Z"]]
+    last_complete_1h_close: 85000.0
+    expected_context: DOWN
+    short_epoch_origin: "2000-01-01T04:00Z"
+    zones_note: "1h zones of LOW 86100 and 85700 are BROKEN (declared)."
+  CTX-MIXED-1:
+    S1h: 300.0
+    swings: [[HIGH, 84400.0, "1999-12-31T06:00Z", "1999-12-31T09:00Z"],
+             [LOW, 83700.0, "1999-12-31T13:00Z", "1999-12-31T16:00Z"],
+             [HIGH, 84300.0, "1999-12-31T20:00Z", "1999-12-31T23:00Z"],
+             [LOW, 83800.0, "2000-01-01T03:00Z", "2000-01-01T06:00Z"]]
+    last_complete_1h_close: 84050.0
+    expected_context: NOT_DIRECTIONAL   # lower high (84300 < 84400) with higher low (83800 > 83700)
+# Common 5m constants for S5 = 60.0: theta = 120.0; impulse minimum = 240.0; b = 15.0; e = 30.0; z(5m) = 15.0.

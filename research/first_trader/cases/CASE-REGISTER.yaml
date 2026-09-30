@@ -1,0 +1,95 @@
+version: 1
+purpose: "RP-001 causal case library for concept formalization (not performance estimation)."
+anti_bias:
+  - "No P&L sorting; adverse, ambiguous and data-loss cases included deliberately."
+  - "Synthetic cases prove predicate mechanics only; they are authored and are not evidence of BTC behavior."
+  - "Real grid cases are fixed by SELECTION-PROTOCOL.md before acquisition; labels frozen before outcomes are exported."
+  - "Prefix and outcome live in separate directories (prefixes/, outcomes/)."
+common_synthetic_inputs: "prefixes/SYN-CONTEXTS.yaml (declared 1h contexts); S5 = 60.0 unless stated"
+cases:
+  - {case_id: SYN-L01, evidence: SYNTHETIC, direction: LONG, category: clean_continuation,
+     source: "prefixes/SYN-L01.yaml (authored)", cutoff: "2000-01-01T10:52Z", allowed_evidence: "declared context/swings; 5m bars to 10:45; 1m bars to 10:51",
+     hidden_outcome: "outcomes/SYN-L01.yaml", question: "Full path to trigger with cost UNRESOLVED",
+     expected: "ARMED rev2 at 10:50; trigger 10:52; NO_TRADE COST_OR_DELAY_VIABILITY_UNRESOLVED; scenario activated",
+     notes: "Geometry exactly at the 1.0 floor (G = Rd)", selection_reason: "mechanics: complete long path + cost gate"}
+  - {case_id: SYN-L05, evidence: SYNTHETIC, direction: LONG, category: clean_continuation,
+     source: "prefixes/SYN-L05.yaml", cutoff: "2000-01-01T14:07Z", allowed_evidence: "5m to 14:00, 1m to 14:06",
+     hidden_outcome: "outcomes/SYN-L05.yaml", question: "All gates pass -> LONG; entry window closure; delay effect",
+     expected: "LONG at 14:07 (VIABLE, 68.6 bps room)", notes: "Re-anchoring across 4 revisions", selection_reason: "mechanics: issuance path"}
+  - {case_id: SYN-L02, evidence: SYNTHETIC, direction: LONG, category: failed_recovery,
+     source: "prefixes/SYN-L02.yaml", cutoff: "2000-01-01T14:07Z (variant PRE 14:06Z)", allowed_evidence: "as SYN-L05",
+     hidden_outcome: "outcomes/SYN-L02.yaml", question: "Post-activation invalidation; pre-trigger invalidation (PRE)",
+     expected: "LONG issued; PRE: INVALIDATED, NOT_ACTIVATED", notes: "", selection_reason: "mechanics: failure paths"}
+  - {case_id: SYN-L03, evidence: SYNTHETIC, direction: LONG, category: deep_reversal,
+     source: "prefixes/SYN-L03.yaml", cutoff: "2000-01-01T10:55Z", allowed_evidence: "5m to 10:50 (+ declared 1m low at 10:53)",
+     hidden_outcome: "outcomes/SYN-L03.yaml", question: "Controlled -> deep while ARMED",
+     expected: "INVALIDATED at 10:54 (V), REACTION_DEEP at 10:55; NO_TRADE SCENARIOS_CONTESTED", notes: "", selection_reason: "mechanics: deep reaction"}
+  - {case_id: SYN-L04, evidence: SYNTHETIC, direction: LONG, category: late_confirmation_entry_lost,
+     source: "prefixes/SYN-L04.yaml", cutoff: "2000-01-01T14:07Z (variant B 14:10Z)", allowed_evidence: "as SYN-L05 + trigger bar",
+     hidden_outcome: "outcomes/SYN-L04.yaml", question: "Trigger close beyond band; leaving band during the window",
+     expected: "NO_TRADE ENTRY_LOCATION_LOST; B: LONG then CLOSED_TO_ENTRY", notes: "Window-closure tie rule at t_ref", selection_reason: "mechanics: entry lost"}
+  - {case_id: SYN-L06, evidence: SYNTHETIC, direction: LONG, category: overlapping_indecisive,
+     source: "prefixes/SYN-L06.yaml", cutoff: "2000-01-01T11:10Z", allowed_evidence: "5m to 11:05",
+     hidden_outcome: "outcomes/SYN-L06.yaml", question: "Stall ends a never-armed setup",
+     expected: "INDECISIVE at 11:10; NO_TRADE NO_SUPPORTED_SETUP", notes: "", selection_reason: "mechanics: indecision"}
+  - {case_id: SYN-L07, evidence: SYNTHETIC, direction: LONG, category: deep_reversal,
+     source: "prefixes/SYN-L07.yaml", cutoff: "2000-01-01T10:55Z", allowed_evidence: "as SYN-L03 with changed 10:50 bar",
+     hidden_outcome: "outcomes/SYN-L07.yaml", question: "Wick below origin, close above",
+     expected: "P-NOFAIL SATISFIED; OPPOSING_INITIATIVE (D >= 1.0); SCENARIOS_CONTESTED", notes: "U-C1 wick convention", selection_reason: "ambiguity probe"}
+  - {case_id: SYN-L08, evidence: SYNTHETIC, direction: LONG, category: missing_or_stale_evidence,
+     source: "prefixes/SYN-L08.yaml", cutoff: "2000-01-01T10:50Z", allowed_evidence: "declared bars incl. one MISSING 1m slot",
+     hidden_outcome: "outcomes/SYN-L08.yaml", question: "Missing minute inside the impulse",
+     expected: "P-IMP UNKNOWN; NO_TRADE WARMUP_OR_REQUIRED_DATA_UNAVAILABLE", notes: "", selection_reason: "mechanics: data loss"}
+  - {case_id: SYN-L09, evidence: SYNTHETIC, direction: LONG, category: target_invalidation_order_ambiguity,
+     source: "prefixes/SYN-L09.yaml", cutoff: "2000-01-01T14:06Z", allowed_evidence: "as SYN-L05 + ambiguous 1m bar",
+     hidden_outcome: "outcomes/SYN-L09.yaml", question: "Trigger and invalidation in one 1m bar",
+     expected: "UNASSESSABLE; NOT_ACTIVATED", notes: "", selection_reason: "mechanics: same-bar ambiguity (pre-trigger)"}
+  - {case_id: SYN-L10, evidence: SYNTHETIC, direction: LONG, category: insufficient_room_cost,
+     source: "prefixes/SYN-L10.yaml", cutoff: "2000-01-01T10:40Z", allowed_evidence: "5m to 10:35 (S5 = 20)",
+     hidden_outcome: "outcomes/SYN-L10.yaml", question: "Valid structure, room consumed by costs",
+     expected: "WATCHING; NO_TRADE COST_OR_DELAY_DOMINATES", notes: "", selection_reason: "mechanics: cost dominance"}
+  - {case_id: SYN-S01, evidence: SYNTHETIC, direction: SHORT, category: clean_continuation,
+     source: "prefixes/SYN-S01.yaml", cutoff: "2000-01-01T10:52Z", allowed_evidence: "5m to 10:45, 1m to 10:51",
+     hidden_outcome: "outcomes/SYN-S01.yaml", question: "Exact short mirror of SYN-L01",
+     expected: "ARMED 10:50; trigger 10:52; NO_TRADE COST_OR_DELAY_VIABILITY_UNRESOLVED", notes: "", selection_reason: "mirror check"}
+  - {case_id: SYN-S02, evidence: SYNTHETIC, direction: SHORT, category: failed_recovery,
+     source: "prefixes/SYN-S02.yaml", cutoff: "2000-01-01T14:07Z", allowed_evidence: "5m to 14:00, 1m to 14:06",
+     hidden_outcome: "outcomes/SYN-S02.yaml", question: "SHORT issued then invalidated; EXCL variant",
+     expected: "SHORT at 14:07; EXCL: NO_TRADE EXISTING_THESIS_NO_NEW_ENTRY", notes: "", selection_reason: "mechanics: short failure + exclusivity"}
+  - {case_id: SYN-S03, evidence: SYNTHETIC, direction: SHORT, category: insufficient_room_obstacle,
+     source: "prefixes/SYN-S03.yaml", cutoff: "2000-01-01T10:45Z", allowed_evidence: "declared P1 swing; 5m to 10:40",
+     hidden_outcome: "outcomes/SYN-S03.yaml", question: "Unbroken nearer obstacle; NOTGT variant",
+     expected: "WATCHING; NO_TRADE INSUFFICIENT_ROOM_OR_GEOMETRY (NOTGT: NO_TARGET)", notes: "", selection_reason: "mechanics: obstacle/no target"}
+  - {case_id: SYN-S04, evidence: SYNTHETIC, direction: SHORT, category: overlapping_indecisive,
+     source: "prefixes/SYN-S04.yaml", cutoff: "2000-01-01T10:00Z", allowed_evidence: "declared mixed 1h context and small legs",
+     hidden_outcome: "outcomes/SYN-S04.yaml", question: "Mixed context",
+     expected: "NOT_DIRECTIONAL; NO_TRADE NO_SUPPORTED_SETUP", notes: "", selection_reason: "mechanics: overlap"}
+  - {case_id: SYN-S05, evidence: SYNTHETIC, direction: SHORT, category: overlapping_indecisive,
+     source: "prefixes/SYN-S05.yaml", cutoff: "2000-01-01T09:20Z", allowed_evidence: "5m to 09:15",
+     hidden_outcome: "outcomes/SYN-S05.yaml", question: "Depth and speed exactly at limits",
+     expected: "CONTROLLED (boundary, SENSITIVE); WATCHING; NO_TRADE INSUFFICIENT_ROOM_OR_GEOMETRY", notes: "one tick flips to OPPOSING", selection_reason: "ambiguity probe"}
+  - {case_id: SYN-S06, evidence: SYNTHETIC, direction: SHORT, category: deep_reversal,
+     source: "prefixes/SYN-S06.yaml", cutoff: "2000-01-01T09:50Z", allowed_evidence: "5m to 09:45",
+     hidden_outcome: "outcomes/SYN-S06.yaml", question: "Opposing initiative with D <= 0.5; SCALE variant",
+     expected: "OPPOSING_INITIATIVE; SCENARIOS_CONTESTED (SCALE: MOVEMENT_OUTSIDE_SUPPORTED_SCALE)", notes: "", selection_reason: "mechanics: opposing initiative"}
+  - {case_id: SYN-S07, evidence: SYNTHETIC, direction: SHORT, category: target_invalidation_order_ambiguity,
+     source: "prefixes/SYN-S07.yaml", cutoff: "2000-01-01T10:52Z", allowed_evidence: "as SYN-S01",
+     hidden_outcome: "outcomes/SYN-S07.yaml", question: "Target and invalidation in one post-activation bar",
+     expected: "scenario activated (outcome AMBIGUOUS_ORDER)", notes: "", selection_reason: "mechanics: post-activation ambiguity"}
+  - {case_id: SYN-S08, evidence: SYNTHETIC, direction: SHORT, category: missing_or_stale_evidence,
+     source: "prefixes/SYN-S08.yaml", cutoff: "2000-01-01T10:58Z", allowed_evidence: "as SYN-S01 to 10:50 + recorder outage + 10:57 bar",
+     hidden_outcome: "outcomes/SYN-S08.yaml", question: "Outage while ARMED",
+     expected: "P-TRIG UNKNOWN; NO_TRADE WARMUP_OR_REQUIRED_DATA_UNAVAILABLE", notes: "U-C2", selection_reason: "mechanics: recorder outage"}
+  - {case_id: REAL-FIX-01, evidence: REAL, direction: BOTH, category: missing_or_stale_evidence,
+     source: "prefixes/REAL-FIX-01.json (dataset okx-btc-usdt-swap-1m-20260930T0750-20260930T0810-6db571d2bdcf, captured OKX public responses)",
+     cutoff: "2026-09-30T08:10Z", allowed_evidence: "all accepted fixture evidence (20 minutes)",
+     hidden_outcome: "outcomes/REAL-FIX-01.yaml (no suffix exists)", question: "Warm-up and rejected-candle handling on real evidence",
+     expected: "context UNKNOWN; S5 UNAVAILABLE; NO_TRADE WARMUP_OR_REQUIRED_DATA_UNAVAILABLE", notes: "08:09 INCOMPLETE_REJECTED",
+     selection_reason: "only real evidence available before acquisition"}
+  # Real grid cases: fixed by SELECTION-PROTOCOL.md; labels added only at the prefix-freeze commit.
+  - {case_id: REAL-G01, evidence: REAL, cutoff: "2026-09-28T04:00Z", status: PENDING_ACQUISITION}
+  - {case_id: REAL-G02, evidence: REAL, cutoff: "2026-09-28T12:00Z", status: PENDING_ACQUISITION}
+  - {case_id: REAL-G03, evidence: REAL, cutoff: "2026-09-28T20:00Z", status: PENDING_ACQUISITION}
+  - {case_id: REAL-G04, evidence: REAL, cutoff: "2026-09-29T04:00Z", status: PENDING_ACQUISITION}
+  - {case_id: REAL-G05, evidence: REAL, cutoff: "2026-09-29T12:00Z", status: PENDING_ACQUISITION}
+  - {case_id: REAL-G06, evidence: REAL, cutoff: "2026-09-29T20:00Z", status: PENDING_ACQUISITION}

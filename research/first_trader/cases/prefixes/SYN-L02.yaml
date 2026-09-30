@@ -1,0 +1,22 @@
+case_id: SYN-L02
+evidence: SYNTHETIC
+category: failed_recovery
+direction: LONG
+question: "Identical prefix to SYN-L05 (LONG issued at 14:07). The outcome tests post-activation invalidation; variant PRE tests invalidation before any trigger."
+visible_prefix_cutoff: "2000-01-01T14:07Z"
+declared_inputs: "Same as SYN-L05 (context CTX-UP-2, S5 60.0, A 82800, B 84400, identical 5m bars 13:25-14:00 and 1m bars 14:05-14:06)."
+frozen_labels:
+  same_as: SYN-L05
+  public_action: LONG
+  issued_geometry_frozen: {K: 83780.0, entry_band: [83780.0, 83810.0], V: 83685.0, T_near: 84385.0}
+variants:
+  PRE:
+    visible_prefix_cutoff: "2000-01-01T14:06Z"
+    bars_1m: [["14:05", 83770.0, 83776.0, 83684.0, 83700.0]]
+    frozen_labels:
+      event: "14:05 low 83684 <= V 83685 before any close >= 83780.1"
+      P-TRIG: CONTRADICTED
+      P-INTACT: CONTRADICTED
+      opportunity: INVALIDATED
+      scenario: NOT_ACTIVATED
+      public: "NO_TRADE EXPIRED_OR_INVALIDATED"

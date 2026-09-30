@@ -1,0 +1,15 @@
+case_id: SYN-L02
+evidence: SYNTHETIC
+suffix_1m_key_bars:
+  - ["14:07", 83795.0, 83803.0, 83790.0, 83800.0]
+  - ["14:08", 83801.0, 83840.0, 83798.0, 83806.0]
+  - ["14:18", 83740.0, 83745.0, 83700.0, 83710.0]
+  - ["14:21", 83705.0, 83708.0, 83680.0, 83690.0]
+declared: "Maximum 1m high between 14:07 and 14:21 = 83840 (< 84385)."
+resolution_under_frozen_rules:
+  thesis: "INVALIDATION_BEFORE_TARGET (14:21 low 83680 <= V 83685; known 14:22)"
+  scenario_outcome: INVALIDATION_BEFORE_TARGET
+  reference_delta_60s: "entry at 14:08 open 83801 -> invalidated; gross (83685 - 83801) / 83801 = -13.8 bps (V is not a guaranteed exit price)"
+  advisory_after_14_22: "NO_TRADE EXPIRED_OR_INVALIDATED; MarketView: 1h context still UP (no 1h close below 82700); local thesis defeated"
+  variant_PRE: "Opportunity INVALIDATED at 14:06; scenario NOT_ACTIVATED; no recommendation to score."
+assessment: "Supports mechanics: local invalidation is distinct from context failure; no automatic reversal or re-entry follows."

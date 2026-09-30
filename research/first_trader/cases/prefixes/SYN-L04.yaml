@@ -1,0 +1,29 @@
+case_id: SYN-L04
+evidence: SYNTHETIC
+category: late_confirmation_entry_lost
+direction: LONG
+question: "Trigger confirmed but the confirming close is already beyond the entry band; variant B: entry issued, then price leaves the band inside the window."
+visible_prefix_cutoff: "2000-01-01T14:07Z"
+declared_inputs: "Same as SYN-L05 through the 14:05 re-anchor (K 83780, band [83780, 83810], V 83685, T_near 84385, VIABLE)."
+bars_1m:
+  - ["14:05", 83770.0, 83778.0, 83745.0, 83772.0]
+  - ["14:06", 83772.0, 83850.0, 83770.0, 83840.0]
+frozen_labels:
+  P-TRIG: "SATISFIED (83840 >= 83780.1), known 14:07"
+  P-BAND: "CONTRADICTED (83840 > 83810)"
+  opportunity: "TRIGGERED -> CLOSED_TO_ENTRY"
+  scenario: "CONTINUATION activated 14:07 (tracked although no LONG)"
+  public_action: NO_TRADE
+  display_reason: ENTRY_LOCATION_LOST
+variants:
+  B:
+    visible_prefix_cutoff: "2000-01-01T14:10Z"
+    bars_1m:
+      - ["14:05", 83770.0, 83778.0, 83745.0, 83772.0]
+      - ["14:06", 83772.0, 83805.0, 83768.0, 83800.0]
+      - ["14:07", 83800.0, 83808.0, 83795.0, 83803.0]
+      - ["14:08", 83803.0, 83812.0, 83799.0, 83808.0]
+      - ["14:09", 83808.0, 83830.0, 83805.0, 83825.0]
+    frozen_labels:
+      at_14_07: "LONG issued (trigger 14:06 close 83800 in band)"
+      at_14_10: "P-VALIDITY CONTRADICTED (14:09 close 83825 > 83810) -> CLOSED_TO_ENTRY; public NO_TRADE EXISTING_THESIS_NO_NEW_ENTRY; thesis TRACKING"

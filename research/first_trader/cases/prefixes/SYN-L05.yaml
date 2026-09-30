@@ -1,0 +1,42 @@
+case_id: SYN-L05
+evidence: SYNTHETIC
+category: clean_continuation
+direction: LONG
+question: "Deep-but-controlled pullback with room above the cost threshold: does the full gate set issue LONG, and how does the entry window close?"
+visible_prefix_cutoff: "2000-01-01T14:07Z"
+declared_inputs:
+  context: CTX-UP-2
+  S5: 60.0
+  epoch_origin: "2000-01-01T04:00Z"
+  epoch_high_water_before_A: 83300.0
+  swing_A: [LOW, 82800.0, "2000-01-01T12:00Z bar", "confirmed earlier (declared)"]
+  impulse_extreme_B_bar: "2000-01-01T13:20Z (high 84400.0)"
+  impulse_bars_n_I: 16
+  note: "Every 1m close between 13:50 and 14:05 was below the then-current K (declared); no 5m swing low confirmed inside the reaction."
+bars_5m:
+  - ["13:25", 84350.0, 84370.0, 84250.0, 84270.0]
+  - ["13:30", 84270.0, 84290.0, 84160.0, 84180.0]
+  - ["13:35", 84180.0, 84200.0, 84080.0, 84100.0]
+  - ["13:40", 84100.0, 84130.0, 84000.0, 84020.0]
+  - ["13:45", 84020.0, 84050.0, 83920.0, 83940.0]
+  - ["13:50", 83940.0, 83960.0, 83830.0, 83850.0]
+  - ["13:55", 83850.0, 83870.0, 83760.0, 83780.0]
+  - ["14:00", 83780.0, 83780.0, 83700.0, 83760.0]
+bars_1m:
+  - ["14:05", 83770.0, 83778.0, 83745.0, 83772.0]
+  - ["14:06", 83772.0, 83800.0, 83768.0, 83795.0]
+frozen_labels:
+  context: UP
+  impulse: {A: 82800.0, B: 84400.0, I: 1600.0, n_I: 16, v_I: 100.0, progress: "84400 > 83300 SATISFIED"}
+  B_confirmation: "13:25 bar low 84250 <= 84280 -> confirmed, known 13:30"
+  timeline:
+    - {at: "13:30", R: 84250.0, D: 0.094, rho: "1.5 (not assessed: D <= 0.25)", state: WATCHING, reason: "no target beyond band (band top 84400 >= T_near 84385)"}
+    - {at: "13:35..13:45", state: WATCHING, reason: "G < Rd at each re-anchor (D <= 0.25, speed not assessed)"}
+    - {at: "13:50", rev: "first ARMED", D: 0.30, n_R: 5, rho: 0.96, R: 83920.0, K: 84050.0, band: [84050.0, 84080.0], V: 83905.0, G: 305.0, Rd: 175.0, cost: "36.3 bps UNRESOLVED", state: ARMED, setup_expiry: "14:50"}
+    - {at: "13:55", R: 83830.0, K: 83960.0, G: 395.0, Rd: 175.0, cost: "47.0 bps UNRESOLVED", state: "ARMED (re-anchor)"}
+    - {at: "14:00", R: 83760.0, K: 83870.0, G: 485.0, Rd: 155.0, cost: "57.8 bps UNRESOLVED", state: "ARMED (re-anchor)"}
+    - {at: "14:05", R: 83700.0, anchor: "14:00", K: 83780.0, V: 83685.0, band: [83780.0, 83810.0], T_near: 84385.0, G: 575.0, Rd: 125.0, D: 0.4375, n_R: 8, rho: 0.875, cost: "68.6 bps VIABLE (16 <= 17.2)", state: "ARMED (re-anchor)", public: "NO_TRADE TRIGGER_PENDING (watch_direction LONG)"}
+    - {at: "14:07", event: "P-TRIG SATISFIED by 14:06 close 83795.0 >= 83780.1; P-BAND SATISFIED", state: OPEN_FOR_ENTRY, public: "LONG", entry_window_until: "14:17", scenario: "CONTINUATION activated 14:07 (84385 before 83685 before 16:07)", checkpoint: "14:37 needs 1m high >= 84082.5"}
+  predicates_at_trigger: {P-DATA: SATISFIED, P-SCALE: SATISFIED, P-SCALEBAND: SATISFIED, P-CTX: SATISFIED, P-IMP: SATISFIED, P-REACT: SATISFIED, P-NOFAIL: SATISFIED, P-TGT: SATISFIED, P-GEOM: SATISFIED, P-COST: VIABLE, P-TRIG: SATISFIED, P-BAND: SATISFIED, P-INTACT: SATISFIED, P-EXCL: SATISFIED}
+  public_action: LONG
+  issued_geometry_frozen: {K: 83780.0, entry_band: [83780.0, 83810.0], V: 83685.0, T_near: 84385.0, S5: 60.0, entry_valid_until: "14:17", thesis_expiry: "16:07"}

@@ -1,0 +1,16 @@
+case_id: SYN-S02
+evidence: SYNTHETIC
+suffix_1m_key_bars:
+  - ["14:07", 85205.0, 85215.0, 85198.0, 85210.0]
+  - ["14:08", 85203.0, 85210.0, 85190.0, 85198.0]
+  - ["14:09", 85198.0, 85214.0, 85195.0, 85212.0]
+  - ["14:10", 85212.0, 85230.0, 85205.0, 85225.0]
+  - ["14:25", 85290.0, 85320.0, 85285.0, 85310.0]
+declared: "Minimum 1m low between 14:07 and 14:25 = 85150 (> 84615)."
+resolution_under_frozen_rules:
+  entry_window: "14:10 close 85225 is outside [85190, 85220] -> CLOSED_TO_ENTRY known 14:11"
+  reference_delta_60s: "14:08 open 85203 in band -> entered"
+  reference_delta_180s: "14:10 open 85212 in band (window still open at 14:10) -> entered"
+  thesis: "INVALIDATION_BEFORE_TARGET (14:25 high 85320 >= V 85315; known 14:26)"
+  variant_EXCL: "scenario tracked identically; no recommendation to score"
+assessment: "Supports mechanics for short failure; long and short are evaluated separately."
