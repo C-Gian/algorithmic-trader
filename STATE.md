@@ -18,13 +18,25 @@ The desired live lens cockpit, full advisory backtest, compact copy report, repo
 
 ## Current work and next action
 
-**PAUSED BY OWNER before the Director issues the next implementation package.**
+**Owner clarification received — Foundation v3.0 is confirmed as the governing direction.**
 
-The Owner asked the Director to review RP-001 and perform only the necessary closure/record-keeping work, then wait for a further Owner clarification before proceeding.
+The temporary Owner pause is resolved.
 
-No executor implementation task is active while this pause is in force.
+The Director must now replan from Foundation v3.0, not from the historical RP-001 mandate.
 
-Codex/Claude must not resume the historical RP-001 mandate, start trader implementation, or launch long CLI backtests.
+Current direction:
+- build an integrated BTC trading adviser whose main feature is a usable, persistent LONG/SHORT call;
+- keep continuous MarketView and professional observations distinct from the trade call;
+- explicitly assess structure/trend/location, momentum/participation/volatility, timing/cyclical concepts, event/news context, and derivatives/liquidity roles rather than silently excluding them;
+- preserve causal evidence/state architecture from M3;
+- support intermittent local operation with catch-up/reconstruction honesty;
+- make substantial backtests Owner-operated from the web application, with visible progress and copyable reports;
+- diagnose low call coverage rather than treating systematic NO_TRADE as success;
+- keep capital, size, leverage, margin and actual execution outside the adviser.
+
+RP-001 remains historical development evidence only. Its pullback-only scope and numeric conventions are not production defaults.
+
+No executor implementation task is active until the Director replaces task.md with a bounded package derived from this direction.
 
 ## Research retained, not governing
 
