@@ -1,4 +1,4 @@
-# Active Task — WP-006: Product-Grade Application UI Redesign
+# Active Task — WP-007: Durable Real-Market Observation Replay and Observable-State Integration
 
 Status: READY  
 Owner: Project & Research Director  
@@ -13,462 +13,540 @@ Read in full:
 2. `STATE.md`
 3. `AGENTS.md`
 4. `task.md`
-5. current `web/` implementation
-6. current API types/endpoints used by the UI
-7. existing UI/E2E tests
+5. `strategic_reviews/SR-001-DIRECTOR-DISPOSITION.md`
+6. accepted `src/algotrader/feed/`
+7. accepted `src/algotrader/marketdata/`
+8. accepted `src/algotrader/recorder/`
+9. current durable run/control/worker infrastructure
+10. current product UI under `web/`
 
-Foundation v2.0 and STATE.md define the product. The current screen layout is not product direction.
+Where older review text conflicts with Foundation v2.0 or STATE.md, Foundation/STATE win.
 
-## Mandatory design workflow
+## Context
 
-**Before coding, invoke/read and actively use your front-end design / frontend-design skill.**
+WP-003, WP-004, WP-005 and WP-006 are accepted.
 
-This is not an incidental styling task. Treat it as a real product-design and front-end architecture pass.
+The project now has:
 
-Use the skill to reason about:
+- immutable historical OKX market evidence;
+- a causal availability feed;
+- a pure centrally owned observable-state reducer;
+- prospective RECORDED receipt-time evidence;
+- a durable application/worker shell;
+- a product-grade UI.
 
-- information hierarchy;
-- navigation;
-- visual rhythm;
-- density;
-- typography;
-- responsive layout;
-- states and affordances;
-- chart/dashboard composition;
-- premium-product polish.
+What is still missing is the bridge from those accepted pieces into a real-market replay that the Owner can launch, pause, step, inspect, resume after restart and observe in the application.
 
-Do not merely restyle the existing DOM with darker colors.
-
-## Owner feedback that triggers this task
-
-The current application is functionally useful but visually unacceptable as a product:
-
-- it feels like a tiny boxed engineering/admin UI;
-- it wastes desktop space;
-- hierarchy is weak;
-- the interface does not feel like something that could be sold or shown publicly;
-- the product's future trader purpose is not obvious;
-- old DEMO account/position scaffolding is visually over-prominent;
-- the lack of real professional signals is confusing because the UI does not clearly distinguish future trader intelligence from current infrastructure.
-
-The redesign must address all of those problems.
-
-## Product truth
-
-Algorithmic Trader is a **BTC market-analysis and trade-decision system**.
-
-The future product will continuously show:
-
-- current MarketView;
-- what changed;
-- prediction / primary and alternative scenarios;
-- LONG / SHORT / NO_TRADE;
-- trigger / entry condition or zone;
-- invalidation;
-- target(s) / expected destination;
-- expected horizon;
-- supporting and opposing evidence;
-- uncertainty;
-- what would change the view.
-
-However, **the real professional trader does not exist yet**.
-
-Therefore this task must create the product surface for those concepts **without fabricating any real signal, prediction, target or recommendation**.
-
-Current real capabilities are:
-
-- durable application/worker shell;
-- synthetic DEMO replay;
-- historical real OKX datasets and quality/provenance;
-- causal feed/state core (not yet application-integrated);
-- public live recorder and receipt-time evidence;
-- health/runtime state;
-- run artifacts.
+The current synthetic replay remains DEMO scaffolding. Do not adapt it into a real trader by substituting real candles.
 
 ## Objective
 
-Transform the web application into a polished, premium, professional desktop product that is credible as a sellable beta/prototype while preserving the current functional behavior.
+Build a **durable observation-only real-market replay** that consumes accepted market evidence through `algotrader.feed.v1`, advances the accepted observable-state reducer in causal availability order, persists restart-safe progress and exposes that state in the product UI.
 
-The result should feel like a modern professional trading/research terminal, not an internal admin panel.
+The real replay must answer:
 
-This task is primarily front-end. Backend/domain semantics should remain unchanged unless a very small read-only API adjustment is strictly necessary to expose data the backend already has. Do not create new trading semantics.
+> “What market evidence would the system have been allowed to know at this replay instant, and what is the resulting observable market state?”
 
-## Visual direction
+It must **not** answer:
 
-Aim for:
+> “What does the market mean?”  
+> “Should I go LONG/SHORT?”  
+> “What is the target?”
 
-- dark-first professional interface;
-- full-width / full-height desktop composition;
-- strong hierarchy;
-- restrained, premium color palette;
-- excellent typography and spacing;
-- crisp cards/panels;
-- information-dense but calm;
-- modern status pills/badges;
-- clear positive/negative/neutral/warning semantics;
-- subtle borders/elevation, not heavy boxes everywhere;
-- polished empty/loading/error states;
-- coherent iconography if a lightweight icon library is justified;
-- high-quality hover/focus/active states;
-- responsive behavior, with desktop as the primary target.
+Those belong to the later professional trader.
 
-Avoid:
+## Architectural decision
 
-- 1990s/admin-dashboard appearance;
-- tiny centered content;
-- giant unused margins;
-- neon/cyberpunk styling;
-- casino-like green/red flashing;
-- gratuitous gradients;
-- fake trading numbers;
-- decorative complexity that reduces readability.
+Real-market observation replay is a **separate operational path** from the frozen synthetic `algotrader.semantic.v1` run.
 
-Do not clone another product. Create an original interface appropriate to Algorithmic Trader.
+Do not force real evidence through the dummy trader, paper account, risk skeleton, order/fill events or old semantic run contract.
 
-## Information architecture
+The long-lived boundary remains:
 
-Replace the current two-tab feel with a real application shell.
+**immutable evidence → causal feed deliveries → observable market state → later professional reasoning**
 
-At minimum provide clear destinations equivalent to:
+WP-007 ends at **observable market state**.
 
-### 1. Overview / Market
+## 1. Supported replay sources
 
-This becomes the default landing page and future professional trader cockpit.
+Support both accepted evidence forms:
 
-It must communicate the product purpose immediately.
+### A. Historical marketdata dataset
 
-The page should include visually strong areas for:
+Input:
+- one finalized/immutable `algotrader.marketdata.v1` dataset.
 
-- BTC / BTC-PERP identity and market-status header;
-- current trader-intelligence state;
-- MarketView;
-- scenario/prediction area;
-- trade-decision area;
-- trade geometry: trigger/entry, invalidation, targets, horizon;
-- evidence / conflicts / what-would-change-the-view;
-- data freshness / system readiness.
+Before launch:
+- verify dataset integrity/hashes;
+- build the feed using the accepted dataset→feed adapter;
+- preserve source dataset identity and feed content identity.
 
-Because the professional engine is not implemented:
+Availability:
+- use an explicit MODELED availability policy;
+- for this observation/development replay, use the accepted zero-extra-delay lower-bound convention unless existing feed code requires another explicit default;
+- persist the exact policy in the replay config/manifest;
+- label it clearly as **MODELED — not measured publication timing**.
 
-- these trader-intelligence areas must show an explicit, polished **NOT YET IMPLEMENTED / awaiting professional trader engine** state;
-- do not populate them from the synthetic DEMO trader;
-- do not invent placeholder prices/signals that can be mistaken for real output.
+Do not silently turn live receipt measurements from WP-005 into a historical latency constant.
 
-The Overview may show **real current infrastructure readiness**, derived from existing endpoints where available, such as:
+### B. Finalized recorder session
 
-- API/worker health;
-- recorder health/status;
-- number/latest historical datasets;
-- latest completed recorder session;
-- whether real causal trader integration is available yet.
+Input:
+- one finalized CLEAN or PARTIAL `algotrader.recorder.v1` session with usable market evidence.
 
-Make a clear visual distinction between **real operational readiness** and **future trader intelligence**.
+Before launch:
+- verify session hashes/integrity;
+- build the feed using the accepted recorded-session bridge;
+- preserve session identity and any bridge exclusions.
 
-### 2. Replay Lab
+Availability:
+- use the existing RECORDED first-completion local receipt times;
+- make it clear these are **client-observed receipt times**, not exchange publication times.
 
-Move the existing synthetic replay here.
+FAILED/no-usable-data sessions must not launch as successful replays.
 
-Keep all current capabilities:
+PARTIAL sessions may replay, but their partial/outage status must remain visible.
 
-- start run;
-- speed;
-- fault injection;
-- run selection;
-- pause/resume/step/cancel;
-- runtime state;
-- progress;
-- ETA;
-- worker heartbeat;
-- synthetic chart;
-- dummy market view/decision;
-- action history;
-- artifacts;
-- recovery/control logs.
+## 2. Separate real-replay operational contract/storage
 
-But present it as a clearly bounded **DEMO / SYNTHETIC LAB**.
+Do not mutate frozen `algotrader.semantic.v1`.
 
-The current synthetic account/position scaffolding must not look like a product feature. Either:
+Create a separate provisional operational namespace/storage appropriate for real observation replay.
 
-- demote it into a collapsible `DEMO internals` / `synthetic account scaffolding` section; or
-- visually subordinate it strongly.
+A replay record must at least persist:
 
-Do not remove the data needed by existing tests unless tests are updated without weakening their behavioral intent.
+- replay id;
+- source kind: dataset | recording;
+- source id;
+- source integrity/verification result;
+- feed schema/version/revision;
+- feed content identity;
+- ordered-event hash;
+- availability policy and basis;
+- freshness policy;
+- source coverage;
+- total feed events;
+- status;
+- replay controls;
+- current cursor / applied-event count;
+- current replay/information time;
+- heartbeat / lease / recovery state;
+- start/finish times;
+- code version;
+- errors;
+- terminal artifact/manifest reference.
 
-### 3. Data
+Name the namespace clearly as observation/replay semantics, not professional trader semantics.
 
-Keep historical dataset inspection but redesign it as a professional data/evidence workspace.
+If a schema baseline is introduced:
+- mark it PROVISIONAL during M3;
+- give it revision/changelog controls consistent with feed/recorder contracts.
 
-Improve:
+## 3. Event-driven replay clock
 
-- dataset list/scanning;
-- source/instrument/coverage summary;
-- quality state;
-- gaps;
-- provenance;
-- file/hash inspection;
-- empty/loading/error states.
+A real replay step is **one causal feed delivery event**, not one bar.
 
-Remove stale product wording that implies the real product owns a 1x exposure policy.
+This is intentional.
 
-### 4. Recorder
+Do not rebuild the permanent architecture around:
+- bar index;
+- one bar = one engine call;
+- traded candle as the only clock;
+- one global data-quality flag.
 
-Give the public recorder its own first-class destination instead of burying it inside Data.
+Processing order must be exactly the accepted feed order.
 
-Preserve all existing recorder behavior:
+For each delivery:
 
-- start/stop;
-- duration;
-- state;
-- heartbeat;
-- connections;
-- subscriptions;
-- message counts;
-- last receipt;
-- reconnects/errors;
-- output reference;
-- measured completion timing;
-- manifest/report access.
+1. take the next `FeedEvent`;
+2. apply it with the pure `feed.state.apply` reducer;
+3. set replay/information time to that event's `available_time`;
+4. derive the current `ObservableSnapshot` with the accepted snapshot function;
+5. persist the checkpoint atomically with the durable progress journal.
 
-Make it obvious that this is:
+The durable cursor must be sufficient to restart without replaying a committed event twice.
 
-**Public market evidence collection — no trading.**
+## 4. Freshness policy
 
-### 5. Operations / Artifacts
+Use an explicit named **inspection/development freshness policy** for the observation UI.
 
-You may either create a dedicated destination or keep run artifacts naturally inside Replay Lab if that yields a cleaner product.
+The existing default bar freshness/history settings may be reused if appropriate, but they must remain labelled as inspection defaults, not professional-trader thresholds.
 
-Do not create empty navigation solely to satisfy a label.
+Persist the policy with every replay.
 
-## Application shell
+Do not turn inspection freshness into a research conclusion.
 
-Create a coherent top-level shell, for example:
+## 5. Durable execution and controls
 
-- persistent sidebar or high-quality desktop navigation;
-- product mark/name;
-- current section;
-- compact global system-health indicator;
-- content workspace that uses the screen properly.
+Real replay must run outside the browser.
 
-Choose the exact shell through the frontend-design skill.
+Provide restart-safe durable behavior comparable to the existing shell:
+
+- queued;
+- running;
+- pausing;
+- paused;
+- stepping;
+- recovering;
+- cancel requested;
+- completed;
+- cancelled;
+- failed.
+
+Controls:
+
+- start;
+- pause;
+- resume;
+- step exactly one feed delivery;
+- change replay pacing;
+- cancel.
+
+Replay pacing is operational only and must not affect feed ordering, state or snapshot digests.
+
+Use units that match the real replay honestly, e.g. **events/s** rather than pretending they are bars/s.
+
+A “max” mode is allowed.
+
+The browser may close/reopen without affecting the run.
+
+## 6. Persistence, fencing and idempotency
+
+Use PostgreSQL-backed durable state.
 
 Requirements:
 
-- desktop widths around 1366–1920 px must use the available space well;
-- avoid a hard tiny max-width;
-- navigation should remain usable at narrower widths;
-- horizontal overflow should be intentional only for data tables where necessary.
+- lease/fencing so only one worker owns a replay;
+- atomic checkpoint + replay journal update;
+- crash recovery from last committed feed cursor;
+- no duplicate committed delivery after restart;
+- no future event applied early;
+- repeated process interruption cannot corrupt state;
+- explicit terminal failure if recovery cannot be made safe.
 
-## Design system / reusable primitives
+You may factor shared durable-control infrastructure from the synthetic worker if it reduces duplication **without coupling real replay to semantic.v1**.
 
-Create a lightweight internal design system rather than one-off CSS.
+Do not rewrite the accepted synthetic path merely for elegance.
 
-Use reusable concepts/components for things such as:
+## 7. Replay journal / artifacts
 
-- app shell/navigation;
-- page header;
-- surface/card;
-- section header;
-- metric;
-- status badge;
-- empty state;
-- notice/callout;
-- button variants;
-- form controls;
-- table treatment;
-- skeleton/loading state;
-- health indicator.
+A terminal real replay must produce structured inspectable artifacts.
 
-A full external UI-framework migration is not required and should not be done unless clearly justified.
+At minimum preserve/reference:
 
-Prefer maintainable React/CSS over a giant monolithic `App.tsx`.
+- replay manifest/config;
+- source kind/id;
+- source verification;
+- feed manifest/content identity/order hash;
+- availability/freshness policies;
+- ordered committed delivery identities;
+- replay control log;
+- recovery log;
+- final observable snapshot;
+- deterministic final snapshot/content digest;
+- any bridge exclusions / source warnings;
+- validation result.
 
-Refactor the current oversized front-end file into coherent components/views where useful.
+Avoid needlessly duplicating immutable raw source payloads; reference the accepted immutable evidence package/session.
 
-## Chart presentation
+Artifacts must remain readable by the Director/executors after hours-scale runs.
 
-The current synthetic chart is functional but visually basic.
+## 8. Observable state in the UI
 
-Improve its product framing:
+Extend the product-grade Replay Lab so that **real Market Replay** is first-class and visually distinct from **Synthetic Demo**.
 
-- larger, well-proportioned chart area;
-- better labels/context;
-- stronger readability;
-- responsive sizing;
-- synthetic/demo identity unmistakable.
+Recommended information hierarchy:
 
-Do not add fake technical indicators or signals.
+### Replay Lab / Market Replay
 
-Do not spend this task implementing a professional charting engine.
+Make real observation replay the primary real-data workflow.
 
-## Copy and semantic cleanup
+Launch UI should allow the Owner to select:
 
-All owner-facing copy must align with Foundation v2.0.
+- a historical dataset; or
+- a finalized recorder session.
 
-In particular:
+Before launch show:
 
-- capital allocation / leverage / position sizing are human decisions;
-- DEMO account/risk scaffolding is not the real product;
-- recorder is public read-only evidence collection;
-- synthetic replay is not market evidence;
-- professional trader intelligence is not implemented yet.
+- source;
+- instrument;
+- time/coverage;
+- quality/status;
+- MODELED vs RECORDED availability;
+- event count if available;
+- warning for PARTIAL recording sessions.
 
-Remove or rewrite stale UI copy implying an accepted product-level `1x exposure cap`.
+During replay show:
 
-Do not change historical frozen contract names simply because some v1 DEMO types still contain old account/risk concepts.
+- REAL badge/material;
+- source id/type;
+- availability basis;
+- runtime/recovery state;
+- event progress;
+- current information/replay time;
+- elapsed/ETA;
+- worker health;
+- controls;
+- current feed cursor.
 
-## Theme
+### Market evidence chart
 
-Use a deliberate premium dark theme as the default product experience.
+Show a real traded-price chart from causally delivered completed traded bars only.
 
-A light theme is optional, not required for this task.
+Important:
+- no future final bar before its event becomes available;
+- no indicator overlays;
+- no fake signals;
+- clearly distinguish gaps/rejected slots where useful;
+- mark/index are not substituted into traded price.
 
-Do not rely solely on `prefers-color-scheme` to determine whether the primary product design looks intentional.
+### Observable Market State
 
-If theme switching is added, keep it simple and persistent; it is not required.
+Show each channel separately, at minimum:
 
-## Accessibility / usability
+- traded 1m;
+- mark 1m;
+- index 1m;
+- settled funding when present.
 
-At minimum:
+For each channel show useful state such as:
 
-- keyboard-focus states must be visible;
-- controls need accessible names;
-- status must not rely on color alone;
-- text contrast should remain reasonable;
-- click targets should be comfortable;
-- tables and controls should remain usable without pixel-perfect viewport assumptions.
+- condition;
+- freshness;
+- latest valid market time;
+- latest available/knowledge time;
+- latest valid value(s);
+- age;
+- latest quality reason;
+- quality slots since valid;
+- coverage/beyond-coverage;
+- counts.
 
-## Functional preservation
+Keep role names explicit so a user cannot mistake mark/index for traded price.
 
-The redesign must not break:
+### Evidence/change timeline
 
-- synthetic replay controls;
-- SSE run updates;
-- run selection;
-- recorder operations;
-- dataset inspection/verification;
-- manifest/artifact links;
-- health visibility.
+Show the latest causal deliveries and/or snapshot delta information:
 
-Do not alter backend domain behavior to fit a visual idea.
+- delivery time;
+- market time;
+- channel/family;
+- observation vs quality event;
+- what channel condition/freshness changed.
 
-## Routing/state
+This is evidence inspection, not market interpretation.
 
-The current hash-based navigation may be retained or cleaned up.
+### Intelligence boundary
 
-Deep links currently used by tests/flows should either remain compatible or be migrated deliberately with updated tests.
+Keep a visible reminder that:
 
-Refresh on a section/deep link should return to the appropriate view.
+**Professional interpretation and LONG/SHORT/NO_TRADE are not connected yet.**
 
-Do not add a routing framework solely for fashion if the existing needs can be satisfied simply.
+Do not populate MarketView/decision cards from observable state with heuristic text.
 
-## No fake trader
+### Synthetic Demo
+
+Keep the existing synthetic replay available as a secondary DEMO mode.
+
+All existing synthetic E2E behavior must remain supported.
+
+## 9. Launch affordances from Data / Recorder
+
+Where clean and simple, add read-only action affordances such as:
+
+- “Replay dataset” from Data;
+- “Replay recording” from a finalized Recorder session.
+
+These should navigate to/preselect Market Replay.
+
+Do not duplicate replay logic inside Data/Recorder.
+
+## 10. API
+
+Provide clean real-replay endpoints separate from synthetic semantic runs.
+
+At minimum support:
+
+- list replayable sources or reuse existing dataset/recorder endpoints;
+- create real observation replay;
+- list/get replay;
+- snapshot/current state;
+- delivery/change history needed by UI;
+- pause/resume/step/speed/cancel;
+- artifact manifest/files.
+
+Use SSE or another existing simple update mechanism if helpful.
+
+Do not expose raw implementation-only mutable state unnecessarily.
+
+## 11. Health semantics
+
+Fix the non-blocking WP-006 issue while touching operations:
+
+The global product health indicator must not say simply “Operational” in a way that implies every capability is healthy when the recorder or real-replay worker is unavailable.
+
+Make health **capability-aware**.
+
+For example:
+- core API/database;
+- synthetic replay worker;
+- recorder worker;
+- real replay worker.
+
+The exact UI wording is your implementation choice, but the state must be truthful.
+
+Do not make an optional inactive capability look like a catastrophic whole-system outage.
+
+## 12. Causal correctness tests
+
+Add deterministic tests that prove at least:
+
+### Historical dataset
+- feed events are applied in accepted total order;
+- first state contains no future evidence;
+- prefix at every committed cursor matches pure `state_at/snapshot_at`;
+- quality events update condition without leaking invalid values;
+- mark/index/trade remain separate;
+- replay restart from a checkpoint produces the identical final snapshot digest.
+
+### Recorded session
+- first completed receipt is the event availability;
+- forming pushes never appear;
+- no future completion leaks before receipt;
+- PARTIAL/outage evidence is not converted into fabricated market gaps;
+- incremental replay produces the same snapshot as the pure recorded feed prefix;
+- bridge exclusions remain visible.
+
+### Durable controls
+- pause parks at a committed cursor;
+- step applies exactly one feed event;
+- resume continues from the next event;
+- pacing changes do not alter final state/digests;
+- cancellation is durable;
+- worker crash/reclaim does not duplicate a feed delivery.
+
+### Separation
+- no synthetic semantic/account/order/fill event is created by real replay;
+- no MarketView/Decision is generated;
+- real replay does not import `trader.py`, `risk.py` or `account.py` as part of its domain path.
+
+## 13. E2E
+
+Add/update browser E2E to demonstrate:
+
+1. open Replay Lab;
+2. choose real Market Replay;
+3. launch a small offline historical dataset replay;
+4. observe REAL/MODELED labeling;
+5. pause;
+6. step one event;
+7. refresh/reconnect;
+8. resume;
+9. complete;
+10. inspect channel state and artifacts;
+11. separately launch/replay a captured recorder fixture with RECORDED labeling;
+12. prove synthetic DEMO remains separate.
+
+CI must stay fully offline/deterministic.
+
+## 14. Visual quality
+
+Integrate this into the accepted WP-006 product shell at the same quality level.
+
+Do not regress into an engineering form/table dump.
+
+Use the existing design system/material semantics:
+
+- REAL for real replay;
+- SYNTHETIC for DEMO;
+- PENDING only for unimplemented intelligence.
+
+Perform browser review/refinement at least at:
+- 1440×900;
+- 1920×1080;
+- ~1024 px width.
+
+Do not redesign the whole app again.
+
+## 15. Contract rules
+
+Do not modify frozen:
+
+- `algotrader.semantic.v1`;
+- `algotrader.marketdata.v1`.
+
+Do not create:
+- `semantic.v2`.
+
+Do not change provisional `feed.v1` or `recorder.v1` unless a genuinely generic missing contract field blocks correct replay.
+
+If such a change is necessary:
+- stop and explain the requirement in the completion report unless it was clearly unavoidable;
+- bump the relevant schema revision;
+- add changelog;
+- preserve previous artifact readability;
+- update baseline deliberately.
+
+Prefer a separate provisional observation-replay contract over contaminating feed semantics with operational job state.
+
+## 16. No trader intelligence
 
 Absolutely do not:
 
-- create a fake “live bullish/bearish” signal;
-- invent confidence values;
-- invent BTC prices;
-- invent targets/stops;
-- use the DEMO trader to populate the real Overview;
-- imply that causal feed/state is already wired into the app;
-- label synthetic output as real market analysis.
+- generate a MarketView;
+- infer bullish/bearish state;
+- rank scenarios;
+- output LONG/SHORT/NO_TRADE;
+- calculate trigger/invalidation/targets;
+- add technical indicators;
+- add support/resistance logic;
+- add account sizing/leverage;
+- add P&L as a product decision signal;
+- place orders;
+- add authenticated exchange connectivity.
 
-The Overview should look complete as a product surface while honestly stating which intelligence modules are pending.
-
-## Suggested real Overview content available today
-
-Use existing APIs where practical to show truthful readiness information, for example:
-
-- system operational / degraded;
-- run worker alive count;
-- recorder worker alive count;
-- historical dataset count;
-- latest dataset source/coverage/quality;
-- active/latest recorder session;
-- evidence pipeline stage;
-- real trader engine: `Not implemented`;
-- real causal replay integration: `Pending WP-007`.
-
-Avoid exposing internal WP numbers prominently to a future end user unless inside a secondary development/status detail.
-
-## Tests
-
-Update/add front-end/E2E tests to preserve behavior and cover the new shell.
-
-At minimum verify:
-
-- default landing page is Overview/Market;
-- navigation reaches Replay, Data and Recorder;
-- synthetic DEMO labeling remains obvious in Replay;
-- replay start → run → controls still work;
-- Data still lists/opens/verifies datasets;
-- Recorder UI still starts/stops a session in offline E2E;
-- Overview never presents synthetic output as real trader intelligence;
-- key not-yet-implemented trader areas are clearly labeled;
-- no critical horizontal overflow at a normal desktop viewport.
-
-Do not weaken existing backend/domain tests.
-
-## Visual validation
-
-Before completion, inspect the rendered application in a browser at minimum around:
-
-- 1440×900;
-- 1920×1080;
-- a narrower desktop/tablet-like width around 1024 px.
-
-Use your frontend-design skill to do at least one refinement pass after seeing the rendered result.
-
-Check:
-
-- hierarchy;
-- spacing;
-- page width usage;
-- navigation;
-- readability;
-- table overflow;
-- empty states;
-- DEMO vs REAL distinction;
-- recorder state;
-- Overview placeholder honesty.
-
-If your environment supports screenshots, capture them for your own review and mention the reviewed viewport(s) in the completion report. Do not commit screenshot binaries unless specifically needed for a test.
+Observable state is factual causal market evidence only.
 
 ## Acceptance criteria
 
-WP-006 is complete only if:
+WP-007 is complete only if:
 
-1. the application has a coherent premium product shell, not the old tiny boxed/admin layout;
-2. Overview/Market is the default landing experience;
-3. the future professional trader information hierarchy is obvious without fake signals;
-4. Replay is clearly a synthetic DEMO lab and all existing controls still work;
-5. synthetic account/risk scaffolding is visually demoted from product prominence;
-6. Data is a polished evidence workspace;
-7. Recorder is a first-class polished operational view;
-8. current functionality and owner observability are preserved;
-9. stale 1x/account-product wording is removed from owner-facing UI;
-10. responsive desktop layouts use available space well;
-11. reusable front-end structure/design primitives replace the current monolithic styling where appropriate;
-12. E2E behavior remains green;
-13. web typecheck/build remain green;
-14. all existing backend/unit/contract tests and compose smoke remain green;
-15. no professional trading logic or fabricated signal is introduced.
+1. historical marketdata and finalized recorded sessions can both launch real observation replays;
+2. replay consumes only `feed.v1` events in accepted causal order;
+3. one replay step equals one feed delivery, not one candle;
+4. current state is produced only by the accepted pure reducer;
+5. MODELED vs RECORDED availability is explicit and persisted;
+6. restart/crash recovery is idempotent and digest-identical;
+7. browser close/reopen does not affect execution;
+8. pause/resume/one-event-step/speed/cancel work durably;
+9. real replay exposes truthful per-channel observable state;
+10. future values cannot leak;
+11. recorder outages do not become fabricated market gaps;
+12. real replay creates no dummy trader/account/order/fill semantics;
+13. Replay Lab clearly separates Market Replay from Synthetic Demo;
+14. artifacts are structured, immutable enough for later review and reference source identities;
+15. global operational health becomes capability-aware;
+16. all deterministic unit/integration/E2E tests pass;
+17. CI and compose smoke remain green;
+18. no professional interpretation/trade recommendation is introduced.
 
 ## Prohibited changes
 
 Do not:
 
 - modify `source_notes/`;
+- import legacy Trading Bot work;
 - implement the professional trader;
 - create `semantic.v2`;
-- wire real feed/state into the trader/replay engine;
-- implement market structure/indicators/levels;
-- create real predictions, targets or recommendations;
-- create autonomous account/leverage/sizing logic;
-- add authenticated exchange connectivity;
-- implement real order execution;
-- rewrite backend architecture for UI convenience;
-- weaken tests to accommodate the redesign.
+- add indicators/levels/predictions/recommendations;
+- add account/leverage/margin management;
+- add real execution/authenticated connectivity;
+- reinterpret funding live snapshots as settled funding;
+- forward fill missing evidence;
+- substitute mark/index for traded price;
+- use a later event before its availability time;
+- weaken tests;
+- rewrite shared Git history.
 
 ## Git workflow
 
@@ -476,33 +554,32 @@ Before editing:
 
 `git pull --ff-only origin main`
 
-Then:
+Then implement only WP-007, run all required checks, commit and push normally to `main`.
 
-1. use the frontend-design skill;
-2. inspect current UI;
-3. implement the bounded redesign;
-4. run required checks;
-5. visually inspect and refine;
-6. commit;
-7. push normally to `main`.
-
-No force-push, reset or shared-history rewrite.
+No force-push/reset/shared-history rewrite.
 
 ## Completion report
 
 Report:
 
 - base/final SHA and branch;
-- confirmation that the frontend-design skill was used;
-- main information-architecture decisions;
-- main visual/design-system decisions;
-- files/components added/refactored;
-- what each top-level destination now does;
-- which Overview content is real today vs intentionally pending;
-- behavior preserved;
-- viewport(s) visually inspected;
-- web/E2E/backend checks and exact results;
+- architecture of the separate real-replay path;
+- contract/storage namespace/version if introduced;
+- DB migration summary;
+- source selection and verification rules;
+- MODELED/RECORDED availability behavior;
+- event-driven clock/control semantics;
+- checkpoint/idempotency/recovery model;
+- replay artifacts;
+- API/UI integration;
+- per-channel state shown;
+- historical and recorded deterministic evidence;
+- crash/restart equivalence evidence;
+- E2E evidence;
+- visual review viewports;
+- schema baseline hashes / revision changes;
+- local checks;
 - GitHub Actions result;
-- deviations/limitations.
+- deviations/unresolved issues.
 
-Do not declare WP-006 accepted. Acceptance belongs to the Project & Research Director.
+Do not declare WP-007 accepted. Acceptance belongs to the Project & Research Director.
