@@ -4,7 +4,7 @@ Algorithmic Trader is a clean-room BTC-only research and paper-trading project w
 
 ## Current state
 
-The operational shell (WP-001/WP-002) is accepted. The project is in **M3 — data and execution readiness**; WP-003 adds public, read-only OKX BTC-USDT-SWAP market-data acquisition with provenance and quality audit. The repository contains the accepted foundation, the professional source dossiers and a runnable shell driven by a scripted **DEMO dummy trader** on a **synthetic** BTC-perpetual fixture. The real trader has not been implemented; nothing the DEMO replay shows is market data or research evidence. Acquired OKX datasets are real public market data, but they are not trading results.
+Algorithmic Trader is a BTC **market-analysis and trade-decision** system (Foundation v2.0): capital, position size, leverage and order placement remain the human Owner's decisions. The operational shell (WP-001/WP-002) and the OKX BTC-USDT-SWAP market-data evidence layer (WP-003) are accepted. The project is in **M3 — trustworthy real-market observation and causal reasoning readiness**; WP-004 adds the causal feed and observable market state pure core. The runnable shell still uses a scripted **DEMO dummy trader** on a **synthetic** fixture; its account/order path is DEMO scaffolding only. No professional trader exists yet, and nothing the DEMO replay shows is market data or research evidence. Acquired OKX datasets are real public market data, not trading results.
 
 ## Read first
 
@@ -94,6 +94,32 @@ uv run algotrader data live-check --minutes 30  # manual live integration check 
 - **Data view**: the UI's *Data* tab (and `GET /api/datasets[/{id}[/verify|/files/{name}]]`) shows source, instrument, coverage, row counts, quality and gaps, retrieval time, schema version, hashes and provenance files.
 - Contracts are versioned separately as **`algotrader.marketdata.v1`** (`schemas/algotrader.marketdata.v1.json`, same frozen-baseline rules as below). Exchange-advertised leverage is stored as metadata only. Funding is recorded, not applied to any account.
 
+## Causal feed and observable market state (WP-004, `algotrader.feed.v1` PROVISIONAL)
+
+A pure domain core (`src/algotrader/feed/`), with no UI, database, worker, trader, account or execution dependency. It sits at the boundary **market evidence → causal availability feed → observable market state**. It is not yet wired into the worker or browser.
+
+```sh
+uv run algotrader feed inspect <dataset_id> --cutoff 2026-09-30T08:00Z [--bar-delay-seconds 15] [--history 240] [--json]
+```
+
+- **Events**: each verified `marketdata.v1` dataset becomes ordered `FeedEvent`s:
+  - bar observations (traded / mark / index, 1m);
+  - sparse funding observations;
+  - slot-quality events (`MISSING`, `INVALID_ROW`, `CONFLICTING_DUPLICATE`, `INCOMPLETE_REJECTED`). Excluded slots are classified from the retained raw pages.
+
+  Invalid or unconfirmed evidence never becomes a valid observation, nothing is forward-filled, and channels are never substituted for each other. The dataset is never modified.
+- **Times**: `event_time`/`event_end_time` (market), `available_time` (knowledge, with `availability_basis` MODELED|RECORDED and a policy id) and `source.retrieved_at` (provenance) stay distinct.
+- **Availability**: `modeled_availability(bar_delay, funding_delay)` adds a non-negative delay to the marketdata.v1 modeled availability without changing market time. The default zero delay is a lower-bound convention, not a measurement. RECORDED receipt times come with the live recorder, which is not part of WP-004.
+- **Ordering** (`feed.order.availability-family-series-time-kind.v1`): a total order by availability time, then family rank (trade, mark, index, funding), series, market time, kind and event id. It is a replay convention, not a claim about exchange micro-order. Two events for the same channel slot are rejected as ambiguous. Input order never matters.
+- **State**: the pure reducer `apply(state, event)` owns bounded per-channel history. Each channel reports:
+  - `condition`: NEVER_SEEN / VALID / GAP / REJECTED / INVALID_ONLY;
+  - `freshness`: UNKNOWN / FRESH / STALE / NOT_APPLICABLE (sparse funding);
+  - ages, counts, coverage and the latest valid value. That value is carried with its original times when stale.
+
+  Snapshots (`snapshot_at`) and deltas (`make_delta`) are deterministic. They carry the ordering, availability and freshness policy ids, and the labels `OBSERVATION_ONLY` / `NO_INTERPRETATION`.
+- **Identity**: the evidence-package `dataset_id` is kept. A separate `feedcontent.v1:` content identity covers the normalized event content and coverage, independent of pagination, base URL and retrieval time. A snapshot's `content_digest` covers market content only; its `snapshot_id` adds provenance.
+- **Status**: the contracts are PROVISIONAL during M3. Any change bumps `FEED_SCHEMA_REVISION`, adds a `FEED_CHANGELOG` entry and needs Director approval; `algotrader schema --write` refuses to rewrite the baseline otherwise.
+
 ## Semantic contract baseline
 
 The public semantic contracts (`src/algotrader/contracts.py`: journal payloads such as MarketObservation, MarketView, TradePlan, RiskDecision, Decision, OrderIntent, Order, Fill and AccountSnapshot, plus Run, RunConfig, ReplayControl and RunManifest) are frozen as **`algotrader.semantic.v1`**. Their JSON Schema is checked in at `schemas/algotrader.semantic.v1.json`, and every run manifest records the version in `schema_version`.
@@ -117,6 +143,7 @@ Without `ALGOTRADER_TEST_DATABASE_URL` the database tests are skipped (CI sets `
 | `src/algotrader/control.py` | Durable replay-control commands (pause/resume/step/speed/cancel) |
 | `src/algotrader/schema.py`, `schemas/` | Semantic and market-data contract JSON Schema baselines and their generator |
 | `src/algotrader/marketdata/` | Market-data contracts, OKX public REST adapter, bounded dataset acquisition/quality/verification |
+| `src/algotrader/feed/` | Causal feed contracts (provisional), dataset→feed adapter, ordering/availability policies, pure observable-state reducer, snapshots/deltas |
 | `tests/fixtures/okx/` | Small captured OKX public responses (see `PROVENANCE.json`) for offline tests |
 | `src/algotrader/artifacts.py`, `validation.py` | Immutable run artifacts and validation checks |
 | `src/algotrader/api.py`, `cli.py` | FastAPI app (commands, snapshots, SSE, artifacts) and CLI |

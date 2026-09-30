@@ -40,7 +40,6 @@ from typing import Any
 import pyarrow as pa
 import pyarrow.parquet as pq
 
-from ..artifacts import code_version
 from .contracts import (
     AVAILABILITY_POLICY_ID,
     AVAILABILITY_POLICY_TEXT,
@@ -528,7 +527,7 @@ def _acquire_into(
         availability_policy_text=AVAILABILITY_POLICY_TEXT,
         retrieval_started_at=started,
         retrieval_finished_at=finished,
-        code_version=code_version(),
+        code_version=_code_version(),
         families=tuple(
             FamilySummary(
                 family=fam, endpoint=ENDPOINTS[fam], rows=states[fam].rows, pages=states[fam].pages,
@@ -616,3 +615,11 @@ def dataset_path(root: Path, dataset_id: str) -> Path | None:
 
 def default_data_root() -> Path:
     return Path(os.environ.get("ALGOTRADER_DATA_ROOT", "var/data")).resolve()
+
+
+def _code_version() -> str | None:
+    # Imported lazily so readers of market data (e.g. the causal feed core) do not load the
+    # DEMO engine/trader/account modules that live next to ``artifacts``.
+    from ..artifacts import code_version
+
+    return code_version()

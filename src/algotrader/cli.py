@@ -11,6 +11,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import logging
 import os
 import subprocess
@@ -137,6 +138,50 @@ def _data_live_check(args: argparse.Namespace) -> None:
     print("LIVE CHECK OK (integration evidence only; not a trading result)")
 
 
+def _feed_inspect(args: argparse.Namespace) -> None:
+    """Developer/Director inspection of the causal feed and observable state (not Owner UI)."""
+    from datetime import timedelta
+
+    from .feed.adapter import build_feed
+    from .feed.ordering import default_freshness, modeled_availability
+    from .feed.state import snapshot_at
+    from .marketdata.dataset import dataset_path, parse_utc
+
+    path = dataset_path(args.root, args.dataset_id)
+    if path is None:
+        sys.exit(f"no dataset {args.dataset_id} under {args.root}")
+    policy = modeled_availability(timedelta(seconds=args.bar_delay_seconds),
+                                  timedelta(seconds=args.funding_delay_seconds))
+    feed = build_feed(path, policy)
+    m = feed.manifest
+    cutoff = parse_utc(args.cutoff)
+    snap = snapshot_at(feed, cutoff, default_freshness(history_limit=args.history))
+    if args.json:
+        print(json.dumps({"feed": json.loads(m.model_dump_json()), "snapshot": json.loads(snap.model_dump_json())},
+                         indent=2))
+        return
+    print(f"feed {m.schema_version} ({m.contract_status}, revision {m.schema_revision})")
+    print(f"  dataset (evidence package)  {', '.join(m.dataset_ids)}")
+    print(f"  content identity            {m.content_identity}")
+    print(f"  ordering policy             {m.ordering_policy_id}")
+    print(f"  availability policy         {m.availability_policy.policy_id} (measured={m.availability_policy.measured})")
+    print(f"  events                      {m.event_count}  ordered-event sha256 {m.ordered_event_hash}")
+    for k, v in m.event_counts.items():
+        print(f"    {k:40} {v}")
+    print(f"snapshot {snap.snapshot_id} as_of {snap.as_of.isoformat()} (cursor {snap.cursor.applied_events} events)")
+    print(f"  content digest {snap.content_digest}; freshness policy {snap.freshness_policy_id}")
+    for c in snap.channels:
+        lv = c.latest_valid
+        latest = "-"
+        if lv is not None:
+            p = lv.payload
+            value = f"close {p.close}" if hasattr(p, "close") else f"rate {p.funding_rate}"
+            latest = f"{lv.event_time.isoformat()} {value} (available {lv.available_time.isoformat()}, age {c.age_since_available})"
+        print(f"  {c.channel_id:40} {c.condition.value:12} {c.freshness.value:14} latest {latest}")
+        print(f"  {'':40} counts {c.counts.model_dump()} history {len(c.history)} beyond_coverage {c.beyond_coverage}")
+    print("labels: " + ", ".join(snap.labels) + " (no interpretation, prediction or recommendation)")
+
+
 def _print_dataset(path, verdict: str) -> None:
     from .marketdata.dataset import load_manifest, load_quality
 
@@ -210,13 +255,27 @@ def main(argv: list[str] | None = None) -> None:
     lc.add_argument("--minutes", type=int, default=30)
     common(lc, source=True)
     lc.set_defaults(fn=_data_live_check)
+
+    fd = sub.add_parser("feed", help="causal feed / observable state inspection (developer tooling)")
+    fsub = fd.add_subparsers(dest="feed_cmd", required=True)
+    fi = fsub.add_parser("inspect", help="build a dataset's causal feed and print the snapshot at a cutoff")
+    fi.add_argument("dataset_id")
+    fi.add_argument("--cutoff", required=True, help="UTC knowledge cutoff, e.g. 2026-09-30T08:05Z")
+    fi.add_argument("--bar-delay-seconds", type=float, default=0.0,
+                    help="modeled extra availability delay for bars (assumption, not measured)")
+    fi.add_argument("--funding-delay-seconds", type=float, default=0.0)
+    fi.add_argument("--history", type=int, default=240, help="valid observations retained per channel")
+    fi.add_argument("--json", action="store_true")
+    common(fi)
+    fi.set_defaults(fn=_feed_inspect)
     args = p.parse_args(argv)
     from .marketdata.dataset import DatasetError
+    from .feed.ordering import FeedError
     from .marketdata.okx import SourceError
 
     try:
         args.fn(args)
-    except (DatasetError, SourceError) as exc:  # explicit, non-traceback failure for data commands
+    except (DatasetError, SourceError, FeedError) as exc:  # explicit, non-traceback failure for data/feed commands
         sys.exit(f"ERROR: {type(exc).__name__}: {exc}")
 
 

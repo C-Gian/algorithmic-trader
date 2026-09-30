@@ -1,0 +1,1161 @@
+{
+  "$defs": {
+    "AvailabilityBasis": {
+      "enum": [
+        "MODELED",
+        "RECORDED"
+      ],
+      "title": "AvailabilityBasis",
+      "type": "string"
+    },
+    "AvailabilityPolicy": {
+      "additionalProperties": false,
+      "description": "Feed-layer availability transformation. Never changes event time.",
+      "properties": {
+        "bar_delay": {
+          "format": "duration",
+          "title": "Bar Delay",
+          "type": "string"
+        },
+        "base_policy_id": {
+          "title": "Base Policy Id",
+          "type": "string"
+        },
+        "basis": {
+          "$ref": "#/$defs/AvailabilityBasis"
+        },
+        "funding_delay": {
+          "format": "duration",
+          "title": "Funding Delay",
+          "type": "string"
+        },
+        "measured": {
+          "title": "Measured",
+          "type": "boolean"
+        },
+        "note": {
+          "title": "Note",
+          "type": "string"
+        },
+        "policy_id": {
+          "title": "Policy Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "policy_id",
+        "basis",
+        "base_policy_id",
+        "bar_delay",
+        "funding_delay",
+        "measured",
+        "note"
+      ],
+      "title": "AvailabilityPolicy",
+      "type": "object"
+    },
+    "ChannelChange": {
+      "additionalProperties": false,
+      "properties": {
+        "channel_id": {
+          "title": "Channel Id",
+          "type": "string"
+        },
+        "condition_after": {
+          "$ref": "#/$defs/ChannelCondition"
+        },
+        "condition_before": {
+          "$ref": "#/$defs/ChannelCondition"
+        },
+        "freshness_after": {
+          "$ref": "#/$defs/Freshness"
+        },
+        "freshness_before": {
+          "$ref": "#/$defs/Freshness"
+        },
+        "latest_valid_after": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Latest Valid After"
+        },
+        "latest_valid_before": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Latest Valid Before"
+        },
+        "new_events": {
+          "title": "New Events",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "channel_id",
+        "new_events",
+        "condition_before",
+        "condition_after",
+        "freshness_before",
+        "freshness_after",
+        "latest_valid_before",
+        "latest_valid_after"
+      ],
+      "title": "ChannelChange",
+      "type": "object"
+    },
+    "ChannelCondition": {
+      "description": "What the latest slot evidence says (independent of timing).",
+      "enum": [
+        "NEVER_SEEN",
+        "VALID",
+        "GAP",
+        "REJECTED",
+        "INVALID_ONLY"
+      ],
+      "title": "ChannelCondition",
+      "type": "string"
+    },
+    "ChannelCounts": {
+      "additionalProperties": false,
+      "properties": {
+        "conflicting_duplicate": {
+          "default": 0,
+          "title": "Conflicting Duplicate",
+          "type": "integer"
+        },
+        "excluded_unclassified": {
+          "default": 0,
+          "title": "Excluded Unclassified",
+          "type": "integer"
+        },
+        "incomplete_rejected": {
+          "default": 0,
+          "title": "Incomplete Rejected",
+          "type": "integer"
+        },
+        "invalid_row": {
+          "default": 0,
+          "title": "Invalid Row",
+          "type": "integer"
+        },
+        "missing": {
+          "default": 0,
+          "title": "Missing",
+          "type": "integer"
+        },
+        "valid": {
+          "default": 0,
+          "title": "Valid",
+          "type": "integer"
+        }
+      },
+      "title": "ChannelCounts",
+      "type": "object"
+    },
+    "ChannelCoverage": {
+      "additionalProperties": false,
+      "description": "Event-time window for which the evidence package can speak about this channel.",
+      "properties": {
+        "channel": {
+          "$ref": "#/$defs/ChannelRef"
+        },
+        "covered_from": {
+          "format": "date-time",
+          "title": "Covered From",
+          "type": "string"
+        },
+        "covered_until": {
+          "format": "date-time",
+          "title": "Covered Until",
+          "type": "string"
+        },
+        "expected_cadence": {
+          "anyOf": [
+            {
+              "format": "duration",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Expected Cadence"
+        }
+      },
+      "required": [
+        "channel",
+        "covered_from",
+        "covered_until",
+        "expected_cadence"
+      ],
+      "title": "ChannelCoverage",
+      "type": "object"
+    },
+    "ChannelRef": {
+      "additionalProperties": false,
+      "properties": {
+        "family": {
+          "$ref": "#/$defs/Family"
+        },
+        "series_id": {
+          "title": "Series Id",
+          "type": "string"
+        },
+        "source": {
+          "title": "Source",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source",
+        "family",
+        "series_id"
+      ],
+      "title": "ChannelRef",
+      "type": "object"
+    },
+    "ChannelSnapshot": {
+      "additionalProperties": false,
+      "properties": {
+        "age_since_available": {
+          "anyOf": [
+            {
+              "format": "duration",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Age Since Available"
+        },
+        "age_since_event_end": {
+          "anyOf": [
+            {
+              "format": "duration",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Age Since Event End"
+        },
+        "beyond_coverage": {
+          "title": "Beyond Coverage",
+          "type": "boolean"
+        },
+        "channel": {
+          "$ref": "#/$defs/ChannelRef"
+        },
+        "channel_id": {
+          "title": "Channel Id",
+          "type": "string"
+        },
+        "condition": {
+          "$ref": "#/$defs/ChannelCondition"
+        },
+        "counts": {
+          "$ref": "#/$defs/ChannelCounts"
+        },
+        "freshness": {
+          "$ref": "#/$defs/Freshness"
+        },
+        "history": {
+          "items": {
+            "$ref": "#/$defs/FeedEvent"
+          },
+          "title": "History",
+          "type": "array"
+        },
+        "last_quality": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/FeedEvent"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "latest_slot_time": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Latest Slot Time"
+        },
+        "latest_valid": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/FeedEvent"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "quality_slots_since_valid": {
+          "title": "Quality Slots Since Valid",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "channel",
+        "channel_id",
+        "condition",
+        "freshness",
+        "latest_valid",
+        "age_since_available",
+        "age_since_event_end",
+        "latest_slot_time",
+        "last_quality",
+        "quality_slots_since_valid",
+        "counts",
+        "beyond_coverage",
+        "history"
+      ],
+      "title": "ChannelSnapshot",
+      "type": "object"
+    },
+    "EventKind": {
+      "enum": [
+        "bar_observation",
+        "funding_observation",
+        "slot_quality"
+      ],
+      "title": "EventKind",
+      "type": "string"
+    },
+    "Family": {
+      "description": "Role-specific source families. No generic 'price' channel exists.",
+      "enum": [
+        "trade_bar_1m",
+        "mark_bar_1m",
+        "index_bar_1m",
+        "funding_settlement"
+      ],
+      "title": "Family",
+      "type": "string"
+    },
+    "FeedCursor": {
+      "additionalProperties": false,
+      "properties": {
+        "applied_events": {
+          "title": "Applied Events",
+          "type": "integer"
+        },
+        "last_event_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Last Event Id"
+        },
+        "last_order": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/OrderKey"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "applied_events",
+        "last_event_id",
+        "last_order"
+      ],
+      "title": "FeedCursor",
+      "type": "object"
+    },
+    "FeedEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "availability_basis": {
+          "$ref": "#/$defs/AvailabilityBasis"
+        },
+        "availability_policy_id": {
+          "title": "Availability Policy Id",
+          "type": "string"
+        },
+        "available_time": {
+          "format": "date-time",
+          "title": "Available Time",
+          "type": "string"
+        },
+        "channel": {
+          "$ref": "#/$defs/ChannelRef"
+        },
+        "event_end_time": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Event End Time"
+        },
+        "event_id": {
+          "title": "Event Id",
+          "type": "string"
+        },
+        "event_time": {
+          "format": "date-time",
+          "title": "Event Time",
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/EventKind"
+        },
+        "order": {
+          "$ref": "#/$defs/OrderKey"
+        },
+        "payload": {
+          "discriminator": {
+            "mapping": {
+              "funding_settlement": "#/$defs/FundingPayload",
+              "index_bar_1m": "#/$defs/IndexBarPayload",
+              "mark_bar_1m": "#/$defs/MarkBarPayload",
+              "slot_quality": "#/$defs/SlotQualityPayload",
+              "trade_bar_1m": "#/$defs/TradeBarPayload"
+            },
+            "propertyName": "payload_type"
+          },
+          "oneOf": [
+            {
+              "$ref": "#/$defs/TradeBarPayload"
+            },
+            {
+              "$ref": "#/$defs/MarkBarPayload"
+            },
+            {
+              "$ref": "#/$defs/IndexBarPayload"
+            },
+            {
+              "$ref": "#/$defs/FundingPayload"
+            },
+            {
+              "$ref": "#/$defs/SlotQualityPayload"
+            }
+          ],
+          "title": "Payload"
+        },
+        "source": {
+          "$ref": "#/$defs/SourceRef"
+        }
+      },
+      "required": [
+        "event_id",
+        "channel",
+        "kind",
+        "event_time",
+        "event_end_time",
+        "available_time",
+        "availability_basis",
+        "availability_policy_id",
+        "source",
+        "order",
+        "payload"
+      ],
+      "title": "FeedEvent",
+      "type": "object"
+    },
+    "FeedManifest": {
+      "additionalProperties": false,
+      "properties": {
+        "availability_policy": {
+          "$ref": "#/$defs/AvailabilityPolicy"
+        },
+        "content_identity": {
+          "title": "Content Identity",
+          "type": "string"
+        },
+        "contract_status": {
+          "title": "Contract Status",
+          "type": "string"
+        },
+        "coverage": {
+          "items": {
+            "$ref": "#/$defs/ChannelCoverage"
+          },
+          "title": "Coverage",
+          "type": "array"
+        },
+        "dataset_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Dataset Ids",
+          "type": "array"
+        },
+        "event_count": {
+          "title": "Event Count",
+          "type": "integer"
+        },
+        "event_counts": {
+          "additionalProperties": {
+            "type": "integer"
+          },
+          "title": "Event Counts",
+          "type": "object"
+        },
+        "index_id": {
+          "title": "Index Id",
+          "type": "string"
+        },
+        "inst_id": {
+          "title": "Inst Id",
+          "type": "string"
+        },
+        "ordered_event_hash": {
+          "title": "Ordered Event Hash",
+          "type": "string"
+        },
+        "ordering_policy_id": {
+          "title": "Ordering Policy Id",
+          "type": "string"
+        },
+        "schema_revision": {
+          "title": "Schema Revision",
+          "type": "integer"
+        },
+        "schema_version": {
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema_version",
+        "contract_status",
+        "schema_revision",
+        "dataset_ids",
+        "content_identity",
+        "inst_id",
+        "index_id",
+        "ordering_policy_id",
+        "availability_policy",
+        "coverage",
+        "event_count",
+        "event_counts",
+        "ordered_event_hash"
+      ],
+      "title": "FeedManifest",
+      "type": "object"
+    },
+    "Freshness": {
+      "enum": [
+        "UNKNOWN",
+        "FRESH",
+        "STALE",
+        "NOT_APPLICABLE"
+      ],
+      "title": "Freshness",
+      "type": "string"
+    },
+    "FreshnessPolicy": {
+      "additionalProperties": false,
+      "description": "Per-family freshness thresholds. Configuration, not universal constants.",
+      "properties": {
+        "bar_max_age": {
+          "format": "duration",
+          "title": "Bar Max Age",
+          "type": "string"
+        },
+        "funding_max_age": {
+          "anyOf": [
+            {
+              "format": "duration",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Funding Max Age"
+        },
+        "history_limit": {
+          "minimum": 1,
+          "title": "History Limit",
+          "type": "integer"
+        },
+        "note": {
+          "title": "Note",
+          "type": "string"
+        },
+        "policy_id": {
+          "title": "Policy Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "policy_id",
+        "bar_max_age",
+        "funding_max_age",
+        "history_limit",
+        "note"
+      ],
+      "title": "FreshnessPolicy",
+      "type": "object"
+    },
+    "FundingPayload": {
+      "additionalProperties": false,
+      "properties": {
+        "formula_type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Formula Type"
+        },
+        "funding_rate": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Funding Rate",
+          "type": "string"
+        },
+        "method": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Method"
+        },
+        "payload_type": {
+          "const": "funding_settlement",
+          "default": "funding_settlement",
+          "title": "Payload Type",
+          "type": "string"
+        },
+        "realized_rate": {
+          "anyOf": [
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Realized Rate"
+        }
+      },
+      "required": [
+        "funding_rate",
+        "realized_rate",
+        "method",
+        "formula_type"
+      ],
+      "title": "FundingPayload",
+      "type": "object"
+    },
+    "IndexBarPayload": {
+      "additionalProperties": false,
+      "properties": {
+        "close": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Close",
+          "type": "string"
+        },
+        "high": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "High",
+          "type": "string"
+        },
+        "index_id": {
+          "title": "Index Id",
+          "type": "string"
+        },
+        "low": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Low",
+          "type": "string"
+        },
+        "open": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Open",
+          "type": "string"
+        },
+        "payload_type": {
+          "const": "index_bar_1m",
+          "default": "index_bar_1m",
+          "title": "Payload Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "index_id",
+        "open",
+        "high",
+        "low",
+        "close"
+      ],
+      "title": "IndexBarPayload",
+      "type": "object"
+    },
+    "MarkBarPayload": {
+      "additionalProperties": false,
+      "properties": {
+        "close": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Close",
+          "type": "string"
+        },
+        "high": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "High",
+          "type": "string"
+        },
+        "low": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Low",
+          "type": "string"
+        },
+        "open": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Open",
+          "type": "string"
+        },
+        "payload_type": {
+          "const": "mark_bar_1m",
+          "default": "mark_bar_1m",
+          "title": "Payload Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "open",
+        "high",
+        "low",
+        "close"
+      ],
+      "title": "MarkBarPayload",
+      "type": "object"
+    },
+    "ObservableSnapshot": {
+      "additionalProperties": false,
+      "description": "Point-in-time observable market state. No interpretation.",
+      "properties": {
+        "as_of": {
+          "format": "date-time",
+          "title": "As Of",
+          "type": "string"
+        },
+        "availability_policy_id": {
+          "title": "Availability Policy Id",
+          "type": "string"
+        },
+        "channels": {
+          "items": {
+            "$ref": "#/$defs/ChannelSnapshot"
+          },
+          "title": "Channels",
+          "type": "array"
+        },
+        "content_digest": {
+          "title": "Content Digest",
+          "type": "string"
+        },
+        "cursor": {
+          "$ref": "#/$defs/FeedCursor"
+        },
+        "dataset_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Dataset Ids",
+          "type": "array"
+        },
+        "feed_content_identity": {
+          "title": "Feed Content Identity",
+          "type": "string"
+        },
+        "freshness_policy_id": {
+          "title": "Freshness Policy Id",
+          "type": "string"
+        },
+        "information_cutoff": {
+          "format": "date-time",
+          "title": "Information Cutoff",
+          "type": "string"
+        },
+        "labels": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Labels",
+          "type": "array"
+        },
+        "ordering_policy_id": {
+          "title": "Ordering Policy Id",
+          "type": "string"
+        },
+        "schema_version": {
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "snapshot_id": {
+          "title": "Snapshot Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema_version",
+        "snapshot_id",
+        "content_digest",
+        "as_of",
+        "information_cutoff",
+        "cursor",
+        "ordering_policy_id",
+        "availability_policy_id",
+        "freshness_policy_id",
+        "feed_content_identity",
+        "dataset_ids",
+        "channels",
+        "labels"
+      ],
+      "title": "ObservableSnapshot",
+      "type": "object"
+    },
+    "OrderKey": {
+      "additionalProperties": false,
+      "description": "Explicit, deterministic total-order fields (see ORDERING_POLICY_TEXT).",
+      "properties": {
+        "available_time": {
+          "format": "date-time",
+          "title": "Available Time",
+          "type": "string"
+        },
+        "event_id": {
+          "title": "Event Id",
+          "type": "string"
+        },
+        "event_time": {
+          "format": "date-time",
+          "title": "Event Time",
+          "type": "string"
+        },
+        "family_rank": {
+          "title": "Family Rank",
+          "type": "integer"
+        },
+        "kind_rank": {
+          "title": "Kind Rank",
+          "type": "integer"
+        },
+        "series_id": {
+          "title": "Series Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "available_time",
+        "family_rank",
+        "series_id",
+        "event_time",
+        "kind_rank",
+        "event_id"
+      ],
+      "title": "OrderKey",
+      "type": "object"
+    },
+    "QualityReason": {
+      "enum": [
+        "MISSING",
+        "INVALID_ROW",
+        "CONFLICTING_DUPLICATE",
+        "INCOMPLETE_REJECTED",
+        "EXCLUDED_UNCLASSIFIED"
+      ],
+      "title": "QualityReason",
+      "type": "string"
+    },
+    "SlotQualityPayload": {
+      "additionalProperties": false,
+      "properties": {
+        "detail": {
+          "title": "Detail",
+          "type": "string"
+        },
+        "flags": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Flags",
+          "type": "array"
+        },
+        "payload_type": {
+          "const": "slot_quality",
+          "default": "slot_quality",
+          "title": "Payload Type",
+          "type": "string"
+        },
+        "reason": {
+          "$ref": "#/$defs/QualityReason"
+        }
+      },
+      "required": [
+        "reason",
+        "detail"
+      ],
+      "title": "SlotQualityPayload",
+      "type": "object"
+    },
+    "SnapshotDelta": {
+      "additionalProperties": false,
+      "description": "What changed between two snapshots of the same feed, in causal order.",
+      "properties": {
+        "channel_changes": {
+          "items": {
+            "$ref": "#/$defs/ChannelChange"
+          },
+          "title": "Channel Changes",
+          "type": "array"
+        },
+        "delta_id": {
+          "title": "Delta Id",
+          "type": "string"
+        },
+        "events": {
+          "items": {
+            "$ref": "#/$defs/FeedEvent"
+          },
+          "title": "Events",
+          "type": "array"
+        },
+        "from_as_of": {
+          "format": "date-time",
+          "title": "From As Of",
+          "type": "string"
+        },
+        "from_cursor": {
+          "$ref": "#/$defs/FeedCursor"
+        },
+        "from_snapshot_id": {
+          "title": "From Snapshot Id",
+          "type": "string"
+        },
+        "schema_version": {
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "to_as_of": {
+          "format": "date-time",
+          "title": "To As Of",
+          "type": "string"
+        },
+        "to_cursor": {
+          "$ref": "#/$defs/FeedCursor"
+        },
+        "to_snapshot_id": {
+          "title": "To Snapshot Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema_version",
+        "delta_id",
+        "from_snapshot_id",
+        "to_snapshot_id",
+        "from_as_of",
+        "to_as_of",
+        "from_cursor",
+        "to_cursor",
+        "events",
+        "channel_changes"
+      ],
+      "title": "SnapshotDelta",
+      "type": "object"
+    },
+    "SourceRef": {
+      "additionalProperties": false,
+      "description": "Provenance of the evidence behind an event. Excluded from market-content digests.",
+      "properties": {
+        "artifact": {
+          "title": "Artifact",
+          "type": "string"
+        },
+        "dataset_id": {
+          "title": "Dataset Id",
+          "type": "string"
+        },
+        "raw_page_ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Raw Page Ref"
+        },
+        "retrieved_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Retrieved At"
+        },
+        "row_index": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Row Index"
+        },
+        "source_availability_policy": {
+          "title": "Source Availability Policy",
+          "type": "string"
+        }
+      },
+      "required": [
+        "dataset_id",
+        "artifact",
+        "row_index",
+        "raw_page_ref",
+        "retrieved_at",
+        "source_availability_policy"
+      ],
+      "title": "SourceRef",
+      "type": "object"
+    },
+    "TradeBarPayload": {
+      "additionalProperties": false,
+      "properties": {
+        "close": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Close",
+          "type": "string"
+        },
+        "high": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "High",
+          "type": "string"
+        },
+        "low": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Low",
+          "type": "string"
+        },
+        "open": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Open",
+          "type": "string"
+        },
+        "payload_type": {
+          "const": "trade_bar_1m",
+          "default": "trade_bar_1m",
+          "title": "Payload Type",
+          "type": "string"
+        },
+        "volume_base": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Volume Base",
+          "type": "string"
+        },
+        "volume_base_ccy": {
+          "title": "Volume Base Ccy",
+          "type": "string"
+        },
+        "volume_contracts": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Volume Contracts",
+          "type": "string"
+        },
+        "volume_quote": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Volume Quote",
+          "type": "string"
+        },
+        "volume_quote_ccy": {
+          "title": "Volume Quote Ccy",
+          "type": "string"
+        }
+      },
+      "required": [
+        "open",
+        "high",
+        "low",
+        "close",
+        "volume_contracts",
+        "volume_base",
+        "volume_base_ccy",
+        "volume_quote",
+        "volume_quote_ccy"
+      ],
+      "title": "TradeBarPayload",
+      "type": "object"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "changelog": [
+    {
+      "date": "2026-09-30",
+      "note": "Initial provisional baseline (WP-004): availability events, ordering key, channel snapshots, observable snapshot and delta.",
+      "revision": 1
+    }
+  ],
+  "ordering_policy": {
+    "id": "feed.order.availability-family-series-time-kind.v1",
+    "text": "Deterministic replay convention, not a claim about true exchange micro-order: events are totally ordered by (available_time, family rank [trade, mark, index, funding], series id, event_time, kind rank [observation, quality], event_id). Input file, page or database order never affects the result. At most one event may exist per (channel, slot)."
+  },
+  "public_contracts": {
+    "AvailabilityPolicy": "#/$defs/AvailabilityPolicy",
+    "ChannelCoverage": "#/$defs/ChannelCoverage",
+    "ChannelRef": "#/$defs/ChannelRef",
+    "ChannelSnapshot": "#/$defs/ChannelSnapshot",
+    "FeedCursor": "#/$defs/FeedCursor",
+    "FeedEvent": "#/$defs/FeedEvent",
+    "FeedManifest": "#/$defs/FeedManifest",
+    "FreshnessPolicy": "#/$defs/FreshnessPolicy",
+    "ObservableSnapshot": "#/$defs/ObservableSnapshot",
+    "SnapshotDelta": "#/$defs/SnapshotDelta",
+    "SourceRef": "#/$defs/SourceRef"
+  },
+  "revision": 1,
+  "schema_version": "algotrader.feed.v1",
+  "status": "PROVISIONAL",
+  "title": "Algorithmic Trader causal feed contracts (algotrader.feed.v1, PROVISIONAL)"
+}
