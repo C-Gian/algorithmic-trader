@@ -1,0 +1,34 @@
+case_id: REAL-G01
+evidence: REAL
+source: "dataset okx-btc-usdt-swap-1m-20260925T0000-20260930T0000-3305612c15aa (OKX public, verified CLEAN); prefix REAL-G01.json (feed/provenance hashes inside)"
+visible_prefix: REAL-G01.json
+visible_prefix_cutoff: "2026-09-28T04:00Z"
+selection_reason: "Predeclared grid cutoff (SELECTION-PROTOCOL.md); not chosen by content."
+labeling_method: "Manual application of RP-001B B3 (structure.dc.v1) and RP-001A A1 to the prefix; medians via generic `sort -n` only; no swing/level/policy code."
+frozen_before: "any viewing of REAL-G02..G06 prefixes and any outcome export (protocol amendment A1)"
+labels:
+  h1_series:
+    warmup_S1h: {bars: "1-24 (09-25T00:00..23:00)", median_tr: 382.4, theta: 764.8}
+    swings:
+      - {kind: LOW,  price: 83748.8, extremum: "2026-09-26T00:00Z", confirmed_by_bar: "2026-09-27T01:00Z", known_at: "2026-09-27T02:00Z", flags: [INIT]}
+      - {kind: HIGH, price: 85137.5, extremum: "2026-09-27T13:00Z", confirmed_by_bar: "2026-09-27T14:00Z", known_at: "2026-09-27T15:00Z", theta_used: 363.9, flags: [AMBIGUOUS_PATH]}
+      - {kind: LOW,  price: 84270.3, extremum: "2026-09-27T15:00Z", confirmed_by_bar: "2026-09-27T16:00Z", known_at: "2026-09-27T17:00Z", theta_used: 416.8}
+      - {kind: HIGH, price: 84811.6, extremum: "2026-09-27T18:00Z", confirmed_by_bar: "2026-09-27T22:00Z", known_at: "2026-09-27T23:00Z", theta_used: 477.5}
+      - {kind: LOW,  price: 84088.3, extremum: "2026-09-27T22:00Z", confirmed_by_bar: "2026-09-28T00:00Z", known_at: "2026-09-28T01:00Z", theta_used: 545.3}
+      - {kind: HIGH, price: 84973.6, extremum: "2026-09-28T00:00Z", confirmed_by_bar: "2026-09-28T01:00Z", known_at: "2026-09-28T02:00Z", theta_used: 584.2}
+    scale_at_each_leg_start: {bar_50: 181.95, bar_63: 208.4, bar_65: 238.75, bar_71: 272.65, bar_73: 292.1, bar_74: 302.35}
+    at_cutoff: {mode: DOWN, theta: 604.7, provisional_running_low: 83173.6, provisional_low_time: "2026-09-28T03:00Z", last_complete_1h_close: 83309.0}
+    ambiguity_note: "bar 09-27T13:00 extended the high and reached the reversal threshold of the prior high in the same bar (DC-07); treated as extension, confirmed on the next bar"
+  context:
+    lookback: "confirmed swings with extremum in the last 48 complete 1h bars (from 2026-09-26T04:00Z)"
+    two_latest_highs: [84811.6, 84973.6]   # rising
+    two_latest_lows: [84270.3, 84088.3]    # falling
+    result: NOT_DIRECTIONAL
+  P-CTX_long: CONTRADICTED
+  P-CTX_short: CONTRADICTED
+  setup_5m: "not assessed (no directional context -> no 5m epoch for either direction)"
+  public_action: NO_TRADE
+  display_reason: NO_SUPPORTED_SETUP
+  marketview_description: "1h structure mixed (higher high, lower low); a sharp provisional 1h down-leg is developing below the last confirmed swing low (running low 83173.6, not yet confirmable). No preferred scenario; no playbook applicability."
+  definition_observations:
+    - "CONFIRMATION_LAG (L-B1): an evident breakdown below the last confirmed higher low cannot be described as DOWN context until a lower high is confirmed; the context rule ignores the provisional leg by design."

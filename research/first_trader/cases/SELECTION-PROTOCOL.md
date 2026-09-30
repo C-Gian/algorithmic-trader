@@ -45,6 +45,10 @@ No cutoff is added, moved or dropped after acquisition. A cutoff that shows `NO_
 2. Apply the frozen rules forward on the suffix (triggers, invalidation, target, deadlines) and record in `outcomes/REAL-Gxx.reveal.yaml` whether the case **supports** the formalization, **exposes ambiguity**, **falsifies/narrows** a definition, or **reveals a missing-data requirement**.
 3. Prefix labels are never edited after the freeze. Any rule change prompted by a reveal is recorded as a new versioned proposal (`DESIGN-CONVENTIONS.yaml` revision marked `post-reveal`) and is not applied retroactively to the frozen labels.
 
+## 5a. Amendment A1 (recorded after export, before any real prefix was viewed)
+
+Later prefixes contain earlier cutoffs' 4-hour outcome windows (e.g. REAL-G02's prefix covers REAL-G01's suffix). Therefore labels are frozen **one case at a time in chronological order**: each `REAL-Gxx.json` + `REAL-Gxx.label.yaml` is committed and pushed before the next prefix is opened. Prefixes were exported with `--m5-hours 24` (a superset of the 12 h in §3).
+
 ## 6. What the real cases can and cannot show
 
 They test whether the definitions can be applied to real causal prefixes consistently and without hidden discretion, and they expose data/definition gaps. Six cutoffs from five days are not a performance sample; no hit rate, return or profitability is computed or implied.
