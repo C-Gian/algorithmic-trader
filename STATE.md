@@ -17,9 +17,9 @@ Canonical directive: `FOUNDATION.md`
 
 ## Current milestone
 
-**M2 — Operational shell with deterministic dummy trader**
+**M3 — Data and execution readiness for BTC perpetual paper operation**
 
-WP-001 is accepted. The first executable shell, durable worker, PostgreSQL persistence, artifacts, UI, crash recovery and CI are proven. One final operational-shell package remains before real BTC data/execution readiness.
+The operational/dummy shell is accepted. M3 now establishes trustworthy real BTC-perpetual data, causal replay inputs and later paper-execution economics before any professional trader logic is implemented.
 
 ## Accepted work
 
@@ -31,13 +31,37 @@ Accepted implementation lineage:
 
 Acceptance evidence:
 - GitHub Actions run `36682981308`: SUCCESS;
-- `checks`: SUCCESS, including PostgreSQL-backed tests and Playwright E2E;
-- `compose-smoke`: SUCCESS;
-- E2E artifact verified by the Director, including browser reopen, worker crash/recovery, deterministic trace, LONG/SHORT/NO_TRADE, risk blocks, cancellation and inspectable artifacts.
+- PostgreSQL-backed tests, browser E2E and Docker Compose smoke: SUCCESS;
+- Director verified deterministic trace, browser reopen, worker crash recovery, idempotent fills, cancellation and artifacts.
+
+### WP-002 — Complete replay/operations shell and freeze semantic contracts
+
+Accepted implementation:
+- `803b3f215c5a33499a4d901ae000ee112b75e691`
+
+Acceptance evidence:
+- GitHub Actions run `36685637348`: SUCCESS;
+- `checks` and `compose-smoke`: SUCCESS;
+- Director verified pause/resume, exact single-step behavior, speed invariance, full API/worker restart recovery, unique fills, browser reconnect and E2E evidence;
+- semantic baseline `algotrader.semantic.v1` is frozen with schema-drift tests.
+
+Accepted implementation interpretations:
+- replay speed belongs to operational `ReplayControl`, not semantic `RunConfig`;
+- `pausing`, `stepping` and `recovering` are runtime/operations states, not market/trading states;
+- restart attempt accounting may reset the consecutive-interruption guard after a committed step;
+- waiting for lease expiry on an unclean restart is acceptable at this milestone; graceful lease release is not required.
+
+## Initial M3 market-data source decision
+
+First public/read-only reference source: **OKX `BTC-USDT-SWAP`**.
+
+Decision note: `knowledge/market_sources/OKX-BTC-USDT-SWAP.md`.
+
+This is a data/reference choice for paper research, not a future real-money broker selection. No authenticated account or order endpoint is authorized.
 
 ## Active task
 
-**WP-002 — Complete replay/operations shell and freeze semantic contracts**
+**WP-003 — OKX BTC-USDT-SWAP public data provenance and bounded historical dataset**
 
 See `task.md`.
 
@@ -49,10 +73,10 @@ See `task.md`.
 
 None at product level.
 
-Initial real market/data venue selection remains intentionally deferred until the operational shell is complete.
+Exact historical completeness and regional public endpoint behavior are evidence to be measured by WP-003, not assumed.
 
 ## Next action
 
-The Owner pulls the latest repository and hands `task.md` to Claude Code. Claude Code implements WP-002, runs the required checks, commits and pushes. The Owner relays only Claude's completion report. The Project & Research Director then reviews the remote diff, CI and evidence directly.
+The Owner pulls the latest repository and hands `task.md` to Claude Code. Claude Code implements WP-003, runs the required checks, commits and pushes. The Owner relays only Claude's completion report. The Project & Research Director then reviews the remote diff, CI, live-source evidence and produced dataset manifest.
 
-If WP-002 is accepted, the project moves to **M3 — Data and execution readiness for BTC perpetual paper operation**.
+WP-003 does not implement the professional trader or paper execution economics.
