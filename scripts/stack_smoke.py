@@ -53,6 +53,13 @@ def main() -> None:
     datasets = call("/api/datasets")  # read-only market-data catalog (no network fetch in the smoke)
     assert datasets["schema_version"] == "algotrader.marketdata.v1", datasets
     print(f"market-data catalog: {len(datasets['datasets'])} dataset(s) under {datasets['data_root']}")
+    # public recorder: worker process alive and API reachable (no session is started: no network in the smoke)
+    for _ in range(30):
+        if call("/api/health")["recorder_workers"]["alive"] >= 1:
+            break
+        time.sleep(1)
+    assert call("/api/health")["recorder_workers"]["alive"] >= 1, "recorder worker not heartbeating"
+    print(f"recorder sessions: {len(call('/api/recorder/sessions')['sessions'])}")
     print("stack smoke OK")
 
 

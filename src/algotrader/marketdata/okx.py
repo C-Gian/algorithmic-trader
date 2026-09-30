@@ -259,7 +259,8 @@ def parse_instrument(resp: RawResponse, inst_id: str, page_ref: str) -> Instrume
         parts = ["", ""]
     if r.get("ctValCcy") != parts[0]:
         problems.append(f"ctValCcy={r.get('ctValCcy')!r} differs from base currency {parts[0]!r}")
-    for field in ("ctVal", "tickSz", "lotSz", "minSz"):
+    # ctMult is defined by OKX for SWAP: missing, empty, zero or negative is incompatible (never defaulted)
+    for field in ("ctVal", "ctMult", "tickSz", "lotSz", "minSz"):
         try:
             if dec(r.get(field), field) <= 0:
                 problems.append(f"{field} must be positive")
@@ -280,7 +281,7 @@ def parse_instrument(resp: RawResponse, inst_id: str, page_ref: str) -> Instrume
         quote_ccy=parts[1],
         ct_val=dec(r["ctVal"], "ctVal"),
         ct_val_ccy=r["ctValCcy"],
-        ct_mult=opt_dec(r.get("ctMult"), "ctMult") or Decimal(1),
+        ct_mult=dec(r["ctMult"], "ctMult"),
         settle_ccy=r["settleCcy"],
         tick_sz=dec(r["tickSz"], "tickSz"),
         lot_sz=dec(r["lotSz"], "lotSz"),

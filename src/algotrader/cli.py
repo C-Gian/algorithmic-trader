@@ -18,6 +18,7 @@ import subprocess
 import sys
 import threading
 import time
+from pathlib import Path
 
 from . import db
 
@@ -35,16 +36,19 @@ def _api(args: argparse.Namespace) -> None:
 
 
 def _serve(args: argparse.Namespace) -> None:
-    """Local stack without Docker: API in-process, worker as a supervised child.
+    """Local stack without Docker: API in-process; run worker and recorder worker as supervised children.
 
-    If the worker dies (e.g. a controlled fault), it is restarted, mirroring
-    the ``restart: unless-stopped`` policy in docker-compose.yml.
+    A dead child (e.g. a controlled fault) is restarted, mirroring the ``restart: unless-stopped``
+    policy in docker-compose.yml.
     """
     db.migrate()
     stop = threading.Event()
-    cmd = [sys.executable, "-m", "algotrader.cli", "worker", "--lease-seconds", str(args.lease_seconds)]
+    cmds = [
+        [sys.executable, "-m", "algotrader.cli", "worker", "--lease-seconds", str(args.lease_seconds)],
+        [sys.executable, "-m", "algotrader.cli", "recorder-worker"],
+    ]
 
-    def supervise() -> None:
+    def supervise(cmd: list[str]) -> None:
         while not stop.is_set():
             proc = subprocess.Popen(cmd, env=os.environ.copy())
             while proc.poll() is None:
@@ -53,16 +57,113 @@ def _serve(args: argparse.Namespace) -> None:
                     proc.wait(10)
                     return
                 time.sleep(0.2)
-            logging.warning("worker exited with code %s; restarting in 1s", proc.returncode)
+            logging.warning("%s exited with code %s; restarting in 1s", cmd[3], proc.returncode)
             time.sleep(1)
 
-    t = threading.Thread(target=supervise, daemon=True)
-    t.start()
+    threads = [threading.Thread(target=supervise, args=(c,), daemon=True) for c in cmds]
+    for t in threads:
+        t.start()
     try:
         _api(args)
     finally:
         stop.set()
-        t.join(15)
+        for t in threads:
+            t.join(15)
+
+
+def _recorder_worker(args: argparse.Namespace) -> None:
+    from .recorder.job import RecorderWorker
+
+    RecorderWorker(data_root=args.root, lease_seconds=args.lease_seconds).run_forever()
+
+
+def _recorder_endpoints(args: argparse.Namespace):
+    from .recorder.job import configured_endpoints
+
+    ep = configured_endpoints()
+    return ep.model_copy(update={k: v for k, v in (("ws_public_url", args.ws_public_url),
+                                                    ("ws_business_url", args.ws_business_url),
+                                                    ("rest_base_url", args.rest_base_url)) if v})
+
+
+def _recorder_run(args: argparse.Namespace) -> None:
+    """Foreground bounded public recording (for integration checks); no database needed."""
+    import asyncio
+    import socket
+    from datetime import timedelta
+
+    from .recorder.job import _code_version, new_session_id
+    from .recorder.journal import SessionWriter, finalize, verify
+    from .recorder.okx_live import Recorder, SystemClock, make_config
+
+    config = make_config(new_session_id(), endpoints=_recorder_endpoints(args),
+                         max_duration=timedelta(minutes=args.minutes),
+                         clock_probe_interval=timedelta(seconds=args.clock_probe_seconds))
+    clock = SystemClock()
+    writer = SessionWriter(args.root, config, clock)
+    started = clock.time_ns()
+    print(f"recording {config.session_id} for up to {args.minutes} min -> {writer.dir}", flush=True)
+    rec = Recorder(config, writer, clock)
+    try:
+        reason = asyncio.run(rec.run())
+    except KeyboardInterrupt:
+        reason = "interrupted"
+    finally:
+        writer.close()
+    finalize(writer.dir, reason, False, socket.gethostname(), os.getpid(), _code_version(),
+             started_ns=started, stopped_ns=clock.time_ns())
+    problems = verify(writer.dir)
+    print("verify: " + ("OK" if not problems else "; ".join(problems)))
+    _print_recording(writer.dir)
+    if problems:
+        sys.exit(1)
+
+
+def _recorder_inspect(args: argparse.Namespace) -> None:
+    from .recorder.journal import session_path, verify
+
+    path = session_path(args.root, args.session_id)
+    if path is None:
+        sys.exit(f"no recording {args.session_id} under {args.root}")
+    problems = verify(path)
+    print("verify: " + ("OK" if not problems else "; ".join(problems)))
+    _print_recording(path)
+
+
+def _print_recording(path) -> None:
+    from .feed.ordering import FeedError
+    from .recorder.feed_bridge import build_recorded_feed
+    from .recorder.journal import is_finalized, load_manifest, load_report
+
+    if not is_finalized(path):
+        print(f"{path.name}: not finalized")
+        return
+    m, r = load_manifest(path), load_report(path)
+    print(f"session {m.session_id}: {m.status.value} ({m.stop_reason}); {r.duration_s} s; "
+          f"schema {m.schema_version} ({m.contract_status})")
+    print(f"  endpoints   ws public {m.endpoints.ws_public_url} | ws business {m.endpoints.ws_business_url} | "
+          f"rest {m.endpoints.rest_base_url}")
+    print(f"  subscribed  {', '.join(m.channels_subscribed) or '-'} (requested {', '.join(m.channels_requested)})")
+    print(f"  records {m.record_count}; connections {m.connections}; reconnects {m.reconnects}; errors {m.errors}; "
+          f"clock {r.clock.clock_quality} (offset median {r.clock.offset_estimate_ms_median} ms, "
+          f"rtt median {r.clock.rtt_ms_median} ms)")
+    for b in r.bars:
+        d = b.delay_raw
+        print(f"  {b.channel_key:34} updates {b.updates:5} completed {b.completed_bars:4} dup {b.duplicate_completed} "
+              f"changed {b.post_completion_changes} ooo {b.out_of_order_updates} "
+              f"delay_s[min {d.min_s} p50 {d.p50_s} p90 {d.p90_s} max {d.max_s} neg {d.negative_count}] "
+              f"missing_healthy {len(b.missing_completions_while_healthy)}")
+    f = r.funding
+    print(f"  funding     ws snapshots {f.snapshots_ws}; poll snapshots {f.snapshots_poll}; "
+          f"fundingTimes {[t.isoformat() for t in f.distinct_funding_times]}; transitions {len(f.funding_time_transitions)}")
+    print(f"  outages {len(r.outages)}; unusable timing periods {len(r.unusable_timing_periods)}; errors {len(r.errors)}")
+    try:
+        bridge = build_recorded_feed(path)
+        fm = bridge.feed.manifest
+        print(f"  recorded feed: {fm.event_count} events {fm.event_counts}; policy {fm.availability_policy.policy_id}; "
+              f"content {fm.content_identity}; excluded {len(bridge.excluded)}")
+    except FeedError as exc:
+        print(f"  recorded feed: not built ({exc})")
 
 
 def _replay(args: argparse.Namespace) -> None:
@@ -219,11 +320,27 @@ def main(argv: list[str] | None = None) -> None:
     r = sub.add_parser("replay")
     r.add_argument("--seed", type=int, default=20260929)
     r.set_defaults(fn=_replay)
+    rw = sub.add_parser("recorder-worker", help="durable public market recorder worker (no trading)")
+    rw.add_argument("--lease-seconds", type=float, default=30.0)
+    rw.add_argument("--root", type=Path, default=None, help="data root (ALGOTRADER_DATA_ROOT)")
+    rw.set_defaults(fn=_recorder_worker)
+    rec = sub.add_parser("recorder", help="public market recorder tools (no trading)")
+    rsub = rec.add_subparsers(dest="recorder_cmd", required=True)
+    rr = rsub.add_parser("run", help="foreground bounded public recording session (integration check)")
+    rr.add_argument("--minutes", type=float, required=True)
+    rr.add_argument("--clock-probe-seconds", type=float, default=60.0)
+    for opt in ("--ws-public-url", "--ws-business-url", "--rest-base-url"):
+        rr.add_argument(opt, default=None)
+    ri = rsub.add_parser("inspect", help="verify and summarize a recording session")
+    ri.add_argument("session_id")
+    for p_ in (rr, ri):
+        p_.add_argument("--root", type=Path, default=None, help="data root (ALGOTRADER_DATA_ROOT)")
+    rr.set_defaults(fn=_recorder_run)
+    ri.set_defaults(fn=_recorder_inspect)
     sc = sub.add_parser("schema", help="check (default) or --write the semantic contract JSON Schema baseline")
     sc.add_argument("--write", action="store_true")
     sc.set_defaults(fn=_schema)
 
-    from pathlib import Path
 
     from .marketdata.dataset import default_data_root
     from .marketdata.okx import DEFAULT_BASE_URL
@@ -269,6 +386,10 @@ def main(argv: list[str] | None = None) -> None:
     common(fi)
     fi.set_defaults(fn=_feed_inspect)
     args = p.parse_args(argv)
+    if hasattr(args, "root") and args.root is None:
+        from .marketdata.dataset import default_data_root
+
+        args.root = default_data_root()
     from .marketdata.dataset import DatasetError
     from .feed.ordering import FeedError
     from .marketdata.okx import SourceError

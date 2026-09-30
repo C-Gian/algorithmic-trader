@@ -239,3 +239,48 @@ export const dataApi = {
   detail: (id: string) => req<DatasetDetail>(`/api/datasets/${id}`),
   verify: (id: string) => req<{ ok: boolean; problems: string[] }>(`/api/datasets/${id}/verify`),
 };
+
+// ---- Public market recorder (no trading) ----
+
+export interface RecorderSession {
+  session_id: string;
+  status: string;
+  stop_requested: boolean;
+  created_at: string;
+  started_at: string | null;
+  finished_at: string | null;
+  elapsed_seconds: number | null;
+  heartbeat_age_seconds: number | null;
+  lease_expired: boolean;
+  endpoints: { ws_public_url: string; ws_business_url: string; rest_base_url: string };
+  channels: string[];
+  max_duration_seconds: number | null;
+  stats: {
+    records?: number;
+    per_channel?: Record<string, number>;
+    last_recv_utc_ns?: number | null;
+    connection_state?: Record<string, string>;
+    subscribed?: string[];
+    reconnects?: number;
+    errors?: number;
+    funding_fallback?: boolean;
+  };
+  error: string | null;
+  session_path: string;
+  manifest_status: string | null;
+  report?: {
+    duration_s: number;
+    bars: { channel_key: string; completed_bars: number; delay_raw: { count: number; p50_s: number | null; max_s: number | null } }[];
+    funding: { snapshots_ws: number; snapshots_poll: number };
+    clock: { clock_quality: string; offset_estimate_ms_median: number | null };
+    outages: unknown[];
+  };
+}
+
+export const recorderApi = {
+  list: () => req<{ data_root: string; sessions: RecorderSession[] }>("/api/recorder/sessions"),
+  detail: (id: string) => req<RecorderSession>(`/api/recorder/sessions/${id}`),
+  start: (minutes: number) =>
+    req<RecorderSession>("/api/recorder/sessions", { method: "POST", body: JSON.stringify({ max_duration_minutes: minutes }) }),
+  stop: (id: string) => req<RecorderSession>(`/api/recorder/sessions/${id}/stop`, { method: "POST" }),
+};

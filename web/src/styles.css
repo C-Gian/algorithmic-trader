@@ -129,3 +129,11 @@ progress { width: 100%; height: 10px; margin: 10px 0; }
 .findings { font-size: 13px; padding-left: 18px; }
 .findings li { margin: 4px 0; }
 button.inline-btn { width: auto; padding: 2px 8px; display: inline; margin: 0; }
+
+.recorder-list { list-style: none; margin: 8px 0 0; padding: 0; }
+.recorder-session { border-top: 1px solid var(--border); padding: 8px 0; }
+.small-grid { font-size: 12px; margin-top: 6px; }
+.badge.q-running, .badge.q-queued { background: #d1e0ff; color: #1d3f9c; }
+.badge.q-partial { background: #fdebd3; color: #93370d; }
+.badge.q-failed { background: #fde2df; color: #912018; }
+.badge.q-cancelled { background: #eceef2; color: #475467; }

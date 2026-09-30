@@ -1,0 +1,1180 @@
+{
+  "$defs": {
+    "BarChannelReport": {
+      "additionalProperties": false,
+      "properties": {
+        "channel_key": {
+          "title": "Channel Key",
+          "type": "string"
+        },
+        "completed_bars": {
+          "title": "Completed Bars",
+          "type": "integer"
+        },
+        "delay_offset_adjusted": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DelaySummary"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "delay_raw": {
+          "$ref": "#/$defs/DelaySummary"
+        },
+        "duplicate_completed": {
+          "title": "Duplicate Completed",
+          "type": "integer"
+        },
+        "family": {
+          "$ref": "#/$defs/ChannelFamily"
+        },
+        "forming_updates": {
+          "title": "Forming Updates",
+          "type": "integer"
+        },
+        "missing_completions_while_healthy": {
+          "items": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "title": "Missing Completions While Healthy",
+          "type": "array"
+        },
+        "out_of_order_updates": {
+          "title": "Out Of Order Updates",
+          "type": "integer"
+        },
+        "post_completion_changes": {
+          "title": "Post Completion Changes",
+          "type": "integer"
+        },
+        "updates": {
+          "title": "Updates",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "channel_key",
+        "family",
+        "updates",
+        "forming_updates",
+        "completed_bars",
+        "duplicate_completed",
+        "post_completion_changes",
+        "out_of_order_updates",
+        "delay_raw",
+        "delay_offset_adjusted",
+        "missing_completions_while_healthy"
+      ],
+      "title": "BarChannelReport",
+      "type": "object"
+    },
+    "ChannelFamily": {
+      "enum": [
+        "trade_bar_1m",
+        "mark_bar_1m",
+        "index_bar_1m",
+        "funding_live"
+      ],
+      "title": "ChannelFamily",
+      "type": "string"
+    },
+    "ChannelReceipt": {
+      "additionalProperties": false,
+      "properties": {
+        "channel_key": {
+          "title": "Channel Key",
+          "type": "string"
+        },
+        "family": {
+          "$ref": "#/$defs/ChannelFamily"
+        },
+        "first_recv_utc": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "First Recv Utc"
+        },
+        "last_recv_utc": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Last Recv Utc"
+        },
+        "records": {
+          "title": "Records",
+          "type": "integer"
+        },
+        "subscribed": {
+          "title": "Subscribed",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "channel_key",
+        "family",
+        "subscribed",
+        "records",
+        "first_recv_utc",
+        "last_recv_utc"
+      ],
+      "title": "ChannelReceipt",
+      "type": "object"
+    },
+    "ChannelSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "channel": {
+          "title": "Channel",
+          "type": "string"
+        },
+        "connection": {
+          "$ref": "#/$defs/Connection"
+        },
+        "family": {
+          "$ref": "#/$defs/ChannelFamily"
+        },
+        "inst_id": {
+          "title": "Inst Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "family",
+        "channel",
+        "inst_id",
+        "connection"
+      ],
+      "title": "ChannelSpec",
+      "type": "object"
+    },
+    "ClockObservation": {
+      "additionalProperties": false,
+      "properties": {
+        "at_utc_ns": {
+          "title": "At Utc Ns",
+          "type": "integer"
+        },
+        "detail": {
+          "default": "",
+          "title": "Detail",
+          "type": "string"
+        },
+        "offset_bound_ns": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Offset Bound Ns"
+        },
+        "offset_estimate_ns": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Offset Estimate Ns"
+        },
+        "request_sent_mono_ns": {
+          "title": "Request Sent Mono Ns",
+          "type": "integer"
+        },
+        "request_sent_utc_ns": {
+          "title": "Request Sent Utc Ns",
+          "type": "integer"
+        },
+        "response_mono_ns": {
+          "title": "Response Mono Ns",
+          "type": "integer"
+        },
+        "rtt_ns": {
+          "title": "Rtt Ns",
+          "type": "integer"
+        },
+        "server_ts_ms": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Server Ts Ms"
+        },
+        "status": {
+          "enum": [
+            "ok",
+            "unavailable"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "at_utc_ns",
+        "request_sent_utc_ns",
+        "request_sent_mono_ns",
+        "response_mono_ns",
+        "server_ts_ms",
+        "rtt_ns",
+        "offset_estimate_ns",
+        "offset_bound_ns",
+        "status"
+      ],
+      "title": "ClockObservation",
+      "type": "object"
+    },
+    "ClockReport": {
+      "additionalProperties": false,
+      "properties": {
+        "clock_quality": {
+          "enum": [
+            "observed",
+            "unknown"
+          ],
+          "title": "Clock Quality",
+          "type": "string"
+        },
+        "observations": {
+          "title": "Observations",
+          "type": "integer"
+        },
+        "offset_estimate_ms_max": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Offset Estimate Ms Max"
+        },
+        "offset_estimate_ms_median": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Offset Estimate Ms Median"
+        },
+        "offset_estimate_ms_min": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Offset Estimate Ms Min"
+        },
+        "ok_observations": {
+          "title": "Ok Observations",
+          "type": "integer"
+        },
+        "rtt_ms_median": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Rtt Ms Median"
+        }
+      },
+      "required": [
+        "observations",
+        "ok_observations",
+        "offset_estimate_ms_min",
+        "offset_estimate_ms_median",
+        "offset_estimate_ms_max",
+        "rtt_ms_median",
+        "clock_quality"
+      ],
+      "title": "ClockReport",
+      "type": "object"
+    },
+    "Connection": {
+      "enum": [
+        "public",
+        "business",
+        "rest"
+      ],
+      "title": "Connection",
+      "type": "string"
+    },
+    "DelaySummary": {
+      "additionalProperties": false,
+      "description": "Bar end -> first completed receipt, in seconds, on the raw local clock.",
+      "properties": {
+        "count": {
+          "title": "Count",
+          "type": "integer"
+        },
+        "max_s": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Max S"
+        },
+        "mean_s": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Mean S"
+        },
+        "min_s": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Min S"
+        },
+        "negative_count": {
+          "title": "Negative Count",
+          "type": "integer"
+        },
+        "p50_s": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "P50 S"
+        },
+        "p90_s": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "P90 S"
+        }
+      },
+      "required": [
+        "count",
+        "min_s",
+        "p50_s",
+        "p90_s",
+        "max_s",
+        "mean_s",
+        "negative_count"
+      ],
+      "title": "DelaySummary",
+      "type": "object"
+    },
+    "Endpoints": {
+      "additionalProperties": false,
+      "properties": {
+        "rest_base_url": {
+          "title": "Rest Base Url",
+          "type": "string"
+        },
+        "ws_business_url": {
+          "title": "Ws Business Url",
+          "type": "string"
+        },
+        "ws_public_url": {
+          "title": "Ws Public Url",
+          "type": "string"
+        }
+      },
+      "required": [
+        "ws_public_url",
+        "ws_business_url",
+        "rest_base_url"
+      ],
+      "title": "Endpoints",
+      "type": "object"
+    },
+    "FileRef": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "lines": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Lines"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "sha256": {
+          "title": "Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "sha256",
+        "bytes",
+        "lines"
+      ],
+      "title": "FileRef",
+      "type": "object"
+    },
+    "FundingReport": {
+      "additionalProperties": false,
+      "properties": {
+        "distinct_funding_times": {
+          "items": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "title": "Distinct Funding Times",
+          "type": "array"
+        },
+        "fields_seen": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Fields Seen",
+          "type": "array"
+        },
+        "funding_time_transitions": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Funding Time Transitions",
+          "type": "array"
+        },
+        "snapshots_poll": {
+          "title": "Snapshots Poll",
+          "type": "integer"
+        },
+        "snapshots_ws": {
+          "title": "Snapshots Ws",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "snapshots_ws",
+        "snapshots_poll",
+        "distinct_funding_times",
+        "funding_time_transitions",
+        "fields_seen"
+      ],
+      "title": "FundingReport",
+      "type": "object"
+    },
+    "Interval": {
+      "additionalProperties": false,
+      "properties": {
+        "connection": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Connection"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "detail": {
+          "title": "Detail",
+          "type": "string"
+        },
+        "end": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "End"
+        },
+        "start": {
+          "format": "date-time",
+          "title": "Start",
+          "type": "string"
+        }
+      },
+      "required": [
+        "start",
+        "end",
+        "connection",
+        "detail"
+      ],
+      "title": "Interval",
+      "type": "object"
+    },
+    "JournalRecord": {
+      "additionalProperties": false,
+      "description": "One raw source message/response, exactly as received, with local receipt timing.",
+      "properties": {
+        "channel": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Channel"
+        },
+        "connection": {
+          "$ref": "#/$defs/Connection"
+        },
+        "endpoint": {
+          "title": "Endpoint",
+          "type": "string"
+        },
+        "generation": {
+          "title": "Generation",
+          "type": "integer"
+        },
+        "inst_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Inst Id"
+        },
+        "kind": {
+          "enum": [
+            "ws_message",
+            "rest_response"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "parse_status": {
+          "$ref": "#/$defs/ParseStatus"
+        },
+        "poll_interval_s": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Poll Interval S"
+        },
+        "previous_observation_utc_ns": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Previous Observation Utc Ns"
+        },
+        "purpose": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Purpose"
+        },
+        "raw": {
+          "title": "Raw",
+          "type": "string"
+        },
+        "raw_sha256": {
+          "title": "Raw Sha256",
+          "type": "string"
+        },
+        "recv_mono_ns": {
+          "title": "Recv Mono Ns",
+          "type": "integer"
+        },
+        "recv_utc_ns": {
+          "title": "Recv Utc Ns",
+          "type": "integer"
+        },
+        "request_sent_mono_ns": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Request Sent Mono Ns"
+        },
+        "request_sent_utc_ns": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Request Sent Utc Ns"
+        },
+        "seq": {
+          "title": "Seq",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "seq",
+        "kind",
+        "connection",
+        "generation",
+        "endpoint",
+        "recv_utc_ns",
+        "recv_mono_ns",
+        "raw",
+        "raw_sha256",
+        "parse_status"
+      ],
+      "title": "JournalRecord",
+      "type": "object"
+    },
+    "LifecycleEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "at_mono_ns": {
+          "title": "At Mono Ns",
+          "type": "integer"
+        },
+        "at_utc_ns": {
+          "title": "At Utc Ns",
+          "type": "integer"
+        },
+        "channel": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Channel"
+        },
+        "connection": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Connection"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "detail": {
+          "default": "",
+          "title": "Detail",
+          "type": "string"
+        },
+        "event": {
+          "title": "Event",
+          "type": "string"
+        },
+        "generation": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Generation"
+        },
+        "seq": {
+          "title": "Seq",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "seq",
+        "at_utc_ns",
+        "at_mono_ns",
+        "event"
+      ],
+      "title": "LifecycleEvent",
+      "type": "object"
+    },
+    "ParseStatus": {
+      "enum": [
+        "data",
+        "event",
+        "error",
+        "pong",
+        "unparsed"
+      ],
+      "title": "ParseStatus",
+      "type": "string"
+    },
+    "SessionConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "channels": {
+          "items": {
+            "$ref": "#/$defs/ChannelSpec"
+          },
+          "title": "Channels",
+          "type": "array"
+        },
+        "clock_probe_interval": {
+          "format": "duration",
+          "title": "Clock Probe Interval",
+          "type": "string"
+        },
+        "completion_grace": {
+          "format": "duration",
+          "title": "Completion Grace",
+          "type": "string"
+        },
+        "endpoints": {
+          "$ref": "#/$defs/Endpoints"
+        },
+        "fsync_interval": {
+          "format": "duration",
+          "title": "Fsync Interval",
+          "type": "string"
+        },
+        "funding_poll_interval": {
+          "format": "duration",
+          "title": "Funding Poll Interval",
+          "type": "string"
+        },
+        "index_id": {
+          "title": "Index Id",
+          "type": "string"
+        },
+        "inst_id": {
+          "title": "Inst Id",
+          "type": "string"
+        },
+        "max_duration": {
+          "format": "duration",
+          "title": "Max Duration",
+          "type": "string"
+        },
+        "ping_interval": {
+          "format": "duration",
+          "title": "Ping Interval",
+          "type": "string"
+        },
+        "reconnect_initial": {
+          "format": "duration",
+          "title": "Reconnect Initial",
+          "type": "string"
+        },
+        "reconnect_max": {
+          "format": "duration",
+          "title": "Reconnect Max",
+          "type": "string"
+        },
+        "segment_max_bytes": {
+          "exclusiveMinimum": 0,
+          "title": "Segment Max Bytes",
+          "type": "integer"
+        },
+        "session_id": {
+          "title": "Session Id",
+          "type": "string"
+        },
+        "source": {
+          "const": "okx",
+          "default": "okx",
+          "title": "Source",
+          "type": "string"
+        }
+      },
+      "required": [
+        "session_id",
+        "inst_id",
+        "index_id",
+        "endpoints",
+        "channels",
+        "max_duration",
+        "ping_interval",
+        "clock_probe_interval",
+        "fsync_interval",
+        "reconnect_initial",
+        "reconnect_max",
+        "funding_poll_interval",
+        "completion_grace",
+        "segment_max_bytes"
+      ],
+      "title": "SessionConfig",
+      "type": "object"
+    },
+    "SessionManifest": {
+      "additionalProperties": false,
+      "properties": {
+        "channels_requested": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Channels Requested",
+          "type": "array"
+        },
+        "channels_subscribed": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Channels Subscribed",
+          "type": "array"
+        },
+        "clock_observation_count": {
+          "title": "Clock Observation Count",
+          "type": "integer"
+        },
+        "clock_source": {
+          "title": "Clock Source",
+          "type": "string"
+        },
+        "code_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Code Version"
+        },
+        "config": {
+          "$ref": "#/$defs/SessionConfig"
+        },
+        "connections": {
+          "title": "Connections",
+          "type": "integer"
+        },
+        "contract_status": {
+          "title": "Contract Status",
+          "type": "string"
+        },
+        "endpoints": {
+          "$ref": "#/$defs/Endpoints"
+        },
+        "errors": {
+          "title": "Errors",
+          "type": "integer"
+        },
+        "files": {
+          "items": {
+            "$ref": "#/$defs/FileRef"
+          },
+          "title": "Files",
+          "type": "array"
+        },
+        "fsync_policy": {
+          "title": "Fsync Policy",
+          "type": "string"
+        },
+        "host": {
+          "title": "Host",
+          "type": "string"
+        },
+        "index_id": {
+          "title": "Index Id",
+          "type": "string"
+        },
+        "inst_id": {
+          "title": "Inst Id",
+          "type": "string"
+        },
+        "labels": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Labels",
+          "type": "array"
+        },
+        "lifecycle_count": {
+          "title": "Lifecycle Count",
+          "type": "integer"
+        },
+        "pid": {
+          "title": "Pid",
+          "type": "integer"
+        },
+        "receipt_point": {
+          "title": "Receipt Point",
+          "type": "string"
+        },
+        "reconnects": {
+          "title": "Reconnects",
+          "type": "integer"
+        },
+        "record_count": {
+          "title": "Record Count",
+          "type": "integer"
+        },
+        "recovered_after_crash": {
+          "title": "Recovered After Crash",
+          "type": "boolean"
+        },
+        "schema_revision": {
+          "title": "Schema Revision",
+          "type": "integer"
+        },
+        "schema_version": {
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "session_id": {
+          "title": "Session Id",
+          "type": "string"
+        },
+        "source": {
+          "title": "Source",
+          "type": "string"
+        },
+        "started_at": {
+          "format": "date-time",
+          "title": "Started At",
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/SessionStatus"
+        },
+        "stop_reason": {
+          "title": "Stop Reason",
+          "type": "string"
+        },
+        "stopped_at": {
+          "format": "date-time",
+          "title": "Stopped At",
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema_version",
+        "contract_status",
+        "schema_revision",
+        "session_id",
+        "status",
+        "labels",
+        "source",
+        "inst_id",
+        "index_id",
+        "endpoints",
+        "config",
+        "started_at",
+        "stopped_at",
+        "stop_reason",
+        "recovered_after_crash",
+        "code_version",
+        "host",
+        "pid",
+        "clock_source",
+        "receipt_point",
+        "channels_requested",
+        "channels_subscribed",
+        "connections",
+        "reconnects",
+        "errors",
+        "record_count",
+        "lifecycle_count",
+        "clock_observation_count",
+        "fsync_policy",
+        "files"
+      ],
+      "title": "SessionManifest",
+      "type": "object"
+    },
+    "SessionReport": {
+      "additionalProperties": false,
+      "properties": {
+        "bars": {
+          "items": {
+            "$ref": "#/$defs/BarChannelReport"
+          },
+          "title": "Bars",
+          "type": "array"
+        },
+        "channels": {
+          "items": {
+            "$ref": "#/$defs/ChannelReceipt"
+          },
+          "title": "Channels",
+          "type": "array"
+        },
+        "clock": {
+          "$ref": "#/$defs/ClockReport"
+        },
+        "duration_s": {
+          "title": "Duration S",
+          "type": "number"
+        },
+        "errors": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Errors",
+          "type": "array"
+        },
+        "funding": {
+          "$ref": "#/$defs/FundingReport"
+        },
+        "note": {
+          "title": "Note",
+          "type": "string"
+        },
+        "outages": {
+          "items": {
+            "$ref": "#/$defs/Interval"
+          },
+          "title": "Outages",
+          "type": "array"
+        },
+        "receipt_point": {
+          "title": "Receipt Point",
+          "type": "string"
+        },
+        "schema_version": {
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "session_id": {
+          "title": "Session Id",
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/SessionStatus"
+        },
+        "unusable_timing_periods": {
+          "items": {
+            "$ref": "#/$defs/Interval"
+          },
+          "title": "Unusable Timing Periods",
+          "type": "array"
+        }
+      },
+      "required": [
+        "schema_version",
+        "session_id",
+        "status",
+        "duration_s",
+        "receipt_point",
+        "note",
+        "channels",
+        "bars",
+        "funding",
+        "clock",
+        "outages",
+        "unusable_timing_periods",
+        "errors"
+      ],
+      "title": "SessionReport",
+      "type": "object"
+    },
+    "SessionStatus": {
+      "enum": [
+        "clean",
+        "partial",
+        "failed"
+      ],
+      "title": "SessionStatus",
+      "type": "string"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "changelog": [
+    {
+      "date": "2026-09-30",
+      "note": "Initial provisional baseline (WP-005): session config/manifest, journal and lifecycle records, clock observations, measured-availability report.",
+      "revision": 1
+    }
+  ],
+  "clock_source": "host UTC wall clock (time.time_ns) for recv_utc_ns; process monotonic clock (time.monotonic_ns) for recv_mono_ns; neither is corrected. Offset versus the OKX public server-time endpoint is observed separately (ClockObservation).",
+  "public_contracts": {
+    "ClockObservation": "#/$defs/ClockObservation",
+    "JournalRecord": "#/$defs/JournalRecord",
+    "LifecycleEvent": "#/$defs/LifecycleEvent",
+    "SessionConfig": "#/$defs/SessionConfig",
+    "SessionManifest": "#/$defs/SessionManifest",
+    "SessionReport": "#/$defs/SessionReport"
+  },
+  "receipt_point": "recv_utc_ns is taken immediately after the recorder's read of a message from the WebSocket client (or of a complete REST response) returns, before parsing. It includes network, TLS/WebSocket-library buffering and scheduling delay; it is not the exchange publication time.",
+  "revision": 1,
+  "schema_version": "algotrader.recorder.v1",
+  "status": "PROVISIONAL",
+  "title": "Algorithmic Trader public recorder contracts (algotrader.recorder.v1, PROVISIONAL)"
+}

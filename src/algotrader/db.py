@@ -93,7 +93,28 @@ CREATE TABLE IF NOT EXISTS workers (
 );
 """
 
-MIGRATIONS: dict[int, str] = {1: SCHEMA_V1, 2: SCHEMA_V2}
+# Public market recorder sessions (operational state; distinct from semantic trader runs).
+SCHEMA_V3 = """
+CREATE TABLE IF NOT EXISTS recorder_sessions (
+    session_id        text PRIMARY KEY,
+    created_at        timestamptz NOT NULL DEFAULT now(),
+    status            text NOT NULL CHECK (status IN
+                        ('queued','running','clean','partial','failed','cancelled')),
+    config            jsonb NOT NULL,
+    stop_requested    boolean NOT NULL DEFAULT false,
+    lease_owner       text,
+    lease_expires_at  timestamptz,
+    heartbeat_at      timestamptz,
+    started_at        timestamptz,
+    finished_at       timestamptz,
+    stats             jsonb NOT NULL DEFAULT '{}'::jsonb,
+    error             text,
+    manifest          jsonb
+);
+CREATE INDEX IF NOT EXISTS recorder_sessions_status_idx ON recorder_sessions (status, created_at);
+"""
+
+MIGRATIONS: dict[int, str] = {1: SCHEMA_V1, 2: SCHEMA_V2, 3: SCHEMA_V3}
 SCHEMA_VERSION = max(MIGRATIONS)
 
 

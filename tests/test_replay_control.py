@@ -292,6 +292,6 @@ def test_migration_upgrades_v1_database(empty_database_url, artifact_root, refer
     assert "speed" not in run["config"] and run["speed"] == 0 and run["paused"] is False
     with db.connection(empty_database_url) as c:
         versions = [r["version"] for r in c.execute("SELECT version FROM schema_migrations ORDER BY 1")]
-    assert versions == [1, 2]
+    assert versions == list(range(1, db.SCHEMA_VERSION + 1))
     make_worker(empty_database_url, artifact_root, "w").run_once()
     assert_reference(empty_database_url, "old", reference_trace)

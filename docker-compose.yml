@@ -61,6 +61,18 @@ services:
     # run after the lease expires and resumes from the last checkpoint.
     restart: unless-stopped
 
+  recorder:
+    <<: *app
+    # Public, read-only OKX market recorder (no credentials, no trading). Idle until a session
+    # is started from the Data tab / API. Endpoints are configurable for regional OKX domains via
+    # ALGOTRADER_OKX_WS_PUBLIC_URL / ALGOTRADER_OKX_WS_BUSINESS_URL / ALGOTRADER_OKX_BASE_URL.
+    command: ["algotrader", "recorder-worker"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    # A crashed recorder is restarted; its interrupted session is recovered as PARTIAL (not resumed).
+    restart: unless-stopped
+
 volumes:
   pgdata:
   artifacts:

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { dataApi, DatasetDetail, DatasetSummary } from "./api";
+import { RecorderPanel } from "./RecorderPanel";
 
 // Read-only inspection of acquired market-data datasets (manifests + quality reports).
 
@@ -180,6 +181,7 @@ export function DataView() {
         </ul>
       </aside>
       <main className="home">
+        <RecorderPanel />
         {selected ? <Detail id={selected} /> : <div className="panel muted">Select a dataset.</div>}
       </main>
     </div>

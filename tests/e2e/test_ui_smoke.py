@@ -16,10 +16,12 @@ import socket
 import subprocess
 import sys
 import time
+from datetime import timedelta
 from pathlib import Path
 
 import httpx
 import psycopg
+import psycopg.rows
 import pytest
 from playwright.sync_api import Page, expect, sync_playwright
 
@@ -407,4 +409,52 @@ def test_ui_data_view_shows_dataset_provenance_and_quality(stack, browser, evide
         "clean": {"dataset_id": clean.dataset_id, "quality": clean.quality_status},
         "degraded": {"dataset_id": degraded.dataset_id, "quality": degraded.quality_status},
         "datasets_api": stack.get("/api/datasets")["datasets"],
+    })
+
+
+def test_ui_public_recorder_start_stop_and_completed_session(stack, browser, evidence_dir, database_url):
+    """Recorder panel: Owner start/stop + a completed offline-recorded session (fake OKX network, no live access)."""
+    sys.path.insert(0, str(ROOT / "tests"))
+    import threading as _threading
+
+    from recorder_fake import BUSINESS as FAKE_BUSINESS, ENDPOINTS as FAKE_EP, PUBLIC as FAKE_PUBLIC
+    from test_recorder_job import fake_worker
+
+    from algotrader.recorder import job as recjob
+
+    with psycopg.connect(database_url, row_factory=psycopg.rows.dict_row) as c:
+        sid = recjob.create_session(c, timedelta(minutes=30), FAKE_EP)
+    worker, net = fake_worker(database_url, stack.data_root)
+    t = _threading.Thread(target=worker.run_once)
+    t.start()
+    wait_for(lambda: net.done, timeout=30)
+    with psycopg.connect(database_url, row_factory=psycopg.rows.dict_row) as c:
+        recjob.stop_session(c, sid)
+    t.join(30)
+
+    ctx = browser.new_context(viewport={"width": 1400, "height": 1300})
+    page = ctx.new_page()
+    page.goto(stack.base + "/#data")
+    panel = page.get_by_test_id("recorder-panel")
+    expect(panel).to_contain_text("Public Market Recorder — no trading")
+    done = page.get_by_test_id(f"recorder-session-{sid}")
+    expect(done.get_by_test_id("recorder-status")).to_have_text("CLEAN", timeout=15_000)
+    expect(done.get_by_test_id("recorder-report")).to_contain_text("candle1m:BTC-USDT-SWAP: 2 completed bars",
+                                                                     timeout=15_000)
+    expect(done.get_by_test_id("recorder-report")).to_contain_text("client-observed, not exchange publication")
+    # Owner starts a session from the browser; no recorder worker runs in this CI stack (no live network),
+    # so it stays queued until stopped -> cancelled.
+    page.get_by_test_id("recorder-duration").select_option("30")
+    page.get_by_test_id("recorder-start").click()
+    queued = page.locator("[data-testid^=recorder-session-]").first
+    expect(queued.get_by_test_id("recorder-status")).to_have_text("QUEUED", timeout=10_000)
+    page.screenshot(path=str(evidence_dir / "11-recorder-panel.png"), full_page=True)
+    queued.get_by_test_id("recorder-stop").click()
+    expect(queued.get_by_test_id("recorder-status")).to_have_text("CANCELLED", timeout=10_000)
+    ctx.close()
+    sessions = stack.get("/api/recorder/sessions")["sessions"]
+    record(evidence_dir, "e2e-recorder", {
+        "note": "offline fake OKX transports built from captured public messages; not live data",
+        "completed_session": stack.get(f"/api/recorder/sessions/{sid}")["report"],
+        "statuses": [(s["session_id"], s["status"]) for s in sessions],
     })

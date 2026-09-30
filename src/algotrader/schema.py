@@ -104,15 +104,40 @@ def feed_baseline() -> dict[str, Any]:
     }
 
 
+def recorder_baseline() -> dict[str, Any]:
+    """PROVISIONAL baseline for public recorder sessions (``algotrader.recorder.v1``)."""
+    from .recorder import contracts as rc
+
+    models = sorted(rc.PUBLIC_CONTRACTS, key=lambda m: m.__name__)
+    refs, schema = models_json_schema(
+        [(m, "serialization") for m in models], ref_template="#/$defs/{model}"
+    )
+    return {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "title": f"Algorithmic Trader public recorder contracts ({rc.RECORDER_SCHEMA_VERSION}, "
+                 f"{rc.RECORDER_CONTRACT_STATUS})",
+        "schema_version": rc.RECORDER_SCHEMA_VERSION,
+        "status": rc.RECORDER_CONTRACT_STATUS,
+        "revision": rc.RECORDER_SCHEMA_REVISION,
+        "changelog": [{"revision": r, "date": d, "note": n} for r, d, n in rc.RECORDER_CHANGELOG],
+        "clock_source": rc.CLOCK_SOURCE,
+        "receipt_point": rc.RECEIPT_POINT,
+        "public_contracts": {m.__name__: refs[(m, "serialization")]["$ref"] for m in models},
+        "$defs": schema["$defs"],
+    }
+
+
 def baselines() -> dict[str, Any]:
     """Every current contract baseline, keyed by schema version."""
     from .feed.contracts import FEED_SCHEMA_VERSION
     from .marketdata.contracts import MARKETDATA_SCHEMA_VERSION
+    from .recorder.contracts import RECORDER_SCHEMA_VERSION
 
     return {
         c.SCHEMA_VERSION: baseline,
         MARKETDATA_SCHEMA_VERSION: marketdata_baseline,
         FEED_SCHEMA_VERSION: feed_baseline,
+        RECORDER_SCHEMA_VERSION: recorder_baseline,
     }
 
 

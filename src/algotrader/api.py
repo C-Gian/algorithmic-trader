@@ -10,7 +10,7 @@ import json
 import os
 import time
 from collections.abc import Iterator
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -25,6 +25,8 @@ from .contracts import SCHEMA_VERSION, FaultMode, ReplayControl, Run, RunConfig,
 from .control import TERMINAL
 from .marketdata.contracts import MARKETDATA_SCHEMA_VERSION, DatasetManifest, QualityReport
 from .marketdata.dataset import dataset_path, default_data_root, list_manifests, load_manifest, load_quality, verify
+from .recorder import job as recorder_job
+from .recorder import journal as rec_journal
 from .worker import default_artifact_root, fetch_events
 
 DEFAULT_WEB_DIST = Path(__file__).resolve().parents[2] / "web" / "dist"
@@ -35,6 +37,26 @@ class StartRun(BaseModel):
     paused: bool = False
     fault: FaultMode = FaultMode.NONE
     fault_at_step: int = Field(default=45, ge=0)
+
+
+class StartRecording(BaseModel):
+    max_duration_minutes: float = Field(default=360, gt=0, le=7 * 24 * 60)
+    ws_public_url: str | None = None
+    ws_business_url: str | None = None
+    rest_base_url: str | None = None
+
+
+def _duration_seconds(value: Any) -> float | None:
+    """Pydantic serializes timedelta as an ISO-8601 duration (e.g. 'PT6H'); parse the simple forms."""
+    import re
+
+    if isinstance(value, (int, float)):
+        return float(value)
+    m = re.fullmatch(r"P(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:([\d.]+)S)?)?", str(value))
+    if not m:
+        return None
+    d, h, mi, sec = (float(x) if x else 0.0 for x in m.groups())
+    return d * 86400 + h * 3600 + mi * 60 + sec
 
 
 class SetSpeed(BaseModel):
@@ -208,11 +230,22 @@ def create_app(
                 """
                 SELECT worker_id, host, pid, started_at, current_run,
                        extract(epoch FROM now() - heartbeat_at)::float8 AS age
-                FROM workers ORDER BY heartbeat_at DESC LIMIT 10
+                FROM workers WHERE worker_id NOT LIKE 'recorder:%%' ORDER BY heartbeat_at DESC LIMIT 10
+                """
+            ).fetchall()
+            recorders = c.execute(
+                """
+                SELECT worker_id, current_run, extract(epoch FROM now() - heartbeat_at)::float8 AS age
+                FROM workers WHERE worker_id LIKE 'recorder:%%' ORDER BY heartbeat_at DESC LIMIT 5
                 """
             ).fetchall()
         alive = [w for w in workers if w["age"] < WORKER_ALIVE_SECONDS]
         return {
+            "recorder_workers": {
+                "alive": sum(1 for r in recorders if r["age"] < WORKER_ALIVE_SECONDS),
+                "recent": [{"worker_id": r["worker_id"], "current_session": r["current_run"],
+                            "heartbeat_age_seconds": round(r["age"], 3)} for r in recorders],
+            },
             "status": "ok",
             "version": __version__,
             "schema_version": SCHEMA_VERSION,
@@ -388,6 +421,95 @@ def create_app(
             table = pq.read_table(path)
             return {"name": name, "rows": table.num_rows, "records": table.slice(0, limit).to_pylist()}
         return FileResponse(path, filename=name)
+
+    # -- public market recorder (no trading) --------------------------------
+
+    def recorder_row(c, session_id: str) -> dict[str, Any]:
+        row = c.execute("SELECT * FROM recorder_sessions WHERE session_id = %s", (session_id,)).fetchone()
+        if row is None:
+            raise HTTPException(404, f"recording session {session_id} not found")
+        return row
+
+    def recorder_view(row: dict[str, Any]) -> dict[str, Any]:
+        now = datetime.now(UTC)
+        hb, started = row["heartbeat_at"], row["started_at"]
+        return {
+            "session_id": row["session_id"],
+            "status": row["status"],
+            "stop_requested": row["stop_requested"],
+            "created_at": row["created_at"].isoformat(),
+            "started_at": started.isoformat() if started else None,
+            "finished_at": row["finished_at"].isoformat() if row["finished_at"] else None,
+            "elapsed_seconds": ((row["finished_at"] or now) - started).total_seconds() if started else None,
+            "heartbeat_age_seconds": (now - hb).total_seconds() if hb else None,
+            "lease_expired": bool(row["status"] == "running" and row["lease_expires_at"]
+                                  and row["lease_expires_at"] < now),
+            "endpoints": row["config"]["endpoints"],
+            "channels": [f"{c['channel']}:{c['inst_id']}" for c in row["config"]["channels"]],
+            "max_duration_seconds": _duration_seconds(row["config"]["max_duration"]),
+            "stats": row["stats"],
+            "error": row["error"],
+            "session_path": f"recordings/{row['session_id']}",
+            "manifest_status": row["manifest"]["status"] if row["manifest"] else None,
+            "labels": ["PUBLIC_MARKET_RECORDING", "NO_TRADING"],
+        }
+
+    @app.get("/api/recorder/sessions")
+    def recorder_sessions(limit: int = 20) -> dict[str, Any]:
+        with conn() as c:
+            rows = c.execute("SELECT * FROM recorder_sessions ORDER BY created_at DESC LIMIT %s", (limit,)).fetchall()
+        return {"data_root": str(md_root), "sessions": [recorder_view(r) for r in rows]}
+
+    @app.post("/api/recorder/sessions", status_code=201)
+    def start_recording(body: StartRecording) -> dict[str, Any]:
+        eps = recorder_job.configured_endpoints()
+        overrides = {k: v for k, v in body.model_dump().items() if k.endswith("_url") and v}
+        try:
+            endpoints = eps.model_copy(update=overrides)
+            with conn() as c:
+                sid = recorder_job.create_session(c, timedelta(minutes=body.max_duration_minutes), endpoints)
+                return recorder_view(recorder_row(c, sid))
+        except ValueError as exc:
+            raise HTTPException(422, str(exc)) from None
+
+    @app.post("/api/recorder/sessions/{session_id}/stop")
+    def stop_recording(session_id: str) -> dict[str, Any]:
+        with conn() as c:
+            try:
+                recorder_job.stop_session(c, session_id)
+            except LookupError:
+                raise HTTPException(404, f"recording session {session_id} not found") from None
+            except recorder_job.RecorderControlError as exc:
+                raise HTTPException(409, str(exc)) from None
+            return recorder_view(recorder_row(c, session_id))
+
+    @app.get("/api/recorder/sessions/{session_id}")
+    def recording_detail(session_id: str) -> dict[str, Any]:
+        with conn() as c:
+            view = recorder_view(recorder_row(c, session_id))
+        path = rec_journal.session_path(md_root, session_id)
+        if path is not None and rec_journal.is_finalized(path):
+            view["manifest"] = json.loads(rec_journal.load_manifest(path).model_dump_json())
+            view["report"] = json.loads(rec_journal.load_report(path).model_dump_json())
+        return view
+
+    @app.get("/api/recorder/sessions/{session_id}/verify")
+    def recording_verify(session_id: str) -> dict[str, Any]:
+        path = rec_journal.session_path(md_root, session_id)
+        if path is None:
+            raise HTTPException(404, f"no recording directory for {session_id}")
+        problems = rec_journal.verify(path)
+        return {"session_id": session_id, "ok": not problems, "problems": problems}
+
+    @app.get("/api/recorder/sessions/{session_id}/files/{name:path}")
+    def recording_file(session_id: str, name: str):
+        path = rec_journal.session_path(md_root, session_id)
+        if path is None or not rec_journal.is_finalized(path):
+            raise HTTPException(404, f"no finalized recording {session_id}")
+        m = rec_journal.load_manifest(path)
+        if name != "manifest.json" and name not in {f.name for f in m.files}:
+            raise HTTPException(404, f"no file {name} in recording {session_id}")
+        return FileResponse(path / name, filename=Path(name).name)
 
     # -- market-data datasets (read-only inspection of the data root) ---------
 

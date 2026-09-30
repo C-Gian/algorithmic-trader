@@ -1,0 +1,40 @@
+{
+  "description": "Unmodified public OKX WebSocket/REST messages captured live (no credentials). Subset: all acks/errors/pongs/funding pushes/server-time, every confirm=1 bar and the two forming (confirm=0) updates preceding it. recv_utc_ns is this capture's local receipt clock. Not trading evidence.",
+  "captured_at_utc": "2026-09-30T11:46:02Z",
+  "endpoints": {
+    "public": "wss://ws.okx.com:8443/ws/v5/public",
+    "business": "wss://ws.okx.com:8443/ws/v5/business"
+  },
+  "subscriptions": {
+    "public": [
+      {
+        "channel": "funding-rate",
+        "instId": "BTC-USDT-SWAP"
+      },
+      {
+        "channel": "candle1m",
+        "instId": "BTC-USDT-SWAP"
+      }
+    ],
+    "business": [
+      {
+        "channel": "candle1m",
+        "instId": "BTC-USDT-SWAP"
+      },
+      {
+        "channel": "mark-price-candle1m",
+        "instId": "BTC-USDT-SWAP"
+      },
+      {
+        "channel": "index-candle1m",
+        "instId": "BTC-USDT"
+      }
+    ]
+  },
+  "files": {
+    "session_messages.jsonl": {
+      "sha256": "d26ca4ae71f605e2c278eedbe9aae8cdfc014d7ed125a59a441b66dc980d6cf2",
+      "lines": 32
+    }
+  }
+}

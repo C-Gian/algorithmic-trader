@@ -93,6 +93,9 @@ def test_instrument_snapshot_from_captured_source():
     ({"ctValCcy": "USDT"}, "ctValCcy"),
     ({"ctVal": "0"}, "ctVal must be positive"),
     ({"settleCcy": ""}, "settleCcy"),
+    ({"ctMult": "0"}, "ctMult must be positive"),  # regression: zero was silently mapped to 1
+    ({"ctMult": ""}, "ctMult"),
+    ({"ctMult": "-1"}, "ctMult must be positive"),
 ])
 def test_incompatible_instrument_fails_explicitly(change, message):
     fake = FakeOkx()
@@ -102,6 +105,16 @@ def test_incompatible_instrument_fails_explicitly(change, message):
     c = client(fake)
     with pytest.raises(InstrumentIncompatible, match=message):
         parse_instrument(c.instrument("BTC-USDT-SWAP"), "BTC-USDT-SWAP", "p")
+
+
+def test_instrument_without_ctmult_is_not_defaulted():
+    fake = FakeOkx()
+    doc = json.loads(fake.instrument_body)
+    del doc["data"][0]["ctMult"]
+    fake.instrument_body = json.dumps(doc).encode()
+    with pytest.raises(InstrumentIncompatible, match="ctMult"):
+        parse_instrument(client(fake).instrument("BTC-USDT-SWAP"), "BTC-USDT-SWAP", "p")
+    assert instrument().ct_mult == Decimal("1")  # the captured source value, parsed explicitly
 
 
 def test_missing_instrument_fails_explicitly():

@@ -120,6 +120,42 @@ uv run algotrader feed inspect <dataset_id> --cutoff 2026-09-30T08:00Z [--bar-de
 - **Identity**: the evidence-package `dataset_id` is kept. A separate `feedcontent.v1:` content identity covers the normalized event content and coverage, independent of pagination, base URL and retrieval time. A snapshot's `content_digest` covers market content only; its `snapshot_id` adds provenance.
 - **Status**: the contracts are PROVISIONAL during M3. Any change bumps `FEED_SCHEMA_REVISION`, adds a `FEED_CHANGELOG` entry and needs Director approval; `algotrader schema --write` refuses to rewrite the baseline otherwise.
 
+## Public market recorder (WP-005, `algotrader.recorder.v1` PROVISIONAL) — no trading
+
+This component prospectively records **public, unauthenticated** OKX BTC-USDT-SWAP information together with **actual local receipt times**. Historical REST data cannot reconstruct those times. It uses no API keys, no login, no private/account channels and no orders.
+
+- **Sources** (verified 2026-09-30):
+  - candle channels on the WebSocket *business* endpoint: `candle1m`, `mark-price-candle1m`, `index-candle1m` (index id from the instrument);
+  - `funding-rate` (evolving pre-settlement information) on the *public* endpoint;
+  - REST `public/time` (clock probe) and `public/instruments` (instrument snapshot at session start).
+
+  Endpoints are configurable for regional domains (`ALGOTRADER_OKX_WS_PUBLIC_URL`, `ALGOTRADER_OKX_WS_BUSINESS_URL`, `ALGOTRADER_OKX_BASE_URL`). If the WS funding channel is unavailable, a bounded REST poll is used and labelled POLL_OBSERVED. Each poll records its request-sent time, response time, interval and previous observation.
+- **Receipt semantics**: every message is journaled raw, with:
+  - `recv_utc_ns`, the host wall clock read immediately after the read returns, before parsing. This is *client-observed receipt, not exchange publication*;
+  - `recv_mono_ns` and a contiguous `seq`, which preserve local order;
+  - the connection generation and the parse status.
+
+  Source timestamps remain inside the raw payload. Raw receipt times are never corrected. The offset to OKX server time is observed separately (offset estimate ± round-trip bound, or "unknown").
+- **Durability**: sessions live under `<ALGOTRADER_DATA_ROOT>/recordings/<session_id>/`, outside Git. The layout is an append-only segmented journal, a lifecycle log, clock observations, the first-completion bar index, `report.json` and `manifest.json` (written last, with sha256 for every file).
+  - Every line is flushed immediately; files are fsynced at least every second.
+  - A crashed session is recovered by truncating only a torn final line and is finalized as PARTIAL. It is never resumed, and records are never rewritten, so a receipt cannot be duplicated.
+  - A finalized session is never modified.
+- **Reconnects**: a text `ping` keeps connections alive; reconnect uses bounded exponential backoff and resubscribes with a new connection generation. Disconnect intervals are reported as recorder coverage loss, never as market gaps, and nothing is fabricated.
+- **Measured availability report** (per session; evidence, not a universal constant):
+  - bar end → first completed (`confirm=1`) receipt delay per candle family, on the raw local clock and as an offset-adjusted estimate;
+  - negative-delay detection;
+  - duplicate, changed and out-of-order pushes;
+  - missing completions while connected;
+  - outages and clock quality;
+  - funding snapshots and fundingTime transitions.
+- **Recorded → feed.v1**: `build_recorded_feed` turns each bar's *first completed receipt* into a RECORDED feed event (`available_time` = local receipt).
+  - Forming updates never become observations, and later pushes never replace the first completion.
+  - Deduplication uses an explicit journal identity, independent of the observable state's bounded history.
+  - Clock-inconsistent completions (received before the bar end) are excluded and reported, not clamped.
+  - Live funding snapshots are *not* settlements and stay recorder-only.
+- **Operation**: the **Data** tab has a *Public Market Recorder — no trading* panel with start (max duration), stop, status, elapsed time, heartbeat, connection states, subscribed channels, counts, last receipt, reconnects/errors, output path and the measured-timing summary. The `recorder` Docker Compose service (or `algotrader serve`) runs `algotrader recorder-worker`; the browser does not own the recording.
+  - CLI: `algotrader recorder run --minutes N` (foreground bounded session) and `algotrader recorder inspect <session_id>`.
+
 ## Semantic contract baseline
 
 The public semantic contracts (`src/algotrader/contracts.py`: journal payloads such as MarketObservation, MarketView, TradePlan, RiskDecision, Decision, OrderIntent, Order, Fill and AccountSnapshot, plus Run, RunConfig, ReplayControl and RunManifest) are frozen as **`algotrader.semantic.v1`**. Their JSON Schema is checked in at `schemas/algotrader.semantic.v1.json`, and every run manifest records the version in `schema_version`.
@@ -143,6 +179,7 @@ Without `ALGOTRADER_TEST_DATABASE_URL` the database tests are skipped (CI sets `
 | `src/algotrader/control.py` | Durable replay-control commands (pause/resume/step/speed/cancel) |
 | `src/algotrader/schema.py`, `schemas/` | Semantic and market-data contract JSON Schema baselines and their generator |
 | `src/algotrader/marketdata/` | Market-data contracts, OKX public REST adapter, bounded dataset acquisition/quality/verification |
+| `src/algotrader/recorder/` | Public live recorder: contracts (provisional), OKX WS/REST adapter, append-only journal, analysis/report, recorded→feed bridge, durable job |
 | `src/algotrader/feed/` | Causal feed contracts (provisional), dataset→feed adapter, ordering/availability policies, pure observable-state reducer, snapshots/deltas |
 | `tests/fixtures/okx/` | Small captured OKX public responses (see `PROVENANCE.json`) for offline tests |
 | `src/algotrader/artifacts.py`, `validation.py` | Immutable run artifacts and validation checks |
