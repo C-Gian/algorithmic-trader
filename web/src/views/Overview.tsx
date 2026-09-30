@@ -276,9 +276,9 @@ export function Overview() {
               {CAPABILITY_ORDER.map((k) => {
                 const c = caps?.[k];
                 const n = k === "synthetic_replay" ? h?.workers.alive : k === "recorder" ? h?.recorder_workers?.alive
-                  : h?.observation_workers?.alive;
+                  : k === "corpus" ? h?.corpus_workers?.alive : h?.observation_workers?.alive;
                 const testid = { synthetic_replay: "overview-run-workers", recorder: "overview-recorder-workers",
-                                 market_replay: "overview-observation-workers" }[k];
+                                 market_replay: "overview-observation-workers", corpus: "overview-corpus-workers" }[k];
                 return (
                   <li key={k}>
                     <span className="cap-name">{c?.label ?? k}</span>

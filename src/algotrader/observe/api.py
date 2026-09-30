@@ -241,13 +241,22 @@ def build_router(conn: Callable, md_root: Path, art_root: Path) -> APIRouter:
         return [{**x["record"], "payload": x["payload"]} for x in rows]
 
     @r.get("/{replay_id}/traded-bars")
-    def traded_bars(replay_id: str) -> dict[str, Any]:
-        """Committed traded-bar deliveries only (valid bars and slot-quality events). Never mark/index."""
+    def traded_bars(replay_id: str, tail: int | None = Query(None, ge=1, le=5000)) -> dict[str, Any]:
+        """Committed traded-bar deliveries only (valid bars and slot-quality events). Never mark/index.
+
+        ``tail`` returns only the latest N traded deliveries (a bounded chart window for long replays).
+        """
         with conn() as c:
             row = get_row(c, replay_id)
-            rows = c.execute(
-                "SELECT record, payload FROM observation_deliveries WHERE replay_id = %s AND family = 'trade_bar_1m' "
-                "ORDER BY seq", (replay_id,)).fetchall()
+            if tail is None:
+                rows = c.execute(
+                    "SELECT record, payload FROM observation_deliveries WHERE replay_id = %s "
+                    "AND family = 'trade_bar_1m' ORDER BY seq", (replay_id,)).fetchall()
+            else:
+                rows = c.execute(
+                    "SELECT record, payload FROM observation_deliveries WHERE replay_id = %s "
+                    "AND family = 'trade_bar_1m' ORDER BY seq DESC LIMIT %s", (replay_id, tail)).fetchall()
+                rows.reverse()
         bars = []
         for x in rows:
             rec, p = x["record"], x["payload"] or {}

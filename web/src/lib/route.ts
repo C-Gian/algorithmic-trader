@@ -3,16 +3,18 @@ import { useEffect, useState } from "react";
 // Minimal hash routing. Refreshing any section/deep link returns to the same view.
 //
 //   ""  | #market                  → Market overview (default landing)
+//   #backtest | #backtest/ev=<id>  → Backtest (Owner evaluation workbench)
 //   #replay | #replay/run=<id>     → Replay Lab (legacy #run=<id> still opens the run)
 //   #data   | #data=<id>           → Data workspace
 //   #recorder                      → Recorder
 
-export type Section = "market" | "replay" | "data" | "recorder";
+export type Section = "market" | "backtest" | "replay" | "data" | "recorder";
 
-export const SECTIONS: Section[] = ["market", "replay", "data", "recorder"];
+export const SECTIONS: Section[] = ["market", "backtest", "replay", "data", "recorder"];
 
 export function sectionFromHash(hash: string = window.location.hash): Section {
   const h = hash.replace(/^#\/?/, "");
+  if (h.startsWith("backtest")) return "backtest";
   if (h.startsWith("replay") || h.startsWith("run=")) return "replay";
   if (h.startsWith("data")) return "data";
   if (h.startsWith("recorder")) return "recorder";
@@ -46,6 +48,11 @@ export function sourceFromHash(hash: string = window.location.hash): { kind: "da
 
 export function replaySource(kind: "dataset" | "recording", id: string): void {
   window.location.hash = `replay/src=${kind}:${id}`;
+}
+
+export function evalFromHash(hash: string = window.location.hash): string | null {
+  const m = hash.match(/^#backtest\/ev=([\w-]+)/);
+  return m ? m[1] : null;
 }
 
 export function datasetFromHash(hash: string = window.location.hash): string | null {

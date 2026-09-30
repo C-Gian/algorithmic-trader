@@ -27,6 +27,9 @@ const PATHS = {
   stop: "M6 6h12v12H6z",
   chevron: "M9 6l6 6-6 6",
   cpu: "M7 7h10v10H7zM10 3v4M14 3v4M10 17v4M14 17v4M3 10h4M3 14h4M17 10h4M17 14h4",
+  gauge: "M4 18a8 8 0 1 1 16 0M12 18l4-6M7 13.5h.01M12 10v.01M17 13.5h.01M4 21h16",
+  copy: "M9 9h11v11H9zM5 15H4V4h11v1",
+  download: "M12 4v11M7.5 10.5 12 15l4.5-4.5M5 20h14",
   refresh: "M20 11a8 8 0 0 0-14.3-4.3L4 8.5M4 4v4.5h4.5M4 13a8 8 0 0 0 14.3 4.3l1.7-1.8M20 20v-4.5h-4.5",
 };
 

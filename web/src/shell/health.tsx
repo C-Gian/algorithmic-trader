@@ -28,7 +28,7 @@ export interface SystemVerdict {
   detail: string;
 }
 
-export const CAPABILITY_ORDER = ["market_replay", "recorder", "synthetic_replay"] as const;
+export const CAPABILITY_ORDER = ["market_replay", "corpus", "recorder", "synthetic_replay"] as const;
 export type CapabilityKey = (typeof CAPABILITY_ORDER)[number];
 
 export function capabilityTone(c: Capability | undefined): Tone {
@@ -54,8 +54,10 @@ export function systemVerdict({ health, error, loading }: HealthState): SystemVe
       ? { tone: "warn", label: "Limited", detail: "API up · no live run worker." }
       : { tone: "pos", label: "Operational", detail: "API and database up." };
   }
-  const stalled = CAPABILITY_ORDER.filter((k) => caps[k].status === "stalled").map((k) => caps[k].label);
-  const off = CAPABILITY_ORDER.filter((k) => caps[k].status === "unavailable").map((k) => caps[k].label);
+  // Older APIs may not report every capability; a missing entry is simply not listed.
+  const known = CAPABILITY_ORDER.filter((k) => caps[k]);
+  const stalled = known.filter((k) => caps[k].status === "stalled").map((k) => caps[k].label);
+  const off = known.filter((k) => caps[k].status === "unavailable").map((k) => caps[k].label);
   if (stalled.length) {
     return { tone: "warn", label: "Degraded", detail: `Jobs waiting without a worker: ${stalled.join(", ")}.` };
   }

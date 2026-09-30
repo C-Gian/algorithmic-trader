@@ -473,7 +473,8 @@ def test_ui_public_recorder_start_stop_and_completed_session(stack, browser, evi
 
 
 PENDING_TRADER_AREAS = ("market-view", "scenarios", "decision", "geometry", "evidence", "changes")
-SECTIONS = {"market": "page-overview", "replay": "page-replay", "data": "page-data", "recorder": "page-recorder"}
+SECTIONS = {"market": "page-overview", "backtest": "page-backtest", "replay": "page-replay", "data": "page-data",
+            "recorder": "page-recorder"}
 
 
 def no_horizontal_overflow(page: Page) -> bool:

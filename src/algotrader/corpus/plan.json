@@ -1,0 +1,119 @@
+{
+  "plan_id": "btc-okx-corpus-v1",
+  "plan_version": 1,
+  "description": "Reusable fixed BTC historical corpus (FOUNDATION.md v3.0 s.7). Logical coverage only: this file contains no market data.",
+  "source": "okx",
+  "inst_id": "BTC-USDT-SWAP",
+  "bar": "1m",
+  "families": [
+    "instrument",
+    "trade_candles_1m",
+    "mark_candles_1m",
+    "index_candles_1m",
+    "funding_rates"
+  ],
+  "target": {
+    "start": "2025-09-01T00:00:00Z",
+    "end": "2026-09-01T00:00:00Z",
+    "note": "start inclusive, end exclusive, UTC"
+  },
+  "chunk_rule": "calendar months (UTC), each one bounded marketdata.v1 dataset",
+  "chunks": [
+    {
+      "chunk_id": "btc-okx-2025-09",
+      "label": "September 2025 \u00b7 bootstrap",
+      "start": "2025-09-01T00:00:00Z",
+      "end": "2025-10-01T00:00:00Z",
+      "preparable": true,
+      "note": "Initial Owner-preparable bootstrap chunk: first chronological full month of the Foundation target, chosen without seeing adviser outcomes, within the accepted 31-day acquisition bound. Engineering/development evidence only."
+    },
+    {
+      "chunk_id": "btc-okx-2025-10",
+      "label": "October 2025",
+      "start": "2025-10-01T00:00:00Z",
+      "end": "2025-11-01T00:00:00Z",
+      "preparable": false,
+      "note": "PLANNED: locked until a later task enables corpus expansion."
+    },
+    {
+      "chunk_id": "btc-okx-2025-11",
+      "label": "November 2025",
+      "start": "2025-11-01T00:00:00Z",
+      "end": "2025-12-01T00:00:00Z",
+      "preparable": false,
+      "note": "PLANNED: locked until a later task enables corpus expansion."
+    },
+    {
+      "chunk_id": "btc-okx-2025-12",
+      "label": "December 2025",
+      "start": "2025-12-01T00:00:00Z",
+      "end": "2026-01-01T00:00:00Z",
+      "preparable": false,
+      "note": "PLANNED: locked until a later task enables corpus expansion."
+    },
+    {
+      "chunk_id": "btc-okx-2026-01",
+      "label": "January 2026",
+      "start": "2026-01-01T00:00:00Z",
+      "end": "2026-02-01T00:00:00Z",
+      "preparable": false,
+      "note": "PLANNED: locked until a later task enables corpus expansion."
+    },
+    {
+      "chunk_id": "btc-okx-2026-02",
+      "label": "February 2026",
+      "start": "2026-02-01T00:00:00Z",
+      "end": "2026-03-01T00:00:00Z",
+      "preparable": false,
+      "note": "PLANNED: locked until a later task enables corpus expansion."
+    },
+    {
+      "chunk_id": "btc-okx-2026-03",
+      "label": "March 2026",
+      "start": "2026-03-01T00:00:00Z",
+      "end": "2026-04-01T00:00:00Z",
+      "preparable": false,
+      "note": "PLANNED: locked until a later task enables corpus expansion."
+    },
+    {
+      "chunk_id": "btc-okx-2026-04",
+      "label": "April 2026",
+      "start": "2026-04-01T00:00:00Z",
+      "end": "2026-05-01T00:00:00Z",
+      "preparable": false,
+      "note": "PLANNED: locked until a later task enables corpus expansion."
+    },
+    {
+      "chunk_id": "btc-okx-2026-05",
+      "label": "May 2026",
+      "start": "2026-05-01T00:00:00Z",
+      "end": "2026-06-01T00:00:00Z",
+      "preparable": false,
+      "note": "PLANNED: locked until a later task enables corpus expansion."
+    },
+    {
+      "chunk_id": "btc-okx-2026-06",
+      "label": "June 2026",
+      "start": "2026-06-01T00:00:00Z",
+      "end": "2026-07-01T00:00:00Z",
+      "preparable": false,
+      "note": "PLANNED: locked until a later task enables corpus expansion."
+    },
+    {
+      "chunk_id": "btc-okx-2026-07",
+      "label": "July 2026",
+      "start": "2026-07-01T00:00:00Z",
+      "end": "2026-08-01T00:00:00Z",
+      "preparable": false,
+      "note": "PLANNED: locked until a later task enables corpus expansion."
+    },
+    {
+      "chunk_id": "btc-okx-2026-08",
+      "label": "August 2026",
+      "start": "2026-08-01T00:00:00Z",
+      "end": "2026-09-01T00:00:00Z",
+      "preparable": false,
+      "note": "PLANNED: locked until a later task enables corpus expansion."
+    }
+  ]
+}

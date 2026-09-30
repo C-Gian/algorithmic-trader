@@ -1,5 +1,6 @@
 import { useSection } from "./lib/route";
 import { AppShell } from "./shell/AppShell";
+import { Backtest } from "./views/Backtest";
 import { HealthProvider } from "./shell/health";
 import { DataWorkspace } from "./views/DataWorkspace";
 import { Overview } from "./views/Overview";
@@ -12,6 +13,7 @@ export function App() {
     <HealthProvider>
       <AppShell section={section}>
         {section === "market" && <Overview />}
+        {section === "backtest" && <Backtest />}
         {section === "replay" && <ReplayLab />}
         {section === "data" && <DataWorkspace />}
         {section === "recorder" && <Recorder />}

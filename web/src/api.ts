@@ -68,7 +68,8 @@ export interface Health {
     recent: { worker_id: string; current_session: string | null; heartbeat_age_seconds: number }[];
   };
   observation_workers?: { alive: number };
-  capabilities?: Record<"core" | "market_replay" | "recorder" | "synthetic_replay", Capability>;
+  corpus_workers?: { alive: number };
+  capabilities?: Record<"core" | "market_replay" | "corpus" | "recorder" | "synthetic_replay", Capability>;
   workers: {
     alive: number;
     alive_threshold_seconds: number;
@@ -531,3 +532,202 @@ export interface Capability {
   workers_alive: number | null;
   active_jobs: number | null;
 }
+
+// ---- Owner evaluation workbench: corpus preparation + observation-only evaluations ----
+
+export interface StorageFamily {
+  family: string;
+  rows: number;
+  pages: number;
+  expected_rows: number | null;
+  missing_rows: number | null;
+  gaps: number;
+  status: string;
+  first_time: string | null;
+  last_time: string | null;
+}
+
+export interface StorageSummary {
+  total_bytes: number;
+  raw_bytes: number;
+  parquet_bytes: number;
+  metadata_bytes: number;
+  file_count: number;
+  raw_page_count: number;
+  quality_status: string;
+  families: StorageFamily[];
+  note: string;
+}
+
+export interface CorpusJob {
+  job_id: string;
+  chunk_id: string;
+  plan_id: string;
+  status: "queued" | "running" | "completed" | "cancelled" | "failed";
+  runtime_state: "queued" | "running" | "cancel_requested" | "recovering" | "completed" | "cancelled" | "failed";
+  runtime_detail: string;
+  cancel_requested: boolean;
+  source: { source: string; base_url: string };
+  created_at: string;
+  started_at: string | null;
+  finished_at: string | null;
+  attempt: number;
+  max_attempts: number;
+  recovery_log: RecoveryEntry[];
+  recovery_behavior: string;
+  lease_expired: boolean;
+  outcome: string | null;
+  dataset_id: string | null;
+  error: string | null;
+  progress: {
+    phase?: string;
+    detail?: string;
+    windows_done?: number;
+    windows_total?: number;
+    pages?: number;
+    bytes?: number;
+    acquire_elapsed_seconds?: number;
+    fraction: number | null;
+    elapsed_seconds: number | null;
+    heartbeat_age_seconds: number | null;
+    eta_seconds: number | null;
+    eta_basis: string;
+  };
+}
+
+export interface CorpusChunk {
+  chunk_id: string;
+  label: string;
+  start: string;
+  end: string;
+  preparable: boolean;
+  note: string;
+  status: "prepared" | "preparing" | "not_prepared" | "invalid" | "planned";
+  source: string;
+  inst_id: string;
+  local: null | {
+    dataset_id: string;
+    manifest_sha256: string;
+    base_url: string;
+    quality_status: string;
+    verification_ok: boolean;
+    verification_problems: string[];
+    verified_at: string | null;
+    retrieved_at: string | null;
+    bytes_on_disk: number;
+    storage: StorageSummary;
+    bound_at: string;
+    bound_by_job: string | null;
+    outcome: string;
+    previous_dataset_id: string | null;
+    usable: boolean;
+    problem: string | null;
+    reuse: string;
+  };
+  latest_job: CorpusJob | null;
+}
+
+export interface CorpusStatus {
+  plan: {
+    plan_id: string;
+    plan_version: number;
+    description: string;
+    source: string;
+    inst_id: string;
+    bar: string;
+    families: string[];
+    chunk_rule: string;
+    target: { start: string; end: string };
+  };
+  summary: { chunks: number; prepared: number; preparable: number; planned_locked: number; prepared_bytes: number };
+  chunks: CorpusChunk[];
+  recovery_behavior: string;
+}
+
+export interface Evaluation {
+  evaluation_id: string;
+  run_type: string;
+  run_type_label: string;
+  preset: string;
+  notice: string;
+  created_at: string;
+  corpus: {
+    plan_id: string;
+    chunk_id: string;
+    chunk_label: string;
+    start: string;
+    end: string;
+    dataset_id: string;
+    quality_status: string;
+    bytes_on_disk: number;
+    storage: StorageSummary;
+  };
+  replay: ObsReplay;
+  report_available: boolean;
+}
+
+export interface CapabilityRow {
+  label?: string;
+  status: string;
+  value?: null;
+  reason: string;
+}
+
+export interface EvaluationReport {
+  report_kind: string;
+  report_format: string;
+  run_type: string;
+  notice: string;
+  evaluation_id: string;
+  replay_id: string;
+  status: string;
+  completion: "COMPLETE" | "INCOMPLETE";
+  coverage: {
+    requested: { start: string; end: string };
+    final_information_time: string | null;
+    applied_events: number;
+    total_events: number;
+    fraction: number | null;
+  };
+  quality_status: string;
+  runtime: {
+    elapsed_seconds: number | null;
+    throughput_events_per_second: number | null;
+    attempts: number;
+    max_attempts: number;
+    recoveries: number;
+  };
+  validation: { ran: boolean; passed: boolean | null; checks: { name: string; passed: boolean; detail: string }[] };
+  stopped_at: null | { applied_events: number; total_events: number; information_time: string | null; reason: string | null };
+  warnings: string[];
+  capabilities: Record<string, CapabilityRow>;
+  conclusion: { verdict: string; text: string };
+  next_diagnostic: string;
+}
+
+async function text(path: string): Promise<string> {
+  const res = await fetch(path);
+  if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
+  return res.text();
+}
+
+export const corpusApi = {
+  status: () => req<CorpusStatus>("/api/corpus"),
+  prepare: (chunkId: string) => req<CorpusJob>(`/api/corpus/chunks/${encodeURIComponent(chunkId)}/prepare`, { method: "POST" }),
+  cancel: (jobId: string) => req<CorpusJob>(`/api/corpus/jobs/${jobId}/cancel`, { method: "POST" }),
+};
+
+const E = "/api/evaluations";
+
+export const evalApi = {
+  list: () => req<Evaluation[]>(E),
+  detail: (id: string) => req<Evaluation>(`${E}/${id}`),
+  start: (chunkId: string, speed: number, paused: boolean) =>
+    req<Evaluation>(E, { method: "POST", body: JSON.stringify({ chunk_id: chunkId, speed, paused }) }),
+  report: (id: string) => req<EvaluationReport>(`${E}/${id}/report.json`),
+  reportMarkdown: (id: string) => text(`${E}/${id}/report.md`),
+  downloadUrl: (id: string, fmt: "md" | "json") => `${E}/${id}/report.${fmt}?download=true`,
+};
+
+export const barsTail = (replayId: string, tail: number) =>
+  req<{ information_time: string | null; bars: TradedBar[] }>(`${O}/${replayId}/traded-bars?tail=${tail}`);

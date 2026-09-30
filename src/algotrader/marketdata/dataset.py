@@ -30,6 +30,7 @@ import json
 import os
 import shutil
 import uuid
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
@@ -243,6 +244,17 @@ class _Acquisition:
         self.work = work
         self.pages: list[RawPageRef] = []
         self.counters: dict[Family, int] = {}
+        # Optional operational progress (see AcquireProgress); never affects the dataset.
+        self.progress: ProgressHook | None = None
+        self.phase = ""
+        self.windows_done = 0
+        self.windows_total = 0
+        self.bytes = 0
+
+    def report(self) -> None:
+        if self.progress is not None:
+            self.progress(AcquireProgress(self.phase, self.windows_done, self.windows_total, len(self.pages),
+                                          self.bytes, self.work.name))
 
     def save_page(self, family: Family, resp: RawResponse) -> str:
         n = self.counters.get(family, 0)
@@ -268,6 +280,8 @@ class _Acquisition:
                 file=rel,
             )
         )
+        self.bytes += len(resp.body)
+        self.report()
         return page_id
 
     def fetch_window(
@@ -429,6 +443,31 @@ class AcquireResult:
     reused: bool  # identical source content was already present
 
 
+@dataclass(frozen=True)
+class AcquireProgress:
+    """Operational progress of one acquisition (never part of the dataset or its identity).
+
+    ``windows_total`` is exact: candle families are fetched in fixed windows of ``page_limit``
+    minutes and funding in one window. ``pages``/``bytes`` count source responses saved so far.
+    """
+
+    phase: str  # "instrument" | a family value | "finalizing"
+    windows_done: int
+    windows_total: int
+    pages: int
+    bytes: int
+    work_dir: str  # name of the temporary directory under datasets/ (removed on any exit)
+
+
+ProgressHook = Callable[[AcquireProgress], None]
+
+
+def window_count(req: DatasetRequest) -> int:
+    lo, hi = dt_to_ms(req.start), dt_to_ms(req.end)
+    step = req.page_limit * BAR_MS
+    return len(CANDLE_FAMILIES) * -(-(hi - lo) // step) + 1
+
+
 def acquire(
     client: OkxPublicClient,
     root: Path,
@@ -436,7 +475,14 @@ def acquire(
     end: datetime,
     inst_id: str = "BTC-USDT-SWAP",
     page_limit: int = 100,
+    progress: ProgressHook | None = None,
 ) -> AcquireResult:
+    """Acquire one bounded dataset.
+
+    ``progress`` (optional) is called after every saved source page and completed window, and
+    before finalization. It may raise to abort the acquisition at that page boundary: the
+    temporary directory is removed and nothing is published. Without it, behavior is unchanged.
+    """
     req = DatasetRequest(
         base_url=client.base_url, inst_id=inst_id, start=start, end=end,
         families=HISTORICAL_FAMILIES, page_limit=page_limit,
@@ -448,15 +494,20 @@ def acquire(
     work = base / f".tmp-{uuid.uuid4().hex}"
     work.mkdir()
     try:
-        return _acquire_into(client, req, base, work, started)
+        return _acquire_into(client, req, base, work, started, progress)
     finally:
         shutil.rmtree(work, ignore_errors=True)
 
 
 def _acquire_into(
-    client: OkxPublicClient, req: DatasetRequest, base: Path, work: Path, started: datetime
+    client: OkxPublicClient, req: DatasetRequest, base: Path, work: Path, started: datetime,
+    progress: ProgressHook | None = None,
 ) -> AcquireResult:
     acq = _Acquisition(client, req, work)
+    if progress is not None:
+        acq.progress = progress
+        acq.windows_total = window_count(req)
+    acq.phase = "instrument"
     inst_resp = client.instrument(req.inst_id)
     inst_page = acq.save_page(Family.INSTRUMENT, inst_resp)
     inst = parse_instrument(inst_resp, req.inst_id, inst_page)
@@ -465,6 +516,7 @@ def _acquire_into(
     states: dict[Family, FamilyState] = {}
     try:
         for family in HISTORICAL_FAMILIES:
+            acq.phase = family.value
             st = states[family] = FamilyState(
                 family, pq.ParquetWriter(work / f"{family.value}.parquet", arrow_schema(RECORD_TYPES[family]))
             )
@@ -473,9 +525,13 @@ def _acquire_into(
             for w_lo in range(lo, hi, step):
                 w_hi = min(w_lo + step, hi)
                 acq.process(family, acq.fetch_window(family, inst, w_lo, w_hi, st), w_lo, w_hi, st)
+                acq.windows_done += 1
+                acq.report()
     finally:
         for st in states.values():
             st.writer.close()
+    acq.phase = "finalizing"
+    acq.report()
     finished = client.clock()
 
     dataset_id = compute_dataset_id(req, [p.sha256 for p in acq.pages])

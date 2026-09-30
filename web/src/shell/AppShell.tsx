@@ -4,7 +4,7 @@ import { Icon, IconName } from "../ui/Icon";
 import { cx } from "../ui/primitives";
 import { CAPABILITY_ORDER, capabilityLabel, capabilityTone, systemVerdict, useHealth } from "./health";
 
-const CAP_SHORT = { market_replay: "Market replay", recorder: "Recorder", synthetic_replay: "Synthetic demo" } as const;
+const CAP_SHORT = { market_replay: "Market replay", corpus: "Corpus prep", recorder: "Recorder", synthetic_replay: "Synthetic demo" } as const;
 
 interface NavItem {
   id: Section;
@@ -17,7 +17,10 @@ interface NavItem {
 const NAV: { group: string; items: NavItem[] }[] = [
   {
     group: "Desk",
-    items: [{ id: "market", label: "Market", icon: "market", hint: "BTC cockpit and system readiness" }],
+    items: [
+      { id: "market", label: "Market", icon: "market", hint: "BTC cockpit and system readiness" },
+      { id: "backtest", label: "Backtest", icon: "gauge", hint: "Owner evaluation workbench: corpus, runs and copyable reports" },
+    ],
   },
   {
     group: "Workbench",
@@ -31,6 +34,7 @@ const NAV: { group: string; items: NavItem[] }[] = [
 
 const TITLES: Record<Section, string> = {
   market: "Market",
+  backtest: "Backtest",
   replay: "Replay Lab",
   data: "Data",
   recorder: "Recorder",

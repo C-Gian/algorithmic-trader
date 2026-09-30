@@ -10,7 +10,7 @@ The 30 September Owner clarification supersedes the mandatory pullback-only/RP-0
 
 ### Required next product capabilities — not yet implemented
 
-Live Home chart and changing professional-lens results, dominant directional view and persistent entry-valid call; integrated context including explicit cycle/event decisions; optional local sessions with catch-up; fixed repository historical pack; Owner-operated advisory backtests and compact copy/export reports.
+Live Home chart and changing professional-lens results, dominant directional view and persistent entry-valid call; integrated context including explicit cycle/event decisions; optional local sessions with catch-up; fixed repository historical pack (only the September 2025 bootstrap chunk is preparable today; the storage mechanism is undecided); advisory call/outcome sections in the Backtest report. The Owner-operated **observation-only** evaluation workflow with copy/export reports exists (WP-008, below).
 
 The Owner launches substantial evaluations from the app. Executors run bounded engineering checks, then hand off **READY FOR OWNER BACKTEST**. Never mistake the existing observation-only replay for evaluation of a real trader.
 
@@ -36,7 +36,7 @@ One command (Docker + Docker Compose required):
 docker compose up --build
 ```
 
-Then open <http://localhost:8000>. The app opens on **Market** (the future trader cockpit, with real system/data readiness and clearly pending trader areas). Navigate with the sidebar: **Replay Lab** (**Market Replay** of real evidence — the primary mode — and the secondary **Synthetic Demo**), **Data** (historical datasets) and **Recorder** (public evidence collection). In Replay Lab, pick a dataset or finalized recording and click **Start market replay**, or switch to *Synthetic Demo* and click **Start synthetic replay**; the workers execute replays independently of the browser. `docker compose down` stops the stack (add `--volumes` to delete the database and run artifacts).
+Then open <http://localhost:8000>. The app opens on **Market** (the future trader cockpit, with real system/data readiness and clearly pending trader areas). Navigate with the sidebar: **Backtest** (Owner evaluation workbench: prepare the historical corpus, launch an observation-only evaluation, copy its report), **Replay Lab** (**Market Replay** of real evidence — the primary mode — and the secondary **Synthetic Demo**), **Data** (historical datasets) and **Recorder** (public evidence collection). In Replay Lab, pick a dataset or finalized recording and click **Start market replay**, or switch to *Synthetic Demo* and click **Start synthetic replay**; the workers execute replays independently of the browser. `docker compose down` stops the stack (add `--volumes` to delete the database and run artifacts).
 
 Without Docker (local PostgreSQL 18, Python via `uv`, Node 24):
 
@@ -44,7 +44,7 @@ Without Docker (local PostgreSQL 18, Python via `uv`, Node 24):
 uv sync --locked
 npm --prefix web ci && npm --prefix web run build
 export ALGOTRADER_DATABASE_URL=postgresql://USER:PASS@localhost:5432/algotrader   # existing, empty database
-uv run algotrader serve          # migrates, starts supervised run/recorder/observation workers + API on :8000
+uv run algotrader serve          # migrates, starts supervised run/recorder/observation/corpus workers + API on :8000
 ```
 
 Useful environment variables: `ALGOTRADER_ARTIFACT_ROOT` (default `./var/artifacts`, outside Git), `ALGOTRADER_PORT`, `ALGOTRADER_LEASE_SECONDS`.
@@ -102,11 +102,11 @@ uv run algotrader data live-check --minutes 30  # manual live integration check 
 - **Data view**: the UI's **Data** workspace (`#data`) (and `GET /api/datasets[/{id}[/verify|/files/{name}]]`) shows source, instrument, coverage, row counts, quality and gaps, retrieval time, schema version, hashes and provenance files.
 - Contracts are versioned separately as **`algotrader.marketdata.v1`** (`schemas/algotrader.marketdata.v1.json`, same frozen-baseline rules as below). Exchange-advertised leverage is stored as venue metadata only; it is not a recommendation or product risk policy. Funding is recorded as market evidence.
 
-### Fixed local corpus requirement
+### Fixed local corpus
 
-Foundation v3.0 requires an immutable reusable repository historical pack (planning target: 2025-09-01 through 2026-09-01 UTC, end exclusive), subject to verified coverage and size. That pack is **not included yet**. Existing acquisition commands below/above describe implemented operations, not a requirement to redownload data for every run. Keep raw acquisition archives and run artifacts outside ordinary Git history; commit bounded data chunks/manifests where practical. Explain any necessary LFS/pinned-archive fallback before adopting it.
+Foundation v3.0 requires an immutable reusable historical corpus (target 2025-09-01 inclusive → 2026-09-01 exclusive, UTC). WP-008 implements its **logical plan and local preparation**, not the pack itself: the checked-in plan `src/algotrader/corpus/plan.json` lists twelve monthly chunks; only `btc-okx-2025-09` (2025-09-01 → 2025-10-01) is preparable, later months are PLANNED/locked. Prepared chunks are ordinary `marketdata.v1` datasets in the local data root (outside Git) and are reused, never re-downloaded per run. No acquired data is committed and no Git LFS is used; the storage mechanism (Git pack / LFS / pinned archive) is a later Director decision based on the sizes the Backtest page and report measure.
 
-Local startup catch-up and the complete advisory backtest/report workflow are pending. Current recorder sessions work only while the local processes run; no H24 operation is required by the product.
+Local startup catch-up and the advisory backtest (calls/outcomes) are pending. Current recorder sessions work only while the local processes run; no H24 operation is required by the product.
 
 ## Causal feed and observable market state (WP-004, `algotrader.feed.v1` PROVISIONAL)
 
@@ -181,6 +181,15 @@ A separate operational path from the synthetic `semantic.v1` shell: **verified e
 - **Artifacts** (`<artifact root>/observations/<replay_id>/`): `config.json`, `deliveries.jsonl`, `final_snapshot.json`, `validation.json` (independent re-derivation from the immutable source: order, no duplicates, per-delivery digests, no future knowledge, final = `snapshot_at`) and `manifest.json` (hashes; source evidence referenced, not copied).
 - **Health** (`GET /api/health` → `capabilities`) is capability-aware: core, market replay, recorder and synthetic replay each report `available`, `unavailable` (worker offline; limits that capability only) or `stalled` (jobs waiting with no worker).
 
+## Owner evaluation workbench (WP-008) — observation-only, no adviser
+
+The **Backtest** page (`#backtest`) is the Owner workflow the future adviser will reuse:
+
+- **A · Historical corpus**: the twelve-month ledger from the checked-in plan, each chunk's local state (`prepared`, `preparing`, `not_prepared`, `invalid`, `planned`), dataset identity, verification, quality, measured bytes (raw / Parquet / metadata, files, pages, rows) and reuse state. **Prepare** only inserts a durable PostgreSQL job (`corpus_jobs`); the `corpus-worker` (Compose service `corpus`, `corpus:` worker ids) owns it: it reuses a verified binding or adopts an exactly matching local dataset without network, otherwise acquires the month via the accepted `OkxPublicClient` + `marketdata.dataset.acquire` (official OKX hosts only), verifies it and only then binds it (`corpus_chunks`). Progress shows phase, fixed windows done/total, pages, bytes, elapsed, heartbeat and an ETA only after measured throughput. Cancel stops at the next source page and binds nothing; finalized datasets are never deleted. A crashed worker's job is reclaimed after its lease and the chunk restarts **from scratch** (no byte-level resume; 3 interruptions fail it).
+- **B · Run setup**: prepared chunk, pacing and optional start-paused. There are no model parameters: *Professional adviser not connected yet.*
+- **C · Run & report**: the accepted durable observation replay (same worker, controls, chart, observable state, artifacts); the chart shows a bounded 240-bar tail refreshed at most once per second while the worker processes every event. Completed, cancelled and failed runs produce a report (`OBSERVATION_ONLY_EVALUATION`): **Copy report for chat**, Markdown and JSON downloads. Every call/MarketView/outcome metric is `UNAVAILABLE` with value `null`, never zero.
+- **API**: `/api/corpus` (status, `chunks/{id}/prepare`, `jobs`, `jobs/{id}`, `jobs/{id}/cancel`) and `/api/evaluations` (create/list/get, `report.md`, `report.json`, `?download=true`). Health reports a `corpus` capability.
+
 ## Semantic contract baseline
 
 The public semantic contracts (`src/algotrader/contracts.py`: journal payloads such as MarketObservation, MarketView, TradePlan, RiskDecision, Decision, OrderIntent, Order, Fill and AccountSnapshot, plus Run, RunConfig, ReplayControl and RunManifest) are frozen as **`algotrader.semantic.v1`**. Their JSON Schema is checked in at `schemas/algotrader.semantic.v1.json`, and every run manifest records the version in `schema_version`.
@@ -196,6 +205,8 @@ Without `ALGOTRADER_TEST_DATABASE_URL` the database tests are skipped (CI sets `
 | Path | Contents |
 |---|---|
 | `src/algotrader/contracts.py` | DEMO semantic contracts (instrument, observation, MarketView, scenario, plan, decision, risk, order, fill, account, run, manifest) |
+| `src/algotrader/corpus/` | Corpus plan (`plan.json`), local bindings, durable corpus-preparation jobs/worker, API |
+| `src/algotrader/evaluation/` | Observation-only evaluation facade and Markdown/JSON reports |
 | `src/algotrader/synthetic.py` | Deterministic synthetic BTC-perpetual fixture |
 | `src/algotrader/trader.py` | Trader interface + scripted DEMO dummy trader |
 | `src/algotrader/risk.py`, `account.py` | DEMO-only risk skeleton (1x cap), paper account and next-bar-open fill model; not adviser policy |

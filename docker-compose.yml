@@ -85,6 +85,17 @@ services:
     # after the last committed feed cursor.
     restart: unless-stopped
 
+  corpus:
+    <<: *app
+    # Corpus preparation (public, read-only OKX REST; no credentials, no trading). Idle until the Owner
+    # clicks Prepare on the Backtest page. A crashed worker is restarted; the interrupted monthly chunk is
+    # reclaimed after its lease expires and acquired again from scratch (no byte-level resume).
+    command: ["algotrader", "corpus-worker"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
 volumes:
   pgdata:
   artifacts:

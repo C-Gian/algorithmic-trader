@@ -23,6 +23,8 @@ from pydantic import BaseModel, Field
 from . import __version__, control, db
 from .contracts import SCHEMA_VERSION, FaultMode, ReplayControl, Run, RunConfig, RunProgress, RuntimeState
 from .control import TERMINAL
+from .corpus.api import build_router as corpus_router
+from .evaluation.api import build_router as evaluation_router
 from .marketdata.contracts import MARKETDATA_SCHEMA_VERSION, DatasetManifest, QualityReport
 from .marketdata.dataset import dataset_path, default_data_root, list_manifests, load_manifest, load_quality, verify
 from .observe.api import build_router as observation_router
@@ -240,6 +242,7 @@ def create_app(
                 SELECT worker_id, host, pid, started_at, current_run,
                        extract(epoch FROM now() - heartbeat_at)::float8 AS age
                 FROM workers WHERE worker_id NOT LIKE 'recorder:%%' AND worker_id NOT LIKE 'observe:%%'
+                  AND worker_id NOT LIKE 'corpus:%%'
                 ORDER BY heartbeat_at DESC LIMIT 10
                 """
             ).fetchall()
@@ -255,16 +258,24 @@ def create_app(
                 FROM workers WHERE worker_id LIKE 'observe:%%' ORDER BY heartbeat_at DESC LIMIT 5
                 """
             ).fetchall()
+            corpus_workers = c.execute(
+                """
+                SELECT worker_id, current_run, extract(epoch FROM now() - heartbeat_at)::float8 AS age
+                FROM workers WHERE worker_id LIKE 'corpus:%%' ORDER BY heartbeat_at DESC LIMIT 5
+                """
+            ).fetchall()
             active = c.execute(
                 """
                 SELECT (SELECT count(*) FROM runs WHERE status IN ('queued','running')) AS runs,
                        (SELECT count(*) FROM recorder_sessions WHERE status IN ('queued','running')) AS recordings,
-                       (SELECT count(*) FROM observation_replays WHERE status IN ('queued','running')) AS observations
+                       (SELECT count(*) FROM observation_replays WHERE status IN ('queued','running')) AS observations,
+                       (SELECT count(*) FROM corpus_jobs WHERE status IN ('queued','running')) AS corpus_jobs
                 """
             ).fetchone()
         alive = [w for w in workers if w["age"] < WORKER_ALIVE_SECONDS]
         rec_alive = sum(1 for r in recorders if r["age"] < WORKER_ALIVE_SECONDS)
         obs_alive = sum(1 for r in observers if r["age"] < WORKER_ALIVE_SECONDS)
+        corpus_alive = sum(1 for r in corpus_workers if r["age"] < WORKER_ALIVE_SECONDS)
         return {
             # Capability-aware health: each capability has its own worker; a missing optional worker
             # limits that capability only (it is not a whole-system outage).
@@ -272,6 +283,7 @@ def create_app(
                 "core": {"label": "API and database", "status": "available", "workers_alive": None,
                          "active_jobs": None},
                 "market_replay": _capability("Real-market observation replay", obs_alive, active["observations"]),
+                "corpus": _capability("Corpus acquisition", corpus_alive, active["corpus_jobs"]),
                 "recorder": _capability("Public market recorder", rec_alive, active["recordings"]),
                 "synthetic_replay": _capability("Synthetic DEMO replay", len(alive), active["runs"]),
             },
@@ -279,6 +291,11 @@ def create_app(
                 "alive": obs_alive,
                 "recent": [{"worker_id": r["worker_id"], "current_replay": r["current_run"],
                             "heartbeat_age_seconds": round(r["age"], 3)} for r in observers],
+            },
+            "corpus_workers": {
+                "alive": corpus_alive,
+                "recent": [{"worker_id": r["worker_id"], "current_job": r["current_run"],
+                            "heartbeat_age_seconds": round(r["age"], 3)} for r in corpus_workers],
             },
             "recorder_workers": {
                 "alive": rec_alive,
@@ -553,6 +570,11 @@ def create_app(
     # -- real-market observation replay (separate path; algotrader.observe.v1) --
 
     app.include_router(observation_router(conn, md_root, art_root))
+
+    # -- Owner evaluation workbench: corpus preparation + observation-only evaluations --
+
+    app.include_router(corpus_router(conn, md_root))
+    app.include_router(evaluation_router(conn, md_root))
 
     # -- market-data datasets (read-only inspection of the data root) ---------
 

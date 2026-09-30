@@ -14,7 +14,7 @@ import { MarketChart } from "./MarketChart";
 // No interpretation, no MarketView, no LONG/SHORT/NO_TRADE.
 
 const TERMINAL = new Set(["completed", "cancelled", "failed"]);
-const PACING = [
+export const PACING = [
   { label: "1 event/s", value: 1 },
   { label: "5 events/s", value: 5 },
   { label: "20 events/s", value: 20 },
@@ -30,7 +30,7 @@ export const ROLE: Record<string, { name: string; role: string; short: string }>
 };
 const FAMILY_ORDER = ["trade_bar_1m", "mark_bar_1m", "index_bar_1m", "funding_settlement"];
 
-function pacingLabel(v: number): string {
+export function pacingLabel(v: number): string {
   return v === 0 ? "max" : `${v} event${v === 1 ? "" : "s"}/s`;
 }
 
@@ -51,7 +51,7 @@ function freshnessTone(f: string): Tone {
   return f === "FRESH" ? "pos" : f === "STALE" ? "warn" : "neutral";
 }
 
-function AvailabilityBadge({ basis, testid }: { basis: string; testid?: string }) {
+export function AvailabilityBadge({ basis, testid }: { basis: string; testid?: string }) {
   return (
     <Badge tone="info" icon="clock" testid={testid}
            title={basis === "MODELED" ? "Modeled availability — not measured publication timing"
@@ -246,7 +246,7 @@ function ChannelCard({ c }: { c: ChannelState }) {
   );
 }
 
-function ObservableStatePanel({ state }: { state: ObsStateDoc["state"] }) {
+export function ObservableStatePanel({ state }: { state: ObsStateDoc["state"] }) {
   if (!state) return <Card><Skeleton lines={5} /></Card>;
   const chans = [...state.channels].sort((a, b) => FAMILY_ORDER.indexOf(a.channel.family) - FAMILY_ORDER.indexOf(b.channel.family));
   return (
@@ -323,7 +323,9 @@ function Timeline({ items }: { items: Delivery[] }) {
 // Replay panel
 // ---------------------------------------------------------------------------
 
-function ReplayPanel({ r, live, onCommand }: { r: ObsReplay; live: boolean; onCommand: (fn: () => Promise<ObsReplay>) => void }) {
+export function ReplayPanel({ r, live, onCommand, eyebrow = "Market replay · real evidence" }: {
+  r: ObsReplay; live: boolean; onCommand: (fn: () => Promise<ObsReplay>) => void; eyebrow?: string;
+}) {
   const { health } = useHealth();
   const workers = health?.observation_workers?.alive;
   const p = r.progress;
@@ -332,7 +334,7 @@ function ReplayPanel({ r, live, onCommand }: { r: ObsReplay; live: boolean; onCo
     <Card className="run-card obs-card" testid="obs-panel">
       <div className="run-head">
         <div className="run-head-id">
-          <div className="eyebrow real-eyebrow">Market replay · real evidence</div>
+          <div className="eyebrow real-eyebrow">{eyebrow}</div>
           <h2 className="run-title mono">{r.replay_id}</h2>
         </div>
         <div className="run-head-status">
@@ -460,7 +462,7 @@ function ReplayPanel({ r, live, onCommand }: { r: ObsReplay; live: boolean; onCo
   );
 }
 
-function Artifacts({ m }: { m: ObsManifest }) {
+export function Artifacts({ m }: { m: ObsManifest }) {
   return (
     <Card title="Replay artifacts" icon="file" testid="obs-artifacts" eyebrow="Immutable, hashed · source evidence referenced, not copied"
           actions={<a className="btn btn-ghost" href={`/api/observations/${m.replay_id}/manifest`} target="_blank" rel="noreferrer"><Icon name="file" size={15} /><span>manifest.json</span></a>}>

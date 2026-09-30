@@ -176,7 +176,76 @@ CREATE TABLE IF NOT EXISTS observation_deliveries (
 CREATE INDEX IF NOT EXISTS observation_deliveries_family_idx ON observation_deliveries (replay_id, family, seq);
 """
 
-MIGRATIONS: dict[int, str] = {1: SCHEMA_V1, 2: SCHEMA_V2, 3: SCHEMA_V3, 4: SCHEMA_V4}
+# Owner evaluation workbench (operational state only; no domain contract changes):
+# local corpus bindings, durable corpus acquisition jobs and evaluation facades over observation replays.
+SCHEMA_V5 = """
+CREATE TABLE IF NOT EXISTS corpus_jobs (
+    job_id             text PRIMARY KEY,
+    chunk_id           text NOT NULL,
+    plan_id            text NOT NULL,
+    created_at         timestamptz NOT NULL DEFAULT now(),
+    status             text NOT NULL CHECK (status IN ('queued','running','completed','cancelled','failed')),
+    cancel_requested   boolean NOT NULL DEFAULT false,
+    base_url           text NOT NULL,
+    lease_owner        text,
+    lease_expires_at   timestamptz,
+    heartbeat_at       timestamptz,
+    attempt            integer NOT NULL DEFAULT 0,
+    max_attempts       integer NOT NULL DEFAULT 3,
+    interruptions      integer NOT NULL DEFAULT 0,
+    attempt_started_at timestamptz,
+    recovery_log       jsonb NOT NULL DEFAULT '[]'::jsonb,
+    progress           jsonb NOT NULL DEFAULT '{}'::jsonb,
+    started_at         timestamptz,
+    finished_at        timestamptz,
+    outcome            text,
+    dataset_id         text,
+    result             jsonb,
+    error              text
+);
+CREATE INDEX IF NOT EXISTS corpus_jobs_status_idx ON corpus_jobs (status, created_at);
+CREATE INDEX IF NOT EXISTS corpus_jobs_chunk_idx ON corpus_jobs (chunk_id, created_at);
+-- At most one active preparation per logical chunk.
+CREATE UNIQUE INDEX IF NOT EXISTS corpus_jobs_one_active
+    ON corpus_jobs (chunk_id) WHERE status IN ('queued','running');
+
+CREATE TABLE IF NOT EXISTS corpus_chunks (
+    chunk_id               text PRIMARY KEY,
+    plan_id                text NOT NULL,
+    start_time             timestamptz NOT NULL,
+    end_time               timestamptz NOT NULL,
+    inst_id                text NOT NULL,
+    base_url               text NOT NULL,
+    dataset_id             text NOT NULL,
+    manifest_sha256        text NOT NULL,
+    quality_status         text NOT NULL,
+    verification_ok        boolean NOT NULL,
+    verification_problems  jsonb NOT NULL DEFAULT '[]'::jsonb,
+    verified_at            timestamptz,
+    retrieved_at           timestamptz,
+    bytes_on_disk          bigint NOT NULL,
+    storage                jsonb NOT NULL,
+    bound_at               timestamptz NOT NULL DEFAULT now(),
+    bound_by_job           text,
+    outcome                text NOT NULL,
+    previous_dataset_id    text
+);
+
+CREATE TABLE IF NOT EXISTS evaluations (
+    evaluation_id  text PRIMARY KEY,
+    replay_id      text NOT NULL UNIQUE REFERENCES observation_replays(replay_id) ON DELETE CASCADE,
+    run_type       text NOT NULL CHECK (run_type IN ('observation_only')),
+    preset         text NOT NULL,
+    plan_id        text NOT NULL,
+    chunk_id       text NOT NULL,
+    dataset_id     text NOT NULL,
+    corpus         jsonb NOT NULL,
+    created_at     timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS evaluations_created_idx ON evaluations (created_at);
+"""
+
+MIGRATIONS: dict[int, str] = {1: SCHEMA_V1, 2: SCHEMA_V2, 3: SCHEMA_V3, 4: SCHEMA_V4, 5: SCHEMA_V5}
 SCHEMA_VERSION = max(MIGRATIONS)
 
 

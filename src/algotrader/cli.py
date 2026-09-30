@@ -4,6 +4,7 @@
     algotrader api                run the FastAPI app (serves the built web UI)
     algotrader worker             run a durable run worker (synthetic DEMO replay)
     algotrader observe-worker     run a durable real-market observation-replay worker
+    algotrader corpus-worker      run a durable corpus-preparation worker (public OKX, read-only)
     algotrader serve              migrate + supervised worker + api (local, no Docker)
     algotrader replay             run the engine in-process and print the trace hash
     algotrader schema [--write]   check / write the semantic contract JSON Schema baseline
@@ -48,6 +49,7 @@ def _serve(args: argparse.Namespace) -> None:
         [sys.executable, "-m", "algotrader.cli", "worker", "--lease-seconds", str(args.lease_seconds)],
         [sys.executable, "-m", "algotrader.cli", "recorder-worker"],
         [sys.executable, "-m", "algotrader.cli", "observe-worker", "--lease-seconds", str(args.lease_seconds)],
+        [sys.executable, "-m", "algotrader.cli", "corpus-worker"],
     ]
 
     def supervise(cmd: list[str]) -> None:
@@ -78,6 +80,13 @@ def _observe_worker(args: argparse.Namespace) -> None:
 
     ObservationWorker(data_root=args.root, lease_seconds=args.lease_seconds,
                       poll_interval=args.poll_interval).run_forever()
+
+
+def _corpus_worker(args: argparse.Namespace) -> None:
+    from .corpus.job import CorpusWorker
+
+    CorpusWorker(data_root=args.root, lease_seconds=args.lease_seconds,
+                 poll_interval=args.poll_interval).run_forever()
 
 
 def _recorder_worker(args: argparse.Namespace) -> None:
@@ -338,6 +347,11 @@ def main(argv: list[str] | None = None) -> None:
     ow.add_argument("--poll-interval", type=float, default=0.5)
     ow.add_argument("--root", type=Path, default=None, help="data root (ALGOTRADER_DATA_ROOT)")
     ow.set_defaults(fn=_observe_worker)
+    cw = sub.add_parser("corpus-worker", help="durable corpus-preparation worker (public read-only OKX acquisition)")
+    cw.add_argument("--lease-seconds", type=float, default=60.0)
+    cw.add_argument("--poll-interval", type=float, default=1.0)
+    cw.add_argument("--root", type=Path, default=None, help="data root (ALGOTRADER_DATA_ROOT)")
+    cw.set_defaults(fn=_corpus_worker)
     rec = sub.add_parser("recorder", help="public market recorder tools (no trading)")
     rsub = rec.add_subparsers(dest="recorder_cmd", required=True)
     rr = rsub.add_parser("run", help="foreground bounded public recording session (integration check)")
