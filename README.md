@@ -4,7 +4,7 @@ Algorithmic Trader is a clean-room BTC-only research and paper-trading project w
 
 ## Current state
 
-The project is completing the **operational shell (WP-002: replay/operations controls and semantic contract baseline v1)**. The repository contains the accepted foundation, the professional source dossiers and a runnable shell driven by a scripted **DEMO dummy trader** on a **synthetic** BTC-perpetual fixture. The real trader has not been implemented; nothing the shell shows is market data or research evidence.
+The operational shell (WP-001/WP-002) is accepted. The project is in **M3 — data and execution readiness**; WP-003 adds public, read-only OKX BTC-USDT-SWAP market-data acquisition with provenance and quality audit. The repository contains the accepted foundation, the professional source dossiers and a runnable shell driven by a scripted **DEMO dummy trader** on a **synthetic** BTC-perpetual fixture. The real trader has not been implemented; nothing the DEMO replay shows is market data or research evidence. Acquired OKX datasets are real public market data, but they are not trading results.
 
 ## Read first
 
@@ -72,6 +72,28 @@ uv run pytest tests/e2e                       # browser UI -> API -> worker proc
 python scripts/stack_smoke.py http://127.0.0.1:8000   # against a running stack
 ```
 
+## Market data (OKX BTC-USDT-SWAP, public/read-only)
+
+Source decision: `knowledge/market_sources/OKX-BTC-USDT-SWAP.md`. No API keys; only the public instrument, history-candles (traded, mark, index; 1m) and funding-rate-history endpoints are reachable through the adapter (`src/algotrader/marketdata/okx.py`).
+
+```sh
+# bounded historical dataset (start inclusive, end exclusive, UTC, whole minutes; max 31 days)
+uv run algotrader data fetch-okx --start 2026-09-29T00:00Z --end 2026-09-29T06:00Z [--base-url https://www.okx.com] [--root var/data]
+uv run algotrader data list
+uv run algotrader data verify <dataset_id>      # re-check every hash, row count and the dataset identity
+uv run algotrader data live-check --minutes 30  # manual live integration check (never run in CI)
+# Docker: docker compose run --rm api algotrader data fetch-okx --start ... --end ...
+```
+
+- **Base URL** is configuration (`--base-url` or `ALGOTRADER_OKX_BASE_URL`; default `https://www.okx.com`). OKX documents regional domains (e.g. `https://my.okx.com`, `https://eea.okx.com`); none is assumed valid everywhere.
+- **Datasets** live outside Git under `ALGOTRADER_DATA_ROOT` (default `./var/data`; Docker volume `marketdata`) in `datasets/<dataset_id>/`. Each has the exact raw source responses, a request/page log, the normalized instrument snapshot, normalized Parquet per family, `quality.json` and `manifest.json` with SHA-256 for every file.
+- **Identity/immutability**: `dataset_id` is derived from the logical request, the market-data schema version, the availability policy and the SHA-256 of every raw response. Re-fetching identical source bytes reuses the existing dataset untouched. Changed source bytes create a new dataset, whose manifest lists the earlier versions in `prior_versions`. Existing dataset directories are never overwritten.
+- **Time semantics**: candles keep the source `open_time`, a computed `close_time`, the modeled `available_time` and `retrieved_at` as separate fields. `available_time` follows the labelled modeling policy `okx.completed_1m_bar_available_at_close.v1` (bar close), which is not a measured publication time. Funding events keep the source `funding_time` and are never made available earlier. Unconfirmed candles (`confirm=0`) are rejected and reported.
+- **Units**: traded candles keep contract volume, base-currency volume and quote-currency volume as separate fields with their currencies. Mark and index candles have no volume fields. Prices, rates and volumes are exact decimals (stored as the source decimal strings).
+- **Quality**: gaps, duplicates (identical or conflicting), out-of-order pages, incomplete bars, invalid OHLC, prices or volumes, and out-of-window rows are reported with a severity (`info`, `warning`, `degraded`, `invalid`). Nothing is filled or repaired; invalid rows are kept with `quality=INVALID`.
+- **Data view**: the UI's *Data* tab (and `GET /api/datasets[/{id}[/verify|/files/{name}]]`) shows source, instrument, coverage, row counts, quality and gaps, retrieval time, schema version, hashes and provenance files.
+- Contracts are versioned separately as **`algotrader.marketdata.v1`** (`schemas/algotrader.marketdata.v1.json`, same frozen-baseline rules as below). Exchange-advertised leverage is stored as metadata only. Funding is recorded, not applied to any account.
+
 ## Semantic contract baseline
 
 The public semantic contracts (`src/algotrader/contracts.py`: journal payloads such as MarketObservation, MarketView, TradePlan, RiskDecision, Decision, OrderIntent, Order, Fill and AccountSnapshot, plus Run, RunConfig, ReplayControl and RunManifest) are frozen as **`algotrader.semantic.v1`**. Their JSON Schema is checked in at `schemas/algotrader.semantic.v1.json`, and every run manifest records the version in `schema_version`.
@@ -93,7 +115,9 @@ Without `ALGOTRADER_TEST_DATABASE_URL` the database tests are skipped (CI sets `
 | `src/algotrader/engine.py` | Pure, deterministic step engine and semantic trace hash |
 | `src/algotrader/worker.py`, `db.py` | PostgreSQL-backed durable worker (leases, fencing, checkpoints, idempotent journal, parking of paused runs) and migrations |
 | `src/algotrader/control.py` | Durable replay-control commands (pause/resume/step/speed/cancel) |
-| `src/algotrader/schema.py`, `schemas/` | Semantic contract JSON Schema baseline and its generator |
+| `src/algotrader/schema.py`, `schemas/` | Semantic and market-data contract JSON Schema baselines and their generator |
+| `src/algotrader/marketdata/` | Market-data contracts, OKX public REST adapter, bounded dataset acquisition/quality/verification |
+| `tests/fixtures/okx/` | Small captured OKX public responses (see `PROVENANCE.json`) for offline tests |
 | `src/algotrader/artifacts.py`, `validation.py` | Immutable run artifacts and validation checks |
 | `src/algotrader/api.py`, `cli.py` | FastAPI app (commands, snapshots, SSE, artifacts) and CLI |
 | `web/` | React + TypeScript UI (Vite) |

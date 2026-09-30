@@ -78,3 +78,54 @@ def test_frozen_baseline_cannot_be_overwritten(tmp_path, monkeypatch):
     assert frozen.read_text(encoding="utf-8") == '{"tampered": true}\n'
     other = tmp_path / "fresh"
     assert schema.write_baseline(other).read_text(encoding="utf-8") == schema.render(schema.baseline())
+
+
+# ---------------------------------------------------------------------------
+# Market-data baseline (algotrader.marketdata.v1): separate from semantic v1
+# ---------------------------------------------------------------------------
+
+
+def test_marketdata_baseline_is_separate_and_matches_contracts():
+    from algotrader.marketdata import contracts as md
+
+    assert md.MARKETDATA_SCHEMA_VERSION == "algotrader.marketdata.v1" != c.SCHEMA_VERSION
+    path = schema.baseline_path(md.MARKETDATA_SCHEMA_VERSION)
+    assert path.is_file(), "run `uv run algotrader schema --write`"
+    stored = json.loads(path.read_text(encoding="utf-8"))
+    current = schema.marketdata_baseline()
+    drifted = sorted(n for n in set(current["$defs"]) | set(stored["$defs"])
+                     if current["$defs"].get(n) != stored["$defs"].get(n))
+    assert not drifted, f"market-data contract drift in {drifted}: bump the market-data schema version"
+    assert current == stored
+    for name in ("InstrumentSnapshot", "TradeCandle1m", "MarkCandle1m", "IndexCandle1m", "FundingRateEvent",
+                 "RawPageRef", "DatasetManifest", "QualityReport"):
+        assert name in stored["public_contracts"]
+    assert stored["availability_policy"]["id"] == md.AVAILABILITY_POLICY_ID
+    # market-data records never leak into the frozen trader baseline
+    assert not set(stored["public_contracts"]) & set(checked_in()["public_contracts"])
+
+
+def test_marketdata_decimals_serialize_as_strings():
+    defs = schema.marketdata_baseline()["$defs"]
+    for field in ("open", "high", "low", "close", "volume_contracts", "volume_base", "volume_quote"):
+        assert defs["TradeCandle1m"]["properties"][field]["type"] == "string"
+    assert defs["FundingRateEvent"]["properties"]["funding_rate"]["type"] == "string"
+
+
+def test_frozen_marketdata_baseline_cannot_be_overwritten(tmp_path):
+    from algotrader.marketdata.contracts import MARKETDATA_SCHEMA_VERSION
+
+    (tmp_path / f"{MARKETDATA_SCHEMA_VERSION}.json").write_text("{}\n", encoding="utf-8")
+    with pytest.raises(SystemExit, match="frozen baseline"):
+        schema.write_baseline(tmp_path, MARKETDATA_SCHEMA_VERSION)
+
+
+def test_semantic_v1_baseline_file_is_unchanged_by_marketdata():
+    import hashlib
+
+    # sha256 of schemas/algotrader.semantic.v1.json as accepted with WP-002 (LF line endings)
+    text = schema.baseline_path().read_text(encoding="utf-8")
+    assert hashlib.sha256(text.encode()).hexdigest() == SEMANTIC_V1_SHA256
+
+
+SEMANTIC_V1_SHA256 = "7e212b948ef0d756628b9db2da4b923aace3d8d25532dc48d58b8b10ce4e0c09"

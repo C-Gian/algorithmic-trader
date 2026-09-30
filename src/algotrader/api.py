@@ -23,6 +23,8 @@ from pydantic import BaseModel, Field
 from . import __version__, control, db
 from .contracts import SCHEMA_VERSION, FaultMode, ReplayControl, Run, RunConfig, RunProgress, RuntimeState
 from .control import TERMINAL
+from .marketdata.contracts import MARKETDATA_SCHEMA_VERSION, DatasetManifest, QualityReport
+from .marketdata.dataset import dataset_path, default_data_root, list_manifests, load_manifest, load_quality, verify
 from .worker import default_artifact_root, fetch_events
 
 DEFAULT_WEB_DIST = Path(__file__).resolve().parents[2] / "web" / "dist"
@@ -134,9 +136,42 @@ FROM runs r LEFT JOIN run_checkpoints c USING (run_id)
 """
 
 
-def create_app(database_url: str | None = None, artifact_root: Path | None = None, web_dist: Path | None = None) -> FastAPI:
+def _dataset_summary(m: DatasetManifest, q: QualityReport) -> dict[str, Any]:
+    return {
+        "dataset_id": m.dataset_id,
+        "schema_version": m.schema_version,
+        "source": m.request.source,
+        "base_url": m.request.base_url,
+        "inst_id": m.instrument.inst_id,
+        "requested": {"start": m.request.start.isoformat(), "end": m.request.end.isoformat()},
+        "retrieved_at": m.retrieval_started_at.isoformat(),
+        "quality_status": q.status.value,
+        "families": [
+            {
+                "family": f.family.value,
+                "rows": f.rows,
+                "first_time": f.first_time.isoformat() if f.first_time else None,
+                "last_time": f.last_time.isoformat() if f.last_time else None,
+                "status": fq.status.value,
+                "expected_rows": fq.expected_rows,
+                "missing_rows": fq.missing_rows,
+                "gaps": len(fq.gaps),
+            }
+            for f, fq in zip(m.families, q.families)
+        ],
+        "prior_versions": list(m.prior_versions),
+    }
+
+
+def create_app(
+    database_url: str | None = None,
+    artifact_root: Path | None = None,
+    web_dist: Path | None = None,
+    data_root: Path | None = None,
+) -> FastAPI:
     app = FastAPI(title="Algorithmic Trader (DEMO shell)", version=__version__)
     art_root = artifact_root or default_artifact_root()
+    md_root = data_root or default_data_root()
     dist = web_dist or Path(os.environ.get("ALGOTRADER_WEB_DIST", DEFAULT_WEB_DIST))
 
     def conn():
@@ -353,6 +388,44 @@ def create_app(database_url: str | None = None, artifact_root: Path | None = Non
             table = pq.read_table(path)
             return {"name": name, "rows": table.num_rows, "records": table.slice(0, limit).to_pylist()}
         return FileResponse(path, filename=name)
+
+    # -- market-data datasets (read-only inspection of the data root) ---------
+
+    def dataset_dir(dataset_id: str) -> Path:
+        path = dataset_path(md_root, dataset_id)
+        if path is None:
+            raise HTTPException(404, f"dataset {dataset_id} not found")
+        return path
+
+    @app.get("/api/datasets")
+    def list_datasets() -> dict[str, Any]:
+        out = []
+        for m in list_manifests(md_root):
+            out.append(_dataset_summary(m, load_quality(dataset_dir(m.dataset_id))))
+        return {"data_root": str(md_root), "schema_version": MARKETDATA_SCHEMA_VERSION, "datasets": out}
+
+    @app.get("/api/datasets/{dataset_id}")
+    def dataset_detail(dataset_id: str) -> dict[str, Any]:
+        path = dataset_dir(dataset_id)
+        m, q = load_manifest(path), load_quality(path)
+        return {
+            "summary": _dataset_summary(m, q),
+            "manifest": json.loads(m.model_dump_json()),
+            "quality": json.loads(q.model_dump_json()),
+        }
+
+    @app.get("/api/datasets/{dataset_id}/verify")
+    def dataset_verify(dataset_id: str) -> dict[str, Any]:
+        problems = verify(dataset_dir(dataset_id))
+        return {"dataset_id": dataset_id, "ok": not problems, "problems": problems}
+
+    @app.get("/api/datasets/{dataset_id}/files/{name:path}")
+    def dataset_file(dataset_id: str, name: str):
+        path = dataset_dir(dataset_id)
+        m = load_manifest(path)
+        if name != "manifest.json" and name not in {f.name for f in m.files}:
+            raise HTTPException(404, f"no file {name} in dataset {dataset_id}")
+        return FileResponse(path / name, filename=Path(name).name)
 
     if (dist / "index.html").is_file():
         app.mount("/", StaticFiles(directory=dist, html=True), name="web")

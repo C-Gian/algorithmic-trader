@@ -8,9 +8,11 @@ x-app: &app
   environment:
     ALGOTRADER_DATABASE_URL: postgresql://algotrader:algotrader@db:5432/algotrader
     ALGOTRADER_ARTIFACT_ROOT: /data/artifacts
+    ALGOTRADER_DATA_ROOT: /data/market
     ALGOTRADER_CODE_VERSION: ${ALGOTRADER_CODE_VERSION:-unknown}
   volumes:
     - artifacts:/data/artifacts
+    - marketdata:/data/market
 
 services:
   db:
@@ -62,3 +64,4 @@ services:
 volumes:
   pgdata:
   artifacts:
+  marketdata:

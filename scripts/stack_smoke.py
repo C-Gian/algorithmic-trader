@@ -50,6 +50,9 @@ def main() -> None:
     controlled = replay_controls()
     assert controlled["semantic_trace_hash"] == m["semantic_trace_hash"], "replay control changed the trace"
     assert call("/api/health")["workers"]["alive"] >= 1
+    datasets = call("/api/datasets")  # read-only market-data catalog (no network fetch in the smoke)
+    assert datasets["schema_version"] == "algotrader.marketdata.v1", datasets
+    print(f"market-data catalog: {len(datasets['datasets'])} dataset(s) under {datasets['data_root']}")
     print("stack smoke OK")
 
 

@@ -1,0 +1,96 @@
+{
+  "description": "Small captured OKX public API responses (unmodified bytes) used as offline source-shape fixtures. Not a historical sample; not trading evidence. Interval: 2026-09-30T07:50Z..08:10Z (exclusive). Captured at ~08:09Z, so each candle file contains 19 confirmed bars (07:50..08:08) and one genuinely unconfirmed (confirm=0) 08:09 bar; the funding file holds the 08:00Z event. Other test scenarios (gaps, duplicates, invalid rows, paging) are derived in tests from these rows and labelled as derived.",
+  "captured_with": "algotrader.marketdata.okx.OkxPublicClient (read-only, no credentials)",
+  "files": {
+    "instrument.json": {
+      "url": "https://www.okx.com/api/v5/public/instruments",
+      "params": {
+        "instType": "SWAP",
+        "instId": "BTC-USDT-SWAP"
+      },
+      "http_status": 200,
+      "retrieved_at": "2026-09-30T08:09:20.378303+00:00",
+      "sha256": "1a6eeb4c4cc625067010d0110718feaee4a6f03becc60f661b800acb4f5ac4e2",
+      "bytes": 1117
+    },
+    "trade_candles_1m.json": {
+      "url": "https://www.okx.com/api/v5/market/history-candles",
+      "params": {
+        "instId": "BTC-USDT-SWAP",
+        "bar": "1m",
+        "after": "1790755800000",
+        "before": "1790754599999",
+        "limit": "100"
+      },
+      "http_status": 200,
+      "retrieved_at": "2026-09-30T08:09:20.633785+00:00",
+      "sha256": "48d750b533708a4e2170393446ca3ea72514051c6696d95a6ab8c23cb574ec60",
+      "bytes": 1947
+    },
+    "mark_candles_1m.json": {
+      "url": "https://www.okx.com/api/v5/market/history-mark-price-candles",
+      "params": {
+        "instId": "BTC-USDT-SWAP",
+        "bar": "1m",
+        "after": "1790755800000",
+        "before": "1790754599999",
+        "limit": "100"
+      },
+      "http_status": 200,
+      "retrieved_at": "2026-09-30T08:09:20.929314+00:00",
+      "sha256": "9f61ac029da279afd9c302a0e419b33dd794744e16311e174dcc4f4372202155",
+      "bytes": 1240
+    },
+    "index_candles_1m.json": {
+      "url": "https://www.okx.com/api/v5/market/history-index-candles",
+      "params": {
+        "instId": "BTC-USDT",
+        "bar": "1m",
+        "after": "1790755800000",
+        "before": "1790754599999",
+        "limit": "100"
+      },
+      "http_status": 200,
+      "retrieved_at": "2026-09-30T08:09:21.209757+00:00",
+      "sha256": "f3d01a6dff73138133b619a30756b8a54d21939d8107dd00d9b7efe60ca082ea",
+      "bytes": 1256
+    },
+    "funding_rates.json": {
+      "url": "https://www.okx.com/api/v5/public/funding-rate-history",
+      "params": {
+        "instId": "BTC-USDT-SWAP",
+        "after": "1790755800000",
+        "before": "1790754599999",
+        "limit": "100"
+      },
+      "http_status": 200,
+      "retrieved_at": "2026-09-30T08:09:21.486249+00:00",
+      "sha256": "242dc6ece755676edc5e33efe2eb87a45c71bd58eb077acf4c6bfdfd6b8616d4",
+      "bytes": 227
+    },
+    "trade_candles_live_edge.json": {
+      "url": "https://www.okx.com/api/v5/market/history-candles",
+      "params": {
+        "instId": "BTC-USDT-SWAP",
+        "bar": "1m",
+        "limit": "3"
+      },
+      "http_status": 200,
+      "retrieved_at": "2026-09-30T08:09:21.767759+00:00",
+      "sha256": "3ae04bb45fc1bb39b95dfeeead5506fa13aee09f611711fc57f9d82b142fa633",
+      "bytes": 316
+    },
+    "error_51001.json": {
+      "url": "https://www.okx.com/api/v5/market/history-candles",
+      "params": {
+        "instId": "NOPE-SWAP",
+        "bar": "1m",
+        "limit": "2"
+      },
+      "http_status": 200,
+      "retrieved_at": "2026-09-30T08:09:22.289203+00:00",
+      "sha256": "230e2c076484f09587d279fd86ac17dce541f4acec83ffd9d40e60daf729f491",
+      "bytes": 97
+    }
+  }
+}

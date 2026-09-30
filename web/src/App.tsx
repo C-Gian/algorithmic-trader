@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { api, Decision, Health, JournalEvent, Manifest, PricePoint, Run, Snapshot } from "./api";
+import { DataView } from "./DataView";
 
 const TERMINAL = new Set(["completed", "cancelled", "failed"]);
 
@@ -102,7 +103,7 @@ function WorkerHealth({ health }: { health: Health | null }) {
   );
 }
 
-export function App() {
+function RunsView() {
   const [runs, setRuns] = useState<Run[]>([]);
   const [selected, setSelected] = useState<string | null>(selectedFromHash());
   const [snap, setSnap] = useState<Snapshot | null>(null);
@@ -457,5 +458,26 @@ export function App() {
         </main>
       </div>
     </div>
+  );
+}
+
+function viewFromHash(): "runs" | "data" {
+  return window.location.hash.startsWith("#data") ? "data" : "runs";
+}
+
+export function App() {
+  const [view, setView] = useState<"runs" | "data">(viewFromHash());
+  const go = (v: "runs" | "data") => {
+    window.location.hash = v === "data" ? "data" : "";
+    setView(v);
+  };
+  return (
+    <>
+      <nav className="topnav">
+        <button className={view === "runs" ? "on" : ""} onClick={() => go("runs")} data-testid="nav-runs">Runs (DEMO replay)</button>
+        <button className={view === "data" ? "on" : ""} onClick={() => go("data")} data-testid="nav-data">Data (market datasets)</button>
+      </nav>
+      {view === "runs" ? <RunsView /> : <DataView />}
+    </>
   );
 }

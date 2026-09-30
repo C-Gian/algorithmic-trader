@@ -176,3 +176,66 @@ export const api = {
   decisions: (id: string) => req<JournalEvent<Decision>[]>(`/api/runs/${id}/events?kind=decision&limit=5000`),
   manifest: (id: string) => req<Manifest>(`/api/runs/${id}/manifest`),
 };
+
+// ---- Market-data datasets (read-only; algotrader.marketdata.v1) ----
+
+export interface DatasetFamily {
+  family: string;
+  rows: number;
+  first_time: string | null;
+  last_time: string | null;
+  status: string;
+  expected_rows: number | null;
+  missing_rows: number | null;
+  gaps: number;
+}
+
+export interface DatasetSummary {
+  dataset_id: string;
+  schema_version: string;
+  source: string;
+  base_url: string;
+  inst_id: string;
+  requested: { start: string; end: string };
+  retrieved_at: string;
+  quality_status: string;
+  families: DatasetFamily[];
+  prior_versions: string[];
+}
+
+export interface QualityFinding {
+  family: string;
+  check: string;
+  severity: string;
+  count: number;
+  detail: string;
+  examples: string[];
+}
+
+export interface DatasetDetail {
+  summary: DatasetSummary;
+  manifest: {
+    availability_policy: string;
+    availability_policy_text: string;
+    retrieval_started_at: string;
+    retrieval_finished_at: string;
+    code_version: string | null;
+    raw_page_count: number;
+    identity_basis: string;
+    labels: string[];
+    instrument: Record<string, string | null>;
+    files: { name: string; sha256: string; bytes: number; rows: number | null }[];
+  };
+  quality: {
+    status: string;
+    scope_note: string;
+    findings: QualityFinding[];
+    families: { family: string; gaps: { first_missing_open_time: string; last_missing_open_time: string; missing_bars: number }[] }[];
+  };
+}
+
+export const dataApi = {
+  list: () => req<{ data_root: string; schema_version: string; datasets: DatasetSummary[] }>("/api/datasets"),
+  detail: (id: string) => req<DatasetDetail>(`/api/datasets/${id}`),
+  verify: (id: string) => req<{ ok: boolean; problems: string[] }>(`/api/datasets/${id}/verify`),
+};

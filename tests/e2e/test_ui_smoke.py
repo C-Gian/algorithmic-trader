@@ -44,10 +44,12 @@ class Stack:
             **os.environ,
             "ALGOTRADER_DATABASE_URL": database_url,
             "ALGOTRADER_ARTIFACT_ROOT": str(artifact_root),
+            "ALGOTRADER_DATA_ROOT": str(log_dir / "data"),
             "ALGOTRADER_WEB_DIST": str(WEB_DIST),
             "PYTHONUNBUFFERED": "1",
         }
         self.log_dir = log_dir
+        self.data_root = log_dir / "data"
         self.api = self._spawn("api", ["api", "--port", str(self.port)])
         self.worker: subprocess.Popen | None = None
         self.start_worker()
@@ -362,3 +364,47 @@ def test_full_api_and_worker_restart_preserves_run(stack, browser, evidence_dir,
         })
     finally:
         fresh.stop()
+
+
+def test_ui_data_view_shows_dataset_provenance_and_quality(stack, browser, evidence_dir):
+    """Owner-facing Data view over fixture-derived datasets (offline; no OKX access in CI)."""
+    sys.path.insert(0, str(ROOT / "tests"))
+    from okx_fake import CONFIRMED_END, FIXTURE_END, FIXTURE_START, FakeOkx, client
+
+    from algotrader.marketdata.dataset import acquire
+
+    clean = acquire(client(FakeOkx()), stack.data_root, FIXTURE_START, CONFIRMED_END).manifest
+    degraded = acquire(client(FakeOkx()), stack.data_root, FIXTURE_START, FIXTURE_END).manifest
+
+    ctx = browser.new_context(viewport={"width": 1400, "height": 1400})
+    page = ctx.new_page()
+    page.goto(stack.base)
+    page.get_by_test_id("nav-data").click()
+    expect(page.get_by_test_id("dataset-list")).to_contain_text(clean.dataset_id)
+    page.get_by_test_id("dataset-list").get_by_text(degraded.dataset_id).click()
+    detail = page.get_by_test_id("dataset-detail")
+    expect(page.get_by_test_id("dataset-id")).to_have_text(degraded.dataset_id)
+    expect(detail.get_by_test_id("dataset-quality")).to_have_text("DEGRADED")
+    expect(page.get_by_test_id("dataset-source")).to_contain_text("OKX · https://www.okx.com")
+    expect(page.get_by_test_id("dataset-instrument")).to_have_text("BTC-USDT-SWAP")
+    expect(page.get_by_test_id("dataset-schema")).to_have_text("algotrader.marketdata.v1")
+    expect(page.get_by_test_id("dataset-requested")).to_contain_text("2026-09-30 07:50:00 UTC")
+    families = page.get_by_test_id("dataset-families")
+    expect(families).to_contain_text("trade_candles_1m")
+    expect(families).to_contain_text("funding_rates")
+    expect(page.get_by_test_id("dataset-findings")).to_contain_text("incomplete_candle_rejected")
+    expect(page.get_by_test_id("dataset-findings")).to_contain_text("missing_intervals")
+    page.get_by_test_id("dataset-verify").click()
+    expect(page.get_by_test_id("dataset-verify-result")).to_contain_text("OK", timeout=10_000)
+    expect(page.get_by_test_id("dataset-provenance")).to_contain_text("request_log.jsonl")
+    page.screenshot(path=str(evidence_dir / "09-data-view-degraded-dataset.png"), full_page=True)
+    page.get_by_test_id("dataset-list").get_by_text(clean.dataset_id).click()
+    expect(detail.get_by_test_id("dataset-quality")).to_have_text("CLEAN")
+    page.screenshot(path=str(evidence_dir / "10-data-view-clean-dataset.png"), full_page=True)
+    ctx.close()
+    record(evidence_dir, "e2e-data-view", {
+        "note": "fixture-derived datasets (captured OKX responses served offline); not live data",
+        "clean": {"dataset_id": clean.dataset_id, "quality": clean.quality_status},
+        "degraded": {"dataset_id": degraded.dataset_id, "quality": degraded.quality_status},
+        "datasets_api": stack.get("/api/datasets")["datasets"],
+    })

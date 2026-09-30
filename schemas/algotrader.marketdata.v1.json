@@ -1,0 +1,1169 @@
+{
+  "$defs": {
+    "DatasetManifest": {
+      "additionalProperties": false,
+      "properties": {
+        "availability_policy": {
+          "title": "Availability Policy",
+          "type": "string"
+        },
+        "availability_policy_text": {
+          "title": "Availability Policy Text",
+          "type": "string"
+        },
+        "code_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Code Version"
+        },
+        "dataset_id": {
+          "title": "Dataset Id",
+          "type": "string"
+        },
+        "families": {
+          "items": {
+            "$ref": "#/$defs/FamilySummary"
+          },
+          "title": "Families",
+          "type": "array"
+        },
+        "files": {
+          "items": {
+            "$ref": "#/$defs/FileRef"
+          },
+          "title": "Files",
+          "type": "array"
+        },
+        "identity_basis": {
+          "title": "Identity Basis",
+          "type": "string"
+        },
+        "instrument": {
+          "$ref": "#/$defs/InstrumentSnapshot"
+        },
+        "labels": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Labels",
+          "type": "array"
+        },
+        "logical_request_key": {
+          "title": "Logical Request Key",
+          "type": "string"
+        },
+        "prior_versions": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Prior Versions",
+          "type": "array"
+        },
+        "quality_status": {
+          "$ref": "#/$defs/QualityStatus"
+        },
+        "raw_page_count": {
+          "title": "Raw Page Count",
+          "type": "integer"
+        },
+        "request": {
+          "$ref": "#/$defs/DatasetRequest"
+        },
+        "retrieval_finished_at": {
+          "format": "date-time",
+          "title": "Retrieval Finished At",
+          "type": "string"
+        },
+        "retrieval_started_at": {
+          "format": "date-time",
+          "title": "Retrieval Started At",
+          "type": "string"
+        },
+        "schema_version": {
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema_version",
+        "dataset_id",
+        "logical_request_key",
+        "labels",
+        "request",
+        "instrument",
+        "availability_policy",
+        "availability_policy_text",
+        "retrieval_started_at",
+        "retrieval_finished_at",
+        "code_version",
+        "families",
+        "quality_status",
+        "raw_page_count",
+        "identity_basis",
+        "prior_versions",
+        "files"
+      ],
+      "title": "DatasetManifest",
+      "type": "object"
+    },
+    "DatasetRequest": {
+      "additionalProperties": false,
+      "description": "The logical request. Its hash identifies 'the same request' across fetches.",
+      "properties": {
+        "bar": {
+          "const": "1m",
+          "default": "1m",
+          "title": "Bar",
+          "type": "string"
+        },
+        "base_url": {
+          "title": "Base Url",
+          "type": "string"
+        },
+        "end": {
+          "format": "date-time",
+          "title": "End",
+          "type": "string"
+        },
+        "families": {
+          "items": {
+            "$ref": "#/$defs/Family"
+          },
+          "title": "Families",
+          "type": "array"
+        },
+        "inst_id": {
+          "title": "Inst Id",
+          "type": "string"
+        },
+        "page_limit": {
+          "maximum": 100,
+          "minimum": 1,
+          "title": "Page Limit",
+          "type": "integer"
+        },
+        "source": {
+          "const": "okx",
+          "default": "okx",
+          "title": "Source",
+          "type": "string"
+        },
+        "start": {
+          "format": "date-time",
+          "title": "Start",
+          "type": "string"
+        }
+      },
+      "required": [
+        "base_url",
+        "inst_id",
+        "start",
+        "end",
+        "families",
+        "page_limit"
+      ],
+      "title": "DatasetRequest",
+      "type": "object"
+    },
+    "Family": {
+      "description": "In-scope source data families.",
+      "enum": [
+        "instrument",
+        "trade_candles_1m",
+        "mark_candles_1m",
+        "index_candles_1m",
+        "funding_rates"
+      ],
+      "title": "Family",
+      "type": "string"
+    },
+    "FamilyQuality": {
+      "additionalProperties": false,
+      "properties": {
+        "expected_rows": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Expected Rows"
+        },
+        "family": {
+          "$ref": "#/$defs/Family"
+        },
+        "first_time": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "First Time"
+        },
+        "gaps": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/Gap"
+          },
+          "title": "Gaps",
+          "type": "array"
+        },
+        "last_time": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Last Time"
+        },
+        "missing_rows": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Missing Rows"
+        },
+        "rows": {
+          "title": "Rows",
+          "type": "integer"
+        },
+        "status": {
+          "$ref": "#/$defs/QualityStatus"
+        }
+      },
+      "required": [
+        "family",
+        "status",
+        "rows",
+        "expected_rows",
+        "missing_rows",
+        "first_time",
+        "last_time"
+      ],
+      "title": "FamilyQuality",
+      "type": "object"
+    },
+    "FamilySummary": {
+      "additionalProperties": false,
+      "properties": {
+        "endpoint": {
+          "title": "Endpoint",
+          "type": "string"
+        },
+        "family": {
+          "$ref": "#/$defs/Family"
+        },
+        "first_time": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "First Time"
+        },
+        "last_time": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Last Time"
+        },
+        "outside_interval": {
+          "title": "Outside Interval",
+          "type": "integer"
+        },
+        "pages": {
+          "title": "Pages",
+          "type": "integer"
+        },
+        "rejected_incomplete": {
+          "title": "Rejected Incomplete",
+          "type": "integer"
+        },
+        "rows": {
+          "title": "Rows",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "family",
+        "endpoint",
+        "rows",
+        "pages",
+        "first_time",
+        "last_time",
+        "rejected_incomplete",
+        "outside_interval"
+      ],
+      "title": "FamilySummary",
+      "type": "object"
+    },
+    "FileRef": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "rows": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Rows"
+        },
+        "sha256": {
+          "title": "Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "sha256",
+        "bytes",
+        "rows",
+        "media_type"
+      ],
+      "title": "FileRef",
+      "type": "object"
+    },
+    "FundingRateEvent": {
+      "additionalProperties": false,
+      "description": "A source funding event. Not applied to any account in this version.",
+      "properties": {
+        "availability_policy": {
+          "title": "Availability Policy",
+          "type": "string"
+        },
+        "available_time": {
+          "format": "date-time",
+          "title": "Available Time",
+          "type": "string"
+        },
+        "formula_type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Formula Type"
+        },
+        "funding_rate": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Funding Rate",
+          "type": "string"
+        },
+        "funding_time": {
+          "format": "date-time",
+          "title": "Funding Time",
+          "type": "string"
+        },
+        "inst_type": {
+          "title": "Inst Type",
+          "type": "string"
+        },
+        "instrument_id": {
+          "title": "Instrument Id",
+          "type": "string"
+        },
+        "method": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Method"
+        },
+        "raw_page_ref": {
+          "title": "Raw Page Ref",
+          "type": "string"
+        },
+        "realized_rate": {
+          "anyOf": [
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Realized Rate"
+        },
+        "retrieved_at": {
+          "format": "date-time",
+          "title": "Retrieved At",
+          "type": "string"
+        }
+      },
+      "required": [
+        "instrument_id",
+        "inst_type",
+        "funding_time",
+        "funding_rate",
+        "realized_rate",
+        "method",
+        "formula_type",
+        "available_time",
+        "availability_policy",
+        "retrieved_at",
+        "raw_page_ref"
+      ],
+      "title": "FundingRateEvent",
+      "type": "object"
+    },
+    "Gap": {
+      "additionalProperties": false,
+      "properties": {
+        "first_missing_open_time": {
+          "format": "date-time",
+          "title": "First Missing Open Time",
+          "type": "string"
+        },
+        "last_missing_open_time": {
+          "format": "date-time",
+          "title": "Last Missing Open Time",
+          "type": "string"
+        },
+        "missing_bars": {
+          "title": "Missing Bars",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "first_missing_open_time",
+        "last_missing_open_time",
+        "missing_bars"
+      ],
+      "title": "Gap",
+      "type": "object"
+    },
+    "IndexCandle1m": {
+      "additionalProperties": false,
+      "description": "Index-price candle (no volume in the source).",
+      "properties": {
+        "availability_policy": {
+          "title": "Availability Policy",
+          "type": "string"
+        },
+        "available_time": {
+          "format": "date-time",
+          "title": "Available Time",
+          "type": "string"
+        },
+        "bar": {
+          "const": "1m",
+          "default": "1m",
+          "title": "Bar",
+          "type": "string"
+        },
+        "close": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Close",
+          "type": "string"
+        },
+        "close_time": {
+          "format": "date-time",
+          "title": "Close Time",
+          "type": "string"
+        },
+        "confirm": {
+          "title": "Confirm",
+          "type": "boolean"
+        },
+        "high": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "High",
+          "type": "string"
+        },
+        "index_id": {
+          "title": "Index Id",
+          "type": "string"
+        },
+        "instrument_id": {
+          "title": "Instrument Id",
+          "type": "string"
+        },
+        "low": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Low",
+          "type": "string"
+        },
+        "open": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Open",
+          "type": "string"
+        },
+        "open_time": {
+          "format": "date-time",
+          "title": "Open Time",
+          "type": "string"
+        },
+        "quality": {
+          "$ref": "#/$defs/RowQuality"
+        },
+        "quality_flags": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Quality Flags",
+          "type": "array"
+        },
+        "raw_page_ref": {
+          "title": "Raw Page Ref",
+          "type": "string"
+        },
+        "retrieved_at": {
+          "format": "date-time",
+          "title": "Retrieved At",
+          "type": "string"
+        }
+      },
+      "required": [
+        "instrument_id",
+        "open_time",
+        "close_time",
+        "open",
+        "high",
+        "low",
+        "close",
+        "confirm",
+        "available_time",
+        "availability_policy",
+        "retrieved_at",
+        "raw_page_ref",
+        "quality",
+        "index_id"
+      ],
+      "title": "IndexCandle1m",
+      "type": "object"
+    },
+    "InstrumentSnapshot": {
+      "additionalProperties": false,
+      "description": "Normalized source definition of the perpetual contract at retrieval time.",
+      "properties": {
+        "advertised_max_leverage": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Advertised Max Leverage"
+        },
+        "base_ccy": {
+          "title": "Base Ccy",
+          "type": "string"
+        },
+        "ct_mult": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Ct Mult",
+          "type": "string"
+        },
+        "ct_type": {
+          "const": "linear",
+          "title": "Ct Type",
+          "type": "string"
+        },
+        "ct_val": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Ct Val",
+          "type": "string"
+        },
+        "ct_val_ccy": {
+          "title": "Ct Val Ccy",
+          "type": "string"
+        },
+        "index_id": {
+          "title": "Index Id",
+          "type": "string"
+        },
+        "inst_family": {
+          "title": "Inst Family",
+          "type": "string"
+        },
+        "inst_id": {
+          "title": "Inst Id",
+          "type": "string"
+        },
+        "inst_type": {
+          "const": "SWAP",
+          "title": "Inst Type",
+          "type": "string"
+        },
+        "list_time": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "List Time"
+        },
+        "lot_sz": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Lot Sz",
+          "type": "string"
+        },
+        "min_sz": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Min Sz",
+          "type": "string"
+        },
+        "quote_ccy": {
+          "title": "Quote Ccy",
+          "type": "string"
+        },
+        "raw_page_ref": {
+          "title": "Raw Page Ref",
+          "type": "string"
+        },
+        "raw_sha256": {
+          "title": "Raw Sha256",
+          "type": "string"
+        },
+        "retrieved_at": {
+          "format": "date-time",
+          "title": "Retrieved At",
+          "type": "string"
+        },
+        "settle_ccy": {
+          "title": "Settle Ccy",
+          "type": "string"
+        },
+        "source": {
+          "const": "okx",
+          "default": "okx",
+          "title": "Source",
+          "type": "string"
+        },
+        "state": {
+          "title": "State",
+          "type": "string"
+        },
+        "tick_sz": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Tick Sz",
+          "type": "string"
+        },
+        "underlying": {
+          "title": "Underlying",
+          "type": "string"
+        }
+      },
+      "required": [
+        "inst_id",
+        "inst_type",
+        "ct_type",
+        "underlying",
+        "inst_family",
+        "index_id",
+        "base_ccy",
+        "quote_ccy",
+        "ct_val",
+        "ct_val_ccy",
+        "ct_mult",
+        "settle_ccy",
+        "tick_sz",
+        "lot_sz",
+        "min_sz",
+        "state",
+        "list_time",
+        "advertised_max_leverage",
+        "retrieved_at",
+        "raw_page_ref",
+        "raw_sha256"
+      ],
+      "title": "InstrumentSnapshot",
+      "type": "object"
+    },
+    "MarkCandle1m": {
+      "additionalProperties": false,
+      "description": "Mark-price candle (no volume in the source).",
+      "properties": {
+        "availability_policy": {
+          "title": "Availability Policy",
+          "type": "string"
+        },
+        "available_time": {
+          "format": "date-time",
+          "title": "Available Time",
+          "type": "string"
+        },
+        "bar": {
+          "const": "1m",
+          "default": "1m",
+          "title": "Bar",
+          "type": "string"
+        },
+        "close": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Close",
+          "type": "string"
+        },
+        "close_time": {
+          "format": "date-time",
+          "title": "Close Time",
+          "type": "string"
+        },
+        "confirm": {
+          "title": "Confirm",
+          "type": "boolean"
+        },
+        "high": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "High",
+          "type": "string"
+        },
+        "instrument_id": {
+          "title": "Instrument Id",
+          "type": "string"
+        },
+        "low": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Low",
+          "type": "string"
+        },
+        "open": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Open",
+          "type": "string"
+        },
+        "open_time": {
+          "format": "date-time",
+          "title": "Open Time",
+          "type": "string"
+        },
+        "quality": {
+          "$ref": "#/$defs/RowQuality"
+        },
+        "quality_flags": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Quality Flags",
+          "type": "array"
+        },
+        "raw_page_ref": {
+          "title": "Raw Page Ref",
+          "type": "string"
+        },
+        "retrieved_at": {
+          "format": "date-time",
+          "title": "Retrieved At",
+          "type": "string"
+        }
+      },
+      "required": [
+        "instrument_id",
+        "open_time",
+        "close_time",
+        "open",
+        "high",
+        "low",
+        "close",
+        "confirm",
+        "available_time",
+        "availability_policy",
+        "retrieved_at",
+        "raw_page_ref",
+        "quality"
+      ],
+      "title": "MarkCandle1m",
+      "type": "object"
+    },
+    "QualityFinding": {
+      "additionalProperties": false,
+      "properties": {
+        "check": {
+          "title": "Check",
+          "type": "string"
+        },
+        "count": {
+          "title": "Count",
+          "type": "integer"
+        },
+        "detail": {
+          "title": "Detail",
+          "type": "string"
+        },
+        "examples": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Examples",
+          "type": "array"
+        },
+        "family": {
+          "$ref": "#/$defs/Family"
+        },
+        "severity": {
+          "$ref": "#/$defs/Severity"
+        }
+      },
+      "required": [
+        "family",
+        "check",
+        "severity",
+        "count",
+        "detail"
+      ],
+      "title": "QualityFinding",
+      "type": "object"
+    },
+    "QualityReport": {
+      "additionalProperties": false,
+      "properties": {
+        "dataset_id": {
+          "title": "Dataset Id",
+          "type": "string"
+        },
+        "families": {
+          "items": {
+            "$ref": "#/$defs/FamilyQuality"
+          },
+          "title": "Families",
+          "type": "array"
+        },
+        "findings": {
+          "items": {
+            "$ref": "#/$defs/QualityFinding"
+          },
+          "title": "Findings",
+          "type": "array"
+        },
+        "schema_version": {
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "scope_note": {
+          "title": "Scope Note",
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/QualityStatus"
+        }
+      },
+      "required": [
+        "schema_version",
+        "dataset_id",
+        "status",
+        "scope_note",
+        "families",
+        "findings"
+      ],
+      "title": "QualityReport",
+      "type": "object"
+    },
+    "QualityStatus": {
+      "enum": [
+        "clean",
+        "warning",
+        "degraded",
+        "invalid"
+      ],
+      "title": "QualityStatus",
+      "type": "string"
+    },
+    "RawPageRef": {
+      "additionalProperties": false,
+      "description": "One source HTTP response, stored byte-for-byte.",
+      "properties": {
+        "base_url": {
+          "title": "Base Url",
+          "type": "string"
+        },
+        "bytes": {
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "family": {
+          "$ref": "#/$defs/Family"
+        },
+        "file": {
+          "title": "File",
+          "type": "string"
+        },
+        "http_status": {
+          "title": "Http Status",
+          "type": "integer"
+        },
+        "method": {
+          "const": "GET",
+          "default": "GET",
+          "title": "Method",
+          "type": "string"
+        },
+        "page_id": {
+          "title": "Page Id",
+          "type": "string"
+        },
+        "params": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Params",
+          "type": "object"
+        },
+        "path": {
+          "title": "Path",
+          "type": "string"
+        },
+        "retrieved_at": {
+          "format": "date-time",
+          "title": "Retrieved At",
+          "type": "string"
+        },
+        "rows": {
+          "title": "Rows",
+          "type": "integer"
+        },
+        "sha256": {
+          "title": "Sha256",
+          "type": "string"
+        },
+        "source_code": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Source Code"
+        }
+      },
+      "required": [
+        "page_id",
+        "family",
+        "base_url",
+        "path",
+        "params",
+        "retrieved_at",
+        "http_status",
+        "source_code",
+        "rows",
+        "sha256",
+        "bytes",
+        "file"
+      ],
+      "title": "RawPageRef",
+      "type": "object"
+    },
+    "RowQuality": {
+      "enum": [
+        "OK",
+        "INVALID"
+      ],
+      "title": "RowQuality",
+      "type": "string"
+    },
+    "Severity": {
+      "enum": [
+        "info",
+        "warning",
+        "degraded",
+        "invalid"
+      ],
+      "title": "Severity",
+      "type": "string"
+    },
+    "TradeCandle1m": {
+      "additionalProperties": false,
+      "description": "Traded-price candle. Volume units are preserved separately.",
+      "properties": {
+        "availability_policy": {
+          "title": "Availability Policy",
+          "type": "string"
+        },
+        "available_time": {
+          "format": "date-time",
+          "title": "Available Time",
+          "type": "string"
+        },
+        "bar": {
+          "const": "1m",
+          "default": "1m",
+          "title": "Bar",
+          "type": "string"
+        },
+        "close": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Close",
+          "type": "string"
+        },
+        "close_time": {
+          "format": "date-time",
+          "title": "Close Time",
+          "type": "string"
+        },
+        "confirm": {
+          "title": "Confirm",
+          "type": "boolean"
+        },
+        "high": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "High",
+          "type": "string"
+        },
+        "instrument_id": {
+          "title": "Instrument Id",
+          "type": "string"
+        },
+        "low": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Low",
+          "type": "string"
+        },
+        "open": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Open",
+          "type": "string"
+        },
+        "open_time": {
+          "format": "date-time",
+          "title": "Open Time",
+          "type": "string"
+        },
+        "quality": {
+          "$ref": "#/$defs/RowQuality"
+        },
+        "quality_flags": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Quality Flags",
+          "type": "array"
+        },
+        "raw_page_ref": {
+          "title": "Raw Page Ref",
+          "type": "string"
+        },
+        "retrieved_at": {
+          "format": "date-time",
+          "title": "Retrieved At",
+          "type": "string"
+        },
+        "volume_base": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Volume Base",
+          "type": "string"
+        },
+        "volume_base_ccy": {
+          "title": "Volume Base Ccy",
+          "type": "string"
+        },
+        "volume_contracts": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Volume Contracts",
+          "type": "string"
+        },
+        "volume_quote": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Volume Quote",
+          "type": "string"
+        },
+        "volume_quote_ccy": {
+          "title": "Volume Quote Ccy",
+          "type": "string"
+        }
+      },
+      "required": [
+        "instrument_id",
+        "open_time",
+        "close_time",
+        "open",
+        "high",
+        "low",
+        "close",
+        "confirm",
+        "available_time",
+        "availability_policy",
+        "retrieved_at",
+        "raw_page_ref",
+        "quality",
+        "volume_contracts",
+        "volume_base",
+        "volume_base_ccy",
+        "volume_quote",
+        "volume_quote_ccy"
+      ],
+      "title": "TradeCandle1m",
+      "type": "object"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "availability_policy": {
+    "id": "okx.completed_1m_bar_available_at_close.v1",
+    "text": "MODELING POLICY, not a measured publication fact: a confirmed (confirm=1) 1m candle is treated as available no earlier than its bar close (open_time + 60s). A funding-rate event is treated as available no earlier than its source funding_time. Unconfirmed candles (confirm=0) are never normalized as completed bars."
+  },
+  "public_contracts": {
+    "DatasetManifest": "#/$defs/DatasetManifest",
+    "FundingRateEvent": "#/$defs/FundingRateEvent",
+    "IndexCandle1m": "#/$defs/IndexCandle1m",
+    "InstrumentSnapshot": "#/$defs/InstrumentSnapshot",
+    "MarkCandle1m": "#/$defs/MarkCandle1m",
+    "QualityReport": "#/$defs/QualityReport",
+    "RawPageRef": "#/$defs/RawPageRef",
+    "TradeCandle1m": "#/$defs/TradeCandle1m"
+  },
+  "schema_version": "algotrader.marketdata.v1",
+  "title": "Algorithmic Trader market-data contracts (algotrader.marketdata.v1)"
+}
