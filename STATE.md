@@ -25,11 +25,11 @@ The human Owner independently decides capital allocation, position size, leverag
 
 **M3 — Trustworthy real-market observation and causal reasoning readiness**
 
-The application shell, immutable OKX evidence layer and pure causal feed/observable-state core are now accepted.
+The application shell, immutable OKX evidence layer, causal feed/observable-state core and prospective live recorder are accepted.
 
-M3 next prioritizes **prospective public recording** because true receipt timing and live-only information cannot be reconstructed retroactively.
+Before wiring real replay/state into the application, the Owner requested a deliberate **product-quality UI redesign** so the application becomes a credible, polished control/observation surface rather than an internal engineering panel.
 
-No professional trader intelligence enters M3 yet.
+This UI pass does not introduce professional trader intelligence.
 
 ## Accepted work
 
@@ -54,8 +54,6 @@ Accepted implementation:
 
 Acceptance evidence includes GitHub Actions run `36688980492`, successful public OKX integration, frozen `algotrader.marketdata.v1`, immutable source evidence and explicit event/availability/retrieval timing.
 
-Accepted WP-003 interpretations remain unchanged.
-
 ### WP-004 — Causal feed and observable market state pure core
 Accepted implementation:
 - `82e6c8488eec146dfb4fd170fe37966750a84f60`
@@ -64,34 +62,57 @@ Acceptance evidence:
 - GitHub Actions run `36708401496`: SUCCESS;
 - `checks`: SUCCESS;
 - `compose-smoke`: SUCCESS;
-- Director verified `algotrader.semantic.v1` and `algotrader.marketdata.v1` blobs are byte-identical to the pre-WP-004 base;
-- new `algotrader.feed.v1` is PROVISIONAL revision 1 with schema-drift/revision controls;
-- dataset evidence converts to deterministic role-specific feed events;
-- modeled availability delay can only postpone knowledge;
-- prefix/truncated-history invariance is tested;
-- observable state is pure, deterministic and independent of UI/DB/worker/trader/account modules;
-- invalid/unconfirmed evidence cannot enter valid state;
-- packaging-independent normalized feed-content identity is distinct from acquisition package identity.
+- `algotrader.feed.v1` PROVISIONAL revision 1;
+- deterministic causal ordering and prefix invariance;
+- role-specific traded/mark/index/funding channels;
+- explicit freshness/quality/missingness;
+- packaging-independent normalized feed-content identity.
 
-Accepted WP-004 interpretations:
-- `feedcontent.v1` identifies normalized market/feed content and intentionally excludes acquisition packaging and availability policy; those remain separately recorded;
-- `ordered_event_hash` includes provenance, so equivalent economic content acquired through different packages may have different ordered-event hashes;
-- a historical missing-slot quality event at the slot's modeled availability is a replay modeling convention, not proof that a live client observed the outage at that instant;
-- default 2-minute bar freshness and 240-event history are developer-inspection defaults only, not trader/research parameters;
-- sparse funding has no completeness schedule in WP-004;
-- live/incremental duplicate/idempotency protection must live in the future recorder/journal boundary rather than rely solely on the bounded observable-state history.
+Accepted interpretations remain:
+- modeled availability is a declared convention, not measured publication timing;
+- default freshness/history values are inspection defaults only;
+- live/incremental duplicate protection belongs at the recorder/journal boundary.
+
+### WP-005 — Prospective OKX public live recorder and measured receipt-time evidence
+Accepted implementation:
+- primary implementation `3dc890392223ea2634bda8b0c975b2c99c5ddc33`;
+- provenance hardening `0cd1ea00074a4740db2761ce00d6777e23540ba3`.
+
+Acceptance evidence:
+- GitHub Actions run `36712746921`: SUCCESS;
+- WP-005-R1 GitHub Actions run `36718997076`: SUCCESS;
+- both `checks` and `compose-smoke` passed on the final commit;
+- frozen/provisional `semantic.v1`, `marketdata.v1`, `feed.v1` and `recorder.v1` schema blobs are byte-identical across R1;
+- live public recording succeeded against OKX;
+- traded/mark/index completed-bar receipt timing is recorded prospectively;
+- evolving live funding snapshots are preserved separately from settled funding semantics;
+- append-only raw journal, crash recovery/finalization, hashes and clock-quality evidence are present;
+- first completed candle receipt becomes RECORDED feed availability without future-value leakage;
+- recorder job is durable and browser-independent;
+- source authority is enforced before network/artifact creation through one shared rule for recorder and historical OKX acquisition;
+- only secure syntactically official `okx.com` / `*.okx.com` endpoint forms are admitted.
+
+Accepted WP-005 interpretations:
+- `recv_utc_ns` is client-observed receipt time after the WebSocket/REST read returns, not exchange publication time;
+- library buffering/scheduling/network latency remain part of observed receipt delay;
+- crashed sessions finalize PARTIAL rather than resume;
+- live session latency evidence is session-specific and must not be promoted into a universal constant;
+- funding pre-settlement snapshots remain recorder evidence until a later professional process justifies a feed/state interpretation;
+- a host clock ahead of OKX (`server - local < 0`) implies offset-adjusted receipt delay is lower than raw delay; the earlier opposite wording in the executor report was prose-only and not a code defect.
 
 ## Repository history note
 
-PR #8 had been merged as `64f3fa7`. Commit `887dfe0` was later created from stale parent `b47b3cb` and contained only `strategic_reviews/CLAUDE-SR-001-REVIEW.md`, temporarily dropping the PR #8 tree from main.
+PR #8 had been merged as `64f3fa7`. Commit `887dfe0` was later created from stale parent `b47b3cb`, temporarily dropping the PR #8 tree from main.
 
 The history was repaired without rewriting shared history by merge commit:
 
 `ea88a978d3c44729f60705c332888116af3ecda6`
 
-Its resulting tree matches `64f3fa7`.
+Future local writes must start from a fresh:
 
-The commit graph alone does not prove which local command/tool moved the branch. Future local writes must start from a fresh `git pull --ff-only origin main`; force pushes remain prohibited.
+`git pull --ff-only origin main`
+
+Force pushes remain prohibited.
 
 ## SR-001 strategic direction
 
@@ -106,16 +127,17 @@ Director disposition:
 
 Accepted long-lived boundary:
 
-**market evidence → causal availability feed → centrally owned observable market state → later professional reasoning → MarketView / prediction / trade recommendation**
+**market evidence → causal availability feed → centrally owned observable market state → professional reasoning → MarketView / prediction / trade recommendation**
 
 ## Contract strategy
 
 Frozen:
 - `algotrader.semantic.v1` — synthetic shell;
-- `algotrader.marketdata.v1` — market evidence.
+- `algotrader.marketdata.v1` — historical/public market evidence.
 
 Provisional during M3:
-- `algotrader.feed.v1` — causal deliveries and observable state.
+- `algotrader.feed.v1`;
+- `algotrader.recorder.v1`.
 
 Do not introduce `semantic.v2` until the first real professional trader specification is designed.
 
@@ -125,59 +147,46 @@ Public/read-only reference source:
 
 **OKX `BTC-USDT-SWAP`**
 
-Source decision:
-`knowledge/market_sources/OKX-BTC-USDT-SWAP.md`
-
-This is a data/reference source choice, not a broker or automated-execution decision.
-
-## WP-005 review status
-
-Implementation under review:
-- `3dc890392223ea2634bda8b0c975b2c99c5ddc33`
-
-Verified by Director:
-- one fast-forward implementation commit over `de5f3cf970f4791ee4cd4ab6c170c3099ee824a0`;
-- GitHub Actions run `36712746921`: `checks` SUCCESS and `compose-smoke` SUCCESS;
-- frozen `algotrader.semantic.v1`, `algotrader.marketdata.v1` and provisional `algotrader.feed.v1` schema blobs are unchanged;
-- recorder contracts are separate as provisional `algotrader.recorder.v1`;
-- append-only journal, crash finalization, receipt-time semantics, first-completed-bar bridge, funding separation and durable recorder job/UI are materially consistent with WP-005;
-- current official OKX documentation supports the public/business WebSocket separation, candlestick channels, funding-rate public channel, system-time endpoint and regional OKX domains.
-
-One blocking correction remains before acceptance:
-
-**source authority validation**.
-
-The recorder currently validates URL scheme/path but does not validate that the configured host is actually an official OKX domain. The API accepts endpoint overrides, so a non-OKX HTTPS/WSS host could produce a session whose manifest still says `source="okx"`. Plain `ws://` is also currently accepted.
-
-The same source-authority weakness exists in the historical OKX public client: its configurable REST base URL validates HTTPS shape but not OKX host authority.
-
-This is a provenance/research-integrity issue, not a recorder-mechanics redesign.
+Official-source validation now applies to both historical acquisition and prospective recording.
 
 ## Active task
 
-**WP-005-R1 — Enforce official OKX source authority**
+**WP-006 — Product-grade application UI redesign**
 
 See `task.md`.
 
-## Why recorder comes before application replay integration
+This task is intentionally scheduled before real replay integration because the UI is the Owner's primary observation/control instrument and the current shell does not meet the required product-quality standard.
 
-Historical REST evidence cannot recover:
+## UI product direction
 
-- actual client receipt time of completed candles;
-- connection/reconnect behavior;
-- the evolving pre-settlement funding value visible live;
-- the precise delay between source market timestamps and what our process actually received.
+The application should look and behave like a serious premium trading/research product, while remaining honest about what is implemented.
 
-This evidence only accumulates prospectively, so recording starts before the observation-only replay/UI integration package.
+The redesigned information architecture should make the product hierarchy clear:
+
+1. **Market / Home** — future professional trader cockpit; currently shows honest not-yet-implemented states plus real system/data readiness.
+2. **Replay / Lab** — current synthetic DEMO replay and, later, real causal replay.
+3. **Data** — datasets, provenance, quality and future market-state inspection.
+4. **Recorder** — live public evidence collection and measured receipt timing.
+5. **Artifacts / Operations** — detailed run/evidence inspection where useful.
+
+The synthetic account/position path is DEMO scaffolding and must not dominate the main product experience.
+
+## What comes after WP-006
+
+Expected next package:
+
+**WP-007 — Durable observation-only real replay and observable-market-state integration**
+
+That package will wire accepted historical/recorded evidence through `feed.v1` / observable state into the durable worker and UI without introducing professional trader intelligence.
+
+After M3 observation/replay readiness, the Director will run the next strategic trader-design checkpoint before `semantic.v2` and the first real professional trader.
 
 ## Known non-blocking technical follow-ups
 
-- WP-003 `ctMult` zero/missing hardening was completed in WP-005.
 - WP-004 does not establish expected funding-settlement completeness.
 - current feed freshness defaults are inspection-only.
-- the WP-005 live completion report prose said a host clock ahead by ~0.26 s implied true delays were longer than raw delays; the implemented calculation is the opposite and is correct: with `offset = server - local < 0`, adjusted delay is lower than raw. This was a report-description mistake, not a code defect.
-
-None of these blocks WP-005-R1.
+- recorded pre-settlement funding has not yet been promoted into causal observable state.
+- no professional market-reading methodology is implemented yet.
 
 ## Base knowledge snapshot
 
@@ -185,9 +194,9 @@ None of these blocks WP-005-R1.
 
 ## Parallel pre-trader research gaps
 
-Before the first real professional trader specification, resolve only what the chosen trader requires, especially:
+Before the first real professional trader specification, resolve only what the selected professional process requires, especially:
 
-1. professional intraday multi-timeframe context → trigger → invalidation → target/management process;
+1. coherent intraday multi-timeframe context → trigger → invalidation → target/management process;
 2. causal structure/levels/support-resistance formalization;
 3. venue/data mechanics required by that process.
 
@@ -195,6 +204,6 @@ Before the first real professional trader specification, resolve only what the c
 
 Owner pulls latest `main`.
 
-Claude Code implements only WP-005-R1 from `task.md`.
+Claude Code executes only WP-006 from `task.md`, using its front-end design capability/skill as explicitly required by that task.
 
-After the narrow source-authority correction passes Director review, WP-005 can be accepted without repeating the full recorder implementation. The next expected package is durable observation-only real replay/UI integration using the accepted feed/state core and recorded-session evidence.
+After WP-006 completion, the Director independently reviews product quality, behavior preservation, screenshots and CI before acceptance.
