@@ -9,7 +9,6 @@ from __future__ import annotations
 import json
 import os
 import time
-import uuid
 from collections.abc import Iterator
 from datetime import UTC, datetime
 from pathlib import Path
@@ -19,12 +18,11 @@ import pyarrow.parquet as pq
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
-from psycopg.types.json import Jsonb
 from pydantic import BaseModel, Field
 
-from . import __version__, db
-from .contracts import TERMINAL_STATUSES, FaultMode, RunConfig
-from .synthetic import build_fixture
+from . import __version__, control, db
+from .contracts import SCHEMA_VERSION, FaultMode, ReplayControl, Run, RunConfig, RunProgress, RuntimeState
+from .control import TERMINAL
 from .worker import default_artifact_root, fetch_events
 
 DEFAULT_WEB_DIST = Path(__file__).resolve().parents[2] / "web" / "dist"
@@ -32,8 +30,58 @@ DEFAULT_WEB_DIST = Path(__file__).resolve().parents[2] / "web" / "dist"
 
 class StartRun(BaseModel):
     speed: float = Field(default=4.0, ge=0, le=1000)
+    paused: bool = False
     fault: FaultMode = FaultMode.NONE
     fault_at_step: int = Field(default=45, ge=0)
+
+
+class SetSpeed(BaseModel):
+    speed: float = Field(ge=0, le=1000)
+
+
+# A worker whose last heartbeat is older than this is reported as not alive.
+WORKER_ALIVE_SECONDS = 10.0
+# Minimum observed progress in the current throughput window before an ETA is shown.
+ETA_MIN_STEPS = 3
+ETA_MIN_SECONDS = 1.0
+
+
+def _runtime(row: dict[str, Any], lease_expired: bool) -> tuple[RuntimeState, str]:
+    status = row["status"]
+    if status in TERMINAL:
+        return RuntimeState(status), {
+            "completed": "finished all input bars",
+            "cancelled": "cancelled by user",
+            "failed": "failed; see error",
+        }[status]
+    if row["cancel_requested"]:
+        return RuntimeState.CANCEL_REQUESTED, "cancellation requested; worker will finalize the run"
+    if status == "running" and lease_expired:
+        return RuntimeState.RECOVERING, "lease expired (worker stopped heartbeating); awaiting reclaim by a worker"
+    if row["paused"]:
+        if row["step_budget"] > 0:
+            return RuntimeState.STEPPING, f"paused; {row['step_budget']} single step(s) pending"
+        if status == "running":
+            return RuntimeState.PAUSING, "pause requested; worker finishes the current bar"
+        return RuntimeState.PAUSED, "paused at a committed checkpoint; no worker holds the run"
+    if status == "running":
+        return RuntimeState.RUNNING, f"worker {row['lease_owner']} is processing bars"
+    return RuntimeState.QUEUED, "waiting for a worker"
+
+
+def _eta(row: dict[str, Any], state: RuntimeState, steps_done: int, now: datetime) -> tuple[float | None, str]:
+    """ETA only from throughput observed since the last claim/resume/speed change."""
+    if state != RuntimeState.RUNNING:
+        return None, f"unavailable while {state.value}"
+    since, base = row["throughput_since"], row["throughput_base_step"]
+    if since is None or base is None:
+        return None, "unavailable: no throughput observed yet"
+    window = (now - since).total_seconds()
+    done = steps_done - base
+    if done < ETA_MIN_STEPS or window < ETA_MIN_SECONDS:
+        return None, "unavailable: not enough progress observed since the last start/resume/speed change"
+    rate = done / window
+    return (row["total_steps"] - steps_done) / rate, f"observed {rate:.2f} bars/s over the last {window:.0f}s"
 
 
 def _run_view(row: dict[str, Any]) -> dict[str, Any]:
@@ -42,33 +90,42 @@ def _run_view(row: dict[str, Any]) -> dict[str, Any]:
     if row["started_at"]:
         elapsed = ((row["finished_at"] or now) - row["started_at"]).total_seconds()
     hb = row["heartbeat_at"]
-    return {
-        "run_id": row["run_id"],
-        "status": row["status"],
-        "config": row["config"],
-        "created_at": row["created_at"].isoformat(),
-        "started_at": row["started_at"].isoformat() if row["started_at"] else None,
-        "finished_at": row["finished_at"].isoformat() if row["finished_at"] else None,
-        "cancel_requested": row["cancel_requested"],
-        "attempt": row["attempt"],
-        "max_attempts": row["max_attempts"],
-        "recovery_log": row["recovery_log"],
-        "error": row["error"],
-        "lease_owner": row["lease_owner"],
-        "lease_expired": bool(
-            row["status"] == "running" and row["lease_expires_at"] and row["lease_expires_at"] < now
+    steps_done = row.get("steps_done") or 0
+    lease_expired = bool(row["status"] == "running" and row["lease_expires_at"] and row["lease_expires_at"] < now)
+    state, detail = _runtime(row, lease_expired)
+    eta, eta_basis = _eta(row, state, steps_done, now)
+    run = Run(
+        run_id=row["run_id"],
+        status=row["status"],
+        runtime_state=state,
+        runtime_detail=detail,
+        config=row["config"],
+        control=ReplayControl(paused=row["paused"], step_budget=row["step_budget"], speed=row["speed"]),
+        created_at=row["created_at"],
+        started_at=row["started_at"],
+        finished_at=row["finished_at"],
+        cancel_requested=row["cancel_requested"],
+        attempt=row["attempt"],
+        max_attempts=row["max_attempts"],
+        recovery_log=row["recovery_log"],
+        control_log=row["control_log"],
+        error=row["error"],
+        lease_owner=row["lease_owner"],
+        lease_expired=lease_expired,
+        has_manifest=row["manifest"] is not None,
+        progress=RunProgress(
+            steps_done=steps_done,
+            total_steps=row["total_steps"],
+            sim_time=row.get("ckpt_sim_time"),
+            heartbeat_at=hb,
+            heartbeat_age_seconds=(now - hb).total_seconds() if hb else None,
+            elapsed_seconds=elapsed,
+            eta_seconds=eta,
+            eta_basis=eta_basis,
         ),
-        "has_manifest": row["manifest"] is not None,
-        "progress": {
-            "steps_done": row.get("steps_done") or 0,
-            "total_steps": row["total_steps"],
-            "sim_time": row["ckpt_sim_time"].astimezone(UTC).isoformat() if row.get("ckpt_sim_time") else None,
-            "heartbeat_at": hb.isoformat() if hb else None,
-            "heartbeat_age_seconds": (now - hb).total_seconds() if hb else None,
-            "elapsed_seconds": elapsed,
-        },
-        "labels": ["DEMO", "SYNTHETIC"],
-    }
+        labels=("DEMO", "SYNTHETIC"),
+    )
+    return run.model_dump(mode="json")
 
 
 RUN_SELECT = """
@@ -109,29 +166,74 @@ def create_app(database_url: str | None = None, artifact_root: Path | None = Non
     def health() -> dict[str, Any]:
         with conn() as c:
             c.execute("SELECT 1")
-            worker = c.execute(
+            running = c.execute(
                 "SELECT max(heartbeat_at) AS hb FROM runs WHERE status = 'running'"
             ).fetchone()
+            workers = c.execute(
+                """
+                SELECT worker_id, host, pid, started_at, current_run,
+                       extract(epoch FROM now() - heartbeat_at)::float8 AS age
+                FROM workers ORDER BY heartbeat_at DESC LIMIT 10
+                """
+            ).fetchall()
+        alive = [w for w in workers if w["age"] < WORKER_ALIVE_SECONDS]
         return {
             "status": "ok",
             "version": __version__,
+            "schema_version": SCHEMA_VERSION,
             "database": "ok",
-            "latest_running_heartbeat": worker["hb"].isoformat() if worker["hb"] else None,
+            "latest_running_heartbeat": running["hb"].isoformat() if running["hb"] else None,
+            "workers": {
+                "alive": len(alive),
+                "alive_threshold_seconds": WORKER_ALIVE_SECONDS,
+                "recent": [
+                    {
+                        "worker_id": w["worker_id"],
+                        "host": w["host"],
+                        "pid": w["pid"],
+                        "started_at": w["started_at"].isoformat(),
+                        "heartbeat_age_seconds": round(w["age"], 3),
+                        "current_run": w["current_run"],
+                        "alive": w["age"] < WORKER_ALIVE_SECONDS,
+                    }
+                    for w in workers[:5]
+                ],
+            },
             "labels": ["DEMO", "SYNTHETIC"],
         }
 
     @app.post("/api/runs", status_code=201)
     def start_run(body: StartRun) -> dict[str, Any]:
-        cfg = RunConfig(speed=body.speed, fault=body.fault, fault_at_step=body.fault_at_step)
-        fixture = build_fixture(cfg.fixture_id, cfg.seed)
-        run_id = f"run-{datetime.now(UTC):%Y%m%dT%H%M%S}-{uuid.uuid4().hex[:6]}"
-        with conn() as c, c.transaction():
-            c.execute(
-                "INSERT INTO runs (run_id, status, config, total_steps) VALUES (%s, 'queued', %s, %s)",
-                (run_id, Jsonb(cfg.model_dump(mode="json")), fixture.total_steps),
-            )
+        cfg = RunConfig(fault=body.fault, fault_at_step=body.fault_at_step)
         with conn() as c:
+            run_id = control.create_run(c, cfg, speed=body.speed, paused=body.paused)
             return _run_view(get_run(c, run_id))
+
+    def command(run_id: str, fn, *args) -> dict[str, Any]:
+        with conn() as c:
+            try:
+                fn(c, run_id, *args)
+            except control.RunNotFound:
+                raise HTTPException(404, f"run {run_id} not found") from None
+            except control.ControlRejected as exc:
+                raise HTTPException(409, str(exc)) from None
+            return _run_view(get_run(c, run_id))
+
+    @app.post("/api/runs/{run_id}/pause")
+    def pause_run(run_id: str) -> dict[str, Any]:
+        return command(run_id, control.pause)
+
+    @app.post("/api/runs/{run_id}/resume")
+    def resume_run(run_id: str) -> dict[str, Any]:
+        return command(run_id, control.resume)
+
+    @app.post("/api/runs/{run_id}/step")
+    def step_run(run_id: str) -> dict[str, Any]:
+        return command(run_id, control.step)
+
+    @app.post("/api/runs/{run_id}/speed")
+    def speed_run(run_id: str, body: SetSpeed) -> dict[str, Any]:
+        return command(run_id, control.set_speed, body.speed)
 
     @app.get("/api/runs")
     def list_runs(limit: int = 50) -> list[dict[str, Any]]:
@@ -146,13 +248,7 @@ def create_app(database_url: str | None = None, artifact_root: Path | None = Non
 
     @app.post("/api/runs/{run_id}/cancel")
     def cancel_run(run_id: str) -> dict[str, Any]:
-        with conn() as c:
-            with c.transaction():
-                row = get_run(c, run_id)
-                if row["status"] in {s.value for s in TERMINAL_STATUSES}:
-                    raise HTTPException(409, f"run already {row['status']}")
-                c.execute("UPDATE runs SET cancel_requested = true WHERE run_id = %s", (run_id,))
-            return _run_view(get_run(c, run_id))
+        return command(run_id, control.cancel)
 
     @app.get("/api/runs/{run_id}/snapshot")
     def run_snapshot(run_id: str) -> dict[str, Any]:
@@ -206,18 +302,21 @@ def create_app(database_url: str | None = None, artifact_root: Path | None = Non
                     run = snap["run"]
                     key = (
                         run["status"],
+                        run["runtime_state"],
                         run["progress"]["steps_done"],
                         run["attempt"],
                         len(run["recovery_log"]),
+                        len(run["control_log"]),
                         run["lease_expired"],
                         run["cancel_requested"],
+                        tuple(run["control"].values()),
                     )
                     if key != last_key or time.monotonic() - last_sent >= 2:
                         yield f"event: snapshot\ndata: {json.dumps(snap)}\n\n"
                         last_key, last_sent = key, time.monotonic()
                     else:
                         yield ": keep-alive\n\n"
-                    if run["status"] in {s.value for s in TERMINAL_STATUSES}:
+                    if run["status"] in TERMINAL:
                         yield "event: end\ndata: {}\n\n"
                         return
                     time.sleep(0.5)

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { api, Decision, JournalEvent, Manifest, PricePoint, Run, Snapshot } from "./api";
+import { api, Decision, Health, JournalEvent, Manifest, PricePoint, Run, Snapshot } from "./api";
 
 const TERMINAL = new Set(["completed", "cancelled", "failed"]);
 
@@ -73,7 +73,33 @@ function PriceChart({ points }: { points: PricePoint[] }) {
 }
 
 function RunStatusBadge({ run }: { run: Run }) {
-  return <span className={`badge ${run.status}`} data-testid="run-status">{run.status.toUpperCase()}</span>;
+  return (
+    <span className={`badge ${run.runtime_state}`} data-testid="run-status" title={run.runtime_detail}>
+      {run.runtime_state.replace("_", " ").toUpperCase()}
+    </span>
+  );
+}
+
+function speedLabel(v: number): string {
+  return v === 0 ? "max" : `${v} bar${v === 1 ? "" : "s"}/s`;
+}
+
+function WorkerHealth({ health }: { health: Health | null }) {
+  if (!health) return <span data-testid="worker-health" className="warn">unknown (API unreachable)</span>;
+  const w = health.workers;
+  const last = w.recent[0];
+  if (w.alive === 0) {
+    return (
+      <span data-testid="worker-health" className="warn">
+        no live worker{last ? ` (last heartbeat ${fmtSecs(last.heartbeat_age_seconds)} ago)` : ""} — runs cannot progress
+      </span>
+    );
+  }
+  return (
+    <span data-testid="worker-health">
+      {w.alive} alive · last heartbeat {fmtSecs(last.heartbeat_age_seconds)} ago
+    </span>
+  );
 }
 
 export function App() {
@@ -87,11 +113,13 @@ export function App() {
   const [fault, setFault] = useState("none");
   const [error, setError] = useState<string | null>(null);
   const [live, setLive] = useState(false);
+  const [health, setHealth] = useState<Health | null>(null);
 
   const refreshRuns = useCallback(async () => {
     try {
-      const rs = await api.listRuns();
+      const [rs, h] = await Promise.all([api.listRuns(), api.health()]);
       setRuns(rs);
+      setHealth(h);
       setSelected((cur) => cur ?? rs[0]?.run_id ?? null);
       setError(null);
     } catch (e) {
@@ -152,9 +180,11 @@ export function App() {
     }
   };
 
-  const cancel = async (id: string) => {
+  // Control commands are persisted by the backend; the UI only reflects the returned state.
+  const command = async (fn: () => Promise<Run>) => {
     try {
-      await api.cancelRun(id);
+      const updated = await fn();
+      setSnap((s) => (s && s.run.run_id === updated.run_id ? { ...s, run: updated } : s));
       await refreshRuns();
     } catch (e) {
       setError((e as Error).message);
@@ -232,16 +262,62 @@ export function App() {
                   <RunStatusBadge run={run} />
                   <span className={`live ${live ? "on" : ""}`}>{live ? "● live" : "○ idle"}</span>
                   {!TERMINAL.has(run.status) && (
-                    <button className="secondary" onClick={() => cancel(run.run_id)} disabled={run.cancel_requested} data-testid="cancel-run">
+                    <button className="secondary" onClick={() => command(() => api.cancelRun(run.run_id))} disabled={run.cancel_requested} data-testid="cancel-run">
                       {run.cancel_requested ? "Cancelling…" : "Cancel"}
                     </button>
                   )}
                 </div>
+                {!TERMINAL.has(run.status) && !run.cancel_requested && (
+                  <div className="controls" data-testid="replay-controls">
+                    {run.control.paused ? (
+                      <>
+                        <button onClick={() => command(() => api.resumeRun(run.run_id))} data-testid="resume-run">Resume</button>
+                        <button
+                          onClick={() => command(() => api.stepRun(run.run_id))}
+                          disabled={run.progress.steps_done + run.control.step_budget >= run.progress.total_steps}
+                          data-testid="step-run"
+                        >
+                          Step one bar
+                        </button>
+                      </>
+                    ) : (
+                      <button onClick={() => command(() => api.pauseRun(run.run_id))} data-testid="pause-run">Pause</button>
+                    )}
+                    <label className="inline">
+                      Speed
+                      <select
+                        value={run.control.speed}
+                        onChange={(e) => command(() => api.setSpeed(run.run_id, Number(e.target.value)))}
+                        data-testid="run-speed"
+                      >
+                        {[...new Set([...SPEEDS.map((s) => s.value), run.control.speed])].map((v) => (
+                          <option key={v} value={v}>{speedLabel(v)}</option>
+                        ))}
+                      </select>
+                    </label>
+                    <span className="muted">Speed changes pacing only, never decisions.</span>
+                  </div>
+                )}
                 <progress value={run.progress.steps_done} max={run.progress.total_steps} />
                 <div className="grid4">
-                  <div><label>Progress</label><span data-testid="progress">{run.progress.steps_done}/{run.progress.total_steps}</span></div>
+                  <div>
+                    <label>Runtime state</label>
+                    <span data-testid="runtime-state" className={["recovering", "failed"].includes(run.runtime_state) ? "warn" : ""}>
+                      {run.runtime_state.replace("_", " ")}
+                    </span>
+                    <div className="muted small" data-testid="runtime-detail">{run.runtime_detail}</div>
+                  </div>
+                  <div><label>Progress (bars)</label><span data-testid="progress">{run.progress.steps_done}/{run.progress.total_steps}</span></div>
                   <div><label>Simulation time</label><span data-testid="sim-time">{fmtTime(obs?.available_time ?? run.progress.sim_time)}</span></div>
                   <div><label>Elapsed</label><span>{fmtSecs(run.progress.elapsed_seconds)}</span></div>
+                  <div>
+                    <label>ETA</label>
+                    <span data-testid="eta" title={run.progress.eta_basis}>
+                      {run.progress.eta_seconds === null ? "unavailable" : fmtSecs(run.progress.eta_seconds)}
+                    </span>
+                    <div className="muted small">{run.progress.eta_basis}</div>
+                  </div>
+                  <div><label>Worker</label><WorkerHealth health={health} /></div>
                   <div>
                     <label>Heartbeat</label>
                     <span className={run.lease_expired ? "warn" : ""}>
@@ -250,7 +326,7 @@ export function App() {
                     </span>
                   </div>
                   <div><label>Attempt</label><span>{run.attempt}/{run.max_attempts}</span></div>
-                  <div><label>Speed</label><span>{run.config.speed === 0 ? "max" : `${run.config.speed} bars/s`}</span></div>
+                  <div><label>Speed</label><span data-testid="speed-now">{speedLabel(run.control.speed)}</span></div>
                   <div><label>Fixture</label><span>{run.config.fixture_id} · seed {run.config.seed}</span></div>
                   <div><label>Last price</label><span data-testid="last-price">{fmtNum(obs?.close)}</span></div>
                 </div>
@@ -261,6 +337,20 @@ export function App() {
                     <ul>
                       {run.recovery_log.map((r, i) => (
                         <li key={i}><b>attempt {r.attempt} · {r.event}</b> — {r.detail}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {run.control_log.length > 1 && (
+                  <div className="recovery" data-testid="control-log">
+                    <label>Replay control log (operational, not part of the decision trace)</label>
+                    <ul>
+                      {run.control_log.slice(-6).map((c, i) => (
+                        <li key={i}>
+                          <b>{c.command}</b>
+                          {c.at_step !== undefined && ` at bar ${String(c.at_step)}`}
+                          {c.speed !== undefined && ` · speed ${speedLabel(Number(c.speed))}`} · {fmtTime(c.at)}
+                        </li>
                       ))}
                     </ul>
                   </div>

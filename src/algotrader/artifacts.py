@@ -19,7 +19,7 @@ from typing import Any
 import pyarrow as pa
 import pyarrow.parquet as pq
 
-from .contracts import SCHEMA_VERSION, ArtifactRef, RunConfig, RunManifest, RunStatus
+from .contracts import SCHEMA_VERSION, ArtifactRef, ReplayControl, RunConfig, RunManifest, RunStatus
 from .engine import INITIAL_COLLATERAL, Engine, canonical_json, trace_hash
 from .validation import validate_run
 
@@ -156,7 +156,8 @@ def _report(manifest: RunManifest, v: dict[str, Any]) -> str:
         "Dummy P&L is not research evidence.**",
         "",
         f"- Status: `{manifest.status}`" + (f" — {manifest.error}" if manifest.error else ""),
-        f"- Engine: `{manifest.engine_version}`; code `{manifest.code_version}`",
+        f"- Engine: `{manifest.engine_version}`; code `{manifest.code_version}`; "
+        f"contracts `{manifest.schema_version}`",
         f"- Fixture: `{manifest.fixture['fixture_id']}` seed `{manifest.fixture['seed']}` "
         f"sha256 `{manifest.fixture['content_sha256'][:16]}…`",
         f"- Steps: {manifest.steps_processed}/{manifest.total_steps}; attempts: {manifest.attempts}",
@@ -169,6 +170,12 @@ def _report(manifest: RunManifest, v: dict[str, Any]) -> str:
     if manifest.recovery_log:
         lines += ["", "## Recovery log", ""]
         lines += [f"- attempt {r['attempt']}: {r['event']} — {r['detail']}" for r in manifest.recovery_log]
+    if manifest.control_log:
+        lines += ["", "## Replay control log (operational; not part of the semantic trace)", ""]
+        lines += [
+            f"- {r['at']}: {r['command']} " + ", ".join(f"{k}={v}" for k, v in r.items() if k not in ("at", "command"))
+            for r in manifest.control_log
+        ]
     return "\n".join(lines) + "\n"
 
 
@@ -254,6 +261,8 @@ def write_run_artifacts(
         total_steps=run["total_steps"],
         attempts=run["attempt"],
         recovery_log=tuple(run["recovery_log"]),
+        control_log=tuple(run["control_log"]),
+        replay_control=ReplayControl(paused=run["paused"], step_budget=run["step_budget"], speed=run["speed"]),
         error=error,
         semantic_trace_hash=trace_hash(events),
         event_count=len(events),

@@ -13,17 +13,7 @@ from algotrader.engine import Engine
 from algotrader.risk import RiskPolicy
 from algotrader.synthetic import build_fixture
 
-KIND_TO_CONTRACT = {
-    "observation": c.MarketObservation,
-    "market_view": c.MarketView,
-    "trade_plan": c.TradePlan,
-    "risk_decision": c.RiskDecision,
-    "decision": c.Decision,
-    "order_intent": c.OrderIntent,
-    "order": c.Order,
-    "fill": c.Fill,
-    "account": c.AccountSnapshot,
-}
+KIND_TO_CONTRACT = c.EVENT_KIND_CONTRACTS
 
 ALL_CONTRACTS = [
     c.InstrumentIdentity,
@@ -42,6 +32,7 @@ ALL_CONTRACTS = [
     c.Run,
     c.RunProgress,
     c.RunConfig,
+    c.ReplayControl,
     c.RunManifest,
 ]
 
@@ -101,12 +92,20 @@ def test_risk_policy_cannot_exceed_1x_exposure():
         RiskPolicy(max_exposure_fraction=Decimal("1.5"))
 
 
-def test_run_config_validates_speed_and_fault():
+def test_run_config_validates_fault_and_excludes_pacing():
     assert c.RunConfig().fault == c.FaultMode.NONE
     with pytest.raises(ValidationError):
-        c.RunConfig(speed=-1)
-    with pytest.raises(ValidationError):
         c.RunConfig(fault="explode")
+    with pytest.raises(ValidationError):  # speed is operational control, not a pinned input
+        c.RunConfig(speed=4)
+
+
+def test_replay_control_validates_speed_and_step_budget():
+    assert c.ReplayControl(paused=True, step_budget=1, speed=0).paused
+    with pytest.raises(ValidationError):
+        c.ReplayControl(paused=False, step_budget=0, speed=-1)
+    with pytest.raises(ValidationError):
+        c.ReplayControl(paused=False, step_budget=-1, speed=1)
 
 
 def test_observation_times_are_explicit():

@@ -8,7 +8,15 @@ no-op and cannot duplicate fills or accounting events.
 
 If a worker dies, its lease expires; the next worker reclaims the run,
 records the recovery, and resumes from the last committed checkpoint. After
-``max_attempts`` the run becomes ``failed`` with an explicit explanation.
+``max_attempts`` consecutive interruptions without a committed step the run
+becomes ``failed`` with an explicit explanation. Ordinary restarts of a run
+that keeps making progress therefore never exhaust the attempts.
+
+Replay control (see ``control.py``) is read from the run row before every
+step and while pacing. A paused run is parked at its committed checkpoint
+and its lease released, so it holds no worker and survives any restart. A
+STEP grant is consumed in the same transaction as the step it allowed.
+Speed only changes sleeping between steps; it never reaches the engine.
 """
 
 from __future__ import annotations
@@ -78,6 +86,7 @@ class Worker:
         self.crash = crash
         self.sleep = sleep
         self._conn: psycopg.Connection | None = None
+        self._beat_at = 0.0
 
     # -- connection ---------------------------------------------------------
 
@@ -98,6 +107,7 @@ class Worker:
         log.info("worker %s started", self.worker_id)
         while not should_stop():
             try:
+                self.beat(None)
                 if not self.run_once():
                     self.sleep(self.poll_interval)
             except (psycopg.OperationalError, LeaseLost) as exc:
@@ -118,6 +128,22 @@ class Worker:
             self.process(run)
         return True
 
+    # -- worker health -------------------------------------------------------
+
+    def beat(self, current_run: str | None, force: bool = False) -> None:
+        """Record worker liveness (throttled to ~1/s) for runtime health display."""
+        now = time.monotonic()
+        if not force and now - self._beat_at < 1.0:
+            return
+        self._beat_at = now
+        self.conn.execute(
+            """
+            INSERT INTO workers (worker_id, host, pid, current_run) VALUES (%s, %s, %s, %s)
+            ON CONFLICT (worker_id) DO UPDATE SET heartbeat_at = now(), current_run = excluded.current_run
+            """,
+            (self.worker_id, socket.gethostname(), os.getpid(), current_run),
+        )
+
     # -- lease --------------------------------------------------------------
 
     def claim(self) -> tuple[dict[str, Any], str | None] | None:
@@ -127,7 +153,8 @@ class Worker:
                 """
                 SELECT r.*, c.next_step AS ckpt_step
                 FROM runs r LEFT JOIN run_checkpoints c USING (run_id)
-                WHERE r.status = 'queued'
+                WHERE (r.status IN ('queued', 'paused')
+                       AND (NOT r.paused OR r.step_budget > 0 OR r.cancel_requested))
                    OR (r.status = 'running' AND r.lease_expires_at < now())
                 ORDER BY r.created_at
                 LIMIT 1
@@ -137,9 +164,13 @@ class Worker:
             if run is None:
                 return None
             recovery_log = list(run["recovery_log"])
-            attempt = run["attempt"] + 1
+            reclaimed = run["status"] == RunStatus.RUNNING
+            # attempt counts worker incarnations: the first claim plus every
+            # reclaim after a lost lease (pause/resume does not count).
+            attempt = run["attempt"] + 1 if reclaimed or run["attempt"] == 0 else run["attempt"]
+            interruptions = run["interruptions"] + 1 if reclaimed else run["interruptions"]
             fail_reason = None
-            if run["status"] == RunStatus.RUNNING:
+            if reclaimed:
                 resume = run["ckpt_step"] or 0
                 recovery_log.append(
                     {
@@ -153,9 +184,9 @@ class Worker:
                         ),
                     }
                 )
-                if attempt > run["max_attempts"]:
+                if interruptions >= run["max_attempts"]:
                     fail_reason = (
-                        f"worker interrupted on {run['attempt']} consecutive attempts "
+                        f"worker interrupted on {interruptions} consecutive attempts "
                         f"(max {run['max_attempts']}); last committed step {resume} of {run['total_steps']}. "
                         "Run marked failed; no further automatic recovery."
                     )
@@ -163,29 +194,51 @@ class Worker:
                 """
                 UPDATE runs SET status = 'running', lease_owner = %s,
                     lease_expires_at = now() + make_interval(secs => %s),
-                    heartbeat_at = now(), attempt = %s,
-                    started_at = coalesce(started_at, now()), recovery_log = %s
+                    heartbeat_at = now(), attempt = %s, interruptions = %s,
+                    started_at = coalesce(started_at, now()), recovery_log = %s,
+                    throughput_since = now(), throughput_base_step = %s
                 WHERE run_id = %s
                 """,
-                (self.worker_id, self.lease_seconds, attempt, Jsonb(recovery_log), run["run_id"]),
+                (self.worker_id, self.lease_seconds, attempt, interruptions, Jsonb(recovery_log),
+                 run["ckpt_step"] or 0, run["run_id"]),
             )
             run.update(status="running", attempt=attempt, lease_owner=self.worker_id, recovery_log=recovery_log)
         log.info("claimed %s attempt %s", run["run_id"], attempt)
         return run, fail_reason
 
-    def heartbeat(self, run_id: str) -> bool:
-        """Extend the lease. Returns cancel_requested. Raises LeaseLost if fenced out."""
+    def control(self, run_id: str) -> dict[str, Any]:
+        """Extend the lease and read the persisted replay control.
+
+        Returns cancel_requested/paused/step_budget/speed. Raises LeaseLost if fenced out.
+        """
         row = self.conn.execute(
-            """
+            f"""
             UPDATE runs SET heartbeat_at = now(), lease_expires_at = now() + make_interval(secs => %s)
             WHERE run_id = %s AND lease_owner = %s AND status = 'running'
-            RETURNING cancel_requested
+            RETURNING {_CONTROL_COLUMNS}
             """,
             (self.lease_seconds, run_id, self.worker_id),
         ).fetchone()
         if row is None:
             raise LeaseLost(run_id)
-        return row["cancel_requested"]
+        self.beat(run_id)
+        return row
+
+    def park(self, run_id: str, at_step: int) -> bool:
+        """Release a paused run at its committed checkpoint. False if control changed meanwhile."""
+        note = {"at": _now(), "command": "parked", "at_step": at_step, "worker": self.worker_id}
+        parked = self.conn.execute(
+            """
+            UPDATE runs SET status = 'paused', lease_owner = NULL, lease_expires_at = NULL,
+                heartbeat_at = now(), control_log = control_log || %s
+            WHERE run_id = %s AND lease_owner = %s AND status = 'running'
+              AND paused AND step_budget = 0 AND NOT cancel_requested
+            """,
+            (Jsonb([note]), run_id, self.worker_id),
+        ).rowcount
+        if parked:
+            log.info("%s paused at step %s; parked", run_id, at_step)
+        return bool(parked)
 
     # -- processing -----------------------------------------------------------
 
@@ -202,21 +255,26 @@ class Worker:
         new_state: EngineState,
         events: list[Event],
         before_commit: Callable[[], None] | None = None,
-    ) -> bool:
-        """Atomically journal one step. Returns cancel_requested.
+        consume_step: bool = False,
+    ) -> dict[str, Any]:
+        """Atomically journal one step. Returns the replay control after it.
 
+        ``consume_step`` marks a step taken on a STEP grant; the grant is used
+        up in the same transaction, so a rolled-back step keeps its grant.
         Raises ``_AlreadyApplied`` (writing nothing) when this step was already
         committed, e.g. when re-processing after an interruption.
         """
         conn = self.conn
         with conn.transaction():
             fence = conn.execute(
-                """
-                UPDATE runs SET heartbeat_at = now(), lease_expires_at = now() + make_interval(secs => %s)
+                f"""
+                UPDATE runs SET heartbeat_at = now(), lease_expires_at = now() + make_interval(secs => %s),
+                    interruptions = 0,
+                    step_budget = CASE WHEN %s THEN greatest(step_budget - 1, 0) ELSE step_budget END
                 WHERE run_id = %s AND lease_owner = %s AND status = 'running'
-                RETURNING cancel_requested
+                RETURNING {_CONTROL_COLUMNS}
                 """,
-                (self.lease_seconds, run_id, self.worker_id),
+                (self.lease_seconds, consume_step, run_id, self.worker_id),
             ).fetchone()
             if fence is None:
                 raise LeaseLost(run_id)
@@ -249,7 +307,7 @@ class Worker:
             if cas.rowcount == 0:
                 # The checkpoint is not at expected_step: this step was already
                 # committed. Roll back (nothing written) and let the caller reload.
-                raise _AlreadyApplied(fence["cancel_requested"])
+                raise _AlreadyApplied(fence)
             with conn.cursor() as cur:
                 cur.executemany(
                     "INSERT INTO run_events (run_id, seq, step, kind, sim_time, payload) VALUES (%s, %s, %s, %s, %s, %s)",
@@ -257,7 +315,7 @@ class Worker:
                 )
             if before_commit is not None:
                 before_commit()
-        return fence["cancel_requested"]
+        return fence
 
     def _fault_hook(self, run: dict[str, Any], cfg: RunConfig, step: int) -> Callable[[], None] | None:
         """If a controlled fault is due at this step, record it and return the crash hook.
@@ -292,21 +350,34 @@ class Worker:
         state = self.load_state(run_id, engine)
         total = engine.fixture.total_steps
         try:
+            ctl = self.control(run_id)
             while state.next_step < total:
+                if ctl["cancel_requested"]:
+                    self.finalize(run_id, RunStatus.CANCELLED, "cancelled by user before completion")
+                    return
+                if ctl["paused"] and ctl["step_budget"] == 0:
+                    if self.park(run_id, state.next_step):
+                        return
+                    ctl = self.control(run_id)  # control changed while parking; re-read
+                    continue
                 step = state.next_step
+                stepping = bool(ctl["paused"])  # while paused, only a STEP grant allows a step
                 new_state, events = engine.step(state, engine.fixture.bars[step])
                 try:
-                    cancel = self.commit_step(run_id, step, new_state, events, self._fault_hook(run, cfg, step))
+                    ctl = self.commit_step(
+                        run_id, step, new_state, events, self._fault_hook(run, cfg, step), consume_step=stepping
+                    )
                     state = new_state
                 except _AlreadyApplied as already:
                     log.warning("%s step %s already committed; reloading checkpoint", run_id, step)
                     state = self.load_state(run_id, engine)
                     if state.next_step <= step:
                         raise RuntimeError(f"checkpoint inconsistent at step {step}") from None
-                    cancel = already.cancel_requested
-                if cancel or self._pace(run_id, cfg.speed):
-                    self.finalize(run_id, RunStatus.CANCELLED, "cancelled by user before completion")
-                    return
+                    ctl = already.control
+                ctl = self._pace(run_id, ctl)
+            if ctl["cancel_requested"]:
+                self.finalize(run_id, RunStatus.CANCELLED, "cancelled by user before completion")
+                return
             self.finalize(run_id, RunStatus.COMPLETED, None)
         except LeaseLost:
             log.error("%s: lease lost; another worker owns the run now", run_id)
@@ -314,18 +385,23 @@ class Worker:
             log.exception("%s failed", run_id)
             self.finalize(run_id, RunStatus.FAILED, f"{type(exc).__name__}: {exc}")
 
-    def _pace(self, run_id: str, speed: float) -> bool:
-        """Sleep according to replay speed. Pacing never affects decisions."""
-        if speed <= 0:
-            return False
-        remaining = 1.0 / speed
-        while remaining > 0:
-            chunk = min(remaining, 0.25)
+    def _pace(self, run_id: str, ctl: dict[str, Any]) -> dict[str, Any]:
+        """Sleep between steps at the current persisted speed; returns the latest control.
+
+        The speed is re-read after every sleep chunk, so a speed change applies
+        to the wait in progress. Pause/cancel end the wait early. Pacing never
+        affects decisions.
+        """
+        waited = 0.0
+        while not (ctl["cancel_requested"] or ctl["paused"]):
+            interval = 1.0 / ctl["speed"] if ctl["speed"] > 0 else 0.0
+            if waited >= interval - 1e-9:
+                break
+            chunk = min(interval - waited, 0.25)
             self.sleep(chunk)
-            remaining -= chunk
-            if self.heartbeat(run_id):
-                return True
-        return False
+            waited += chunk
+            ctl = self.control(run_id)
+        return ctl
 
     # -- completion -------------------------------------------------------------
 
@@ -353,10 +429,13 @@ class Worker:
         log.info("%s finalized as %s", run_id, status)
 
 
+_CONTROL_COLUMNS = "cancel_requested, paused, step_budget, speed"
+
+
 class _AlreadyApplied(Exception):
-    def __init__(self, cancel_requested: bool) -> None:
+    def __init__(self, control: dict[str, Any]) -> None:
         super().__init__("step already applied")
-        self.cancel_requested = cancel_requested
+        self.control = control
 
 
 def fetch_events(conn: psycopg.Connection, run_id: str, kind: str | None = None) -> list[dict[str, Any]]:

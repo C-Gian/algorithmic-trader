@@ -5,6 +5,7 @@
     algotrader worker             run a durable run worker
     algotrader serve              migrate + supervised worker + api (local, no Docker)
     algotrader replay             run the engine in-process and print the trace hash
+    algotrader schema [--write]   check / write the semantic contract JSON Schema baseline
 """
 
 from __future__ import annotations
@@ -72,6 +73,19 @@ def _replay(args: argparse.Namespace) -> None:
     print(f"events={len(events)} trace_sha256={trace_hash([e.semantic() for e in events])}")
 
 
+def _schema(args: argparse.Namespace) -> None:
+    from .schema import baseline, baseline_path, render, write_baseline
+
+    if args.write:
+        print(f"wrote {write_baseline()}")
+        return
+    path = baseline_path()
+    current = render(baseline())
+    if not path.is_file() or path.read_text(encoding="utf-8") != current:
+        sys.exit(f"semantic contracts differ from the checked-in baseline {path}")
+    print(f"{path.name}: contracts match the checked-in baseline")
+
+
 def main(argv: list[str] | None = None) -> None:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
     p = argparse.ArgumentParser(prog="algotrader")
@@ -90,6 +104,9 @@ def main(argv: list[str] | None = None) -> None:
     r = sub.add_parser("replay")
     r.add_argument("--seed", type=int, default=20260929)
     r.set_defaults(fn=_replay)
+    sc = sub.add_parser("schema", help="check (default) or --write the semantic contract JSON Schema baseline")
+    sc.add_argument("--write", action="store_true")
+    sc.set_defaults(fn=_schema)
     args = p.parse_args(argv)
     args.fn(args)
 

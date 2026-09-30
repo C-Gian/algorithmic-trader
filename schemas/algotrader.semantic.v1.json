@@ -1,0 +1,1741 @@
+{
+  "$defs": {
+    "AccountSnapshot": {
+      "additionalProperties": false,
+      "properties": {
+        "as_of": {
+          "format": "date-time",
+          "title": "As Of",
+          "type": "string"
+        },
+        "collateral_balance": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Collateral Balance",
+          "type": "string"
+        },
+        "equity": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Equity",
+          "type": "string"
+        },
+        "exposure_fraction": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Exposure Fraction",
+          "type": "string"
+        },
+        "exposure_notional": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Exposure Notional",
+          "type": "string"
+        },
+        "fees_paid": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Fees Paid",
+          "type": "string"
+        },
+        "funding": {
+          "const": "NOT_MODELED",
+          "default": "NOT_MODELED",
+          "title": "Funding",
+          "type": "string"
+        },
+        "mark_price": {
+          "anyOf": [
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Mark Price"
+        },
+        "position": {
+          "$ref": "#/$defs/Position"
+        },
+        "realized_pnl": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Realized Pnl",
+          "type": "string"
+        },
+        "unrealized_pnl": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Unrealized Pnl",
+          "type": "string"
+        }
+      },
+      "required": [
+        "as_of",
+        "collateral_balance",
+        "realized_pnl",
+        "unrealized_pnl",
+        "fees_paid",
+        "equity",
+        "mark_price",
+        "position",
+        "exposure_notional",
+        "exposure_fraction"
+      ],
+      "title": "AccountSnapshot",
+      "type": "object"
+    },
+    "Action": {
+      "enum": [
+        "LONG",
+        "SHORT",
+        "NO_TRADE",
+        "HOLD",
+        "REDUCE",
+        "EXIT"
+      ],
+      "title": "Action",
+      "type": "string"
+    },
+    "ArtifactRef": {
+      "additionalProperties": false,
+      "properties": {
+        "media_type": {
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "path": {
+          "title": "Path",
+          "type": "string"
+        },
+        "rows": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Rows"
+        },
+        "sha256": {
+          "title": "Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "path",
+        "sha256",
+        "rows",
+        "media_type"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    },
+    "Bias": {
+      "enum": [
+        "BULLISH",
+        "BEARISH",
+        "BALANCED",
+        "UNCERTAIN"
+      ],
+      "title": "Bias",
+      "type": "string"
+    },
+    "CostAssumptions": {
+      "additionalProperties": false,
+      "properties": {
+        "fee_bps": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Fee Bps",
+          "type": "string"
+        },
+        "funding": {
+          "const": "NOT_MODELED",
+          "default": "NOT_MODELED",
+          "title": "Funding",
+          "type": "string"
+        },
+        "label": {
+          "const": "DEMO_PLACEHOLDER",
+          "default": "DEMO_PLACEHOLDER",
+          "title": "Label",
+          "type": "string"
+        },
+        "slippage_bps": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Slippage Bps",
+          "type": "string"
+        }
+      },
+      "required": [
+        "fee_bps",
+        "slippage_bps"
+      ],
+      "title": "CostAssumptions",
+      "type": "object"
+    },
+    "DataQuality": {
+      "enum": [
+        "OK",
+        "MISSING",
+        "STALE"
+      ],
+      "title": "DataQuality",
+      "type": "string"
+    },
+    "DataQualityState": {
+      "additionalProperties": false,
+      "properties": {
+        "as_of": {
+          "format": "date-time",
+          "title": "As Of",
+          "type": "string"
+        },
+        "bars_since_valid": {
+          "title": "Bars Since Valid",
+          "type": "integer"
+        },
+        "last_valid_available_time": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Last Valid Available Time"
+        },
+        "last_valid_observation_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Last Valid Observation Id"
+        },
+        "reasons": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Reasons",
+          "type": "array"
+        },
+        "status": {
+          "$ref": "#/$defs/DataQuality"
+        }
+      },
+      "required": [
+        "status",
+        "as_of",
+        "last_valid_observation_id",
+        "last_valid_available_time",
+        "bars_since_valid"
+      ],
+      "title": "DataQualityState",
+      "type": "object"
+    },
+    "Decision": {
+      "additionalProperties": false,
+      "properties": {
+        "as_of": {
+          "format": "date-time",
+          "title": "As Of",
+          "type": "string"
+        },
+        "blocking_reasons": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Blocking Reasons",
+          "type": "array"
+        },
+        "current_exposure": {
+          "$ref": "#/$defs/ExposureSummary"
+        },
+        "decision_id": {
+          "title": "Decision Id",
+          "type": "string"
+        },
+        "permitted_action": {
+          "$ref": "#/$defs/Action"
+        },
+        "plan_ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Plan Ref"
+        },
+        "proposed_action": {
+          "$ref": "#/$defs/Action"
+        },
+        "reason": {
+          "title": "Reason",
+          "type": "string"
+        },
+        "risk_decision_ref": {
+          "title": "Risk Decision Ref",
+          "type": "string"
+        },
+        "target_quantity": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Target Quantity",
+          "type": "string"
+        },
+        "view_ref": {
+          "title": "View Ref",
+          "type": "string"
+        }
+      },
+      "required": [
+        "decision_id",
+        "as_of",
+        "view_ref",
+        "plan_ref",
+        "risk_decision_ref",
+        "proposed_action",
+        "permitted_action",
+        "blocking_reasons",
+        "reason",
+        "current_exposure",
+        "target_quantity"
+      ],
+      "title": "Decision",
+      "type": "object"
+    },
+    "ExposureSummary": {
+      "additionalProperties": false,
+      "properties": {
+        "exposure_fraction": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Exposure Fraction",
+          "type": "string"
+        },
+        "notional": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Notional",
+          "type": "string"
+        },
+        "quantity": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Quantity",
+          "type": "string"
+        },
+        "side": {
+          "enum": [
+            "LONG",
+            "SHORT",
+            "FLAT"
+          ],
+          "title": "Side",
+          "type": "string"
+        }
+      },
+      "required": [
+        "side",
+        "quantity",
+        "notional",
+        "exposure_fraction"
+      ],
+      "title": "ExposureSummary",
+      "type": "object"
+    },
+    "FaultMode": {
+      "description": "Controlled worker interruption used to demonstrate recovery/failure.",
+      "enum": [
+        "none",
+        "crash_once",
+        "crash_always"
+      ],
+      "title": "FaultMode",
+      "type": "string"
+    },
+    "Fill": {
+      "additionalProperties": false,
+      "properties": {
+        "fee": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Fee",
+          "type": "string"
+        },
+        "fill_id": {
+          "title": "Fill Id",
+          "type": "string"
+        },
+        "fill_time": {
+          "format": "date-time",
+          "title": "Fill Time",
+          "type": "string"
+        },
+        "instrument_id": {
+          "title": "Instrument Id",
+          "type": "string"
+        },
+        "liquidity": {
+          "const": "TAKER",
+          "default": "TAKER",
+          "title": "Liquidity",
+          "type": "string"
+        },
+        "model": {
+          "title": "Model",
+          "type": "string"
+        },
+        "order_ref": {
+          "title": "Order Ref",
+          "type": "string"
+        },
+        "price": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Price",
+          "type": "string"
+        },
+        "quantity": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Quantity",
+          "type": "string"
+        },
+        "side": {
+          "$ref": "#/$defs/Side"
+        }
+      },
+      "required": [
+        "fill_id",
+        "order_ref",
+        "instrument_id",
+        "side",
+        "quantity",
+        "price",
+        "fee",
+        "fill_time",
+        "model"
+      ],
+      "title": "Fill",
+      "type": "object"
+    },
+    "HorizonState": {
+      "additionalProperties": false,
+      "properties": {
+        "bias": {
+          "$ref": "#/$defs/Bias"
+        },
+        "freshness": {
+          "title": "Freshness",
+          "type": "string"
+        },
+        "horizon": {
+          "title": "Horizon",
+          "type": "string"
+        },
+        "note": {
+          "title": "Note",
+          "type": "string"
+        }
+      },
+      "required": [
+        "horizon",
+        "bias",
+        "freshness",
+        "note"
+      ],
+      "title": "HorizonState",
+      "type": "object"
+    },
+    "InstrumentIdentity": {
+      "additionalProperties": false,
+      "properties": {
+        "base_asset": {
+          "title": "Base Asset",
+          "type": "string"
+        },
+        "contract_multiplier": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Contract Multiplier",
+          "type": "string"
+        },
+        "instrument_id": {
+          "title": "Instrument Id",
+          "type": "string"
+        },
+        "kind": {
+          "const": "perpetual_future",
+          "default": "perpetual_future",
+          "title": "Kind",
+          "type": "string"
+        },
+        "price_tick": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Price Tick",
+          "type": "string"
+        },
+        "quantity_step": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Quantity Step",
+          "type": "string"
+        },
+        "quote_asset": {
+          "title": "Quote Asset",
+          "type": "string"
+        },
+        "settlement_asset": {
+          "title": "Settlement Asset",
+          "type": "string"
+        },
+        "synthetic": {
+          "title": "Synthetic",
+          "type": "boolean"
+        },
+        "venue": {
+          "title": "Venue",
+          "type": "string"
+        }
+      },
+      "required": [
+        "instrument_id",
+        "venue",
+        "base_asset",
+        "quote_asset",
+        "settlement_asset",
+        "contract_multiplier",
+        "quantity_step",
+        "price_tick",
+        "synthetic"
+      ],
+      "title": "InstrumentIdentity",
+      "type": "object"
+    },
+    "Level": {
+      "additionalProperties": false,
+      "properties": {
+        "label": {
+          "title": "Label",
+          "type": "string"
+        },
+        "price": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Price",
+          "type": "string"
+        }
+      },
+      "required": [
+        "label",
+        "price"
+      ],
+      "title": "Level",
+      "type": "object"
+    },
+    "MarketObservation": {
+      "additionalProperties": false,
+      "description": "One bar as it becomes available. Missing bars carry no prices.",
+      "properties": {
+        "available_time": {
+          "format": "date-time",
+          "title": "Available Time",
+          "type": "string"
+        },
+        "bar_index": {
+          "title": "Bar Index",
+          "type": "integer"
+        },
+        "close": {
+          "anyOf": [
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Close"
+        },
+        "event_time": {
+          "format": "date-time",
+          "title": "Event Time",
+          "type": "string"
+        },
+        "high": {
+          "anyOf": [
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "High"
+        },
+        "instrument_id": {
+          "title": "Instrument Id",
+          "type": "string"
+        },
+        "low": {
+          "anyOf": [
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Low"
+        },
+        "observation_id": {
+          "title": "Observation Id",
+          "type": "string"
+        },
+        "open": {
+          "anyOf": [
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Open"
+        },
+        "quality": {
+          "$ref": "#/$defs/DataQuality"
+        },
+        "source": {
+          "title": "Source",
+          "type": "string"
+        },
+        "volume": {
+          "anyOf": [
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Volume"
+        }
+      },
+      "required": [
+        "observation_id",
+        "instrument_id",
+        "bar_index",
+        "event_time",
+        "available_time",
+        "open",
+        "high",
+        "low",
+        "close",
+        "volume",
+        "quality",
+        "source"
+      ],
+      "title": "MarketObservation",
+      "type": "object"
+    },
+    "MarketView": {
+      "additionalProperties": false,
+      "properties": {
+        "as_of": {
+          "format": "date-time",
+          "title": "As Of",
+          "type": "string"
+        },
+        "change_triggers": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Change Triggers",
+          "type": "array"
+        },
+        "confidence": {
+          "$ref": "#/$defs/QualitativeConfidence"
+        },
+        "config_version": {
+          "title": "Config Version",
+          "type": "string"
+        },
+        "data_quality": {
+          "$ref": "#/$defs/DataQualityState"
+        },
+        "demo": {
+          "title": "Demo",
+          "type": "boolean"
+        },
+        "engine_id": {
+          "title": "Engine Id",
+          "type": "string"
+        },
+        "engine_version": {
+          "title": "Engine Version",
+          "type": "string"
+        },
+        "expected_response": {
+          "title": "Expected Response",
+          "type": "string"
+        },
+        "horizons": {
+          "items": {
+            "$ref": "#/$defs/HorizonState"
+          },
+          "title": "Horizons",
+          "type": "array"
+        },
+        "information_cutoff": {
+          "format": "date-time",
+          "title": "Information Cutoff",
+          "type": "string"
+        },
+        "input_refs": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Input Refs",
+          "type": "array"
+        },
+        "instrument_id": {
+          "title": "Instrument Id",
+          "type": "string"
+        },
+        "relevant_levels": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/Level"
+          },
+          "title": "Relevant Levels",
+          "type": "array"
+        },
+        "scenarios": {
+          "items": {
+            "$ref": "#/$defs/Scenario"
+          },
+          "title": "Scenarios",
+          "type": "array"
+        },
+        "summary": {
+          "title": "Summary",
+          "type": "string"
+        },
+        "validity": {
+          "$ref": "#/$defs/ViewValidity"
+        },
+        "view_id": {
+          "title": "View Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "view_id",
+        "instrument_id",
+        "as_of",
+        "information_cutoff",
+        "input_refs",
+        "engine_id",
+        "engine_version",
+        "config_version",
+        "validity",
+        "data_quality",
+        "horizons",
+        "scenarios",
+        "confidence",
+        "expected_response",
+        "change_triggers",
+        "summary",
+        "demo"
+      ],
+      "title": "MarketView",
+      "type": "object"
+    },
+    "Order": {
+      "additionalProperties": false,
+      "properties": {
+        "filled_quantity": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Filled Quantity",
+          "type": "string"
+        },
+        "instrument_id": {
+          "title": "Instrument Id",
+          "type": "string"
+        },
+        "intent_ref": {
+          "title": "Intent Ref",
+          "type": "string"
+        },
+        "order_id": {
+          "title": "Order Id",
+          "type": "string"
+        },
+        "order_type": {
+          "const": "MARKET",
+          "default": "MARKET",
+          "title": "Order Type",
+          "type": "string"
+        },
+        "quantity": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Quantity",
+          "type": "string"
+        },
+        "reduce_only": {
+          "title": "Reduce Only",
+          "type": "boolean"
+        },
+        "side": {
+          "$ref": "#/$defs/Side"
+        },
+        "status": {
+          "$ref": "#/$defs/OrderStatus"
+        },
+        "status_detail": {
+          "default": "",
+          "title": "Status Detail",
+          "type": "string"
+        },
+        "submitted_at": {
+          "format": "date-time",
+          "title": "Submitted At",
+          "type": "string"
+        }
+      },
+      "required": [
+        "order_id",
+        "intent_ref",
+        "instrument_id",
+        "side",
+        "quantity",
+        "filled_quantity",
+        "reduce_only",
+        "submitted_at",
+        "status"
+      ],
+      "title": "Order",
+      "type": "object"
+    },
+    "OrderIntent": {
+      "additionalProperties": false,
+      "description": "Desired exposure change approved by risk, before it becomes an order.",
+      "properties": {
+        "approved_quantity": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Approved Quantity",
+          "type": "string"
+        },
+        "current_quantity": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Current Quantity",
+          "type": "string"
+        },
+        "decision_ref": {
+          "title": "Decision Ref",
+          "type": "string"
+        },
+        "desired_quantity": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Desired Quantity",
+          "type": "string"
+        },
+        "intent_id": {
+          "title": "Intent Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "intent_id",
+        "decision_ref",
+        "current_quantity",
+        "desired_quantity",
+        "approved_quantity"
+      ],
+      "title": "OrderIntent",
+      "type": "object"
+    },
+    "OrderStatus": {
+      "enum": [
+        "SUBMITTED",
+        "PARTIALLY_FILLED",
+        "FILLED",
+        "REJECTED",
+        "CANCELLED"
+      ],
+      "title": "OrderStatus",
+      "type": "string"
+    },
+    "PlanStatus": {
+      "enum": [
+        "ARMED",
+        "TRIGGERED",
+        "CLOSED",
+        "EXPIRED"
+      ],
+      "title": "PlanStatus",
+      "type": "string"
+    },
+    "Position": {
+      "additionalProperties": false,
+      "properties": {
+        "average_entry_price": {
+          "anyOf": [
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Average Entry Price"
+        },
+        "instrument_id": {
+          "title": "Instrument Id",
+          "type": "string"
+        },
+        "quantity": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Quantity",
+          "type": "string"
+        },
+        "side": {
+          "enum": [
+            "LONG",
+            "SHORT",
+            "FLAT"
+          ],
+          "title": "Side",
+          "type": "string"
+        }
+      },
+      "required": [
+        "instrument_id",
+        "side",
+        "quantity",
+        "average_entry_price"
+      ],
+      "title": "Position",
+      "type": "object"
+    },
+    "QualitativeConfidence": {
+      "description": "Explicitly qualitative. This is not a probability.",
+      "enum": [
+        "LOW",
+        "MEDIUM",
+        "HIGH"
+      ],
+      "title": "QualitativeConfidence",
+      "type": "string"
+    },
+    "ReplayControl": {
+      "additionalProperties": false,
+      "description": "Persisted operational replay control. Never an input to the trader.",
+      "properties": {
+        "paused": {
+          "title": "Paused",
+          "type": "boolean"
+        },
+        "speed": {
+          "maximum": 1000,
+          "minimum": 0,
+          "title": "Speed",
+          "type": "number"
+        },
+        "step_budget": {
+          "minimum": 0,
+          "title": "Step Budget",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "paused",
+        "step_budget",
+        "speed"
+      ],
+      "title": "ReplayControl",
+      "type": "object"
+    },
+    "RiskCheck": {
+      "additionalProperties": false,
+      "properties": {
+        "detail": {
+          "title": "Detail",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "passed": {
+          "title": "Passed",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "name",
+        "passed",
+        "detail"
+      ],
+      "title": "RiskCheck",
+      "type": "object"
+    },
+    "RiskDecision": {
+      "additionalProperties": false,
+      "properties": {
+        "approved": {
+          "title": "Approved",
+          "type": "boolean"
+        },
+        "approved_exposure_fraction": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Approved Exposure Fraction",
+          "type": "string"
+        },
+        "approved_target_quantity": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Approved Target Quantity",
+          "type": "string"
+        },
+        "as_of": {
+          "format": "date-time",
+          "title": "As Of",
+          "type": "string"
+        },
+        "blocking_reasons": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Blocking Reasons",
+          "type": "array"
+        },
+        "checks": {
+          "items": {
+            "$ref": "#/$defs/RiskCheck"
+          },
+          "title": "Checks",
+          "type": "array"
+        },
+        "proposed_action": {
+          "$ref": "#/$defs/Action"
+        },
+        "requested_target_quantity": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Requested Target Quantity",
+          "type": "string"
+        },
+        "risk_decision_id": {
+          "title": "Risk Decision Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "risk_decision_id",
+        "as_of",
+        "proposed_action",
+        "requested_target_quantity",
+        "approved",
+        "approved_target_quantity",
+        "approved_exposure_fraction",
+        "checks",
+        "blocking_reasons"
+      ],
+      "title": "RiskDecision",
+      "type": "object"
+    },
+    "Run": {
+      "additionalProperties": false,
+      "properties": {
+        "attempt": {
+          "title": "Attempt",
+          "type": "integer"
+        },
+        "cancel_requested": {
+          "title": "Cancel Requested",
+          "type": "boolean"
+        },
+        "config": {
+          "$ref": "#/$defs/RunConfig"
+        },
+        "control": {
+          "$ref": "#/$defs/ReplayControl"
+        },
+        "control_log": {
+          "items": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "title": "Control Log",
+          "type": "array"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Error"
+        },
+        "finished_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Finished At"
+        },
+        "has_manifest": {
+          "title": "Has Manifest",
+          "type": "boolean"
+        },
+        "labels": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Labels",
+          "type": "array"
+        },
+        "lease_expired": {
+          "title": "Lease Expired",
+          "type": "boolean"
+        },
+        "lease_owner": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Lease Owner"
+        },
+        "max_attempts": {
+          "title": "Max Attempts",
+          "type": "integer"
+        },
+        "progress": {
+          "$ref": "#/$defs/RunProgress"
+        },
+        "recovery_log": {
+          "items": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "title": "Recovery Log",
+          "type": "array"
+        },
+        "run_id": {
+          "title": "Run Id",
+          "type": "string"
+        },
+        "runtime_detail": {
+          "title": "Runtime Detail",
+          "type": "string"
+        },
+        "runtime_state": {
+          "$ref": "#/$defs/RuntimeState"
+        },
+        "started_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Started At"
+        },
+        "status": {
+          "$ref": "#/$defs/RunStatus"
+        }
+      },
+      "required": [
+        "run_id",
+        "status",
+        "runtime_state",
+        "runtime_detail",
+        "config",
+        "control",
+        "created_at",
+        "started_at",
+        "finished_at",
+        "cancel_requested",
+        "attempt",
+        "max_attempts",
+        "recovery_log",
+        "control_log",
+        "error",
+        "lease_owner",
+        "lease_expired",
+        "has_manifest",
+        "progress",
+        "labels"
+      ],
+      "title": "Run",
+      "type": "object"
+    },
+    "RunConfig": {
+      "additionalProperties": false,
+      "description": "Pinned run inputs. Operational pacing is deliberately not part of it.",
+      "properties": {
+        "fault": {
+          "$ref": "#/$defs/FaultMode",
+          "default": "none"
+        },
+        "fault_at_step": {
+          "default": 45,
+          "minimum": 0,
+          "title": "Fault At Step",
+          "type": "integer"
+        },
+        "fixture_id": {
+          "default": "synthetic-btc-perp-v1",
+          "title": "Fixture Id",
+          "type": "string"
+        },
+        "seed": {
+          "default": 20260929,
+          "title": "Seed",
+          "type": "integer"
+        }
+      },
+      "title": "RunConfig",
+      "type": "object"
+    },
+    "RunManifest": {
+      "additionalProperties": false,
+      "properties": {
+        "artifacts": {
+          "items": {
+            "$ref": "#/$defs/ArtifactRef"
+          },
+          "title": "Artifacts",
+          "type": "array"
+        },
+        "assumptions": {
+          "additionalProperties": true,
+          "title": "Assumptions",
+          "type": "object"
+        },
+        "attempts": {
+          "title": "Attempts",
+          "type": "integer"
+        },
+        "code_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Code Version"
+        },
+        "config": {
+          "$ref": "#/$defs/RunConfig"
+        },
+        "config_hash": {
+          "title": "Config Hash",
+          "type": "string"
+        },
+        "control_log": {
+          "items": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "title": "Control Log",
+          "type": "array"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "engine_id": {
+          "title": "Engine Id",
+          "type": "string"
+        },
+        "engine_version": {
+          "title": "Engine Version",
+          "type": "string"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Error"
+        },
+        "event_count": {
+          "title": "Event Count",
+          "type": "integer"
+        },
+        "finished_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Finished At"
+        },
+        "fixture": {
+          "additionalProperties": true,
+          "title": "Fixture",
+          "type": "object"
+        },
+        "instrument": {
+          "$ref": "#/$defs/InstrumentIdentity"
+        },
+        "labels": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Labels",
+          "type": "array"
+        },
+        "recovery_log": {
+          "items": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "title": "Recovery Log",
+          "type": "array"
+        },
+        "replay_control": {
+          "$ref": "#/$defs/ReplayControl"
+        },
+        "risk_policy": {
+          "additionalProperties": true,
+          "title": "Risk Policy",
+          "type": "object"
+        },
+        "run_id": {
+          "title": "Run Id",
+          "type": "string"
+        },
+        "schema_version": {
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "semantic_trace_hash": {
+          "title": "Semantic Trace Hash",
+          "type": "string"
+        },
+        "started_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Started At"
+        },
+        "status": {
+          "$ref": "#/$defs/RunStatus"
+        },
+        "steps_processed": {
+          "title": "Steps Processed",
+          "type": "integer"
+        },
+        "total_steps": {
+          "title": "Total Steps",
+          "type": "integer"
+        },
+        "validation": {
+          "additionalProperties": true,
+          "title": "Validation",
+          "type": "object"
+        }
+      },
+      "required": [
+        "schema_version",
+        "run_id",
+        "labels",
+        "status",
+        "engine_id",
+        "engine_version",
+        "code_version",
+        "config",
+        "config_hash",
+        "fixture",
+        "instrument",
+        "assumptions",
+        "risk_policy",
+        "created_at",
+        "started_at",
+        "finished_at",
+        "steps_processed",
+        "total_steps",
+        "attempts",
+        "recovery_log",
+        "control_log",
+        "replay_control",
+        "error",
+        "semantic_trace_hash",
+        "event_count",
+        "validation",
+        "artifacts"
+      ],
+      "title": "RunManifest",
+      "type": "object"
+    },
+    "RunProgress": {
+      "additionalProperties": false,
+      "properties": {
+        "elapsed_seconds": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Elapsed Seconds"
+        },
+        "eta_basis": {
+          "title": "Eta Basis",
+          "type": "string"
+        },
+        "eta_seconds": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Eta Seconds"
+        },
+        "heartbeat_age_seconds": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Heartbeat Age Seconds"
+        },
+        "heartbeat_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Heartbeat At"
+        },
+        "sim_time": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Sim Time"
+        },
+        "steps_done": {
+          "title": "Steps Done",
+          "type": "integer"
+        },
+        "total_steps": {
+          "title": "Total Steps",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "steps_done",
+        "total_steps",
+        "sim_time",
+        "heartbeat_at",
+        "heartbeat_age_seconds",
+        "elapsed_seconds",
+        "eta_seconds",
+        "eta_basis"
+      ],
+      "title": "RunProgress",
+      "type": "object"
+    },
+    "RunStatus": {
+      "description": "Persisted run lifecycle (who may act on the run), not trading state.",
+      "enum": [
+        "queued",
+        "running",
+        "paused",
+        "completed",
+        "cancelled",
+        "failed"
+      ],
+      "title": "RunStatus",
+      "type": "string"
+    },
+    "RuntimeState": {
+      "description": "Owner-facing runtime state derived from status, control and lease.",
+      "enum": [
+        "queued",
+        "running",
+        "pausing",
+        "paused",
+        "stepping",
+        "recovering",
+        "cancel_requested",
+        "completed",
+        "cancelled",
+        "failed"
+      ],
+      "title": "RuntimeState",
+      "type": "string"
+    },
+    "Scenario": {
+      "additionalProperties": false,
+      "properties": {
+        "applicability": {
+          "title": "Applicability",
+          "type": "string"
+        },
+        "expected_behavior": {
+          "title": "Expected Behavior",
+          "type": "string"
+        },
+        "expires_at": {
+          "format": "date-time",
+          "title": "Expires At",
+          "type": "string"
+        },
+        "invalidation": {
+          "title": "Invalidation",
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/ScenarioKind"
+        },
+        "label": {
+          "title": "Label",
+          "type": "string"
+        },
+        "opposing": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Opposing",
+          "type": "array"
+        },
+        "rank": {
+          "title": "Rank",
+          "type": "integer"
+        },
+        "scenario_id": {
+          "title": "Scenario Id",
+          "type": "string"
+        },
+        "supporting": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Supporting",
+          "type": "array"
+        }
+      },
+      "required": [
+        "scenario_id",
+        "kind",
+        "label",
+        "rank",
+        "supporting",
+        "opposing",
+        "applicability",
+        "expected_behavior",
+        "expires_at",
+        "invalidation"
+      ],
+      "title": "Scenario",
+      "type": "object"
+    },
+    "ScenarioKind": {
+      "enum": [
+        "CONTINUATION",
+        "BALANCE",
+        "TRANSITION"
+      ],
+      "title": "ScenarioKind",
+      "type": "string"
+    },
+    "Side": {
+      "enum": [
+        "BUY",
+        "SELL"
+      ],
+      "title": "Side",
+      "type": "string"
+    },
+    "TradePlan": {
+      "additionalProperties": false,
+      "description": "A conditional plan. A plan is not an order.",
+      "properties": {
+        "cost_assumptions": {
+          "$ref": "#/$defs/CostAssumptions"
+        },
+        "direction": {
+          "enum": [
+            "LONG",
+            "SHORT"
+          ],
+          "title": "Direction",
+          "type": "string"
+        },
+        "eligibility_notes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Eligibility Notes",
+          "type": "array"
+        },
+        "eligible": {
+          "title": "Eligible",
+          "type": "boolean"
+        },
+        "exit_logic": {
+          "title": "Exit Logic",
+          "type": "string"
+        },
+        "expires_at": {
+          "format": "date-time",
+          "title": "Expires At",
+          "type": "string"
+        },
+        "invalidation": {
+          "title": "Invalidation",
+          "type": "string"
+        },
+        "max_exposure_fraction": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Max Exposure Fraction",
+          "type": "string"
+        },
+        "plan_id": {
+          "title": "Plan Id",
+          "type": "string"
+        },
+        "scenario_ref": {
+          "title": "Scenario Ref",
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/PlanStatus"
+        },
+        "target_exposure_fraction": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Target Exposure Fraction",
+          "type": "string"
+        },
+        "trigger": {
+          "title": "Trigger",
+          "type": "string"
+        }
+      },
+      "required": [
+        "plan_id",
+        "status",
+        "scenario_ref",
+        "direction",
+        "eligible",
+        "eligibility_notes",
+        "trigger",
+        "invalidation",
+        "exit_logic",
+        "expires_at",
+        "target_exposure_fraction",
+        "max_exposure_fraction",
+        "cost_assumptions"
+      ],
+      "title": "TradePlan",
+      "type": "object"
+    },
+    "ViewValidity": {
+      "enum": [
+        "VALID",
+        "STALE",
+        "WARMUP"
+      ],
+      "title": "ViewValidity",
+      "type": "string"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "journal_event_kinds": {
+    "account": "#/$defs/AccountSnapshot",
+    "decision": "#/$defs/Decision",
+    "fill": "#/$defs/Fill",
+    "market_view": "#/$defs/MarketView",
+    "observation": "#/$defs/MarketObservation",
+    "order": "#/$defs/Order",
+    "order_intent": "#/$defs/OrderIntent",
+    "risk_decision": "#/$defs/RiskDecision",
+    "trade_plan": "#/$defs/TradePlan"
+  },
+  "public_contracts": {
+    "AccountSnapshot": "#/$defs/AccountSnapshot",
+    "ArtifactRef": "#/$defs/ArtifactRef",
+    "Decision": "#/$defs/Decision",
+    "Fill": "#/$defs/Fill",
+    "InstrumentIdentity": "#/$defs/InstrumentIdentity",
+    "MarketObservation": "#/$defs/MarketObservation",
+    "MarketView": "#/$defs/MarketView",
+    "Order": "#/$defs/Order",
+    "OrderIntent": "#/$defs/OrderIntent",
+    "ReplayControl": "#/$defs/ReplayControl",
+    "RiskDecision": "#/$defs/RiskDecision",
+    "Run": "#/$defs/Run",
+    "RunConfig": "#/$defs/RunConfig",
+    "RunManifest": "#/$defs/RunManifest",
+    "TradePlan": "#/$defs/TradePlan"
+  },
+  "schema_version": "algotrader.semantic.v1",
+  "title": "Algorithmic Trader semantic contracts (algotrader.semantic.v1)"
+}

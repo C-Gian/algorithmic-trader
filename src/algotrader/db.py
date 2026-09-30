@@ -9,9 +9,7 @@ from contextlib import contextmanager
 import psycopg
 from psycopg.rows import dict_row
 
-SCHEMA_VERSION = 1
-
-SCHEMA_SQL = """
+SCHEMA_V1 = """
 CREATE TABLE IF NOT EXISTS schema_migrations (
     version integer PRIMARY KEY,
     applied_at timestamptz NOT NULL DEFAULT now()
@@ -63,6 +61,41 @@ CREATE UNIQUE INDEX IF NOT EXISTS run_events_fill_uniq
     ON run_events (run_id, (payload->>'fill_id')) WHERE kind = 'fill';
 """
 
+# Durable replay control, restart-safe interruption counting and worker health.
+SCHEMA_V2 = """
+ALTER TABLE runs ADD COLUMN IF NOT EXISTS paused boolean NOT NULL DEFAULT false;
+ALTER TABLE runs ADD COLUMN IF NOT EXISTS step_budget integer NOT NULL DEFAULT 0 CHECK (step_budget >= 0);
+ALTER TABLE runs ADD COLUMN IF NOT EXISTS speed double precision NOT NULL DEFAULT 4
+    CHECK (speed >= 0 AND speed <= 1000);
+-- Consecutive lease-expiry reclaims without a committed step (crash-loop guard).
+ALTER TABLE runs ADD COLUMN IF NOT EXISTS interruptions integer NOT NULL DEFAULT 0;
+-- Operational control commands; never part of the semantic journal.
+ALTER TABLE runs ADD COLUMN IF NOT EXISTS control_log jsonb NOT NULL DEFAULT '[]'::jsonb;
+-- Start of the current observed-throughput window (for ETA).
+ALTER TABLE runs ADD COLUMN IF NOT EXISTS throughput_since timestamptz;
+ALTER TABLE runs ADD COLUMN IF NOT EXISTS throughput_base_step integer;
+
+-- Speed used to live in the run config; it is operational pacing only.
+UPDATE runs SET speed = (config->>'speed')::double precision, config = config - 'speed'
+WHERE config ? 'speed';
+
+ALTER TABLE runs DROP CONSTRAINT IF EXISTS runs_status_check;
+ALTER TABLE runs ADD CONSTRAINT runs_status_check
+    CHECK (status IN ('queued','running','paused','completed','cancelled','failed'));
+
+CREATE TABLE IF NOT EXISTS workers (
+    worker_id     text PRIMARY KEY,
+    host          text NOT NULL,
+    pid           integer NOT NULL,
+    started_at    timestamptz NOT NULL DEFAULT now(),
+    heartbeat_at  timestamptz NOT NULL DEFAULT now(),
+    current_run   text
+);
+"""
+
+MIGRATIONS: dict[int, str] = {1: SCHEMA_V1, 2: SCHEMA_V2}
+SCHEMA_VERSION = max(MIGRATIONS)
+
 
 def database_url() -> str:
     url = os.environ.get("ALGOTRADER_DATABASE_URL")
@@ -84,11 +117,13 @@ def connection(url: str | None = None) -> Iterator[psycopg.Connection]:
         conn.close()
 
 
-def migrate(url: str | None = None) -> None:
+def migrate(url: str | None = None, target: int = SCHEMA_VERSION) -> None:
+    """Apply pending migrations in order, in one transaction (idempotent)."""
     with connection(url) as conn, conn.transaction():
         conn.execute("SELECT pg_advisory_xact_lock(4242001)")
-        conn.execute(SCHEMA_SQL)
-        conn.execute(
-            "INSERT INTO schema_migrations (version) VALUES (%s) ON CONFLICT DO NOTHING",
-            (SCHEMA_VERSION,),
-        )
+        conn.execute(MIGRATIONS[1])  # creates schema_migrations on a fresh database
+        applied = {r["version"] for r in conn.execute("SELECT version FROM schema_migrations")}
+        for version in sorted(v for v in MIGRATIONS if v <= target):
+            if version not in applied:
+                conn.execute(MIGRATIONS[version])
+                conn.execute("INSERT INTO schema_migrations (version) VALUES (%s)", (version,))

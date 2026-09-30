@@ -1,4 +1,4 @@
-"""Durable worker: persistence, idempotency, recovery, cancellation, speed invariance."""
+"""Durable worker: persistence, idempotency, recovery, cancellation, replay control, trace invariance."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 from psycopg.types.json import Jsonb
 
-from algotrader import db
+from algotrader import control, db
 from algotrader.contracts import FaultMode, RunConfig
 from algotrader.engine import Engine
 from algotrader.synthetic import build_fixture
@@ -26,13 +26,9 @@ def make_worker(url: str, root: Path, name: str, lease: float = 5.0, **kw) -> Wo
     return Worker(url=url, worker_id=name, lease_seconds=lease, artifact_root=root, crash=crash, **kw)
 
 
-def create_run(url: str, run_id: str, **cfg) -> None:
-    config = RunConfig(**cfg)
-    with db.connection(url) as c, c.transaction():
-        c.execute(
-            "INSERT INTO runs (run_id, status, config, total_steps) VALUES (%s, 'queued', %s, %s)",
-            (run_id, Jsonb(config.model_dump(mode="json")), build_fixture().total_steps),
-        )
+def create_run(url: str, run_id: str, speed: float = 4.0, paused: bool = False, **cfg) -> None:
+    with db.connection(url) as c:
+        control.create_run(c, RunConfig(**cfg), speed=speed, paused=paused, run_id=run_id)
 
 
 def get_run(url: str, run_id: str) -> dict:

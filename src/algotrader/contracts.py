@@ -7,6 +7,11 @@ records distinct. Nothing here depends on the UI or the database.
 
 Monetary and quantity values use Decimal so accounting is exact and the
 semantic trace is byte-identical across runs and platforms.
+
+``SCHEMA_VERSION`` identifies the frozen semantic contract baseline. Its
+machine-readable JSON Schema is checked in under ``schemas/`` (see
+``algotrader.schema``); a breaking change gets a new version and a new
+baseline file instead of mutating an existing one.
 """
 
 from __future__ import annotations
@@ -18,7 +23,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-SCHEMA_VERSION = "wp001.v1"
+SCHEMA_VERSION = "algotrader.semantic.v1"
 
 
 class Contract(BaseModel):
@@ -333,14 +338,32 @@ class AccountSnapshot(Contract):
 
 
 class RunStatus(StrEnum):
-    QUEUED = "queued"
-    RUNNING = "running"
+    """Persisted run lifecycle (who may act on the run), not trading state."""
+
+    QUEUED = "queued"  # waiting for a worker (new, or resumed)
+    RUNNING = "running"  # a worker holds the lease
+    PAUSED = "paused"  # parked at a committed checkpoint; no worker holds it
     COMPLETED = "completed"
     CANCELLED = "cancelled"
     FAILED = "failed"
 
 
 TERMINAL_STATUSES = frozenset({RunStatus.COMPLETED, RunStatus.CANCELLED, RunStatus.FAILED})
+
+
+class RuntimeState(StrEnum):
+    """Owner-facing runtime state derived from status, control and lease."""
+
+    QUEUED = "queued"
+    RUNNING = "running"
+    PAUSING = "pausing"  # pause requested; worker finishes the current step
+    PAUSED = "paused"
+    STEPPING = "stepping"  # paused with single-step requests outstanding
+    RECOVERING = "recovering"  # lease expired; awaiting reclaim by a worker
+    CANCEL_REQUESTED = "cancel_requested"
+    COMPLETED = "completed"
+    CANCELLED = "cancelled"
+    FAILED = "failed"
 
 
 class FaultMode(StrEnum):
@@ -352,13 +375,21 @@ class FaultMode(StrEnum):
 
 
 class RunConfig(Contract):
+    """Pinned run inputs. Operational pacing is deliberately not part of it."""
+
     fixture_id: str = "synthetic-btc-perp-v1"
     seed: int = 20260929
-    # Replay speed in bars per second; 0 means as fast as possible.
-    # Speed only affects pacing, never decisions.
-    speed: float = Field(default=4.0, ge=0, le=1000)
     fault: FaultMode = FaultMode.NONE
     fault_at_step: int = Field(default=45, ge=0)
+
+
+class ReplayControl(Contract):
+    """Persisted operational replay control. Never an input to the trader."""
+
+    paused: bool
+    step_budget: int = Field(ge=0)  # single-step requests not yet executed
+    # Replay speed in bars per second; 0 means as fast as possible.
+    speed: float = Field(ge=0, le=1000)
 
 
 class RunProgress(Contract):
@@ -366,13 +397,19 @@ class RunProgress(Contract):
     total_steps: int
     sim_time: datetime | None
     heartbeat_at: datetime | None
+    heartbeat_age_seconds: float | None
     elapsed_seconds: float | None
+    eta_seconds: float | None  # only from observed throughput; None = unavailable
+    eta_basis: str
 
 
 class Run(Contract):
     run_id: str
     status: RunStatus
+    runtime_state: RuntimeState
+    runtime_detail: str
     config: RunConfig
+    control: ReplayControl
     created_at: datetime
     started_at: datetime | None
     finished_at: datetime | None
@@ -380,8 +417,13 @@ class Run(Contract):
     attempt: int
     max_attempts: int
     recovery_log: tuple[dict, ...]
+    control_log: tuple[dict, ...]
     error: str | None
+    lease_owner: str | None
+    lease_expired: bool
+    has_manifest: bool
     progress: RunProgress
+    labels: tuple[str, ...]
 
 
 class ArtifactRef(Contract):
@@ -413,8 +455,27 @@ class RunManifest(Contract):
     total_steps: int
     attempts: int
     recovery_log: tuple[dict, ...]
+    control_log: tuple[dict, ...]  # operational commands; not part of the semantic trace
+    replay_control: ReplayControl  # final control state
     error: str | None
     semantic_trace_hash: str
     event_count: int
     validation: dict
     artifacts: tuple[ArtifactRef, ...]
+
+
+# ---------------------------------------------------------------------------
+# Journal: every semantic event kind and the contract its payload conforms to
+# ---------------------------------------------------------------------------
+
+EVENT_KIND_CONTRACTS: dict[str, type[Contract]] = {
+    "observation": MarketObservation,
+    "market_view": MarketView,
+    "trade_plan": TradePlan,
+    "risk_decision": RiskDecision,
+    "decision": Decision,
+    "order_intent": OrderIntent,
+    "order": Order,
+    "fill": Fill,
+    "account": AccountSnapshot,
+}

@@ -38,18 +38,23 @@ def _with_dbname(url: str, name: str) -> str:
 
 
 @pytest.fixture
-def database_url() -> Iterator[str]:
+def empty_database_url() -> Iterator[str]:
+    """A fresh, unmigrated database."""
     admin = _admin_url()
     name = f"algotrader_test_{uuid.uuid4().hex[:10]}"
     with psycopg.connect(admin, autocommit=True) as c:
         c.execute(sql.SQL("CREATE DATABASE {}").format(sql.Identifier(name)))
-    url = _with_dbname(admin, name)
-    db.migrate(url)
     try:
-        yield url
+        yield _with_dbname(admin, name)
     finally:
         with psycopg.connect(admin, autocommit=True) as c:
             c.execute(sql.SQL("DROP DATABASE IF EXISTS {} WITH (FORCE)").format(sql.Identifier(name)))
+
+
+@pytest.fixture
+def database_url(empty_database_url: str) -> str:
+    db.migrate(empty_database_url)
+    return empty_database_url
 
 
 @pytest.fixture

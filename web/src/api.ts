@@ -1,6 +1,24 @@
 // Thin typed client for the FastAPI backend. Payloads mirror src/algotrader/contracts.py.
 
-export type RunStatus = "queued" | "running" | "completed" | "cancelled" | "failed";
+export type RunStatus = "queued" | "running" | "paused" | "completed" | "cancelled" | "failed";
+
+export type RuntimeState =
+  | "queued"
+  | "running"
+  | "pausing"
+  | "paused"
+  | "stepping"
+  | "recovering"
+  | "cancel_requested"
+  | "completed"
+  | "cancelled"
+  | "failed";
+
+export interface ControlEntry {
+  at: string;
+  command: string;
+  [detail: string]: unknown;
+}
 
 export interface RecoveryEntry {
   at: string;
@@ -12,7 +30,10 @@ export interface RecoveryEntry {
 export interface Run {
   run_id: string;
   status: RunStatus;
-  config: { speed: number; fault: string; fault_at_step: number; fixture_id: string; seed: number };
+  runtime_state: RuntimeState;
+  runtime_detail: string;
+  config: { fault: string; fault_at_step: number; fixture_id: string; seed: number };
+  control: { paused: boolean; step_budget: number; speed: number };
   created_at: string;
   started_at: string | null;
   finished_at: string | null;
@@ -20,7 +41,9 @@ export interface Run {
   attempt: number;
   max_attempts: number;
   recovery_log: RecoveryEntry[];
+  control_log: ControlEntry[];
   error: string | null;
+  lease_owner: string | null;
   lease_expired: boolean;
   has_manifest: boolean;
   progress: {
@@ -30,6 +53,18 @@ export interface Run {
     heartbeat_at: string | null;
     heartbeat_age_seconds: number | null;
     elapsed_seconds: number | null;
+    eta_seconds: number | null;
+    eta_basis: string;
+  };
+}
+
+export interface Health {
+  status: string;
+  schema_version: string;
+  workers: {
+    alive: number;
+    alive_threshold_seconds: number;
+    recent: { worker_id: string; heartbeat_age_seconds: number; current_run: string | null; alive: boolean }[];
   };
 }
 
@@ -106,6 +141,7 @@ export interface ArtifactRef {
 }
 
 export interface Manifest {
+  schema_version: string;
   run_id: string;
   status: string;
   semantic_trace_hash: string;
@@ -129,6 +165,12 @@ export const api = {
   startRun: (speed: number, fault: string) =>
     req<Run>("/api/runs", { method: "POST", body: JSON.stringify({ speed, fault }) }),
   cancelRun: (id: string) => req<Run>(`/api/runs/${id}/cancel`, { method: "POST" }),
+  pauseRun: (id: string) => req<Run>(`/api/runs/${id}/pause`, { method: "POST" }),
+  resumeRun: (id: string) => req<Run>(`/api/runs/${id}/resume`, { method: "POST" }),
+  stepRun: (id: string) => req<Run>(`/api/runs/${id}/step`, { method: "POST" }),
+  setSpeed: (id: string, speed: number) =>
+    req<Run>(`/api/runs/${id}/speed`, { method: "POST", body: JSON.stringify({ speed }) }),
+  health: () => req<Health>("/api/health"),
   snapshot: (id: string) => req<Snapshot>(`/api/runs/${id}/snapshot`),
   prices: (id: string) => req<PricePoint[]>(`/api/runs/${id}/prices`),
   decisions: (id: string) => req<JournalEvent<Decision>[]>(`/api/runs/${id}/events?kind=decision&limit=5000`),
