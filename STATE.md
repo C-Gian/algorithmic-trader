@@ -38,24 +38,54 @@ Professional coverage decisions are now explicit:
 
 RP-001 remains historical development evidence only. Its useful causal/masking lessons may be reused; its pullback-only scope and numeric conventions are not production defaults.
 
-### Active package
+### WP-008 — Owner Evaluation Workbench + Corpus Bootstrap
 
-**WP-008 — Owner Evaluation Workbench + Corpus Bootstrap**
+Accepted implementation:
+- `a14f58bde1f00508f234c8ccba9d08f98f57d71f`
+
+Acceptance evidence:
+- one fast-forward implementation commit over `18638b23f7daaa9e587808f0d032473a4fa30da5`;
+- GitHub Actions run `36773558450`: `checks` SUCCESS and `compose-smoke` SUCCESS;
+- 308 non-E2E tests and 10 E2E tests reported green;
+- all five accepted/frozen schema baseline blobs are byte-identical to the WP-008 base;
+- corpus plan target is exactly `2025-09-01 → 2026-09-01 UTC` with twelve calendar chunks and only `btc-okx-2025-09` enabled;
+- Prepare queues a durable PostgreSQL job owned by a separate corpus worker; the browser does not own acquisition;
+- verified bindings are reused without network, and exact matching local datasets can be adopted without network;
+- acquisition uses the accepted official-OKX marketdata path, verifies before binding and never creates a second market-data format;
+- cancellation/restart semantics are explicit and preserve finalized immutable datasets;
+- the Backtest page reuses the accepted observation replay rather than forking a second replay/backtest engine;
+- completed/cancelled/failed runs produce deterministic Markdown/JSON reports with `Copy report for chat`;
+- adviser/MarketView/call/outcome metrics remain UNAVAILABLE/null rather than fabricated or zero;
+- fast chart display is sampled while backend causal event processing remains complete;
+- no trader logic, `semantic.v2`, P&L strategy evaluation or real Sep-2025 acquisition was performed by the executor.
+
+Accepted limitations to measure on the Owner machine:
+- real Sep-2025 acquisition throughput/ETA is not yet measured;
+- a month is expected to produce roughly 130k feed events, and the current observation worker commits one transaction per event and re-derives state for terminal validation, so replay may take many minutes;
+- this is a measurement gate, not yet evidence of an unacceptable performance defect;
+- storage mechanism for the eventual reusable corpus pack remains undecided until measured month size is available;
+- local startup catch-up and the real adviser remain pending.
+
+## Current action
+
+**OWNER CORPUS PREP / OBSERVATION EVALUATION**
 
 See `task.md`.
 
-WP-008 creates the Owner-operated workflow that the future real adviser will reuse:
-- reusable historical corpus planning/preparation;
-- durable app-launched acquisition;
-- initial fixed bootstrap chunk `2025-09-01 → 2025-10-01 UTC`;
-- dedicated Backtest/Evaluation surface;
-- real observation-only historical evaluation using accepted replay;
-- visible progress/candles/controls;
-- compact Copy report for chat + Markdown/JSON.
+No executor implementation task is active during this measurement step.
 
-WP-008 does not implement trader semantics or `semantic.v2`.
+The Owner prepares the fixed Sep-2025 bootstrap chunk from the Backtest page, then runs the observation-only evaluation at max pacing and copies the resulting report back to the Director.
 
-After WP-008 acceptance, the Director will close only the specific integrated-method questions required for the first adviser implementation, then authorize the real advisory core.
+This run answers only:
+- whether real month acquisition/verification/reuse works on the Owner machine;
+- actual local storage size;
+- actual acquisition throughput/ETA behavior;
+- actual full-month causal replay throughput/ETA/browser responsiveness;
+- terminal validation integrity.
+
+It does not evaluate trading performance.
+
+After the report is returned, the Director will use the measured operational evidence while closing the bounded integrated-adviser method required for the first real advisory implementation.
 
 ## Research retained, not governing
 
