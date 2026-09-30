@@ -6,11 +6,11 @@ Updated: 2026-09-30
 
 Canonical directive: `FOUNDATION.md` — version 2.0.
 
-## Corrected accepted product scope
+## Accepted product scope
 
-Algorithmic Trader is a **BTC market-analysis and trade-decision system**, not an autonomous account-management/trading bot.
+Algorithmic Trader is a BTC market-analysis and trade-decision system, not an autonomous account-management/trading bot.
 
-The system must:
+The system must eventually:
 
 - maintain a current professional MarketView;
 - state plausible/primary scenarios and expected market behavior;
@@ -19,28 +19,17 @@ The system must:
 - keep market understanding distinct from trade recommendation;
 - update the view/recommendation as the market evolves.
 
-The human Owner independently decides:
-
-- capital allocation;
-- position size;
-- leverage;
-- collateral/margin;
-- actual order placement;
-- personal portfolio/account risk.
-
-Those choices are outside the algorithm's recommendation semantics.
+The human Owner independently decides capital allocation, position size, leverage, collateral/margin, actual order placement and personal portfolio/account risk.
 
 ## Current milestone
 
 **M3 — Trustworthy real-market observation and causal reasoning readiness**
 
-The operational shell and source-auditable OKX market-data evidence layer are accepted.
+The application shell, immutable OKX evidence layer and pure causal feed/observable-state core are now accepted.
 
-The next objective is to create the long-lived causal boundary:
+M3 next prioritizes **prospective public recording** because true receipt timing and live-only information cannot be reconstructed retroactively.
 
-**market evidence → availability feed → observable market state → later professional reasoning**
-
-No real professional trader intelligence enters M3 yet.
+No professional trader intelligence enters M3 yet.
 
 ## Accepted work
 
@@ -57,71 +46,78 @@ Accepted implementation:
 
 Accepted outcomes include durable replay controls, restart recovery, runtime visibility and frozen `algotrader.semantic.v1`.
 
-`algotrader.semantic.v1` is the synthetic-shell baseline, not the final professional trader contract.
+`algotrader.semantic.v1` remains the synthetic-shell baseline.
 
 ### WP-003 — OKX BTC-USDT-SWAP public data provenance
 Accepted implementation:
 - `6b45728074e470bb85b06cce1995dad90f81cb62`
 
-Acceptance evidence:
-- GitHub Actions run `36688980492`: SUCCESS;
-- `checks`: SUCCESS;
-- `compose-smoke`: SUCCESS;
-- live public OKX integration succeeded;
-- `algotrader.marketdata.v1` remains separate from semantic contracts;
-- event, modeled availability and retrieval time are distinct;
-- incomplete/invalid/gap/duplicate evidence is surfaced without silent repair.
+Acceptance evidence includes GitHub Actions run `36688980492`, successful public OKX integration, frozen `algotrader.marketdata.v1`, immutable source evidence and explicit event/availability/retrieval timing.
 
 Accepted WP-003 interpretations remain unchanged.
 
-## SR-001 strategic review
+### WP-004 — Causal feed and observable market state pure core
+Accepted implementation:
+- `82e6c8488eec146dfb4fd170fe37966750a84f60`
 
-Inputs retained:
+Acceptance evidence:
+- GitHub Actions run `36708401496`: SUCCESS;
+- `checks`: SUCCESS;
+- `compose-smoke`: SUCCESS;
+- Director verified `algotrader.semantic.v1` and `algotrader.marketdata.v1` blobs are byte-identical to the pre-WP-004 base;
+- new `algotrader.feed.v1` is PROVISIONAL revision 1 with schema-drift/revision controls;
+- dataset evidence converts to deterministic role-specific feed events;
+- modeled availability delay can only postpone knowledge;
+- prefix/truncated-history invariance is tested;
+- observable state is pure, deterministic and independent of UI/DB/worker/trader/account modules;
+- invalid/unconfirmed evidence cannot enter valid state;
+- packaging-independent normalized feed-content identity is distinct from acquisition package identity.
+
+Accepted WP-004 interpretations:
+- `feedcontent.v1` identifies normalized market/feed content and intentionally excludes acquisition packaging and availability policy; those remain separately recorded;
+- `ordered_event_hash` includes provenance, so equivalent economic content acquired through different packages may have different ordered-event hashes;
+- a historical missing-slot quality event at the slot's modeled availability is a replay modeling convention, not proof that a live client observed the outage at that instant;
+- default 2-minute bar freshness and 240-event history are developer-inspection defaults only, not trader/research parameters;
+- sparse funding has no completeness schedule in WP-004;
+- live/incremental duplicate/idempotency protection must live in the future recorder/journal boundary rather than rely solely on the bounded observable-state history.
+
+## Repository history note
+
+PR #8 had been merged as `64f3fa7`. Commit `887dfe0` was later created from stale parent `b47b3cb` and contained only `strategic_reviews/CLAUDE-SR-001-REVIEW.md`, temporarily dropping the PR #8 tree from main.
+
+The history was repaired without rewriting shared history by merge commit:
+
+`ea88a978d3c44729f60705c332888116af3ecda6`
+
+Its resulting tree matches `64f3fa7`.
+
+The commit graph alone does not prove which local command/tool moved the branch. Future local writes must start from a fresh `git pull --ff-only origin main`; force pushes remain prohibited.
+
+## SR-001 strategic direction
+
+Retained reviews:
 
 - `strategic_reviews/ASTRA-SR-001-REVIEW.md`
 - `strategic_reviews/CLAUDE-SR-001-REVIEW.md`
 
-Both were useful. Astra is the primary strategic reviewer; Claude is retained as a secondary independent/technical review.
-
 Director disposition:
 
-`strategic_reviews/SR-001-DIRECTOR-DISPOSITION.md`
+- `strategic_reviews/SR-001-DIRECTOR-DISPOSITION.md`
 
-The Owner clarified after both reviews that account sizing, leverage and capital allocation are human responsibilities. Foundation v2.0 supersedes inconsistent Foundation v1.x language.
+Accepted long-lived boundary:
 
-Accepted SR-001 architecture:
-
-- heterogeneous causal events;
-- centrally owned observable market state;
-- per-channel freshness/quality;
-- explicit event/availability/retrieval times;
-- role-specific traded/mark/index/funding information;
-- replay/live parity;
-- no raw dataset access from professional reasoning;
-- no bar-indexed assumption as the long-lived engine boundary.
-
-Rejected as product requirements:
-
-- autonomous 1x account-equity control;
-- leverage selection;
-- position sizing;
-- margin/collateral management;
-- full perpetual account/liquidation modeling.
-
-Trade execution/cost mechanics remain relevant only when needed to fairly evaluate a concrete recommendation.
+**market evidence → causal availability feed → centrally owned observable market state → later professional reasoning → MarketView / prediction / trade recommendation**
 
 ## Contract strategy
 
-Keep frozen:
-
+Frozen:
 - `algotrader.semantic.v1` — synthetic shell;
 - `algotrader.marketdata.v1` — market evidence.
 
-Next introduce:
+Provisional during M3:
+- `algotrader.feed.v1` — causal deliveries and observable state.
 
-- provisional `algotrader.feed.v1` — causal deliveries and observable-state contracts.
-
-Do **not** introduce `semantic.v2` until the first real professional trader specification is designed.
+Do not introduce `semantic.v2` until the first real professional trader specification is designed.
 
 ## Initial market-data source
 
@@ -136,9 +132,28 @@ This is a data/reference source choice, not a broker or automated-execution deci
 
 ## Active task
 
-**WP-004 — Causal feed and observable market state pure core**
+**WP-005 — Prospective OKX public live recorder and measured receipt-time evidence**
 
 See `task.md`.
+
+## Why recorder comes before application replay integration
+
+Historical REST evidence cannot recover:
+
+- actual client receipt time of completed candles;
+- connection/reconnect behavior;
+- the evolving pre-settlement funding value visible live;
+- the precise delay between source market timestamps and what our process actually received.
+
+This evidence only accumulates prospectively, so recording starts before the observation-only replay/UI integration package.
+
+## Known non-blocking technical follow-ups
+
+- WP-003 instrument parsing currently maps numeric `ctMult=0` through a fallback to 1; this should be hardened before any future use of multiplier semantics.
+- WP-004 does not establish expected funding-settlement completeness.
+- current feed freshness defaults are inspection-only.
+
+None blocks public receipt-time recording.
 
 ## Base knowledge snapshot
 
@@ -146,18 +161,16 @@ See `task.md`.
 
 ## Parallel pre-trader research gaps
 
-Before the first real professional trader specification, the Director must resolve only what the chosen trader actually requires, especially:
+Before the first real professional trader specification, resolve only what the chosen trader requires, especially:
 
 1. professional intraday multi-timeframe context → trigger → invalidation → target/management process;
 2. causal structure/levels/support-resistance formalization;
 3. venue/data mechanics required by that process.
 
-Broad literature collection, cycle theory, retracement ratios, order flow/L2 and liquidation-flow interpretation are not automatic prerequisites.
-
 ## Next action
 
-Owner pulls latest `main` after the Director merges this scope correction.
+Owner pulls latest `main` after this acceptance package is merged.
 
-Claude Code then implements only WP-004 from `task.md`.
+Claude Code then implements only WP-005 from `task.md`.
 
-After WP-004 acceptance, the expected next package is observation-only real replay plus prospective public receipt-time recording. No professional trader logic is introduced before a later trader-design checkpoint.
+After WP-005 acceptance, the next expected package is durable observation-only real replay/UI integration using the accepted feed/state core and recorded-session evidence.
