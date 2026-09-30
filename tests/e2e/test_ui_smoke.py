@@ -124,7 +124,7 @@ def panel_status(page: Page):
 
 
 def start_from_ui(page: Page, base: str, speed: str, fault: str = "none") -> str:
-    page.goto(base)
+    page.goto(base + "/#replay")  # the synthetic replay lives in the Replay Lab (Market is the landing page)
     expect(page.get_by_test_id("demo-banner")).to_contain_text("DEMO / SYNTHETIC")
     page.get_by_test_id("speed").select_option(speed)
     page.get_by_test_id("fault").select_option(fault)
@@ -157,7 +157,7 @@ def test_ui_run_survives_browser_close_and_completes(stack, browser, evidence_di
 
     ctx = browser.new_context(viewport={"width": 1400, "height": 1100})
     page = ctx.new_page()
-    page.goto(stack.base)  # fresh browser, no hash: reconstructs from backend
+    page.goto(stack.base + "/#replay")  # fresh browser, no run hash: reconstructs from backend
     expect(page.get_by_test_id("run-panel")).to_contain_text(run_id)
     expect(panel_status(page)).to_have_text("COMPLETED", timeout=30_000)
     expect(page.get_by_test_id("validation")).to_have_text("PASS", timeout=10_000)
@@ -267,7 +267,7 @@ def test_ui_pause_step_speed_resume_survive_browser_reconnect(stack, browser, ev
 
     ctx = browser.new_context(viewport={"width": 1400, "height": 1200})
     page = ctx.new_page()
-    page.goto(stack.base)  # fresh browser reconstructs the paused run from the backend
+    page.goto(stack.base + "/#replay")  # fresh browser (no run hash) reconstructs the paused run from the backend
     expect(page.get_by_test_id("run-panel")).to_contain_text(run_id)
     expect(panel_status(page)).to_have_text("PAUSED")
     expect(page.get_by_test_id("progress")).to_have_text(f"{paused_at}/120")
@@ -340,7 +340,7 @@ def test_full_api_and_worker_restart_preserves_run(stack, browser, evidence_dir,
     try:
         ctx = browser.new_context(viewport={"width": 1400, "height": 1200})
         page = ctx.new_page()
-        page.goto(fresh.base)  # fresh browser, same URL
+        page.goto(fresh.base + "/#replay")  # fresh browser, no run hash
         expect(page.get_by_test_id("run-panel")).to_contain_text(run_id)
         expect(panel_status(page)).to_have_text("COMPLETED", timeout=45_000)
         expect(page.get_by_test_id("recovery-log")).to_contain_text("lease_expired_reclaimed")
@@ -396,6 +396,8 @@ def test_ui_data_view_shows_dataset_provenance_and_quality(stack, browser, evide
     expect(families).to_contain_text("funding_rates")
     expect(page.get_by_test_id("dataset-findings")).to_contain_text("incomplete_candle_rejected")
     expect(page.get_by_test_id("dataset-findings")).to_contain_text("missing_intervals")
+    expect(detail).not_to_contain_text("1x exposure cap")  # stale product wording removed
+    expect(detail).to_contain_text("venue metadata only")
     page.get_by_test_id("dataset-verify").click()
     expect(page.get_by_test_id("dataset-verify-result")).to_contain_text("OK", timeout=10_000)
     expect(page.get_by_test_id("dataset-provenance")).to_contain_text("request_log.jsonl")
@@ -434,14 +436,19 @@ def test_ui_public_recorder_start_stop_and_completed_session(stack, browser, evi
 
     ctx = browser.new_context(viewport={"width": 1400, "height": 1300})
     page = ctx.new_page()
-    page.goto(stack.base + "/#data")
+    page.goto(stack.base)
+    page.get_by_test_id("nav-recorder").click()  # first-class destination
+    expect(page.get_by_test_id("page-recorder")).to_be_visible()
     panel = page.get_by_test_id("recorder-panel")
-    expect(panel).to_contain_text("Public Market Recorder — no trading")
+    expect(panel).to_contain_text("Public market evidence collection — no trading")
     done = page.get_by_test_id(f"recorder-session-{sid}")
     expect(done.get_by_test_id("recorder-status")).to_have_text("CLEAN", timeout=15_000)
-    expect(done.get_by_test_id("recorder-report")).to_contain_text("candle1m:BTC-USDT-SWAP: 2 completed bars",
-                                                                     timeout=15_000)
-    expect(done.get_by_test_id("recorder-report")).to_contain_text("client-observed, not exchange publication")
+    report = done.get_by_test_id("recorder-report")
+    trade_row = report.get_by_test_id("report-row-candle1m:BTC-USDT-SWAP")
+    expect(trade_row.get_by_test_id("completed-bars")).to_have_text("2", timeout=15_000)
+    expect(report).to_contain_text("client-observed, not exchange publication")
+    page.reload()  # refresh on the section deep link returns to the Recorder
+    expect(page.get_by_test_id("page-recorder")).to_be_visible()
     # Owner starts a session from the browser; no recorder worker runs in this CI stack (no live network),
     # so it stays queued until stopped -> cancelled.
     page.get_by_test_id("recorder-duration").select_option("30")
@@ -458,3 +465,74 @@ def test_ui_public_recorder_start_stop_and_completed_session(stack, browser, evi
         "completed_session": stack.get(f"/api/recorder/sessions/{sid}")["report"],
         "statuses": [(s["session_id"], s["status"]) for s in sessions],
     })
+
+
+PENDING_TRADER_AREAS = ("market-view", "scenarios", "decision", "geometry", "evidence", "changes")
+SECTIONS = {"market": "page-overview", "replay": "page-replay", "data": "page-data", "recorder": "page-recorder"}
+
+
+def no_horizontal_overflow(page: Page) -> bool:
+    return page.evaluate("() => document.documentElement.scrollWidth <= document.documentElement.clientWidth")
+
+
+def test_shell_market_overview_is_default_honest_and_navigable(stack, browser, evidence_dir):
+    """Market overview is the landing page, reserves the trader areas as clearly pending and never shows
+    synthetic Replay Lab output; every destination is reachable, refresh-stable and free of page overflow."""
+    run_id = httpx.post(f"{stack.base}/api/runs", json={"speed": 0}, timeout=10).json()["run_id"]
+    wait_for(lambda: stack.get(f"/api/runs/{run_id}")["status"] == "completed", timeout=30)
+    latest = stack.get(f"/api/runs/{run_id}/snapshot")["latest"]
+    synthetic_texts = [run_id, latest["decision"]["reason"], latest["market_view"]["summary"]]
+
+    ctx = browser.new_context(viewport={"width": 1440, "height": 900})
+    page = ctx.new_page()
+    page.goto(stack.base)
+    overview = page.get_by_test_id("page-overview")
+    expect(overview).to_be_visible()
+    expect(page.get_by_test_id("nav-market")).to_have_attribute("aria-current", "page")
+    expect(page.get_by_test_id("trader-engine-status")).to_contain_text("Not yet implemented")
+    for area in PENDING_TRADER_AREAS:
+        card = page.get_by_test_id(f"pending-{area}")
+        expect(card).to_be_visible()
+        expect(card).to_have_attribute("data-state", "pending")
+        expect(card).to_contain_text("Not yet implemented")
+    expect(page.get_by_test_id("pending-decision")).to_contain_text("No decision published")
+    expect(page.get_by_test_id("pending-geometry")).to_contain_text("Awaiting engine")
+    # real readiness is shown; synthetic output is not
+    expect(page.get_by_test_id("overview-run-workers")).to_have_text("1", timeout=10_000)
+    expect(page.get_by_test_id("readiness")).to_contain_text("Professional trader engine")
+    for text in synthetic_texts:
+        expect(overview).not_to_contain_text(text)
+    for testid in ("permitted-action", "view-bias", "demo-banner", "run-panel", "position"):
+        expect(page.get_by_test_id(testid)).to_have_count(0)
+    for word in ("BULLISH", "BEARISH"):
+        expect(overview).not_to_contain_text(word)
+    assert no_horizontal_overflow(page)
+    page.screenshot(path=str(evidence_dir / "12-market-overview-1440.png"), full_page=True)
+
+    for section, testid in SECTIONS.items():
+        page.get_by_test_id(f"nav-{section}").click()
+        expect(page.get_by_test_id(testid)).to_be_visible()
+        expect(page.get_by_test_id(f"nav-{section}")).to_have_attribute("aria-current", "page")
+        page.wait_for_timeout(300)
+        assert no_horizontal_overflow(page), section
+    page.get_by_test_id("nav-replay").click()
+    expect(page.get_by_test_id("demo-banner")).to_contain_text("DEMO / SYNTHETIC")
+    expect(page.get_by_test_id("run-panel")).to_contain_text(run_id)
+    page.get_by_test_id("nav-data").click()
+    page.reload()  # section deep link survives refresh
+    expect(page.get_by_test_id("page-data")).to_be_visible()
+    ctx.close()
+
+    ctx = browser.new_context(viewport={"width": 1024, "height": 768})  # narrower desktop / tablet
+    page = ctx.new_page()
+    for section, testid in SECTIONS.items():
+        page.goto(f"{stack.base}/#{section}")
+        expect(page.get_by_test_id(testid)).to_be_visible()
+        page.wait_for_timeout(300)
+        assert no_horizontal_overflow(page), section
+    page.goto(f"{stack.base}/#run={run_id}")  # legacy run deep link still opens the Replay Lab run
+    expect(page.get_by_test_id("run-panel")).to_contain_text(run_id)
+    page.screenshot(path=str(evidence_dir / "13-replay-lab-1024.png"), full_page=True)
+    ctx.close()
+    record(evidence_dir, "e2e-shell-overview", {"synthetic_run": run_id, "pending_areas": list(PENDING_TRADER_AREAS),
+                                                "sections": list(SECTIONS)})

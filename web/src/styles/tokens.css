@@ -1,0 +1,85 @@
+/* Design tokens — Algorithmic Trader "decision desk".
+   Dark-first by design (not dependent on prefers-color-scheme). */
+
+:root {
+  /* Ink surfaces */
+  --bg: #0a0d12;
+  --bg-sidebar: #0c1016;
+  --surface: #11161e;
+  --surface-2: #151b25;
+  --surface-3: #1b2230;
+  --surface-hover: #1a212c;
+  --line: rgba(214, 224, 240, 0.075);
+  --line-2: rgba(214, 224, 240, 0.12);
+  --line-3: rgba(214, 224, 240, 0.2);
+
+  /* Text */
+  --text: #e9ecf2;
+  --text-2: #b1b9c7;
+  --text-3: #7c8697;
+  --text-4: #5a6474;
+
+  /* Brand: champagne brass — used sparingly (identity, primary action, active nav) */
+  --brand: #cdb27a;
+  --brand-hi: #e9d6ad;
+  --brand-ink: #1b1508;
+  --brand-soft: rgba(205, 178, 122, 0.12);
+
+  /* Semantics (always paired with text/shape) */
+  --pos: #43c890;
+  --pos-soft: rgba(67, 200, 144, 0.12);
+  --neg: #f07470;
+  --neg-soft: rgba(240, 116, 112, 0.12);
+  --warn: #f19a55;
+  --warn-soft: rgba(241, 154, 85, 0.12);
+  --info: #6cb6e0;
+  --info-soft: rgba(108, 182, 224, 0.12);
+  --neutral: #9aa4b5;
+  --neutral-soft: rgba(154, 164, 181, 0.1);
+
+  /* Materials */
+  --synthetic: #b39cf2;
+  --synthetic-soft: rgba(179, 156, 242, 0.1);
+  --synthetic-line: rgba(179, 156, 242, 0.28);
+  --synthetic-hatch: repeating-linear-gradient(135deg, rgba(179, 156, 242, 0.07) 0 1px, transparent 1px 9px);
+  --pending: #8ea3c7;
+  --pending-soft: rgba(142, 163, 199, 0.08);
+  --pending-line: rgba(142, 163, 199, 0.34);
+
+  /* Type */
+  --font-display: "Bricolage Grotesque Variable", "Figtree Variable", ui-sans-serif, sans-serif;
+  --font-ui: "Figtree Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+
+  --fs-2xs: 11px;
+  --fs-xs: 12px;
+  --fs-sm: 13px;
+  --fs-md: 14px;
+  --fs-lg: 16px;
+  --fs-xl: 20px;
+  --fs-2xl: 26px;
+  --fs-3xl: 34px;
+
+  /* Space (4px grid) */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 20px;
+  --s-6: 24px;
+  --s-7: 32px;
+  --s-8: 40px;
+  --s-9: 56px;
+
+  --radius-sm: 6px;
+  --radius: 10px;
+  --radius-lg: 14px;
+
+  --shadow: 0 1px 0 rgba(255, 255, 255, 0.025) inset, 0 12px 32px -18px rgba(0, 0, 0, 0.7);
+  --focus: 0 0 0 2px var(--bg), 0 0 0 4px rgba(205, 178, 122, 0.75);
+
+  --sidebar-w: 256px;
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+
+  color-scheme: dark;
+}

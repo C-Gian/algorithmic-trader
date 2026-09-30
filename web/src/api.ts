@@ -60,7 +60,13 @@ export interface Run {
 
 export interface Health {
   status: string;
+  version?: string;
+  database?: string;
   schema_version: string;
+  recorder_workers?: {
+    alive: number;
+    recent: { worker_id: string; current_session: string | null; heartbeat_age_seconds: number }[];
+  };
   workers: {
     alive: number;
     alive_threshold_seconds: number;

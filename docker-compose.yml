@@ -64,7 +64,7 @@ services:
   recorder:
     <<: *app
     # Public, read-only OKX market recorder (no credentials, no trading). Idle until a session
-    # is started from the Data tab / API. Endpoints are configurable for regional OKX domains via
+    # is started from the Recorder view / API. Endpoints are configurable for regional OKX domains via
     # ALGOTRADER_OKX_WS_PUBLIC_URL / ALGOTRADER_OKX_WS_BUSINESS_URL / ALGOTRADER_OKX_BASE_URL.
     command: ["algotrader", "recorder-worker"]
     depends_on:

@@ -28,7 +28,7 @@ One command (Docker + Docker Compose required):
 docker compose up --build
 ```
 
-Then open <http://localhost:8000>. Click **Start synthetic replay** to launch a run; the worker executes it independently of the browser. `docker compose down` stops the stack (add `--volumes` to delete the database and run artifacts).
+Then open <http://localhost:8000>. The app opens on **Market** (the future trader cockpit, with real system/data readiness and clearly pending trader areas). Navigate with the sidebar: **Replay Lab** (synthetic DEMO replay), **Data** (historical datasets) and **Recorder** (public evidence collection). In Replay Lab, click **Start synthetic replay** to launch a run; the worker executes it independently of the browser. `docker compose down` stops the stack (add `--volumes` to delete the database and run artifacts).
 
 Without Docker (local PostgreSQL 18, Python via `uv`, Node 24):
 
@@ -91,7 +91,7 @@ uv run algotrader data live-check --minutes 30  # manual live integration check 
 - **Time semantics**: candles keep the source `open_time`, a computed `close_time`, the modeled `available_time` and `retrieved_at` as separate fields. `available_time` follows the labelled modeling policy `okx.completed_1m_bar_available_at_close.v1` (bar close), which is not a measured publication time. Funding events keep the source `funding_time` and are never made available earlier. Unconfirmed candles (`confirm=0`) are rejected and reported.
 - **Units**: traded candles keep contract volume, base-currency volume and quote-currency volume as separate fields with their currencies. Mark and index candles have no volume fields. Prices, rates and volumes are exact decimals (stored as the source decimal strings).
 - **Quality**: gaps, duplicates (identical or conflicting), out-of-order pages, incomplete bars, invalid OHLC, prices or volumes, and out-of-window rows are reported with a severity (`info`, `warning`, `degraded`, `invalid`). Nothing is filled or repaired; invalid rows are kept with `quality=INVALID`.
-- **Data view**: the UI's *Data* tab (and `GET /api/datasets[/{id}[/verify|/files/{name}]]`) shows source, instrument, coverage, row counts, quality and gaps, retrieval time, schema version, hashes and provenance files.
+- **Data view**: the UI's **Data** workspace (`#data`) (and `GET /api/datasets[/{id}[/verify|/files/{name}]]`) shows source, instrument, coverage, row counts, quality and gaps, retrieval time, schema version, hashes and provenance files.
 - Contracts are versioned separately as **`algotrader.marketdata.v1`** (`schemas/algotrader.marketdata.v1.json`, same frozen-baseline rules as below). Exchange-advertised leverage is stored as venue metadata only; it is not a recommendation or product risk policy. Funding is recorded as market evidence.
 
 ## Causal feed and observable market state (WP-004, `algotrader.feed.v1` PROVISIONAL)
@@ -153,7 +153,7 @@ This component prospectively records **public, unauthenticated** OKX BTC-USDT-SW
   - Deduplication uses an explicit journal identity, independent of the observable state's bounded history.
   - Clock-inconsistent completions (received before the bar end) are excluded and reported, not clamped.
   - Live funding snapshots are *not* settlements and stay recorder-only.
-- **Operation**: the **Data** tab has a *Public Market Recorder — no trading* panel with start (max duration), stop, status, elapsed time, heartbeat, connection states, subscribed channels, counts, last receipt, reconnects/errors, output path and the measured-timing summary. The `recorder` Docker Compose service (or `algotrader serve`) runs `algotrader recorder-worker`; the browser does not own the recording.
+- **Operation**: the **Recorder** view (`#recorder`, *Public market evidence collection — no trading*) has start (max duration), stop, status, elapsed time, heartbeat, connection states, subscribed channels, counts, last receipt, reconnects/errors, output path and the measured-timing summary. The `recorder` Docker Compose service (or `algotrader serve`) runs `algotrader recorder-worker`; the browser does not own the recording.
   - CLI: `algotrader recorder run --minutes N` (foreground bounded session) and `algotrader recorder inspect <session_id>`.
 
 ## Semantic contract baseline
