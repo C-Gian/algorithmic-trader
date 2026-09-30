@@ -1,0 +1,47 @@
+case_id: REAL-G02
+evidence: REAL
+source: "dataset okx-btc-usdt-swap-1m-20260925T0000-20260930T0000-3305612c15aa; prefix REAL-G02.json"
+visible_prefix: REAL-G02.json
+visible_prefix_cutoff: "2026-09-28T12:00Z"
+selection_reason: "Predeclared grid cutoff."
+labeling_method: "Manual application of RP-001B B3/DC-30/DC-31 and RP-001A/C; medians via `sort -n`; no swing/level/policy code."
+frozen_before: "viewing REAL-G03..G06 prefixes and any outcome export"
+interpretations:
+  I1: "DC-30 'extremum bar' of a 1h swing is a 1h bar; the 5m epoch starts at the first 5m bar of that 1h bar, and S5 uses the 24 complete 5m bars strictly before it. Recorded interpretation, not a rule change."
+labels:
+  h1_series_continued_from_REAL-G01:
+    - {kind: LOW,  price: 82647.0, extremum: "2026-09-28T05:00Z", confirmed_by_bar: "2026-09-28T06:00Z", known_at: "2026-09-28T07:00Z", theta_used: 604.7}
+    - {kind: HIGH, price: 83260.0, extremum: "2026-09-28T06:00Z", confirmed_by_bar: "2026-09-28T09:00Z", known_at: "2026-09-28T10:00Z", theta_used: 656.4}
+    at_cutoff: {mode: DOWN, theta: 701.2, provisional_running_low: 82561.3, last_complete_1h_close: 83059.6}
+    scale_at_leg_starts: {bar_79: 328.2, bar_82: 350.6}
+  context:
+    two_latest_highs: [84973.6, 83260.0]   # falling
+    two_latest_lows: [84088.3, 82647.0]    # falling
+    close_below_latest_high: "83059.6 < 83260.0"
+    result: DOWN
+  P-CTX_short: SATISFIED
+  P-CTX_long: CONTRADICTED
+  setup_5m_short:
+    epoch_origin: "2026-09-28T06:00Z (1h swing HIGH 83260.0), per I1"
+    S5: {bars: "04:00-05:55", median_tr: 112.25, theta: 224.5, impulse_min: 449.0, b: 28.1, e: 56.2, z: 28.1}
+    swings_5m:   # [kind, price, extremum, confirming bar]
+      - [HIGH, 83260.0, "06:10", "06:25"]
+      - [LOW, 82992.1, "06:30", "07:00"]
+      - [HIGH, 83252.2, "07:00", "07:10"]
+      - [LOW, 82865.0, "07:40", "07:55"]
+      - [HIGH, 83125.0, "08:00", "08:15"]
+      - [LOW, 82750.0, "08:35", "08:50"]
+      - [HIGH, 83000.0, "08:50", "09:00"]
+      - [LOW, 82561.3, "09:05", "09:10"]
+      - [HIGH, 82943.0, "09:15", "09:30"]
+      - [LOW, 82572.8, "09:35", "10:00"]
+    at_cutoff: {mode: UP, provisional_running_high: 83080.0, provisional_high_time: "11:40"}
+    down_leg_sizes: {"83260.0->82992.1": 267.9, "83252.2->82865.0": 387.2, "83125.0->82750.0": 375.0, "83000.0->82561.3": 438.7, "82943.0->82572.8": 370.2}
+    latest_leg_in_context_direction: "HIGH 82943.0 -> LOW 82572.8 (370.2 < 449.0)"
+    P-IMP: CONTRADICTED
+    setup_state: NO_IMPULSE
+  public_action: NO_TRADE
+  display_reason: NO_SUPPORTED_SETUP
+  marketview_description: "1h context DOWN (lower highs, lower lows). 5m: a stair-step decline of five lower highs/lower lows since 06:10, each leg < 4 x S5; since 09:35 a counter-context rally has lifted price above the last confirmed 5m swing high (82943.0). No qualifying impulse; no preferred scenario."
+  definition_observations:
+    - "STAIR_STEP_TREND_NOT_IMPULSE: a persistent 5m down-structure made of several legs, each smaller than 4 x S5 (largest 438.7 vs 449.0), never qualifies as an impulse. The single-leg impulse definition (A2/DC-10) excludes stair-step trends by construction."
