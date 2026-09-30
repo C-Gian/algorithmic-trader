@@ -1,0 +1,29 @@
+case_id: REAL-G03
+evidence: REAL
+source: "dataset okx-btc-usdt-swap-1m-20260925T0000-20260930T0000-3305612c15aa; prefix REAL-G03.json"
+visible_prefix: REAL-G03.json
+visible_prefix_cutoff: "2026-09-28T20:00Z"
+selection_reason: "Predeclared grid cutoff."
+labeling_method: "Manual application of RP-001B B3 and RP-001A A1; medians via `sort -n`."
+frozen_before: "viewing REAL-G04..G06 prefixes and any outcome export"
+labels:
+  h1_series_continued_from_REAL-G02:
+    - {kind: LOW,  price: 82561.3, extremum: "2026-09-28T09:00Z", confirmed_by_bar: "2026-09-28T12:00Z", known_at: "2026-09-28T13:00Z", theta_used: 701.2}
+    - {kind: HIGH, price: 83800.0, extremum: "2026-09-28T13:00Z", confirmed_by_bar: "2026-09-28T14:00Z", known_at: "2026-09-28T15:00Z", theta_used: 748.6}
+    - {kind: LOW,  price: 82501.0, extremum: "2026-09-28T14:00Z", confirmed_by_bar: "2026-09-28T15:00Z", known_at: "2026-09-28T16:00Z", theta_used: 748.6}
+    - {kind: HIGH, price: 84346.8, extremum: "2026-09-28T17:00Z", confirmed_by_bar: "2026-09-28T19:00Z", known_at: "2026-09-28T20:00Z", theta_used: 762.2}
+    scale_at_leg_starts: {bar_85: 374.3, bar_87: 374.3, bar_88: 381.1}
+    at_cutoff: {mode: DOWN, provisional_running_low: 83062.0, last_complete_1h_close: 83345.9}
+    note: "the latest swing HIGH's known_at equals the cutoff (20:00) and is therefore included"
+  context:
+    two_latest_highs: [83800.0, 84346.8]   # rising
+    two_latest_lows: [82561.3, 82501.0]    # falling
+    result: NOT_DIRECTIONAL
+  P-CTX_long: CONTRADICTED
+  P-CTX_short: CONTRADICTED
+  setup_5m: "not assessed (no directional context)"
+  public_action: NO_TRADE
+  display_reason: NO_SUPPORTED_SETUP
+  marketview_description: "1h structure expanding (higher high 84346.8, lower low 82501.0) with large bars (TR up to 1102.4); the down-context of REAL-G02 is no longer supported. No preferred scenario; no playbook applicability."
+  definition_observations:
+    - "Context flipped DOWN (G02) -> NOT_DIRECTIONAL (G03) within 8 hours through two new swings; the HH/HL rule is sensitive to the latest swing in volatile, overlapping hours (expected behavior, recorded)."
