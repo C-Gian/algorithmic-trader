@@ -1,9 +1,9 @@
-# Active Task — WP-004: Causal Feed and Observable Market State Pure Core
+# Active Task — WP-005: Prospective OKX Public Live Recorder and Measured Receipt-Time Evidence
 
 Status: READY  
 Owner: Project & Research Director  
 Executor: Claude Code  
-Base: latest `main` after the Owner runs `git pull`.
+Base: latest `main` after the Owner runs `git pull --ff-only origin main`.
 
 ## Read first
 
@@ -14,350 +14,432 @@ Read in full:
 3. `AGENTS.md`
 4. `task.md`
 5. `strategic_reviews/SR-001-DIRECTOR-DISPOSITION.md`
-6. `strategic_reviews/ASTRA-SR-001-REVIEW.md`
-7. `strategic_reviews/CLAUDE-SR-001-REVIEW.md`
-8. `knowledge/market_sources/OKX-BTC-USDT-SWAP.md`
+6. `knowledge/market_sources/OKX-BTC-USDT-SWAP.md`
+7. the accepted feed implementation under `src/algotrader/feed/`
+8. the accepted market-data implementation under `src/algotrader/marketdata/`
 
-Where the advisory reviews conflict with Foundation v2.0 or the Director disposition, Foundation v2.0 and the Director disposition win.
+Where earlier review assumptions conflict with Foundation v2.0 or STATE.md, Foundation/STATE win.
 
 ## Context
 
-WP-001–WP-003 are accepted.
+WP-004 is accepted.
 
-The Owner clarified the product scope after SR-001:
+The project now has:
 
-**Algorithmic Trader is a professional market-analysis and trade-decision system. It is not an autonomous account sizing, leverage or capital-management bot.**
+- immutable historical/public source evidence: `algotrader.marketdata.v1`;
+- a deterministic causal feed/state core: provisional `algotrader.feed.v1`;
+- explicit MODELED vs RECORDED availability semantics.
 
-Do not implement autonomous position sizing, leverage, collateral/margin, account-level risk, liquidation or real execution in this task.
+The next priority is **prospective public recording**.
 
-The accepted market evidence layer already exists as `algotrader.marketdata.v1`.
+Historical REST acquisition cannot reconstruct exact client receipt times or the evolving live-only information visible before a funding settlement. That evidence can only be accumulated going forward.
 
-The next long-lived boundary is:
-
-**immutable market evidence → causal availability feed → centrally owned observable market state**
-
-This task implements only that boundary as a pure domain core. It does **not** connect the real data to the current dummy trader/account path yet.
+This task records public market information only. It does not implement the professional trader, recommendations, account sizing, P&L, orders or authenticated exchange access.
 
 ## Objective
 
-Build a deterministic, versioned causal feed and observable-state core that can consume the accepted OKX market-data evidence without lookahead, preserve asynchronous source timing/quality, and produce point-in-time market-state snapshots suitable for a future professional trader.
+Build a durable, auditable, public/read-only OKX live recorder for `BTC-USDT-SWAP` that captures raw pushed/polled source messages together with **actual local receipt timestamps** and enough connection/session provenance to later reconstruct RECORDED feed availability.
 
-The core must be independent of:
+The recorder must establish measured **client-observed receipt timing**, not claim to measure the exchange's internal publication instant.
 
-- UI;
-- PostgreSQL;
-- worker leases;
-- dummy trader;
-- account/P&L;
-- trade execution;
-- professional trading rules.
+It must be usable for multi-hour sessions and observable/controllable from the application where practical.
 
-## 1. Provisional feed contract namespace
+## Current source constraints
 
-Create a separate provisional contract namespace:
+Use only current official OKX public/unauthenticated interfaces.
 
-`algotrader.feed.v1`
+Relevant source families remain:
 
-It must not mutate:
+- traded 1m candles;
+- mark-price 1m candles;
+- index-price 1m candles;
+- settled/current funding information;
+- evolving pre-settlement funding information when exposed by the official current public API/channel.
+
+Prefer official public WebSocket push channels for timing-sensitive recording.
+
+Where a required family is not available/reliable through the selected official WebSocket endpoint or regional domain, a bounded public REST poller may be used as a fallback, but its availability basis must be labeled **POLL_OBSERVED** / polling-observed rather than exchange publication time.
+
+No API key, login, private/account or order endpoint is allowed.
+
+Base REST and WebSocket endpoints must be configurable for regional OKX domains. Do not hard-code one universal hostname.
+
+## 1. Recorder session contract
+
+Create a separate recording/session contract namespace appropriate to this task.
+
+Do not mutate frozen:
 
 - `algotrader.semantic.v1`;
 - `algotrader.marketdata.v1`.
 
-Create a checked-in machine-readable schema baseline plus drift tests.
+Do not freeze professional `semantic.v2`.
 
-Mark the namespace clearly as **PROVISIONAL during M3**. Unlike the frozen semantic/marketdata baselines, controlled breaking changes remain possible until M3 acceptance, but they must require:
+You may extend provisional `algotrader.feed.v1` only if WP-005 truly requires additional generic RECORDED-availability fields. Any feed contract change must:
 
-- schema version/change note;
-- explicit Director approval in a future task.
+- bump `FEED_SCHEMA_REVISION`;
+- add a changelog entry;
+- update the checked-in schema baseline;
+- preserve backward readability of revision-1 artifacts where relevant.
 
-Do not create `semantic.v2` in WP-004.
+Prefer a separate recorder/session manifest contract if the required fields are operational/provenance rather than causal feed semantics.
 
-## 2. Availability-event model
+At minimum a recording session must identify:
 
-Define a typed event envelope that can represent causally available market evidence.
+- source/venue;
+- instrument/series;
+- configured REST and WS endpoints;
+- start/stop times;
+- code version;
+- recorder/session schema version;
+- host/process/session identity;
+- wall-clock source used for receipt timestamps;
+- channels requested and channels successfully subscribed;
+- reconnects/disconnections/errors;
+- raw record counts;
+- per-channel first/last receipt;
+- raw artifact hashes;
+- clean/partial/failed status.
 
-At minimum include:
+## 2. Receipt-time semantics
 
-- stable event identity;
-- channel/family identity;
-- instrument/series identity;
-- event kind;
-- event/economic time;
-- availability time;
-- availability basis: at least `MODELED` or `RECORDED`;
-- availability-policy identifier;
-- retrieval/recording/provenance reference where applicable;
-- source record reference;
-- deterministic ordering fields;
-- payload reference or typed payload;
-- validity/quality semantics where applicable.
+For each received source message/record preserve separately:
 
-Required event categories include at least:
+- source market/event timestamp(s), where supplied;
+- source server/data-return timestamp(s), where supplied;
+- **local receipt time in UTC**, captured immediately when the message is received by the recorder process;
+- a monotonic in-process sequence / monotonic clock sample sufficient to preserve local receipt order even if wall clock shifts;
+- raw payload bytes/text exactly enough to hash/replay;
+- channel/subscription identity;
+- connection/reconnect generation;
+- parser/normalization status;
+- any source sequence/update identifier if supplied.
 
-- valid market observation;
-- quality/invalid/missing-slot event;
-- sparse funding event.
+Never call local receipt time “exchange publication time”.
 
-Do not model account settlements, orders or fills.
+For WebSocket data the later causal basis is `RECORDED`.
 
-## 3. Deterministic causal ordering
+For REST polling fallback, distinguish:
 
-Implement one total ordering policy for feed events.
+- request sent time;
+- response received time;
+- source timestamp;
+- poll interval/policy.
+
+Polling observation establishes only that the value was available **no later than the response receipt and no earlier than the previous observation/request bound**. Preserve that uncertainty.
+
+## 3. Clock quality
+
+Receipt timing is useful only if the host clock is visible/auditable.
+
+Record at session start and periodically where practical:
+
+- local UTC wall time;
+- monotonic time;
+- a public OKX/server-time observation if available through an unauthenticated official endpoint;
+- estimated local-vs-source clock offset/round-trip bound when calculable.
+
+Do not silently correct raw receipt timestamps.
+
+If server-time probing is unavailable, the recorder still works but must label clock offset as unknown.
+
+Do not add external NTP infrastructure.
+
+## 4. Raw immutable recording
+
+Write recording sessions outside Git under the configured data/artifact root.
+
+Use an immutable session layout such as:
+
+`<data-root>/recordings/<session-id>/...`
+
+A completed/stopped session must contain or reference:
+
+- session manifest;
+- append-only raw message/event journal;
+- subscription/connection lifecycle log;
+- normalized recorder index if useful;
+- integrity hashes;
+- clock-quality observations;
+- concise quality/summary report.
 
 Requirements:
 
-- primary ordering is availability time;
-- stable deterministic tie-breaking independent of filesystem order, HTTP page order and database return order;
-- observations from different families at the same modeled availability time have deterministic ordering;
-- quality events and valid observations for the same slot cannot produce ambiguous state;
-- the ordering policy is named/versioned and written into snapshots/manifests produced by this core;
-- identical causal inputs produce identical ordered-event hashes.
+- do not overwrite a completed session;
+- tolerate process restart without corrupting prior durable records;
+- no duplicate logical receipt record on recovery;
+- append-only/raw-first design;
+- bounded memory use;
+- fsync/flush policy explicit enough that a crash cannot silently lose an unbounded interval;
+- partial/crashed sessions remain inspectable and clearly labeled.
 
-Do not encode a claim that the ordering represents the true exchange micro-order when source evidence does not establish it. It is a deterministic historical/replay convention.
+Do not commit live recordings to Git.
 
-No trade/execution/account phase ordering belongs in WP-004.
+## 5. Channels and data to record
 
-## 4. Dataset → causal-feed adapter
+Record the following public source families when available from current official interfaces:
 
-Create a pure adapter that reads an accepted `algotrader.marketdata.v1` dataset and produces feed events.
+### A. Traded 1m candle stream
+
+Capture raw candle updates, including forming and completed states if the source sends both.
+
+Important goal:
+
+- identify the **first locally received update that establishes a bar as completed/final**;
+- preserve all earlier forming updates needed to prove that transition;
+- later compute observed delay between bar end and first receipt of completion.
+
+Do not normalize a forming bar into a completed feed event.
+
+### B. Mark-price 1m candle stream
+
+Same raw-first and first-completed-receipt discipline.
+
+### C. Index-price 1m candle stream
+
+Same raw-first and first-completed-receipt discipline.
+
+### D. Funding stream/snapshots
+
+Capture the public funding information as it evolves before settlement, including every returned field that may change over time, such as when present:
+
+- funding rate;
+- funding/next funding time;
+- settlement state;
+- settlement funding rate;
+- premium;
+- formula/method fields;
+- source timestamp.
+
+Do not infer a trading meaning from funding.
+
+The purpose is to build a point-in-time archive so a later trader can only use funding information that was actually known then.
+
+## 6. Reconnect and failure semantics
+
+The recorder must survive ordinary network instability.
 
 Requirements:
 
-- consume normalized market-data artifacts/manifest, not live network calls;
-- preserve source/provenance references;
-- never expose `confirm=0` as a valid completed observation;
-- rows marked INVALID cannot become valid observation events;
-- gaps/conflicting excluded rows must be representable as quality/coverage events rather than silently disappearing;
-- traded, mark, index and funding remain distinct channels;
-- no silent substitution between channels;
-- no synthetic forward-filled market observations;
-- preserve exact Decimal values.
+- explicit connection states;
+- heartbeat/ping/pong as required by the official current interface;
+- bounded reconnect backoff;
+- resubscribe after reconnect;
+- increment connection generation;
+- record disconnect/reconnect intervals;
+- never fabricate messages for the gap;
+- identify possible coverage loss caused by disconnection;
+- duplicate source pushes after reconnect are retained or deduplicated only under an explicit identity rule; raw evidence must remain auditable.
 
-The adapter must not mutate WP-003 dataset artifacts.
+A reconnect gap is not automatically equivalent to “the market had no update”.
 
-## 5. Availability transformation
+## 7. Recorded-session → feed bridge
 
-WP-003 stores source evidence and an accepted historical modeling policy.
-
-WP-004 must make availability an explicit feed transformation.
+Add a **minimal pure adapter** that converts a completed/partial recorded session into `algotrader.feed.v1` RECORDED events for the source families whose semantics are already supported by feed.v1.
 
 Requirements:
 
-- support the existing marketdata modeled availability as an input;
-- permit an explicit non-negative modeled delay parameter/policy to be applied in the feed layer without rewriting the source dataset;
-- record which availability policy produced each feed event;
-- a delayed availability transformation must never change the market/event time;
-- no default numeric delay should be presented as measured fact.
+- use local receipt time as `available_time` for recorded WebSocket observations;
+- preserve original market/event time;
+- preserve recording/source provenance;
+- do not use a later final bar value before its first completed receipt;
+- no future message may alter an earlier snapshot except through an explicit later delivery/revision event;
+- no forward fill;
+- no channel substitution;
+- duplicate/idempotency handling must not depend on the observable state's bounded history.
 
-Tests must prove that increasing the modeled delay can only delay knowledge, never move an event earlier.
+If pre-settlement funding snapshots do not fit the current `funding_settlement` channel semantically, **do not force them into it**. Record them faithfully and either:
+- extend provisional feed.v1 with an explicitly distinct funding-indicative channel (with revision bump), or
+- leave them recorder-only until a later task.
 
-Actual live receipt-time measurement is deferred to the next package.
+Choose the semantically honest option.
 
-## 6. Observable market state reducer
+## 8. Measured availability report
 
-Implement a pure reducer:
+For each session produce a structured report with at least:
 
-`state' = apply(state, event)`
+- session duration/status;
+- channel receipt counts;
+- disconnect/reconnect periods;
+- completed bars observed per bar family;
+- distribution/summary of:
+  - bar-end → first completed receipt delay;
+- negative/impossible delay detection;
+- local/source clock-offset observations;
+- duplicate/update counts;
+- missing expected completed-bar receipts during periods when connection was healthy;
+- periods where timing evidence is unusable due to recorder outage or unknown clock quality;
+- funding snapshot/update count and settlement-boundary observations.
 
-It owns observable market history/state. The future professional trader must not need to buffer raw source records independently.
+Do not promote a single session into a universal latency constant.
 
-At minimum maintain independently for each in-scope channel:
+The report is evidence for later selecting/testing an availability policy.
 
-- latest valid observation/event;
-- latest event/economic time;
-- latest availability time;
-- age relative to an explicit snapshot/as-of time;
-- quality/validity state;
-- coverage/missingness information needed to distinguish missing from invalid;
-- source/dependency references.
+## 9. Durable recorder job
 
-Support at least these distinct states/conditions:
+The recording process is hours-scale operational work and should not live only in an executor shell.
 
-- never seen / warm-up;
-- fresh;
-- stale;
-- missing/gap;
-- invalid-only / rejected evidence.
+Integrate a minimal durable recorder job into the existing application infrastructure where practical.
 
-Exact freshness thresholds are configuration/policy, not universal constants.
+Owner-facing requirements:
 
-A last valid value may remain visible with its original timestamp and stale status. It must not become a fabricated fresh observation.
+- start a public recording session;
+- stop it cleanly;
+- see status;
+- elapsed time;
+- heartbeat/connection state;
+- current subscribed channels;
+- message counts;
+- last receipt time;
+- reconnect count;
+- output session id/path/reference;
+- failure explanation.
 
-## 7. Snapshot and delta
+The browser must not own the recorder.
 
-Create a typed point-in-time observable-state snapshot.
+Closing/reopening the browser must not stop the process.
 
-A snapshot must include:
+If using the existing PostgreSQL job infrastructure, keep recorder operational state distinct from semantic trader runs and do not mutate frozen `semantic.v1`.
 
-- snapshot identity;
-- as-of/knowledge cutoff;
-- feed/order-policy version;
-- channel states;
-- dependency/source references sufficient for audit;
-- explicit quality/freshness.
+Do not add trading controls.
 
-Also provide a deterministic delta/change representation between snapshots or since a prior feed cursor so the future trader can know **what changed** without re-reading raw datasets.
+## 10. Minimal UI
 
-Do not put professional interpretation in the snapshot.
+Add a small recorder surface under Data or another natural existing operations location.
 
-Examples of content that belong in state:
+It should be clearly labeled something like:
 
-- latest traded candle and its freshness;
-- latest mark candle and freshness;
-- latest index candle and freshness;
-- latest funding event and its event/availability time;
-- coverage gap.
+**Public Market Recorder — no trading**
 
-Examples that do **not** belong in state in WP-004:
+Show enough information for the Owner to know whether useful prospective evidence is being collected.
 
-- “support is defended”;
-- “continuation likely”;
-- “bullish”;
-- “buy”;
-- target price;
-- confidence.
+Do not redesign the whole application.
 
-## 8. Price/source roles
+## 11. Offline deterministic tests
 
-The core must preserve role-specific channels.
+CI must not depend on live OKX.
 
-Freeze no directional interpretation.
+Create small captured/synthetic WebSocket and REST message fixtures and fake transports/timing.
+
+Test at least:
+
+- subscribe/ack/data parsing;
+- forming → completed candle transition;
+- first completed receipt timestamp;
+- out-of-order pushes;
+- duplicate pushes;
+- reconnect/resubscribe;
+- gap caused by disconnect;
+- raw journal immutability/integrity;
+- crash/restart/idempotency;
+- local receipt order despite equal source timestamp;
+- server-time/clock-quality calculation;
+- recorded session → feed RECORDED adapter;
+- prefix invariance on recorded sessions;
+- no future final-bar value leakage;
+- funding snapshots preserved separately from settlements if semantics differ;
+- no authenticated endpoint/header usage.
+
+All previous tests remain green.
+
+## 12. Explicit live integration evidence
+
+Run a short real public recording check if executor network access is available.
 
 At minimum:
 
-- traded data remains traded evidence;
-- mark remains mark;
-- index remains index/reference;
-- funding remains funding/carry evidence.
+1. connect using a documented current official public endpoint for the configured region/default;
+2. subscribe/observe the target BTC perpetual source families available there;
+3. collect a bounded live sample;
+4. stop cleanly;
+5. verify session hashes;
+6. build the recorded-feed projection for supported channels;
+7. report exact endpoint(s), session id, duration, counts, reconnects/errors and observed completion-delay summary.
 
-Do not create one generic current-price field that silently chooses among them.
+If enough time passes to observe no completed 1m bar, extend the check only as reasonably necessary for one or more completions; do not run an unbounded hidden task.
 
-A convenience projection may expose clearly named values, but role identity must remain explicit.
+If the environment cannot establish public WebSocket access, demonstrate the offline recorder and report the exact blocker. Do not fake live success.
 
-## 9. Prefix / truncated-history invariance
+## 13. Known WP-003 hardening
 
-Add strong causality tests.
+Fix the narrow instrument-parser issue already recorded in STATE:
 
-For a pinned dataset/event sequence and cutoff `T`:
+- a numeric `ctMult=0` must not silently become `1` through Python truthiness;
+- explicitly validate/handle missing vs zero according to the source contract;
+- add a regression test.
 
-- observable state at or before `T` must be identical whether the adapter is given only evidence available through `T` or the full later dataset;
-- adding evidence with availability strictly after `T` cannot change the snapshot at `T`;
-- changing replay speed/order of file reads cannot change the causal ordered result;
-- delayed availability must change only snapshots after the delayed knowledge time.
-
-Include late-arrival and same-time multi-family cases.
-
-## 10. Dataset-composition identity
-
-WP-003 `dataset_id` identifies an acquisition/evidence package, and equivalent normalized economic content may exist under multiple package IDs.
-
-For feed/replay identity, add a deterministic normalized-content identity/reference sufficient to detect equivalent ordered normalized source records independent of irrelevant acquisition pagination.
-
-Do not delete or replace dataset/package IDs; retain both:
-
-- evidence-package identity;
-- normalized feed-content identity.
-
-Define the identity narrowly for current in-scope records. Do not build a universal data-lake deduplication framework.
-
-## 11. Pure-core inspection tooling
-
-Add a small CLI/test utility that can:
-
-- load an existing dataset;
-- build its causal feed under a selected availability policy;
-- advance to a supplied UTC cutoff;
-- print a concise observable-state snapshot and channel freshness/quality;
-- print feed event count/hash and normalized-content identity.
-
-This is developer/Director inspection, not Owner UI yet.
-
-Do not integrate the new feed/state into the browser or run worker in WP-004.
-
-## Required tests
-
-At minimum cover:
-
-- schema baseline and provisional contract checks;
-- deterministic event ordering;
-- stable tie-breaking;
-- dataset adapter for trade/mark/index/funding;
-- INVALID record exclusion from valid state;
-- gap vs invalid vs never-seen distinction;
-- no forward fill;
-- last-valid carried only as stale;
-- modeled availability delay monotonicity;
-- prefix/truncated-history invariance;
-- same-time heterogeneous events;
-- late-arrival event;
-- deterministic snapshot/delta;
-- normalized feed-content identity;
-- equivalent normalized content from different acquisition packaging where fixture support permits;
-- all WP-001/WP-002/WP-003 tests remain green.
-
-CI `checks` and `compose-smoke` must remain green.
+Do not expand this into perpetual account modeling.
 
 ## Acceptance criteria
 
-WP-004 is complete only if:
+WP-005 is complete only if:
 
-1. `algotrader.feed.v1` exists separately and is explicitly provisional;
-2. accepted marketdata datasets can be transformed into deterministic causal events;
-3. event/economic time and availability/knowledge time remain distinct;
-4. modeled delay cannot create lookahead;
-5. the observable-state reducer is pure and deterministic;
-6. traded/mark/index/funding retain separate identities;
-7. per-channel freshness/quality/missingness is explicit;
-8. invalid evidence never enters valid state;
-9. future evidence cannot change a past snapshot;
-10. snapshot + delta are sufficient for a future professional reasoning layer without raw-dataset access;
-11. dataset acquisition identity and normalized feed-content identity are both preserved;
-12. no professional trading interpretation, account sizing, leverage, P&L or execution is introduced;
-13. existing CI remains green.
+1. public recording requires no credentials/authentication;
+2. raw source messages and actual local receipt timing are durably preserved;
+3. source/event time, source-return time and local receipt time are not collapsed;
+4. reconnect/outage intervals are visible and never fabricated as market gaps;
+5. first completed-bar receipt can be measured for each supported candle family;
+6. live-only/evolving funding information is preserved point-in-time without being misrepresented as settled history;
+7. recorded sessions are immutable/hash-verifiable and crash-inspectable;
+8. duplicate/idempotency protection is independent of the bounded state history;
+9. supported recorded data can produce RECORDED feed events without lookahead;
+10. measured delay reports preserve clock/network uncertainty;
+11. the recorder is launchable/observable outside a hidden executor shell;
+12. frozen semantic/marketdata baselines remain unchanged;
+13. no MarketView, LONG/SHORT recommendation, account sizing, leverage, P&L or real execution is introduced;
+14. all CI remains deterministic/offline and green;
+15. a bounded live public integration check succeeds or an exact external blocker is documented.
 
 ## Prohibited changes
 
 Do not:
 
 - modify `source_notes/`;
-- revert or weaken Foundation v2.0;
+- create professional trader logic;
 - create `semantic.v2`;
-- implement MarketView/trader logic;
-- implement indicators, market structure, support/resistance or directional rules;
-- implement trade entry/targets;
-- implement account/equity/collateral/margin/leverage logic;
-- implement orders/fills/execution simulation;
-- implement fee/funding P&L;
-- connect authenticated APIs;
-- add a second venue/source;
-- build the live recorder yet;
-- redesign the UI;
-- weaken existing WP-001–003 tests.
-
-The existing DEMO account/order code may remain untouched for regression compatibility.
+- implement indicators/structure/levels/predictions/targets;
+- implement account sizing/leverage/collateral/margin;
+- implement order placement or authenticated connectivity;
+- implement autonomous execution;
+- add a second exchange;
+- commit real recording data to Git;
+- treat REST polling receipt as exact exchange publication;
+- silently convert pre-settlement funding into settled funding;
+- weaken existing tests.
 
 ## Git / completion workflow
 
-After implementation and local checks:
+Before editing, verify local `main` contains the latest remote history.
 
-1. commit the bounded task;
-2. push normally to the current branch/origin;
-3. do not force-push or rewrite history;
-4. resolve genuine WP-004 CI failures without expanding scope.
+Use:
+
+`git pull --ff-only origin main`
+
+Do not force-push or reset shared history.
+
+After implementation:
+
+1. run all required local checks;
+2. commit the bounded task;
+3. push normally to `main`;
+4. inspect/fix genuine WP-005 CI failures without scope expansion.
 
 ## Completion report
 
 Report:
 
-- base commit and final pushed SHA;
-- pushed branch;
+- base/final SHA and branch;
 - files/components changed;
-- exact feed-contract version/status;
-- ordering and availability policies implemented;
-- deterministic/prefix-invariance evidence;
-- normalized-content identity evidence;
-- all local checks and results;
+- session/recorder contract/version;
+- exact live public endpoints/channels used;
+- recording durability/restart model;
+- recorded→feed semantics;
+- clock-quality model;
+- deterministic fixture evidence;
+- live bounded session id/duration/counts/reconnects/errors;
+- completion-delay summary from live evidence if observed;
+- local checks;
 - GitHub Actions result;
 - deviations/unresolved issues.
 
-Do not declare WP-004 accepted. Acceptance belongs to the Project & Research Director.
+Do not declare WP-005 accepted. Acceptance belongs to the Project & Research Director.
