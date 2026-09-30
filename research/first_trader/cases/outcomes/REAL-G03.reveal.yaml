@@ -1,0 +1,13 @@
+case_id: REAL-G03
+evidence: REAL
+frozen_label: "prefixes/REAL-G03.label.yaml (freeze commit 544e206)"
+suffix: "outcomes/REAL-G03.json - 240 traded 1m bars (2026-09-28T20:00Z, 24:00Z], all VALID; dataset okx-btc-usdt-swap-1m-20260925T0000-20260930T0000-3305612c15aa"
+suffix_facts: {open: 83346.0, high: {price: 83626.1, time: "21:05"}, low: {price: 83062.1, time: "22:02"}, last_close: 83461.0}
+frozen_rules_applied_forward:
+  h1: "No new 1h confirmation (DOWN mode, running low 83062.0/83062.1 range, reversal needs +826.5). Context NOT_DIRECTIONAL throughout."
+  public_action_through_horizon: "NO_TRADE / NO_SUPPORTED_SETUP"
+verdict: SUPPORTS
+exposes:
+  - "Uninformative for setup definitions: a 564 USDT range inside a NOT_DIRECTIONAL context."
+missing_data: none
+post_reveal_rule_changes: none

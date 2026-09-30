@@ -1,0 +1,14 @@
+case_id: REAL-G02
+evidence: REAL
+frozen_label: "prefixes/REAL-G02.label.yaml (freeze commit 53bf65b)"
+suffix: "outcomes/REAL-G02.json - 240 traded 1m bars (2026-09-28T12:00Z, 16:00Z], all VALID; dataset okx-btc-usdt-swap-1m-20260925T0000-20260930T0000-3305612c15aa"
+suffix_facts: {open: 83059.5, high: {price: 83800.0, time: "13:47"}, low: {price: 82501.0, time: "14:53"}, last_close: 83329.5}
+frozen_rules_applied_forward:
+  h1: "The 12:00 1h bar closes 83548.9 > H2 83260.0: DOWN damage check fails at 13:00 -> NOT_DIRECTIONAL (LOW 82561.3 also becomes known at 13:00; HIGH 83800.0 known 15:00 makes highs rising; LOW 82501.0 known 16:00). NOT_DIRECTIONAL from 13:00 to horizon end."
+  setup_12_00_to_13_00: "short epoch unchanged; 5m in UP mode rallying from 82572.8 through the 83260.0 origin high; no confirmed down leg >= 449.0 -> NO_IMPULSE"
+  public_action_through_horizon: "NO_TRADE / NO_SUPPORTED_SETUP"
+verdict: SUPPORTS
+exposes:
+  - "The close-beyond-H2 damage rule removed the DOWN context one bar after the cutoff; the horizon then held both a +741 USDT rally and a -1299 USDT drop from its high, both inside a NOT_DIRECTIONAL context (a volatile, overlapping regime the method is designed not to address)."
+missing_data: none
+post_reveal_rule_changes: none

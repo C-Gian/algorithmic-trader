@@ -1,0 +1,34 @@
+case_id: REAL-G04
+evidence: REAL
+frozen_label: "prefixes/REAL-G04.label.yaml (freeze commit 85ae86f)"
+suffix: "outcomes/REAL-G04.json - 240 traded 1m bars (2026-09-29T04:00Z, 08:00Z], all VALID; dataset okx-btc-usdt-swap-1m-20260925T0000-20260930T0000-3305612c15aa"
+suffix_facts: {open: 83044.3, high: {price: 84169.9, time: "07:39"}, low: {price: 82933.0, time: "05:37"}, last_close: 83944.5}
+frozen_rules_applied_forward:
+  h1: "1h LOW 82726.0 (extremum 01:00) confirmed by the 06:00 bar, known 07:00: highs 83800.0 -> 84346.8, lows 82501.0 -> 82726.0 rising, close 83965.1 > 82726.0 -> context UP from 07:00."
+  long_epoch: "origin 01:00 (I1), S5 86.1, theta 172.2, impulse_min 344.4, b 21.6, e 43.1 (as frozen later in REAL-G05)"
+  timeline:
+    - known: "07:00"
+      setup_state: IMPULSE_DEVELOPING
+      reason: NO_SUPPORTED_SETUP
+      note: "latest confirmed 5m swing LOW 82933.0 (05:35); running high rising"
+    - known: "07:45"
+      event: "5m HIGH 84169.9 (07:35) confirmed by the 07:40 bar"
+      impulse: {A: 82933.0, A_time: "05:35", B: 84169.9, B_time: "07:35", I: 1236.9, n_I: 24, progress: "84169.9 > epoch high-water mark 83318.0 (05:20)"}
+      reaction: {R: 83965.4, R_bar: "07:40", D: 0.165, rho: "not assessed (D <= 0.25)", state: REACTION_CONTROLLED}
+      opportunity: WATCHING
+      geometry: {K: 84110.6, K_plus_e: 84153.7, V: 83943.8, Rd: 209.9, target: "1h HIGH 84346.8 zone (z = 0.25 x 413.25 -> 103.4), T_near 84243.4; the zone of B (near edge 84148.3) is not above K+e", G: 89.7, P-GEOM: CONTRADICTED}
+      reason: INSUFFICIENT_ROOM_OR_GEOMETRY
+    - known: "08:00"
+      event: "re-anchor: 07:55 bar low 83928.2"
+      reaction: {R: 83928.2, D: 0.195, state: REACTION_CONTROLLED}
+      geometry: {K: 83994.5, K_plus_e: 84037.6, V: 83906.6, Rd: 131.0, target: "zone of B, T_near 84148.3", G: 110.7, P-GEOM: CONTRADICTED}
+      reason: INSUFFICIENT_ROOM_OR_GEOMETRY
+  public_action_through_horizon: "NO_TRADE (NO_SUPPORTED_SETUP until 07:45, then INSUFFICIENT_ROOM_OR_GEOMETRY); never ARMED, so no trigger and no scenario activation"
+  after_horizon_informational: "From the already-committed REAL-G05 prefix: the 08:20 5m bar reached 84338.2 and closed 84176.5 (> 84169.9, the zone of B becomes BROKEN); the opportunity was never armed. One observation; not scored."
+verdict: EXPOSES_AMBIGUITY
+exposes:
+  - "First real WATCHING state. With a shallow controlled reaction the nearest eligible target is the impulse extreme's own zone (or an old zone just above it), so G = (B - z) - (K + e) is small while Rd = (K + e) - (R - b) includes the anchor bar's range: the G >= 1.0 x Rd floor (DC-17) binds for shallow reactions by construction. Recorded as a structural property for the Director, not changed."
+  - "DEFINITION_GAP (targets): B7/C7 say zones come from confirmed 5m swings, but 5m swings exist only inside epochs (DC-30) and long and short epochs run with different S5. Which 5m series feed the zone set is not specified. Here the conclusion is robust (any additional nearer zone only lowers G)."
+  - "Boundary wording: 'confirmed before the arming known-at' - the zone of B becomes known at the same instant the setup becomes WATCHING (07:45). Not decisive here."
+missing_data: none
+post_reveal_rule_changes: none

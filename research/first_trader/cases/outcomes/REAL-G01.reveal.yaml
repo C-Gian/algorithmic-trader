@@ -1,0 +1,14 @@
+case_id: REAL-G01
+evidence: REAL
+frozen_label: "prefixes/REAL-G01.label.yaml (freeze commit a43dc45)"
+suffix: "outcomes/REAL-G01.json - 240 traded 1m bars (2026-09-28T04:00Z, 08:00Z], all VALID; dataset okx-btc-usdt-swap-1m-20260925T0000-20260930T0000-3305612c15aa"
+suffix_facts: {open: 83309.0, high: {price: 83510.0, time: "05:00"}, low: {price: 82647.0, time: "05:38"}, last_close: 82922.5}
+frozen_rules_applied_forward:
+  h1: "1h swing LOW 82647.0 (extremum 05:00) becomes known at 07:00. Highs 84811.6 -> 84973.6 rising, lows 84088.3 -> 82647.0 falling -> NOT_DIRECTIONAL for the whole horizon (context DOWN only from 10:00, after HIGH 83260.0 is known - see REAL-G02 prefix)."
+  setup: "not assessed (no directional context)"
+  public_action_through_horizon: "NO_TRADE / NO_SUPPORTED_SETUP (unchanged)"
+verdict: SUPPORTS
+exposes:
+  - "CONFIRMATION_LAG (already recorded at the freeze): the horizon's main move (-662 USDT to 82647.0 within 98 min) occurred while context was NOT_DIRECTIONAL; the method's DOWN context arrived 6 h after the cutoff and after the low. This is the designed cost of confirmed-swing context, not a rule failure. No performance inference."
+missing_data: none
+post_reveal_rule_changes: none

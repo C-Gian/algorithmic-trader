@@ -1,0 +1,20 @@
+case_id: REAL-G06
+evidence: REAL
+frozen_label: "prefixes/REAL-G06.label.yaml (freeze commit 0047ea6)"
+suffix: "outcomes/REAL-G06.json - 240 traded 1m bars (2026-09-29T20:00Z, 2026-09-30T00:00Z], all VALID; dataset okx-btc-usdt-swap-1m-20260925T0000-20260930T0000-3305612c15aa"
+suffix_facts: {open: 83571.7, high: {price: 83816.7, time: "23:17"}, low: {price: 83344.6, time: "21:27"}, last_close: 83627.0}
+frozen_rules_applied_forward:
+  h1: "1h DOWN leg (theta 927.5): no bar reaches 83778.3 until the 23:00 bar (high 83816.7) -> 1h LOW 82850.8 (16:00) confirmed, known 2026-09-30T00:00Z (= horizon end). Lows 82726.0 -> 82850.8 rising: context stays UP; a new long epoch (origin 16:00) starts only at the horizon end."
+  swings_5m_forward:   # [kind, price, extremum, confirming bar]
+    - [HIGH, 83641.3, "20:50", "21:15"]
+    - [LOW, 83344.6, "21:25", "22:00"]
+    - [HIGH, 83694.6, "22:10", "22:15"]
+    - [LOW, 83501.2, "22:30", "23:00"]
+    - [HIGH, 83816.7, "23:15", "23:35"]
+  up_legs: {"83370.1->83641.3": "271.2 < 344.4", "83344.6->83694.6": "350.0 >= 344.4 but fails progress (< 84544.9)", "83501.2->83816.7": "315.5 < 344.4"}
+  public_action_through_horizon: "NO_TRADE / NO_SUPPORTED_SETUP (NO_IMPULSE) throughout"
+verdict: SUPPORTS
+exposes:
+  - "CONTEXT_LABEL_LAG (recorded at the freeze) persisted to the horizon end: from the 13:25 epoch high to 00:00 (10.5 h) the method could not see any long setup in an UP-labelled context, because DC-31 compares every new 5m high with 84544.9 and no newer 1h swing LOW had restarted the epoch. Whether DC-31 should reference the latest confirmed 5m high instead (its recorded alternative) is a Director question; no rule changed."
+missing_data: none
+post_reveal_rule_changes: none

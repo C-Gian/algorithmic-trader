@@ -86,10 +86,34 @@ cases:
      hidden_outcome: "outcomes/REAL-FIX-01.yaml (no suffix exists)", question: "Warm-up and rejected-candle handling on real evidence",
      expected: "context UNKNOWN; S5 UNAVAILABLE; NO_TRADE WARMUP_OR_REQUIRED_DATA_UNAVAILABLE", notes: "08:09 INCOMPLETE_REJECTED",
      selection_reason: "only real evidence available before acquisition"}
-  # Real grid cases: fixed by SELECTION-PROTOCOL.md; labels added only at the prefix-freeze commit.
-  - {case_id: REAL-G01, evidence: REAL, cutoff: "2026-09-28T04:00Z", status: PENDING_ACQUISITION}
-  - {case_id: REAL-G02, evidence: REAL, cutoff: "2026-09-28T12:00Z", status: PENDING_ACQUISITION}
-  - {case_id: REAL-G03, evidence: REAL, cutoff: "2026-09-28T20:00Z", status: PENDING_ACQUISITION}
-  - {case_id: REAL-G04, evidence: REAL, cutoff: "2026-09-29T04:00Z", status: PENDING_ACQUISITION}
-  - {case_id: REAL-G05, evidence: REAL, cutoff: "2026-09-29T12:00Z", status: PENDING_ACQUISITION}
-  - {case_id: REAL-G06, evidence: REAL, cutoff: "2026-09-29T20:00Z", status: PENDING_ACQUISITION}
+  # Real grid cases: fixed by SELECTION-PROTOCOL.md; each label frozen (own commit) before later prefixes/outcomes were viewed.
+  - {case_id: REAL-G01, evidence: REAL, direction: BOTH, category: "context_not_directional",
+     source: "prefixes/REAL-G01.json (dataset okx-btc-usdt-swap-1m-20260925T0000-20260930T0000-3305612c15aa)", cutoff: "2026-09-28T04:00Z", allowed_evidence: "1h from window start, 5m 24 h, 1m 60 min, all known <= cutoff",
+     hidden_outcome: "outcomes/REAL-G01.json (240 min); reveal outcomes/REAL-G01.reveal.yaml", question: "Can the frozen definitions be applied to a real causal prefix without discretion?",
+     expected: "NOT_DIRECTIONAL; NO_TRADE NO_SUPPORTED_SETUP", freeze_commit: a43dc45, reveal_verdict: SUPPORTS, notes: "confirmation lag: -662 USDT move inside NOT_DIRECTIONAL context",
+     selection_reason: "predeclared 8-hour grid (not chosen by content)"}
+  - {case_id: REAL-G02, evidence: REAL, direction: BOTH, category: "no_supported_setup (context DOWN, NO_IMPULSE)",
+     source: "prefixes/REAL-G02.json (dataset okx-btc-usdt-swap-1m-20260925T0000-20260930T0000-3305612c15aa)", cutoff: "2026-09-28T12:00Z", allowed_evidence: "1h from window start, 5m 24 h, 1m 60 min, all known <= cutoff",
+     hidden_outcome: "outcomes/REAL-G02.json (240 min); reveal outcomes/REAL-G02.reveal.yaml", question: "Can the frozen definitions be applied to a real causal prefix without discretion?",
+     expected: "DOWN; 5m stair-step, no leg >= 449.0; NO_TRADE NO_SUPPORTED_SETUP", freeze_commit: 53bf65b, reveal_verdict: SUPPORTS, notes: "context lost 13:00 by close above H2",
+     selection_reason: "predeclared 8-hour grid (not chosen by content)"}
+  - {case_id: REAL-G03, evidence: REAL, direction: BOTH, category: "context_not_directional",
+     source: "prefixes/REAL-G03.json (dataset okx-btc-usdt-swap-1m-20260925T0000-20260930T0000-3305612c15aa)", cutoff: "2026-09-28T20:00Z", allowed_evidence: "1h from window start, 5m 24 h, 1m 60 min, all known <= cutoff",
+     hidden_outcome: "outcomes/REAL-G03.json (240 min); reveal outcomes/REAL-G03.reveal.yaml", question: "Can the frozen definitions be applied to a real causal prefix without discretion?",
+     expected: "NOT_DIRECTIONAL; NO_TRADE NO_SUPPORTED_SETUP", freeze_commit: 544e206, reveal_verdict: SUPPORTS, notes: "uninformative range",
+     selection_reason: "predeclared 8-hour grid (not chosen by content)"}
+  - {case_id: REAL-G04, evidence: REAL, direction: BOTH, category: "context_not_directional (becomes UP; WATCHING in suffix)",
+     source: "prefixes/REAL-G04.json (dataset okx-btc-usdt-swap-1m-20260925T0000-20260930T0000-3305612c15aa)", cutoff: "2026-09-29T04:00Z", allowed_evidence: "1h from window start, 5m 24 h, 1m 60 min, all known <= cutoff",
+     hidden_outcome: "outcomes/REAL-G04.json (240 min); reveal outcomes/REAL-G04.reveal.yaml", question: "Can the frozen definitions be applied to a real causal prefix without discretion?",
+     expected: "NOT_DIRECTIONAL; NO_TRADE NO_SUPPORTED_SETUP", freeze_commit: 85ae86f, reveal_verdict: EXPOSES_AMBIGUITY, notes: "first real WATCHING; blocked by G >= Rd floor; 5m zone-source gap",
+     selection_reason: "predeclared 8-hour grid (not chosen by content)"}
+  - {case_id: REAL-G05, evidence: REAL, direction: BOTH, category: "impulse_developing (context UP)",
+     source: "prefixes/REAL-G05.json (dataset okx-btc-usdt-swap-1m-20260925T0000-20260930T0000-3305612c15aa)", cutoff: "2026-09-29T12:00Z", allowed_evidence: "1h from window start, 5m 24 h, 1m 60 min, all known <= cutoff",
+     hidden_outcome: "outcomes/REAL-G05.json (240 min); reveal outcomes/REAL-G05.reveal.yaml", question: "Can the frozen definitions be applied to a real causal prefix without discretion?",
+     expected: "UP; IMPULSE_DEVELOPING; NO_TRADE NO_SUPPORTED_SETUP", freeze_commit: 972d6a2, reveal_verdict: SUPPORTS, notes: "WATCHING then OPPOSING_INITIATIVE (rho 1.118)",
+     selection_reason: "predeclared 8-hour grid (not chosen by content)"}
+  - {case_id: REAL-G06, evidence: REAL, direction: BOTH, category: "no_supported_setup (context UP, progress fails)",
+     source: "prefixes/REAL-G06.json (dataset okx-btc-usdt-swap-1m-20260925T0000-20260930T0000-3305612c15aa)", cutoff: "2026-09-29T20:00Z", allowed_evidence: "1h from window start, 5m 24 h, 1m 60 min, all known <= cutoff",
+     hidden_outcome: "outcomes/REAL-G06.json (240 min); reveal outcomes/REAL-G06.reveal.yaml", question: "Can the frozen definitions be applied to a real causal prefix without discretion?",
+     expected: "UP; NO_IMPULSE; NO_TRADE NO_SUPPORTED_SETUP", freeze_commit: 0047ea6, reveal_verdict: SUPPORTS, notes: "context label lag; DC-31 blinds long setups below epoch high",
+     selection_reason: "predeclared 8-hour grid (not chosen by content)"}
