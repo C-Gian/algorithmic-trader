@@ -68,24 +68,42 @@ Accepted limitations to measure on the Owner machine:
 
 ## Current action
 
-**OWNER CORPUS PREP / OBSERVATION EVALUATION**
+**WP-008-R1 — Fast Durable Observation Replay and Finalization**
 
 See `task.md`.
 
-No executor implementation task is active during this measurement step.
+The first real Owner month measurement exposed a product-blocking performance defect:
 
-The Owner prepares the fixed Sep-2025 bootstrap chunk from the Backtest page, then runs the observation-only evaluation at max pacing and copies the resulting report back to the Director.
+- Sep-2025 preparation completed successfully and the corpus remained CLEAN;
+- the observation replay reached all `129600 / 129600` feed events;
+- processing required roughly one hour on the Owner machine;
+- terminal validation then remained CPU-bound for at least another ~20 minutes at ~99% of one logical CPU;
+- during validation the observer stopped heartbeating, so the UI falsely reported `RECOVERING / stalled / System Degraded`.
 
-This run answers only:
-- whether real month acquisition/verification/reuse works on the Owner machine;
-- actual local storage size;
-- actual acquisition throughput/ETA behavior;
-- actual full-month causal replay throughput/ETA/browser responsiveness;
-- terminal validation integrity.
+The Owner stopped waiting; no substantial rerun is requested until R1 is implemented.
 
-It does not evaluate trading performance.
+R1 must:
+- batch durable max-speed replay commits while preserving exact causal order and crash safety;
+- keep one-event STEP semantics;
+- replace per-delivery full-snapshot terminal re-derivation with an efficient integrity/final-state proof;
+- heartbeat and expose a truthful FINALIZING/VALIDATING phase;
+- preserve compatibility with the Owner's already committed `129600 / 129600` replay where practical;
+- report processing vs finalization time separately.
 
-After the report is returned, the Director will use the measured operational evidence while closing the bounded integrated-adviser method required for the first real advisory implementation.
+No trader/adviser semantics are part of R1.
+
+The Sep-2025 dataset must not be deleted or redownloaded merely to fix replay performance.
+
+### Owner observations reserved for later adviser/Astra review
+
+The Owner raised a substantive design question that must not be lost:
+
+- why is the evidence base 1m, and what professional role should 1m actually play?
+- should 1m be only the causal base resolution while MarketView/setup decisions operate on higher horizons such as 15m/30m/45m/1h/4h/daily/weekly/monthly?
+- what should the professional reasoning clock be, as distinct from the evidence clock?
+- if weekly/monthly/annual context matters, is one year of history sufficient?
+
+These questions are intentionally not answered by WP-008-R1. They belong in the integrated adviser/Astra review after the operational replay path is practical.
 
 ## Research retained, not governing
 
