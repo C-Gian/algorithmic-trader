@@ -26,7 +26,7 @@ import hashlib
 import json
 import os
 import socket
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import IO, Any, Protocol
@@ -325,8 +325,13 @@ def finalize(path: Path, stop_reason: str, recovered: bool, host: str, pid: int,
     return manifest
 
 
-def verify(path: Path) -> list[str]:
-    """Re-check a finalized session: file hashes/sizes/lines, contiguous seq, per-record raw hashes."""
+def verify(path: Path, progress: Callable[[str, int, int | None, str], None] | None = None) -> list[str]:
+    """Re-check a finalized session: file hashes/sizes/lines, contiguous seq, per-record raw hashes.
+
+    ``progress(stage, done, total, unit)`` is an optional cooperative hook between bounded units
+    (one file / 1,000 journal records). It may raise to cancel; it never changes what is checked.
+    """
+    hook = progress or (lambda *_: None)
     if not is_finalized(path):
         return ["not finalized (no manifest.json)"]
     problems: list[str] = []
@@ -335,7 +340,8 @@ def verify(path: Path) -> list[str]:
     actual = {p.relative_to(path).as_posix() for p in path.rglob("*") if p.is_file() and p.name != "manifest.json"}
     for extra in sorted(actual - listed):
         problems.append(f"unlisted file {extra}")
-    for ref in m.files:
+    for i, ref in enumerate(m.files):
+        hook("hash session files", i, len(m.files), "files")
         p = path / ref.name
         if not p.is_file():
             problems.append(f"missing file {ref.name}")
@@ -343,8 +349,11 @@ def verify(path: Path) -> list[str]:
         digest, size, lines = _sha256_file(p)
         if (digest, size) != (ref.sha256, ref.bytes) or (ref.lines is not None and lines != ref.lines):
             problems.append(f"hash/size mismatch for {ref.name}")
+    hook("hash session files", len(m.files), len(m.files), "files")
     expected = 1
     for rec in iter_records(path):
+        if expected % 1000 == 1:
+            hook("check journal records", expected - 1, m.record_count, "records")
         if rec.seq != expected:
             problems.append(f"journal seq gap at {expected}")
             break

@@ -31,11 +31,23 @@ from ..feed.contracts import AvailabilityPolicy, ChannelChange, ChannelCoverage,
 
 OBSERVE_SCHEMA_VERSION = "algotrader.observe.v1"
 OBSERVE_CONTRACT_STATUS = "PROVISIONAL"
-OBSERVE_SCHEMA_REVISION = 1
+OBSERVE_SCHEMA_REVISION = 2
 OBSERVE_CHANGELOG: tuple[tuple[int, str, str], ...] = (
     (1, "2026-09-30", "Initial provisional baseline (WP-007): observation-replay config, source verification, "
                       "feed identity, committed delivery records, manifest and validation."),
+    (2, "2026-10-02", "WP-008-R1A operational lifecycle (Director-approved limited revision): durable "
+                      "ObservationLaunch envelope persisted before worker-owned source preparation; manifest adds "
+                      "optional fencing generation, generation-scoped immutable artifact directory, measured phase "
+                      "timings and operational counters; validation adds optional outcome "
+                      "(passed/failed/incomplete), validator id/version and scope. All additions are optional, so "
+                      "revision-1 manifests remain readable unchanged. Replay semantics, order, digests and "
+                      "validation mathematics are unchanged."),
 )
+VALIDATOR_ID = "observe.terminal-revalidation"
+VALIDATOR_VERSION = "1"
+VALIDATOR_SCOPE = ("Full pure re-execution of the committed delivery prefix from the immutable source (per-delivery "
+                   "digests, order, duplicates, no-future-knowledge) plus, for completed runs, the pure cutoff "
+                   "snapshot. Same reducer code as the replay: a re-derivation, not an independent implementation.")
 CLOCK_POLICY = (
     "Event-driven replay clock: one step applies exactly one causal feed delivery, in the accepted feed.v1 total "
     "order; replay/information time becomes that delivery's available_time. Pacing (events/s) is operational only "
@@ -66,12 +78,18 @@ TERMINAL_STATUSES = frozenset({ReplayStatus.COMPLETED, ReplayStatus.CANCELLED, R
 
 
 class ReplayRuntimeState(StrEnum):
+    """Compact UI summary (not a contract field). Status, phase, health and assurance stay separate."""
+
     QUEUED = "queued"
+    PREPARING = "preparing"  # worker-owned source preparation / initialization before replay
     RUNNING = "running"
+    FINISHING = "finishing"  # replay cursor complete; finalizing / validating / publishing (NOT completed)
     PAUSING = "pausing"
     PAUSED = "paused"
     STEPPING = "stepping"
-    RECOVERING = "recovering"
+    RECOVERING = "recovering"  # only while a new fenced attempt is actually restoring
+    UNRESPONSIVE = "unresponsive"  # lease expired / compute lost: awaiting recovery (not yet restoring)
+    SUSPENDED = "suspended"  # pre-upgrade run preserved read-only
     CANCEL_REQUESTED = "cancel_requested"
     COMPLETED = "completed"
     CANCELLED = "cancelled"
@@ -148,9 +166,39 @@ class ValidationCheck(Record):
     detail: str
 
 
+class ValidationOutcome(StrEnum):
+    PASSED = "passed"
+    FAILED = "failed"
+    INCOMPLETE = "incomplete"  # validation stopped (e.g. cancelled) before every check ran: not a PASS
+
+
 class ReplayValidation(Record):
     passed: bool
     checks: tuple[ValidationCheck, ...]
+    # revision 2 (optional; absent in revision-1 manifests)
+    outcome: ValidationOutcome | None = None
+    validator: str | None = None
+    validator_version: str | None = None
+    scope: str | None = None
+
+
+class ObservationLaunch(Record):
+    """Revision 2: the lightweight launch envelope persisted (<=1 s, no hashing) before any preparation.
+
+    Source/config/feed identity and the total event count are PENDING until the worker-owned preparation
+    has verified the source and built the feed; nothing here claims verification.
+    """
+
+    schema_version: str
+    replay_id: str
+    source_kind: SourceKind
+    source_id: str
+    requested_at: datetime
+    speed: float
+    paused: bool
+    evaluation_id: str | None
+    expected_manifest_sha256: str | None  # corpus binding to re-check during preparation (evaluations)
+    code_version: str | None
 
 
 class ArtifactFile(Record):
@@ -183,9 +231,15 @@ class ObservationReplayManifest(Record):
     validation: ReplayValidation
     source_reference: str  # where the immutable evidence lives (not duplicated here)
     artifacts: tuple[ArtifactFile, ...]
+    # revision 2 (optional; absent in revision-1 manifests)
+    lease_generation: int | None = None  # fencing generation that published this manifest
+    artifact_dir: str | None = None  # generation-scoped immutable directory (relative to the replay directory)
+    phase_timings: list[dict] | None = None  # measured operational phase spans up to publication
+    operational_metrics: dict | None = None  # cheap bounded counters (events, snapshots, transactions, bytes)
 
 
 PUBLIC_CONTRACTS: tuple[type[Record], ...] = (
+    ObservationLaunch,
     SourceVerification,
     SourceSummary,
     FeedIdentity,

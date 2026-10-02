@@ -245,7 +245,51 @@ CREATE TABLE IF NOT EXISTS evaluations (
 CREATE INDEX IF NOT EXISTS evaluations_created_idx ON evaluations (created_at);
 """
 
-MIGRATIONS: dict[int, str] = {1: SCHEMA_V1, 2: SCHEMA_V2, 3: SCHEMA_V3, 4: SCHEMA_V4, 5: SCHEMA_V5}
+# WP-008-R1A: observable job lifecycle (operational only; additive). Rows created before this migration
+# keep lifecycle_version 1 (verified config fixed at launch) and are never relaxed: the CHECK below keeps
+# config/total mandatory for them. New launches (lifecycle_version 2) persist a lightweight launch envelope
+# first; the worker-owned preparation persists the verified config/total before the first causal step.
+# Pre-upgrade nonterminal replays receive an additive operational suspension (their historical status,
+# lease, checkpoint and deliveries are left exactly as they were) so the new workers never auto-claim them.
+SCHEMA_V6 = """
+ALTER TABLE observation_replays ALTER COLUMN config DROP NOT NULL;
+ALTER TABLE observation_replays ALTER COLUMN total_events DROP NOT NULL;
+ALTER TABLE observation_replays ADD COLUMN IF NOT EXISTS lifecycle_version integer NOT NULL DEFAULT 1;
+ALTER TABLE observation_replays ADD CONSTRAINT observation_replays_legacy_config
+    CHECK (lifecycle_version >= 2 OR (config IS NOT NULL AND total_events IS NOT NULL));
+ALTER TABLE observation_replays ADD COLUMN IF NOT EXISTS launch jsonb;
+ALTER TABLE observation_replays ADD COLUMN IF NOT EXISTS lease_generation bigint NOT NULL DEFAULT 0;
+ALTER TABLE observation_replays ADD COLUMN IF NOT EXISTS phase text;
+ALTER TABLE observation_replays ADD COLUMN IF NOT EXISTS phase_started_at timestamptz;
+ALTER TABLE observation_replays ADD COLUMN IF NOT EXISTS phase_history jsonb NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE observation_replays ADD COLUMN IF NOT EXISTS progress jsonb NOT NULL DEFAULT '{}'::jsonb;
+ALTER TABLE observation_replays ADD COLUMN IF NOT EXISTS progress_seq bigint NOT NULL DEFAULT 0;
+ALTER TABLE observation_replays ADD COLUMN IF NOT EXISTS last_progress_at timestamptz;
+ALTER TABLE observation_replays ADD COLUMN IF NOT EXISTS assurance jsonb;
+ALTER TABLE observation_replays ADD COLUMN IF NOT EXISTS metrics jsonb NOT NULL DEFAULT '{}'::jsonb;
+ALTER TABLE observation_replays ADD COLUMN IF NOT EXISTS supervisor jsonb NOT NULL DEFAULT '{}'::jsonb;
+ALTER TABLE observation_replays ADD COLUMN IF NOT EXISTS diagnostic_log jsonb NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE observation_replays ADD COLUMN IF NOT EXISTS suspended_at timestamptz;
+ALTER TABLE observation_replays ADD COLUMN IF NOT EXISTS suspension jsonb;
+UPDATE observation_replays
+   SET suspended_at = now(),
+       suspension = jsonb_build_object(
+         'reason', 'pre-upgrade nonterminal observation replay (lifecycle v1, WP-007/WP-008 engine) suspended at '
+                   || 'the WP-008-R1A upgrade; preserved read-only, never auto-claimed or finalized by the new workers',
+         'historical_status', status,
+         'historical_lease_owner', lease_owner,
+         'historical_lease_expires_at', lease_expires_at,
+         'migration', 6)
+ WHERE lifecycle_version = 1 AND status IN ('queued', 'running', 'paused') AND suspended_at IS NULL;
+
+ALTER TABLE corpus_jobs ADD COLUMN IF NOT EXISTS lease_generation bigint NOT NULL DEFAULT 0;
+ALTER TABLE corpus_jobs ADD COLUMN IF NOT EXISTS phase_history jsonb NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE corpus_jobs ADD COLUMN IF NOT EXISTS progress_seq bigint NOT NULL DEFAULT 0;
+ALTER TABLE corpus_jobs ADD COLUMN IF NOT EXISTS last_progress_at timestamptz;
+ALTER TABLE corpus_chunks ADD COLUMN IF NOT EXISTS bound_generation bigint;
+"""
+
+MIGRATIONS: dict[int, str] = {1: SCHEMA_V1, 2: SCHEMA_V2, 3: SCHEMA_V3, 4: SCHEMA_V4, 5: SCHEMA_V5, 6: SCHEMA_V6}
 SCHEMA_VERSION = max(MIGRATIONS)
 
 
@@ -261,8 +305,8 @@ def connect(url: str | None = None, **kw) -> psycopg.Connection:
 
 
 @contextmanager
-def connection(url: str | None = None) -> Iterator[psycopg.Connection]:
-    conn = connect(url)
+def connection(url: str | None = None, **kw) -> Iterator[psycopg.Connection]:
+    conn = connect(url, **kw)
     try:
         yield conn
     finally:

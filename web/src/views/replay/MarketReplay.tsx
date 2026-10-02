@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  ChannelState, Delivery, obsApi, ObsManifest, ObsReplay, ObsStateDoc, Preflight, ReplayableSource, TradedBar,
+  ChannelState, Delivery, obsApi, ObsManifest, obsReport, ObsReplay, ObsStateDoc, Operation, OpsHealth, Preflight,
+  ReplayableSource, TradedBar,
 } from "../../api";
 import { fmtInt, fmtSecs, fmtTime, humanize } from "../../lib/format";
 import { obsFromHash, replaceHash, sourceFromHash } from "../../lib/route";
@@ -61,14 +62,131 @@ export function AvailabilityBadge({ basis, testid }: { basis: string; testid?: s
   );
 }
 
-function ProgressBar({ done, total }: { done: number; total: number }) {
+function ProgressBar({ done, total }: { done: number; total: number | null }) {
   const pct = total ? Math.min(100, (done / total) * 100) : 0;
   return (
     <div className="progress" role="progressbar" aria-label="Feed deliveries applied" aria-valuemin={0}
-         aria-valuemax={total} aria-valuenow={done}>
+         aria-valuemax={total ?? undefined} aria-valuenow={done}>
       <div className="progress-fill real" style={{ width: `${pct}%` }} />
     </div>
   );
+}
+
+// ---------------------------------------------------------------------------
+// Shared operation panel (status / phase / health / assurance are separate facts)
+// ---------------------------------------------------------------------------
+
+export function healthTone(h: OpsHealth): Tone {
+  return h === "progressing" ? "pos" : h === "waiting" || h === "finished" ? "info"
+    : h === "recovering" ? "brand" : h === "suspended" ? "pending" : h === "alive_no_progress" ? "warn" : "neg";
+}
+
+function assuranceTone(a: string): Tone {
+  return a === "passed" ? "pos" : a === "failed" ? "neg" : a === "incomplete" ? "warn" : "neutral";
+}
+
+export function OperationPanel({ op, testid = "op-panel", what = "operation" }: {
+  op: Operation; testid?: string; what?: string;
+}) {
+  const cur = op.timeline.phases.find((x) => x.state === "current");
+  const pr = op.progress;
+  const pct = pr.fraction === null ? null : Math.min(100, Math.round(pr.fraction * 1000) / 10);
+  const terminal = ["completed", "cancelled", "failed"].includes(op.status);
+  return (
+    <div className="op-panel" data-testid={testid} data-phase={op.phase ?? ""} data-health={op.health}>
+      <div className="op-badges">
+        <Badge tone={statusTone(op.status)} dot testid={`${testid}-status`}>{op.status.toUpperCase()}</Badge>
+        <Badge tone="brand" testid={`${testid}-phase`}>{op.phase_label}</Badge>
+        <Badge tone={healthTone(op.health)} dot testid={`${testid}-health`} title={op.health_detail}>{op.health_label}</Badge>
+        <Badge tone={assuranceTone(op.assurance.state)} icon="shield" testid={`${testid}-assurance`}
+               title={op.assurance.scope ?? op.assurance.detail ?? ""}>
+          Assurance {humanize(op.assurance.state)}
+        </Badge>
+        <span className="muted small-text mono">attempt {op.attempt} · generation {op.generation}</span>
+      </div>
+      <ol className="phase-timeline" aria-label={`Phases of this ${what}`} data-testid={`${testid}-timeline`}>
+        {op.timeline.phases.map((x) => (
+          <li key={x.phase} className={cx("phase-step", `is-${x.state}`, x.interrupted_spans > 0 && "was-interrupted")}
+              data-testid={`phase-${x.phase}`} data-state={x.state}
+              title={`${x.label}: ${fmtSecs(x.active_seconds)} active${x.interrupted_spans ? ` · ${x.interrupted_spans} interrupted` : ""}`}>
+            <span className="phase-dot" aria-hidden />
+            <span className="phase-name">{x.label}</span>
+            <span className="phase-time mono">{x.spans || x.state === "current" ? fmtSecs(x.active_seconds) : "—"}</span>
+          </li>
+        ))}
+      </ol>
+      {!terminal && (
+        <div className="op-current" data-testid={`${testid}-current`}>
+          <div className="op-current-head">
+            <span><b>{cur?.label ?? op.phase_label}</b>{pr.stage ? ` — ${pr.stage}` : ""}</span>
+            <span className="mono muted">
+              {pr.done !== null && pr.total !== null ? `${fmtInt(pr.done)}/${fmtInt(pr.total)} ${pr.unit ?? ""}`
+                : pr.done !== null ? `${fmtInt(pr.done)} ${pr.unit ?? ""} · total unknown` : "progress not measurable yet"}
+              {pct !== null && ` · ${pct}%`}
+            </span>
+          </div>
+          <div className="progress" role="progressbar" aria-label="Current phase progress" aria-valuemin={0}
+               aria-valuemax={100} aria-valuenow={pct ?? undefined}>
+            <div className={cx("progress-fill real", pct === null && "indeterminate")} style={{ width: `${pct ?? 100}%` }} />
+          </div>
+          <div className="op-current-foot small-text muted">
+            <span data-testid={`${testid}-elapsed`}>{fmtSecs(cur?.active_seconds ?? 0)} in this phase · {fmtSecs(op.timeline.active_seconds_total)} active total</span>
+            <span data-testid={`${testid}-eta`}>
+              {op.eta && op.eta.seconds !== null ? `~${fmtSecs(op.eta.seconds)} left in this phase` : "time remaining not yet known"}
+            </span>
+          </div>
+        </div>
+      )}
+      <p className="small-text muted" data-testid={`${testid}-health-detail`}>{op.health_detail}</p>
+      {op.suspension && (
+        <Notice tone="warn" icon="lock" title="Suspended pre-upgrade run (read-only)" testid={`${testid}-suspension`}>
+          {op.suspension.reason}
+        </Notice>
+      )}
+    </div>
+  );
+}
+
+export function CopyDiagnostics({ markdown, mdUrl, jsonUrl, label = "Copy report for chat", testid = "copy-diagnostic" }: {
+  markdown: () => Promise<string>; mdUrl: string; jsonUrl: string; label?: string; testid?: string;
+}) {
+  const [state, setState] = useState<"idle" | "copied" | "error">("idle");
+  const copy = async () => {
+    try {
+      await copyText(await markdown());
+      setState("copied");
+      window.setTimeout(() => setState("idle"), 4000);
+    } catch {
+      setState("error");
+    }
+  };
+  return (
+    <div className="report-actions">
+      <Button icon={state === "copied" ? "check" : "copy"} variant="secondary" onClick={copy} data-testid={testid}>
+        {state === "copied" ? "Copied — paste into chat" : state === "error" ? "Copy failed" : label}
+      </Button>
+      <a className="btn btn-secondary" href={mdUrl} data-testid={`${testid}-md`}><Icon name="download" size={15} /><span>Markdown</span></a>
+      <a className="btn btn-secondary" href={jsonUrl} data-testid={`${testid}-json`}><Icon name="download" size={15} /><span>JSON</span></a>
+    </div>
+  );
+}
+
+export async function copyText(value: string): Promise<void> {
+  try {
+    await navigator.clipboard.writeText(value);
+    return;
+  } catch {
+    const ta = document.createElement("textarea");
+    ta.value = value;
+    ta.setAttribute("readonly", "");
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand("copy");
+    document.body.removeChild(ta);
+    if (!ok) throw new Error("clipboard unavailable");
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -125,7 +243,6 @@ function Launcher({ onStarted }: { onStarted: (r: ObsReplay) => void }) {
     }
   };
 
-  const cov = pre?.source.coverage[0];
   return (
     <Card title="New market replay" icon="play" eyebrow="Real evidence · observation only" className="launcher"
           testid="obs-launcher">
@@ -157,21 +274,15 @@ function Launcher({ onStarted }: { onStarted: (r: ObsReplay) => void }) {
             <div className="preflight-row">
               <AvailabilityBadge basis={pre.availability.basis} testid="obs-preflight-availability" />
               <Badge tone={statusTone(pre.source.source_status)} dot>{pre.source.source_status.toUpperCase()}</Badge>
-              {pre.verification.verified && <Badge tone="pos" icon="shield">Verified</Badge>}
+              <Badge tone="pending" icon="clock">Verified after launch</Badge>
             </div>
             <div className="kv-grid">
-              <span>Instrument</span><Mono>{pre.source.inst_id} · index {pre.source.index_id}</Mono>
-              <span>Coverage</span><Mono>{cov ? `${fmtTime(cov.covered_from)} → ${fmtTime(cov.covered_until)}` : "—"}</Mono>
-              <span>Feed events</span><Mono>{fmtInt(pre.feed.event_count)}</Mono>
-              <span>Channels</span><Mono>{pre.source.coverage.length}</Mono>
+              <span>Instrument</span><Mono>{pre.source.inst_id}</Mono>
+              <span>Coverage</span><Mono>{`${fmtTime(pre.source.coverage_from)} → ${fmtTime(pre.source.coverage_until)}`}</Mono>
+              <span>Feed events</span><span className="muted">counted during preparation</span>
             </div>
             <p className="preflight-note">{pre.availability.label}</p>
-            {pre.source.warnings.map((w) => <Notice key={w} tone="warn">{w}</Notice>)}
-            {pre.source.exclusions.length > 0 && (
-              <Notice tone="warn" title={`${pre.source.exclusions.length} bridge exclusion(s)`}>
-                {pre.source.exclusions.join(" · ")}
-              </Notice>
-            )}
+            <p className="preflight-note" data-testid="obs-preflight-verification">{pre.verification_note}</p>
           </>
         )}
       </div>
@@ -330,6 +441,10 @@ export function ReplayPanel({ r, live, onCommand, eyebrow = "Market replay · re
   const workers = health?.observation_workers?.alive;
   const p = r.progress;
   const cov = r.source.coverage[0];
+  const ctl = r.operation.controls;
+  const total = p.total_events;
+  const post = ["FINALIZING", "VALIDATING", "GENERATING_REPORT"].includes(r.operation.phase ?? "");
+  const cursorText = `${p.applied_events}/${total ?? "PENDING"}`;
   return (
     <Card className="run-card obs-card" testid="obs-panel">
       <div className="run-head">
@@ -342,32 +457,37 @@ export function ReplayPanel({ r, live, onCommand, eyebrow = "Market replay · re
             {r.runtime_state.replace("_", " ").toUpperCase()}
           </Badge>
           <Badge tone="brand" icon="check" testid="obs-real-badge">Real market evidence</Badge>
-          <AvailabilityBadge basis={r.availability.basis} testid="obs-availability" />
+          {r.availability ? <AvailabilityBadge basis={r.availability.basis} testid="obs-availability" />
+            : <Badge tone="pending" icon="clock" testid="obs-availability">Availability pending preparation</Badge>}
           <span className={cx("live-pill", live && "is-live")}>
             <span className={cx("pulse-dot", live ? "tone-pos" : "tone-neutral")} aria-hidden />
             {live ? "Live stream" : "Stream idle"}
           </span>
         </div>
-        {!TERMINAL.has(r.status) && (
+        {!TERMINAL.has(r.status) && !r.operation.suspension && (
           <div className="run-head-controls">
             {!r.cancel_requested && (
               <div className="controls" data-testid="obs-controls">
                 {r.control.paused ? (
                   <>
-                    <Button icon="play" onClick={() => onCommand(() => obsApi.resume(r.replay_id))} data-testid="obs-resume">Resume</Button>
+                    <Button icon="play" onClick={() => onCommand(() => obsApi.resume(r.replay_id))} data-testid="obs-resume"
+                            disabled={!ctl.resume.enabled} title={ctl.resume.reason ?? undefined}>Resume</Button>
                     <Button variant="secondary" icon="step" onClick={() => onCommand(() => obsApi.step(r.replay_id))}
-                            disabled={p.applied_events + r.control.step_budget >= p.total_events} data-testid="obs-step">
+                            disabled={!ctl.step.enabled} title={ctl.step.reason ?? "exactly one source evidence event"}
+                            data-testid="obs-step">
                       Step one event
                     </Button>
                   </>
                 ) : (
-                  <Button variant="secondary" icon="pause" onClick={() => onCommand(() => obsApi.pause(r.replay_id))} data-testid="obs-pause">
+                  <Button variant="secondary" icon="pause" onClick={() => onCommand(() => obsApi.pause(r.replay_id))} data-testid="obs-pause"
+                          disabled={!ctl.pause.enabled} title={ctl.pause.reason ?? undefined}>
                     Pause
                   </Button>
                 )}
                 <label className="inline-field">
                   <span>Pacing</span>
-                  <select className="control control-sm" value={r.control.speed} data-testid="obs-speed"
+                  <select className="control control-sm" value={r.control.speed} data-testid="obs-speed" disabled={!ctl.speed.enabled}
+                          title={ctl.speed.reason ?? undefined}
                           onChange={(e) => onCommand(() => obsApi.setSpeed(r.replay_id, Number(e.target.value)))}>
                     {[...new Set([...PACING.map((x) => x.value), r.control.speed])].map((v) => (
                       <option key={v} value={v}>{pacingLabel(v)}</option>
@@ -384,24 +504,31 @@ export function ReplayPanel({ r, live, onCommand, eyebrow = "Market replay · re
         )}
       </div>
 
+      <OperationPanel op={r.operation} testid="obs-op" what="market replay" />
+
       <div className="run-progress">
-        <ProgressBar done={p.applied_events} total={p.total_events} />
-        <span className="muted small-text">One step = one causal feed delivery. Pacing never changes state.</span>
+        <ProgressBar done={p.applied_events} total={total} />
+        <span className="muted small-text" data-testid="obs-replay-progress-note">
+          {total === null ? "Replay cursor: total PENDING until the worker has verified the source and built the feed."
+            : post && p.applied_events === total ? `Replay 100% — ${r.operation.phase_label.toLowerCase()}; not completed until results are validated and published.`
+              : "One step = one causal feed delivery. Pacing never changes state."}
+        </span>
       </div>
 
       <div className="metric-grid">
         <Metric label="Runtime state" mono={false}
                 value={<span data-testid="obs-runtime" className={["recovering", "failed"].includes(r.runtime_state) ? "text-warn" : ""}>{humanize(r.runtime_state)}</span>}
                 hint={r.runtime_detail} />
-        <Metric label="Feed cursor (events)" value={`${p.applied_events}/${p.total_events}`} testid="obs-cursor"
+        <Metric label="Feed cursor (events)" value={cursorText} testid="obs-cursor"
                 hint={p.last_event_id ? <span className="mono" title={p.last_event_id}>{p.last_event_id.split("/").slice(-1)[0]}</span> : "no delivery yet"} />
         <Metric label="Information time" value={fmtTime(p.information_time)} testid="obs-info-time"
                 hint="Latest delivery's availability time" />
         <Metric label="Elapsed" value={fmtSecs(p.elapsed_seconds)} />
-        <Metric label="ETA" value={p.eta_seconds === null ? "unavailable" : fmtSecs(p.eta_seconds)} hint={p.eta_basis} />
-        <Metric label="Observation worker" mono={false}
+        <Metric label="Replay ETA" value={p.eta_seconds === null ? "not yet known" : fmtSecs(p.eta_seconds)} hint={p.eta_basis} />
+        <Metric label="Observation worker service" mono={false}
                 value={workers === undefined ? "unknown" : workers === 0
-                  ? <span className="text-warn">no live worker — replay cannot progress</span> : `${workers} alive`} />
+                  ? <span className="text-warn">no live supervisor — cannot progress</span> : `${workers} supervisor(s) alive`}
+                hint="Service availability; this run's own health is shown above" />
         <Metric label="Heartbeat" mono={false}
                 value={<span className={r.lease_expired ? "text-warn" : "mono"}>
                   {p.heartbeat_age_seconds === null ? "—" : `${fmtSecs(p.heartbeat_age_seconds)} ago`}
@@ -410,19 +537,21 @@ export function ReplayPanel({ r, live, onCommand, eyebrow = "Market replay · re
         <Metric label="Attempt" value={`${r.attempt}/${r.max_attempts}`} />
         <Metric label="Pacing" value={pacingLabel(r.control.speed)} testid="obs-speed-now" />
         <Metric label="Source" value={<span data-testid="obs-source-id">{r.source.kind} · {r.source.source_id}</span>}
-                hint={`${r.source.source_status} · verified ${r.verification.verified ? "yes" : "no"}`} />
+                hint={`${r.source.source_status} · verified ${r.verification ? (r.verification.verified ? "yes" : "no") : "PENDING"}`} />
         <Metric label="Coverage" value={cov ? `${fmtTime(cov.covered_from).slice(0, 16)} → ${fmtTime(cov.covered_until).slice(11, 16)}` : "—"} />
-        <Metric label="Feed identity" value={<span title={r.feed.content_identity}>{r.feed.content_identity.slice(0, 26)}…</span>}
-                hint={`ordered-event ${r.feed.ordered_event_hash.slice(0, 12)}…`} />
+        <Metric label="Feed identity" value={r.feed ? <span title={r.feed.content_identity}>{r.feed.content_identity.slice(0, 26)}…</span> : "PENDING"}
+                hint={r.feed ? `ordered-event ${r.feed.ordered_event_hash.slice(0, 12)}…` : "fixed by the worker-owned preparation"} />
       </div>
 
-      <div className="availability-strip" data-testid="obs-availability-label">
-        <Icon name="clock" size={15} />
-        <div>
-          <strong>{r.availability.basis}</strong> — {r.availability.label}
-          <div className="muted small-text mono">{r.availability.policy_id}</div>
+      {r.availability && (
+        <div className="availability-strip" data-testid="obs-availability-label">
+          <Icon name="clock" size={15} />
+          <div>
+            <strong>{r.availability.basis}</strong> — {r.availability.label}
+            <div className="muted small-text mono">{r.availability.policy_id}</div>
+          </div>
         </div>
-      </div>
+      )}
 
       {r.source.warnings.map((w) => <Notice key={w} tone="warn">{w}</Notice>)}
       {r.source.exclusions.length > 0 && (
@@ -431,6 +560,15 @@ export function ReplayPanel({ r, live, onCommand, eyebrow = "Market replay · re
         </Notice>
       )}
       {r.error && <Notice tone="neg" title="Replay error"><span data-testid="obs-error">{r.error}</span></Notice>}
+      <div className="diag-row">
+        <span className="muted small-text">
+          {TERMINAL.has(r.status) ? "Terminal diagnostic export (phase timings, counters, manifest check)."
+            : "Diagnostic snapshot from persisted facts — available at any time; not a result."}
+        </span>
+        <CopyDiagnostics markdown={() => obsReport.markdown(r.replay_id)} mdUrl={obsReport.downloadUrl(r.replay_id, "md")}
+                         jsonUrl={obsReport.downloadUrl(r.replay_id, "json")} label="Copy diagnostics for chat"
+                         testid="obs-copy-diagnostic" />
+      </div>
 
       {(r.recovery_log.length > 0 || r.control_log.length > 1) && (
         <div className="log-grid">
@@ -620,8 +758,8 @@ export function MarketReplay() {
                       <span className="list-item-title mono">{x.replay_id}</span>
                       <span className="list-item-meta">
                         <Badge tone={statusTone(x.runtime_state)} dot>{x.runtime_state.replace("_", " ").toUpperCase()}</Badge>
-                        <Badge tone="info">{x.availability.basis}</Badge>
-                        <span className="mono muted">{x.progress.applied_events}/{x.progress.total_events}</span>
+                        <Badge tone="info">{x.availability?.basis ?? "PENDING"}</Badge>
+                        <span className="mono muted">{x.progress.applied_events}/{x.progress.total_events ?? "?"}</span>
                       </span>
                       <span className="list-item-sub mono">{x.source.kind} · {x.source.source_id}</span>
                       <span className="mini-progress real" aria-hidden>

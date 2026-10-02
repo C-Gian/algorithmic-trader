@@ -19,7 +19,7 @@ const NAV: { group: string; items: NavItem[] }[] = [
     group: "Desk",
     items: [
       { id: "market", label: "Market", icon: "market", hint: "BTC cockpit and system readiness" },
-      { id: "backtest", label: "Backtest", icon: "gauge", hint: "Owner evaluation workbench: corpus, runs and copyable reports" },
+      { id: "backtest", label: "Historical Workbench", icon: "gauge", hint: "Corpus, market replay runs (data and engine check) and copyable reports" },
     ],
   },
   {
@@ -34,7 +34,7 @@ const NAV: { group: string; items: NavItem[] }[] = [
 
 const TITLES: Record<Section, string> = {
   market: "Market",
-  backtest: "Backtest",
+  backtest: "Historical Workbench",
   replay: "Replay Lab",
   data: "Data",
   recorder: "Recorder",

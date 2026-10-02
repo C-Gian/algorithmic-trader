@@ -1,32 +1,49 @@
 """Terminal observation-replay artifacts and validation.
 
-Written once per replay under ``<artifact root>/observations/<replay_id>/``:
+Revision-1 replays (WP-007/WP-008) wrote their files directly under
+``<artifact root>/observations/<replay_id>/``; those directories stay readable unchanged.
+
+Revision-2 replays (WP-008-R1A) publish into a **generation-scoped immutable directory**
+``observations/<replay_id>/g<generation>/``:
+
+1. every file is written into a private staging directory ``.staging-g<generation>-<pid>``;
+2. the staging directory is renamed to ``g<generation>`` (never overwritten once published);
+3. only then does the worker attempt the fenced terminal DB commit that references it.
+
+A stale finalizer (older generation) can therefore only ever publish its own ``g<old>``
+directory, which no committed manifest references; it can never overwrite the files of the
+current owner. Files:
 
 * ``config.json``         - the replay config (source, verification, feed identity, policies);
 * ``deliveries.jsonl``    - the ordered committed delivery identities (+ snapshot digest after each);
-* ``final_snapshot.json`` - the final ObservableSnapshot (full, including bounded history);
-* ``validation.json``     - independent re-derivation checks;
-* ``manifest.json``       - written last and atomically; lists every file with its SHA-256.
+* ``final_snapshot.json`` - the final ObservableSnapshot (absent when validation did not finish);
+* ``validation.json``     - re-derivation checks (outcome passed / failed / incomplete);
+* ``manifest.json``       - written last; lists every file with its SHA-256.
 
 Immutable source evidence is referenced (dataset / recording id), never copied.
-A finalize that is repeated after an interruption reuses an existing manifest.
 """
 
 from __future__ import annotations
 
 import hashlib
 import os
+import shutil
+from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 from ..feed.contracts import ObservableSnapshot
-from ..feed.state import snapshot_at
+from ..feed.state import apply, events_known_at, initial_state, snapshot
+from ..ops import OperationCancelled
 from .contracts import (
     LABELS,
     OBSERVE_CONTRACT_STATUS,
     OBSERVE_SCHEMA_REVISION,
     OBSERVE_SCHEMA_VERSION,
+    VALIDATOR_ID,
+    VALIDATOR_SCOPE,
+    VALIDATOR_VERSION,
     ArtifactFile,
     DeliveryRecord,
     ObservationReplayConfig,
@@ -34,18 +51,44 @@ from .contracts import (
     ReplayStatus,
     ReplayValidation,
     ValidationCheck,
+    ValidationOutcome,
 )
 from .core import ReplayCore, as_of
 from .sources import LoadedSource, feed_identity
+
+# ``hook(stage, done, total, unit)`` - cooperative progress/cancellation between bounded units.
+Hook = Callable[[str, int, int | None, str], None]
+
+
+def _no_hook(stage: str, done: int, total: int | None, unit: str) -> None:  # noqa: ARG001
+    return None
 
 
 def replay_dir(root: Path, replay_id: str) -> Path:
     return root / "observations" / replay_id
 
 
+def generation_dir_name(generation: int) -> str:
+    return f"g{generation}"
+
+
+def files_dir(root: Path, replay_id: str, manifest: dict[str, Any] | None) -> Path:
+    """Directory holding the files a committed manifest references (revision 1: the replay directory)."""
+    base = replay_dir(root, replay_id)
+    sub = (manifest or {}).get("artifact_dir")
+    if sub and "/" not in sub and "\\" not in sub and not sub.startswith("."):
+        return base / sub
+    return base
+
+
 def _sha256(path: Path) -> tuple[str, int, int]:
-    data = path.read_bytes()
-    return hashlib.sha256(data).hexdigest(), len(data), data.count(b"\n")
+    h, size, lines = hashlib.sha256(), 0, 0
+    with path.open("rb") as f:
+        for chunk in iter(lambda: f.read(1 << 20), b""):
+            h.update(chunk)
+            size += len(chunk)
+            lines += chunk.count(b"\n")
+    return h.hexdigest(), size, lines
 
 
 def _no_future(snap: ObservableSnapshot) -> str | None:
@@ -57,16 +100,27 @@ def _no_future(snap: ObservableSnapshot) -> str | None:
 
 
 def validate(config: ObservationReplayConfig, source: LoadedSource | None, deliveries: list[DeliveryRecord],
-             cursor: int, final_digest: str, status: ReplayStatus) -> tuple[ReplayValidation, ObservableSnapshot | None]:
-    """Re-derive the replay from the immutable source and compare with what was committed."""
+             cursor: int, final_digest: str, status: ReplayStatus,
+             hook: Hook | None = None) -> tuple[ReplayValidation, ObservableSnapshot | None]:
+    """Re-derive the replay from the immutable source and compare with what was committed.
+
+    The checks and their mathematics are those of revision 1. ``hook`` only reports progress between
+    re-derived deliveries; if it raises ``OperationCancelled`` the validation stops and is reported as
+    INCOMPLETE (never PASS), listing the checks that did and did not run.
+    """
+    hook = hook or _no_hook
     checks: list[ValidationCheck] = []
 
     def check(name: str, ok: bool, detail: str) -> None:
         checks.append(ValidationCheck(name=name, passed=ok, detail=detail))
 
+    def result(outcome: ValidationOutcome) -> ReplayValidation:
+        return ReplayValidation(passed=outcome == ValidationOutcome.PASSED, checks=tuple(checks), outcome=outcome,
+                                validator=VALIDATOR_ID, validator_version=VALIDATOR_VERSION, scope=VALIDATOR_SCOPE)
+
     if source is None:
         check("source_loadable", False, "the source could not be loaded; nothing could be re-derived")
-        return ReplayValidation(passed=False, checks=tuple(checks)), None
+        return result(ValidationOutcome.FAILED), None
     ident = feed_identity(source.feed)
     check("source_identity_unchanged", ident == config.feed,
           f"feed content {ident.content_identity}, ordered-event hash {ident.ordered_event_hash[:16]}")
@@ -83,14 +137,23 @@ def validate(config: ObservationReplayConfig, source: LoadedSource | None, deliv
     core = ReplayCore(source.feed, config.freshness_policy)
     pos = core.at(0)
     mismatch, future = None, _no_future(pos.snapshot)
-    for d in deliveries[:cursor]:
-        if pos.cursor >= core.total:
-            mismatch = f"delivery {d.seq} beyond the feed"
-            break
-        pos, rec = core.step(pos)
-        if rec.snapshot_digest != d.snapshot_digest and mismatch is None:
-            mismatch = f"delivery {d.seq}: committed digest differs from the pure re-derivation"
-        future = future or _no_future(pos.snapshot)
+    todo = deliveries[:cursor]
+    try:
+        for i, d in enumerate(todo):
+            hook("re-derive committed deliveries", i, len(todo), "deliveries")
+            if pos.cursor >= core.total:
+                mismatch = f"delivery {d.seq} beyond the feed"
+                break
+            pos, rec = core.step(pos)
+            if rec.snapshot_digest != d.snapshot_digest and mismatch is None:
+                mismatch = f"delivery {d.seq}: committed digest differs from the pure re-derivation"
+            future = future or _no_future(pos.snapshot)
+        hook("re-derive committed deliveries", len(todo), len(todo), "deliveries")
+    except OperationCancelled:
+        check("validation_completed", False,
+              f"cancelled after re-deriving {pos.cursor} of {len(todo)} committed deliveries; the digest, "
+              "no-future-knowledge and final-state checks did not run - assurance is INCOMPLETE, not PASS")
+        return result(ValidationOutcome.INCOMPLETE), None
     check("digests_match_pure_replay", mismatch is None and pos.snapshot.content_digest == final_digest,
           mismatch or f"every per-delivery snapshot digest and the final digest {final_digest[:16]} re-derived")
     check("no_future_knowledge", future is None,
@@ -98,34 +161,92 @@ def validate(config: ObservationReplayConfig, source: LoadedSource | None, deliv
     check("observation_only", set(pos.snapshot.labels) >= {"OBSERVATION_ONLY", "NO_INTERPRETATION"},
           f"snapshot labels {list(pos.snapshot.labels)}; no MarketView/decision/order/account records")
     if status == ReplayStatus.COMPLETED:
-        pure = snapshot_at(source.feed, as_of(source.feed, core.total), config.freshness_policy)
+        try:
+            cutoff = as_of(source.feed, core.total)
+            known = events_known_at(source.feed, cutoff)
+            state = initial_state(source.feed, config.freshness_policy)
+            for i, e in enumerate(known):  # the same fold as feed.state.snapshot_at, with progress
+                hook("pure cutoff snapshot", i, len(known), "events")
+                state = apply(state, e)
+            hook("pure cutoff snapshot", len(known), len(known), "events")
+            pure = snapshot(state, cutoff, source.feed)
+        except OperationCancelled:
+            check("validation_completed", False,
+                  "cancelled while re-deriving the pure cutoff snapshot; assurance is INCOMPLETE, not PASS")
+            return result(ValidationOutcome.INCOMPLETE), None
         check("completed_equals_pure_cutoff_snapshot",
               cursor == core.total and pure.content_digest == final_digest,
               f"all {core.total} deliveries applied; final state equals snapshot_at(feed, last availability)")
-    return ReplayValidation(passed=all(c.passed for c in checks), checks=tuple(checks)), pos.snapshot
+    outcome = ValidationOutcome.PASSED if all(c.passed for c in checks) else ValidationOutcome.FAILED
+    return result(outcome), pos.snapshot
 
 
-def write_replay_artifacts(root: Path, row: dict[str, Any], status: ReplayStatus, error: str | None,
-                           finished_at: datetime, deliveries: list[DeliveryRecord], cursor: int, final_digest: str,
-                           source: LoadedSource | None) -> ObservationReplayManifest:
-    out = replay_dir(root, row["replay_id"])
-    if (out / "manifest.json").is_file():  # finalize repeated after an interruption: never rewrite
-        return ObservationReplayManifest.model_validate_json((out / "manifest.json").read_text(encoding="utf-8"))
-    config = ObservationReplayConfig.model_validate(row["config"])
-    validation, final = validate(config, source, deliveries, cursor, final_digest, status)
-    out.mkdir(parents=True, exist_ok=True)
-    (out / "config.json").write_text(config.model_dump_json(indent=2), encoding="utf-8")
-    with (out / "deliveries.jsonl").open("w", encoding="utf-8", newline="\n") as f:
-        for d in deliveries:
+def _write_jsonl(path: Path, deliveries: list[DeliveryRecord], hook: Hook) -> None:
+    with path.open("w", encoding="utf-8", newline="\n") as f:
+        for i, d in enumerate(deliveries):
+            if i % 1000 == 0:
+                hook("serialize deliveries", i, len(deliveries), "deliveries")
             f.write(d.model_dump_json() + "\n")
+    hook("serialize deliveries", len(deliveries), len(deliveries), "deliveries")
+
+
+class PublishedArtifacts:
+    """Result of a staged, generation-scoped publication (before the fenced DB commit)."""
+
+    def __init__(self, manifest: ObservationReplayManifest, directory: Path, output_bytes: int) -> None:
+        self.manifest = manifest
+        self.directory = directory
+        self.output_bytes = output_bytes
+
+
+def publish_replay_artifacts(root: Path, row: dict[str, Any], status: ReplayStatus, error: str | None,
+                             finished_at: datetime, deliveries: list[DeliveryRecord], cursor: int,
+                             final_digest: str, source: LoadedSource | None, *, generation: int,
+                             phase: Callable[[str], None] | None = None, hook: Hook | None = None,
+                             timings: Callable[[], list[dict]] | None = None,
+                             metrics: Callable[[], dict] | None = None,
+                             cancel_validation: bool = True) -> tuple[PublishedArtifacts, ReplayStatus, str | None]:
+    """FINALIZING -> VALIDATING -> GENERATING_REPORT into ``g<generation>``; returns (artifacts, status, error).
+
+    A cancellation observed during VALIDATING turns a would-be COMPLETED run into CANCELLED with
+    INCOMPLETE assurance (cursor coverage is kept exactly as committed).
+    """
+    hook = hook or _no_hook
+    phase = phase or (lambda _p: None)
+    base = replay_dir(root, row["replay_id"])
+    final_dir = base / generation_dir_name(generation)
+    if (final_dir / "manifest.json").is_file():  # same generation repeating finalize: never rewrite
+        m = ObservationReplayManifest.model_validate_json((final_dir / "manifest.json").read_text(encoding="utf-8"))
+        return PublishedArtifacts(m, final_dir, sum(a.bytes for a in m.artifacts)), m.status, m.error
+    config = ObservationReplayConfig.model_validate(row["config"])
+    staging = base / f".staging-g{generation}-{os.getpid()}"
+    if staging.exists():
+        shutil.rmtree(staging)
+    staging.mkdir(parents=True)
+
+    phase("FINALIZING")
+    (staging / "config.json").write_text(config.model_dump_json(indent=2), encoding="utf-8")
+    _write_jsonl(staging / "deliveries.jsonl", deliveries, hook)
+
+    phase("VALIDATING")
+    validation, final = validate(config, source, deliveries, cursor, final_digest, status,
+                                 hook=hook if cancel_validation else None)
+    if validation.outcome == ValidationOutcome.INCOMPLETE and status == ReplayStatus.COMPLETED:
+        status = ReplayStatus.CANCELLED
+        error = ("cancelled by user during VALIDATING: the replay cursor was complete, but validation did not "
+                 "finish; assurance INCOMPLETE")
+
+    phase("GENERATING_REPORT")
     if final is not None:
-        (out / "final_snapshot.json").write_text(final.model_dump_json(indent=2), encoding="utf-8")
-    (out / "validation.json").write_text(validation.model_dump_json(indent=2), encoding="utf-8")
+        (staging / "final_snapshot.json").write_text(final.model_dump_json(indent=2), encoding="utf-8")
+    (staging / "validation.json").write_text(validation.model_dump_json(indent=2), encoding="utf-8")
     files = []
-    for p in sorted(x for x in out.iterdir() if x.is_file() and x.name != "manifest.json"
-                    and not x.name.startswith(".")):
+    names = sorted(x for x in staging.iterdir() if x.is_file() and not x.name.startswith("."))
+    for i, p in enumerate(names):
+        hook("hash artifacts", i, len(names), "files")
         digest, size, lines = _sha256(p)
         files.append(ArtifactFile(name=p.name, sha256=digest, bytes=size, lines=lines if p.suffix == ".jsonl" else None))
+    hook("hash artifacts", len(names), len(names), "files")
     manifest = ObservationReplayManifest(
         schema_version=OBSERVE_SCHEMA_VERSION,
         contract_status=OBSERVE_CONTRACT_STATUS,
@@ -150,11 +271,21 @@ def write_replay_artifacts(root: Path, row: dict[str, Any], status: ReplayStatus
         source_reference=(source.reference if source is not None
                           else f"{config.source.kind.value}s/{config.source.source_id}"),
         artifacts=tuple(files),
+        lease_generation=generation,
+        artifact_dir=final_dir.name,
+        phase_timings=timings() if timings else None,
+        operational_metrics=metrics() if metrics else None,
     )
-    tmp = out / ".manifest.json.tmp"
-    tmp.write_text(manifest.model_dump_json(indent=2), encoding="utf-8")
-    os.replace(tmp, out / "manifest.json")
-    return manifest
+    (staging / "manifest.json").write_text(manifest.model_dump_json(indent=2), encoding="utf-8")
+    try:
+        os.replace(staging, final_dir)  # immutable publication of this generation's directory
+    except OSError:
+        if not (final_dir / "manifest.json").is_file():
+            raise
+        shutil.rmtree(staging, ignore_errors=True)  # a same-generation publication already exists: keep it
+        manifest = ObservationReplayManifest.model_validate_json((final_dir / "manifest.json").read_text("utf-8"))
+    out_bytes = sum(a.bytes for a in manifest.artifacts)
+    return PublishedArtifacts(manifest, final_dir, out_bytes), manifest.status, manifest.error
 
 
 def load_replay_manifest(root: Path, replay_id: str) -> ObservationReplayManifest | None:

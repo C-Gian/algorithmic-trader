@@ -68,7 +68,20 @@ Accepted limitations to measure on the Owner machine:
 
 ## Current action
 
-**WP-008-R1A — Observable job lifecycle and diagnosis** is READY and is the only active implementation package. See `task.md`.
+**WP-008-R1A — Observable job lifecycle and diagnosis** is the only active implementation package (`task.md`). **Executor delivery: IMPLEMENTED — READY FOR DIRECTOR REVIEW; Director acceptance pending.** NOT READY FOR OWNER MARKET REPLAY.
+
+Executor evidence (base `fb19de21`, Director has not reviewed):
+- shared operational contract `algotrader.ops.v1` (`src/algotrader/ops.py`): separate status / phase / health / assurance; current-phase-only ETA; phase spans with active vs wall time;
+- durable observation/evaluation launch: `ObservationLaunch` envelope, identity/total PENDING until worker-owned PREPARING_SOURCE / VERIFYING_SOURCE / BUILDING_FEED persist the verified config before the first causal step; cheap source preview; preparation errors are visible failed runs;
+- supervisor + separate compute process (`observe/worker.py`, `observe/job.py`), heartbeat 2 s / lease 30 s; lease renewed only while the compute process exists; monotonic `lease_generation` fencing of every durable write (observation and corpus, incl. corpus binding); generation-scoped immutable artifact publication (`g<generation>/`) before the fenced terminal commit;
+- distinct health: progressing, waiting, alive_no_progress, compute_lost, unresponsive, recovering (only while a new generation restores), suspended, finished; API 503 `disconnected`; supervisor DB outages logged;
+- cooperative progress/cancellation hooks in verification, feed build, prefix rebuild, serialization and validation (mathematics unchanged); cancel during VALIDATING at full cursor -> CANCELLED with INCOMPLETE assurance;
+- diagnostic Markdown/JSON + Copy for every status (observation, evaluation, corpus), including missing manifest and failed publication; terminal evaluation reports remain byte-deterministic;
+- migration 6 (additive); pre-upgrade nonterminal replays get an additive operational suspension, never claimed/finalized, exportable read-only; Owner upgrade procedure in README (stop old containers first, never `--volumes`);
+- `observe.v1` revision 2 (optional additions; revision-1 artifacts readable); `semantic.v1`, `marketdata.v1`, `feed.v1`, `recorder.v1` baseline bytes unchanged;
+- UI: Historical Workbench (route `#backtest` kept), explicit run types (Market replay available, Adviser backtest unavailable, Deep validation planned), phase timeline + current-phase bar, honest PENDING/unknown fields;
+- local checks: 320 non-E2E + 10 E2E tests green on a disposable PostgreSQL 18.6, TypeScript typecheck/build green. Compose smoke deferred to CI (the Owner's live stack runs on the executor machine);
+- remaining costs unchanged by design (R1B/R1C): eager feed build with duplicate verification, one transaction + delivery row + full snapshot per event, full prefix rebuild on restore/resume, full terminal re-derivation (also on cancel before completion).
 
 SR-003 review is now retained at `strategic_reviews/ASTRA-SR-003-REPLAY-CLOCK-PERFORMANCE-REVIEW.md`. Director disposition: `strategic_reviews/SR-003-DIRECTOR-DISPOSITION.md`, ACCEPT WITH MODIFICATION. This is documentation/architecture acceptance, not an implemented performance fix or a reproduced benchmark.
 

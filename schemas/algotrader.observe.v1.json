@@ -438,6 +438,87 @@
       "title": "FreshnessPolicy",
       "type": "object"
     },
+    "ObservationLaunch": {
+      "additionalProperties": false,
+      "description": "Revision 2: the lightweight launch envelope persisted (<=1 s, no hashing) before any preparation.\n\nSource/config/feed identity and the total event count are PENDING until the worker-owned preparation\nhas verified the source and built the feed; nothing here claims verification.",
+      "properties": {
+        "code_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Code Version"
+        },
+        "evaluation_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Evaluation Id"
+        },
+        "expected_manifest_sha256": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Expected Manifest Sha256"
+        },
+        "paused": {
+          "title": "Paused",
+          "type": "boolean"
+        },
+        "replay_id": {
+          "title": "Replay Id",
+          "type": "string"
+        },
+        "requested_at": {
+          "format": "date-time",
+          "title": "Requested At",
+          "type": "string"
+        },
+        "schema_version": {
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "source_id": {
+          "title": "Source Id",
+          "type": "string"
+        },
+        "source_kind": {
+          "$ref": "#/$defs/SourceKind"
+        },
+        "speed": {
+          "title": "Speed",
+          "type": "number"
+        }
+      },
+      "required": [
+        "schema_version",
+        "replay_id",
+        "source_kind",
+        "source_id",
+        "requested_at",
+        "speed",
+        "paused",
+        "evaluation_id",
+        "expected_manifest_sha256",
+        "code_version"
+      ],
+      "title": "ObservationLaunch",
+      "type": "object"
+    },
     "ObservationReplayConfig": {
       "additionalProperties": false,
       "description": "Everything a replay depends on; fixed at creation and re-checked by every worker claim.",
@@ -515,6 +596,18 @@
           "title": "Applied Events",
           "type": "integer"
         },
+        "artifact_dir": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Artifact Dir"
+        },
         "artifacts": {
           "items": {
             "$ref": "#/$defs/ArtifactFile"
@@ -581,6 +674,47 @@
           },
           "title": "Labels",
           "type": "array"
+        },
+        "lease_generation": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Lease Generation"
+        },
+        "operational_metrics": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Operational Metrics"
+        },
+        "phase_timings": {
+          "anyOf": [
+            {
+              "items": {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Phase Timings"
         },
         "recovery_log": {
           "items": {
@@ -678,9 +812,56 @@
           "title": "Checks",
           "type": "array"
         },
+        "outcome": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ValidationOutcome"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
         "passed": {
           "title": "Passed",
           "type": "boolean"
+        },
+        "scope": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Scope"
+        },
+        "validator": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Validator"
+        },
+        "validator_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Validator Version"
         }
       },
       "required": [
@@ -824,6 +1005,15 @@
       ],
       "title": "ValidationCheck",
       "type": "object"
+    },
+    "ValidationOutcome": {
+      "enum": [
+        "passed",
+        "failed",
+        "incomplete"
+      ],
+      "title": "ValidationOutcome",
+      "type": "string"
     }
   },
   "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -832,6 +1022,11 @@
       "date": "2026-09-30",
       "note": "Initial provisional baseline (WP-007): observation-replay config, source verification, feed identity, committed delivery records, manifest and validation.",
       "revision": 1
+    },
+    {
+      "date": "2026-10-02",
+      "note": "WP-008-R1A operational lifecycle (Director-approved limited revision): durable ObservationLaunch envelope persisted before worker-owned source preparation; manifest adds optional fencing generation, generation-scoped immutable artifact directory, measured phase timings and operational counters; validation adds optional outcome (passed/failed/incomplete), validator id/version and scope. All additions are optional, so revision-1 manifests remain readable unchanged. Replay semantics, order, digests and validation mathematics are unchanged.",
+      "revision": 2
     }
   ],
   "clock_policy": "Event-driven replay clock: one step applies exactly one causal feed delivery, in the accepted feed.v1 total order; replay/information time becomes that delivery's available_time. Pacing (events/s) is operational only and never changes order, state or digests.",
@@ -845,6 +1040,7 @@
     "ArtifactFile": "#/$defs/ArtifactFile",
     "DeliveryRecord": "#/$defs/DeliveryRecord",
     "FeedIdentity": "#/$defs/FeedIdentity",
+    "ObservationLaunch": "#/$defs/ObservationLaunch",
     "ObservationReplayConfig": "#/$defs/ObservationReplayConfig",
     "ObservationReplayManifest": "#/$defs/ObservationReplayManifest",
     "ReplayValidation": "#/$defs/ReplayValidation",
@@ -852,7 +1048,7 @@
     "SourceVerification": "#/$defs/SourceVerification",
     "ValidationCheck": "#/$defs/ValidationCheck"
   },
-  "revision": 1,
+  "revision": 2,
   "schema_version": "algotrader.observe.v1",
   "status": "PROVISIONAL",
   "title": "Algorithmic Trader observation-replay contracts (algotrader.observe.v1, PROVISIONAL)"

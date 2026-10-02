@@ -282,7 +282,16 @@ def test_missing_or_altered_binding_is_not_reported_prepared(database_url, conn,
     original = manifest.read_bytes()
     manifest.write_bytes(original + b" ")
     assert status()["status"] == "invalid" and "changed" in status()["local"]["problem"]
-    assert api.post("/api/evaluations", json={"chunk_id": "test-chunk"}).status_code == 409
+    # the launch itself never hashes (<=1 s durable launch); the worker-owned preparation re-checks the
+    # manifest hash recorded at binding and fails the run visibly instead of replaying altered evidence
+    ev = api.post("/api/evaluations", json={"chunk_id": "test-chunk", "speed": 0})
+    assert ev.status_code == 201
+    from algotrader.observe.worker import ObservationWorker
+
+    ObservationWorker(database_url, root, tmp_path / "art", worker_id="observe:t", isolate=False).run_once()
+    rv = api.get(f"/api/evaluations/{ev.json()['evaluation_id']}").json()["replay"]
+    assert rv["status"] == "failed" and "manifest changed since it was bound" in rv["error"]
+    assert rv["configured"] is False
     manifest.write_bytes(original)
     assert status()["status"] == "prepared"
     moved = manifest.parent.with_name("moved-away")
@@ -321,7 +330,7 @@ def test_cancellation_stops_at_a_page_boundary_and_binds_nothing(database_url, c
 def test_acquired_dataset_is_verified_before_binding(database_url, conn, tmp_path, plan_file, monkeypatch):
     root = tmp_path / "data"
     job_id = cj.create_job(conn, load_plan(), "test-chunk")
-    monkeypatch.setattr(md, "verify", lambda path: ["simulated hash mismatch"])
+    monkeypatch.setattr(md, "verify", lambda path, progress=None: ["simulated hash mismatch"])
     corpus_worker(database_url, root, FakeOkx()).run_once()
     row = job_row(conn, job_id)
     assert row["status"] == "failed" and "failed verification" in row["error"]
@@ -354,7 +363,10 @@ def test_worker_restart_reclaims_and_restarts_the_chunk_from_scratch(database_ur
     conn.execute("UPDATE corpus_jobs SET progress = progress || '{\"work_dir\": \".tmp-deadbeef\"}'::jsonb, "
                  "lease_expires_at = now() - interval '1 second' WHERE job_id = %s", (job_id,))
     api = TestClient(create_app(database_url, tmp_path / "art", web_dist=tmp_path / "no-ui", data_root=root))
-    assert api.get(f"/api/corpus/jobs/{job_id}").json()["runtime_state"] == "recovering"
+    view = api.get(f"/api/corpus/jobs/{job_id}").json()
+    # lease expired alone is "unresponsive / awaiting recovery", never "recovering"
+    assert view["runtime_state"] == "unresponsive" and view["operation"]["health"] == "unresponsive"
+    assert "CORPUS_PREPARATION_DIAGNOSTIC" in api.get(f"/api/corpus/jobs/{job_id}/report.md").text
 
     corpus_worker(database_url, root, FakeOkx(), worker_id="corpus:new").run_once()
     row = job_row(conn, job_id)

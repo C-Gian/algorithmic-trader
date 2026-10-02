@@ -77,12 +77,15 @@ services:
     <<: *app
     # Real-market observation replay (observation only; no interpretation, no trading). Replays
     # verified datasets / finalized recordings from the data volume through the causal feed.
-    command: ["algotrader", "observe-worker", "--lease-seconds", "10"]
+    # Supervisor (heartbeat ~2 s, fenced 30 s lease) + a separate compute process per claimed replay, so
+    # CPU-bound replay/validation can never starve the heartbeat.
+    command: ["algotrader", "observe-worker", "--lease-seconds", "30", "--heartbeat-seconds", "2"]
     depends_on:
       migrate:
         condition: service_completed_successfully
-    # A dead observer is restarted; it reclaims the replay after the lease expires and resumes
-    # after the last committed feed cursor.
+    # A dead observer is restarted; a new fenced attempt reclaims the replay after the lease expires and
+    # resumes after the last committed feed cursor. Pre-upgrade runs are suspended read-only, never reclaimed.
+    stop_grace_period: 15s
     restart: unless-stopped
 
   corpus:

@@ -15,6 +15,7 @@ twice or silently diverge.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 
@@ -55,11 +56,22 @@ class ReplayCore:
     def total(self) -> int:
         return len(self.feed.events)
 
-    def at(self, cursor: int) -> Position:
-        """Position after exactly ``cursor`` committed deliveries (pure prefix replay)."""
+    def at(self, cursor: int, progress: Callable[[int, int], None] | None = None) -> Position:
+        """Position after exactly ``cursor`` committed deliveries (pure prefix replay).
+
+        ``progress(done, total)`` is an optional cooperative hook called between applied events of the
+        prefix rebuild (same fold as ``apply_all``); it may raise to cancel and never changes the state.
+        """
         if not 0 <= cursor <= self.total:
             raise FeedError(f"cursor {cursor} outside feed of {self.total} events")
-        state = apply_all(initial_state(self.feed, self.freshness), self.feed.events[:cursor])
+        state = initial_state(self.feed, self.freshness)
+        if progress is None:
+            state = apply_all(state, self.feed.events[:cursor])
+        else:
+            for i, e in enumerate(self.feed.events[:cursor]):
+                progress(i, cursor)
+                state = apply(state, e)
+            progress(cursor, cursor)
         return Position(cursor, state, snapshot(state, as_of(self.feed, cursor), self.feed))
 
     def step(self, pos: Position) -> tuple[Position, DeliveryRecord]:

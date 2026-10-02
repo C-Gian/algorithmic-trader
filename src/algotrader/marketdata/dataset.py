@@ -611,8 +611,13 @@ def load_quality(path: Path) -> QualityReport:
     return QualityReport.model_validate_json((path / "quality.json").read_text(encoding="utf-8"))
 
 
-def verify(path: Path) -> list[str]:
-    """Re-check every recorded hash, row count and the dataset identity. Empty list = OK."""
+def verify(path: Path, progress: Callable[[str, int, int | None, str], None] | None = None) -> list[str]:
+    """Re-check every recorded hash, row count and the dataset identity. Empty list = OK.
+
+    ``progress(stage, done, total, unit)`` is an optional cooperative hook called between bounded units
+    (one file / one raw page). It may raise to cancel; it never changes what is checked.
+    """
+    hook = progress or (lambda *_: None)
     problems: list[str] = []
     try:
         m = load_manifest(path)
@@ -622,7 +627,8 @@ def verify(path: Path) -> list[str]:
         problems.append(f"schema_version {m.schema_version} is not {MARKETDATA_SCHEMA_VERSION}")
     if path.name != m.dataset_id:
         problems.append(f"directory {path.name} does not match dataset_id {m.dataset_id}")
-    for ref in m.files:
+    for i, ref in enumerate(m.files):
+        hook("hash dataset files", i, len(m.files), "files")
         p = path / ref.name
         if not p.is_file():
             problems.append(f"missing file {ref.name}")
@@ -635,10 +641,13 @@ def verify(path: Path) -> list[str]:
         pages = [RawPageRef.model_validate_json(line) for line in (path / "request_log.jsonl").read_text(encoding="utf-8").splitlines()]
     except (OSError, ValueError) as exc:
         return [*problems, f"request log unreadable: {exc}"]
-    for page in pages:
+    hook("hash dataset files", len(m.files), len(m.files), "files")
+    for i, page in enumerate(pages):
+        hook("check raw source pages", i, len(pages), "pages")
         p = path / page.file
         if not p.is_file() or hashlib.sha256(p.read_bytes()).hexdigest() != page.sha256:
             problems.append(f"raw page {page.page_id} missing or altered")
+    hook("check raw source pages", len(pages), len(pages), "pages")
     if compute_dataset_id(m.request, [p.sha256 for p in pages]) != m.dataset_id:
         problems.append("dataset_id does not match the raw source content")
     for fam in m.families:

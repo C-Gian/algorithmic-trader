@@ -11,12 +11,14 @@ import {
   Badge, Button, Card, cx, EmptyState, Field, Metric, Mono, Notice, PageHeader, Skeleton, statusTone, Tone,
 } from "../ui/primitives";
 import { MarketChart } from "./replay/MarketChart";
-import { Artifacts, ObservableStatePanel, PACING, ReplayPanel } from "./replay/MarketReplay";
+import { Artifacts, CopyDiagnostics, copyText, ObservableStatePanel, OperationPanel, PACING, ReplayPanel } from "./replay/MarketReplay";
 
-// Backtest: the Owner's evaluation workbench. Three stages over the SAME accepted machinery:
+// Historical Workbench (route #backtest kept): the Owner's evaluation workbench. Three stages over the SAME machinery:
 //   A. historical corpus  - checked-in logical plan + locally prepared, verified immutable datasets;
-//   B. run setup          - the only run type today: observation-only historical evaluation;
-//   C. run & report       - the accepted durable observation replay, plus a copyable report.
+//   B. run setup          - explicit run types: Market replay (data and engine check) is the only available one;
+//                           Adviser backtest is unavailable until the adviser exists; Deep validation is planned;
+//   C. run & report       - the durable observation replay with its phase timeline, plus a copyable report or
+//                           diagnostic snapshot at every status.
 // No adviser is connected yet: no MarketView, calls or outcomes are shown or implied.
 
 const NOT_CONNECTED =
@@ -65,25 +67,6 @@ function span(a: string, b: string): string {
   return mins >= 60 ? `${(mins / 60).toFixed(1)} hours` : `${mins} minutes`;
 }
 
-async function copyText(value: string): Promise<void> {
-  try {
-    await navigator.clipboard.writeText(value);
-    return;
-  } catch {
-    // Fallback for browsers/contexts without the async clipboard API.
-    const ta = document.createElement("textarea");
-    ta.value = value;
-    ta.setAttribute("readonly", "");
-    ta.style.position = "fixed";
-    ta.style.opacity = "0";
-    document.body.appendChild(ta);
-    ta.select();
-    const ok = document.execCommand("copy");
-    document.body.removeChild(ta);
-    if (!ok) throw new Error("clipboard unavailable");
-  }
-}
-
 // ---------------------------------------------------------------------------
 // Stage rail
 // ---------------------------------------------------------------------------
@@ -101,14 +84,14 @@ function StageRail({ corpus, ev }: { corpus: CorpusStatus | null; ev: Evaluation
     },
     {
       n: "B", title: "Run setup", testid: "stage-setup",
-      value: prepared ? "Ready · observation-only" : "Waiting for a prepared chunk",
+      value: prepared ? "Ready · market replay" : "Waiting for a prepared chunk",
       tone: prepared ? "pos" : "neutral",
     },
     {
       n: "C", title: "Run & report", testid: "stage-run",
-      value: !ev ? "No evaluation yet" : ev.report_available ? `Report ready · ${ev.replay.status}`
-        : humanize(runState ?? "queued"),
-      tone: !ev ? "neutral" : ev.report_available ? (ev.replay.status === "completed" ? "pos" : "warn") : "info",
+      value: !ev ? "No evaluation yet" : ev.report_terminal ? `Report ready · ${ev.replay.status}`
+        : `${humanize(runState ?? "queued")} · ${ev.replay.operation.phase_label}`,
+      tone: !ev ? "neutral" : ev.report_terminal ? (ev.replay.status === "completed" ? "pos" : "warn") : "info",
     },
   ];
   return (
@@ -189,11 +172,12 @@ function JobProgress({ job, onCancel }: { job: CorpusJob; onCancel: () => void }
           <div className="eyebrow">Preparation job</div>
           <div className="mono job-id">{job.job_id}</div>
         </div>
-        <Badge tone={statusTone(job.runtime_state === "recovering" ? "recovering" : job.status)} dot
+        <Badge tone={statusTone(job.runtime_state === "unresponsive" ? "failed" : job.status)} dot
                testid="prep-status" title={job.runtime_detail}>
           {humanize(job.runtime_state).toUpperCase()}
         </Badge>
       </div>
+      {job.operation && <OperationPanel op={job.operation} testid="prep-op" what="preparation" />}
       {active && (
         <>
           <div className="job-phase">
@@ -224,6 +208,9 @@ function JobProgress({ job, onCancel }: { job: CorpusJob; onCancel: () => void }
           {job.recovery_log.map((x, i) => <li key={i}><b>attempt {x.attempt} · {x.event}</b> — {x.detail}</li>)}
         </ol>
       )}
+      <CopyDiagnostics markdown={() => corpusApi.reportMarkdown(job.job_id)} mdUrl={corpusApi.downloadUrl(job.job_id, "md")}
+                       jsonUrl={corpusApi.downloadUrl(job.job_id, "json")} label="Copy preparation report for chat"
+                       testid="prep-copy-diagnostic" />
       <div className="job-foot">
         <p className="muted small-text"><Icon name="shield" size={13} /> {job.recovery_behavior}</p>
         {active && (
@@ -371,7 +358,32 @@ function RunSetup({ corpus, onStarted }: { corpus: CorpusStatus | null; onStarte
     }
   };
   return (
-    <Card title="Run setup" icon="play" eyebrow="B · Observation-only historical evaluation" className="setup" testid="run-setup">
+    <Card title="Run setup" icon="play" eyebrow="B · Choose a run type" className="setup" testid="run-setup">
+      <div className="run-types" role="radiogroup" aria-label="Run type" data-testid="run-types">
+        <label className="run-type is-on" data-testid="run-type-market-replay">
+          <input type="radio" name="run-type" checked readOnly />
+          <span>
+            <b>Market replay — data and engine check</b>
+            <span className="muted small-text">Replays historical market evidence through the causal engine. No adviser or trade calls are evaluated.</span>
+          </span>
+          <Badge tone="pos">Available</Badge>
+        </label>
+        <label className="run-type is-disabled" data-testid="run-type-adviser-backtest" aria-disabled="true">
+          <input type="radio" name="run-type" disabled />
+          <span>
+            <b>Adviser backtest</b>
+            <span className="muted small-text">Runs the integrated adviser and call-outcome evaluation on the same engine — unavailable until the adviser exists.</span>
+          </span>
+          <Badge tone="pending" icon="lock">Unavailable</Badge>
+        </label>
+        <div className="run-type is-planned" data-testid="run-type-deep-validation">
+          <span>
+            <b>Deep validation</b>
+            <span className="muted small-text">Planned optional diagnostic attached to a finished run (separately observable) — not an action in this version.</span>
+          </span>
+          <Badge tone="pending">Planned</Badge>
+        </div>
+      </div>
       <Notice tone="warn" icon="compass" title="Observation-only" testid="adviser-notice">{NOT_CONNECTED}</Notice>
       <Field label="Prepared corpus chunk">
         <select className="control" value={chunkId} onChange={(e) => setChunkId(e.target.value)} data-testid="eval-chunk"
@@ -399,7 +411,7 @@ function RunSetup({ corpus, onStarted }: { corpus: CorpusStatus | null; onStarte
       </label>
       {error && <Notice tone="neg" title="Launch failed">{error}</Notice>}
       <Button icon="play" className="btn-block" onClick={start} disabled={!chunk || busy} data-testid="start-evaluation">
-        Start observation evaluation
+        Start market replay
       </Button>
       <p className="muted small-text">No model parameters: there is no adviser to configure yet.</p>
     </Card>
@@ -424,9 +436,9 @@ function EvaluationList({ items, selected, onSelect }: {
                   <span className="list-item-title mono">{e.evaluation_id}</span>
                   <span className="list-item-meta">
                     <Badge tone={statusTone(e.replay.runtime_state)} dot>{humanize(e.replay.runtime_state).toUpperCase()}</Badge>
-                    <span className="mono muted">{fmtInt(p.applied_events)}/{fmtInt(p.total_events)}</span>
+                    <span className="mono muted">{fmtInt(p.applied_events)}/{p.total_events === null ? "PENDING" : fmtInt(p.total_events)}</span>
                   </span>
-                  <span className="list-item-sub">{e.corpus.chunk_label} · observation-only</span>
+                  <span className="list-item-sub">{e.corpus.chunk_label} · market replay · {e.replay.operation.phase_label}</span>
                   <span className="mini-progress real" aria-hidden>
                     <span style={{ width: `${(p.applied_events / (p.total_events || 1)) * 100}%` }} />
                   </span>
@@ -448,12 +460,13 @@ function ReportCard({ ev }: { ev: Evaluation }) {
   const [report, setReport] = useState<EvaluationReport | null>(null);
   const [copied, setCopied] = useState<"idle" | "copied" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
+  const terminal = TERMINAL.has(ev.replay.status);
   useEffect(() => {
     setReport(null);
     setCopied("idle");
-    if (!ev.report_available) return;
+    if (!terminal) return;  // terminal reports are fetched once; snapshots are generated on Copy/Download
     evalApi.report(ev.evaluation_id).then(setReport).catch((e) => setError((e as Error).message));
-  }, [ev.evaluation_id, ev.report_available]);
+  }, [ev.evaluation_id, terminal, ev.replay.has_manifest]);
 
   const copy = async () => {
     try {
@@ -466,12 +479,30 @@ function ReportCard({ ev }: { ev: Evaluation }) {
     }
   };
 
-  if (!ev.report_available) {
+  const actions = (
+    <div className="report-actions">
+      <Button icon={copied === "copied" ? "check" : "copy"} onClick={copy} data-testid="copy-report">
+        {copied === "copied" ? "Copied — paste into chat" : terminal ? "Copy report for chat" : "Copy diagnostic snapshot for chat"}
+      </Button>
+      <a className="btn btn-secondary" href={evalApi.downloadUrl(ev.evaluation_id, "md")} data-testid="download-md">
+        <Icon name="download" size={15} /><span>Markdown</span>
+      </a>
+      <a className="btn btn-secondary" href={evalApi.downloadUrl(ev.evaluation_id, "json")} data-testid="download-json">
+        <Icon name="download" size={15} /><span>JSON</span>
+      </a>
+    </div>
+  );
+  if (!terminal) {
+    const op = ev.replay.operation;
     return (
-      <Card title="Report" icon="file" eyebrow="C · Copyable evaluation report" testid="report-card" state="pending">
-        <EmptyState icon="file" title="Report appears when the run ends">
-          Completed, cancelled and failed runs all produce a report with Copy report for chat, Markdown and JSON.
-        </EmptyState>
+      <Card title="Report" icon="file" eyebrow="C · Diagnostic snapshot (incomplete)" testid="report-card" state="snapshot"
+            className="report-card" actions={actions}>
+        {error && <Notice tone="neg" title="Report error">{error}</Notice>}
+        <Notice tone="info" title="Not a result yet" testid="report-snapshot-note">
+          The run is {op.status} in phase {op.phase_label.toLowerCase()} (health: {op.health_label.toLowerCase()}, assurance:{" "}
+          {op.assurance.state.replace("_", " ")}). Copy produces a diagnostic snapshot from persisted facts with its capture
+          time; the terminal report appears when the run completes, is cancelled or fails.
+        </Notice>
       </Card>
     );
   }
@@ -480,20 +511,7 @@ function ReportCard({ ev }: { ev: Evaluation }) {
   const caps = report ? Object.entries(report.capabilities) : [];
   return (
     <Card title="Report" icon="file" eyebrow="C · Copyable evaluation report" testid="report-card" state="ready"
-          className="report-card"
-          actions={
-            <div className="report-actions">
-              <Button icon={copied === "copied" ? "check" : "copy"} onClick={copy} data-testid="copy-report">
-                {copied === "copied" ? "Copied — paste into chat" : "Copy report for chat"}
-              </Button>
-              <a className="btn btn-secondary" href={evalApi.downloadUrl(ev.evaluation_id, "md")} data-testid="download-md">
-                <Icon name="download" size={15} /><span>Markdown</span>
-              </a>
-              <a className="btn btn-secondary" href={evalApi.downloadUrl(ev.evaluation_id, "json")} data-testid="download-json">
-                <Icon name="download" size={15} /><span>JSON</span>
-              </a>
-            </div>
-          }>
+          className="report-card" actions={actions}>
       {error && <Notice tone="neg" title="Report error">{error}</Notice>}
       {!report ? <Skeleton lines={4} /> : (
         <>
@@ -504,10 +522,12 @@ function ReportCard({ ev }: { ev: Evaluation }) {
           </div>
           <div className="metric-grid compact">
             <Metric label="Coverage" value={<span data-testid="report-completion">{report.completion}</span>}
-                    hint={`${fmtInt(report.coverage.applied_events)}/${fmtInt(report.coverage.total_events)} feed events`} />
+                    hint={`${fmtInt(report.coverage.applied_events)}/${report.coverage.total_events === null ? "PENDING" : fmtInt(report.coverage.total_events)} feed events`} />
             <Metric label="Validation" mono={false}
-                    value={<Badge tone={!report.validation.ran ? "warn" : report.validation.passed ? "pos" : "neg"}>
-                      {!report.validation.ran ? "NOT RUN" : report.validation.passed ? "PASS" : "FAIL"}</Badge>}
+                    value={<Badge tone={!report.validation.ran || report.validation.outcome === "incomplete" ? "warn"
+                      : report.validation.passed ? "pos" : "neg"}>
+                      {!report.validation.ran ? "NOT RUN" : report.validation.outcome === "incomplete" ? "INCOMPLETE"
+                        : report.validation.passed ? "PASS" : "FAIL"}</Badge>}
                     hint={`${report.validation.checks.filter((c) => c.passed).length}/${report.validation.checks.length} checks`} />
             <Metric label="Final information time" value={fmtTime(report.coverage.final_information_time)} />
             <Metric label="Runtime" value={fmtSecs(report.runtime.elapsed_seconds)}
@@ -518,7 +538,7 @@ function ReportCard({ ev }: { ev: Evaluation }) {
           </div>
           {report.stopped_at && (
             <Notice tone="warn" title="Incomplete coverage" testid="report-stopped">
-              Stopped at {fmtInt(report.stopped_at.applied_events)}/{fmtInt(report.stopped_at.total_events)} events
+              Stopped at {fmtInt(report.stopped_at.applied_events)}/{report.stopped_at.total_events === null ? "PENDING" : fmtInt(report.stopped_at.total_events)} events
               (information time {fmtTime(report.stopped_at.information_time)}). {report.stopped_at.reason ?? ""}
             </Notice>
           )}
@@ -613,7 +633,7 @@ function ActiveRun({ ev, onReplay }: { ev: Evaluation; onReplay: (r: ObsReplay) 
   return (
     <div className="run-stack" data-testid="active-run">
       {error && <Notice tone="neg" title="Something went wrong">{error}</Notice>}
-      <ReplayPanel r={r} live={live} onCommand={command} eyebrow={`Observation-only evaluation · ${ev.corpus.chunk_label}`} />
+      <ReplayPanel r={r} live={live} onCommand={command} eyebrow={`Market replay — data and engine check · ${ev.corpus.chunk_label}`} />
       <div className="boundary" data-testid="intelligence-boundary">
         <Icon name="compass" size={18} />
         <div>
@@ -627,7 +647,7 @@ function ActiveRun({ ev, onReplay }: { ev: Evaluation; onReplay: (r: ObsReplay) 
             actions={<Badge tone="brand">REAL · HISTORICAL</Badge>}>
         <MarketChart bars={bars} informationTime={r.progress.information_time} />
       </Card>
-      <ReportCard ev={{ ...ev, replay: r, report_available: TERMINAL.has(r.status) && r.has_manifest }} />
+      <ReportCard ev={{ ...ev, replay: r, report_available: true, report_terminal: TERMINAL.has(r.status) }} />
       <ObservableStatePanel state={doc?.state ?? null} />
       {r.has_manifest && (
         <details className="more" onToggle={(e) => setManifestOpen((e.target as HTMLDetailsElement).open)}>
@@ -672,7 +692,7 @@ export function Backtest() {
 
   const onReplay = useCallback((r: ObsReplay) => {
     setEvDetail((d) => (d && d.replay.replay_id === r.replay_id
-      ? { ...d, replay: r, report_available: TERMINAL.has(r.status) && r.has_manifest } : d));
+      ? { ...d, replay: r, report_available: true, report_terminal: TERMINAL.has(r.status) } : d));
   }, []);
 
   const prepare = async () => {
@@ -710,8 +730,8 @@ export function Backtest() {
     <div className="page page-backtest" data-testid="page-backtest">
       <PageHeader
         eyebrow="Owner workflow · historical evaluation"
-        title="Backtest"
-        lede="Prepare the fixed BTC corpus once, reuse it locally, launch a durable historical run and copy an honest report into chat. The professional adviser plugs into this same page when it exists."
+        title="Historical Workbench"
+        lede="Prepare the fixed BTC corpus once, reuse it locally, launch a durable market replay (data and engine check) and copy an honest report or diagnostic snapshot into chat at any time. The professional adviser's backtest plugs into this same page when it exists."
         meta={<Badge tone="brand" icon="clock" testid="historical-mode">HISTORICAL MODE</Badge>}
       />
       <div className="history-banner" data-testid="history-banner">

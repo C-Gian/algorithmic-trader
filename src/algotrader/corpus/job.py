@@ -44,6 +44,7 @@ from .. import db
 from ..marketdata import dataset as md
 from ..marketdata.okx import DEFAULT_BASE_URL, OkxPublicClient
 from ..marketdata.okx_authority import validate_okx_rest_base_url
+from .. import ops
 from . import state
 from .plan import Chunk, CorpusPlan, load_plan
 
@@ -55,6 +56,17 @@ RECOVERY_BEHAVIOR = (
     "bounded monthly chunk is acquired again from scratch; partially downloaded pages are discarded (no "
     "byte-level resume). A completed binding survives any restart."
 )
+
+
+# corpus progress phase names -> shared operational phases (algotrader.ops.v1)
+_SHARED = {"checking_local": "PREPARING_SOURCE", "verifying": "VERIFYING_SOURCE", "binding": "BINDING",
+           "completed": "BINDING", "cancelled": None, "failed": None}
+
+
+def ops_phase(name: str | None) -> str | None:
+    if name is None:
+        return None
+    return _SHARED.get(name, "DOWNLOADING")  # instrument / candle families / funding / finalizing
 
 
 class CorpusJobRejected(Exception):
@@ -129,24 +141,58 @@ def default_client_factory(base_url: str) -> OkxPublicClient:
 class _Heartbeat(threading.Thread):
     """Extends the lease, publishes progress and reads cancellation independently of network waits."""
 
-    def __init__(self, worker: CorpusWorker, job_id: str) -> None:
+    def __init__(self, worker: CorpusWorker, job_id: str, generation: int, attempt: int,
+                 history: list[dict[str, Any]]) -> None:
         super().__init__(daemon=True, name=f"heartbeat-{job_id}")
         self.worker, self.job_id = worker, job_id
+        self.generation, self.attempt = generation, attempt
         self.progress: dict[str, Any] = {}
         self.cancel = False
         self.lost = False
+        self.seq = 0  # compute milestones published by the job thread (heartbeat itself is not progress)
+        self.history = list(history)
+        self._phase: str | None = None
+        self._phase_started: datetime | None = None
+        self._phase_t0 = time.monotonic()
+        self._lock = threading.Lock()
         self._halt = threading.Event()
 
     def publish(self, progress: dict[str, Any]) -> None:
-        self.progress = progress
+        shared = ops_phase(progress.get("phase"))
+        with self._lock:
+            now = datetime.now(UTC)
+            if shared != self._phase:
+                if self._phase is not None:
+                    self.history.append(ops.closed_entry(self._phase, self.generation, self.attempt,
+                                                         self._phase_started, now,
+                                                         round(time.monotonic() - self._phase_t0, 3)))
+                self._phase, self._phase_started, self._phase_t0 = shared, now, time.monotonic()
+            self.progress = {**progress, "shared_phase": shared, "phase_started_at": now.isoformat()
+                             if self._phase_started is None else self._phase_started.isoformat()}
+            self.seq += 1
+
+    def close_phase(self) -> list[dict[str, Any]]:
+        with self._lock:
+            if self._phase is not None:
+                self.history.append(ops.closed_entry(self._phase, self.generation, self.attempt,
+                                                     self._phase_started, datetime.now(UTC),
+                                                     round(time.monotonic() - self._phase_t0, 3)))
+                self._phase = None
+            return list(self.history)
 
     def tick(self) -> None:
-        with db.connect(self.worker.url, autocommit=True) as c:
+        with self._lock:
+            progress, seq, history = dict(self.progress), self.seq, list(self.history)
+        with db.connect(self.worker.url, autocommit=True, connect_timeout=5) as c:
             row = c.execute(
                 """UPDATE corpus_jobs SET heartbeat_at = now(), progress = %s,
-                       lease_expires_at = now() + make_interval(secs => %s)
-                   WHERE job_id = %s AND lease_owner = %s AND status = 'running' RETURNING cancel_requested""",
-                (Jsonb(self.progress), self.worker.lease_seconds, self.job_id, self.worker.worker_id),
+                       lease_expires_at = now() + make_interval(secs => %s),
+                       last_progress_at = CASE WHEN progress_seq < %s THEN now() ELSE last_progress_at END,
+                       progress_seq = greatest(progress_seq, %s), phase_history = %s
+                   WHERE job_id = %s AND lease_owner = %s AND lease_generation = %s AND status = 'running'
+                   RETURNING cancel_requested""",
+                (Jsonb(progress), self.worker.lease_seconds, seq, seq, Jsonb(history), self.job_id,
+                 self.worker.worker_id, self.generation),
             ).fetchone()
             self.worker.beat(c, self.job_id)
         if row is None:
@@ -183,6 +229,7 @@ class CorpusWorker:
         self.sleep = sleep
         self.client_factory = client_factory or default_client_factory
         self._plan = plan
+        self.generation = 0
 
     @property
     def plan(self) -> CorpusPlan:
@@ -210,14 +257,27 @@ class CorpusWorker:
             if row is None:
                 return None
             reclaimed = row["status"] == "running"
+            generation = row["lease_generation"] + 1
             recovery_log = list(row["recovery_log"])
+            history = list(row["phase_history"] or [])
+            if row["status"] == "queued":
+                history.append(ops.closed_entry("QUEUED", generation, row["attempt"] + 1, row["created_at"],
+                                                datetime.now(UTC), 0.0, waiting=True))
+            elif reclaimed and (row["progress"] or {}).get("shared_phase"):
+                p = row["progress"]
+                started = ops.parse_iso(p.get("phase_started_at"))
+                ended = row["heartbeat_at"] or datetime.now(UTC)
+                history.append(ops.closed_entry(p["shared_phase"], row["lease_generation"], row["attempt"], started,
+                                                max(ended, started) if started else ended, None, interrupted=True,
+                                                note="attempt interrupted; active time unknown"))
             interruptions = row["interruptions"] + 1 if reclaimed else row["interruptions"]
             fail_reason = None
             if reclaimed:
                 orphan = (row["progress"] or {}).get("work_dir")
                 removed = self._remove_orphan(orphan)
                 recovery_log.append({
-                    "at": _now(), "attempt": row["attempt"] + 1, "event": "lease_expired_reclaimed",
+                    "at": _now(), "attempt": row["attempt"] + 1, "generation": generation,
+                    "event": "lease_expired_reclaimed",
                     "detail": (f"worker {row['lease_owner']} stopped heartbeating (last heartbeat "
                                f"{row['heartbeat_at'].isoformat() if row['heartbeat_at'] else 'never'}); "
                                f"reclaimed by {self.worker_id}. The bounded chunk restarts from scratch (no byte-level "
@@ -230,12 +290,15 @@ class CorpusWorker:
                 """UPDATE corpus_jobs SET status = 'running', lease_owner = %s, heartbeat_at = now(),
                        lease_expires_at = now() + make_interval(secs => %s), attempt = attempt + 1,
                        interruptions = %s, recovery_log = %s, started_at = coalesce(started_at, now()),
-                       attempt_started_at = now(), progress = '{}'::jsonb
+                       attempt_started_at = now(), progress = '{}'::jsonb, lease_generation = %s,
+                       phase_history = %s
                    WHERE job_id = %s""",
-                (self.worker_id, self.lease_seconds, interruptions, Jsonb(recovery_log), row["job_id"]),
+                (self.worker_id, self.lease_seconds, interruptions, Jsonb(recovery_log), generation, Jsonb(history),
+                 row["job_id"]),
             )
             row.update(status="running", lease_owner=self.worker_id, attempt=row["attempt"] + 1,
-                       recovery_log=recovery_log)
+                       recovery_log=recovery_log, lease_generation=generation, phase_history=history)
+        self.generation = generation
         return row, fail_reason
 
     def _remove_orphan(self, work_dir: Any) -> str:
@@ -249,15 +312,16 @@ class CorpusWorker:
 
     def _finish(self, conn: psycopg.Connection, job_id: str, status: str, error: str | None = None,
                 outcome: str | None = None, dataset_id: str | None = None, result: dict | None = None,
-                progress: dict | None = None) -> None:
+                progress: dict | None = None, history: list | None = None) -> None:
         conn.execute(
             """UPDATE corpus_jobs SET status = %s, error = %s, outcome = coalesce(%s, outcome),
                    dataset_id = coalesce(%s, dataset_id), result = coalesce(%s, result),
                    progress = coalesce(%s, progress), finished_at = now(), heartbeat_at = now(),
-                   lease_owner = NULL, lease_expires_at = NULL
-               WHERE job_id = %s AND lease_owner = %s AND status = 'running'""",
+                   lease_owner = NULL, lease_expires_at = NULL, phase_history = coalesce(%s, phase_history)
+               WHERE job_id = %s AND lease_owner = %s AND lease_generation = %s AND status = 'running'""",
             (status, error, outcome, dataset_id, Jsonb(result) if result is not None else None,
-             Jsonb(progress) if progress is not None else None, job_id, self.worker_id),
+             Jsonb(progress) if progress is not None else None, Jsonb(history) if history is not None else None,
+             job_id, self.worker_id, self.generation),
         )
 
     # -- main loop -----------------------------------------------------------------
@@ -294,22 +358,31 @@ class CorpusWorker:
         if chunk is None or not chunk.preparable or plan.plan_id != row["plan_id"]:
             self._finish(conn, job_id, "failed", f"chunk {row['chunk_id']} is not preparable in plan {plan.plan_id}")
             return
-        hb = _Heartbeat(self, job_id)
+        hb = _Heartbeat(self, job_id, row["lease_generation"], row["attempt"], row["phase_history"])
         hb.publish({"phase": "checking_local", "detail": "checking for a verified local dataset"})
         hb.start()
         try:
             self._prepare(conn, row, plan, chunk, hb)
         except AcquisitionCancelled:
-            self._finish(conn, job_id, "cancelled", "cancelled by the Owner at a page boundary; temporary data "
-                         "removed; no chunk bound", progress={**hb.progress, "phase": "cancelled"})
+            self._finish(conn, job_id, "cancelled", "cancelled by the Owner at a safe boundary; temporary data "
+                         "removed; no chunk bound", progress={**hb.progress, "phase": "cancelled"},
+                         history=hb.close_phase())
         except LeaseLost:
             log.error("%s: lease lost; another worker owns the job now", job_id)
         except Exception as exc:  # explicit failure, visible to the Owner
             log.exception("corpus job %s failed", job_id)
             self._finish(conn, job_id, "failed", f"{type(exc).__name__}: {exc}",
-                         progress={**hb.progress, "phase": "failed"})
+                         progress={**hb.progress, "phase": "failed"}, history=hb.close_phase())
         finally:
             hb.stop()
+
+    def _verify_hook(self, hb: _Heartbeat):
+        def hook(stage: str, done: int, total: int | None, unit: str) -> None:
+            if done == 0 or total is None or done >= total or done % 50 == 0:
+                hb.publish({**hb.progress, "phase": "verifying", "stage": stage, "verify_done": done,
+                            "verify_total": total, "verify_unit": unit})
+                self._check(hb)
+        return hook
 
     def _check(self, hb: _Heartbeat) -> None:
         if hb.lost:
@@ -325,7 +398,7 @@ class CorpusWorker:
         # 1. reuse an existing verified binding: no network
         if binding is not None:
             hb.publish({"phase": "verifying", "detail": f"verifying bound dataset {binding['dataset_id']}"})
-            path, problems = state.verify_dataset(self.data_root, binding["dataset_id"])
+            path, problems = state.verify_dataset(self.data_root, binding["dataset_id"], self._verify_hook(hb))
             self._check(hb)
             if path is not None and not problems:
                 self._complete(conn, job_id, plan, chunk, path, "reused_binding", hb)
@@ -338,7 +411,7 @@ class CorpusWorker:
             if binding is not None and m.dataset_id == binding["dataset_id"]:
                 continue
             hb.publish({"phase": "verifying", "detail": f"verifying local dataset {m.dataset_id}"})
-            path, problems = state.verify_dataset(self.data_root, m.dataset_id)
+            path, problems = state.verify_dataset(self.data_root, m.dataset_id, self._verify_hook(hb))
             self._check(hb)
             if path is not None and not problems:
                 self._complete(conn, job_id, plan, chunk, path, "adopted_local_dataset", hb)
@@ -361,7 +434,7 @@ class CorpusWorker:
                             progress=on_progress)
         hb.publish({**hb.progress, "phase": "verifying", "work_dir": None,
                     "detail": f"verifying new dataset {result.manifest.dataset_id} before binding"})
-        problems = md.verify(result.path)
+        problems = md.verify(result.path, progress=self._verify_hook(hb))
         if problems:
             raise RuntimeError(f"acquired dataset {result.manifest.dataset_id} failed verification: {problems}")
         self._complete(conn, job_id, plan, chunk, result.path,
@@ -373,16 +446,19 @@ class CorpusWorker:
         progress = {**hb.progress, "phase": "completed", "work_dir": None}
         with conn.transaction():
             fence = conn.execute("SELECT cancel_requested FROM corpus_jobs WHERE job_id = %s AND lease_owner = %s "
-                                 "AND status = 'running' FOR UPDATE", (job_id, self.worker_id)).fetchone()
+                                 "AND lease_generation = %s AND status = 'running' FOR UPDATE",
+                                 (job_id, self.worker_id, self.generation)).fetchone()
             if fence is None:
                 raise LeaseLost()
             if fence["cancel_requested"]:
                 self._finish(conn, job_id, "cancelled",
                              f"cancelled by the Owner after dataset {path.name} was finalized; the immutable dataset "
                              "is kept but NOT bound (a later Prepare can adopt it locally)",
-                             dataset_id=path.name, progress={**progress, "phase": "cancelled"})
+                             dataset_id=path.name, progress={**progress, "phase": "cancelled"},
+                             history=hb.close_phase())
                 return
-            storage = state.bind(conn, plan, chunk, path, job_id, outcome, verified_at)
+            hb.publish({**hb.progress, "phase": "binding", "detail": f"binding {path.name} (fenced)"})
+            storage = state.bind(conn, plan, chunk, path, job_id, outcome, verified_at, generation=self.generation)
             self._finish(conn, job_id, "completed", None, outcome, path.name,
-                         {"dataset_id": path.name, "storage": storage}, progress)
+                         {"dataset_id": path.name, "storage": storage}, progress, history=hb.close_phase())
         log.info("%s: chunk %s bound to %s (%s)", job_id, chunk.chunk_id, path.name, outcome)

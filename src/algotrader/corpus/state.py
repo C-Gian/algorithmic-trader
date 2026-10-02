@@ -94,15 +94,15 @@ def storage_summary(path: Path, m: DatasetManifest) -> dict[str, Any]:
     }
 
 
-def verify_dataset(data_root: Path, dataset_id: str) -> tuple[Path | None, list[str]]:
+def verify_dataset(data_root: Path, dataset_id: str, progress=None) -> tuple[Path | None, list[str]]:
     path = md.dataset_path(data_root, dataset_id)
     if path is None:
         return None, [f"dataset {dataset_id} is not present in the local data root"]
-    return path, md.verify(path)
+    return path, md.verify(path, progress=progress)
 
 
 def bind(conn: psycopg.Connection, plan: CorpusPlan, chunk: Chunk, path: Path, job_id: str | None,
-         outcome: str, verified_at: datetime) -> dict[str, Any]:
+         outcome: str, verified_at: datetime, generation: int | None = None) -> dict[str, Any]:
     """Insert/replace the chunk binding. Caller must have verified ``path``; runs in the caller's transaction."""
     m = md.load_manifest(path)
     check_logical_match(chunk, plan.inst_id, m)
@@ -112,8 +112,8 @@ def bind(conn: psycopg.Connection, plan: CorpusPlan, chunk: Chunk, path: Path, j
         """
         INSERT INTO corpus_chunks (chunk_id, plan_id, start_time, end_time, inst_id, base_url, dataset_id,
             manifest_sha256, quality_status, verification_ok, verification_problems, verified_at, retrieved_at,
-            bytes_on_disk, storage, bound_at, bound_by_job, outcome, previous_dataset_id)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, true, '[]'::jsonb, %s, %s, %s, %s, now(), %s, %s, %s)
+            bytes_on_disk, storage, bound_at, bound_by_job, outcome, previous_dataset_id, bound_generation)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, true, '[]'::jsonb, %s, %s, %s, %s, now(), %s, %s, %s, %s)
         ON CONFLICT (chunk_id) DO UPDATE SET plan_id = excluded.plan_id, start_time = excluded.start_time,
             end_time = excluded.end_time, inst_id = excluded.inst_id, base_url = excluded.base_url,
             dataset_id = excluded.dataset_id, manifest_sha256 = excluded.manifest_sha256,
@@ -121,13 +121,14 @@ def bind(conn: psycopg.Connection, plan: CorpusPlan, chunk: Chunk, path: Path, j
             verified_at = excluded.verified_at, retrieved_at = excluded.retrieved_at,
             bytes_on_disk = excluded.bytes_on_disk, storage = excluded.storage, bound_at = now(),
             bound_by_job = excluded.bound_by_job, outcome = excluded.outcome,
+            bound_generation = excluded.bound_generation,
             previous_dataset_id = CASE WHEN corpus_chunks.dataset_id <> excluded.dataset_id
                                        THEN corpus_chunks.dataset_id ELSE corpus_chunks.previous_dataset_id END
         """,
         (chunk.chunk_id, plan.plan_id, chunk.start, chunk.end, plan.inst_id, m.request.base_url, m.dataset_id,
          manifest_sha256(path), storage["quality_status"], verified_at, m.retrieval_started_at,
          storage["total_bytes"], Jsonb(storage), job_id, outcome,
-         prev["dataset_id"] if prev and prev["dataset_id"] != m.dataset_id else None),
+         prev["dataset_id"] if prev and prev["dataset_id"] != m.dataset_id else None, generation),
     )
     return storage
 
@@ -161,6 +162,20 @@ def binding_state(data_root: Path, binding: dict[str, Any] | None) -> tuple[bool
             return False, "the bound dataset manifest changed since binding"
     except OSError as exc:
         return False, f"the bound dataset manifest is unreadable: {exc}"
+    if not binding["verification_ok"]:
+        return False, "the last full verification failed: " + "; ".join(binding["verification_problems"] or [])
+    return True, None
+
+
+def binding_state_cheap(data_root: Path, binding: dict[str, Any] | None) -> tuple[bool, str | None]:
+    """Launch-time check without hashing: bound, last verification passed, directory still present.
+
+    The manifest hash recorded at binding is re-checked by the worker-owned preparation phase.
+    """
+    if binding is None:
+        return False, None
+    if md.dataset_path(data_root, binding["dataset_id"]) is None:
+        return False, "the bound dataset is no longer present in the local data root"
     if not binding["verification_ok"]:
         return False, "the last full verification failed: " + "; ".join(binding["verification_problems"] or [])
     return True, None

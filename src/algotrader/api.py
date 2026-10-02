@@ -16,7 +16,8 @@ from typing import Any
 
 import pyarrow.parquet as pq
 from fastapi import FastAPI, HTTPException, Query
-from fastapi.responses import FileResponse, StreamingResponse
+import psycopg
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
@@ -208,7 +209,16 @@ def create_app(
     dist = web_dist or Path(os.environ.get("ALGOTRADER_WEB_DIST", DEFAULT_WEB_DIST))
 
     def conn():
-        return db.connection(database_url)
+        return db.connection(database_url, connect_timeout=3)
+
+    @app.exception_handler(psycopg.OperationalError)
+    def database_disconnected(_request, exc: psycopg.OperationalError) -> JSONResponse:
+        # The database cannot be reached: report DISCONNECTED; never a fabricated stall or a successful save.
+        return JSONResponse(status_code=503, content={
+            "status": "disconnected", "database": "disconnected", "health": "disconnected",
+            "detail": "database unreachable: operation state cannot be read or confirmed right now",
+            "error": type(exc).__name__,
+        })
 
     def get_run(c, run_id: str) -> dict[str, Any]:
         row = c.execute(RUN_SELECT + " WHERE r.run_id = %s", (run_id,)).fetchone()
@@ -268,7 +278,10 @@ def create_app(
                 """
                 SELECT (SELECT count(*) FROM runs WHERE status IN ('queued','running')) AS runs,
                        (SELECT count(*) FROM recorder_sessions WHERE status IN ('queued','running')) AS recordings,
-                       (SELECT count(*) FROM observation_replays WHERE status IN ('queued','running')) AS observations,
+                       (SELECT count(*) FROM observation_replays WHERE status IN ('queued','running')
+                          AND suspended_at IS NULL) AS observations,
+                       (SELECT count(*) FROM observation_replays WHERE suspended_at IS NOT NULL
+                          AND status NOT IN ('completed','cancelled','failed')) AS suspended_observations,
                        (SELECT count(*) FROM corpus_jobs WHERE status IN ('queued','running')) AS corpus_jobs
                 """
             ).fetchone()
@@ -289,6 +302,9 @@ def create_app(
             },
             "observation_workers": {
                 "alive": obs_alive,
+                "suspended_legacy_replays": active["suspended_observations"],
+                "note": ("service availability comes from supervisor heartbeats (not blocked by CPU-bound compute); "
+                         "each operation reports its own health separately"),
                 "recent": [{"worker_id": r["worker_id"], "current_replay": r["current_run"],
                             "heartbeat_age_seconds": round(r["age"], 3)} for r in observers],
             },
@@ -574,7 +590,7 @@ def create_app(
     # -- Owner evaluation workbench: corpus preparation + observation-only evaluations --
 
     app.include_router(corpus_router(conn, md_root))
-    app.include_router(evaluation_router(conn, md_root))
+    app.include_router(evaluation_router(conn, md_root, art_root))
 
     # -- market-data datasets (read-only inspection of the data root) ---------
 

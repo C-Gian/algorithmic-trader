@@ -43,7 +43,7 @@ def env(database_url, conn, tmp_path, plan_file):  # noqa: F811
 
 
 def observer(database_url, root, art) -> ObservationWorker:
-    return ObservationWorker(database_url, root, art, worker_id="observe:test", lease_seconds=5, poll_interval=0.01,
+    return ObservationWorker(database_url, root, art, worker_id="observe:test", lease_seconds=5, poll_interval=0.01, isolate=False,
                              sleep=lambda s: None)
 
 
@@ -71,7 +71,12 @@ def test_completed_evaluation_produces_deterministic_markdown_and_json(database_
     eid = ev["evaluation_id"]
     assert ev["run_type"] == "observation_only" and "not connected yet" in ev["notice"]
     assert ev["replay"]["source"]["kind"] == "dataset" and ev["corpus"]["chunk_id"] == "test-chunk"
-    assert api.get(f"/api/evaluations/{eid}/report.md").status_code == 409  # not terminal yet
+    # before any worker ran: a diagnostic snapshot (not a result) is already copyable
+    snap = api.get(f"/api/evaluations/{eid}/report.json").json()
+    assert snap["snapshot"] is True and snap["captured_at"] and snap["completion"] == "INCOMPLETE"
+    assert snap["conclusion"]["verdict"] == "IN_PROGRESS_SNAPSHOT" and snap["feed"]["content_identity"] == "PENDING"
+    assert_no_trading_numbers(snap)
+    assert "DIAGNOSTIC SNAPSHOT" in api.get(f"/api/evaluations/{eid}/report.md").text
 
     drain(observer(database_url, root, art))
     detail = api.get(f"/api/evaluations/{eid}").json()
@@ -107,8 +112,9 @@ def test_cancelled_evaluation_reports_incomplete_coverage(database_url, env):
     eid = api.post("/api/evaluations", json={"chunk_id": "test-chunk", "speed": 0, "paused": True}).json()[
         "evaluation_id"]
     rid = api.get(f"/api/evaluations/{eid}").json()["replay"]["replay_id"]
-    api.post(f"/api/observations/{rid}/step")
     w = observer(database_url, root, art)
+    drain(w)  # prepares and parks at cursor 0
+    assert api.post(f"/api/observations/{rid}/step").status_code == 200
     drain(w)
     api.post(f"/api/observations/{rid}/cancel")
     drain(w)
@@ -130,7 +136,9 @@ def test_failed_evaluation_reports_the_operational_failure(database_url, env):
     doc = api.get(f"/api/evaluations/{ev['evaluation_id']}/report.json").json()
     assert doc["status"] == "failed" and doc["completion"] == "INCOMPLETE"
     assert doc["conclusion"]["verdict"] == "OPERATIONAL_FAILURE"
-    assert doc["validation"]["ran"] is False and doc["validation"]["passed"] is False
+    # never prepared: no manifest; validation did not run and is not reported as PASS or FAIL
+    assert doc["validation"]["ran"] is False and doc["validation"]["passed"] is None
+    assert doc["operation"]["assurance"]["state"] == "not_checked" and doc["snapshot"] is True
     assert "not replayable" in doc["stopped_at"]["reason"]
     assert_no_trading_numbers(doc)
 

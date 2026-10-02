@@ -14,18 +14,16 @@ from pathlib import Path
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query
-from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.responses import FileResponse, PlainTextResponse, StreamingResponse
 from pydantic import BaseModel, Field
 
 from ..marketdata import dataset as md
 from ..recorder import journal as rj
 from . import control
-from .artifacts import replay_dir
-from .contracts import ObservationReplayConfig, ReplayRuntimeState, SourceKind
-from .sources import SourceRejected, feed_identity, load_source
-
-ETA_MIN_EVENTS = 5
-ETA_MIN_SECONDS = 1.0
+from . import diagnostics as diag
+from .artifacts import files_dir
+from .contracts import LABELS, ObservationReplayConfig, SourceKind
+from .sources import MODELED_LABEL, RECORDED_LABEL, SourceRejected, locate_source
 
 REPLAY_SELECT = """
 SELECT r.*, c.cursor AS applied, c.info_time, c.last_event_id, c.snapshot_id, c.snapshot_digest
@@ -44,64 +42,39 @@ class SetSpeed(BaseModel):
     speed: float = Field(ge=0, le=control.MAX_SPEED)
 
 
-def _runtime(row: dict[str, Any], lease_expired: bool) -> tuple[ReplayRuntimeState, str]:
-    status = row["status"]
-    if status in control.TERMINAL:
-        return ReplayRuntimeState(status), {
-            "completed": "all feed deliveries applied",
-            "cancelled": "cancelled by user",
-            "failed": "failed; see error",
-        }[status]
-    if row["cancel_requested"]:
-        return ReplayRuntimeState.CANCEL_REQUESTED, "cancellation requested; worker will finalize the replay"
-    if status == "running" and lease_expired:
-        return ReplayRuntimeState.RECOVERING, "lease expired (worker stopped heartbeating); awaiting reclaim"
-    if row["paused"]:
-        if row["step_budget"] > 0:
-            return ReplayRuntimeState.STEPPING, f"paused; {row['step_budget']} single feed delivery(ies) pending"
-        if status == "running":
-            return ReplayRuntimeState.PAUSING, "pause requested; worker finishes the current delivery"
-        return ReplayRuntimeState.PAUSED, "paused at a committed feed cursor; no worker holds the replay"
-    if status == "running":
-        return ReplayRuntimeState.RUNNING, f"worker {row['lease_owner']} is applying feed deliveries"
-    return ReplayRuntimeState.QUEUED, "waiting for an observation worker"
-
-
-def _eta(row: dict[str, Any], state: ReplayRuntimeState, applied: int, now: datetime) -> tuple[float | None, str]:
-    if state != ReplayRuntimeState.RUNNING:
-        return None, f"unavailable while {state.value}"
-    since, base = row["throughput_since"], row["throughput_base"]
-    if since is None or base is None:
-        return None, "unavailable: no throughput observed yet"
-    window, done = (now - since).total_seconds(), applied - base
-    if done < ETA_MIN_EVENTS or window < ETA_MIN_SECONDS:
-        return None, "unavailable: not enough progress observed since the last start/resume/speed change"
-    rate = done / window
-    return (row["total_events"] - applied) / rate, f"observed {rate:.1f} events/s over the last {window:.0f}s"
+def _pending_source(row: dict[str, Any]) -> dict[str, Any]:
+    """Source facts before preparation: only what the launch envelope genuinely knows."""
+    return {"kind": row["source_kind"], "source_id": row["source_id"], "source_schema": None, "inst_id": None,
+            "index_id": None, "source_status": "PENDING", "coverage": [], "warnings": [], "exclusions": [],
+            "notes": ["source verification and feed construction run as durable worker-owned phases"],
+            "pending": True}
 
 
 def replay_view(row: dict[str, Any]) -> dict[str, Any]:
     now = datetime.now(UTC)
-    cfg = ObservationReplayConfig.model_validate(row["config"])
+    cfg = ObservationReplayConfig.model_validate(row["config"]) if row["config"] is not None else None
     applied = row.get("applied") or 0
     hb = row["heartbeat_at"]
+    op = diag.operation(row, now)
     lease_expired = bool(row["status"] == "running" and row["lease_expires_at"] and row["lease_expires_at"] < now)
-    state, detail = _runtime(row, lease_expired)
-    eta, eta_basis = _eta(row, state, applied, now)
-    pol = cfg.availability_policy
+    state, detail = diag.runtime_state(row, lease_expired)
+    pol = cfg.availability_policy if cfg else None
+    eta = op["eta"]
     return {
         "replay_id": row["replay_id"],
         "kind": "market_observation_replay",
+        "run_type_label": "Market replay — data and engine check",
         "status": row["status"],
         "runtime_state": state.value,
         "runtime_detail": detail,
-        "source": json.loads(cfg.source.model_dump_json()),
-        "verification": json.loads(cfg.verification.model_dump_json()),
-        "availability": {"basis": pol.basis.value, "policy_id": pol.policy_id, "measured": pol.measured,
-                         "label": cfg.availability_label, "note": pol.note},
-        "freshness_policy": json.loads(cfg.freshness_policy.model_dump_json()),
-        "feed": json.loads(cfg.feed.model_dump_json()),
-        "clock_policy": cfg.clock_policy,
+        "configured": cfg is not None,
+        "source": json.loads(cfg.source.model_dump_json()) if cfg else _pending_source(row),
+        "verification": json.loads(cfg.verification.model_dump_json()) if cfg else None,
+        "availability": ({"basis": pol.basis.value, "policy_id": pol.policy_id, "measured": pol.measured,
+                          "label": cfg.availability_label, "note": pol.note} if cfg else None),
+        "freshness_policy": json.loads(cfg.freshness_policy.model_dump_json()) if cfg else None,
+        "feed": json.loads(cfg.feed.model_dump_json()) if cfg else None,
+        "clock_policy": cfg.clock_policy if cfg else None,
         "control": {"paused": row["paused"], "step_budget": row["step_budget"], "speed": row["speed"],
                     "unit": "events/s"},
         "created_at": row["created_at"].isoformat(),
@@ -127,11 +100,13 @@ def replay_view(row: dict[str, Any]) -> dict[str, Any]:
             "heartbeat_age_seconds": (now - hb).total_seconds() if hb else None,
             "elapsed_seconds": (((row["finished_at"] or now) - row["started_at"]).total_seconds()
                                 if row["started_at"] else None),
-            "eta_seconds": eta,
-            "eta_basis": eta_basis,
+            "eta_seconds": eta["seconds"] if op["phase"] == "REPLAYING" else None,
+            "eta_basis": eta["basis"] if op["phase"] == "REPLAYING" else (
+                "replay ETA applies only while REPLAYING; see the current-phase ETA"),
         },
-        "code_version": cfg.code_version,
-        "labels": list(cfg.labels),
+        "operation": op,
+        "code_version": (cfg.code_version if cfg else (row.get("launch") or {}).get("code_version")),
+        "labels": list(cfg.labels) if cfg else list(LABELS),
     }
 
 
@@ -176,19 +151,31 @@ def build_router(conn: Callable, md_root: Path, art_root: Path) -> APIRouter:
 
     @r.get("/sources/{kind}/{source_id}")
     def preflight(kind: SourceKind, source_id: str) -> dict[str, Any]:
-        """Verify a source and build its feed (nothing is persisted)."""
+        """Cheap source preview (no hashing, no feed build). Verification is a durable preparation phase."""
         try:
-            s = load_source(md_root, kind, source_id)
+            path = locate_source(md_root, kind, source_id)
         except SourceRejected as exc:
             raise HTTPException(422, str(exc)) from None
-        pol = s.feed.manifest.availability_policy
+        if kind == SourceKind.DATASET:
+            m = md.load_manifest(path)
+            facts = {"inst_id": m.instrument.inst_id, "coverage_from": m.request.start.isoformat(),
+                     "coverage_until": m.request.end.isoformat(),
+                     "source_status": md.load_quality(path).status.value}
+            basis, label = "MODELED", MODELED_LABEL
+        else:
+            m = rj.load_manifest(path)
+            facts = {"inst_id": m.inst_id, "coverage_from": m.started_at.isoformat(),
+                     "coverage_until": m.stopped_at.isoformat(), "source_status": m.status.value}
+            basis, label = "RECORDED", RECORDED_LABEL
         return {
-            "source": json.loads(s.summary.model_dump_json()),
-            "verification": json.loads(s.verification.model_dump_json()),
-            "feed": json.loads(feed_identity(s.feed).model_dump_json()),
-            "availability": {"basis": pol.basis.value, "policy_id": pol.policy_id, "measured": pol.measured,
-                             "label": s.availability_label, "note": pol.note},
-            "reference": s.reference,
+            "source": {"kind": kind.value, "source_id": source_id, **facts},
+            "verification": None,
+            "verification_note": ("Not verified here: full hash/row verification and feed construction run as "
+                                  "visible, cancellable phases of the durable replay job after launch."),
+            "feed": None,
+            "availability": {"basis": basis, "label": label, "policy_id": None, "measured": False,
+                             "note": "availability basis follows the source kind"},
+            "reference": f"{kind.value}s/{source_id}",
         }
 
     # -- replays ----------------------------------------------------------------
@@ -310,6 +297,8 @@ def build_router(conn: Callable, md_root: Path, art_root: Path) -> APIRouter:
                     doc = state(c, replay_id)
                     rv = doc["replay"]
                     key = (rv["status"], rv["runtime_state"], rv["progress"]["applied_events"], rv["attempt"],
+                           rv["operation"]["phase"], rv["operation"]["health"],
+                           rv["operation"]["progress"]["progress_seq"],
                            len(rv["recovery_log"]), len(rv["control_log"]), rv["lease_expired"],
                            rv["cancel_requested"], tuple(rv["control"].values()))
                     if key != last_key or time.monotonic() - last_sent >= 2:
@@ -324,6 +313,26 @@ def build_router(conn: Callable, md_root: Path, art_root: Path) -> APIRouter:
 
         return StreamingResponse(gen(), media_type="text/event-stream", headers={"Cache-Control": "no-cache"})
 
+    def report_doc(replay_id: str) -> dict[str, Any]:
+        with conn() as c:
+            row = get_row(c, replay_id)
+            ev = c.execute("SELECT evaluation_id FROM evaluations WHERE replay_id = %s", (replay_id,)).fetchone()
+        return diag.diagnostic_report(row, art_root, datetime.now(UTC), ev)
+
+    @r.get("/{replay_id}/report.json")
+    def report_json(replay_id: str, download: bool = False) -> PlainTextResponse:
+        doc = report_doc(replay_id)
+        headers = {"Content-Disposition": f'attachment; filename="{replay_id}-diagnostic.json"'} if download else {}
+        return PlainTextResponse(json.dumps(doc, indent=2, sort_keys=True, ensure_ascii=False, default=str) + "\n",
+                                 media_type="application/json", headers=headers)
+
+    @r.get("/{replay_id}/report.md")
+    def report_md(replay_id: str, download: bool = False) -> PlainTextResponse:
+        doc = report_doc(replay_id)
+        headers = {"Content-Disposition": f'attachment; filename="{replay_id}-diagnostic.md"'} if download else {}
+        return PlainTextResponse(diag.render_markdown(doc), media_type="text/markdown; charset=utf-8",
+                                 headers=headers)
+
     @r.get("/{replay_id}/manifest")
     def manifest(replay_id: str) -> dict[str, Any]:
         with conn() as c:
@@ -337,7 +346,7 @@ def build_router(conn: Callable, md_root: Path, art_root: Path) -> APIRouter:
         m = manifest(replay_id)
         if name != "manifest.json" and name not in {a["name"] for a in m["artifacts"]}:
             raise HTTPException(404, f"no artifact {name}")
-        path = replay_dir(art_root, replay_id) / name
+        path = files_dir(art_root, replay_id, m) / name
         if not path.is_file():
             raise HTTPException(410, f"artifact {name} is recorded in the manifest but missing on disk")
         return FileResponse(path, filename=name)

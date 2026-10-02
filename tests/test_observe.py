@@ -85,10 +85,17 @@ def test_observe_contract_is_separate_provisional_and_baselined():
     from algotrader.observe import contracts as oc
 
     assert oc.OBSERVE_SCHEMA_VERSION == "algotrader.observe.v1" and oc.OBSERVE_CONTRACT_STATUS == "PROVISIONAL"
-    assert oc.OBSERVE_CHANGELOG[-1][0] == oc.OBSERVE_SCHEMA_REVISION == 1
+    assert oc.OBSERVE_CHANGELOG[-1][0] == oc.OBSERVE_SCHEMA_REVISION == 2  # R1A Director-approved revision
+    assert [r for r, _, _ in oc.OBSERVE_CHANGELOG] == [1, 2]
     stored = json.loads(schema.baseline_path(oc.OBSERVE_SCHEMA_VERSION).read_text(encoding="utf-8"))
     assert stored == schema.observe_baseline(), "observe contract drift: bump OBSERVE_SCHEMA_REVISION + changelog"
-    assert (stored["status"], stored["revision"]) == ("PROVISIONAL", 1)
+    assert (stored["status"], stored["revision"]) == ("PROVISIONAL", 2)
+    # revision-2 additions are optional: revision-1 manifests/validations stay readable unchanged
+    for name in ("lease_generation", "artifact_dir", "phase_timings", "operational_metrics"):
+        assert name not in stored["$defs"]["ObservationReplayManifest"]["required"]
+    for name in ("outcome", "validator", "validator_version", "scope"):
+        assert name not in stored["$defs"]["ReplayValidation"].get("required", [])
+    assert "ObservationLaunch" in stored["public_contracts"]
     own = {n: stored["$defs"][n] for n in stored["public_contracts"]}
     fields = {p for d in own.values() for p in d.get("properties", {})}
     for banned in ("bias", "confidence", "recommendation", "decision", "target", "invalidation", "position",
@@ -298,6 +305,7 @@ def test_real_replay_domain_path_imports_no_synthetic_trader_modules():
 
 def worker(database_url, root, art, **kw) -> ObservationWorker:
     kw.setdefault("worker_id", "observe:test")
+    kw.setdefault("isolate", False)
     return ObservationWorker(database_url, root, art, lease_seconds=5, poll_interval=0.01, sleep=lambda s: None, **kw)
 
 
@@ -347,7 +355,8 @@ def test_dataset_replay_completes_durably_with_valid_artifacts_and_no_synthetic_
     assert m["config"]["availability_policy"]["basis"] == "MODELED" and not m["config"]["availability_policy"]["measured"]
     assert m["config"]["freshness_policy"]["note"].startswith("Inspection default")
     assert m["config"]["source"]["source_id"] == ds and m["source_reference"] == f"datasets/{ds}"
-    out = art / "observations" / rid
+    out = art / "observations" / rid / m["artifact_dir"]
+    assert m["artifact_dir"] == f"g{m['lease_generation']}" and m["schema_revision"] == 2
     names = {a["name"] for a in m["artifacts"]}
     assert names == {"config.json", "deliveries.jsonl", "final_snapshot.json", "validation.json"}
     lines = (out / "deliveries.jsonl").read_text(encoding="utf-8").splitlines()
@@ -394,8 +403,14 @@ def test_pause_step_resume_speed_are_durable_and_do_not_change_digests(database_
     reference = replay_row(conn, ref)
 
     rid = control.create_replay(conn, root, SourceKind.DATASET, ds, speed=5, paused=True)
+    with pytest.raises(control.ControlRejected, match="PENDING"):
+        control.step(conn, rid)  # STEP needs a prepared feed: the total is still PENDING
     w = worker(database_url, root, art)
-    assert not w.run_once()  # paused before start: nothing claims it, nothing applied
+    assert w.run_once()  # paused launch: the worker prepares the source, then parks at cursor 0
+    row = replay_row(conn, rid)
+    assert row["status"] == "paused" and row["cursor"] == 0 and not deliveries(conn, rid)
+    assert row["total_events"] == reference["total_events"] and row["config"] is not None
+    assert not w.run_once()  # parked: nothing to claim
     for n in (1, 2):
         control.step(conn, rid)
         drain(w)
@@ -454,23 +469,27 @@ def test_worker_crash_and_reclaim_never_duplicate_a_delivery(database_url, conn,
 def test_stale_writer_cannot_commit_twice(database_url, conn, tmp_path):
     root, art = tmp_path / "data", tmp_path / "art"
     rid = control.create_replay(conn, root, SourceKind.DATASET, dataset(root), speed=0, paused=True)
-    control.step(conn, rid)
     w = worker(database_url, root, art)
+    drain(w)  # prepare + park at 0
+    control.step(conn, rid)
     drain(w)
     row = replay_row(conn, rid)
     assert row["cursor"] == 1
     # a second commit of the same delivery (e.g. a retried transaction) is refused by the cursor CAS
-    from algotrader.observe.worker import _AlreadyApplied
+    from algotrader.observe.job import JobSpec, ReplayJob, _AlreadyApplied
 
     src = load_dataset(root, row["source_id"])
     core = ReplayCore(src.feed, FRESH)
     before = core.at(0)
     after, rec = core.step(before)
+    gen = row["lease_generation"]
     conn.execute("UPDATE observation_replays SET status = 'running', lease_owner = %s WHERE replay_id = %s",
                  (w.worker_id, rid))
+    job = ReplayJob(JobSpec(database_url, rid, w.worker_id, gen, str(root), str(art)))
     with pytest.raises(_AlreadyApplied):
-        w.commit(rid, before, after, rec, {}, consume_step=False)
+        job.commit(before, after, rec, {}, consume_step=False)
     assert len(deliveries(conn, rid)) == 1
+    job.close()
 
 
 @pytest.mark.db
@@ -500,6 +519,7 @@ def test_unsafe_recovery_and_vanished_source_fail_explicitly(database_url, conn,
     root, art = tmp_path / "data", tmp_path / "art"
     ds = dataset(root)
     rid = control.create_replay(conn, root, SourceKind.DATASET, ds, speed=0, paused=True)
+    drain(worker(database_url, root, art))
     control.step(conn, rid)
     drain(worker(database_url, root, art))
     conn.execute("UPDATE observation_checkpoints SET snapshot_digest = 'tampered' WHERE replay_id = %s", (rid,))
@@ -511,18 +531,20 @@ def test_unsafe_recovery_and_vanished_source_fail_explicitly(database_url, conn,
     rid2 = control.create_replay(conn, root, SourceKind.DATASET, ds, speed=0, paused=True)
     import shutil
 
-    shutil.rmtree(root / "datasets" / ds)
-    control.resume(conn, rid2)
+    shutil.rmtree(root / "datasets" / ds)  # evidence vanishes after the durable launch, before preparation
     drain(worker(database_url, root, art))
     row = replay_row(conn, rid2)
     assert row["status"] == "failed" and "source not replayable" in row["error"]
-    assert not row["manifest"]["validation"]["passed"]
+    # never prepared: no verified config, no manifest, and assurance is explicitly NOT CHECKED (not FAIL/PASS)
+    assert row["config"] is None and row["total_events"] is None and row["manifest"] is None
+    assert row["assurance"]["state"] == "not_checked"
 
 
 @pytest.mark.db
 def test_cancel_is_durable(database_url, conn, tmp_path):
     root, art = tmp_path / "data", tmp_path / "art"
     rid = control.create_replay(conn, root, SourceKind.DATASET, dataset(root), speed=0, paused=True)
+    drain(worker(database_url, root, art))
     control.step(conn, rid)
     drain(worker(database_url, root, art))
     control.cancel(conn, rid)
@@ -553,11 +575,21 @@ def test_observation_api_sources_preflight_launch_state_and_artifacts(database_u
     assert recs[sid]["replayable"] and recs[sid]["availability_basis"] == "RECORDED"
     assert not recs["rec-dead"]["replayable"]
     pre = api.get(f"/api/observations/sources/dataset/{ds}").json()
-    assert pre["availability"]["basis"] == "MODELED" and pre["verification"]["verified"]
-    assert pre["feed"]["event_count"] > 0
-    assert api.get("/api/observations/sources/recording/rec-dead").status_code == 422
-    assert api.post("/api/observations", json={"source_kind": "recording", "source_id": "rec-dead"}).status_code == 422
+    # cheap preview: no hashing/feed build here; verification is a durable preparation phase after launch
+    assert pre["availability"]["basis"] == "MODELED" and pre["verification"] is None and pre["feed"] is None
+    assert "not verified here" in pre["verification_note"].lower()
+    assert api.get("/api/observations/sources/dataset/nope").status_code == 422
     assert api.post("/api/observations", json={"source_kind": "dataset", "source_id": "nope"}).status_code == 422
+    # a finalized but FAILED recording is launchable cheaply; preparation turns it into a visible failed job
+    dead = api.post("/api/observations", json={"source_kind": "recording", "source_id": "rec-dead"}).json()
+    assert dead["status"] == "queued" and dead["configured"] is False and dead["feed"] is None
+    assert dead["source"]["source_status"] == "PENDING" and dead["progress"]["total_events"] is None
+    drain(worker(database_url, root, art))
+    dead = api.get(f"/api/observations/{dead['replay_id']}").json()
+    assert dead["status"] == "failed" and "FAILED" in dead["error"]
+    assert dead["operation"]["assurance"]["state"] == "not_checked"
+    dmd = api.get(f"/api/observations/{dead['replay_id']}/report.md").text
+    assert "FAILED" in dmd and "no terminal manifest" in dmd
 
     created = api.post("/api/observations", json={"source_kind": "dataset", "source_id": ds, "speed": 0,
                                                   "paused": True})
@@ -565,9 +597,15 @@ def test_observation_api_sources_preflight_launch_state_and_artifacts(database_u
     view = created.json()
     rid = view["replay_id"]
     assert view["kind"] == "market_observation_replay" and view["control"]["unit"] == "events/s"
-    assert view["availability"]["basis"] == "MODELED" and "REAL_MARKET_EVIDENCE" in view["labels"]
-    assert api.post(f"/api/observations/{rid}/step").status_code == 200
+    assert view["availability"] is None and view["operation"]["phase"] is None and "REAL_MARKET_EVIDENCE" in view["labels"]
+    assert view["operation"]["controls"]["step"]["enabled"] is False  # total PENDING
+    assert api.post(f"/api/observations/{rid}/step").status_code == 409
     w = worker(database_url, root, art)
+    drain(w)  # prepares, then parks at cursor 0
+    view = api.get(f"/api/observations/{rid}").json()
+    assert view["availability"]["basis"] == "MODELED" and view["runtime_state"] == "paused"
+    assert view["operation"]["controls"]["step"]["enabled"] is True
+    assert api.post(f"/api/observations/{rid}/step").status_code == 200
     drain(w)
     st = api.get(f"/api/observations/{rid}/state").json()
     assert st["replay"]["runtime_state"] == "paused" and st["replay"]["progress"]["applied_events"] == 1

@@ -77,6 +77,13 @@ def test_owner_prepares_corpus_runs_observation_evaluation_and_copies_report(wor
     page.get_by_test_id("nav-backtest").click()
     expect(page.get_by_test_id("page-backtest")).to_be_visible()
     expect(page.get_by_test_id("nav-backtest")).to_have_attribute("aria-current", "page")
+    expect(page.get_by_test_id("nav-backtest")).to_contain_text("Historical Workbench")
+    expect(page.get_by_test_id("page-backtest")).to_contain_text("Historical Workbench")
+    # explicit run types: only Market replay is available; Adviser backtest unavailable; Deep validation planned
+    expect(page.get_by_test_id("run-type-market-replay")).to_contain_text("Market replay — data and engine check")
+    expect(page.get_by_test_id("run-type-adviser-backtest")).to_contain_text("Unavailable")
+    expect(page.get_by_test_id("run-type-adviser-backtest").locator("input")).to_be_disabled()
+    expect(page.get_by_test_id("run-type-deep-validation")).to_contain_text("Planned")
     expect(page.get_by_test_id("historical-mode")).to_contain_text("HISTORICAL MODE")
     expect(page.get_by_test_id("history-banner")).to_contain_text("OBSERVATION ONLY")
     expect(page.get_by_test_id("capability-corpus")).to_contain_text("up", timeout=10_000)
@@ -123,8 +130,17 @@ def test_owner_prepares_corpus_runs_observation_evaluation_and_copies_report(wor
     rid = ev["replay"]["replay_id"]
     expect(page.get_by_test_id("obs-real-badge")).to_contain_text("Real market evidence")
     expect(page.get_by_test_id("obs-availability")).to_contain_text("Modeled availability")
-    expect(page.get_by_test_id("report-card")).to_have_attribute("data-state", "pending")
+    # a diagnostic snapshot (never a result) is copyable while the run is still going
+    expect(page.get_by_test_id("report-card")).to_have_attribute("data-state", "snapshot")
     wait_for(lambda: stack.get(f"/api/observations/{rid}")["progress"]["applied_events"] >= 3, timeout=30)
+    expect(page.get_by_test_id("obs-op-timeline")).to_be_visible()
+    expect(page.get_by_test_id("phase-VERIFYING_SOURCE")).to_have_attribute("data-state", "done")
+    expect(page.get_by_test_id("phase-REPLAYING")).to_have_attribute("data-state", "current")
+    expect(page.get_by_test_id("obs-op-health")).to_contain_text("Progressing")
+    page.get_by_test_id("copy-report").click()
+    expect(page.get_by_test_id("copy-report")).to_contain_text("Copied")
+    snap = page.evaluate("() => navigator.clipboard.readText()")
+    assert "DIAGNOSTIC SNAPSHOT" in snap and "IN_PROGRESS_SNAPSHOT" in snap and "captured" in snap
     expect(page.locator("[data-testid=market-chart] .candle").first).to_be_visible(timeout=10_000)
     page.get_by_test_id("obs-pause").click()
     expect(page.get_by_test_id("obs-status")).to_have_text("PAUSED", timeout=10_000)

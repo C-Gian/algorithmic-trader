@@ -22,13 +22,14 @@ from pydantic import BaseModel, Field
 from ..corpus import state
 from ..corpus.plan import load_plan
 from ..observe import control
+from ..observe import diagnostics as diag
 from ..observe.api import REPLAY_SELECT, replay_view
 from ..observe.contracts import SourceKind
 from ..observe.sources import SourceRejected
 from . import report as rp
 
 PRESET = "observation-only"
-PRESET_LABEL = "Observation-only historical evaluation"
+PRESET_LABEL = "Market replay — data and engine check"
 
 
 class StartEvaluation(BaseModel):
@@ -70,7 +71,7 @@ def corpus_snapshot(c, plan, chunk, binding: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def build_router(conn: Callable, data_root: Path) -> APIRouter:
+def build_router(conn: Callable, data_root: Path, art_root: Path) -> APIRouter:
     r = APIRouter(prefix="/api/evaluations")
 
     def get(c, evaluation_id: str) -> tuple[dict[str, Any], dict[str, Any]]:
@@ -82,6 +83,7 @@ def build_router(conn: Callable, data_root: Path) -> APIRouter:
 
     def view(ev: dict[str, Any], replay: dict[str, Any]) -> dict[str, Any]:
         rv = replay_view(replay)
+        terminal = rv["status"] in control.TERMINAL
         return {
             "evaluation_id": ev["evaluation_id"],
             "run_type": ev["run_type"],
@@ -91,7 +93,9 @@ def build_router(conn: Callable, data_root: Path) -> APIRouter:
             "created_at": ev["created_at"].isoformat(),
             "corpus": ev["corpus"],
             "replay": rv,
-            "report_available": rv["status"] in control.TERMINAL and replay["manifest"] is not None,
+            # a report (or a diagnostic snapshot) is always available; it is terminal only when the run is
+            "report_available": True,
+            "report_terminal": terminal,
         }
 
     @r.post("", status_code=201)
@@ -102,7 +106,7 @@ def build_router(conn: Callable, data_root: Path) -> APIRouter:
             raise HTTPException(404, f"chunk {body.chunk_id} is not in the corpus plan")
         with conn() as c:
             binding = c.execute("SELECT * FROM corpus_chunks WHERE chunk_id = %s", (chunk.chunk_id,)).fetchone()
-            usable, problem = state.binding_state(data_root, binding)
+            usable, problem = state.binding_state_cheap(data_root, binding)
             if not usable:
                 raise HTTPException(409, f"{chunk.chunk_id} is not prepared" + (f": {problem}" if problem else ""))
             snapshot = corpus_snapshot(c, plan, chunk, binding)
@@ -110,9 +114,11 @@ def build_router(conn: Callable, data_root: Path) -> APIRouter:
             evaluation_id = new_evaluation_id()
             try:
                 with c.transaction():
-                    # the accepted observation path re-verifies the dataset and builds its feed
+                    # durable launch only (<=1 s): the worker-owned preparation re-checks the bound manifest
+                    # hash, re-verifies the dataset and builds its feed as visible, cancellable phases
                     replay_id = control.create_replay(c, data_root, SourceKind.DATASET, binding["dataset_id"],
-                                                      body.speed, body.paused)
+                                                      body.speed, body.paused, evaluation_id=evaluation_id,
+                                                      expected_manifest_sha256=binding["manifest_sha256"])
                     c.execute(
                         """INSERT INTO evaluations (evaluation_id, replay_id, run_type, preset, plan_id, chunk_id,
                                dataset_id, corpus) VALUES (%s, %s, 'observation_only', %s, %s, %s, %s, %s)""",
@@ -142,10 +148,9 @@ def build_router(conn: Callable, data_root: Path) -> APIRouter:
     def report_doc(evaluation_id: str) -> dict[str, Any]:
         with conn() as c:
             ev, replay = get(c, evaluation_id)
-        if replay["status"] not in control.TERMINAL or replay["manifest"] is None:
-            raise HTTPException(409, f"evaluation {evaluation_id} is {replay['status']}; the report is produced when "
-                                     "the run completes, is cancelled or fails")
-        return rp.build_report(ev, replay, replay["manifest"])
+        now = datetime.now(UTC)
+        return rp.build_report(ev, replay, replay["manifest"], diag.operation(replay, now),
+                               diag.diagnostic_report(replay, art_root, now, ev), now)
 
     @r.get("/{evaluation_id}/report.json")
     def report_json(evaluation_id: str, download: bool = False) -> PlainTextResponse:

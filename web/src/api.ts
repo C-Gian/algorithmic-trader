@@ -297,8 +297,8 @@ export const recorderApi = {
 // ---- Real-market observation replay (algotrader.observe.v1; observation only) ----
 
 export type ReplayRuntimeState =
-  | "queued" | "running" | "pausing" | "paused" | "stepping" | "recovering"
-  | "cancel_requested" | "completed" | "cancelled" | "failed";
+  | "queued" | "preparing" | "running" | "finishing" | "pausing" | "paused" | "stepping" | "recovering"
+  | "unresponsive" | "suspended" | "cancel_requested" | "completed" | "cancelled" | "failed";
 
 export interface ChannelCoverage {
   channel: { source: string; family: string; series_id: string };
@@ -310,14 +310,15 @@ export interface ChannelCoverage {
 export interface ObsSourceSummary {
   kind: "dataset" | "recording";
   source_id: string;
-  source_schema: string;
-  inst_id: string;
-  index_id: string;
+  source_schema: string | null;
+  inst_id: string | null;
+  index_id: string | null;
   source_status: string;
   coverage: ChannelCoverage[];
   warnings: string[];
   exclusions: string[];
   notes: string[];
+  pending?: boolean; // source not yet verified/prepared by the worker
 }
 
 export interface Availability {
@@ -359,11 +360,74 @@ export interface ReplayableSource {
 }
 
 export interface Preflight {
-  source: ObsSourceSummary;
-  verification: Verification;
-  feed: FeedIdentity;
-  availability: Availability;
+  // Cheap preview only: verification and feed construction are durable worker-owned phases after launch.
+  source: { kind: string; source_id: string; inst_id: string; coverage_from: string; coverage_until: string; source_status: string };
+  verification: null;
+  verification_note: string;
+  feed: null;
+  availability: { basis: string; label: string; policy_id: string | null; measured: boolean; note: string };
   reference: string;
+}
+
+// ---- Shared operational job contract (algotrader.ops.v1) ----
+
+export type OpsHealth =
+  | "progressing" | "waiting" | "alive_no_progress" | "compute_lost" | "unresponsive" | "recovering"
+  | "suspended" | "finished" | "disconnected";
+
+export interface OpsControl { enabled: boolean; reason: string | null }
+
+export interface OpsPhase {
+  phase: string;
+  label: string;
+  state: "done" | "current" | "pending";
+  active_seconds: number;
+  wall_seconds: number;
+  spans: number;
+  interrupted_spans: number;
+}
+
+export interface OpsAssurance {
+  state: "not_checked" | "incomplete" | "passed" | "failed";
+  detail?: string;
+  validator?: string | null;
+  validator_version?: string | null;
+  scope?: string | null;
+}
+
+export interface Operation {
+  contract: string;
+  lifecycle_version?: number;
+  status: string;
+  phase: string | null;
+  phase_label: string;
+  health: OpsHealth;
+  health_label: string;
+  health_detail: string;
+  assurance: OpsAssurance;
+  generation: number;
+  attempt: number;
+  progress: {
+    stage: string | null;
+    done: number | null;
+    total: number | null;
+    unit: string | null;
+    fraction: number | null;
+    detail: string | null;
+    waiting?: string | null;
+    progress_seq: number;
+    last_progress_at: string | null;
+    last_progress_age_seconds?: number | null;
+    stall_limit_seconds?: number | null;
+  };
+  eta?: { seconds: number | null; basis: string; scope: string };
+  timeline: { current: { phase: string; label: string; started_at: string | null; open_seconds: number | null } | null;
+              phases: OpsPhase[]; active_seconds_total: number };
+  wall_seconds?: number;
+  controls: Record<string, OpsControl>;
+  supervisor?: Record<string, unknown>;
+  suspension?: null | { at: string | null; reason: string; historical_status?: string };
+  diagnostic_log?: { event: string; detail?: string; at?: string }[];
 }
 
 export interface ObsReplay {
@@ -372,12 +436,14 @@ export interface ObsReplay {
   status: string;
   runtime_state: ReplayRuntimeState;
   runtime_detail: string;
+  run_type_label?: string;
+  configured: boolean;
   source: ObsSourceSummary;
-  verification: Verification;
-  availability: Availability;
-  freshness_policy: { policy_id: string; note: string; bar_max_age: string; history_limit: number };
-  feed: FeedIdentity;
-  clock_policy: string;
+  verification: Verification | null;
+  availability: Availability | null;
+  freshness_policy: { policy_id: string; note: string; bar_max_age: string; history_limit: number } | null;
+  feed: FeedIdentity | null;
+  clock_policy: string | null;
   control: { paused: boolean; step_budget: number; speed: number; unit: string };
   created_at: string;
   started_at: string | null;
@@ -394,7 +460,7 @@ export interface ObsReplay {
   validation_passed: boolean | null;
   progress: {
     applied_events: number;
-    total_events: number;
+    total_events: number | null;
     information_time: string | null;
     last_event_id: string | null;
     snapshot_id: string | null;
@@ -406,6 +472,7 @@ export interface ObsReplay {
   };
   code_version: string | null;
   labels: string[];
+  operation: Operation;
 }
 
 export interface FeedEventLite {
@@ -564,7 +631,8 @@ export interface CorpusJob {
   chunk_id: string;
   plan_id: string;
   status: "queued" | "running" | "completed" | "cancelled" | "failed";
-  runtime_state: "queued" | "running" | "cancel_requested" | "recovering" | "completed" | "cancelled" | "failed";
+  runtime_state: "queued" | "running" | "cancel_requested" | "unresponsive" | "completed" | "cancelled" | "failed";
+  operation: Operation;
   runtime_detail: string;
   cancel_requested: boolean;
   source: { source: string; base_url: string };
@@ -664,6 +732,7 @@ export interface Evaluation {
   };
   replay: ObsReplay;
   report_available: boolean;
+  report_terminal: boolean;
 }
 
 export interface CapabilityRow {
@@ -681,12 +750,15 @@ export interface EvaluationReport {
   evaluation_id: string;
   replay_id: string;
   status: string;
+  snapshot: boolean;
+  captured_at: string | null;
   completion: "COMPLETE" | "INCOMPLETE";
   coverage: {
     requested: { start: string; end: string };
     final_information_time: string | null;
+    committed_information_time: string | null;
     applied_events: number;
-    total_events: number;
+    total_events: number | null;
     fraction: number | null;
   };
   quality_status: string;
@@ -697,8 +769,9 @@ export interface EvaluationReport {
     max_attempts: number;
     recoveries: number;
   };
-  validation: { ran: boolean; passed: boolean | null; checks: { name: string; passed: boolean; detail: string }[] };
-  stopped_at: null | { applied_events: number; total_events: number; information_time: string | null; reason: string | null };
+  validation: { ran: boolean; passed: boolean | null; outcome: string | null; checks: { name: string; passed: boolean; detail: string }[] };
+  operation: null | { phase: string | null; health: string; assurance: OpsAssurance; active_seconds_total: number };
+  stopped_at: null | { applied_events: number; total_events: number | null; information_time: string | null; reason: string | null };
   warnings: string[];
   capabilities: Record<string, CapabilityRow>;
   conclusion: { verdict: string; text: string };
@@ -715,6 +788,13 @@ export const corpusApi = {
   status: () => req<CorpusStatus>("/api/corpus"),
   prepare: (chunkId: string) => req<CorpusJob>(`/api/corpus/chunks/${encodeURIComponent(chunkId)}/prepare`, { method: "POST" }),
   cancel: (jobId: string) => req<CorpusJob>(`/api/corpus/jobs/${jobId}/cancel`, { method: "POST" }),
+  reportMarkdown: (jobId: string) => text(`/api/corpus/jobs/${jobId}/report.md`),
+  downloadUrl: (jobId: string, fmt: "md" | "json") => `/api/corpus/jobs/${jobId}/report.${fmt}?download=true`,
+};
+
+export const obsReport = {
+  markdown: (replayId: string) => text(`/api/observations/${replayId}/report.md`),
+  downloadUrl: (replayId: string, fmt: "md" | "json") => `/api/observations/${replayId}/report.${fmt}?download=true`,
 };
 
 const E = "/api/evaluations";

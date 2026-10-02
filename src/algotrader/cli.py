@@ -48,7 +48,7 @@ def _serve(args: argparse.Namespace) -> None:
     cmds = [
         [sys.executable, "-m", "algotrader.cli", "worker", "--lease-seconds", str(args.lease_seconds)],
         [sys.executable, "-m", "algotrader.cli", "recorder-worker"],
-        [sys.executable, "-m", "algotrader.cli", "observe-worker", "--lease-seconds", str(args.lease_seconds)],
+        [sys.executable, "-m", "algotrader.cli", "observe-worker"],
         [sys.executable, "-m", "algotrader.cli", "corpus-worker"],
     ]
 
@@ -78,8 +78,8 @@ def _serve(args: argparse.Namespace) -> None:
 def _observe_worker(args: argparse.Namespace) -> None:
     from .observe.worker import ObservationWorker
 
-    ObservationWorker(data_root=args.root, lease_seconds=args.lease_seconds,
-                      poll_interval=args.poll_interval).run_forever()
+    ObservationWorker(data_root=args.root, lease_seconds=args.lease_seconds, poll_interval=args.poll_interval,
+                      heartbeat_interval=args.heartbeat_seconds, isolate=not args.inline_compute).run_forever()
 
 
 def _corpus_worker(args: argparse.Namespace) -> None:
@@ -343,8 +343,12 @@ def main(argv: list[str] | None = None) -> None:
     rw.add_argument("--root", type=Path, default=None, help="data root (ALGOTRADER_DATA_ROOT)")
     rw.set_defaults(fn=_recorder_worker)
     ow = sub.add_parser("observe-worker", help="durable real-market observation-replay worker (no interpretation)")
-    ow.add_argument("--lease-seconds", type=float, default=float(os.environ.get("ALGOTRADER_LEASE_SECONDS", 10)))
+    ow.add_argument("--lease-seconds", type=float,
+                    default=float(os.environ.get("ALGOTRADER_OBSERVE_LEASE_SECONDS", 30)))
+    ow.add_argument("--heartbeat-seconds", type=float, default=2.0)
     ow.add_argument("--poll-interval", type=float, default=0.5)
+    ow.add_argument("--inline-compute", action="store_true",
+                    help="diagnostics only: run compute in the supervisor process (heartbeat shares the GIL)")
     ow.add_argument("--root", type=Path, default=None, help="data root (ALGOTRADER_DATA_ROOT)")
     ow.set_defaults(fn=_observe_worker)
     cw = sub.add_parser("corpus-worker", help="durable corpus-preparation worker (public read-only OKX acquisition)")

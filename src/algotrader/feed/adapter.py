@@ -22,7 +22,7 @@ Event (economic) time is never changed by the availability transformation.
 from __future__ import annotations
 
 import json
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from decimal import Decimal
@@ -54,6 +54,14 @@ from .contracts import (
     TradeBarPayload,
 )
 from .ordering import FeedError, digest, modeled_availability, order_events, order_key, ordered_event_hash
+
+# Optional cooperative progress hook ``(stage, done, total, unit)``: called between bounded build units.
+# It may raise to cancel and never changes the feed that is built.
+BuildProgress = Callable[[str, int, int | None, str], None]
+
+
+def _no_hook(stage: str, done: int, total: int | None, unit: str) -> None:  # noqa: ARG001
+    return None
 
 BAR = timedelta(minutes=1)
 SOURCE = "okx"
@@ -159,8 +167,12 @@ def assemble_feed(
     inst_id: str,
     index_id: str,
     instrument: dict,
+    progress: BuildProgress | None = None,
 ) -> Feed:
+    hook = progress or _no_hook
+    hook("order events (single unit)", 0, 1, "stages")
     ordered = order_events(events)
+    hook("order events (single unit)", 1, 1, "stages")
     counts: dict[str, int] = {}
     for e in ordered:
         key = f"{e.channel.family.value}/{e.kind.value}"
@@ -169,6 +181,7 @@ def assemble_feed(
     for e in ordered:
         if e.channel.channel_id not in covered:
             raise FeedError(f"event {e.event_id} has no declared channel coverage")
+    hook("feed identity hashes (single unit)", 0, 1, "stages")
     manifest = FeedManifest(
         schema_version=FEED_SCHEMA_VERSION,
         contract_status=FEED_CONTRACT_STATUS,
@@ -184,6 +197,7 @@ def assemble_feed(
         event_counts=dict(sorted(counts.items())),
         ordered_event_hash=ordered_event_hash(ordered),
     )
+    hook("feed identity hashes (single unit)", 1, 1, "stages")
     return Feed(manifest, ordered)
 
 
@@ -230,10 +244,12 @@ def _bar_payload(family: Family, row: dict):
     return IndexBarPayload(index_id=row["index_id"], **ohlc)
 
 
-def build_feed(dataset_path: Path, policy: AvailabilityPolicy | None = None) -> Feed:
+def build_feed(dataset_path: Path, policy: AvailabilityPolicy | None = None,
+               progress: BuildProgress | None = None) -> Feed:
     """Transform one verified marketdata.v1 dataset into an ordered causal feed."""
     policy = policy or modeled_availability()
-    problems = verify(dataset_path)
+    hook = progress or _no_hook
+    problems = verify(dataset_path, progress=lambda st, d, t, u: hook(f"re-verify inside feed build: {st}", d, t, u))
     if problems:
         raise FeedError(f"dataset {dataset_path.name} failed verification: {problems}")
     m: DatasetManifest = load_manifest(dataset_path)
@@ -253,7 +269,8 @@ def build_feed(dataset_path: Path, policy: AvailabilityPolicy | None = None) -> 
         for fam, ch in channels.items()
     )
     events: list[FeedEvent] = []
-    for fam, ch in channels.items():
+    for k, (fam, ch) in enumerate(channels.items()):
+        hook("normalize families", k, len(channels), "families")
         artifact = f"{MD_FAMILY[fam].value}.parquet"
         rows = pq.read_table(dataset_path / artifact).to_pylist()
 
@@ -321,4 +338,6 @@ def build_feed(dataset_path: Path, policy: AvailabilityPolicy | None = None) -> 
         "ct_val_ccy": inst.ct_val_ccy, "ct_mult": str(inst.ct_mult), "base_ccy": inst.base_ccy,
         "quote_ccy": inst.quote_ccy, "settle_ccy": inst.settle_ccy,
     }
-    return assemble_feed(events, coverage, policy, (m.dataset_id,), inst.inst_id, inst.index_id, instrument)
+    hook("normalize families", len(channels), len(channels), "families")
+    return assemble_feed(events, coverage, policy, (m.dataset_id,), inst.inst_id, inst.index_id, instrument,
+                         progress=hook)

@@ -6,12 +6,16 @@ Private filesystem paths are not exposed.
 
 from __future__ import annotations
 
+import json
 from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import PlainTextResponse
+
+from .. import ops
 
 from . import job as cj
 from . import state
@@ -37,7 +41,8 @@ def _runtime(row: dict[str, Any], lease_expired: bool) -> tuple[str, str]:
     if row["cancel_requested"]:
         return "cancel_requested", "cancellation requested; the worker stops at the next page boundary"
     if status == "running" and lease_expired:
-        return "recovering", "worker stopped heartbeating; the job will be reclaimed and the chunk restarted from scratch"
+        return "unresponsive", ("worker stopped heartbeating (lease expired); awaiting reclaim by a new fenced attempt, "
+                                "which restarts this chunk from scratch")
     if status == "running":
         return "running", f"worker {row['lease_owner']} is preparing the chunk"
     return "queued", "waiting for a corpus worker"
@@ -55,6 +60,112 @@ def _eta(p: dict[str, Any], state_: str) -> tuple[float | None, str]:
     return (total - done) / rate, f"measured {rate:.2f} windows/s over {secs:.0f}s of this attempt"
 
 
+def operation(row: dict[str, Any], now: datetime) -> dict[str, Any]:
+    """Shared status / phase / health / assurance view (algotrader.ops.v1) of a corpus job."""
+    status = row["status"]
+    terminal = status in cj.TERMINAL
+    lease_expired = bool(status == "running" and row["lease_expires_at"] and row["lease_expires_at"] < now)
+    p = row["progress"] or {}
+    phase = p.get("shared_phase") or ("QUEUED" if status == "queued" else None)
+    waiting = None
+    if p.get("phase") in ("instrument", "trade_candles_1m", "mark_candles_1m", "index_candles_1m",
+                          "funding_rates") and p.get("rate_limited"):
+        waiting = "rate limited by the source"
+    health, detail = ops.derive_health(
+        status=status, phase=phase, lease_expired=lease_expired, last_progress_at=row.get("last_progress_at"),
+        heartbeat_at=row["heartbeat_at"], progress={"waiting": waiting}, supervisor=None,
+        generation=row.get("lease_generation") or 0, now=now)
+    started = ops.parse_iso(p.get("phase_started_at"))
+    tl = ops.timeline(list(row.get("phase_history") or []), None if terminal else phase, started,
+                      status == "running" and not lease_expired, now, ops.CORPUS_PHASES)
+    if status == "completed":
+        assurance = {"state": "passed", "validator": "marketdata.v1 verify", "scope":
+                     "every file hash/size, row counts, raw pages and dataset identity verified before binding"}
+    elif terminal:
+        assurance = {"state": "not_checked" if status == "cancelled" else "failed",
+                     "detail": row["error"] or status}
+    else:
+        assurance = {"state": "not_checked", "detail": "dataset verification runs before binding"}
+    if p.get("verify_total"):
+        done, total, unit = p.get("verify_done"), p.get("verify_total"), p.get("verify_unit")
+    else:
+        done, total, unit = p.get("windows_done"), p.get("windows_total"), "windows"
+    return {
+        "contract": ops.OPS_CONTRACT, "status": status, "phase": phase,
+        "phase_label": ops.PHASE_LABEL.get(phase or "", "—"), "health": health.value,
+        "health_label": ops.HEALTH_LABEL[health.value], "health_detail": detail, "assurance": assurance,
+        "generation": row.get("lease_generation") or 0, "attempt": row["attempt"],
+        "progress": {"stage": p.get("stage") or p.get("phase"), "done": done, "total": total, "unit": unit,
+                     "fraction": (done / total) if (done is not None and total) else None,
+                     "detail": p.get("detail"), "progress_seq": row.get("progress_seq") or 0,
+                     "last_progress_at": ops.iso(row.get("last_progress_at"))},
+        "timeline": tl,
+        "controls": {"cancel": {"enabled": not terminal and not row["cancel_requested"],
+                                "reason": None if not terminal and not row["cancel_requested"] else
+                                ("cancellation already requested" if row["cancel_requested"] else f"job {status}")}},
+    }
+
+
+def diagnostic_report(row: dict[str, Any], now: datetime) -> dict[str, Any]:
+    op = operation(row, now)
+    terminal = row["status"] in cj.TERMINAL
+    p = dict(row["progress"] or {})
+    p.pop("work_dir", None)
+    return {
+        "report_kind": "CORPUS_PREPARATION_DIAGNOSTIC", "report_format": "algotrader.corpus-diagnostic.v1",
+        "snapshot": not terminal, "captured_at": None if terminal else now.isoformat(),
+        "job_id": row["job_id"], "chunk_id": row["chunk_id"], "plan_id": row["plan_id"],
+        "source": {"source": "okx", "base_url": row["base_url"]},
+        "status": row["status"], "phase": op["phase"], "health": op["health"],
+        "health_detail": op["health_detail"] if not terminal else None, "assurance": op["assurance"],
+        "outcome": row["outcome"], "dataset_id": row["dataset_id"] or "PENDING",
+        "attempts": {"attempt": row["attempt"], "max_attempts": row["max_attempts"], "generation": op["generation"],
+                     "recovery_log": list(row["recovery_log"] or [])},
+        "timing": {"created_at": ops.iso(row["created_at"]), "started_at": ops.iso(row["started_at"]),
+                   "finished_at": ops.iso(row["finished_at"]),
+                   "active_seconds_total": op["timeline"]["active_seconds_total"],
+                   "phases": [x for x in op["timeline"]["phases"] if x["spans"] or x["state"] == "current"]},
+        "progress": {**op["progress"], "pages": p.get("pages"), "bytes_fetched": p.get("bytes"),
+                     "windows_done": p.get("windows_done"), "windows_total": p.get("windows_total")},
+        "network_note": ("counts are what this job recorded; a diagnostic snapshot never claims download "
+                         "completion or network receipts that did not happen"),
+        "result": row["result"], "error": row["error"],
+        "recovery_behavior": cj.RECOVERY_BEHAVIOR,
+    }
+
+
+def render_markdown(r: dict[str, Any]) -> str:
+    pr, a = r["progress"], r["assurance"]
+    lines = [
+        "# Corpus preparation diagnostic" + (" — snapshot (incomplete)" if r["snapshot"] else ""),
+        "",
+        f"**{r['report_kind']}** · job `{r['job_id']}` · chunk `{r['chunk_id']}`"
+        + (f" · captured {r['captured_at']}" if r["captured_at"] else ""),
+        f"**Status:** {r['status'].upper()} · phase **{r['phase'] or '—'}** · health **{r['health']}** · "
+        f"assurance **{str(a.get('state')).upper()}**",
+        "",
+        f"- Source: OKX public REST {r['source']['base_url']} (read-only)",
+        f"- Outcome: {r['outcome'] or '—'} · dataset {r['dataset_id']}",
+        f"- Progress: {pr.get('stage') or '—'} {pr.get('done')}/{pr.get('total')} {pr.get('unit') or ''} · pages "
+        f"{pr.get('pages')} · bytes {pr.get('bytes_fetched')}",
+        f"- Attempts {r['attempts']['attempt']}/{r['attempts']['max_attempts']} · fencing generation "
+        f"{r['attempts']['generation']}",
+        f"- Active (measured) {r['timing']['active_seconds_total']:.1f} s",
+    ]
+    for x in r["timing"]["phases"]:
+        lines.append(f"  - {x['label']}: {x['active_seconds']:.1f} s active"
+                     + (f" · {x['interrupted_spans']} interrupted" if x["interrupted_spans"] else "")
+                     + (" · CURRENT" if x["state"] == "current" else ""))
+    for x in r["attempts"]["recovery_log"]:
+        lines.append(f"  - recovery: attempt {x.get('attempt')} · {x.get('event')} — {x.get('detail')}")
+    if r["health_detail"]:
+        lines.append(f"- Health: {r['health_detail']}")
+    if r["error"]:
+        lines.append(f"- Error: {r['error']}")
+    lines += ["", f"_{r['network_note']}_", f"_Recovery: {r['recovery_behavior']}_", ""]
+    return "\n".join(lines)
+
+
 def job_view(row: dict[str, Any]) -> dict[str, Any]:
     now = datetime.now(UTC)
     lease_expired = bool(row["status"] == "running" and row["lease_expires_at"] and row["lease_expires_at"] < now)
@@ -65,6 +176,7 @@ def job_view(row: dict[str, Any]) -> dict[str, Any]:
     total = p.get("windows_total")
     hb = row["heartbeat_at"]
     return {
+        "operation": operation(row, now),
         "job_id": row["job_id"],
         "chunk_id": row["chunk_id"],
         "plan_id": row["plan_id"],
@@ -162,6 +274,21 @@ def build_router(conn: Callable, data_root: Path) -> APIRouter:
     def job(job_id: str) -> dict[str, Any]:
         with conn() as c:
             return job_view(get_job(c, job_id))
+
+    @r.get("/jobs/{job_id}/report.json")
+    def job_report_json(job_id: str, download: bool = False) -> PlainTextResponse:
+        with conn() as c:
+            doc = diagnostic_report(get_job(c, job_id), datetime.now(UTC))
+        headers = {"Content-Disposition": f'attachment; filename="{job_id}-diagnostic.json"'} if download else {}
+        return PlainTextResponse(json.dumps(doc, indent=2, sort_keys=True, ensure_ascii=False, default=str) + "\n",
+                                 media_type="application/json", headers=headers)
+
+    @r.get("/jobs/{job_id}/report.md")
+    def job_report_md(job_id: str, download: bool = False) -> PlainTextResponse:
+        with conn() as c:
+            doc = diagnostic_report(get_job(c, job_id), datetime.now(UTC))
+        headers = {"Content-Disposition": f'attachment; filename="{job_id}-diagnostic.md"'} if download else {}
+        return PlainTextResponse(render_markdown(doc), media_type="text/markdown; charset=utf-8", headers=headers)
 
     @r.post("/jobs/{job_id}/cancel")
     def cancel(job_id: str) -> dict[str, Any]:

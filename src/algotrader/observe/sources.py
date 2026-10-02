@@ -13,6 +13,8 @@ A source with no usable market evidence (no valid bar observation) is rejected.
 
 from __future__ import annotations
 
+import hashlib
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -39,6 +41,32 @@ class SourceRejected(Exception):
     """The source cannot launch a valid observation replay."""
 
 
+# Optional cooperative hook ``(stage, done, total, unit)`` used by the worker-owned preparation phases.
+Progress = Callable[[str, int, int | None, str], None]
+
+
+def _no_hook(stage: str, done: int, total: int | None, unit: str) -> None:  # noqa: ARG001
+    return None
+
+
+def locate_source(root: Path, kind: SourceKind | str, source_id: str) -> Path:
+    """Cheap launch-time check (no hashing, no parsing beyond a path test): the source exists locally.
+
+    Full verification and feed construction happen later, inside the durable worker-owned job.
+    """
+    kind = SourceKind(kind)
+    path = md.dataset_path(root, source_id) if kind == SourceKind.DATASET else rj.session_path(root, source_id)
+    if path is None:
+        raise SourceRejected(f"{kind.value} {source_id} not found in the local data root")
+    if kind == SourceKind.RECORDING and not rj.is_finalized(path):
+        raise SourceRejected(f"recording {source_id} is not finalized (still recording or awaiting recovery)")
+    return path
+
+
+def manifest_sha256(path: Path) -> str:
+    return hashlib.sha256((path / "manifest.json").read_bytes()).hexdigest()
+
+
 @dataclass(frozen=True)
 class LoadedSource:
     summary: SourceSummary
@@ -62,19 +90,20 @@ def _require_usable(feed: Feed, what: str) -> None:
         raise SourceRejected(f"{what} contains no usable market evidence (no valid observation)")
 
 
-def load_dataset(root: Path, dataset_id: str) -> LoadedSource:
+def load_dataset(root: Path, dataset_id: str, progress: Progress | None = None,
+                 build_progress: Progress | None = None) -> LoadedSource:
     path = md.dataset_path(root, dataset_id)
     if path is None:
         raise SourceRejected(f"dataset {dataset_id} not found")
     checked = datetime.now(UTC)
-    problems = md.verify(path)
+    problems = md.verify(path, progress=progress)
     verification = SourceVerification(
         verified=not problems, checked_at=checked, problems=tuple(problems),
         method="marketdata.v1 verify: every file hash/size, row counts and dataset identity re-checked")
     if problems:
         raise SourceRejected(f"dataset {dataset_id} failed verification: {'; '.join(problems)}")
     try:
-        feed = build_feed(path, modeled_availability())
+        feed = build_feed(path, modeled_availability(), progress=build_progress)
     except FeedError as exc:
         raise SourceRejected(f"dataset {dataset_id}: feed not built ({exc})") from None
     _require_usable(feed, f"dataset {dataset_id}")
@@ -94,14 +123,15 @@ def load_dataset(root: Path, dataset_id: str) -> LoadedSource:
     return LoadedSource(summary, verification, feed, MODELED_LABEL, f"datasets/{dataset_id}")
 
 
-def load_recording(root: Path, session_id: str) -> LoadedSource:
+def load_recording(root: Path, session_id: str, progress: Progress | None = None,
+                   build_progress: Progress | None = None) -> LoadedSource:
     path = rj.session_path(root, session_id)
     if path is None:
         raise SourceRejected(f"recording {session_id} not found")
     if not rj.is_finalized(path):
         raise SourceRejected(f"recording {session_id} is not finalized (still recording or awaiting recovery)")
     checked = datetime.now(UTC)
-    problems = rj.verify(path)
+    problems = rj.verify(path, progress=progress)
     verification = SourceVerification(
         verified=not problems, checked_at=checked, problems=tuple(problems),
         method="recorder.v1 verify: every file hash/size/line count, contiguous journal seq, per-record raw hash")
@@ -110,8 +140,11 @@ def load_recording(root: Path, session_id: str) -> LoadedSource:
     manifest, report = rj.load_manifest(path), rj.load_report(path)
     if manifest.status == SessionStatus.FAILED:
         raise SourceRejected(f"recording {session_id} is FAILED (no usable market data); it cannot be replayed")
+    hook = build_progress or _no_hook
     try:
+        hook("bridge recorded journal (single unit)", 0, 1, "stages")
         bridge = build_recorded_feed(path)
+        hook("bridge recorded journal (single unit)", 1, 1, "stages")
     except FeedError as exc:
         raise SourceRejected(f"recording {session_id}: feed not built ({exc})") from None
     _require_usable(bridge.feed, f"recording {session_id}")
@@ -134,6 +167,9 @@ def load_recording(root: Path, session_id: str) -> LoadedSource:
     return LoadedSource(summary, verification, bridge.feed, RECORDED_LABEL, f"recordings/{session_id}")
 
 
-def load_source(root: Path, kind: SourceKind | str, source_id: str) -> LoadedSource:
+def load_source(root: Path, kind: SourceKind | str, source_id: str, progress: Progress | None = None,
+                build_progress: Progress | None = None) -> LoadedSource:
     kind = SourceKind(kind)
-    return load_dataset(root, source_id) if kind == SourceKind.DATASET else load_recording(root, source_id)
+    if kind == SourceKind.DATASET:
+        return load_dataset(root, source_id, progress, build_progress)
+    return load_recording(root, source_id, progress, build_progress)

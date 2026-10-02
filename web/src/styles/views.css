@@ -493,3 +493,25 @@ details.more > .card { border: none; box-shadow: none; background: transparent; 
   .ledger { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .bt-rail { grid-template-columns: 1fr; }
 }
+
+/* ---- WP-008-R1A: operation lifecycle (status / phase / health / assurance) ---- */
+.op-panel { display: flex; flex-direction: column; gap: var(--s-3); padding: var(--s-3); border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface-2); }
+.op-badges { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.phase-timeline { display: flex; flex-wrap: wrap; gap: 4px; list-style: none; margin: 0; padding: 0; }
+.phase-step { display: inline-flex; align-items: center; gap: 6px; padding: 3px 8px; border-radius: 6px; border: 1px solid var(--line); font-size: var(--fs-2xs); color: var(--text-3); background: var(--surface); }
+.phase-step .phase-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--line); flex: none; }
+.phase-step.is-done { color: var(--text-2); }
+.phase-step.is-done .phase-dot { background: var(--pos); }
+.phase-step.is-current { color: var(--text-1, inherit); border-color: var(--brand); }
+.phase-step.is-current .phase-dot { background: var(--brand); box-shadow: 0 0 0 3px var(--brand-soft); }
+.phase-step.was-interrupted .phase-dot { background: var(--warn); }
+.phase-step .phase-time { color: var(--text-3); }
+.op-current { display: flex; flex-direction: column; gap: 6px; }
+.op-current-head, .op-current-foot { display: flex; justify-content: space-between; gap: var(--s-3); flex-wrap: wrap; font-size: var(--fs-xs); }
+.diag-row { display: flex; justify-content: space-between; align-items: center; gap: var(--s-3); flex-wrap: wrap; }
+.run-types { display: flex; flex-direction: column; gap: 6px; }
+.run-type { display: grid; grid-template-columns: auto 1fr auto; gap: var(--s-2); align-items: start; padding: var(--s-2) var(--s-3); border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface-2); }
+.run-type > span { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.run-type.is-on { border-color: var(--brand); }
+.run-type.is-disabled, .run-type.is-planned { opacity: 0.7; }
+.run-type.is-planned { grid-template-columns: 1fr auto; }
