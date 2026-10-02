@@ -38,3 +38,16 @@ Anchor published cache metadata to a trusted preparation receipt/persistent pin 
 Keep existing differential, checkpoint/CAS/generation, restore/fallback, cancellation, inspection and compatibility tests. Add deterministic offline fixtures with increasing long gaps, shuffled Parquet, many repeated recorded completions/exclusions/raw pages, and enough spills to cross a configured merge fan-in. Verify exact reference identities/order/slot classification and bounded in-memory cardinalities/open descriptors. Report peak RSS when supported alongside Python heap; distinguish metadata proportional to partitions from evidence collections proportional to events. Instrument configured limits and cancellation during no-yield work.
 
 Add the post-verification source-mutation and compatible warm-manifest corruption fixtures described above. Demonstrate that the rejected bytes are not applied and no falsely verified cache/run completes. Preserve R1A bounded diagnostics and cold/warm identity parity. Run required existing checks and CI on isolated services under AGENTS.md. No real September/month/year replay or acquisition is needed to close these defects.
+
+## Correction review and closure — 2026-10-02
+
+Correction: `9d814ec957e17fc33c1fcfbfb96034844e416444`, base `418d033495da4bfd3f047f9c6b7f69e6c665d5d4`.
+Final decision: **ACCEPTED — R1B structural slice only**. The CHANGES REQUIRED decision above remains the historical review of `464f449`.
+
+The Director inspected private source snapshot/verification/normalization, PostgreSQL receipt publication and warm matching, deterministic cache manifests/fsync ordering, bounded multi-pass merge, disk-backed gap/dedup paths, incremental request-log verification and the new corruption/mutation/crash fixtures. These close the three R1B findings. Independently confirmed CI `37065434955`: checks SUCCESS and compose-smoke SUCCESS. Executor reports 366 non-E2E + 10 E2E and the process-isolated memory figures; the Director did not rerun those suites or Windows memory measurements. No schema-related diff from the correction base.
+
+An independent stdlib execution of the actual extracted ExternalSorter on 100 records/block2/fan-in3 passed sorted output and maximum-open-run limits: 75 runs created, 3 merge passes, maximum 3 open runs and 2 buffered records. No Owner database/dataset/live stack was used.
+
+R1B acceptance is not month/year performance or universal control-latency acceptance. Snapshot copy still hooks between files (copy buffers alone are not cancellation hooks); large-file copy/hashing, no-yield scans and publication boundaries require representative control measurements in R1C. Partition/file metadata and disk storage scale with source size and are disclosed. Windows has no directory-fsync guarantee; receipts expose this limit. R1C must verify safe failure/rebuild after lost cache files and preserve that qualification, rather than claim proven Windows power-loss durability.
+
+R1C is now activated by task.md. Owner September replay remains blocked pending Director release review.

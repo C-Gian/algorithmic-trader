@@ -44,7 +44,7 @@ Relevant source-level passages in LIB-008 support caution about redundant linear
 
 ## Active task and release boundaries
 
-R1A is accepted at `0919001` for its operational slice. **WP-008-R1B — Streaming replay and restorable checkpoints** is now activated by `task.md`. Architecture approval does not authorize R1C, R2/R3 or the adviser; each needs a reviewed task.
+R1A is accepted at `0919001` for its operational slice and R1B correction at `9d814ec` for its structural slice. **WP-008-R1C — Assurance and performance release gates** is now activated by `task.md`. R2/R3, method closure, the adviser and the Owner September retry remain unactivated until their reviewed gates/tasks.
 
 R1A must make preparation, replay, validation and reporting visible; eliminate false recovery; fence all publication; provide incomplete diagnostics and preserve old evidence. It may add cooperative progress/control hooks to existing verification/validation without changing calculations. It is not the performance release and does not authorize a real-month retry.
 

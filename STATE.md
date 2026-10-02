@@ -1,6 +1,6 @@
 # Project State
 
-Updated: 2026-10-02 — R1B Director review: corrections required
+Updated: 2026-10-02 — R1B correction accepted; R1C activated
 
 ## Authority and active direction
 
@@ -68,7 +68,7 @@ Accepted limitations to measure on the Owner machine:
 
 ## Current action
 
-**WP-008-R1A is ACCEPTED at `0919001fb689909080e139801641eb4c7105702f` for the operational slice. WP-008-R1B correction is the only active implementation package (`task.md`), following CHANGES REQUIRED review of `464f449`.** NOT READY FOR OWNER MARKET REPLAY.
+**WP-008-R1A is ACCEPTED at `0919001fb689909080e139801641eb4c7105702f` for the operational slice. R1B correction is ACCEPTED at `9d814ec` for the structural slice. WP-008-R1C — Assurance and performance release gates is the only active implementation package (`task.md`).** NOT READY FOR OWNER MARKET REPLAY.
 
 Executor evidence (base `fb19de247350f205ad8c9da2cb18adeb7ea885b6`, final `66a2dce90619848776e891e7f50f0f8440d95eb4`; claims below are subject to the Director findings):
 - shared operational contract `algotrader.ops.v1` (`src/algotrader/ops.py`): separate status / phase / health / assurance; current-phase-only ETA; phase spans with active vs wall time;
@@ -94,7 +94,7 @@ Director evidence: CI run `37038947330` has successful `checks` and `compose-smo
 
 Director closure: independently confirmed CI `37044401955` checks/compose-smoke SUCCESS, inspected correction source and regressions, and executed small stdlib timing/ETA checks. Schema-related files remain byte-identical to the correction base. Full local suites and reported timings were not independently rerun. R1A acceptance is not a performance release; remaining large-input serialization/control bounds belong to R1B/C. The acknowledged executor no-op pull violated AGENTS; the rule now explicitly prohibits startup/no-op pull habits.
 
-Active R1B: bounded immutable feed/cache, one incremental causal kernel, sparse committed ranges, directly restorable versioned checkpoints and committed-prefix inspection. No real-month retry until R1C review.
+Accepted R1B scope: bounded immutable feed/cache, one incremental causal kernel, sparse committed ranges, directly restorable versioned checkpoints and committed-prefix inspection. No real-month retry until R1C review.
 
 R1B executor evidence (base `17b5720`; Director acceptance pending):
 - streaming dataset adapter + streaming recorded bridge (identical events to the reference builders); immutable feed cache with bounded external sorts, exact canonical content identity / ordered-event hash, SHA-256-pinned gzip partitions, rolling prefix commitment, atomic publication, quarantine on corruption, verify-once trust boundary (cold 1 verification, warm 0);
@@ -103,7 +103,7 @@ R1B executor evidence (base `17b5720`; Director acceptance pending):
 - tests: differential digests at every committed cursor across checkpoint cadences 1/3/7/5000 and paced mode; restore at cursors 1/13/30/60; crafted ties/late arrival/gap/rejection/partition boundaries/end of source with a hand-expected order; duplicate-slot rejection; future-suffix perturbation; cold/warm cache; partition/manifest/source tampering; interrupted build; restore-point corruption/fallback/no valid point; DB failure inside a checkpoint; stale generation and cursor CAS; structural scaling (4,323 vs 17,292 events: Python-heap peak 15.0 vs 16.1 MB, transactions = checkpoints + 1, 0 delivery rows) and direct restore at 8,000/17,292;
 - bounded synthetic measurement (Windows, separate compute process): ~3,700-4,300 events/s replay, cold cache build 2.3 s / 17,292 events, reconciliation 0.08 s; not a month/year budget claim.
 
-R1B correction (executor evidence; base `418d033`; Director acceptance pending) for `delivery/WP-008-R1B-DIRECTOR-REVIEW.md`:
+R1B correction (executor evidence reviewed and accepted for structural scope; base `418d033`, final `9d814ec`) for `delivery/WP-008-R1B-DIRECTOR-REVIEW.md`:
 - bounded cold preparation: disk-backed exact sqlite indexes for absent slots (incl. unsorted Parquet) and raw-page classification; recorded first-completion dedup on disk, exclusions spilled and hash-pinned, lifecycle first/max only; streaming request-log verification with incremental dataset identity; external sort with bounded fan-in (multi-pass); hooks in every scan/no-yield stretch; all handles closed before cleanup;
 - verified-byte boundary: private source snapshot, verified once, the only input to normalization and source facts;
 - trusted receipts (migration 8) written after fsynced publication; deterministic cache manifests; warm launches require a matching receipt; compatible manifest alterations and receipt-less caches are quarantined and rebuilt to the receipt;
@@ -319,6 +319,12 @@ Professional dossiers: source_notes/ and knowledge/registry.yaml; initial snapsh
 
 ## R1B Director review — 2026-10-02
 
-Implementation `464f449e5961e240eab588876d21ab1bdd444145` remains **CHANGES REQUIRED**, not accepted. CI `37052483628` checks/compose-smoke independently confirmed SUCCESS; executor reports 348 non-E2E + 10 E2E, fixture timings/memory not independently rerun. Schema-related files have no diff from the base.
+Historical initial review: implementation `464f449e5961e240eab588876d21ab1bdd444145` was **CHANGES REQUIRED**; the later `9d814ec` correction closes these findings. CI `37052483628` checks/compose-smoke independently confirmed SUCCESS; executor reports 348 non-E2E + 10 E2E, fixture timings/memory not independently rerun. Schema-related files have no diff from the base.
 
-Retain kernel/sparse persistence/direct restore and short differential evidence. Blocking R1B defects: input-sized in-memory preparation sets/lists and unbounded external-merge fan-in; source bytes mutable between verification and normalization; compatible cache-manifest alterations accepted on a fresh warm launch without a trusted prior pin. Independent stdlib probes of actual extracted code accepted changed compatible cache facts and showed 10 simultaneous spill readers for 20 records/block2. See `delivery/WP-008-R1B-DIRECTOR-REVIEW.md` and task.md. No full local suite or Owner stack/data accessed. R1C and Owner September retry remain inactive.
+Retain kernel/sparse persistence/direct restore and short differential evidence. Initial R1B defects (closed by the correction below): input-sized in-memory preparation sets/lists and unbounded external-merge fan-in; source bytes mutable between verification and normalization; compatible cache-manifest alterations accepted on a fresh warm launch without a trusted prior pin. Independent stdlib probes of actual extracted code accepted changed compatible cache facts and showed 10 simultaneous spill readers for 20 records/block2. See `delivery/WP-008-R1B-DIRECTOR-REVIEW.md` and task.md. No full local suite or Owner stack/data accessed. At that initial review R1C and Owner September retry remained inactive; the current action and correction closure below supersede this activation status.
+
+## R1B correction accepted; R1C activated — 2026-10-02
+
+Director accepted `9d814ec957e17fc33c1fcfbfb96034844e416444` after source inspection of private verified snapshots, trusted PostgreSQL cache receipts, deterministic durable publication and bounded disk-index/multipass preparation, plus the added regressions. CI `37065434955` checks/compose-smoke independently confirmed SUCCESS. Executor reports 366 non-E2E + 10 E2E and fresh-process memory measurements; Director did not rerun full suites or Windows measurements. Independent actual-sorter stdlib probe passed (100 records, block2, fan-in3; max 3 readers, 3 merge passes). Schema-related files unchanged from correction base.
+
+This closes the earlier `464f449` findings; see the closure in `delivery/WP-008-R1B-DIRECTOR-REVIEW.md`. R1C now closes layered assurance, explicit optional Deep validation, representative long-unit control/durability tests and reproducible structural performance gates. Directory fsync on Windows remains unproven; metadata/disk growth remains disclosed. No achieved month/year performance or Owner improvement is claimed. Owner September retry still blocked until Director R1C release acceptance.
