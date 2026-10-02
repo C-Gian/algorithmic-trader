@@ -1,6 +1,6 @@
 # Project State
 
-Updated: 2026-10-03 — R1C implemented by the executor; Director review pending
+Updated: 2026-10-03 — R1C Director review: corrections required
 
 ## Authority and active direction
 
@@ -68,7 +68,7 @@ Accepted limitations to measure on the Owner machine:
 
 ## Current action
 
-**WP-008-R1A is ACCEPTED at `0919001fb689909080e139801641eb4c7105702f` for the operational slice. R1B correction is ACCEPTED at `9d814ec` for the structural slice. WP-008-R1C — Assurance and performance release gates is the only active implementation package (`task.md`); executor implementation delivered, Director review pending.** NOT READY FOR OWNER MARKET REPLAY until Director release acceptance.
+**WP-008-R1A is ACCEPTED at `0919001fb689909080e139801641eb4c7105702f` for the operational slice. R1B correction is ACCEPTED at `9d814ec` for the structural slice. WP-008-R1C correction is the only active implementation package (`task.md`); Director review of `6745117`: CHANGES REQUIRED.** NOT READY FOR OWNER MARKET REPLAY until Director release acceptance.
 
 Executor evidence (base `fb19de247350f205ad8c9da2cb18adeb7ea885b6`, final `66a2dce90619848776e891e7f50f0f8440d95eb4`; claims below are subject to the Director findings):
 - shared operational contract `algotrader.ops.v1` (`src/algotrader/ops.py`): separate status / phase / health / assurance; current-phase-only ETA; phase spans with active vs wall time;
@@ -337,3 +337,9 @@ Retain kernel/sparse persistence/direct restore and short differential evidence.
 Director accepted `9d814ec957e17fc33c1fcfbfb96034844e416444` after source inspection of private verified snapshots, trusted PostgreSQL cache receipts, deterministic durable publication and bounded disk-index/multipass preparation, plus the added regressions. CI `37065434955` checks/compose-smoke independently confirmed SUCCESS. Executor reports 366 non-E2E + 10 E2E and fresh-process memory measurements; Director did not rerun full suites or Windows measurements. Independent actual-sorter stdlib probe passed (100 records, block2, fan-in3; max 3 readers, 3 merge passes). Schema-related files unchanged from correction base.
 
 This closes the earlier `464f449` findings; see the closure in `delivery/WP-008-R1B-DIRECTOR-REVIEW.md`. R1C now closes layered assurance, explicit optional Deep validation, representative long-unit control/durability tests and reproducible structural performance gates. Directory fsync on Windows remains unproven; metadata/disk growth remains disclosed. No achieved month/year performance or Owner improvement is claimed. Owner September retry still blocked until Director R1C release acceptance.
+
+## R1C Director review — 2026-10-03
+
+Implementation `6745117ee1010510abfa6247bfc40c1331fff7c1`: **CHANGES REQUIRED**. The active task is the R1C correction, not an Owner retry. CI `37075370604` checks/compose-smoke independently confirmed SUCCESS; full suites and Windows measurements remain executor evidence, not Director reruns. No schema-related diff.
+
+Retain useful full-month synthetic measurements and implemented integrity/Deep functionality. Blocking findings: reconciliation accepts an absent receipt; Deep final success can overwrite an accepted cancel; Deep MATCH headline can incorrectly promote failed runtime assurance. Independent focused stdlib code probes confirmed these behaviors. Annual component timings are useful but annual application gates remain NOT_MEASURED/PENDING. See `delivery/WP-008-R1C-DIRECTOR-REVIEW.md`. Director review may authorize a scoped September app check after fixes; no annual-readiness claim or real historical CLI evaluation is accepted.

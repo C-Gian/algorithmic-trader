@@ -445,4 +445,4 @@ Preliminary source capability/size checks may inform MP-001 without substantial 
 
 ## 10. Immediate active package
 
-**WP-008-R1C only.** R1A and R1B correction are accepted for their operational/structural slices; R1B final review is recorded in `delivery/WP-008-R1B-DIRECTOR-REVIEW.md` at `9d814ec`. Current task.md activates layered assurance, optional Deep validation and performance/control release gates. No trader semantics, real historical CLI evaluation or September acquisition/retry is authorized. The Owner Market replay handoff requires Director R1C acceptance.
+**WP-008-R1C correction only.** Review of `6745117` requires receipt/Deep correctness and benchmark-scope corrections; see `delivery/WP-008-R1C-DIRECTOR-REVIEW.md`. R1A and R1B correction are accepted for their operational/structural slices; R1B final review is recorded in `delivery/WP-008-R1B-DIRECTOR-REVIEW.md` at `9d814ec`. Current task.md activates layered assurance, optional Deep validation and performance/control release gates. No trader semantics, real historical CLI evaluation or September acquisition/retry is authorized. The Owner Market replay handoff requires Director R1C acceptance.

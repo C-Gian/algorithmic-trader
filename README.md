@@ -8,9 +8,9 @@ Algorithmic Trader is a clean-room, local BTC trading adviser: professional mark
 
 The 30 September Owner clarification supersedes the mandatory pullback-only/RP-001 research path. Read FOUNDATION.md v3.1 and task.md for the current Director handoff. Old reviews/research are historical evidence, not current work authorization.
 
-### SR-003 current work — R1A and R1B accepted; R1C implemented, Director review pending
+### SR-003 current work — R1A and R1B accepted; R1C implemented, Director corrections required
 
-The Owner's September run exposed a replay/finalization performance defect. The Director approved a bounded redesign in `strategic_reviews/SR-003-DIRECTOR-DISPOSITION.md`. **WP-008-R1A (observable lifecycle and diagnosis) is accepted at `0919001`. WP-008-R1B (streaming replay and restorable checkpoints) is accepted at correction `9d814ec` for the structural slice**; see *Streaming replay engine (WP-008-R1B)* below. New runs no longer build the feed eagerly, snapshot every event, write a delivery row/transaction per event or rebuild the prefix on restore. R1C (layered assurance, optional Deep validation, control/durability closure, structural benchmark) is implemented and awaits Director review; see *Assurance, Deep validation and release gates (WP-008-R1C)*. Synthetic structural gates are not an achieved Owner month/year result.
+The Owner's September run exposed a replay/finalization performance defect. The Director approved a bounded redesign in `strategic_reviews/SR-003-DIRECTOR-DISPOSITION.md`. **WP-008-R1A (observable lifecycle and diagnosis) is accepted at `0919001`. WP-008-R1B (streaming replay and restorable checkpoints) is accepted at correction `9d814ec` for the structural slice**; see *Streaming replay engine (WP-008-R1B)* below. New runs no longer build the feed eagerly, snapshot every event, write a delivery row/transaction per event or rebuild the prefix on restore. R1C (layered assurance, optional Deep validation, control/durability closure, structural benchmark) is implemented but requires Director corrections before acceptance; see *Assurance, Deep validation and release gates (WP-008-R1C)*. Synthetic structural gates are not an achieved Owner month/year result.
 
 Do not retry the real month after R1A alone (**NOT READY FOR OWNER MARKET REPLAY**). The Director will hand off READY FOR OWNER MARKET REPLAY after R1B/C and review. Reuse September locally in a new run; preserve old rows/artifacts/identity. No automatic old-run salvage or September download. No professional adviser or achieved speedup is claimed.
 
@@ -367,3 +367,7 @@ The initial implementation at `464f449` required corrections, now closed by `9d8
 ### Current R1C status
 
 The earlier R1B findings are closed by Director review of `9d814ec`. R1C is implemented by the executor and awaits Director review; it is not accepted. No Owner September retry is authorized yet; Windows power-loss directory durability and actual (non-synthetic) month/year timings on the Owner's hardware remain unproven.
+
+### Director R1C review — corrections required
+
+Review of `6745117` requires receipt enforcement, Deep terminal-cancel correctness and truthful separation of runtime versus reference assurance. See `delivery/WP-008-R1C-DIRECTOR-REVIEW.md`. The full synthetic month measurements are useful; annual component comparisons do not establish full annual application/preparation/report gates, which remain NOT_MEASURED/PENDING. No Owner September retry is authorized yet.
