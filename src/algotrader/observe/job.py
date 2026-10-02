@@ -223,6 +223,8 @@ class ReplayJob:
         unit_fault = self.spec.faults.get(f"{self._phase}_cpu_per_unit")
         if unit_fault:
             _busy(unit_fault)
+        if self.spec.faults.get(f"{self._phase}_hard_exit"):
+            os._exit(int(self.spec.faults[f"{self._phase}_hard_exit"]))  # test fault: compute process dies
         now = time.monotonic()
         if not force and now - self._last_publish < self.spec.progress_interval:
             return
@@ -231,8 +233,6 @@ class ReplayJob:
         if stall:
             # test fault (one shot): stay alive but publish no milestone for ``stall`` seconds
             self.sleep(stall)
-        if self.spec.faults.get(f"{self._phase}_hard_exit"):
-            os._exit(int(self.spec.faults[f"{self._phase}_hard_exit"]))  # test fault: compute process dies
         self._last_publish = now
         if self._milestone_base is None:
             self._milestone_base = (now, done)
@@ -586,14 +586,14 @@ class ReplayJob:
         self.counters.deliveries_loaded_for_finalize = len(deliveries)
 
         def phase(p: str) -> None:
-            if p != "FINALIZING":
-                self.enter_phase(p)
-            if p == "VALIDATING":
+            if p == "VALIDATING":  # assurance becomes INCOMPLETE before the phase is visible
                 from .contracts import VALIDATOR_ID, VALIDATOR_SCOPE, VALIDATOR_VERSION
 
                 self._set_assurance({"state": ops.Assurance.INCOMPLETE.value, "detail": "validation in progress",
                                      "validator": VALIDATOR_ID, "validator_version": VALIDATOR_VERSION,
                                      "scope": VALIDATOR_SCOPE})
+            if p != "FINALIZING":
+                self.enter_phase(p)
 
         def hook(stage: str, done: int, total: int | None, unit: str) -> None:
             if stage == "re-derive committed deliveries":

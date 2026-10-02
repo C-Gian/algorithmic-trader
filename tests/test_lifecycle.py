@@ -158,7 +158,7 @@ def test_preparation_failure_cancel_and_restart_are_visible(database_url, env, c
 
     # 2. cancel while VERIFYING_SOURCE (CPU-bound per unit) -> cancelled at a safe boundary, never prepared
     rid = api.post("/api/observations", json={"source_kind": "dataset", "source_id": ds}).json()["replay_id"]
-    w = inline(database_url, root, art, progress_interval=0.02, faults={"VERIFYING_SOURCE_cpu_per_unit": 0.05})
+    w = inline(database_url, root, art, progress_interval=0.02, faults={"VERIFYING_SOURCE_cpu_per_unit": 0.2})
     t = in_thread(w.run_once)
     wait_until(lambda: row_of(conn, rid)["phase"] == "VERIFYING_SOURCE")
     t0 = time.perf_counter()
