@@ -8,9 +8,9 @@ Algorithmic Trader is a clean-room, local BTC trading adviser: professional mark
 
 The 30 September Owner clarification supersedes the mandatory pullback-only/RP-001 research path. Read FOUNDATION.md v3.1 and task.md for the current Director handoff. Old reviews/research are historical evidence, not current work authorization.
 
-### SR-003 current work — R1A accepted; R1B implemented (Director review pending); R1C not implemented
+### SR-003 current work — R1A accepted; R1B implemented (Director corrections required); R1C not implemented
 
-The Owner's September run exposed a replay/finalization performance defect. The Director approved a bounded redesign in `strategic_reviews/SR-003-DIRECTOR-DISPOSITION.md`. **WP-008-R1A (observable lifecycle and diagnosis) is accepted at `0919001`. WP-008-R1B (streaming replay and restorable checkpoints) is implemented by the executor and awaits Director review**; see *Streaming replay engine (WP-008-R1B)* below. New runs no longer build the feed eagerly, snapshot every event, write a delivery row/transaction per event or rebuild the prefix on restore. R1C (layered assurance closure, Deep validation, release performance gates) is not implemented, and no month/year performance budget is claimed.
+The Owner's September run exposed a replay/finalization performance defect. The Director approved a bounded redesign in `strategic_reviews/SR-003-DIRECTOR-DISPOSITION.md`. **WP-008-R1A (observable lifecycle and diagnosis) is accepted at `0919001`. WP-008-R1B (streaming replay and restorable checkpoints) is implemented, but Director review of `464f449` requires corrections before acceptance**; see *Streaming replay engine (WP-008-R1B)* below. New runs no longer build the feed eagerly, snapshot every event, write a delivery row/transaction per event or rebuild the prefix on restore. R1C (layered assurance closure, Deep validation, release performance gates) is not implemented, and no month/year performance budget is claimed.
 
 Do not retry the real month after R1A alone (**NOT READY FOR OWNER MARKET REPLAY**). The Director will hand off READY FOR OWNER MARKET REPLAY after R1B/C and review. Reuse September locally in a new run; preserve old rows/artifacts/identity. No automatic old-run salvage or September download. No professional adviser or achieved speedup is claimed.
 
@@ -288,3 +288,7 @@ Without `ALGOTRADER_TEST_DATABASE_URL` the database tests are skipped (CI sets `
 Toolchain pins: Python 3.14.7 (`.python-version`, `uv.lock`), Node 24.14.1 (`.nvmrc`, `web/package-lock.json`), PostgreSQL 18.6 image, uv 0.12.10.
 
 The Project & Research Director replaces `task.md` after reviewing each pushed implementation.
+
+### R1B Director review status
+
+The implementation at `464f449` is **CHANGES REQUIRED**. Streaming/sparse persistence/direct restore are implemented, but cold preparation still has input-sized memory and unbounded merge fan-in, and the verified-source/cache metadata trust boundaries require correction. See `delivery/WP-008-R1B-DIRECTOR-REVIEW.md`. Short fixture rates/memory do not establish month/year readiness. R1C and Owner September retry remain inactive.

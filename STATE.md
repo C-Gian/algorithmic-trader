@@ -1,6 +1,6 @@
 # Project State
 
-Updated: 2026-10-02 — R1A accepted; R1B activated
+Updated: 2026-10-02 — R1B Director review: corrections required
 
 ## Authority and active direction
 
@@ -68,7 +68,7 @@ Accepted limitations to measure on the Owner machine:
 
 ## Current action
 
-**WP-008-R1A is ACCEPTED at `0919001fb689909080e139801641eb4c7105702f` for the operational slice. WP-008-R1B — Streaming replay and restorable checkpoints is the only active implementation package (`task.md`).** NOT READY FOR OWNER MARKET REPLAY.
+**WP-008-R1A is ACCEPTED at `0919001fb689909080e139801641eb4c7105702f` for the operational slice. WP-008-R1B correction is the only active implementation package (`task.md`), following CHANGES REQUIRED review of `464f449`.** NOT READY FOR OWNER MARKET REPLAY.
 
 Executor evidence (base `fb19de247350f205ad8c9da2cb18adeb7ea885b6`, final `66a2dce90619848776e891e7f50f0f8440d95eb4`; claims below are subject to the Director findings):
 - shared operational contract `algotrader.ops.v1` (`src/algotrader/ops.py`): separate status / phase / health / assurance; current-phase-only ETA; phase spans with active vs wall time;
@@ -309,3 +309,9 @@ This is a market-evidence/reference decision, not an autonomous broker/execution
 ## Knowledge baseline
 
 Professional dossiers: source_notes/ and knowledge/registry.yaml; initial snapshot 3bf9de0d88fd97360bff7a6517bbb61544f5db68. Preserve these and frozen RP-001 cases unchanged. Sources are evidence, not automatic BTC efficacy or active workflow instructions.
+
+## R1B Director review — 2026-10-02
+
+Implementation `464f449e5961e240eab588876d21ab1bdd444145` remains **CHANGES REQUIRED**, not accepted. CI `37052483628` checks/compose-smoke independently confirmed SUCCESS; executor reports 348 non-E2E + 10 E2E, fixture timings/memory not independently rerun. Schema-related files have no diff from the base.
+
+Retain kernel/sparse persistence/direct restore and short differential evidence. Blocking R1B defects: input-sized in-memory preparation sets/lists and unbounded external-merge fan-in; source bytes mutable between verification and normalization; compatible cache-manifest alterations accepted on a fresh warm launch without a trusted prior pin. Independent stdlib probes of actual extracted code accepted changed compatible cache facts and showed 10 simultaneous spill readers for 20 records/block2. See `delivery/WP-008-R1B-DIRECTOR-REVIEW.md` and task.md. No full local suite or Owner stack/data accessed. R1C and Owner September retry remain inactive.
