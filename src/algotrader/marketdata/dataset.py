@@ -161,6 +161,31 @@ def compute_dataset_id(req: DatasetRequest, page_hashes: list[str]) -> str:
     return f"okx-{req.inst_id.lower()}-1m-{req.start:%Y%m%dT%H%M}-{req.end:%Y%m%dT%H%M}-{digest[:12]}"
 
 
+class DatasetIdStream:
+    """Incremental ``compute_dataset_id``: identical bytes hashed without holding the page-hash list.
+
+    ``canonical(basis)`` sorts keys (availability_policy, raw_pages_sha256, request, schema_version), so the
+    canonical JSON can be produced as a stream with page hashes appended one at a time.
+    """
+
+    def __init__(self, req: DatasetRequest) -> None:
+        self.req = req
+        self.h = hashlib.sha256()
+        self.h.update(b'{"availability_policy":' + canonical(AVAILABILITY_POLICY_ID) + b',"raw_pages_sha256":[')
+        self.n = 0
+
+    def add(self, page_sha256: str) -> None:
+        self.h.update((b"," if self.n else b"") + canonical(page_sha256))
+        self.n += 1
+
+    def dataset_id(self) -> str:
+        h = self.h.copy()
+        h.update(b'],"request":' + canonical(self.req.model_dump(mode="json")) + b',"schema_version":'
+                 + canonical(MARKETDATA_SCHEMA_VERSION) + b"}")
+        r = self.req
+        return f"okx-{r.inst_id.lower()}-1m-{r.start:%Y%m%dT%H%M}-{r.end:%Y%m%dT%H%M}-{h.hexdigest()[:12]}"
+
+
 IDENTITY_BASIS = (
     "sha256(schema_version, availability_policy, logical request, ordered raw page sha256s); "
     "identical source bytes -> same dataset_id, changed bytes -> new dataset_id"
@@ -637,18 +662,25 @@ def verify(path: Path, progress: Callable[[str, int, int | None, str], None] | N
             problems.append(f"hash/size mismatch for {ref.name}")
         if ref.rows is not None and pq.ParquetFile(p).metadata.num_rows != ref.rows:
             problems.append(f"row count mismatch for {ref.name}")
+    hook("hash dataset files", len(m.files), len(m.files), "files")
+    # request log streamed line by line (never materialized); identity hashed incrementally (same bytes)
+    ident = DatasetIdStream(m.request)
+    total = m.raw_page_count
     try:
-        pages = [RawPageRef.model_validate_json(line) for line in (path / "request_log.jsonl").read_text(encoding="utf-8").splitlines()]
+        with (path / "request_log.jsonl").open(encoding="utf-8") as f:
+            for i, line in enumerate(f):
+                if not line.strip():
+                    continue
+                page = RawPageRef.model_validate_json(line)
+                hook("check raw source pages", i, total, "pages")
+                p = path / page.file
+                if not p.is_file() or sha256_file(p) != page.sha256:
+                    problems.append(f"raw page {page.page_id} missing or altered")
+                ident.add(page.sha256)
     except (OSError, ValueError) as exc:
         return [*problems, f"request log unreadable: {exc}"]
-    hook("hash dataset files", len(m.files), len(m.files), "files")
-    for i, page in enumerate(pages):
-        hook("check raw source pages", i, len(pages), "pages")
-        p = path / page.file
-        if not p.is_file() or hashlib.sha256(p.read_bytes()).hexdigest() != page.sha256:
-            problems.append(f"raw page {page.page_id} missing or altered")
-    hook("check raw source pages", len(pages), len(pages), "pages")
-    if compute_dataset_id(m.request, [p.sha256 for p in pages]) != m.dataset_id:
+    hook("check raw source pages", total, total, "pages")
+    if ident.dataset_id() != m.dataset_id:
         problems.append("dataset_id does not match the raw source content")
     for fam in m.families:
         ref = next((r for r in m.files if r.name == f"{fam.family.value}.parquet"), None)

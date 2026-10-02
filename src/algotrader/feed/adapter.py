@@ -398,122 +398,185 @@ def _iter_rows(path: Path, batch_rows: int):
             i += 1
 
 
-def _absent_slots(path: Path, start: datetime, end: datetime, batch_rows: int) -> set[int]:
-    """Absent 1m slots in [start, end) from the open_time column, read in bounded batches."""
-    absent: set[int] = set()
-    expected = start
-    for batch in pq.ParquetFile(path).iter_batches(batch_size=batch_rows, columns=["open_time"]):
-        for t in batch.column(0).to_pylist():
-            if t < expected - BAR:  # not in market-time order: exact fallback (bounded by the row count)
-                return _absent_slots_unordered(path, start, end, batch_rows)
-            while expected < t and expected < end:
-                absent.add(int(expected.timestamp() * 1000))
-                expected += BAR
-            if t >= expected:
-                expected = t + BAR
-    while expected < end:
-        absent.add(int(expected.timestamp() * 1000))
-        expected += BAR
-    return absent
+class _SlotIndex:
+    """Exact disk-backed slot indexes for one bar family (stdlib sqlite in a private work directory).
+
+    Replaces in-memory sets that grow with source/gap length: the present open times, and the raw-page
+    evidence of every key (confirmed variants / unconfirmed), are written to an indexed on-disk table in
+    bounded batches; absent slots are then produced by walking [start, end) against an ordered cursor, and
+    classified with indexed lookups. Memory: one batch + sqlite's bounded page cache.
+    """
+
+    CACHE_KIB = 4096
+
+    def __init__(self, workdir: Path, name: str) -> None:
+        import sqlite3
+
+        workdir.mkdir(parents=True, exist_ok=True)
+        self.path = workdir / f"slots-{name}.sqlite"
+        if self.path.exists():
+            self.path.unlink()
+        self.db = sqlite3.connect(self.path)
+        self.db.execute(f"PRAGMA cache_size = -{self.CACHE_KIB}")
+        self.db.execute("PRAGMA journal_mode = OFF")
+        self.db.execute("PRAGMA synchronous = OFF")
+        self.db.execute("CREATE TABLE present (t INTEGER NOT NULL)")
+        self.db.execute("CREATE TABLE raw (k INTEGER NOT NULL, confirmed INTEGER NOT NULL, row TEXT NOT NULL)")
+
+    def close(self) -> None:
+        self.db.close()
+        try:
+            self.path.unlink()
+        except OSError:
+            pass
 
 
-def _absent_slots_unordered(path: Path, start: datetime, end: datetime, batch_rows: int) -> set[int]:
-    present: set[datetime] = set()
-    for batch in pq.ParquetFile(path).iter_batches(batch_size=batch_rows, columns=["open_time"]):
-        present.update(batch.column(0).to_pylist())
-    absent, t = set(), start
-    while t < end:
-        if t not in present:
-            absent.add(int(t.timestamp() * 1000))
-        t += BAR
-    return absent
+def _build_slot_index(path: Path, apath: Path, md_family: MdFamily, lo_ms: int, hi_ms: int, batch_rows: int,
+                      hook: BuildProgress, workdir: Path) -> _SlotIndex:
+    idx = _SlotIndex(workdir, md_family.value)
+    try:
+        return _fill_slot_index(idx, path, apath, md_family, lo_ms, hi_ms, batch_rows, hook)
+    except BaseException:
+        idx.close()
+        raise
 
 
-def _absent_slot_classes(path: Path, md_family: MdFamily, absent: set[int]):
-    """Raw-page evidence restricted to the absent keys (bounded by the number of missing slots)."""
-    confirmed: dict[int, set[str]] = {}
-    unconfirmed: set[int] = set()
-    if not absent:
-        return confirmed, unconfirmed
+def _fill_slot_index(idx, path, apath, md_family, lo_ms, hi_ms, batch_rows, hook):
+    done = 0
+    for batch in pq.ParquetFile(apath).iter_batches(batch_size=batch_rows, columns=["open_time"]):
+        vals = [(int(t.timestamp() * 1000),) for t in batch.column(0).to_pylist()]
+        idx.db.executemany("INSERT INTO present (t) VALUES (?)", vals)
+        done += len(vals)
+        hook("index present slots", done, None, "rows")
+    idx.db.execute("CREATE INDEX present_t ON present (t)")
+    pages = 0
     with (path / "request_log.jsonl").open(encoding="utf-8") as f:
         for line in f:
+            if not line.strip():
+                continue
             page = RawPageRef.model_validate_json(line)
             if page.family != md_family:
                 continue
             doc = json.loads((path / page.file).read_bytes())
+            rows = []
             for row in doc.get("data", []):
                 if not isinstance(row, list) or not row or not str(row[0]).isdigit():
                     continue
                 key = int(str(row[0]))
-                if key not in absent:
-                    continue
-                if str(row[-1]) == "1":
-                    confirmed.setdefault(key, set()).add(json.dumps(row))
-                else:
-                    unconfirmed.add(key)
-    return confirmed, unconfirmed
+                if lo_ms <= key < hi_ms:
+                    rows.append((key, 1 if str(row[-1]) == "1" else 0, json.dumps(row)))
+            idx.db.executemany("INSERT INTO raw (k, confirmed, row) VALUES (?, ?, ?)", rows)
+            pages += 1
+            hook("index raw-page slot evidence", pages, None, "pages")
+    idx.db.execute("CREATE INDEX raw_k ON raw (k)")
+    idx.db.commit()
+    return idx
+
+
+def _absent_slot_keys(idx: _SlotIndex, start: datetime, end: datetime, hook: BuildProgress):
+    """Absent 1m slots of [start, end) in market-time order (exact; works for unsorted Parquet rows)."""
+    present = idx.db.execute("SELECT DISTINCT t FROM present ORDER BY t")
+    try:
+        nxt = present.fetchone()
+        t, walked = start, 0
+        while t < end:
+            ms = int(t.timestamp() * 1000)
+            while nxt is not None and nxt[0] < ms:
+                nxt = present.fetchone()
+            if nxt is None or nxt[0] != ms:
+                yield ms, t
+            t += BAR
+            walked += 1
+            if walked % 1000 == 0:
+                hook("classify absent slots", walked, None, "minutes")  # long gaps / dense data: no-yield work
+    finally:
+        present.close()  # finalize the statement so the index file can really be closed and removed
+
+
+def _classify(idx: _SlotIndex, key: int) -> tuple[QualityReason, str]:
+    n_conf, n_unconf = idx.db.execute(
+        "SELECT COUNT(DISTINCT CASE WHEN confirmed = 1 THEN row END), SUM(confirmed = 0) FROM raw WHERE k = ?",
+        (key,)).fetchone()
+    n_unconf = n_unconf or 0
+    if n_conf > 1:
+        return QualityReason.CONFLICTING_DUPLICATE, "source returned conflicting values; none admitted"
+    if n_unconf and not n_conf:
+        return QualityReason.INCOMPLETE_REJECTED, "only an unconfirmed (confirm=0) bar was returned"
+    if n_conf:
+        return QualityReason.EXCLUDED_UNCLASSIFIED, "raw record present but not normalized"
+    return QualityReason.MISSING, "no source record for this slot; not filled"
 
 
 def iter_dataset_events(dataset_path: Path, policy: AvailabilityPolicy | None = None,
-                        progress: BuildProgress | None = None, batch_rows: int = 4096):
-    """Yield the events of ``build_feed(dataset_path, policy)`` (unordered across channels), streaming."""
+                        progress: BuildProgress | None = None, batch_rows: int = 4096,
+                        workdir: Path | None = None):
+    """Yield the events of ``build_feed(dataset_path, policy)`` (unordered across channels), streaming.
+
+    Working memory is bounded by ``batch_rows`` and the sqlite page cache; slot indexes live on disk in
+    ``workdir`` (a private temporary directory by default) and are removed afterwards.
+    """
+    import shutil
+    import tempfile
+
     policy = policy or modeled_availability()
     hook = progress or _no_hook
+    own = workdir is None
+    work = Path(tempfile.mkdtemp(prefix="slots-")) if own else workdir
     m: DatasetManifest = load_manifest(dataset_path)
     meta = dataset_feed_meta(dataset_path)
     start, end = m.request.start, m.request.end
-    for k, (fam, ch) in enumerate(meta.channels):
-        hook("stream normalized families", k, len(meta.channels), "families")
-        artifact = f"{MD_FAMILY[fam].value}.parquet"
-        apath = dataset_path / artifact
+    lo_ms, hi_ms = int(start.timestamp() * 1000), int(end.timestamp() * 1000)
+    try:
+        for k, (fam, ch) in enumerate(meta.channels):
+            hook("stream normalized families", k, len(meta.channels), "families")
+            artifact = f"{MD_FAMILY[fam].value}.parquet"
+            apath = dataset_path / artifact
 
-        def src(row_index: int | None, row: dict | None, artifact: str = artifact) -> SourceRef:
-            return SourceRef(
-                dataset_id=m.dataset_id, artifact=artifact, row_index=row_index,
-                raw_page_ref=row["raw_page_ref"] if row else None,
-                retrieved_at=row["retrieved_at"] if row else None,
-                source_availability_policy=m.availability_policy,
-            )
-
-        if fam == Family.FUNDING_SETTLEMENT:
-            for i, row in _iter_rows(apath, batch_rows):
-                yield make_event(
-                    ch, EventKind.FUNDING_OBSERVATION, row["funding_time"], None, row["available_time"], policy,
-                    src(i, row),
-                    FundingPayload(
-                        funding_rate=Decimal(row["funding_rate"]),
-                        realized_rate=Decimal(row["realized_rate"]) if row["realized_rate"] is not None else None,
-                        method=row["method"], formula_type=row["formula_type"],
-                    ))
-            continue
-        absent = _absent_slots(apath, start, end, batch_rows)
-        for i, row in _iter_rows(apath, batch_rows):
-            t, close_t = row["open_time"], row["close_time"]
-            if row["quality"] == "OK":
-                yield make_event(ch, EventKind.BAR_OBSERVATION, t, close_t, row["available_time"], policy,
-                                 src(i, row), _bar_payload(fam, row))
-            else:
-                yield make_event(
-                    ch, EventKind.SLOT_QUALITY, t, close_t, row["available_time"], policy, src(i, row),
-                    SlotQualityPayload(reason=QualityReason.INVALID_ROW,
-                                       detail="row failed source validity checks; values withheld from valid state",
-                                       flags=tuple(row["quality_flags"] or ())),
+            def src(row_index: int | None, row: dict | None, artifact: str = artifact) -> SourceRef:
+                return SourceRef(
+                    dataset_id=m.dataset_id, artifact=artifact, row_index=row_index,
+                    raw_page_ref=row["raw_page_ref"] if row else None,
+                    retrieved_at=row["retrieved_at"] if row else None,
+                    source_availability_policy=m.availability_policy,
                 )
-        confirmed, unconfirmed = _absent_slot_classes(dataset_path, MD_FAMILY[fam], absent)
-        for key in sorted(absent):
-            t = datetime.fromtimestamp(key / 1000, tz=start.tzinfo)
-            if len(confirmed.get(key, ())) > 1:
-                reason, detail = QualityReason.CONFLICTING_DUPLICATE, "source returned conflicting values; none admitted"
-            elif key in unconfirmed and key not in confirmed:
-                reason, detail = QualityReason.INCOMPLETE_REJECTED, "only an unconfirmed (confirm=0) bar was returned"
-            elif key in confirmed:
-                reason, detail = QualityReason.EXCLUDED_UNCLASSIFIED, "raw record present but not normalized"
-            else:
-                reason, detail = QualityReason.MISSING, "no source record for this slot; not filled"
-            yield make_event(
-                ch, EventKind.SLOT_QUALITY, t, t + BAR, t + BAR, policy,
-                SourceRef(dataset_id=m.dataset_id, artifact=f"{artifact} (absent slot)", row_index=None,
-                          raw_page_ref=None, retrieved_at=None, source_availability_policy=m.availability_policy),
-                SlotQualityPayload(reason=reason, detail=detail),
-            )
-    hook("stream normalized families", len(meta.channels), len(meta.channels), "families")
+
+            if fam == Family.FUNDING_SETTLEMENT:
+                for i, row in _iter_rows(apath, batch_rows):
+                    yield make_event(
+                        ch, EventKind.FUNDING_OBSERVATION, row["funding_time"], None, row["available_time"], policy,
+                        src(i, row),
+                        FundingPayload(
+                            funding_rate=Decimal(row["funding_rate"]),
+                            realized_rate=Decimal(row["realized_rate"]) if row["realized_rate"] is not None else None,
+                            method=row["method"], formula_type=row["formula_type"],
+                        ))
+                continue
+            for i, row in _iter_rows(apath, batch_rows):
+                t, close_t = row["open_time"], row["close_time"]
+                if row["quality"] == "OK":
+                    yield make_event(ch, EventKind.BAR_OBSERVATION, t, close_t, row["available_time"], policy,
+                                     src(i, row), _bar_payload(fam, row))
+                else:
+                    yield make_event(
+                        ch, EventKind.SLOT_QUALITY, t, close_t, row["available_time"], policy, src(i, row),
+                        SlotQualityPayload(reason=QualityReason.INVALID_ROW,
+                                           detail="row failed source validity checks; values withheld from valid state",
+                                           flags=tuple(row["quality_flags"] or ())),
+                    )
+            idx = _build_slot_index(dataset_path, apath, MD_FAMILY[fam], lo_ms, hi_ms, batch_rows, hook, work)
+            try:
+                for key, t in _absent_slot_keys(idx, start, end, hook):
+                    reason, detail = _classify(idx, key)
+                    yield make_event(
+                        ch, EventKind.SLOT_QUALITY, t, t + BAR, t + BAR, policy,
+                        SourceRef(dataset_id=m.dataset_id, artifact=f"{artifact} (absent slot)", row_index=None,
+                                  raw_page_ref=None, retrieved_at=None,
+                                  source_availability_policy=m.availability_policy),
+                        SlotQualityPayload(reason=reason, detail=detail),
+                    )
+            finally:
+                idx.close()
+        hook("stream normalized families", len(meta.channels), len(meta.channels), "families")
+    finally:
+        if own:
+            shutil.rmtree(work, ignore_errors=True)

@@ -115,6 +115,7 @@ class Counters:
     cache_build_events: int | None = None
     sort_spill_runs: int | None = None
     cache_reused: bool | None = None
+    preparation: dict | None = None
     feed_events: int | None = None
     source_records_read: int = 0  # canonical event lines read from the verified cache
     events_decoded: int = 0
@@ -342,6 +343,14 @@ class ReplayJob:
 
     # -- preparation --------------------------------------------------------------------------
 
+    def _prep_fault(self, stage: str) -> None:
+        """Test-only preparation fault hooks (``prep_<stage>`` in ``faults``): simulated crash / mutation."""
+        action = self.spec.faults.get(f"prep_{stage}")
+        if action == "crash":
+            raise SimulatedCrash(stage)
+        if callable(getattr(self, "_prep_fault_cb", None)):
+            self._prep_fault_cb(stage)
+
     def _prepare(self, row: dict[str, Any]) -> PreparedSource:
         """PREPARING_SOURCE (+ VERIFYING_SOURCE / BUILDING_FEED on a cold cache). Pins config + engine."""
         configured = row["config"] is not None
@@ -359,20 +368,27 @@ class ReplayJob:
                                         "streaming the verified source into an immutable feed cache"),
                              noninterruptible_units=["cache directory publication (single rename)"])
 
-        prepared = prepare_stream_source(self.data_root, kind, source_id, verify_hook=self.hook,
-                                         build_hook=self.hook, on_phase=on_phase, counters=build_counters,
-                                         expected_manifest_sha256=expected_sha)
+        from .sources import ReceiptStore
+
+        prepared = prepare_stream_source(self.data_root, kind, source_id, receipts=ReceiptStore(self.conn),
+                                         verify_hook=self.hook, build_hook=self.hook, on_phase=on_phase,
+                                         counters=build_counters, expected_manifest_sha256=expected_sha,
+                                         created_by={"replay_id": self.rid, "generation": self.spec.generation},
+                                         fault=self._prep_fault)
         c = self.counters
         c.source_verifications += build_counters.get("source_verifications", 0)
         c.feed_builds += build_counters.get("feed_builds", 0)
         c.cache_build_events = build_counters.get("cache_build_events", c.cache_build_events)
         c.sort_spill_runs = build_counters.get("sort_spill_runs", c.sort_spill_runs)
         c.cache_reused = prepared.warm
+        c.preparation = {k: build_counters[k] for k in ("sort", "durability", "cache_quarantined",
+                                                         "bridge_first_completions") if k in build_counters}
         c.feed_events = prepared.cache.event_count
         cache = prepared.cache
         if configured:
             eng = row["engine"] or {}
-            if eng.get("cache_id") != cache.cache_id or eng.get("cache_manifest_sha256") != cache.manifest_sha256:
+            if (eng.get("cache_id") != cache.cache_id or eng.get("cache_manifest_sha256") != cache.manifest_sha256
+                    or prepared.receipt["cache_manifest_sha256"] != eng.get("cache_manifest_sha256")):
                 raise SourceRejected(f"feed cache {cache.cache_id} differs from the cache pinned at preparation "
                                      f"({eng.get('cache_id')}); the run cannot continue on different input")
             if feed_identity(prepared.loaded.feed) != cfg.feed:

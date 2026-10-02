@@ -344,8 +344,29 @@ UPDATE observation_replays
  WHERE lifecycle_version = 2 AND status IN ('queued', 'running', 'paused') AND suspended_at IS NULL;
 """
 
+# WP-008-R1B correction: trusted feed-cache receipts. A receipt is written only after the cache directory has
+# been durably published from a verified private source snapshot; it pins the cache manifest SHA-256 outside
+# the (mutable) cache directory. Fresh warm launches require a matching receipt.
+SCHEMA_V8 = """
+CREATE TABLE IF NOT EXISTS observation_feed_caches (
+    cache_id               text PRIMARY KEY,
+    cache_manifest_sha256  text NOT NULL,
+    cache_key              jsonb NOT NULL,
+    source_kind            text NOT NULL,
+    source_id              text NOT NULL,
+    source_manifest_sha256 text NOT NULL,
+    event_count            integer NOT NULL,
+    partitions             integer NOT NULL,
+    bytes_on_disk          bigint NOT NULL,
+    durability             text NOT NULL,
+    verification           text NOT NULL,
+    created_by             jsonb NOT NULL DEFAULT '{}'::jsonb,
+    created_at             timestamptz NOT NULL DEFAULT now()
+);
+"""
+
 MIGRATIONS: dict[int, str] = {1: SCHEMA_V1, 2: SCHEMA_V2, 3: SCHEMA_V3, 4: SCHEMA_V4, 5: SCHEMA_V5, 6: SCHEMA_V6,
-                              7: SCHEMA_V7}
+                              7: SCHEMA_V7, 8: SCHEMA_V8}
 SCHEMA_VERSION = max(MIGRATIONS)
 
 

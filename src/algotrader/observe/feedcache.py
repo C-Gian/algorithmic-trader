@@ -61,7 +61,9 @@ from ..ops import OperationCancelled  # noqa: F401 - re-exported for callers' ho
 CACHE_FORMAT = "algotrader.observe-feedcache.v1"
 COMMITMENT_FORMAT = "observe.prefix-commitment.v1"
 PARTITION_EVENTS = 5000
-SORT_BLOCK = 20000
+SORT_BLOCK = 20000  # records held in memory per external-sort run
+FAN_IN = 16  # spill runs open at once during a merge pass (bounded descriptors / buffers)
+EXCLUSIONS_IN_CONFIG = 1000  # recorded exclusions copied into a run config; the full list stays in the cache
 ADAPTER_VERSIONS = {"dataset": "feed.adapter.stream-dataset.v1", "recording": "recorder.feed_bridge.stream.v1"}
 
 Hook = Callable[[str, int, int | None, str], None]
@@ -137,15 +139,29 @@ def content_sort_key(rec: dict) -> bytes:
 
 
 class ExternalSorter:
-    """Sort (key, line) records with at most ``block`` records in memory; spilled runs are merged lazily."""
+    """Sort (key, line) records with at most ``block`` records in memory and at most ``fan_in`` spill runs
+    open at once: runs are merged in bounded multi-pass groups until one final ``fan_in``-way merge remains.
+    """
 
     SEP = b"\x1f"
 
-    def __init__(self, workdir: Path, name: str, block: int | None = None) -> None:
-        self.workdir, self.name, self.block = workdir, name, block or SORT_BLOCK
+    def __init__(self, workdir: Path, name: str, block: int | None = None, fan_in: int | None = None,
+                 hook: Hook | None = None) -> None:
+        self.workdir, self.name = workdir, name
+        self.block = block or SORT_BLOCK
+        self.fan_in = max(2, fan_in or FAN_IN)
+        self.hook = hook or _no_hook
         self.buf: list[tuple[bytes, bytes]] = []
         self.runs: list[Path] = []
         self.count = 0
+        self.stats = {"runs_created": 0, "merge_passes": 0, "max_open_runs": 0, "max_buffer_records": 0}
+        self._seq = 0
+        self._open: list = []  # run readers currently open (closed on completion, error or cancellation)
+
+    def close(self) -> None:
+        for st in self._open:
+            st.close()
+        self._open = []
 
     def add(self, key: bytes, line: bytes) -> None:
         self.buf.append((key, line))
@@ -153,9 +169,16 @@ class ExternalSorter:
         if len(self.buf) >= self.block:
             self._spill()
 
+    def _new_run(self) -> Path:
+        path = self.workdir / f"{self.name}-run{self._seq:06d}.bin"
+        self._seq += 1
+        self.stats["runs_created"] += 1
+        return path
+
     def _spill(self) -> None:
+        self.stats["max_buffer_records"] = max(self.stats["max_buffer_records"], len(self.buf))
         self.buf.sort(key=lambda r: r[0])
-        path = self.workdir / f"{self.name}-run{len(self.runs):05d}.bin"
+        path = self._new_run()
         with path.open("wb") as f:
             for k, line in self.buf:
                 f.write(k + self.SEP + line + b"\n")
@@ -169,10 +192,77 @@ class ExternalSorter:
                 k, _, line = raw.rstrip(b"\n").partition(ExternalSorter.SEP)
                 yield k, line
 
+    def _merge_group(self, group: list[Path]) -> Path:
+        self.stats["max_open_runs"] = max(self.stats["max_open_runs"], len(group))
+        out = self._new_run()
+        streams = [self._read(p) for p in group]
+        self._open = streams
+        try:
+            with out.open("wb") as f:
+                for i, (k, line) in enumerate(heapq.merge(*streams, key=lambda r: r[0])):
+                    f.write(k + self.SEP + line + b"\n")
+                    if i % 5000 == 0:
+                        self.hook(f"merge {self.name} sort runs", i, None, "records")  # no-yield work
+        finally:
+            self.close()
+        for p in group:
+            p.unlink()
+        return out
+
     def merged(self) -> Iterator[tuple[bytes, bytes]]:
-        self.buf.sort(key=lambda r: r[0])
-        streams = [self._read(p) for p in self.runs] + [iter(self.buf)]
-        return heapq.merge(*streams, key=lambda r: r[0])
+        if self.buf:
+            self._spill()
+        runs = list(self.runs)
+        while len(runs) > self.fan_in:  # bounded multi-pass merge
+            self.stats["merge_passes"] += 1
+            runs = [self._merge_group(runs[i:i + self.fan_in]) for i in range(0, len(runs), self.fan_in)]
+        self.runs = runs
+        self.stats["max_open_runs"] = max(self.stats["max_open_runs"], len(runs))
+        self._open = [self._read(p) for p in runs]
+        return heapq.merge(*self._open, key=lambda r: r[0])
+
+
+def _fsync_file(path: Path) -> None:
+    with path.open("r+b") as f:
+        os.fsync(f.fileno())
+
+
+def _fsync_dir(path: Path) -> bool:
+    """fsync a directory entry where the platform supports it (POSIX); False where it cannot be expressed."""
+    if os.name == "nt":
+        return False
+    fd = os.open(path, os.O_RDONLY)
+    try:
+        os.fsync(fd)
+    finally:
+        os.close(fd)
+    return True
+
+
+def durability_note(dir_synced: bool) -> str:
+    return ("partition/manifest files fsynced, build directory and parent directory fsynced around the rename"
+            if dir_synced else
+            "partition/manifest files fsynced before the rename; directory fsync is not available on this "
+            "platform (rename is journaled metadata, not proven power-loss durable)")
+
+
+def cleanup_stale(data_root: Path, max_age_s: float = 86400.0) -> int:
+    """Remove temporary build/snapshot directories left by crashed preparations (older than ``max_age_s``)."""
+    import time as _t
+
+    root = cache_root(data_root)
+    n = 0
+    if not root.is_dir():
+        return 0
+    for p in root.iterdir():
+        if p.is_dir() and (p.name.startswith(".tmp-") or p.name.startswith(".snap-")):
+            try:
+                if _t.time() - p.stat().st_mtime > max_age_s:
+                    shutil.rmtree(p, ignore_errors=True)
+                    n += 1
+            except OSError:
+                pass
+    return n
 
 
 # ---------------------------------------------------------------------------
@@ -208,23 +298,28 @@ class FeedCache:
 def build_cache(data_root: Path, key: dict, events: Iterable[FeedEvent], coverage_fn: Callable[[], tuple],
                 policy: AvailabilityPolicy, dataset_ids: tuple[str, ...], inst_fn: Callable[[], tuple[str, str, dict]],
                 source_facts_fn: Callable[[], dict], hook: Hook | None = None,
-                counters: dict | None = None) -> FeedCache:
-    """Stream ``events`` (any order) into a published immutable cache. ``coverage_fn``/``inst_fn``/
-    ``source_facts_fn`` are called after the stream is exhausted (bridges learn coverage while streaming)."""
+                counters: dict | None = None, exclusions: Callable[[], Iterable[str]] | None = None,
+                fault: Callable[[str], None] | None = None) -> FeedCache:
+    """Stream ``events`` (any order) into a durably published immutable cache.
+
+    ``coverage_fn``/``inst_fn``/``source_facts_fn``/``exclusions`` are called after the stream is exhausted.
+    The manifest is deterministic (no timestamps), so rebuilding the same source with the same versions
+    reproduces byte-identical metadata - which lets a trusted receipt (stored outside the cache) pin it.
+    Files are fsynced before the publication rename. ``fault(stage)`` is a test-only crash hook.
+    """
     hook = hook or _no_hook
+    fault = fault or (lambda _s: None)
     counters = counters if counters is not None else {}
     root = cache_root(data_root)
     root.mkdir(parents=True, exist_ok=True)
     cid = cache_id_for(key)
     final = root / cid
-    if (final / "manifest.json").is_file():
-        return open_cache(data_root, cid, key)
     tmp = root / f".tmp-{cid}-{uuid.uuid4().hex[:8]}"
     tmp.mkdir()
     sortdir = Path(tempfile.mkdtemp(prefix="sort-", dir=tmp))
     try:
-        order = ExternalSorter(sortdir, "order")
-        content = ExternalSorter(sortdir, "content")
+        order = ExternalSorter(sortdir, "order", hook=hook)
+        content = ExternalSorter(sortdir, "content", hook=hook)
         counts: dict[str, int] = {}
         seen_channels: set[str] = set()
         usable = False
@@ -243,7 +338,6 @@ def build_cache(data_root: Path, key: dict, events: Iterable[FeedEvent], coverag
             n += 1
         hook("normalize and sort events", n, n, "events")
         counters["cache_build_events"] = n
-        counters["sort_spill_runs"] = len(order.runs) + len(content.runs)
         coverage: tuple[ChannelCoverage, ...] = coverage_fn()
         inst_id, index_id, instrument = inst_fn()
         covered = {c.channel.channel_id for c in coverage}
@@ -282,7 +376,10 @@ def build_cache(data_root: Path, key: dict, events: Iterable[FeedEvent], coverag
             name = f"part-{idx:05d}.jsonl.gz"
             data = b"".join(x + b"\n" for x in buf)
             blob = gzip.compress(data, compresslevel=1, mtime=0)
-            (tmp / name).write_bytes(blob)
+            with (tmp / name).open("wb") as pf:
+                pf.write(blob)
+                pf.flush()
+                os.fsync(pf.fileno())
             partitions.append({"index": idx, "file": name, "first_seq": written - len(buf), "count": len(buf),
                                "sha256": hashlib.sha256(blob).hexdigest(), "bytes": len(blob),
                                "first_order": first_key, "last_order": last_key,
@@ -306,6 +403,8 @@ def build_cache(data_root: Path, key: dict, events: Iterable[FeedEvent], coverag
                 flush()
         if buf:
             flush()
+        order.close()
+        content.close()
         hook("write ordered partitions", written, n, "events")
         feed_manifest = FeedManifest(
             schema_version=FEED_SCHEMA_VERSION, contract_status=FEED_CONTRACT_STATUS,
@@ -314,22 +413,58 @@ def build_cache(data_root: Path, key: dict, events: Iterable[FeedEvent], coverag
             coverage=coverage, event_count=n, event_counts=dict(sorted(counts.items())),
             ordered_event_hash=oh.hexdigest(),
         )
+        counters["sort"] = {"order": order.stats, "content": content.stats, "block": order.block,
+                            "fan_in": order.fan_in}
+        counters["sort_spill_runs"] = order.stats["runs_created"] + content.stats["runs_created"]
+        shutil.rmtree(sortdir, ignore_errors=True)
+        facts = dict(source_facts_fn())
+        n_excl, eh = 0, hashlib.sha256()
+        with (tmp / "exclusions.jsonl").open("wb") as ef:
+            for text in (exclusions() if exclusions else ()):
+                line = canonical(text) + b"\n"
+                ef.write(line)
+                eh.update(line)
+                n_excl += 1
+            ef.flush()
+            os.fsync(ef.fileno())
+        facts["exclusions_count"] = n_excl
+        facts["exclusions_sha256"] = eh.hexdigest()
         manifest = {
             "format": CACHE_FORMAT, "cache_id": cid, "key": key, "commitment_format": COMMITMENT_FORMAT,
             "feed_manifest": json.loads(feed_manifest.model_dump_json()), "usable": usable,
             "partitions": partitions, "final_commitment": commit.hex(), "partition_events": PARTITION_EVENTS,
-            "source_facts": source_facts_fn(), "built_at": datetime.now(UTC).isoformat(),
+            "source_facts": facts,
         }
-        shutil.rmtree(sortdir, ignore_errors=True)
-        (tmp / "manifest.json").write_bytes(canonical(manifest))
+        mbytes = canonical(manifest)
+        with (tmp / "manifest.json").open("wb") as mf:
+            mf.write(mbytes)
+            mf.flush()
+            os.fsync(mf.fileno())
+        dir_synced = _fsync_dir(tmp)
+        fault("before_publish_rename")
         try:
-            os.replace(tmp, final)  # one-step publication of the immutable cache directory
+            os.replace(tmp, final)  # one-step publication of the fsynced immutable cache directory
+            if dir_synced:
+                _fsync_dir(root)
         except OSError:
             if not (final / "manifest.json").is_file():
                 raise
-            shutil.rmtree(tmp, ignore_errors=True)  # a concurrent build published first: reuse it
-        return open_cache(data_root, cid, key)
+            # a concurrent builder published first: identical deterministic bytes are the same cache
+            if (final / "manifest.json").read_bytes() != mbytes:
+                raise CacheError(f"feed cache {cid}: a concurrently published cache differs from this verified "
+                                 "build; refusing to use either without a trusted receipt") from None
+            shutil.rmtree(tmp, ignore_errors=True)
+        counters["durability"] = durability_note(dir_synced)
+        fault("after_publish_rename")
+        return open_cache(data_root, cid, key, expected_manifest_sha256=hashlib.sha256(mbytes).hexdigest())
     except BaseException:
+        # release every handle first (event generator -> its sqlite indexes / spill files; sort run readers)
+        close = getattr(events, "close", None)
+        if close is not None:
+            close()
+        for srt in (locals().get("order"), locals().get("content")):
+            if srt is not None:
+                srt.close()
         shutil.rmtree(tmp, ignore_errors=True)
         raise
 
@@ -374,9 +509,13 @@ def open_cache(data_root: Path, cid: str, key: dict | None = None, expected_mani
 
 def quarantine(cache: FeedCache, reason: str) -> Path | None:
     """Move a corrupt cache aside so the next preparation rebuilds it (never deleted silently)."""
-    dest = cache.path.parent / f".invalid-{cache.cache_id}-{uuid.uuid4().hex[:6]}"
+    return quarantine_dir(cache.path, cache.cache_id, reason)
+
+
+def quarantine_dir(path: Path, cid: str, reason: str) -> Path | None:
+    dest = path.parent / f".invalid-{cid}-{uuid.uuid4().hex[:6]}"
     try:
-        os.replace(cache.path, dest)
+        os.replace(path, dest)
         (dest / "QUARANTINED.txt").write_text(reason + "\n", encoding="utf-8")
         return dest
     except OSError:
@@ -451,8 +590,18 @@ def decode(line: bytes) -> FeedEvent:
     return FeedEvent.model_validate_json(line)
 
 
+def iter_exclusions(cache: FeedCache) -> Iterator[str]:
+    """The recorded exclusions: the file is hash-checked against the pinned manifest BEFORE any line is used."""
+    p = cache.path / "exclusions.jsonl"
+    if sha256_file(p) != cache.manifest["source_facts"].get("exclusions_sha256"):
+        raise CacheError(f"feed cache {cache.cache_id}: exclusions file does not match the pinned manifest")
+    with p.open("rb") as f:
+        for line in f:
+            yield json.loads(line)
+
+
 def describe(cache: FeedCache) -> dict[str, Any]:
     return {"cache_id": cache.cache_id, "format": CACHE_FORMAT, "manifest_sha256": cache.manifest_sha256,
             "partitions": len(cache.partitions), "partition_events": cache.manifest["partition_events"],
             "event_count": cache.event_count, "bytes_on_disk": sum(p["bytes"] for p in cache.partitions),
-            "built_at": cache.manifest["built_at"], "commitment_format": COMMITMENT_FORMAT}
+            "commitment_format": COMMITMENT_FORMAT}

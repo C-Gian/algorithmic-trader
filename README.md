@@ -232,6 +232,30 @@ New observation replays (lifecycle 3, `engine_format = observe.stream.v1`) use o
   - for completed runs, exactly-once consumption of the whole canonical stream.
 
   Artifacts are `config.json`, `engine.json`, `ranges.jsonl`, `final_snapshot.json`, `validation.json` and `manifest.json`. Its scope says it is **not** a full reference re-execution; Deep validation is R1C. Observed cancellation keeps the R1A bounded path.
+- **Correction (bounded preparation, verified bytes, trusted receipts)**:
+  - **Verified-byte boundary:** a cold preparation first copies the source package into a private snapshot (`feedcache/.snap-*`). It then verifies the *snapshot* once (marketdata.v1 / recorder.v1) and builds the cache, source facts (quality, warnings, exclusions, notes) and identities only from that snapshot, which is removed afterwards.
+    - A mutation of the original after the copy cannot reach the cache.
+    - A mutation before or during the copy makes the snapshot fail verification, or changes its manifest ("changed while it was being prepared"), so nothing is built.
+    - Warm launches do not re-verify the original package; the receipt-pinned cache is the trusted verified copy.
+  - **Trusted receipts** (`observation_feed_caches`, migration 8): written only after durable publication. Every cache file is fsynced before the publication rename; on POSIX the directories are also fsynced, while on Windows directory fsync is unavailable and the receipt says so. The receipt pins the cache manifest SHA-256 outside the cache directory.
+    - **Warm launch:** accepts a cache only if its manifest equals the receipt.
+    - **Rejected caches:** a cache without a receipt (crash before the receipt) or with any compatible alteration (source facts, feed metadata, partition hashes, final commitment) is quarantined and rebuilt.
+    - **Deterministic rebuilds:** cache manifests contain no timestamps, so a rebuild must reproduce the receipt exactly or the run fails. Concurrent identical builds converge on the same bytes.
+    - **Run pins:** a resumed run checks both its run pin and the receipt.
+  - **Bounded working memory and descriptors** (configured limits):
+    - Parquet is read in 4,096-row batches.
+    - Absent-slot detection (including unsorted Parquet) and raw-page slot classification use an exact disk-backed sqlite index per family (4 MiB page cache), walked in market-time order.
+    - Recorded first-completion dedup uses an on-disk sqlite key table; exclusions are spilled to `exclusions.jsonl` (hash-pinned). A run config embeds at most 1,000 exclusions plus a count line.
+    - Lifecycle events are scanned for first/max times only.
+    - `marketdata.verify` streams the request log and hashes the dataset identity incrementally (same bytes).
+    - External sort keeps ≤ 20,000 records per run and merges ≤ 16 runs at a time (multi-pass).
+    - Progress/cancel hooks run in the snapshot copy, scans, index builds, dedup stretches, gap walks and merge passes. Every handle (sqlite cursors, run readers, generators) is closed before cleanup.
+    - Remaining growth is small administrative metadata: one manifest entry per partition (5,000 events) and the on-disk indexes/cache, which scale with source bytes.
+  - **Measured (fresh processes, Windows):**
+    - 2-day/1-day-gap vs 10-day/9-day-gap dataset (8,646 → 43,230 events): Python heap peak 4.5 → 5.0 MB, peak RSS 68.9 → 70.4 MB, ≤ 4 open sort runs with fan-in 4.
+    - Recording with ×5 vs ×60 repeated completions: heap 1.4 → 2.0 MB, RSS 51.9 → 52.1 MB.
+
+    These are bounded engineering fixtures, not month/year claims.
 - **Compatibility:** migration 7 is additive. Pre-R1B nonterminal R1A runs are suspended read-only exactly like pre-R1A runs; legacy and R1A runs, delivery rows, manifests and readers are unchanged. No `observe.v1` contract revision was needed, and all schema baselines are byte-identical.
 - **Bounded engineering evidence**, not month/year claims. Synthetic 4-day fixture, 17,292 events, Windows, separate compute process:
   - cold cache build 2.3 s, replay ~4,300 events/s, reconciliation 0.08 s, 4 checkpoints, 5 transactions, 0 delivery rows;
@@ -240,7 +264,7 @@ New observation replays (lifecycle 3, `engine_format = observe.stream.v1`) use o
 
 ### Owner upgrade to R1B
 
-Same procedure as R1A: stop the application containers (`docker compose stop api worker recorder observer corpus`), update the checkout, `docker compose up --build -d` (never `--volumes`). Migration 7 suspends any unfinished R1A run read-only. Feed caches are created on the existing market-data volume on first use. Do not start the replacement September run yet (R1C).
+Caches built by the first R1B commit carry no receipt and are quarantined/rebuilt on first use (migration 8). Same procedure as R1A: stop the application containers (`docker compose stop api worker recorder observer corpus`), update the checkout, `docker compose up --build -d` (never `--volumes`). Migration 7 suspends any unfinished R1A run read-only. Feed caches are created on the existing market-data volume on first use. Do not start the replacement September run yet (R1C).
 
 ## Owner evaluation workbench (WP-008) — observation-only, no adviser
 
