@@ -381,10 +381,13 @@ export interface OpsPhase {
   phase: string;
   label: string;
   state: "done" | "current" | "pending";
-  active_seconds: number;
+  active_seconds: number; // compute time minus declared waits, over MEASURED spans only
+  waiting_seconds: number; // declared waits (queue, pacing)
   wall_seconds: number;
   spans: number;
   interrupted_spans: number;
+  unmeasured_spans: number; // spans whose active time is unknown (never counted as zero)
+  active_complete: boolean;
 }
 
 export interface OpsAssurance {
@@ -421,8 +424,16 @@ export interface Operation {
     stall_limit_seconds?: number | null;
   };
   eta?: { seconds: number | null; basis: string; scope: string };
-  timeline: { current: { phase: string; label: string; started_at: string | null; open_seconds: number | null } | null;
-              phases: OpsPhase[]; active_seconds_total: number };
+  timeline: {
+    current: { phase: string; label: string; started_at: string | null; wall_seconds: number | null;
+               active_seconds: number | null; waiting_seconds: number | null; active_basis: string } | null;
+    phases: OpsPhase[];
+    active_seconds_total: number;
+    waiting_seconds_total: number;
+    unmeasured_spans: number;
+    active_complete: boolean;
+    definitions: Record<string, string>;
+  };
   wall_seconds?: number;
   controls: Record<string, OpsControl>;
   supervisor?: Record<string, unknown>;

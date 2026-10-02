@@ -124,6 +124,7 @@ def diagnostic_report(row: dict[str, Any], now: datetime) -> dict[str, Any]:
         "timing": {"created_at": ops.iso(row["created_at"]), "started_at": ops.iso(row["started_at"]),
                    "finished_at": ops.iso(row["finished_at"]),
                    "active_seconds_total": op["timeline"]["active_seconds_total"],
+                   "unmeasured_spans": op["timeline"]["unmeasured_spans"],
                    "phases": [x for x in op["timeline"]["phases"] if x["spans"] or x["state"] == "current"]},
         "progress": {**op["progress"], "pages": p.get("pages"), "bytes_fetched": p.get("bytes"),
                      "windows_done": p.get("windows_done"), "windows_total": p.get("windows_total")},
@@ -150,11 +151,14 @@ def render_markdown(r: dict[str, Any]) -> str:
         f"{pr.get('pages')} · bytes {pr.get('bytes_fetched')}",
         f"- Attempts {r['attempts']['attempt']}/{r['attempts']['max_attempts']} · fencing generation "
         f"{r['attempts']['generation']}",
-        f"- Active (measured) {r['timing']['active_seconds_total']:.1f} s",
+        f"- Active (measured) {r['timing']['active_seconds_total']:.1f} s"
+        + (f" · INCOMPLETE: {r['timing']['unmeasured_spans']} unmeasured span(s)" if r["timing"]["unmeasured_spans"]
+           else ""),
     ]
     for x in r["timing"]["phases"]:
         lines.append(f"  - {x['label']}: {x['active_seconds']:.1f} s active"
                      + (f" · {x['interrupted_spans']} interrupted" if x["interrupted_spans"] else "")
+                     + (f" · {x['unmeasured_spans']} unmeasured" if x["unmeasured_spans"] else "")
                      + (" · CURRENT" if x["state"] == "current" else ""))
     for x in r["attempts"]["recovery_log"]:
         lines.append(f"  - recovery: attempt {x.get('attempt')} · {x.get('event')} — {x.get('detail')}")

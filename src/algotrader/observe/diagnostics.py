@@ -45,11 +45,16 @@ def runtime_state(row: dict[str, Any], lease_expired: bool) -> tuple[ReplayRunti
     phase = row.get("phase")
     if row.get("suspended_at") is not None:
         return ReplayRuntimeState.SUSPENDED, (row.get("suspension") or {}).get("reason", "suspended")
+    applied, total = row.get("applied") or 0, row["total_events"]
+    cov = f"{applied:,}/{total:,}" if total is not None else f"{applied:,}/PENDING"
     if status in TERMINAL:
+        a_state = (row.get("assurance") or {}).get("state") or (
+            ("passed" if row["manifest"]["validation"]["passed"] else "failed") if row.get("manifest") else "not_checked")
         return ReplayRuntimeState(status), {
-            "completed": "all feed deliveries applied, validated and published",
-            "cancelled": "cancelled by user",
-            "failed": "failed; see error",
+            "completed": f"replay cursor {cov} and terminal artifacts published (operational completion); "
+                         f"assurance {a_state.replace('_', ' ')} is reported separately",
+            "cancelled": f"cancelled by user at cursor {cov}; assurance {a_state.replace('_', ' ')}",
+            "failed": f"failed at cursor {cov}; see error; assurance {a_state.replace('_', ' ')}",
         }[status]
     if row["cancel_requested"]:
         return ReplayRuntimeState.CANCEL_REQUESTED, "cancellation requested; applied at the next safe boundary"
@@ -70,8 +75,14 @@ def runtime_state(row: dict[str, Any], lease_expired: bool) -> tuple[ReplayRunti
     if status == "running" and phase in PREP:
         return ReplayRuntimeState.PREPARING, f"{ops.PHASE_LABEL.get(phase, phase)}"
     if status == "running" and phase in POST:
-        return ReplayRuntimeState.FINISHING, (f"replay cursor complete; {ops.PHASE_LABEL.get(phase, phase).lower()} "
-                                              "- not completed until artifacts and report are published")
+        target = progress.get("finalizing_as") or "completed"
+        what = ops.PHASE_LABEL.get(phase, phase).lower()
+        if total is not None and applied == total:
+            head = f"replay cursor complete ({cov}); {what}"
+        else:
+            head = f"{what} a partial run at cursor {cov}"
+        return ReplayRuntimeState.FINISHING, (f"{head} as {target}; not finished until artifacts and the terminal "
+                                              "status are committed; completion is separate from assurance")
     if status == "running":
         return ReplayRuntimeState.RUNNING, f"worker {row['lease_owner']} is applying feed deliveries"
     return ReplayRuntimeState.QUEUED, "waiting for an observation worker"
@@ -129,7 +140,7 @@ def operation(row: dict[str, Any], now: datetime) -> dict[str, Any]:
     running = status == "running" and not lease_expired
     phase = row.get("phase")
     tl = ops.timeline(list(row.get("phase_history") or []), None if terminal else phase,
-                      row.get("phase_started_at"), running, now, ops.OBSERVATION_PHASES)
+                      row.get("phase_started_at"), running, now, ops.OBSERVATION_PHASES, current_measure=progress)
     # current-phase progress
     if phase == "REPLAYING" or (legacy and not terminal):
         done, total, unit = applied, row["total_events"], "events"
@@ -137,9 +148,16 @@ def operation(row: dict[str, Any], now: datetime) -> dict[str, Any]:
         done, total, unit = progress.get("done"), progress.get("total"), progress.get("unit")
     eta, basis = None, "unknown"
     if running:
-        if phase == "REPLAYING" and row["throughput_since"] is not None and row["throughput_base"] is not None:
-            eta, basis = ops.phase_eta(applied, row["total_events"], row["throughput_base"],
-                                       (now - row["throughput_since"]).total_seconds(), "events")
+        if phase == "REPLAYING":
+            # window = this REPLAYING span since its start / the last pacing change (never claim or preparation)
+            since, base = row["throughput_since"], row["throughput_base"]
+            speed = row["speed"]
+            waits = progress.get("phase_waiting_seconds") or 0.0
+            eta, basis = ops.phase_eta(
+                applied, row["total_events"], base, (now - since).total_seconds() if since else None, "events",
+                basis=("wall-clock replay time in the current REPLAYING window at pacing "
+                       f"{'max' if speed == 0 else f'{speed:g} events/s'}; this span contains {waits:.1f}s of declared "
+                       "pacing waits (not active compute throughput)"))
         else:
             eta, basis = ops.phase_eta(done, total, progress.get("rate_base_done"),
                                        progress.get("rate_window_seconds"), unit or "units")
@@ -289,6 +307,10 @@ def diagnostic_report(row: dict[str, Any], art_root: Path, now: datetime,
             "finished_at": ops.iso(row["finished_at"]),
             "wall_seconds_since_launch": op["wall_seconds"],
             "active_seconds_total": op["timeline"]["active_seconds_total"],
+            "waiting_seconds_total": op["timeline"]["waiting_seconds_total"],
+            "unmeasured_spans": op["timeline"]["unmeasured_spans"],
+            "active_complete": op["timeline"]["active_complete"],
+            "definitions": op["timeline"]["definitions"],
             "phases": [p for p in op["timeline"]["phases"] if p["spans"] or p["state"] == "current"],
             "phase_spans": list(row.get("phase_history") or []),
         },
@@ -340,11 +362,17 @@ def render_markdown(r: dict[str, Any]) -> str:
         f"- Health: {r['health']['detail']}",
         f"- Assurance: {a.get('state')} — {a.get('detail') or a.get('scope') or ''}",
         f"- Wall since launch: {tm['wall_seconds_since_launch']:.1f} s · active (measured) "
-        f"{tm['active_seconds_total']:.1f} s",
+        f"{tm['active_seconds_total']:.1f} s · declared waits {tm['waiting_seconds_total']:.1f} s"
+        + ("" if tm["active_complete"] else
+           f" · INCOMPLETE: {tm['unmeasured_spans']} unmeasured span(s), active time unknown for them"),
+        "- Timing: wall = start-to-end clock time; waiting = declared waits (queue, pacing); active = compute "
+        "time minus declared waits; paused time lies in no span",
     ]
     for p in tm["phases"]:
-        lines.append(f"  - {p['label']}: active {p['active_seconds']:.1f} s · wall {p['wall_seconds']:.1f} s · "
-                     f"{p['spans']} span(s){' · ' + str(p['interrupted_spans']) + ' interrupted' if p['interrupted_spans'] else ''}"
+        lines.append(f"  - {p['label']}: active {p['active_seconds']:.1f} s · waiting {p['waiting_seconds']:.1f} s · "
+                     f"wall {p['wall_seconds']:.1f} s · {p['spans']} span(s)"
+                     f"{' · ' + str(p['interrupted_spans']) + ' interrupted' if p['interrupted_spans'] else ''}"
+                     f"{' · ' + str(p['unmeasured_spans']) + ' unmeasured' if p['unmeasured_spans'] else ''}"
                      f"{' · CURRENT' if p['state'] == 'current' else ''}")
     pr = r["progress"]
     if pr.get("stage") or pr.get("done") is not None:

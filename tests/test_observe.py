@@ -551,7 +551,12 @@ def test_cancel_is_durable(database_url, conn, tmp_path):
     drain(worker(database_url, root, art))
     row = replay_row(conn, rid)
     assert row["status"] == ReplayStatus.CANCELLED and row["cursor"] == 1
-    assert row["manifest"]["status"] == "cancelled" and row["manifest"]["validation"]["passed"]
+    # bounded cancellation (R1A correction): no prefix load / source reload / reference re-derivation;
+    # assurance is INCOMPLETE and the committed delivery stays preserved in the database
+    m = row["manifest"]
+    assert m["status"] == "cancelled" and m["validation"]["outcome"] == "incomplete" and not m["validation"]["passed"]
+    assert {a["name"] for a in m["artifacts"]} == {"config.json", "validation.json"}
+    assert len(deliveries(conn, rid)) == 1
     with pytest.raises(control.ControlRejected):
         control.resume(conn, rid)
 

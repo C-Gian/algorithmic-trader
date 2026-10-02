@@ -447,16 +447,41 @@ def test_evaluation_reports_in_every_state(database_url, conn, tmp_path, plan_fi
 
 def test_progress_timeline_and_eta_rules():
     now = datetime(2026, 10, 2, 12, 0, tzinfo=UTC)
-    hist = [ops.closed_entry("QUEUED", 1, 1, now - timedelta(seconds=100), now - timedelta(seconds=90), 0.0,
+    hist = [ops.closed_entry("QUEUED", 1, 1, now - timedelta(seconds=200), now - timedelta(seconds=190), None,
                              waiting=True),
-            ops.closed_entry("REPLAYING", 1, 1, now - timedelta(seconds=90), now - timedelta(seconds=60), 30.0),
-            # paused for 40 s (no span), then a resumed REPLAYING span is open
+            ops.closed_entry("REPLAYING", 1, 1, now - timedelta(seconds=90), now - timedelta(seconds=60), 22.0,
+                             waiting_seconds=8.0),
+            # interrupted, unmeasurable span: unknown, never zero
+            ops.closed_entry("VERIFYING_SOURCE", 1, 1, now - timedelta(seconds=190), now - timedelta(seconds=150),
+                             None, interrupted=True),
+            # paused for 40 s (inside no span), then a resumed REPLAYING span is open
             ]
+    q = hist[0]
+    assert (q["active_seconds"], q["waiting_seconds"], q["wall_seconds"], q["measured"]) == (0.0, 10.0, 10.0, True)
+    assert hist[2]["active_seconds"] is None and hist[2]["measured"] is False
+    # open span without a compute measurement: wall known, active unknown
     tl = ops.timeline(hist, "REPLAYING", now - timedelta(seconds=20), True, now, ops.OBSERVATION_PHASES)
     rep = next(p for p in tl["phases"] if p["phase"] == "REPLAYING")
-    assert rep["active_seconds"] == pytest.approx(50.0) and rep["spans"] == 1 and rep["state"] == "current"
-    assert tl["active_seconds_total"] == pytest.approx(50.0)  # queue wait and the pause are excluded
+    assert rep["active_seconds"] == pytest.approx(22.0) and rep["wall_seconds"] == pytest.approx(50.0)
+    assert rep["waiting_seconds"] == pytest.approx(8.0) and rep["unmeasured_spans"] == 1 and not rep["active_complete"]
+    assert tl["current"]["active_seconds"] is None and "not measured" in tl["current"]["active_basis"]
+    ver = next(p for p in tl["phases"] if p["phase"] == "VERIFYING_SOURCE")
+    assert ver["unmeasured_spans"] == 1 and ver["interrupted_spans"] == 1 and ver["active_complete"] is False
+    assert tl["unmeasured_spans"] == 2 and tl["active_complete"] is False
+    # with the compute process's last milestone, the open span is measured (waits excluded)
+    tl = ops.timeline(hist, "REPLAYING", now - timedelta(seconds=20), True, now, ops.OBSERVATION_PHASES,
+                      current_measure={"phase": "REPLAYING", "phase_active_seconds": 12.0,
+                                       "phase_waiting_seconds": 6.0})
+    rep = next(p for p in tl["phases"] if p["phase"] == "REPLAYING")
+    assert rep["active_seconds"] == pytest.approx(34.0) and rep["waiting_seconds"] == pytest.approx(14.0)
+    assert tl["active_seconds_total"] == pytest.approx(34.0)  # queue wait, pause and pacing waits excluded
+    assert tl["waiting_seconds_total"] == pytest.approx(24.0) and tl["unmeasured_spans"] == 1
     assert next(p for p in tl["phases"] if p["phase"] == "VALIDATING")["state"] == "pending"
+    assert set(tl["definitions"]) == {"wall_seconds", "waiting_seconds", "active_seconds"}
+    # the Director's counter-example: 100 s preparation + 10 s replay, 50 of 100 events. A window that starts at
+    # REPLAYING gives 10 s; the claim-started window (110 s) is exactly what must no longer be used.
+    assert ops.phase_eta(50, 100, 0, 10.0, "events")[0] == pytest.approx(10.0)
+    assert ops.phase_eta(50, 100, 0, 110.0, "events")[0] == pytest.approx(110.0)
     eta, basis = ops.phase_eta(60, 100, 10, 25.0, "events")
     assert eta == pytest.approx(20.0) and "later phases are not included" in basis
     assert ops.phase_eta(60, None, 10, 25.0, "events")[0] is None  # unknown total -> unknown, not a guess

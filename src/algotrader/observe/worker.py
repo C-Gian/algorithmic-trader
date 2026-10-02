@@ -217,7 +217,7 @@ class ObservationWorker:
                 UPDATE observation_replays SET status = 'running', lease_owner = %s, lease_generation = %s,
                     lease_expires_at = now() + make_interval(secs => %s), heartbeat_at = now(),
                     attempt = %s, interruptions = %s, started_at = coalesce(started_at, now()),
-                    recovery_log = %s, throughput_since = now(), throughput_base = %s,
+                    recovery_log = %s, throughput_since = NULL, throughput_base = NULL,
                     phase_history = phase_history || %s,
                     phase_started_at = CASE WHEN %s THEN NULL ELSE phase_started_at END,
                     phase = coalesce(phase, 'QUEUED'),
@@ -225,7 +225,7 @@ class ObservationWorker:
                 WHERE replay_id = %s
                 """,
                 (self.worker_id, generation, self.lease_seconds, attempt, interruptions, Jsonb(recovery_log),
-                 row["ckpt_cursor"] or 0, Jsonb(history_add), reclaimed,
+                 Jsonb(history_add), reclaimed,
                  Jsonb({"worker_id": self.worker_id, "supervisor_pid": os.getpid(), "generation": generation,
                         "isolated_compute": self.isolate, "heartbeat_interval": self.heartbeat_interval,
                         "lease_seconds": self.lease_seconds, "claimed_at": _now(), "child_pid": None,

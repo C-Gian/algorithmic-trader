@@ -108,10 +108,14 @@ export function OperationPanel({ op, testid = "op-panel", what = "operation" }: 
         {op.timeline.phases.map((x) => (
           <li key={x.phase} className={cx("phase-step", `is-${x.state}`, x.interrupted_spans > 0 && "was-interrupted")}
               data-testid={`phase-${x.phase}`} data-state={x.state}
-              title={`${x.label}: ${fmtSecs(x.active_seconds)} active${x.interrupted_spans ? ` · ${x.interrupted_spans} interrupted` : ""}`}>
+              title={`${x.label}: ${fmtSecs(x.active_seconds)} active · ${fmtSecs(x.waiting_seconds)} waiting · ${fmtSecs(x.wall_seconds)} wall${x.interrupted_spans ? ` · ${x.interrupted_spans} interrupted` : ""}${x.unmeasured_spans ? ` · ${x.unmeasured_spans} unmeasured` : ""}`}>
             <span className="phase-dot" aria-hidden />
             <span className="phase-name">{x.label}</span>
-            <span className="phase-time mono">{x.spans || x.state === "current" ? fmtSecs(x.active_seconds) : "—"}</span>
+            <span className="phase-time mono">
+              {!(x.spans || x.state === "current") ? "—"
+                : x.unmeasured_spans && !x.active_seconds ? "unknown"
+                  : `${fmtSecs(x.active_seconds)}${x.unmeasured_spans ? "+?" : ""}`}
+            </span>
           </li>
         ))}
       </ol>
@@ -130,7 +134,14 @@ export function OperationPanel({ op, testid = "op-panel", what = "operation" }: 
             <div className={cx("progress-fill real", pct === null && "indeterminate")} style={{ width: `${pct ?? 100}%` }} />
           </div>
           <div className="op-current-foot small-text muted">
-            <span data-testid={`${testid}-elapsed`}>{fmtSecs(cur?.active_seconds ?? 0)} in this phase · {fmtSecs(op.timeline.active_seconds_total)} active total</span>
+            <span data-testid={`${testid}-elapsed`}
+                  title={Object.entries(op.timeline.definitions ?? {}).map(([k, v]) => `${k}: ${v}`).join("\n")}>
+              {op.timeline.current?.active_seconds != null
+                ? `${fmtSecs(op.timeline.current.active_seconds)} active in this phase` : "active time in this phase not measured yet"}
+              {op.timeline.current?.waiting_seconds ? ` (+${fmtSecs(op.timeline.current.waiting_seconds)} declared waits)` : ""}
+              {" · "}{fmtSecs(op.timeline.active_seconds_total)} active total
+              {op.timeline.unmeasured_spans > 0 && ` · ${op.timeline.unmeasured_spans} span(s) unmeasured`}
+            </span>
             <span data-testid={`${testid}-eta`}>
               {op.eta && op.eta.seconds !== null ? `~${fmtSecs(op.eta.seconds)} left in this phase` : "time remaining not yet known"}
             </span>

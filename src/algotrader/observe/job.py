@@ -41,7 +41,7 @@ from psycopg.types.json import Jsonb
 from .. import db, ops
 from ..feed.ordering import FeedError
 from ..ops import OperationCancelled
-from .artifacts import publish_replay_artifacts
+from .artifacts import StagedArtifacts, stage_bounded_artifacts, stage_replay_artifacts
 from .contracts import DeliveryRecord, ObservationLaunch, ObservationReplayConfig, ReplayStatus, ValidationOutcome
 from .core import Position, ReplayCore, snapshot_view
 from .sources import LoadedSource, SourceRejected, feed_identity, load_source, locate_source, manifest_sha256
@@ -147,6 +147,9 @@ class ReplayJob:
         self._parent = multiprocessing.parent_process()
         self._milestone_base: tuple[float, int] | None = None
         self._restoring = False
+        self._phase_wait = 0.0  # declared intentional waits (pacing) inside the current phase span
+        self._milestone_key: tuple | None = None
+        self._cancel_consumed = False  # a cancellation already turned into INCOMPLETE validation
         self._row_cache: dict[str, Any] = {}
         self._progress: dict[str, Any] = {}
 
@@ -182,10 +185,15 @@ class ReplayJob:
 
     # -- phases and milestones ---------------------------------------------------------
 
+    def _span_measure(self) -> tuple[float, float]:
+        """(active, waiting) seconds of the open span: monotonic compute time minus declared waits."""
+        elapsed = time.monotonic() - self._phase_t0
+        return round(max(elapsed - self._phase_wait, 0.0), 3), round(self._phase_wait, 3)
+
     def _closed(self, phase: str, row_started: datetime | None) -> dict[str, Any]:
-        row = self._row_cache
-        return ops.closed_entry(phase, self.spec.generation, row["attempt"], row_started, _now(),
-                                round(time.monotonic() - self._phase_t0, 3))
+        active, waiting = self._span_measure()
+        return ops.closed_entry(phase, self.spec.generation, self._row_cache["attempt"], row_started, _now(), active,
+                                waiting_seconds=waiting)
 
     def enter_phase(self, phase: str, **progress: Any) -> None:
         cond, args = self.fence
@@ -200,20 +208,26 @@ class ReplayJob:
         limit = self.spec.stall_limit or ops.STALL_LIMITS.get(phase, ops.DEFAULT_STALL_LIMIT)
         doc = {"stage": None, "done": None, "total": None, "unit": None, "stall_limit": limit,
                "restoring": self._restoring, "restoring_attempt": row["attempt"] if self._restoring else None,
-               "waiting": None, **progress}
+               "waiting": None, "phase": phase, "phase_active_seconds": 0.0, "phase_waiting_seconds": 0.0,
+               "rate_base_done": None, "rate_window_seconds": None, **progress}
+        replaying = phase == "REPLAYING"
+        # The replay ETA window starts when REPLAYING starts (never at claim/preparation); other phases clear it.
         updated = self.conn.execute(
             f"""UPDATE observation_replays SET phase = %s, phase_started_at = now(),
                     phase_history = phase_history || %s, progress = %s, last_progress_at = now(),
-                    progress_seq = progress_seq + 1
+                    progress_seq = progress_seq + 1,
+                    throughput_since = CASE WHEN %s THEN now() ELSE NULL END,
+                    throughput_base = CASE WHEN %s THEN %s::int ELSE NULL END
                 WHERE {cond} RETURNING cancel_requested""",
-            (phase, Jsonb(closing), Jsonb(doc), *args),
+            (phase, Jsonb(closing), Jsonb(doc), replaying, replaying, progress.get("done") if replaying else None,
+             *args),
         ).fetchone()
         if updated is None:
             raise LeaseLost(self.rid)
         self.cancel_seen = bool(updated["cancel_requested"])
-        self._phase, self._phase_t0 = phase, time.monotonic()
+        self._phase, self._phase_t0, self._phase_wait = phase, time.monotonic(), 0.0
         self._last_publish = time.monotonic()
-        self._milestone_base = None
+        self._milestone_base, self._milestone_key = None, None
         self._progress = doc
         log.info("%s g%s: phase %s", self.rid, self.spec.generation, phase)
 
@@ -234,12 +248,16 @@ class ReplayJob:
             # test fault (one shot): stay alive but publish no milestone for ``stall`` seconds
             self.sleep(stall)
         self._last_publish = now
-        if self._milestone_base is None:
-            self._milestone_base = (now, done)
-        base_t, base_done = self._milestone_base
-        doc = {**self._progress, "stage": stage, "done": done, "total": total, "unit": unit,
-               "phase_active_seconds": round(now - self._phase_t0, 3),
-               "rate_window_seconds": round(now - base_t, 3), "rate_base_done": base_done, **extra}
+        active, waiting = self._span_measure()
+        key = (stage, unit, total)
+        if self._milestone_base is None or self._milestone_key != key:
+            # a new comparable window: different substage, unit or total never shares a rate base
+            self._milestone_base, self._milestone_key = (active, done), key
+        base_active, base_done = self._milestone_base
+        doc = {**self._progress, "stage": stage, "done": done, "total": total, "unit": unit, "phase": self._phase,
+               "phase_active_seconds": active, "phase_waiting_seconds": waiting,
+               "rate_window_seconds": round(active - base_active, 3), "rate_base_done": base_done,
+               "rate_basis": "active compute seconds of this substage (declared waits excluded)", **extra}
         self._progress = doc
         cond, args = self.fence
         sets = "progress = %s, last_progress_at = now(), progress_seq = progress_seq + 1"
@@ -256,8 +274,15 @@ class ReplayJob:
 
     def hook(self, stage: str, done: int, total: int | None, unit: str) -> None:
         self.milestone(stage, done, total, unit, force=done == 0 or (total is not None and done >= total))
-        if self.cancel_seen and self._cancellable:
+        if self.cancel_seen and self._cancellable and not self._cancel_consumed:
             raise OperationCancelled(stage)
+
+    def _cancel_requested(self) -> bool:
+        cond, args = self.fence
+        row = self.conn.execute(f"SELECT cancel_requested FROM observation_replays WHERE {cond}", args).fetchone()
+        if row is None:
+            raise LeaseLost(self.rid)
+        return bool(row["cancel_requested"])
 
     def _metrics_doc(self) -> dict[str, Any]:
         return {str(self.spec.generation): {**self.counters.doc(), **ops.process_metrics(),
@@ -266,8 +291,9 @@ class ReplayJob:
     def _timings(self) -> list[dict]:
         row = self.conn.execute("SELECT phase_history FROM observation_replays WHERE replay_id = %s",
                                 (self.rid,)).fetchone()
+        active, waiting = self._span_measure()
         current = ops.closed_entry(self._phase or "?", self.spec.generation, self._row_cache["attempt"], None, _now(),
-                                   round(time.monotonic() - self._phase_t0, 3), note="open at publication")
+                                   active, waiting_seconds=waiting, note="open at publication")
         return [*list(row["phase_history"]), current]
 
     def _set_assurance(self, doc: dict[str, Any]) -> None:
@@ -352,8 +378,8 @@ class ReplayJob:
         return source
 
     def _load_quietly(self, row: dict[str, Any]) -> LoadedSource | None:
+        """Reload the source for terminal validation; cancellable (OperationCancelled propagates)."""
         try:
-            self._cancellable = False
             return self._prepare(row)
         except (SourceRejected, FeedError):
             return None
@@ -448,8 +474,7 @@ class ReplayJob:
         cond, args = self.fence
         note = {"at": _now().isoformat(), "command": "parked", "at_cursor": cursor, "worker": self.spec.worker_id,
                 "generation": self.spec.generation}
-        closing = [ops.closed_entry(self._phase or "REPLAYING", self.spec.generation, self._row_cache["attempt"],
-                                    self._phase_started(), _now(), round(time.monotonic() - self._phase_t0, 3))]
+        closing = [self._closed(self._phase or "REPLAYING", self._phase_started())]
         parked = self.conn.execute(
             f"""
             UPDATE observation_replays SET status = 'paused', lease_owner = NULL, lease_expires_at = NULL,
@@ -497,7 +522,6 @@ class ReplayJob:
             stall = max(self.spec.stall_limit or ops.STALL_LIMITS["REPLAYING"], 3.0 / speed if speed > 0 else 0)
             self.enter_phase("REPLAYING", detail="one causal feed delivery per committed step", stall_limit=stall,
                              total=core.total, done=pos.cursor, unit="events")
-            self._milestone_base = (time.monotonic(), pos.cursor)
             while pos.cursor < core.total:
                 if ctl["cancel_requested"]:
                     self.finalize(ReplayStatus.CANCELLED, "cancelled by user before completion", source)
@@ -549,6 +573,7 @@ class ReplayJob:
             chunk = min(interval - waited, 0.25)
             self.sleep(chunk)
             waited += chunk
+            self._phase_wait += chunk  # declared wait: excluded from active time
             self.counters.pacing_sleep_seconds += chunk
             ctl = self.control()
         return ctl
@@ -557,6 +582,9 @@ class ReplayJob:
 
     def finalize(self, status: ReplayStatus, error: str | None, source: LoadedSource | None,
                  reload: bool = True) -> None:
+        """Terminal phases. Once a cancellation is observed, finish on the bounded path (no prefix load, no
+        source reload, no reference re-derivation). The final publish + terminal commit run under the row lock,
+        which serializes against the cancel command: that rename+commit is the only atomic boundary."""
         row = self._row()
         self._row_cache = row
         self._restoring = False
@@ -564,26 +592,15 @@ class ReplayJob:
             self._terminal(status, error, None, {"state": ops.Assurance.NOT_CHECKED.value,
                                                  "detail": "the source was never prepared: nothing to validate"})
             return
-        if source is None and reload:
-            source = self._load_quietly(row)
         ck = self.checkpoint()
         cursor = ck["cursor"] if ck else 0
-        digest = ck["snapshot_digest"] if ck else ""
-        if ck is None and source is not None:
-            core = ReplayCore(source.feed, ObservationReplayConfig.model_validate(row["config"]).freshness_policy)
-            digest = core.at(0).snapshot.content_digest
-        # a cancellation already requested is the reason we finalize: only a cancellation that arrives while
-        # a completed run is validating may interrupt the (otherwise unchanged) terminal validation
-        self._cancellable = status == ReplayStatus.COMPLETED
-        self.cancel_seen = False
-        self.enter_phase("FINALIZING", detail="loading committed deliveries and serializing artifacts")
-        deliveries = []
-        for i, r in enumerate(self.conn.execute(
-                "SELECT record FROM observation_deliveries WHERE replay_id = %s ORDER BY seq", (self.rid,))):
-            if i % 1000 == 0:
-                self.milestone("load committed deliveries", i, cursor, "deliveries")
-            deliveries.append(DeliveryRecord.model_validate(r["record"]))
-        self.counters.deliveries_loaded_for_finalize = len(deliveries)
+        if status == ReplayStatus.CANCELLED or self._cancel_requested():
+            self._finalize_bounded(status, error, ck, self._phase or "QUEUED")
+            return
+        self._cancellable, self._cancel_consumed, self.cancel_seen = True, False, False
+        self._progress_target(status, cursor, row["total_events"])
+        staged: StagedArtifacts | None = None
+        validation_stages = ("re-derive committed deliveries", "pure cutoff snapshot")
 
         def phase(p: str) -> None:
             if p == "VALIDATING":  # assurance becomes INCOMPLETE before the phase is visible
@@ -593,27 +610,62 @@ class ReplayJob:
                                      "validator": VALIDATOR_ID, "validator_version": VALIDATOR_VERSION,
                                      "scope": VALIDATOR_SCOPE})
             if p != "FINALIZING":
-                self.enter_phase(p)
+                self.enter_phase(p, finalizing_as=status.value, cursor=cursor, total_events=row["total_events"])
 
         def hook(stage: str, done: int, total: int | None, unit: str) -> None:
             if stage == "re-derive committed deliveries":
                 self.counters.validation_deliveries_rederived = done
-            if stage in ("re-derive committed deliveries", "pure cutoff snapshot"):
-                self.hook(stage, done, total, unit)  # cancellable: validation stops as INCOMPLETE
-            else:  # serialization / publication: short units, report progress but never abort midway
-                self.milestone(stage, done, total, unit, force=done == 0 or (total is not None and done >= total))
+            try:
+                self.hook(stage, done, total, unit)
+            except OperationCancelled:
+                if stage in validation_stages:  # validation reports INCOMPLETE itself; later units continue
+                    self._cancel_consumed = True
+                raise
 
         try:
+            if source is None and reload:
+                source = self._load_quietly(row)
+            digest = ck["snapshot_digest"] if ck else ""
+            if ck is None and source is not None:
+                core = ReplayCore(source.feed, ObservationReplayConfig.model_validate(row["config"]).freshness_policy)
+                digest = core.at(0).snapshot.content_digest
+            self.enter_phase("FINALIZING", detail="loading committed deliveries and serializing artifacts",
+                             finalizing_as=status.value, cursor=cursor, total_events=row["total_events"])
+            deliveries = []
+            for i, r in enumerate(self.conn.execute(
+                    "SELECT record FROM observation_deliveries WHERE replay_id = %s ORDER BY seq", (self.rid,))):
+                if i % 1000 == 0:
+                    self.hook("load committed deliveries", i, cursor, "deliveries")
+                deliveries.append(DeliveryRecord.model_validate(r["record"]))
+                self.counters.deliveries_loaded_for_finalize = i + 1
+            self.hook("load committed deliveries", len(deliveries), cursor, "deliveries")
             if self.spec.faults.get("publish_error"):
                 raise OSError("simulated artifact publication failure (test fault)")
-            published, status, error = publish_replay_artifacts(
+            staged = stage_replay_artifacts(
                 self.artifact_root, row, status, error, _now(), deliveries, cursor, digest, source,
                 generation=self.spec.generation, phase=phase, hook=hook, timings=self._timings,
-                metrics=lambda: self._metrics_doc()[str(self.spec.generation)],
-                cancel_validation=self._cancellable)
+                metrics=lambda: self._metrics_doc()[str(self.spec.generation)], cancel_validation=True)
+            self.counters.output_bytes = staged.output_bytes
+            m = staged.manifest
+            v = m.validation
+            outcome = v.outcome or (ValidationOutcome.PASSED if v.passed else ValidationOutcome.FAILED)
+            assurance = {"state": outcome.value, "validator": v.validator, "validator_version": v.validator_version,
+                         "scope": v.scope, "checks_passed": sum(1 for c in v.checks if c.passed),
+                         "checks_total": len(v.checks)}
+            # a cancellation that reaches the commit lock first still prevents a COMPLETED publication
+            self._terminal(m.status, m.error, m, assurance, expected_cursor=cursor, staged=staged,
+                           abort_if_cancelled=m.status == ReplayStatus.COMPLETED and not self._cancel_consumed)
+        except OperationCancelled as exc:
+            if staged is not None:
+                staged.discard()
+            self._finalize_bounded(status, error, ck, f"{self._phase} ({exc})")
         except (LeaseLost, SimulatedCrash, psycopg.OperationalError):
+            if staged is not None:
+                staged.discard()
             raise
         except Exception as exc:  # report generation/publication failed: stay diagnosable, never "completed"
+            if staged is not None:
+                staged.discard()
             log.exception("%s: terminal publication failed", self.rid)
             self._terminal(ReplayStatus.FAILED,
                            f"terminal artifact/report publication failed during {self._phase}: "
@@ -622,30 +674,70 @@ class ReplayJob:
                            None, {"state": ops.Assurance.INCOMPLETE.value,
                                   "detail": "terminal publication failed; no manifest was recorded"},
                            expected_cursor=cursor)
-            return
-        self.counters.output_bytes = published.output_bytes
-        m = published.manifest
-        v = m.validation
-        outcome = v.outcome or (ValidationOutcome.PASSED if v.passed else ValidationOutcome.FAILED)
-        assurance = {"state": {"passed": "passed", "failed": "failed", "incomplete": "incomplete"}[outcome.value],
-                     "validator": v.validator, "validator_version": v.validator_version, "scope": v.scope,
-                     "checks_passed": sum(1 for c in v.checks if c.passed), "checks_total": len(v.checks)}
-        self._terminal(status, error, m, assurance, expected_cursor=cursor)
+
+    def _progress_target(self, status: ReplayStatus, cursor: int, total: int | None) -> None:
+        self._progress = {**self._progress, "finalizing_as": status.value, "cursor": cursor, "total_events": total}
+
+    def _finalize_bounded(self, status: ReplayStatus, error: str | None, ck: dict[str, Any] | None,
+                          where: str) -> None:
+        """Bounded terminal path after an observed cancellation: config + committed checkpoint facts only."""
+        row = self._row()
+        self._row_cache = row
+        cursor = ck["cursor"] if ck else 0
+        total = row["total_events"]
+        full = ck is not None and total is not None and cursor == total
+        if status == ReplayStatus.FAILED:
+            final, err = ReplayStatus.FAILED, (f"{error}; cancellation requested during {where}: the reference "
+                                               "validation was not run")
+        elif status == ReplayStatus.COMPLETED:
+            final, err = ReplayStatus.CANCELLED, (
+                f"cancelled by user during {where}: the replay cursor {'was complete' if full else 'stopped'} at "
+                f"{cursor}/{total}, but terminal validation/publication did not finish; assurance INCOMPLETE")
+        else:
+            final, err = ReplayStatus.CANCELLED, error or "cancelled by user before completion"
+        ck_full = None
+        if ck is not None:
+            ck_full = self.conn.execute(
+                "SELECT cursor, snapshot_id, snapshot_digest, info_time FROM observation_checkpoints "
+                "WHERE replay_id = %s", (self.rid,)).fetchone()
+        self.enter_phase("GENERATING_REPORT", detail="bounded cancellation report (config + checkpoint facts only)",
+                         finalizing_as=final.value, cursor=cursor, total_events=total)
+        staged = stage_bounded_artifacts(
+            self.artifact_root, row, final, err, _now(), cursor, ck_full, f"cancellation observed during {where}",
+            generation=self.spec.generation, timings=self._timings,
+            metrics=lambda: self._metrics_doc()[str(self.spec.generation)])
+        self.counters.output_bytes = staged.output_bytes
+        try:
+            self._terminal(final, err, staged.manifest,
+                           {"state": ops.Assurance.INCOMPLETE.value, "validator": staged.manifest.validation.validator,
+                            "validator_version": staged.manifest.validation.validator_version,
+                            "scope": staged.manifest.validation.scope,
+                            "detail": f"bounded cancellation during {where}; reference validation not run"},
+                           expected_cursor=cursor, staged=staged)
+        except BaseException:
+            staged.discard()
+            raise
 
     def _terminal(self, status: ReplayStatus, error: str | None, manifest: Any, assurance: dict[str, Any],
-                  expected_cursor: int | None = None) -> None:
+                  expected_cursor: int | None = None, staged: StagedArtifacts | None = None,
+                  abort_if_cancelled: bool = False) -> None:
+        """Fenced terminal commit. With ``staged`` the immutable publication happens inside the locked
+        transaction, so the cancel command (which locks the same row) is ordered strictly before or after it."""
         cond, args = self.fence
-        closing = [ops.closed_entry(self._phase, self.spec.generation, self._row_cache["attempt"],
-                                    self._phase_started(), _now(), round(time.monotonic() - self._phase_t0, 3))
-                   ] if self._phase else []
+        closing = [self._closed(self._phase, self._phase_started())] if self._phase else []
         with self.conn.transaction():
-            row = self.conn.execute(f"SELECT 1 FROM observation_replays WHERE {cond} FOR UPDATE", args).fetchone()
+            row = self.conn.execute(f"SELECT cancel_requested FROM observation_replays WHERE {cond} FOR UPDATE",
+                                    args).fetchone()
             if row is None:
                 raise LeaseLost(self.rid)
             if expected_cursor is not None:
                 ck = self.checkpoint()
                 if (ck["cursor"] if ck else 0) != expected_cursor:
                     raise LeaseLost(f"{self.rid}: committed cursor moved during finalization")
+            if abort_if_cancelled and row["cancel_requested"]:
+                raise OperationCancelled("terminal commit boundary")
+            if staged is not None:
+                manifest = staged.publish().manifest
             self.conn.execute(
                 f"""
                 UPDATE observation_replays SET status = %s, error = %s, finished_at = now(), manifest = %s,

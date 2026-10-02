@@ -183,49 +183,96 @@ def derive_health(*, status: str, phase: str | None, lease_expired: bool, last_p
 # ---------------------------------------------------------------------------
 
 
-def timeline(history: list[dict[str, Any]], current_phase: str | None, current_started: datetime | None,
-             running: bool, now: datetime, order: tuple[str, ...]) -> dict[str, Any]:
-    """Per-phase measured totals (closed spans + the open span) in canonical order."""
-    totals: dict[str, dict[str, Any]] = {}
-    for e in history:
-        t = totals.setdefault(e["phase"], {"active_seconds": 0.0, "wall_seconds": 0.0, "spans": 0,
-                                           "interrupted_spans": 0})
-        t["spans"] += 1
-        t["active_seconds"] += float(e.get("active_seconds") or 0.0)
-        t["wall_seconds"] += float(e.get("wall_seconds") or 0.0)
-        if e.get("interrupted"):
-            t["interrupted_spans"] += 1
-    current = None
-    open_secs = 0.0
-    if current_phase:
-        if running and current_started is not None:
-            open_secs = max((now - current_started).total_seconds(), 0.0)
-        current = {"phase": current_phase, "label": PHASE_LABEL.get(current_phase, current_phase),
-                   "started_at": iso(current_started), "open_seconds": open_secs if running else None}
-    phases = []
-    seen = set(totals) | ({current_phase} if current_phase else set())
-    for p in [*order, *sorted(seen - set(order))]:
-        t = totals.get(p) or {"active_seconds": 0.0, "wall_seconds": 0.0, "spans": 0, "interrupted_spans": 0}
-        is_current = p == current_phase
-        state = "current" if is_current else ("done" if t["spans"] else "pending")
-        phases.append({"phase": p, "label": PHASE_LABEL.get(p, p), "state": state,
-                       "active_seconds": t["active_seconds"] + (open_secs if is_current else 0.0),
-                       "wall_seconds": t["wall_seconds"] + (open_secs if is_current else 0.0),
-                       "spans": t["spans"], "interrupted_spans": t["interrupted_spans"]})
-    active_total = sum(float(e.get("active_seconds") or 0.0) for e in history if not e.get("waiting"))
-    if current_phase and current_phase != "QUEUED":
-        active_total += open_secs
-    return {"current": current, "phases": phases, "active_seconds_total": active_total}
+TIMING_DEFINITIONS = {
+    "wall_seconds": "wall-clock length of the span (start to end, database clock)",
+    "waiting_seconds": ("declared intentional waits inside the span: queue wait, configured replay pacing sleeps; "
+                        "paused time is not inside any span"),
+    "active_seconds": ("compute-process monotonic time of the span minus its declared waits; null when the span was "
+                       "interrupted and could not be measured (never reported as zero)"),
+}
 
 
 def closed_entry(phase: str, generation: int, attempt: int, started_at: datetime | None, ended_at: datetime,
                  active_seconds: float | None, *, waiting: bool = False, interrupted: bool = False,
-                 note: str | None = None) -> dict[str, Any]:
+                 note: str | None = None, waiting_seconds: float | None = None) -> dict[str, Any]:
+    """One closed phase span. ``active_seconds`` None means unmeasured (e.g. interrupted), not zero."""
     wall = (ended_at - started_at).total_seconds() if started_at else None
+    if waiting:  # a declared waiting span (queue): no compute by definition
+        active_seconds, waiting_seconds = 0.0, wall
+    measured = active_seconds is not None
     return {"phase": phase, "generation": generation, "attempt": attempt, "started_at": iso(started_at),
             "ended_at": iso(ended_at), "wall_seconds": wall,
-            "active_seconds": active_seconds if active_seconds is not None else (0.0 if waiting else None),
-            "waiting": waiting, "interrupted": interrupted, "note": note}
+            "active_seconds": active_seconds,
+            "waiting_seconds": waiting_seconds if measured else None,
+            "measured": measured, "waiting": waiting, "interrupted": interrupted, "note": note}
+
+
+def _measured(e: dict[str, Any]) -> bool:
+    # revision of R1A spans before this correction: interrupted spans carried active None; waiting spans 0.0
+    return e.get("measured", e.get("active_seconds") is not None)
+
+
+def timeline(history: list[dict[str, Any]], current_phase: str | None, current_started: datetime | None,
+             running: bool, now: datetime, order: tuple[str, ...],
+             current_measure: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Per-phase totals with explicit wall / waiting / active meanings (see ``TIMING_DEFINITIONS``).
+
+    Unmeasured spans are counted, never summed as zero; the open span's active/waiting time comes only from
+    the compute process's last milestone (``current_measure``) and is otherwise unknown.
+    """
+    totals: dict[str, dict[str, Any]] = {}
+    for e in history:
+        t = totals.setdefault(e["phase"], {"active_seconds": 0.0, "waiting_seconds": 0.0, "wall_seconds": 0.0,
+                                           "spans": 0, "interrupted_spans": 0, "unmeasured_spans": 0})
+        t["spans"] += 1
+        t["wall_seconds"] += float(e.get("wall_seconds") or 0.0)
+        if e.get("interrupted"):
+            t["interrupted_spans"] += 1
+        if _measured(e):
+            t["active_seconds"] += float(e.get("active_seconds") or 0.0)
+            t["waiting_seconds"] += float(e.get("waiting_seconds") or 0.0)
+        else:
+            t["unmeasured_spans"] += 1
+    current = None
+    open_wall = 0.0
+    open_active: float | None = None
+    open_waiting: float | None = None
+    if current_phase:
+        if running and current_started is not None:
+            open_wall = max((now - current_started).total_seconds(), 0.0)
+        m = current_measure or {}
+        if running and m.get("phase") == current_phase and m.get("phase_active_seconds") is not None:
+            open_active = float(m["phase_active_seconds"])
+            open_waiting = float(m.get("phase_waiting_seconds") or 0.0)
+        current = {"phase": current_phase, "label": PHASE_LABEL.get(current_phase, current_phase),
+                   "started_at": iso(current_started), "wall_seconds": open_wall if running else None,
+                   "active_seconds": open_active, "waiting_seconds": open_waiting,
+                   "active_basis": ("as of the last compute milestone" if open_active is not None
+                                    else "not measured yet in this span")}
+    phases = []
+    seen = set(totals) | ({current_phase} if current_phase else set())
+    for p in [*order, *sorted(seen - set(order))]:
+        t = totals.get(p) or {"active_seconds": 0.0, "waiting_seconds": 0.0, "wall_seconds": 0.0, "spans": 0,
+                              "interrupted_spans": 0, "unmeasured_spans": 0}
+        is_current = p == current_phase
+        state = "current" if is_current else ("done" if t["spans"] else "pending")
+        unmeasured = t["unmeasured_spans"] + (1 if is_current and running and open_active is None else 0)
+        phases.append({"phase": p, "label": PHASE_LABEL.get(p, p), "state": state,
+                       "active_seconds": t["active_seconds"] + (open_active or 0.0 if is_current else 0.0),
+                       "waiting_seconds": t["waiting_seconds"] + (open_waiting or 0.0 if is_current else 0.0),
+                       "wall_seconds": t["wall_seconds"] + (open_wall if is_current else 0.0),
+                       "spans": t["spans"], "interrupted_spans": t["interrupted_spans"],
+                       "unmeasured_spans": unmeasured, "active_complete": unmeasured == 0})
+    measured = [e for e in history if _measured(e)]
+    unmeasured_total = len(history) - len(measured) + (1 if current and running and open_active is None else 0)
+    return {
+        "current": current, "phases": phases,
+        "active_seconds_total": sum(float(e.get("active_seconds") or 0.0) for e in measured) + (open_active or 0.0),
+        "waiting_seconds_total": sum(float(e.get("waiting_seconds") or 0.0) for e in measured) + (open_waiting or 0.0),
+        "unmeasured_spans": unmeasured_total,
+        "active_complete": unmeasured_total == 0,
+        "definitions": TIMING_DEFINITIONS,
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -237,17 +284,23 @@ ETA_MIN_SECONDS = 1.0
 
 
 def phase_eta(done: int | None, total: int | None, base_done: int | None, window_seconds: float | None,
-              unit: str) -> tuple[float | None, str]:
+              unit: str, *, basis: str = "active work in the current phase/substage") -> tuple[float | None, str]:
+    """ETA for the remaining units of the CURRENT comparable window only (never a whole-job estimate).
+
+    The caller must start the window (``base_done`` at ``window_seconds`` = 0) at the beginning of a comparable
+    span - the current phase/substage/unit/total, generation and pacing - so that preparation, pauses or other
+    units can never be counted as this window's throughput. Too little observation -> unknown.
+    """
     if total is None or done is None:
         return None, "unknown: the current phase has no known total"
     if base_done is None or window_seconds is None:
-        return None, "unknown: no throughput observed yet in this phase"
+        return None, "unknown: no throughput observed yet in this window"
     moved = done - base_done
     if moved < ETA_MIN_UNITS or window_seconds < ETA_MIN_SECONDS:
-        return None, "unknown: not enough progress observed yet in this phase"
+        return None, "unknown: not enough comparable progress observed yet"
     rate = moved / window_seconds
-    return (total - done) / rate, (f"current phase only: observed {rate:.1f} {unit}/s over {window_seconds:.0f}s of "
-                                   "active work; later phases are not included")
+    return (total - done) / rate, (f"current window only: {moved} {unit} in {window_seconds:.1f}s of {basis} "
+                                   f"({rate:.1f} {unit}/s); later phases are not included")
 
 
 # ---------------------------------------------------------------------------

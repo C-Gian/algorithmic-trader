@@ -121,8 +121,10 @@ def build_report(ev: dict[str, Any], replay: dict[str, Any], manifest: dict[str,
             "phase": op["phase"], "health": op["health"], "health_detail": op["health_detail"] if not terminal else None,
             "assurance": op["assurance"], "generation": op["generation"],
             "active_seconds_total": op["timeline"]["active_seconds_total"],
+            "waiting_seconds_total": op["timeline"]["waiting_seconds_total"],
+            "unmeasured_spans": op["timeline"]["unmeasured_spans"],
             "phases": [{k: x[k] for k in ("phase", "label", "state", "active_seconds", "wall_seconds", "spans",
-                                          "interrupted_spans")}
+                                          "interrupted_spans", "waiting_seconds", "unmeasured_spans")}
                        for x in op["timeline"]["phases"] if x["spans"] or x["state"] == "current"],
             "counters": op["metrics"],
             "environment": ((replay.get("supervisor") or {}).get("environment")),
@@ -267,10 +269,14 @@ def render_markdown(r: dict[str, Any]) -> str:
                      + f" · fencing generation {op.get('generation')}")
         if op.get("health_detail"):
             lines.append(f"- Health: {op['health']} — {op['health_detail']}")
-        lines.append(f"- Phases (measured active time; total {op['active_seconds_total']:.1f} s):")
+        lines.append(f"- Phases (measured active time; total {op['active_seconds_total']:.1f} s, declared waits "
+                     f"{op['waiting_seconds_total']:.1f} s"
+                     + (f"; {op['unmeasured_spans']} unmeasured span(s): active time incomplete" if op["unmeasured_spans"]
+                        else "") + "):")
         for x in op["phases"]:
             lines.append(f"  - {x['label']}: {x['active_seconds']:.1f} s active · {x['wall_seconds']:.1f} s wall"
                          + (f" · {x['interrupted_spans']} interrupted" if x["interrupted_spans"] else "")
+                         + (f" · {x['unmeasured_spans']} unmeasured" if x["unmeasured_spans"] else "")
                          + (" · CURRENT" if x["state"] == "current" else ""))
         for gen, cnt in sorted((op.get("counters") or {}).items()):
             keys = ("events_applied", "snapshots_built", "transactions_committed", "delivery_rows_written",

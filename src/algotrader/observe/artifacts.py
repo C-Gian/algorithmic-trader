@@ -199,47 +199,53 @@ class PublishedArtifacts:
         self.output_bytes = output_bytes
 
 
-def publish_replay_artifacts(root: Path, row: dict[str, Any], status: ReplayStatus, error: str | None,
-                             finished_at: datetime, deliveries: list[DeliveryRecord], cursor: int,
-                             final_digest: str, source: LoadedSource | None, *, generation: int,
-                             phase: Callable[[str], None] | None = None, hook: Hook | None = None,
-                             timings: Callable[[], list[dict]] | None = None,
-                             metrics: Callable[[], dict] | None = None,
-                             cancel_validation: bool = True) -> tuple[PublishedArtifacts, ReplayStatus, str | None]:
-    """FINALIZING -> VALIDATING -> GENERATING_REPORT into ``g<generation>``; returns (artifacts, status, error).
+class StagedArtifacts:
+    """Fully written but not yet published artifacts (``staging`` is None when the same generation already
+    published - a repeated finalize never rewrites a published directory)."""
 
-    A cancellation observed during VALIDATING turns a would-be COMPLETED run into CANCELLED with
-    INCOMPLETE assurance (cursor coverage is kept exactly as committed).
-    """
-    hook = hook or _no_hook
-    phase = phase or (lambda _p: None)
-    base = replay_dir(root, row["replay_id"])
+    def __init__(self, manifest: ObservationReplayManifest, staging: Path | None, final_dir: Path) -> None:
+        self.manifest = manifest
+        self.staging = staging
+        self.final_dir = final_dir
+
+    @property
+    def output_bytes(self) -> int:
+        return sum(a.bytes for a in self.manifest.artifacts)
+
+    def discard(self) -> None:
+        if self.staging is not None:
+            shutil.rmtree(self.staging, ignore_errors=True)
+            self.staging = None
+
+    def publish(self) -> PublishedArtifacts:
+        """Immutable publication of this generation's directory (a rename; the caller holds the DB fence)."""
+        if self.staging is not None:
+            try:
+                os.replace(self.staging, self.final_dir)
+            except OSError:
+                if not (self.final_dir / "manifest.json").is_file():
+                    raise
+                shutil.rmtree(self.staging, ignore_errors=True)  # same-generation publication exists: keep it
+                self.manifest = ObservationReplayManifest.model_validate_json(
+                    (self.final_dir / "manifest.json").read_text("utf-8"))
+            self.staging = None
+        return PublishedArtifacts(self.manifest, self.final_dir, self.output_bytes)
+
+
+def _staging(root: Path, replay_id: str, generation: int) -> tuple[Path, Path, ObservationReplayManifest | None]:
+    base = replay_dir(root, replay_id)
     final_dir = base / generation_dir_name(generation)
-    if (final_dir / "manifest.json").is_file():  # same generation repeating finalize: never rewrite
-        m = ObservationReplayManifest.model_validate_json((final_dir / "manifest.json").read_text(encoding="utf-8"))
-        return PublishedArtifacts(m, final_dir, sum(a.bytes for a in m.artifacts)), m.status, m.error
-    config = ObservationReplayConfig.model_validate(row["config"])
+    if (final_dir / "manifest.json").is_file():
+        return final_dir, final_dir, ObservationReplayManifest.model_validate_json(
+            (final_dir / "manifest.json").read_text(encoding="utf-8"))
     staging = base / f".staging-g{generation}-{os.getpid()}"
     if staging.exists():
         shutil.rmtree(staging)
     staging.mkdir(parents=True)
+    return staging, final_dir, None
 
-    phase("FINALIZING")
-    (staging / "config.json").write_text(config.model_dump_json(indent=2), encoding="utf-8")
-    _write_jsonl(staging / "deliveries.jsonl", deliveries, hook)
 
-    phase("VALIDATING")
-    validation, final = validate(config, source, deliveries, cursor, final_digest, status,
-                                 hook=hook if cancel_validation else None)
-    if validation.outcome == ValidationOutcome.INCOMPLETE and status == ReplayStatus.COMPLETED:
-        status = ReplayStatus.CANCELLED
-        error = ("cancelled by user during VALIDATING: the replay cursor was complete, but validation did not "
-                 "finish; assurance INCOMPLETE")
-
-    phase("GENERATING_REPORT")
-    if final is not None:
-        (staging / "final_snapshot.json").write_text(final.model_dump_json(indent=2), encoding="utf-8")
-    (staging / "validation.json").write_text(validation.model_dump_json(indent=2), encoding="utf-8")
+def _hash_files(staging: Path, hook: Hook) -> tuple[ArtifactFile, ...]:
     files = []
     names = sorted(x for x in staging.iterdir() if x.is_file() and not x.name.startswith("."))
     for i, p in enumerate(names):
@@ -247,45 +253,130 @@ def publish_replay_artifacts(root: Path, row: dict[str, Any], status: ReplayStat
         digest, size, lines = _sha256(p)
         files.append(ArtifactFile(name=p.name, sha256=digest, bytes=size, lines=lines if p.suffix == ".jsonl" else None))
     hook("hash artifacts", len(names), len(names), "files")
-    manifest = ObservationReplayManifest(
-        schema_version=OBSERVE_SCHEMA_VERSION,
-        contract_status=OBSERVE_CONTRACT_STATUS,
-        schema_revision=OBSERVE_SCHEMA_REVISION,
-        replay_id=row["replay_id"],
-        status=status,
-        labels=LABELS,
-        config=config,
-        created_at=row["created_at"],
-        started_at=row["started_at"],
-        finished_at=finished_at,
-        applied_events=cursor,
-        total_events=row["total_events"],
-        final_as_of=final.as_of if final is not None else finished_at,
-        final_snapshot_id=final.snapshot_id if final is not None else "",
-        final_content_digest=final_digest,
-        attempts=row["attempt"],
-        recovery_log=list(row["recovery_log"]),
-        control_log=list(row["control_log"]),
-        error=error,
-        validation=validation,
-        source_reference=(source.reference if source is not None
-                          else f"{config.source.kind.value}s/{config.source.source_id}"),
-        artifacts=tuple(files),
-        lease_generation=generation,
-        artifact_dir=final_dir.name,
-        phase_timings=timings() if timings else None,
+    return tuple(files)
+
+
+def _manifest(row: dict[str, Any], config: ObservationReplayConfig, status: ReplayStatus, error: str | None,
+              finished_at: datetime, cursor: int, validation: ReplayValidation, files: tuple[ArtifactFile, ...],
+              generation: int, final_dir: Path, *, final_as_of: datetime, final_snapshot_id: str, final_digest: str,
+              source_reference: str, timings: Callable[[], list[dict]] | None,
+              metrics: Callable[[], dict] | None) -> ObservationReplayManifest:
+    return ObservationReplayManifest(
+        schema_version=OBSERVE_SCHEMA_VERSION, contract_status=OBSERVE_CONTRACT_STATUS,
+        schema_revision=OBSERVE_SCHEMA_REVISION, replay_id=row["replay_id"], status=status, labels=LABELS,
+        config=config, created_at=row["created_at"], started_at=row["started_at"], finished_at=finished_at,
+        applied_events=cursor, total_events=row["total_events"], final_as_of=final_as_of,
+        final_snapshot_id=final_snapshot_id, final_content_digest=final_digest, attempts=row["attempt"],
+        recovery_log=list(row["recovery_log"]), control_log=list(row["control_log"]), error=error,
+        validation=validation, source_reference=source_reference, artifacts=files, lease_generation=generation,
+        artifact_dir=final_dir.name, phase_timings=timings() if timings else None,
         operational_metrics=metrics() if metrics else None,
     )
-    (staging / "manifest.json").write_text(manifest.model_dump_json(indent=2), encoding="utf-8")
+
+
+def stage_replay_artifacts(root: Path, row: dict[str, Any], status: ReplayStatus, error: str | None,
+                           finished_at: datetime, deliveries: list[DeliveryRecord], cursor: int,
+                           final_digest: str, source: LoadedSource | None, *, generation: int,
+                           phase: Callable[[str], None] | None = None, hook: Hook | None = None,
+                           timings: Callable[[], list[dict]] | None = None,
+                           metrics: Callable[[], dict] | None = None,
+                           cancel_validation: bool = True) -> StagedArtifacts:
+    """FINALIZING -> VALIDATING -> GENERATING_REPORT into a private staging directory (not yet published).
+
+    A cancellation observed during VALIDATING turns a would-be COMPLETED run into CANCELLED with INCOMPLETE
+    assurance (cursor coverage is kept exactly as committed). ``hook`` may raise ``OperationCancelled`` in
+    the serialization / hashing units; the caller then discards the staging directory.
+    """
+    hook = hook or _no_hook
+    phase = phase or (lambda _p: None)
+    staging, final_dir, existing = _staging(root, row["replay_id"], generation)
+    if existing is not None:  # same generation repeating finalize: never rewrite
+        return StagedArtifacts(existing, None, final_dir)
+    staged = StagedArtifacts(None, staging, final_dir)  # type: ignore[arg-type]
     try:
-        os.replace(staging, final_dir)  # immutable publication of this generation's directory
-    except OSError:
-        if not (final_dir / "manifest.json").is_file():
-            raise
-        shutil.rmtree(staging, ignore_errors=True)  # a same-generation publication already exists: keep it
-        manifest = ObservationReplayManifest.model_validate_json((final_dir / "manifest.json").read_text("utf-8"))
-    out_bytes = sum(a.bytes for a in manifest.artifacts)
-    return PublishedArtifacts(manifest, final_dir, out_bytes), manifest.status, manifest.error
+        config = ObservationReplayConfig.model_validate(row["config"])
+        phase("FINALIZING")
+        (staging / "config.json").write_text(config.model_dump_json(indent=2), encoding="utf-8")
+        _write_jsonl(staging / "deliveries.jsonl", deliveries, hook)
+
+        phase("VALIDATING")
+        validation, final = validate(config, source, deliveries, cursor, final_digest, status,
+                                     hook=hook if cancel_validation else None)
+        if validation.outcome == ValidationOutcome.INCOMPLETE and status == ReplayStatus.COMPLETED:
+            status = ReplayStatus.CANCELLED
+            error = ("cancelled by user during VALIDATING: the replay cursor was complete, but validation did not "
+                     "finish; assurance INCOMPLETE")
+
+        phase("GENERATING_REPORT")
+        if final is not None:
+            (staging / "final_snapshot.json").write_text(final.model_dump_json(indent=2), encoding="utf-8")
+        (staging / "validation.json").write_text(validation.model_dump_json(indent=2), encoding="utf-8")
+        files = _hash_files(staging, hook)
+        manifest = _manifest(
+            row, config, status, error, finished_at, cursor, validation, files, generation, final_dir,
+            final_as_of=final.as_of if final is not None else finished_at,
+            final_snapshot_id=final.snapshot_id if final is not None else "", final_digest=final_digest,
+            source_reference=(source.reference if source is not None
+                              else f"{config.source.kind.value}s/{config.source.source_id}"),
+            timings=timings, metrics=metrics)
+        (staging / "manifest.json").write_text(manifest.model_dump_json(indent=2), encoding="utf-8")
+    except BaseException:
+        staged.discard()
+        raise
+    staged.manifest = manifest
+    return staged
+
+
+def stage_bounded_artifacts(root: Path, row: dict[str, Any], status: ReplayStatus, error: str | None,
+                            finished_at: datetime, cursor: int, checkpoint: dict[str, Any] | None, reason: str, *,
+                            generation: int, timings: Callable[[], list[dict]] | None = None,
+                            metrics: Callable[[], dict] | None = None) -> StagedArtifacts:
+    """Bounded terminal artifacts for an observed cancellation (no prefix load, no source, no re-derivation).
+
+    Written from the replay config and the committed checkpoint only: ``config.json``, ``validation.json``
+    (outcome INCOMPLETE, explaining exactly what did not run) and ``manifest.json``. The committed delivery
+    rows stay in the database; ``deliveries.jsonl`` / ``final_snapshot.json`` are not exported.
+    """
+    staging, final_dir, existing = _staging(root, row["replay_id"], generation)
+    if existing is not None:
+        return StagedArtifacts(existing, None, final_dir)
+    staged = StagedArtifacts(None, staging, final_dir)  # type: ignore[arg-type]
+    try:
+        config = ObservationReplayConfig.model_validate(row["config"])
+        validation = ReplayValidation(
+            passed=False, outcome=ValidationOutcome.INCOMPLETE, validator=VALIDATOR_ID,
+            validator_version=VALIDATOR_VERSION, scope=VALIDATOR_SCOPE,
+            checks=(ValidationCheck(name="validation_not_run", passed=False, detail=(
+                f"{reason}: the reference re-derivation did not run (bounded cancellation). The {cursor} committed "
+                "deliveries and the committed checkpoint remain preserved in the database; deliveries.jsonl and "
+                "final_snapshot.json were not exported. Assurance INCOMPLETE, not PASS or FAIL.")),))
+        (staging / "config.json").write_text(config.model_dump_json(indent=2), encoding="utf-8")
+        (staging / "validation.json").write_text(validation.model_dump_json(indent=2), encoding="utf-8")
+        files = _hash_files(staging, _no_hook)
+        ck = checkpoint or {}
+        manifest = _manifest(
+            row, config, status, error, finished_at, cursor, validation, files, generation, final_dir,
+            final_as_of=ck.get("info_time") or finished_at, final_snapshot_id=ck.get("snapshot_id") or "",
+            final_digest=ck.get("snapshot_digest") or "",
+            source_reference=f"{config.source.kind.value}s/{config.source.source_id}",
+            timings=timings, metrics=metrics)
+        (staging / "manifest.json").write_text(manifest.model_dump_json(indent=2), encoding="utf-8")
+    except BaseException:
+        staged.discard()
+        raise
+    staged.manifest = manifest
+    return staged
+
+
+def publish_replay_artifacts(root: Path, row: dict[str, Any], status: ReplayStatus, error: str | None,
+                             finished_at: datetime, deliveries: list[DeliveryRecord], cursor: int,
+                             final_digest: str, source: LoadedSource | None, *, generation: int,
+                             **kw: Any) -> tuple[PublishedArtifacts, ReplayStatus, str | None]:
+    """Stage then publish immediately (no DB fence; tests/tools only). Workers publish under the row lock."""
+    staged = stage_replay_artifacts(root, row, status, error, finished_at, deliveries, cursor, final_digest, source,
+                                    generation=generation, **kw)
+    pub = staged.publish()
+    return pub, pub.manifest.status, pub.manifest.error
 
 
 def load_replay_manifest(root: Path, replay_id: str) -> ObservationReplayManifest | None:
