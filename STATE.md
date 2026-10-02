@@ -1,6 +1,6 @@
 # Project State
 
-Updated: 2026-10-02 — Director SR-003 disposition; R1A activated
+Updated: 2026-10-02 — R1A Director review: corrections required
 
 ## Authority and active direction
 
@@ -68,9 +68,9 @@ Accepted limitations to measure on the Owner machine:
 
 ## Current action
 
-**WP-008-R1A — Observable job lifecycle and diagnosis** is the only active implementation package (`task.md`). **Executor delivery: IMPLEMENTED — READY FOR DIRECTOR REVIEW; Director acceptance pending.** NOT READY FOR OWNER MARKET REPLAY.
+**WP-008-R1A — Observable job lifecycle and diagnosis** is the only active implementation package (`task.md`). **Director review: CHANGES REQUIRED at `66a2dce`; bounded R1A correction is active.** NOT READY FOR OWNER MARKET REPLAY.
 
-Executor evidence (base `fb19de21`, Director has not reviewed):
+Executor evidence (base `fb19de247350f205ad8c9da2cb18adeb7ea885b6`, final `66a2dce90619848776e891e7f50f0f8440d95eb4`; claims below are subject to the Director findings):
 - shared operational contract `algotrader.ops.v1` (`src/algotrader/ops.py`): separate status / phase / health / assurance; current-phase-only ETA; phase spans with active vs wall time;
 - durable observation/evaluation launch: `ObservationLaunch` envelope, identity/total PENDING until worker-owned PREPARING_SOURCE / VERIFYING_SOURCE / BUILDING_FEED persist the verified config before the first causal step; cheap source preview; preparation errors are visible failed runs;
 - supervisor + separate compute process (`observe/worker.py`, `observe/job.py`), heartbeat 2 s / lease 30 s; lease renewed only while the compute process exists; monotonic `lease_generation` fencing of every durable write (observation and corpus, incl. corpus binding); generation-scoped immutable artifact publication (`g<generation>/`) before the fenced terminal commit;
@@ -81,7 +81,9 @@ Executor evidence (base `fb19de21`, Director has not reviewed):
 - `observe.v1` revision 2 (optional additions; revision-1 artifacts readable); `semantic.v1`, `marketdata.v1`, `feed.v1`, `recorder.v1` baseline bytes unchanged;
 - UI: Historical Workbench (route `#backtest` kept), explicit run types (Market replay available, Adviser backtest unavailable, Deep validation planned), phase timeline + current-phase bar, honest PENDING/unknown fields;
 - local checks: 320 non-E2E + 10 E2E tests green on a disposable PostgreSQL 18.6, TypeScript typecheck/build green. Compose smoke deferred to CI (the Owner's live stack runs on the executor machine);
-- remaining costs unchanged by design (R1B/R1C): eager feed build with duplicate verification, one transaction + delivery row + full snapshot per event, full prefix rebuild on restore/resume, full terminal re-derivation (also on cancel before completion).
+- remaining costs unchanged by design (R1B/R1C): eager feed build with duplicate verification, one transaction + delivery row + full snapshot per event, full prefix rebuild on restore/resume, full terminal re-derivation. Re-derivation after an already requested cancellation is an R1A control defect to correct, not a cost deferred to R1B.
+
+Director evidence: CI run `37038947330` has successful `checks` and `compose-smoke` jobs. Source inspection found unbounded partial-cancellation finalization and misleading phase ETA/timing. A small stdlib-only numerical check reproduced ETA 110 s versus 10 s when preparation is included; no full local suite or Owner data/stack was used. See `delivery/WP-008-R1A-DIRECTOR-REVIEW.md`. R1B remains inactive.
 
 SR-003 review is now retained at `strategic_reviews/ASTRA-SR-003-REPLAY-CLOCK-PERFORMANCE-REVIEW.md`. Director disposition: `strategic_reviews/SR-003-DIRECTOR-DISPOSITION.md`, ACCEPT WITH MODIFICATION. This is documentation/architecture acceptance, not an implemented performance fix or a reproduced benchmark.
 
@@ -240,9 +242,7 @@ The history was repaired without rewriting shared history by merge commit:
 
 `ea88a978d3c44729f60705c332888116af3ecda6`
 
-Future local writes must start from:
-
-`git pull --ff-only origin main`
+The Owner prepares the current checkout before launching the executor. Executors inspect that prepared base and do not pull; see AGENTS.md.
 
 Force pushes remain prohibited.
 

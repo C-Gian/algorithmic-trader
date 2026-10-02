@@ -18,7 +18,7 @@ Capital, quantity, leverage, margin and orders are human decisions. No real-orde
 
 ## Local workflow and backtests
 
-- Verify the current remote base; normally git pull --ff-only origin main before editing. Do not overwrite unrelated local changes.
+- The Owner updates the checkout before launching Claude. Never instruct Claude to pull and never run pull automatically. Inspect the prepared branch, base and worktree; preserve unrelated changes and stop on unexpected divergence.
 - Build only the bounded task. Preserve public contract versioning and M3 causal guarantees.
 - Run required unit/integration/causality checks and bounded engineering smoke tests.
 - **Do not launch substantial historical profitability runs, parameter sweeps or long research/backtests in an agent CLI.**
@@ -29,7 +29,7 @@ Capital, quantity, leverage, margin and orders are human decisions. No real-orde
 
 ## Git and reporting
 
-After bounded changes and required checks succeed, commit and push normally unless the task says otherwise. No force-push, history rewrite, secrets or unrelated changes. Stop on unexpected divergence; do not reconstruct main from a stale parent.
+After bounded changes and required checks succeed, the executor commits and pushes normally at the end of the work unless the task says otherwise. No force-push, history rewrite, secrets or unrelated changes. Stop on unexpected divergence; do not reconstruct main from a stale parent.
 
 Report:
 - base/final SHA and branch;
@@ -44,3 +44,11 @@ The Director independently reviews; an executor's PASS is not acceptance.
 ## SR-003 operational boundary
 
 Read `strategic_reviews/SR-003-DIRECTOR-DISPOSITION.md` for approved execution architecture. The Astra review is evidence; only task.md activates a package. R1A is not a real-month retry release. Preserve pre-upgrade September runs/datasets and legacy readers; no automatic salvage/relabel/redownload. All expensive phases need durable progress and incomplete diagnostic export. Changed provisional operational contracts require explicit revision/changelog and compatibility; frozen evidence/DEMO baselines remain unchanged. No advisory semantic.v2 during performance hardening. Never claim health/progress from CPU activity or heartbeat alone.
+
+## Standing execution and handoff rules
+
+Keep recurring instructions in this file; task.md and executor prompts contain only the active assignment and its specific acceptance evidence. Update README for implemented behavior/limitations and STATE with actual executor evidence; Director acceptance remains pending until independently reviewed. Do not activate the next package.
+
+Use disposable, isolated services for engineering checks. Never run destructive Compose cleanup or rebuild shared image tags against the Owner's live stack. Report unavailable checks honestly and use isolated CI evidence when applicable; a silently skipped DB suite is not a pass.
+
+Director handoff prompts must be ready to copy in a fenced text block, with no destination labels or surrounding explanation inside the block. Label the recipient outside it. For an Astra handoff, use a prominent level-one warning explicitly saying ASTRA, so the Owner cannot mistake it for a Claude prompt. These presentation rules do not authorize an executor to delegate work.
