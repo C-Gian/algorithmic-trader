@@ -8,9 +8,9 @@ Algorithmic Trader is a clean-room, local BTC trading adviser: professional mark
 
 The 30 September Owner clarification supersedes the mandatory pullback-only/RP-001 research path. Read FOUNDATION.md v3.1 and task.md for the current Director handoff. Old reviews/research are historical evidence, not current work authorization.
 
-### SR-003 current work — R1A + R1A correction implemented (Director review pending), R1B/R1C not implemented
+### SR-003 current work — R1A accepted, R1B active, R1B/R1C not implemented
 
-The Owner's September run exposed a replay/finalization performance defect. The Director approved a bounded redesign in `strategic_reviews/SR-003-DIRECTOR-DISPOSITION.md`. **WP-008-R1A (observable lifecycle and diagnosis) is implemented by the executor and awaits Director review**; see *Observable job lifecycle (WP-008-R1A)* below. It makes long operations visible, truthful and diagnosable; **it does not make replay faster.** The WP-007 engine costs (eager feed build, one transaction + delivery row + full snapshot per event, full prefix rebuild on restore, full terminal re-derivation of a run that completes) remain until R1B/R1C. Since the R1A correction an observed cancellation never triggers that re-derivation.
+The Owner's September run exposed a replay/finalization performance defect. The Director approved a bounded redesign in `strategic_reviews/SR-003-DIRECTOR-DISPOSITION.md`. **WP-008-R1A (observable lifecycle and diagnosis) is accepted by the Director at `0919001` for its operational scope; WP-008-R1B is now the active task**; see *Observable job lifecycle (WP-008-R1A)* below. It makes long operations visible, truthful and diagnosable; **it does not make replay faster.** The WP-007 engine costs (eager feed build, one transaction + delivery row + full snapshot per event, full prefix rebuild on restore, full terminal re-derivation of a run that completes) remain until R1B/R1C. Since the R1A correction an observed cancellation never triggers that re-derivation.
 
 Do not retry the real month after R1A alone (**NOT READY FOR OWNER MARKET REPLAY**). The Director will hand off READY FOR OWNER MARKET REPLAY after R1B/C and review. Reuse September locally in a new run; preserve old rows/artifacts/identity. No automatic old-run salvage or September download. No professional adviser or achieved speedup is claimed.
 

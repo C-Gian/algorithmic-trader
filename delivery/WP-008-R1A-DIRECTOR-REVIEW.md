@@ -19,3 +19,16 @@ GitHub Actions run `37038947330`: independently inspected jobs `checks` and `com
 ## Correction acceptance evidence
 
 Use short deterministic fixtures covering partial replay cancellation after a nontrivial committed prefix, configured paused/resumed cancellation and terminal-phase cancellation; none may require a full reference pass to acknowledge cancellation. Retain full-cursor validation cancellation tests and stale-generation publication tests. Add meaningful regressions for long preparation followed by replay, substage unit resets, intentional pacing/waiting and interrupted timing. Report actual control latency and reference-work counters, plus required CI checks. Retain schema compatibility and legacy preservation. No Owner database, dataset or live containers are needed.
+
+## Correction review and closure — 2026-10-02
+
+Correction: `0919001fb689909080e139801641eb4c7105702f`, base `adcf127b366dfc6a22aa6b670cbc6a4f1b6fe89d`.
+Final decision: **ACCEPTED — R1A operational slice only**. The earlier CHANGES REQUIRED decision above remains the historical review of `66a2dce`.
+
+The Director inspected correction code in job/artifacts/worker/diagnostics/ops and the new regression fixtures. Already observed partial cancellation uses config/checkpoint-only artifacts; pause/resume cancellation claims only to finalize; terminal publication locks the same row as Cancel and checks the cancellation boundary. Replay rate starts at REPLAYING; substage/unit/total rate bases reset; timing exposes measured active/waiting and unknown interrupted spans. Existing supervision, generation and legacy preservation architecture remains.
+
+Independently verified CI run `37044401955`: checks SUCCESS, compose-smoke SUCCESS. The executor reports 331 non-E2E + 10 E2E tests and the measured short cancellation fixtures; these timings/counts were not independently rerun by the Director. Independently executed stdlib checks passed for interrupted unknown spans, measured active/waiting totals and comparable ETA; seven tracked schema-related files were byte-identical to the correction base. No local full suite, Owner dataset, database or live stack was accessed.
+
+This closes the three requested regressions at the bounded fixture scope. It does not demonstrate month/year performance or universal five-second control latency: full-trace serialization/hashing and other existing eager units still require the structural work and representative control tests in R1B/C. In particular, cancellation consumed inside validation can retain/hash the already serialized trace; release review must measure that path rather than infer large-run responsiveness from 61 events.
+
+The executor acknowledged a no-op pull despite AGENTS.md. This was a workflow violation; no tree change resulted, and it does not invalidate the implementation evidence. AGENTS now explicitly prohibits no-op/startup pull habits. R1B is activated by the new task; R1C and Owner September retry remain inactive.

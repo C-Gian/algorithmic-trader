@@ -445,4 +445,4 @@ Preliminary source capability/size checks may inform MP-001 without substantial 
 
 ## 10. Immediate active package
 
-**WP-008-R1A correction only.** Director review of `66a2dce` requires cancellation and timing/ETA corrections; see `delivery/WP-008-R1A-DIRECTOR-REVIEW.md`. Current task.md defines implementation and acceptance. No trader semantics, substantial replay or September acquisition is authorized. A documentation disposition does not mean the application already implements these changes.
+**WP-008-R1B only.** R1A correction is accepted at `0919001` for the operational scope; see `delivery/WP-008-R1A-DIRECTOR-REVIEW.md`. Streaming input, sparse persistence, restorable checkpoints and committed-prefix inspection are now activated. R1C/release gates remain planned. Current task.md defines implementation and acceptance. No trader semantics, substantial replay or September acquisition is authorized. A documentation disposition does not mean the application already implements these changes.

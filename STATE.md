@@ -1,6 +1,6 @@
 # Project State
 
-Updated: 2026-10-02 — R1A Director review: corrections required
+Updated: 2026-10-02 — R1A accepted; R1B activated
 
 ## Authority and active direction
 
@@ -68,7 +68,7 @@ Accepted limitations to measure on the Owner machine:
 
 ## Current action
 
-**WP-008-R1A — Observable job lifecycle and diagnosis** is the only active implementation package (`task.md`). **Director review: CHANGES REQUIRED at `66a2dce`; bounded R1A correction is active.** NOT READY FOR OWNER MARKET REPLAY.
+**WP-008-R1A is ACCEPTED at `0919001fb689909080e139801641eb4c7105702f` for the operational slice. WP-008-R1B — Streaming replay and restorable checkpoints is the only active implementation package (`task.md`).** NOT READY FOR OWNER MARKET REPLAY.
 
 Executor evidence (base `fb19de247350f205ad8c9da2cb18adeb7ea885b6`, final `66a2dce90619848776e891e7f50f0f8440d95eb4`; claims below are subject to the Director findings):
 - shared operational contract `algotrader.ops.v1` (`src/algotrader/ops.py`): separate status / phase / health / assurance; current-phase-only ETA; phase spans with active vs wall time;
@@ -83,14 +83,18 @@ Executor evidence (base `fb19de247350f205ad8c9da2cb18adeb7ea885b6`, final `66a2d
 - local checks: 320 non-E2E + 10 E2E tests green on a disposable PostgreSQL 18.6, TypeScript typecheck/build green. Compose smoke deferred to CI (the Owner's live stack runs on the executor machine);
 - remaining costs unchanged by design (R1B/R1C): eager feed build with duplicate verification, one transaction + delivery row + full snapshot per event, full prefix rebuild on restore/resume, full terminal re-derivation. Re-derivation after an already requested cancellation is an R1A control defect to correct, not a cost deferred to R1B.
 
-R1A correction (executor evidence, Director acceptance pending; base `adcf127`):
+R1A correction (executor evidence reviewed and accepted for bounded operational scope; base `adcf127`, final `0919001`):
 - bounded cancellation: after an observed cancel the job finishes from config + committed checkpoint only (no prefix load, source reload or re-derivation), in every phase incl. paused/resumed and FINALIZING/VALIDATING/GENERATING_REPORT; the final publication rename + terminal commit run under the replay row lock (the documented atomic boundary), so a cancel reaching the lock first prevents a COMPLETED publication;
 - measured on the offline fixture: cancel after 20+ committed events -> CANCELLED in 0.14 s (separate compute process under per-event CPU load) / 0.28 s (inline), 0 deliveries re-derived, 0 delivery rows loaded, no source re-verification; paused/resumed cancel at cursor 8 -> 0.13 s with zero reference work; terminal-phase cancels finish CANCELLED/INCOMPLETE without a COMPLETED publication;
 - ETA: replay window starts at REPLAYING (not at claim), resets on resume/pacing change, labelled as wall-clock at configured pacing; substage/unit/total/phase/generation changes start a new rate window; fixture: ETA 5.2 s vs pacing-implied 4.6 s after 5.1 s preparation;
 - timing: explicit wall / waiting / active per span, declared pacing waits excluded from active, interrupted spans unmeasured (null, counted, never zero), terminal-phase text follows the actual cursor and separates completion from assurance;
 - checks: full non-E2E + E2E suites, web typecheck/build, and an isolated Compose smoke (separate project, image tag, port and volumes; the Owner stack/image/volumes verified untouched). Schema baselines unchanged by the correction (no contract revision).
 
-Director evidence: CI run `37038947330` has successful `checks` and `compose-smoke` jobs. Source inspection found unbounded partial-cancellation finalization and misleading phase ETA/timing. A small stdlib-only numerical check reproduced ETA 110 s versus 10 s when preparation is included; no full local suite or Owner data/stack was used. See `delivery/WP-008-R1A-DIRECTOR-REVIEW.md`. R1B remains inactive.
+Director evidence: CI run `37038947330` has successful `checks` and `compose-smoke` jobs. Source inspection found unbounded partial-cancellation finalization and misleading phase ETA/timing. A small stdlib-only numerical check reproduced ETA 110 s versus 10 s when preparation is included; no full local suite or Owner data/stack was used. These initial findings are closed by the correction review in `delivery/WP-008-R1A-DIRECTOR-REVIEW.md`.
+
+Director closure: independently confirmed CI `37044401955` checks/compose-smoke SUCCESS, inspected correction source and regressions, and executed small stdlib timing/ETA checks. Schema-related files remain byte-identical to the correction base. Full local suites and reported timings were not independently rerun. R1A acceptance is not a performance release; remaining large-input serialization/control bounds belong to R1B/C. The acknowledged executor no-op pull violated AGENTS; the rule now explicitly prohibits startup/no-op pull habits.
+
+Active R1B: bounded immutable feed/cache, one incremental causal kernel, sparse committed ranges, directly restorable versioned checkpoints and committed-prefix inspection. No real-month retry until R1C review.
 
 SR-003 review is now retained at `strategic_reviews/ASTRA-SR-003-REPLAY-CLOCK-PERFORMANCE-REVIEW.md`. Director disposition: `strategic_reviews/SR-003-DIRECTOR-DISPOSITION.md`, ACCEPT WITH MODIFICATION. This is documentation/architecture acceptance, not an implemented performance fix or a reproduced benchmark.
 

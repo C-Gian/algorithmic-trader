@@ -18,7 +18,7 @@ Capital, quantity, leverage, margin and orders are human decisions. No real-orde
 
 ## Local workflow and backtests
 
-- The Owner updates the checkout before launching Claude. Never instruct Claude to pull and never run pull automatically. Inspect the prepared branch, base and worktree; preserve unrelated changes and stop on unexpected divergence.
+- The Owner updates the checkout before launching Claude. Never instruct Claude to pull and never run pull, including a no-op `pull --ff-only`, a startup habit or a synchronization alias. Do not synchronize/update the Owner-prepared checkout. Inspect the prepared branch, base and worktree; preserve unrelated changes and stop on unexpected divergence.
 - Build only the bounded task. Preserve public contract versioning and M3 causal guarantees.
 - Run required unit/integration/causality checks and bounded engineering smoke tests.
 - **Do not launch substantial historical profitability runs, parameter sweeps or long research/backtests in an agent CLI.**
