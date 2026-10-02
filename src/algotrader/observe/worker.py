@@ -144,11 +144,16 @@ class ObservationWorker:
                 self.sleep(self.poll_interval)
 
     def run_once(self) -> bool:
+        kind = "replay"
         claim = self.claim()
+        if claim is None:
+            kind = "deep"
+            claim = self.claim_deep()
         if claim is None:
             return False
         row, generation, finalize, reason = claim
-        spec = JobSpec(url=self.url, replay_id=row["replay_id"], worker_id=self.worker_id, generation=generation,
+        spec = JobSpec(url=self.url, replay_id=row["validation_id" if kind == "deep" else "replay_id"],
+                       worker_id=self.worker_id, generation=generation, kind=kind,
                        data_root=str(self.data_root), artifact_root=str(self.artifact_root),
                        progress_interval=self.progress_interval, stall_limit=self.stall_limit,
                        checkpoint_seconds=self.checkpoint_seconds, checkpoint_events=self.checkpoint_events,
@@ -242,22 +247,90 @@ class ObservationWorker:
         log.info("claimed %s attempt %s generation %s", row["replay_id"], attempt, generation)
         return row, generation, finalize, reason
 
+    def claim_deep(self) -> tuple[dict[str, Any], int, str | None, str | None] | None:
+        """Claim a Deep validation job (same fencing/generation/recovery semantics as replays)."""
+        conn = self.conn
+        with conn.transaction():
+            row = conn.execute(
+                """
+                SELECT * FROM observation_deep_validations
+                WHERE (status = 'queued')
+                   OR (status = 'paused' AND (NOT paused OR cancel_requested))
+                   OR (status = 'running' AND lease_expires_at < now())
+                ORDER BY created_at LIMIT 1 FOR UPDATE SKIP LOCKED
+                """
+            ).fetchone()
+            if row is None:
+                return None
+            generation = row["lease_generation"] + 1
+            reclaimed = row["status"] == "running"
+            attempt = row["attempt"] + 1
+            interruptions = row["interruptions"] + 1 if reclaimed else row["interruptions"]
+            recovery_log = list(row["recovery_log"])
+            history_add: list[dict[str, Any]] = []
+            now = datetime.now(UTC)
+            finalize, reason = None, None
+            if row["phase"] is None:
+                history_add.append(ops.closed_entry("QUEUED", generation, attempt, row["created_at"], now, 0.0,
+                                                    waiting=True))
+            if reclaimed:
+                recovery_log.append({"at": _now(), "attempt": attempt, "generation": generation,
+                                     "event": "lease_expired_reclaimed", "previous_generation": row["lease_generation"],
+                                     "detail": f"reclaimed by {self.worker_id}; resuming the reference execution "
+                                               f"from its saved diagnostic state at cursor {row['resume_cursor']}"})
+                if row["phase"] and row["phase_started_at"] is not None:
+                    ended = row["heartbeat_at"] or now
+                    history_add.append(ops.closed_entry(row["phase"], row["lease_generation"], row["attempt"],
+                                                        row["phase_started_at"], max(ended, row["phase_started_at"]),
+                                                        None, interrupted=True,
+                                                        note="attempt interrupted; active time unknown"))
+                if interruptions >= row["max_attempts"]:
+                    finalize, reason = "failed", (f"Deep validation interrupted on {interruptions} consecutive "
+                                                  "attempts; no further automatic recovery")
+            if finalize is None and row["cancel_requested"]:
+                finalize, reason = "cancelled", "Deep validation cancelled by user"
+            conn.execute(
+                """
+                UPDATE observation_deep_validations SET status = 'running', lease_owner = %s, lease_generation = %s,
+                    lease_expires_at = now() + make_interval(secs => %s), heartbeat_at = now(), attempt = %s,
+                    interruptions = %s, started_at = coalesce(started_at, now()), recovery_log = %s,
+                    phase_history = phase_history || %s,
+                    phase_started_at = CASE WHEN %s THEN NULL ELSE phase_started_at END,
+                    phase = coalesce(phase, 'QUEUED'), supervisor = supervisor || %s
+                WHERE validation_id = %s
+                """,
+                (self.worker_id, generation, self.lease_seconds, attempt, interruptions, Jsonb(recovery_log),
+                 Jsonb(history_add), reclaimed,
+                 Jsonb({"worker_id": self.worker_id, "supervisor_pid": os.getpid(), "generation": generation,
+                        "isolated_compute": self.isolate, "claimed_at": _now(), "child_pid": None,
+                        "environment": ops.environment()}),
+                 row["validation_id"]),
+            )
+        log.info("claimed deep validation %s generation %s", row["validation_id"], generation)
+        return row, generation, finalize, reason
+
+    @staticmethod
+    def _table(job_id: str) -> tuple[str, str]:
+        return (("observation_deep_validations", "validation_id") if job_id.startswith("deep-")
+                else ("observation_replays", "replay_id"))
+
     def renew(self, replay_id: str, generation: int, child_pid: int | None) -> str:
         """Renew the fenced lease. Returns 'ok', 'released' (no longer running), 'lost' or 'disconnected'."""
+        table, key = self._table(replay_id)
         try:
             row = self.conn.execute(
-                """
-                UPDATE observation_replays SET heartbeat_at = now(),
+                f"""
+                UPDATE {table} SET heartbeat_at = now(),
                     lease_expires_at = now() + make_interval(secs => %s),
                     supervisor = supervisor || jsonb_build_object('child_pid', %s::int,
                                                                   'child_checked_at', now()::text)
-                WHERE replay_id = %s AND lease_owner = %s AND lease_generation = %s AND status = 'running'
+                WHERE {key} = %s AND lease_owner = %s AND lease_generation = %s AND status = 'running'
                 RETURNING 1
                 """,
                 (self.lease_seconds, child_pid, replay_id, self.worker_id, generation),
             ).fetchone()
             if row is None:
-                cur = self.conn.execute("SELECT status, lease_generation FROM observation_replays WHERE replay_id = %s",
+                cur = self.conn.execute(f"SELECT status, lease_generation FROM {table} WHERE {key} = %s",
                                         (replay_id,)).fetchone()
                 state = "lost" if cur is None or cur["lease_generation"] != generation else "released"
             else:
@@ -282,22 +355,23 @@ class ObservationWorker:
             return "disconnected"
 
     def _note(self, replay_id: str, generation: int, entry: dict[str, Any]) -> None:
+        table, key = self._table(replay_id)
         self.conn.execute(
-            "UPDATE observation_replays SET diagnostic_log = diagnostic_log || %s "
-            "WHERE replay_id = %s AND lease_generation = %s",
+            f"UPDATE {table} SET diagnostic_log = diagnostic_log || %s WHERE {key} = %s AND lease_generation = %s",
             (Jsonb([entry]), replay_id, generation),
         )
 
     def compute_exited(self, replay_id: str, generation: int, exitcode: int | None) -> None:
         """Fenced: record that the compute process died and let the lease lapse now (recovery may start)."""
         info = {"generation": generation, "exitcode": exitcode, "at": _now(), "worker_id": self.worker_id}
+        table, key = self._table(replay_id)
         try:
             self.conn.execute(
-                """
-                UPDATE observation_replays SET lease_expires_at = now(),
+                f"""
+                UPDATE {table} SET lease_expires_at = now(),
                     supervisor = supervisor || jsonb_build_object('compute_exit', %s::jsonb),
                     diagnostic_log = diagnostic_log || %s
-                WHERE replay_id = %s AND lease_owner = %s AND lease_generation = %s AND status = 'running'
+                WHERE {key} = %s AND lease_owner = %s AND lease_generation = %s AND status = 'running'
                 """,
                 (Jsonb(info), Jsonb([{**info, "event": "compute_exited",
                                       "detail": f"compute process ended with exit code {exitcode}; supervisor stopped "
@@ -346,7 +420,12 @@ class ObservationWorker:
 
         t = threading.Thread(target=beat, daemon=True, name=f"supervise-{spec.replay_id}")
         t.start()
-        job = ReplayJob(spec, sleep=self.sleep, before_commit=self.before_commit, after_commit=self.after_commit)
+        if spec.kind == "deep":
+            from .deep import DeepJob
+
+            job = DeepJob(spec, sleep=self.sleep)
+        else:
+            job = ReplayJob(spec, sleep=self.sleep, before_commit=self.before_commit, after_commit=self.after_commit)
         try:
             job.run()
         finally:

@@ -110,11 +110,16 @@ def canonical(obj: Any) -> bytes:
     return json.dumps(obj, sort_keys=True, separators=(",", ":"), ensure_ascii=True, default=str).encode()
 
 
-def sha256_file(path: Path) -> str:
+def sha256_file(path: Path, on_chunk: Callable[[int], None] | None = None) -> str:
+    """SHA-256 of a file in 1 MiB chunks; ``on_chunk(bytes_done)`` is an optional cooperative hook per chunk."""
     h = hashlib.sha256()
+    done = 0
     with path.open("rb") as f:
         for chunk in iter(lambda: f.read(1 << 20), b""):
             h.update(chunk)
+            done += len(chunk)
+            if on_chunk is not None:
+                on_chunk(done)
     return h.hexdigest()
 
 
@@ -658,7 +663,8 @@ def verify(path: Path, progress: Callable[[str, int, int | None, str], None] | N
         if not p.is_file():
             problems.append(f"missing file {ref.name}")
             continue
-        if sha256_file(p) != ref.sha256 or p.stat().st_size != ref.bytes:
+        if sha256_file(p, lambda b, ref=ref: hook(f"hash {ref.name} (bytes)", b, ref.bytes, "bytes")
+                       ) != ref.sha256 or p.stat().st_size != ref.bytes:
             problems.append(f"hash/size mismatch for {ref.name}")
         if ref.rows is not None and pq.ParquetFile(p).metadata.num_rows != ref.rows:
             problems.append(f"row count mismatch for {ref.name}")

@@ -365,8 +365,59 @@ CREATE TABLE IF NOT EXISTS observation_feed_caches (
 );
 """
 
+# WP-008-R1C: assurance. Committed ranges additionally record the materialized snapshot digest and the
+# restorable state SHA-256 at their end cursor (comparison points for optional Deep validation; NULL for runs
+# committed before this migration). Deep validations are separate durable diagnostic jobs linked to a run;
+# they never modify the originating run's records.
+SCHEMA_V9 = """
+ALTER TABLE observation_ranges ADD COLUMN IF NOT EXISTS snapshot_digest text;
+ALTER TABLE observation_ranges ADD COLUMN IF NOT EXISTS state_sha256 text;
+
+CREATE TABLE IF NOT EXISTS observation_deep_validations (
+    validation_id     text PRIMARY KEY,
+    replay_id         text NOT NULL REFERENCES observation_replays(replay_id) ON DELETE CASCADE,
+    created_at        timestamptz NOT NULL DEFAULT now(),
+    status            text NOT NULL CHECK (status IN ('queued','running','paused','completed','cancelled','failed')),
+    paused            boolean NOT NULL DEFAULT false,
+    cancel_requested  boolean NOT NULL DEFAULT false,
+    lease_owner       text,
+    lease_generation  bigint NOT NULL DEFAULT 0,
+    lease_expires_at  timestamptz,
+    heartbeat_at      timestamptz,
+    attempt           integer NOT NULL DEFAULT 0,
+    max_attempts      integer NOT NULL DEFAULT 3,
+    interruptions     integer NOT NULL DEFAULT 0,
+    started_at        timestamptz,
+    finished_at       timestamptz,
+    phase             text,
+    phase_started_at  timestamptz,
+    phase_history     jsonb NOT NULL DEFAULT '[]'::jsonb,
+    progress          jsonb NOT NULL DEFAULT '{}'::jsonb,
+    progress_seq      bigint NOT NULL DEFAULT 0,
+    last_progress_at  timestamptz,
+    throughput_since  timestamptz,
+    throughput_base   integer,
+    metrics           jsonb NOT NULL DEFAULT '{}'::jsonb,
+    supervisor        jsonb NOT NULL DEFAULT '{}'::jsonb,
+    diagnostic_log    jsonb NOT NULL DEFAULT '[]'::jsonb,
+    recovery_log      jsonb NOT NULL DEFAULT '[]'::jsonb,
+    control_log       jsonb NOT NULL DEFAULT '[]'::jsonb,
+    plan              jsonb NOT NULL,
+    resume_cursor     integer NOT NULL DEFAULT 0,
+    resume_commitment text,
+    resume_state      bytea,
+    resume_state_sha  text,
+    comparisons       jsonb NOT NULL DEFAULT '{"compared": 0, "mismatches": []}'::jsonb,
+    result            jsonb,
+    error             text
+);
+CREATE INDEX IF NOT EXISTS observation_deep_validations_replay_idx ON observation_deep_validations (replay_id, created_at);
+CREATE UNIQUE INDEX IF NOT EXISTS observation_deep_validations_one_active
+    ON observation_deep_validations (replay_id) WHERE status IN ('queued','running','paused');
+"""
+
 MIGRATIONS: dict[int, str] = {1: SCHEMA_V1, 2: SCHEMA_V2, 3: SCHEMA_V3, 4: SCHEMA_V4, 5: SCHEMA_V5, 6: SCHEMA_V6,
-                              7: SCHEMA_V7, 8: SCHEMA_V8}
+                              7: SCHEMA_V7, 8: SCHEMA_V8, 9: SCHEMA_V9}
 SCHEMA_VERSION = max(MIGRATIONS)
 
 

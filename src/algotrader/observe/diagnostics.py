@@ -220,6 +220,26 @@ def operation(row: dict[str, Any], now: datetime) -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 
+HASH_LIMIT = 64 * 2**20
+
+
+def _host_line(env: Any) -> str:
+    if not isinstance(env, dict):
+        return str(env)
+    ram = env.get("ram_bytes")
+    return (f"{env.get('platform')} · Python {env.get('python')} · CPU {env.get('cpu_model') or 'unknown'} · "
+            f"{env.get('logical_cpus')} logical · RAM {f'{ram / 2**30:.1f} GiB' if ram else 'unknown'} · "
+            f"cgroup cpu.max {env.get('cgroup_cpu_max') or 'n/a'} · memory.max {env.get('cgroup_memory_max') or 'n/a'}")
+
+
+def _sha_file(p: Path) -> str:
+    h = hashlib.sha256()
+    with p.open("rb") as f:
+        for chunk in iter(lambda: f.read(1 << 20), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
 def manifest_check(art_root: Path, row: dict[str, Any]) -> dict[str, Any]:
     m = row.get("manifest")
     if m is None:
@@ -239,9 +259,12 @@ def manifest_check(art_root: Path, row: dict[str, Any]) -> dict[str, Any]:
     for a in m.get("artifacts", []):
         p = d / a["name"]
         files.append({"name": a["name"], "present": p.is_file(),
-                      "size_matches": p.is_file() and p.stat().st_size == a["bytes"]})
+                      "size_matches": p.is_file() and p.stat().st_size == a["bytes"],
+                      "sha256_matches": (_sha_file(p) == a["sha256"]) if p.is_file() and a["bytes"] <= HASH_LIMIT
+                      else None})
     out["artifacts"] = files
-    out["note"] = "file presence and sizes checked; artifact SHA-256 values are not re-hashed by this export"
+    out["note"] = (f"file presence and sizes checked; artifacts up to {HASH_LIMIT // 2**20} MiB re-hashed against the "
+                   "manifest (larger legacy traces: size only)")
     return out
 
 
@@ -366,6 +389,7 @@ def render_markdown(r: dict[str, Any]) -> str:
         f"- Feed: {ident['feed_content_identity']} · total events {ident['total_events']} · availability "
         f"{ident['availability_basis']}",
         f"- Engine: code {r['engine']['code_version'] or 'unknown'} · lifecycle v{r['lifecycle_version']}",
+        f"- Worker host: {_host_line(r['engine']['environment'])}",
         "",
         "## Progress",
         f"- Committed cursor: {cov['committed_cursor']:,}/{cov['total_events'] if isinstance(cov['total_events'], str) else format(cov['total_events'], ',')}"
@@ -406,8 +430,9 @@ def render_markdown(r: dict[str, Any]) -> str:
         lines.append(f"- Directory {m['artifact_dir']} · manifest file present {m['manifest_file_present']}"
                      + (f" · matches database {m.get('manifest_file_matches_database')}" if m["manifest_file_present"]
                         else ""))
-        missing = [x["name"] for x in m["artifacts"] if not (x["present"] and x["size_matches"])]
-        lines.append(f"- Artifacts: {len(m['artifacts'])} listed · missing/size mismatch: {', '.join(missing) or 'none'}")
+        missing = [x["name"] for x in m["artifacts"]
+                   if not (x["present"] and x["size_matches"] and x.get("sha256_matches") is not False)]
+        lines.append(f"- Artifacts: {len(m['artifacts'])} listed · missing/size/hash mismatch: {', '.join(missing) or 'none'}")
     if r["counters"]:
         lines += ["", "## Counters (per fencing generation)"]
         for gen, cnt in sorted(r["counters"].items()):
@@ -428,6 +453,12 @@ def render_markdown(r: dict[str, Any]) -> str:
     if st:
         lines.append(f"- Storage: {st.get('ranges')} committed range(s) to cursor {st.get('ranges_to_cursor')} · "
                      f"restore points {st.get('restore_points')} · per-event delivery rows {st.get('delivery_rows')}")
+    ca = r.get("current_assurance")
+    if ca:
+        lines += ["", "## Current assurance (linked)", f"- {ca['headline']}",
+                  f"- Run validation: {ca['run_validation']} · Deep validation: {ca['deep_validation']}"
+                  + (f" (latest `{ca['latest_deep_validation']}`)" if ca.get("latest_deep_validation") else "")]
+        lines += [f"- WARNING: {w}" for w in ca["warnings"]]
     lines += ["", "## Limitations"] + [f"- {x}" for x in r["limitations"]]
     lines += ["", f"Next diagnostic: {r['next_diagnostic']}", "", f"_Format {r['report_format']}_", ""]
     return "\n".join(lines)

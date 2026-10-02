@@ -10,13 +10,15 @@ import { Icon } from "../ui/Icon";
 import {
   Badge, Button, Card, cx, EmptyState, Field, Metric, Mono, Notice, PageHeader, Skeleton, statusTone, Tone,
 } from "../ui/primitives";
+import { DeepValidationPanel } from "./replay/DeepValidation";
 import { MarketChart } from "./replay/MarketChart";
 import { Artifacts, CopyDiagnostics, copyText, ObservableStatePanel, OperationPanel, PACING, ReplayPanel } from "./replay/MarketReplay";
 
 // Historical Workbench (route #backtest kept): the Owner's evaluation workbench. Three stages over the SAME machinery:
 //   A. historical corpus  - checked-in logical plan + locally prepared, verified immutable datasets;
 //   B. run setup          - explicit run types: Market replay (data and engine check) is the only available one;
-//                           Adviser backtest is unavailable until the adviser exists; Deep validation is planned;
+//                           Adviser backtest is unavailable until the adviser exists; Deep validation is an optional
+//                           diagnostic launched explicitly from a finished/paused run (its own durable job);
 //   C. run & report       - the durable observation replay with its phase timeline, plus a copyable report or
 //                           diagnostic snapshot at every status.
 // No adviser is connected yet: no MarketView, calls or outcomes are shown or implied.
@@ -376,12 +378,14 @@ function RunSetup({ corpus, onStarted }: { corpus: CorpusStatus | null; onStarte
           </span>
           <Badge tone="pending" icon="lock">Unavailable</Badge>
         </label>
-        <div className="run-type is-planned" data-testid="run-type-deep-validation">
+        <div className="run-type" data-testid="run-type-deep-validation">
           <span>
             <b>Deep validation</b>
-            <span className="muted small-text">Planned optional diagnostic attached to a finished run (separately observable) — not an action in this version.</span>
+            <span className="muted small-text">Optional diagnostic launched from a finished (or paused) streaming run's panel below: an independent
+              reference re-execution of the committed prefix over the canonical feed cache, with its own progress, controls and
+              report. Not an independent audit of the original source files; never changes the run.</span>
           </span>
-          <Badge tone="pending">Planned</Badge>
+          <Badge tone="info">Implemented · per run</Badge>
         </div>
       </div>
       <Notice tone="warn" icon="compass" title="Observation-only" testid="adviser-notice">{NOT_CONNECTED}</Notice>
@@ -649,6 +653,7 @@ function ActiveRun({ ev, onReplay }: { ev: Evaluation; onReplay: (r: ObsReplay) 
         <MarketChart bars={bars} informationTime={r.progress.information_time} />
       </Card>
       <ReportCard ev={{ ...ev, replay: r, report_available: true, report_terminal: TERMINAL.has(r.status) }} />
+      <DeepValidationPanel r={r} />
       <ObservableStatePanel state={doc?.state ?? null} />
       {r.has_manifest && (
         <details className="more" onToggle={(e) => setManifestOpen((e.target as HTMLDetailsElement).open)}>

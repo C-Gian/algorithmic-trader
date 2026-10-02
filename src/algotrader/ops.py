@@ -325,13 +325,48 @@ def no_progress(stage: str, done: int, total: int | None, unit: str) -> None:  #
 # ---------------------------------------------------------------------------
 
 
+def _read_first(path: str) -> str | None:
+    try:
+        with open(path, encoding="ascii") as f:
+            return f.read().strip() or None
+    except OSError:
+        return None
+
+
+def _total_ram() -> int | None:
+    try:
+        if sys.platform == "win32":
+            import ctypes
+
+            class MS(ctypes.Structure):
+                _fields_ = [("dwLength", ctypes.c_ulong), ("dwMemoryLoad", ctypes.c_ulong)] + [
+                    (n, ctypes.c_ulonglong) for n in ("total", "avail", "tpf", "apf", "tv", "av", "aev")]
+            ms = MS()
+            ms.dwLength = ctypes.sizeof(MS)
+            return int(ms.total) if ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(ms)) else None
+        return int(os.sysconf("SC_PAGE_SIZE") * os.sysconf("SC_PHYS_PAGES"))
+    except (OSError, ValueError, AttributeError):
+        return None
+
+
 def environment() -> dict[str, Any]:
+    """Facts about the host as seen by this process (a container sees its own cgroup limits, if any)."""
+    cpu_max = _read_first("/sys/fs/cgroup/cpu.max")  # cgroup v2: "<quota> <period>" or "max <period>"
+    mem_max = _read_first("/sys/fs/cgroup/memory.max")
+    model = None
+    info = _read_first("/proc/cpuinfo")
+    if info:
+        model = next((ln.split(":", 1)[1].strip() for ln in info.splitlines() if ln.startswith("model name")), None)
     return {
         "python": sys.version.split()[0],
         "implementation": platform.python_implementation(),
         "platform": platform.platform(),
         "machine": platform.machine(),
+        "cpu_model": model or platform.processor() or None,
         "logical_cpus": os.cpu_count(),
+        "ram_bytes": _total_ram(),
+        "cgroup_cpu_max": cpu_max,
+        "cgroup_memory_max": mem_max,
         "code_version": os.environ.get("ALGOTRADER_CODE_VERSION") or None,
     }
 

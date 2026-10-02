@@ -218,10 +218,20 @@ class StagedArtifacts:
             self.staging = None
 
     def publish(self) -> PublishedArtifacts:
-        """Immutable publication of this generation's directory (a rename; the caller holds the DB fence)."""
+        """Immutable publication of this generation's directory (the caller holds the DB fence).
+
+        Staged files are fsynced (and, on POSIX, the staging and parent directories around the rename); after
+        the rename every referenced file is re-hashed against the manifest, so a partial or corrupted
+        publication is never referenced by a terminal commit."""
         if self.staging is not None:
+            for f in self.staging.iterdir():
+                if f.is_file():
+                    with f.open("r+b") as fh:
+                        os.fsync(fh.fileno())
+            _fsync_dir(self.staging)
             try:
                 os.replace(self.staging, self.final_dir)
+                _fsync_dir(self.final_dir.parent)
             except OSError:
                 if not (self.final_dir / "manifest.json").is_file():
                     raise
@@ -229,7 +239,23 @@ class StagedArtifacts:
                 self.manifest = ObservationReplayManifest.model_validate_json(
                     (self.final_dir / "manifest.json").read_text("utf-8"))
             self.staging = None
+        for a in self.manifest.artifacts:
+            p = self.final_dir / a.name
+            if not p.is_file() or _sha256(p)[0] != a.sha256:
+                raise OSError(f"published artifact {a.name} does not match its manifest entry (partial or corrupt "
+                              "publication); not referenced")
         return PublishedArtifacts(self.manifest, self.final_dir, self.output_bytes)
+
+
+def _fsync_dir(path: Path) -> bool:
+    if os.name == "nt":
+        return False  # directory fsync is not available on Windows; not claimed
+    fd = os.open(path, os.O_RDONLY)
+    try:
+        os.fsync(fd)
+    finally:
+        os.close(fd)
+    return True
 
 
 def _staging(root: Path, replay_id: str, generation: int) -> tuple[Path, Path, ObservationReplayManifest | None]:

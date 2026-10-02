@@ -8,9 +8,9 @@ Algorithmic Trader is a clean-room, local BTC trading adviser: professional mark
 
 The 30 September Owner clarification supersedes the mandatory pullback-only/RP-001 research path. Read FOUNDATION.md v3.1 and task.md for the current Director handoff. Old reviews/research are historical evidence, not current work authorization.
 
-### SR-003 current work — R1A and R1B accepted; R1C active, not implemented
+### SR-003 current work — R1A and R1B accepted; R1C implemented, Director review pending
 
-The Owner's September run exposed a replay/finalization performance defect. The Director approved a bounded redesign in `strategic_reviews/SR-003-DIRECTOR-DISPOSITION.md`. **WP-008-R1A (observable lifecycle and diagnosis) is accepted at `0919001`. WP-008-R1B (streaming replay and restorable checkpoints) is accepted at correction `9d814ec` for the structural slice**; see *Streaming replay engine (WP-008-R1B)* below. New runs no longer build the feed eagerly, snapshot every event, write a delivery row/transaction per event or rebuild the prefix on restore. R1C (layered assurance closure, Deep validation, release performance gates) is not implemented, and no month/year performance budget is claimed.
+The Owner's September run exposed a replay/finalization performance defect. The Director approved a bounded redesign in `strategic_reviews/SR-003-DIRECTOR-DISPOSITION.md`. **WP-008-R1A (observable lifecycle and diagnosis) is accepted at `0919001`. WP-008-R1B (streaming replay and restorable checkpoints) is accepted at correction `9d814ec` for the structural slice**; see *Streaming replay engine (WP-008-R1B)* below. New runs no longer build the feed eagerly, snapshot every event, write a delivery row/transaction per event or rebuild the prefix on restore. R1C (layered assurance, optional Deep validation, control/durability closure, structural benchmark) is implemented and awaits Director review; see *Assurance, Deep validation and release gates (WP-008-R1C)*. Synthetic structural gates are not an achieved Owner month/year result.
 
 Do not retry the real month after R1A alone (**NOT READY FOR OWNER MARKET REPLAY**). The Director will hand off READY FOR OWNER MARKET REPLAY after R1B/C and review. Reuse September locally in a new run; preserve old rows/artifacts/identity. No automatic old-run salvage or September download. No professional adviser or achieved speedup is claimed.
 
@@ -266,12 +266,59 @@ New observation replays (lifecycle 3, `engine_format = observe.stream.v1`) use o
 
 Caches built by the first R1B commit carry no receipt and are quarantined/rebuilt on first use (migration 8). Same procedure as R1A: stop the application containers (`docker compose stop api worker recorder observer corpus`), update the checkout, `docker compose up --build -d` (never `--volumes`). Migration 7 suspends any unfinished R1A run read-only. Feed caches are created on the existing market-data volume on first use. Do not start the replacement September run yet (R1C).
 
+## Assurance, Deep validation and release gates (WP-008-R1C) — executor evidence, Director review pending
+
+- **Layered assurance (what a normal run actually establishes).** Layer 1, *admission*: the source snapshot is verified once and only receipt-pinned, SHA-256-verified cache partitions are applied; the replay loop refuses any admission discontinuity (`seq != cursor`). Layer 2, *runtime + bounded terminal integrity*: validator **`observe.stream-reconciliation` v2** (migration 9 adds each range's `snapshot_digest` / `state_sha256`). It never replays the reducer, rebuilds a prefix or synthesizes deliveries. Checks:
+  - `committed_ranges_contiguous` — positive contiguous ranges/counts with strictly increasing first/last order keys;
+  - `input_commitment_chain` + `consumed_input_exact` — every consumed line is re-hashed against the pinned cache and the rolling **input commitment** is recomputed at every range boundary;
+  - `terminal_state_verified` — the terminal restorable **state** (SHA-256) and committed **snapshot digest**;
+  - `feed_cache_integrity`, `cache_receipt_and_pin` — partition hashes, run pin and trusted receipt;
+  - `completed_consumed_entire_feed` — exactly-once consumption (completed runs);
+  - `commitments_reported` — input, state and **output** commitments (hash over the committed ranges) are reported separately;
+  - `observation_only`, `validation_completed`; a cancelled or interrupted reconciliation is INCOMPLETE, never PASS.
+
+  Its scope reads *"Runtime integrity verified, engine reference-tested … No independent reference replay was performed in this run"*. Layer 3, *reference*: protected differential/hand-expected fixtures, plus the optional Deep validation below. R1A/R1B runs keep their original validator claims. Adviser/horizon checks remain unavailable.
+- **Artifact publication.** Staged files are fsynced, renamed, the parent directory fsynced where the OS supports it (POSIX; on Windows directory fsync is unavailable and stays unproven), then every manifest artifact is re-hashed; a partial/corrupt publication is an error and is never referenced. Diagnostic exports re-hash referenced artifacts ≤ 64 MiB.
+- **Deep validation (optional, never automatic).** Launched only from a run's *Deep validation* panel (Historical Workbench or Replay Lab) for a streaming run that is completed, cancelled, failed or paused with committed events. It is its own durable job (`observation_deep_validations`, `deep-*` ids, one active per run) claimed by the same observation worker in a separate compute process, with its own phase timeline, progress, health, fencing generation, pause/resume/cancel and Copy/Markdown/JSON report at every status.
+  - Validator **`observe.deep-reference` v1**: an independent sequential fold of the accepted pure reducer from the initial state over the run's committed prefix, compared at every committed range boundary and retained restore point (input commitment, state SHA-256, snapshot digest).
+  - **Scope:** input is the receipt-checked canonical feed cache only — the original source is *not* re-normalized, so this is not an independent source audit, and the reducer code is shared with the engine.
+  - Streams bounded input; saves resumable state every 5,000 events / 2 s; pause/cancel/restart resume from the saved cursor; cancellation is INCOMPLETE.
+  - The originating run's records, artifacts and terminal report never change. A mismatch is a persistent linked **assurance warning** shown in the run panel (*current assurance*) and in its copied diagnostics. Re-running a completed validation reproduces the same result without duplicate links.
+- **Controls and durability.** Byte-level cooperative hooks (1 MiB) in source snapshot copy and single-file hashing (datasets and recordings); measured on generated large files: every control applied ≤ 0.7 s across snapshot copy, source hashing, gap walk, external merge, replay, reconciliation, report, pause and STEP (`tests/test_controls.py`, `CONTROL_MATRIX`). Acks ≤ 0.55 s; progress age ≤ 0.1 s. Terminal publication is a labelled atomic boundary. Lost cache → rebuilt and must reproduce its receipt exactly; lost cache with a changed source → fails safely with an actionable error; lost/corrupt artifacts → reported in the diagnostic export.
+- **UI.** Run setup lists Deep validation as *Implemented · per run* with its scope. The run panel shows the **committed cursor** (durable checkpoint, the only admission boundary) and the **computed cursor** (in-memory, may run ahead until the next commit), and the current assurance headline/warnings. Reports now include the worker host (OS, Python, CPU, logical CPUs, RAM, cgroup CPU/memory limits).
+- **Structural benchmark** (`scripts/bench_observe.py`, synthetic infrastructure evidence — **not** a historical month/year evaluation or Owner speedup): see *R1C benchmark results* below.
+
+### R1C benchmark results (synthetic, this machine)
+
+Windows 10, Python 3.14.7, 8 logical CPUs, 32 GiB; full evidence in `delivery/evidence/WP-008-R1C-BENCHMARK.md`.
+
+| Gate | Measured | Limit |
+|---|---|---|
+| Month (129,690 events, long gap, shuffled Parquet) cached observation, launch → terminal | 31.4 s | 120 s |
+| Month terminal validation + report | 0.84 s | 10 s |
+| Month cold preparation (snapshot + verify + cache) | 36.8 s | 120 s |
+| Year (1,576,800 events) component replay with checkpoint-cadence encoding | 326 s | 900 s |
+| Year component terminal re-hash | 6.8 s | 30 s |
+| Year component cache build (verification not included) | 157 s | 900 s |
+
+Month: 27 transactions, 0 delivery rows, direct restore after pause (0 prefix events), Deep validation 28.6 s MATCH. Year: flat ~4,850 events/s across deciles, Python-heap plateau ~10.7 MB, peak RSS ≤ 102 MB, manifest metadata ≈ 620 B per 5,000-event partition. These are structural infrastructure results, not the Owner's September result or a hardware prediction.
+
+### Owner upgrade to R1C and the replacement September run — proposed, NOT yet authorized
+
+Only after the Director accepts R1C and hands off READY FOR OWNER MARKET REPLAY:
+
+1. Stop the application containers (`docker compose stop api worker recorder observer corpus`; leave `db`), update the checkout, `docker compose up --build -d`. Never `down --volumes`. Migration 9 is additive; the old September run stays suspended and read-only.
+2. Historical Workbench → **B · Run setup** → *Market replay — data and engine check* → select the **existing prepared September 2025 chunk** (badge *Verified*; nothing is downloaded) → pacing **max** → **Start**. This creates a **new** run id; the old run is not resumed, salvaged or relabeled.
+3. Wait for COMPLETED. A useful result requires: phases *Verifying source → Building feed → Replaying → Validating → Generating report* all done, status COMPLETED, assurance **passed** (`observe.stream-reconciliation` v2), committed cursor = total events (129,600 expected), no unmeasured spans.
+4. **Copy report for chat** and paste it to the Director (it contains build, worker host, counts, per-phase timings, counters, controls and limits). Optionally run **Deep validation** on the new run and copy its report too. Also copy the old suspended run's diagnostics if not already shared.
+5. No CLI commands, raw logs or retries are needed; if anything fails, copy the report as it is.
+
 ## Owner evaluation workbench (WP-008) — observation-only, no adviser
 
 The **Historical Workbench** page (`#backtest`, formerly *Backtest*) is the Owner workflow the future adviser will reuse:
 
 - **A · Historical corpus**: the twelve-month ledger from the checked-in plan, each chunk's local state (`prepared`, `preparing`, `not_prepared`, `invalid`, `planned`), dataset identity, verification, quality, measured bytes (raw / Parquet / metadata, files, pages, rows) and reuse state. **Prepare** only inserts a durable PostgreSQL job (`corpus_jobs`); the `corpus-worker` (Compose service `corpus`, `corpus:` worker ids) owns it: it reuses a verified binding or adopts an exactly matching local dataset without network, otherwise acquires the month via the accepted `OkxPublicClient` + `marketdata.dataset.acquire` (official OKX hosts only), verifies it and only then binds it (`corpus_chunks`). Progress shows phase, fixed windows done/total, pages, bytes, elapsed, heartbeat and an ETA only after measured throughput. Cancel stops at the next source page and binds nothing; finalized datasets are never deleted. A crashed worker's job is reclaimed after its lease and the chunk restarts **from scratch** (no byte-level resume; 3 interruptions fail it).
-- **B · Run setup**: explicit run types — **Market replay — data and engine check** (available), **Adviser backtest** (unavailable until the adviser exists), **Deep validation** (planned, not an action). Prepared chunk, pacing and optional start-paused. There are no model parameters: *Professional adviser not connected yet.*
+- **B · Run setup**: explicit run types — **Market replay — data and engine check** (available), **Adviser backtest** (unavailable until the adviser exists), **Deep validation** (implemented as an optional per-run diagnostic launched from a finished/paused run's panel; canonical-cache scope). Prepared chunk, pacing and optional start-paused. There are no model parameters: *Professional adviser not connected yet.*
 - **C · Run & report**: the accepted durable observation replay (same worker, controls, chart, observable state, artifacts); the chart shows a bounded 240-bar tail refreshed at most once per second while the worker processes every event. Every run has **Copy report for chat**, Markdown and JSON at every status: a diagnostic snapshot while queued/running/paused/validating, a terminal report (`OBSERVATION_ONLY_EVALUATION`) once completed, cancelled or failed. Every call/MarketView/outcome metric is `UNAVAILABLE` with value `null`, never zero.
 - **API**: `/api/corpus` (status, `chunks/{id}/prepare`, `jobs`, `jobs/{id}`, `jobs/{id}/cancel`) and `/api/evaluations` (create/list/get, `report.md`, `report.json`, `?download=true`). Health reports a `corpus` capability.
 
@@ -317,6 +364,6 @@ The Project & Research Director replaces `task.md` after reviewing each pushed i
 
 The initial implementation at `464f449` required corrections, now closed by `9d814ec`. Streaming/sparse persistence/direct restore are implemented, but cold preparation still has input-sized memory and unbounded merge fan-in, and the verified-source/cache metadata trust boundaries require correction. See `delivery/WP-008-R1B-DIRECTOR-REVIEW.md`. Short fixture rates/memory do not establish month/year readiness. R1C and Owner September retry remain inactive.
 
-### Current R1C activation
+### Current R1C status
 
-The earlier R1B findings are closed by Director review of `9d814ec`; its review document retains the original findings and final acceptance. R1C is now active in task.md for layered assurance, optional Deep validation, long-unit controls and structural performance gates. It is not yet implemented or accepted. No Owner September retry is authorized yet; Windows power-loss directory durability and actual month/year timings remain unproven.
+The earlier R1B findings are closed by Director review of `9d814ec`. R1C is implemented by the executor and awaits Director review; it is not accepted. No Owner September retry is authorized yet; Windows power-loss directory durability and actual (non-synthetic) month/year timings on the Owner's hardware remain unproven.

@@ -471,6 +471,8 @@ export interface ObsReplay {
   validation_passed: boolean | null;
   progress: {
     applied_events: number;
+    committed_events?: number;
+    computed_events?: number;
     total_events: number | null;
     information_time: string | null;
     last_event_id: string | null;
@@ -484,6 +486,51 @@ export interface ObsReplay {
   code_version: string | null;
   labels: string[];
   operation: Operation;
+  assurance_summary?: AssuranceSummary;
+}
+
+export interface AssuranceSummary {
+  headline: string;
+  run_validation: string | null;
+  deep_validation: string;
+  latest_deep_validation: string | null;
+  deep_validations: number;
+  warnings: string[];
+}
+
+export interface DeepMismatch { cursor: number; at: string; kind: string; expected: string; reference: string }
+
+export interface DeepValidation {
+  validation_id: string;
+  replay_id: string;
+  kind: "deep_validation";
+  validator: string;
+  validator_version: string;
+  scope: string;
+  mode: string;
+  status: string;
+  phase: string | null;
+  phase_label: string;
+  health: OpsHealth;
+  health_label: string;
+  health_detail: string;
+  generation: number;
+  attempt: number;
+  progress: { done: number | null; total: number; unit: string; fraction: number | null; saved_cursor: number | null;
+              stage: string | null; last_progress_at: string | null };
+  eta: { seconds: number | null; basis: string; scope: string };
+  created_at: string;
+  started_at: string | null;
+  finished_at: string | null;
+  controls: { cancel: { enabled: boolean }; pause: { enabled: boolean }; resume: { enabled: boolean } };
+  cancel_requested: boolean;
+  paused: boolean;
+  plan: { committed_cursor: number; total_events: number; cache_id: string; cache_manifest_sha256: string };
+  comparisons: { compared: number; mismatches: number };
+  result: null | { outcome: string; covered_events: number; target_events: number; comparison_cursors: number;
+                   compared: number; mismatches: DeepMismatch[]; input_examined: string };
+  error: string | null;
+  recovery_log: RecoveryEntry[];
 }
 
 export interface FeedEventLite {
@@ -602,6 +649,17 @@ export const obsApi = {
   cancel: (id: string) => req<ObsReplay>(`${O}/${id}/cancel`, { method: "POST" }),
   setSpeed: (id: string, speed: number) =>
     req<ObsReplay>(`${O}/${id}/speed`, { method: "POST", body: JSON.stringify({ speed }) }),
+};
+
+export const deepApi = {
+  list: (replayId: string) => req<DeepValidation[]>(`${O}/${replayId}/deep-validations`),
+  launch: (replayId: string) => req<DeepValidation>(`${O}/${replayId}/deep-validations`, { method: "POST" }),
+  assurance: (replayId: string) => req<AssuranceSummary>(`${O}/${replayId}/assurance`),
+  cancel: (vid: string) => req<DeepValidation>(`${O}/deep-validations/${vid}/cancel`, { method: "POST" }),
+  pause: (vid: string) => req<DeepValidation>(`${O}/deep-validations/${vid}/pause`, { method: "POST" }),
+  resume: (vid: string) => req<DeepValidation>(`${O}/deep-validations/${vid}/resume`, { method: "POST" }),
+  markdown: (vid: string) => text(`${O}/deep-validations/${vid}/report.md`),
+  downloadUrl: (vid: string, fmt: "md" | "json") => `${O}/deep-validations/${vid}/report.${fmt}?download=true`,
 };
 
 export interface Capability {

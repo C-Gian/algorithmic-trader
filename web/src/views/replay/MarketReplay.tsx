@@ -8,6 +8,7 @@ import { obsFromHash, replaceHash, sourceFromHash } from "../../lib/route";
 import { useHealth } from "../../shell/health";
 import { Icon } from "../../ui/Icon";
 import { Badge, Button, Card, cx, EmptyState, Field, Metric, Mono, Notice, Skeleton, statusTone, Tone } from "../../ui/primitives";
+import { AssuranceStrip, DeepValidationPanel } from "./DeepValidation";
 import { MarketChart } from "./MarketChart";
 
 // Market Replay: durable observation-only replay of REAL market evidence through the causal feed.
@@ -455,7 +456,9 @@ export function ReplayPanel({ r, live, onCommand, eyebrow = "Market replay · re
   const ctl = r.operation.controls;
   const total = p.total_events;
   const post = ["FINALIZING", "VALIDATING", "GENERATING_REPORT"].includes(r.operation.phase ?? "");
-  const cursorText = `${p.applied_events}/${total ?? "PENDING"}`;
+  const committed = p.committed_events ?? p.applied_events;
+  const computed = p.computed_events ?? committed;
+  const cursorText = `${committed}/${total ?? "PENDING"}`;
   return (
     <Card className="run-card obs-card" testid="obs-panel">
       <div className="run-head">
@@ -516,6 +519,7 @@ export function ReplayPanel({ r, live, onCommand, eyebrow = "Market replay · re
       </div>
 
       <OperationPanel op={r.operation} testid="obs-op" what="market replay" />
+      <AssuranceStrip a={r.assurance_summary} />
 
       <div className="run-progress">
         <ProgressBar done={p.applied_events} total={total} />
@@ -530,8 +534,12 @@ export function ReplayPanel({ r, live, onCommand, eyebrow = "Market replay · re
         <Metric label="Runtime state" mono={false}
                 value={<span data-testid="obs-runtime" className={["recovering", "failed"].includes(r.runtime_state) ? "text-warn" : ""}>{humanize(r.runtime_state)}</span>}
                 hint={r.runtime_detail} />
-        <Metric label="Feed cursor (events)" value={cursorText} testid="obs-cursor"
+        <Metric label="Committed cursor (events)" value={cursorText} testid="obs-cursor"
+                title="Durable checkpoint cursor: the only admission boundary; survives restarts"
                 hint={p.last_event_id ? <span className="mono" title={p.last_event_id}>{p.last_event_id.split("/").slice(-1)[0]}</span> : "no delivery yet"} />
+        <Metric label="Computed cursor (events)" value={fmtInt(computed)} testid="obs-computed-cursor"
+                hint={computed > committed ? `${fmtInt(computed - committed)} computed, not yet committed (lost on a crash, recomputed)`
+                  : "equal to the committed cursor"} />
         <Metric label="Information time" value={fmtTime(p.information_time)} testid="obs-info-time"
                 hint="Latest delivery's availability time" />
         <Metric label="Elapsed" value={fmtSecs(p.elapsed_seconds)} />
@@ -795,6 +803,7 @@ export function MarketReplay() {
           ) : (
             <>
               <ReplayPanel r={r} live={live} onCommand={command} />
+              <DeepValidationPanel r={r} />
 
               <div className="boundary" data-testid="intelligence-boundary">
                 <Icon name="compass" size={18} />

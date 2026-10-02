@@ -24,6 +24,7 @@ from ..corpus.plan import load_plan
 from ..observe import control
 from ..observe import diagnostics as diag
 from ..observe.api import REPLAY_SELECT, replay_view, storage_facts
+from ..observe.deep_api import assurance_summary
 from ..observe.contracts import SourceKind
 from ..observe.sources import SourceRejected
 from . import report as rp
@@ -81,8 +82,10 @@ def build_router(conn: Callable, data_root: Path, art_root: Path) -> APIRouter:
         replay = c.execute(REPLAY_SELECT + " WHERE r.replay_id = %s", (ev["replay_id"],)).fetchone()
         return ev, replay
 
-    def view(ev: dict[str, Any], replay: dict[str, Any]) -> dict[str, Any]:
+    def view(ev: dict[str, Any], replay: dict[str, Any], c=None) -> dict[str, Any]:
         rv = replay_view(replay)
+        if c is not None:
+            rv["assurance_summary"] = assurance_summary(c, replay["replay_id"], rv["operation"]["assurance"])
         terminal = rv["status"] in control.TERMINAL
         return {
             "evaluation_id": ev["evaluation_id"],
@@ -131,7 +134,7 @@ def build_router(conn: Callable, data_root: Path, art_root: Path) -> APIRouter:
                 raise HTTPException(422, str(exc)) from None
             except control.ControlRejected as exc:
                 raise HTTPException(422, str(exc)) from None
-            return view(*get(c, evaluation_id))
+            return view(*get(c, evaluation_id), c)
 
     @r.get("")
     def list_evaluations(limit: int = 20) -> list[dict[str, Any]]:
@@ -143,7 +146,7 @@ def build_router(conn: Callable, data_root: Path, art_root: Path) -> APIRouter:
     @r.get("/{evaluation_id}")
     def detail(evaluation_id: str) -> dict[str, Any]:
         with conn() as c:
-            return view(*get(c, evaluation_id))
+            return view(*get(c, evaluation_id), c)
 
     def report_doc(evaluation_id: str) -> dict[str, Any]:
         with conn() as c:

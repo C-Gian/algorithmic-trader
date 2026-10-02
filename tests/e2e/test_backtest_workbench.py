@@ -79,11 +79,12 @@ def test_owner_prepares_corpus_runs_observation_evaluation_and_copies_report(wor
     expect(page.get_by_test_id("nav-backtest")).to_have_attribute("aria-current", "page")
     expect(page.get_by_test_id("nav-backtest")).to_contain_text("Historical Workbench")
     expect(page.get_by_test_id("page-backtest")).to_contain_text("Historical Workbench")
-    # explicit run types: only Market replay is available; Adviser backtest unavailable; Deep validation planned
+    # explicit run types: Market replay available; Adviser backtest unavailable; Deep validation implemented per run
     expect(page.get_by_test_id("run-type-market-replay")).to_contain_text("Market replay — data and engine check")
     expect(page.get_by_test_id("run-type-adviser-backtest")).to_contain_text("Unavailable")
     expect(page.get_by_test_id("run-type-adviser-backtest").locator("input")).to_be_disabled()
-    expect(page.get_by_test_id("run-type-deep-validation")).to_contain_text("Planned")
+    expect(page.get_by_test_id("run-type-deep-validation")).to_contain_text("Implemented")
+    expect(page.get_by_test_id("run-type-deep-validation")).to_contain_text("canonical feed cache")
     expect(page.get_by_test_id("historical-mode")).to_contain_text("HISTORICAL MODE")
     expect(page.get_by_test_id("history-banner")).to_contain_text("OBSERVATION ONLY")
     expect(page.get_by_test_id("capability-corpus")).to_contain_text("up", timeout=10_000)
@@ -192,6 +193,25 @@ def test_owner_prepares_corpus_runs_observation_evaluation_and_copies_report(wor
     expect(page.get_by_test_id("report-card")).to_have_attribute("data-state", "ready", timeout=15_000)
     expect(page.get_by_test_id("obs-status")).to_have_text("COMPLETED")
     assert len(fake.calls) == calls_after_prepare
+
+    # 12. optional Deep validation: never automatic; explicit launch -> its own job, report and linked assurance
+    expect(page.get_by_test_id("assurance-headline")).to_contain_text("no Deep validation of this run")
+    expect(page.get_by_test_id("deep-none")).to_be_visible()
+    manifest_before = httpx.get(f"{stack.base}/api/observations/{rid}/manifest", timeout=10).json()
+    page.get_by_test_id("deep-launch").click()
+    expect(page.get_by_test_id("deep-status")).to_have_text("COMPLETED", timeout=60_000)
+    expect(page.get_by_test_id("deep-outcome")).to_contain_text("MATCH")
+    expect(page.get_by_test_id("deep-comparisons")).to_contain_text("0 mismatch")
+    page.get_by_test_id("deep-copy-report").click()
+    expect(page.get_by_test_id("deep-copy-report")).to_contain_text("Copied")
+    deep_md = page.evaluate("() => navigator.clipboard.readText()").replace("\r\n", "\n")
+    assert "Deep validation report" in deep_md and "MATCH" in deep_md and rid in deep_md
+    manifest_after = httpx.get(f"{stack.base}/api/observations/{rid}/manifest", timeout=10).json()
+    assert manifest_after == manifest_before  # the run's records/artifacts never change
+    page.reload()
+    expect(page.get_by_test_id("assurance-headline")).to_contain_text("Deep validation", timeout=10_000)
+    expect(page.get_by_test_id("assurance-deep")).to_have_text("match")
+    page.screenshot(path=str(evidence_dir / "24-backtest-deep-validation.png"), full_page=True)
     ctx.close()
 
     for (w, h), name in (((1920, 1080), "22-backtest-1920.png"), ((1024, 768), "23-backtest-1024.png")):

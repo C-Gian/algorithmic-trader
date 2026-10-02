@@ -29,6 +29,7 @@ from .evaluation.api import build_router as evaluation_router
 from .marketdata.contracts import MARKETDATA_SCHEMA_VERSION, DatasetManifest, QualityReport
 from .marketdata.dataset import dataset_path, default_data_root, list_manifests, load_manifest, load_quality, verify
 from .observe.api import build_router as observation_router
+from .observe.deep_api import build_router as deep_router
 from .recorder import job as recorder_job
 from .recorder import journal as rec_journal
 from .worker import default_artifact_root, fetch_events
@@ -585,6 +586,7 @@ def create_app(
 
     # -- real-market observation replay (separate path; algotrader.observe.v1) --
 
+    app.include_router(deep_router(conn))  # before the generic /{replay_id} routes
     app.include_router(observation_router(conn, md_root, art_root))
 
     # -- Owner evaluation workbench: corpus preparation + observation-only evaluations --

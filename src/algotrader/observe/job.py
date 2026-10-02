@@ -101,6 +101,7 @@ class JobSpec:
     # Set by the claim when this attempt only has to finalize (cancel before start / too many interruptions).
     finalize: str | None = None
     finalize_error: str | None = None
+    kind: str = "replay"  # "replay" (observation replay) or "deep" (Deep validation; replay_id = validation id)
     # Test-only fault injection (never exposed through the API/CLI): CPU-bound busy work per unit so that
     # bounded fixtures can exceed a deliberately short lease, or a silent stall without milestones.
     faults: dict[str, float] = field(default_factory=dict)
@@ -153,6 +154,9 @@ def _busy(seconds: float) -> None:
 
 
 class ReplayJob:
+    TABLE = "observation_replays"  # lifecycle table (Deep validation jobs reuse the same machinery)
+    KEY = "replay_id"
+    CONTROLS = _CONTROL_COLUMNS
     def __init__(self, spec: JobSpec, *, sleep: Callable[[float], None] = time.sleep,
                  before_commit: Callable[[str, int], None] | None = None,
                  after_commit: Callable[[str, int], None] | None = None) -> None:
@@ -196,12 +200,12 @@ class ReplayJob:
 
     @property
     def fence(self) -> tuple[str, tuple[Any, ...]]:
-        return ("replay_id = %s AND lease_owner = %s AND lease_generation = %s AND status = 'running'",
+        return (f"{self.KEY} = %s AND lease_owner = %s AND lease_generation = %s AND status = 'running'",
                 (self.rid, self.spec.worker_id, self.spec.generation))
 
     def _row(self) -> dict[str, Any]:
         cond, args = self.fence
-        row = self.conn.execute(f"SELECT * FROM observation_replays WHERE {cond}", args).fetchone()
+        row = self.conn.execute(f"SELECT * FROM {self.TABLE} WHERE {cond}", args).fetchone()
         if row is None:
             raise LeaseLost(self.rid)
         return row
@@ -225,7 +229,7 @@ class ReplayJob:
 
     def enter_phase(self, phase: str, **progress: Any) -> None:
         cond, args = self.fence
-        row = self.conn.execute(f"SELECT attempt, phase, phase_started_at FROM observation_replays WHERE {cond}",
+        row = self.conn.execute(f"SELECT attempt, phase, phase_started_at FROM {self.TABLE} WHERE {cond}",
                                 args).fetchone()
         if row is None:
             raise LeaseLost(self.rid)
@@ -241,7 +245,7 @@ class ReplayJob:
         replaying = phase == "REPLAYING"
         # The replay ETA window starts when REPLAYING starts (never at claim/preparation); other phases clear it.
         updated = self.conn.execute(
-            f"""UPDATE observation_replays SET phase = %s, phase_started_at = now(),
+            f"""UPDATE {self.TABLE} SET phase = %s, phase_started_at = now(),
                     phase_history = phase_history || %s, progress = %s, last_progress_at = now(),
                     progress_seq = progress_seq + 1,
                     throughput_since = CASE WHEN %s THEN now() ELSE NULL END,
@@ -295,7 +299,7 @@ class ReplayJob:
             self._last_metrics = now
             sets += ", metrics = metrics || %s"
             params.append(Jsonb(self._metrics_doc()))
-        row = self.conn.execute(f"UPDATE observation_replays SET {sets} WHERE {cond} RETURNING cancel_requested",
+        row = self.conn.execute(f"UPDATE {self.TABLE} SET {sets} WHERE {cond} RETURNING cancel_requested",
                                 (*params, *args)).fetchone()
         if row is None:
             raise LeaseLost(self.rid)
@@ -308,13 +312,13 @@ class ReplayJob:
 
     def _cancel_requested(self) -> bool:
         cond, args = self.fence
-        row = self.conn.execute(f"SELECT cancel_requested FROM observation_replays WHERE {cond}", args).fetchone()
+        row = self.conn.execute(f"SELECT cancel_requested FROM {self.TABLE} WHERE {cond}", args).fetchone()
         if row is None:
             raise LeaseLost(self.rid)
         return bool(row["cancel_requested"])
 
     def _timings(self) -> list[dict]:
-        row = self.conn.execute("SELECT phase_history FROM observation_replays WHERE replay_id = %s",
+        row = self.conn.execute(f"SELECT phase_history FROM {self.TABLE} WHERE {self.KEY} = %s",
                                 (self.rid,)).fetchone()
         active, waiting = self._span_measure()
         current = ops.closed_entry(self._phase or "?", self.spec.generation, self._row_cache["attempt"], None, _now(),
@@ -432,7 +436,7 @@ class ReplayJob:
 
     def _note(self, entry: dict[str, Any]) -> None:
         cond, args = self.fence
-        self.conn.execute(f"UPDATE observation_replays SET diagnostic_log = diagnostic_log || %s WHERE {cond}",
+        self.conn.execute(f"UPDATE {self.TABLE} SET diagnostic_log = diagnostic_log || %s WHERE {cond}",
                           (Jsonb([{"at": _now().isoformat(), "generation": self.spec.generation, **entry}]), *args))
 
     def _restore(self, cache: FeedCache, reader: CacheReader, freshness, reclaimed: bool) -> Kernel:
@@ -526,7 +530,7 @@ class ReplayJob:
 
     def control(self) -> dict[str, Any]:
         cond, args = self.fence
-        row = self.conn.execute(f"SELECT {_CONTROL_COLUMNS} FROM observation_replays WHERE {cond}", args).fetchone()
+        row = self.conn.execute(f"SELECT {self.CONTROLS} FROM {self.TABLE} WHERE {cond}", args).fetchone()
         if row is None:
             raise LeaseLost(self.rid)
         return row
@@ -558,11 +562,12 @@ class ReplayJob:
                 raise _UnsafeRecovery(f"committed cursor is no longer {from_cursor}; refusing to commit a range")
             conn.execute(
                 """INSERT INTO observation_ranges (replay_id, range_seq, generation, from_cursor, to_cursor,
-                       event_count, first_order, last_order, commitment_before, commitment_after)
+                       event_count, first_order, last_order, commitment_before, commitment_after, snapshot_digest,
+                       state_sha256)
                    VALUES (%s, (SELECT coalesce(max(range_seq) + 1, 0) FROM observation_ranges WHERE replay_id = %s),
-                           %s, %s, %s, %s, %s, %s, %s, %s)""",
+                           %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
                 (self.rid, self.rid, self.spec.generation, from_cursor, kernel.cursor, kernel.cursor - from_cursor,
-                 first_order, last_order, commit_before.hex(), kernel.commitment.hex()))
+                 first_order, last_order, commit_before.hex(), kernel.commitment.hex(), snap.content_digest, sha))
             self._insert_restore_point(kernel, snap, blob, sha, engine)
             if self.before_commit is not None:
                 self.before_commit(self.rid, kernel.cursor)
@@ -593,7 +598,7 @@ class ReplayJob:
         return bool(parked)
 
     def _phase_started(self) -> datetime | None:
-        row = self.conn.execute("SELECT phase_started_at FROM observation_replays WHERE replay_id = %s",
+        row = self.conn.execute(f"SELECT phase_started_at FROM {self.TABLE} WHERE {self.KEY} = %s",
                                 (self.rid,)).fetchone()
         return row["phase_started_at"] if row else None
 
@@ -708,9 +713,11 @@ class ReplayJob:
                 continue
             stepping = bool(ctl["paused"])  # while paused only a STEP grant allows exactly one event
             try:
-                _seq, line = next(it)
+                seq, line = next(it)
             except StopIteration:
                 break
+            if seq != kernel.cursor:  # runtime admission check: total-order position continuity
+                raise FeedError(f"admission discontinuity: cache position {seq} != kernel cursor {kernel.cursor}")
             e = kernel.apply_line(line)
             self.counters.source_records_read += 1
             key = order_sort_key(e).decode().replace("\x00", "|")
@@ -808,9 +815,11 @@ class ReplayJob:
                     self._cancel_consumed = True
                     raise
 
+            receipt = self.conn.execute("SELECT * FROM observation_feed_caches WHERE cache_id = %s",
+                                        (engine["cache_id"],)).fetchone()
             validation, snap = reconcile(status=status, cache=cache, ranges=ranges, cursor=cursor, terminal=terminal,
                                          committed_snapshot_digest=ck["snapshot_digest"], engine=engine,
-                                         freshness=cfg.freshness_policy, hook=vhook)
+                                         freshness=cfg.freshness_policy, hook=vhook, receipt=receipt)
             if validation.outcome == ValidationOutcome.INCOMPLETE:
                 status = ReplayStatus.CANCELLED
                 error = ("cancelled by user during VALIDATING: the replay cursor was complete, but reconciliation did "
@@ -937,7 +946,12 @@ class ReplayJob:
 def compute_main(spec: JobSpec) -> None:
     """Compute-process entry point (spawned by the supervisor)."""
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
-    job = ReplayJob(spec)
+    if spec.kind == "deep":
+        from .deep import DeepJob
+
+        job = DeepJob(spec)
+    else:
+        job = ReplayJob(spec)
     try:
         job.run()
     except psycopg.OperationalError as exc:

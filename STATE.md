@@ -1,6 +1,6 @@
 # Project State
 
-Updated: 2026-10-02 — R1B correction accepted; R1C activated
+Updated: 2026-10-03 — R1C implemented by the executor; Director review pending
 
 ## Authority and active direction
 
@@ -68,7 +68,7 @@ Accepted limitations to measure on the Owner machine:
 
 ## Current action
 
-**WP-008-R1A is ACCEPTED at `0919001fb689909080e139801641eb4c7105702f` for the operational slice. R1B correction is ACCEPTED at `9d814ec` for the structural slice. WP-008-R1C — Assurance and performance release gates is the only active implementation package (`task.md`).** NOT READY FOR OWNER MARKET REPLAY.
+**WP-008-R1A is ACCEPTED at `0919001fb689909080e139801641eb4c7105702f` for the operational slice. R1B correction is ACCEPTED at `9d814ec` for the structural slice. WP-008-R1C — Assurance and performance release gates is the only active implementation package (`task.md`); executor implementation delivered, Director review pending.** NOT READY FOR OWNER MARKET REPLAY until Director release acceptance.
 
 Executor evidence (base `fb19de247350f205ad8c9da2cb18adeb7ea885b6`, final `66a2dce90619848776e891e7f50f0f8440d95eb4`; claims below are subject to the Director findings):
 - shared operational contract `algotrader.ops.v1` (`src/algotrader/ops.py`): separate status / phase / health / assurance; current-phase-only ETA; phase spans with active vs wall time;
@@ -109,6 +109,15 @@ R1B correction (executor evidence reviewed and accepted for structural scope; ba
 - trusted receipts (migration 8) written after fsynced publication; deterministic cache manifests; warm launches require a matching receipt; compatible manifest alterations and receipt-less caches are quarantined and rebuilt to the receipt;
 - tests (`tests/test_stream_bounds.py`): long-gap + shuffled Parquet + multi-pass merge reference-exact; recorded duplicates/exclusion exact vs an independent copy of the accepted bridge; fresh-process heap/RSS for increasing gaps and duplicates; cancellation in five no-yield stages with nothing left behind; post-verification source mutation (manifest unchanged) never becomes cache evidence; pre-snapshot data/manifest mutation rejected; recording report mutation after snapshot ignored; compatible source_facts / feed metadata / partition hash / final commitment alteration rejected on a NEW warm run; crashes before/after the publication rename and before the receipt commit; receipt with vanished cache reproduced;
 - local: 366 non-E2E + 10 E2E, web typecheck/build, isolated Compose smoke.
+
+R1C executor evidence (base `d2ee918`; Director acceptance pending):
+- assurance: `observe.stream-reconciliation` v2 (migration 9 adds per-range `snapshot_digest`/`state_sha256`): contiguous positive ranges and strictly ordered bounds, exact consumed-input re-hash with the input commitment recomputed at every range boundary, terminal state SHA-256 + snapshot digest, cache/receipt/run pin, exactly-once consumption for completed runs, separate input/state/output commitments; cancelled/interrupted -> INCOMPLETE; scope "Runtime integrity verified, engine reference-tested … no independent reference replay was performed in this run"; replay loop refuses admission discontinuity; R1A/R1B validator claims preserved;
+- artifact publication fsyncs staged files and (POSIX) directories, then re-hashes every manifest artifact before reference; diagnostics re-hash referenced artifacts ≤ 64 MiB; Windows directory fsync remains unproven;
+- Deep validation `observe.deep-reference` v1: separate durable job table `observation_deep_validations` (one active per run), claimed by the existing worker with fencing generation, phase timeline, health, pause/resume/cancel, resumable saved state (5,000 events / 2 s), Markdown/JSON/Copy report at every status; independent sequential reducer fold over the receipt-checked canonical cache compared at every range boundary and restore point; canonical-cache scope disclosed (not a source audit; reducer shared); mismatch -> persistent linked assurance warning in run detail, evaluation view and copied diagnostics; originating run never modified; never auto-launched;
+- controls/durability (`tests/test_controls.py`): 1 MiB byte-level hooks in snapshot copy and single-file hashing; measured control application ≤ 0.7 s in snapshot copy, source hashing, gap walk, external merge, replay, reconciliation, report, pause and STEP; acknowledgements ≤ 0.55 s; progress age ≤ 0.1 s; lost cache rebuilt to its receipt, lost cache + changed source fails safely, lost/corrupt artifacts reported; `tests/test_assurance.py`: tamper classes, partial publication, Deep match/mismatch/cancel/pause/resume/restart/unsupported/lost cache;
+- structural benchmark `scripts/bench_observe.py`, evidence `delivery/evidence/WP-008-R1C-BENCHMARK.md`: synthetic month (129,690 events) warm 31.4 s, terminal 0.84 s, cold prep 36.8 s; year component (1,576,800 events) replay 326 s, terminal re-hash 6.8 s, cache build 157 s (verification not included); all six reference gates pass on this machine; a first run with tracemalloc active failed the year replay gate (984 s) and is retained with its root cause;
+- UI: Deep validation listed as implemented per run with its scope; Deep validation panel in Historical Workbench and Replay Lab; committed vs computed cursor; current assurance headline/warnings; reports include worker host (OS, CPU, logical CPUs, RAM, cgroup limits);
+- proposed Owner procedure (README) for the replacement September Market replay, pending Director release acceptance.
 
 SR-003 review is now retained at `strategic_reviews/ASTRA-SR-003-REPLAY-CLOCK-PERFORMANCE-REVIEW.md`. Director disposition: `strategic_reviews/SR-003-DIRECTOR-DISPOSITION.md`, ACCEPT WITH MODIFICATION. This is documentation/architecture acceptance, not an implemented performance fix or a reproduced benchmark.
 

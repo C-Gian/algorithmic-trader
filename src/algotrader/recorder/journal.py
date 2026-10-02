@@ -71,13 +71,15 @@ def sha256_text(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
-def _sha256_file(path: Path) -> tuple[str, int, int]:
+def _sha256_file(path: Path, on_chunk=None) -> tuple[str, int, int]:
     h, size, lines = hashlib.sha256(), 0, 0
     with path.open("rb") as f:
         for chunk in iter(lambda: f.read(1 << 20), b""):
             h.update(chunk)
             size += len(chunk)
             lines += chunk.count(b"\n")
+            if on_chunk is not None:
+                on_chunk(size)  # cooperative hook per 1 MiB chunk (large single files)
     return h.hexdigest(), size, lines
 
 
@@ -346,7 +348,8 @@ def verify(path: Path, progress: Callable[[str, int, int | None, str], None] | N
         if not p.is_file():
             problems.append(f"missing file {ref.name}")
             continue
-        digest, size, lines = _sha256_file(p)
+        digest, size, lines = _sha256_file(p, lambda b, ref=ref: hook(f"hash {ref.name} (bytes)", b, ref.bytes,
+                                                                      "bytes"))
         if (digest, size) != (ref.sha256, ref.bytes) or (ref.lines is not None and lines != ref.lines):
             problems.append(f"hash/size mismatch for {ref.name}")
     hook("hash session files", len(m.files), len(m.files), "files")

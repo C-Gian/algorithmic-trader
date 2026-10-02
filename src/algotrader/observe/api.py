@@ -23,6 +23,7 @@ from . import control
 from . import diagnostics as diag
 from .artifacts import files_dir
 from .contracts import LABELS, ObservationReplayConfig, SourceKind
+from .deep_api import assurance_summary
 from .feedcache import CacheError, CacheReader, decode, open_cache
 from .kernel import ENGINE_FORMAT
 from .sources import MODELED_LABEL, RECORDED_LABEL, SourceRejected, locate_source
@@ -94,6 +95,11 @@ def replay_view(row: dict[str, Any]) -> dict[str, Any]:
         "validation_passed": row["manifest"]["validation"]["passed"] if row["manifest"] else None,
         "progress": {
             "applied_events": applied,
+            # committed = durable checkpoint cursor (the only admission boundary, survives crashes); computed = the
+            # compute process's in-memory cursor reported with progress (may run ahead until the next commit)
+            "committed_events": applied,
+            "computed_events": max(applied, int((row["progress"] or {}).get("done") or 0))
+            if row["phase"] == "REPLAYING" and (row["progress"] or {}).get("unit") == "events" else applied,
             "total_events": row["total_events"],
             "information_time": row["info_time"].isoformat() if row.get("info_time") else None,
             "last_event_id": row.get("last_event_id"),
@@ -242,13 +248,18 @@ def build_router(conn: Callable, md_root: Path, art_root: Path) -> APIRouter:
     @r.get("/{replay_id}")
     def detail(replay_id: str) -> dict[str, Any]:
         with conn() as c:
-            return replay_view(get_row(c, replay_id))
+            row = get_row(c, replay_id)
+            v = replay_view(row)
+            v["assurance_summary"] = assurance_summary(c, replay_id, v["operation"]["assurance"])
+            return v
 
     def state(c, replay_id: str) -> dict[str, Any]:
         row = get_row(c, replay_id)
         ck = c.execute("SELECT snapshot_view FROM observation_checkpoints WHERE replay_id = %s",
                        (replay_id,)).fetchone()
-        return {"replay": replay_view(row), "state": ck["snapshot_view"] if ck else None}
+        v = replay_view(row)
+        v["assurance_summary"] = assurance_summary(c, replay_id, v["operation"]["assurance"])
+        return {"replay": v, "state": ck["snapshot_view"] if ck else None}
 
     @r.get("/{replay_id}/state")
     def current_state(replay_id: str) -> dict[str, Any]:
@@ -402,7 +413,12 @@ def build_router(conn: Callable, md_root: Path, art_root: Path) -> APIRouter:
             row = get_row(c, replay_id)
             ev = c.execute("SELECT evaluation_id FROM evaluations WHERE replay_id = %s", (replay_id,)).fetchone()
             storage = storage_facts(c, replay_id)
-        return diag.diagnostic_report(row, art_root, datetime.now(UTC), ev, storage)
+            current = assurance_summary(c, replay_id, row.get("assurance"))
+        doc = diag.diagnostic_report(row, art_root, datetime.now(UTC), ev, storage)
+        doc["current_assurance"] = {**current, "captured_at": datetime.now(UTC).isoformat(),
+                                    "note": "current linked assurance (may change when Deep validations run); the "
+                                            "run's terminal records are immutable"}
+        return doc
 
     @r.get("/{replay_id}/report.json")
     def report_json(replay_id: str, download: bool = False) -> PlainTextResponse:

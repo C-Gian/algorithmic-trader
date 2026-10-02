@@ -1,0 +1,645 @@
+{
+  "kind": "R1C synthetic engineering benchmark (not a historical evaluation)",
+  "environment": {
+    "captured_at": "2026-10-02T22:30:52.645317+00:00",
+    "build": "d2ee918e03cf9388d9c017060b528413ca10b378",
+    "worktree_dirty": true,
+    "os": "Windows-10-10.0.19045-SP0",
+    "python": "3.14.7",
+    "cpu": "Intel64 Family 6 Model 158 Stepping 9, GenuineIntel",
+    "logical_cpus": 8,
+    "ram_bytes": 34316906496,
+    "storage": {
+      "path": "var\\benchmarks\\r1c",
+      "total_bytes": 999507046400,
+      "free_bytes": 406516346880
+    },
+    "runtime_limits": "local machine, no container CPU/memory limits applied by the benchmark"
+  },
+  "gates": {
+    "month_cached_observation_s": 120.0,
+    "month_terminal_report_s": 10.0,
+    "month_cold_preparation_s": 120.0,
+    "year_cached_observation_s": 900.0,
+    "year_terminal_report_s": 30.0,
+    "year_cold_preparation_s": 900.0
+  },
+  "tiers": {
+    "pilot": {
+      "cold": {
+        "replay_id": "obs-20261002T223054-baf85b",
+        "status": "completed",
+        "assurance": "passed",
+        "events": 8646,
+        "cursor": 8646,
+        "wall_including_process_spawn_s": 5.646,
+        "phase_active_s": {
+          "QUEUED": 0.0,
+          "PREPARING_SOURCE": 0.011,
+          "VERIFYING_SOURCE": 1.277,
+          "BUILDING_FEED": 1.299,
+          "INITIALIZING": 0.011,
+          "REPLAYING": 1.981,
+          "FINALIZING": 0.02,
+          "VALIDATING": 0.118,
+          "GENERATING_REPORT": 0.057
+        },
+        "phase_wall_s": {
+          "QUEUED": 0.042,
+          "PREPARING_SOURCE": 0.015,
+          "VERIFYING_SOURCE": 1.28,
+          "BUILDING_FEED": 1.302,
+          "INITIALIZING": 0.014,
+          "REPLAYING": 1.985,
+          "FINALIZING": 0.023,
+          "VALIDATING": 0.12,
+          "GENERATING_REPORT": 0.059
+        },
+        "preparation_active_s": 2.587,
+        "terminal_report_active_s": 0.195,
+        "replay_events_per_s": 4364.5,
+        "counters": {
+          "source_verifications": 1,
+          "feed_builds": 1,
+          "cache_reused": false,
+          "cache_build_events": 8646,
+          "sort_spill_runs": 2,
+          "events_applied": 8646,
+          "snapshots_built": 3,
+          "state_encodes": 3,
+          "transactions_committed": 3,
+          "checkpoints_committed": 2,
+          "delivery_rows_written": 0,
+          "restore_suffix_events": 0,
+          "prefix_restore_events": 0,
+          "cache_bytes_read": 567806,
+          "cache_partitions_read": 2,
+          "checkpoint_state_bytes": 30557,
+          "output_bytes": null,
+          "max_control_gap_seconds": 0.253,
+          "max_rss_bytes": 101367808,
+          "max_rss_source": "Windows PeakWorkingSetSize (process lifetime peak)",
+          "cpu_seconds": 4.047
+        },
+        "ranges": 2,
+        "delivery_rows": 0
+      },
+      "warm": {
+        "replay_id": "obs-20261002T223059-50ab60",
+        "status": "completed",
+        "assurance": "passed",
+        "events": 8646,
+        "cursor": 8646,
+        "wall_including_process_spawn_s": 3.069,
+        "phase_active_s": {
+          "QUEUED": 0.0,
+          "PREPARING_SOURCE": 0.064,
+          "INITIALIZING": 0.011,
+          "REPLAYING": 1.981,
+          "FINALIZING": 0.018,
+          "VALIDATING": 0.121,
+          "GENERATING_REPORT": 0.06
+        },
+        "phase_wall_s": {
+          "QUEUED": 0.02,
+          "PREPARING_SOURCE": 0.067,
+          "INITIALIZING": 0.013,
+          "REPLAYING": 1.983,
+          "FINALIZING": 0.02,
+          "VALIDATING": 0.124,
+          "GENERATING_REPORT": 0.062
+        },
+        "preparation_active_s": 0.064,
+        "terminal_report_active_s": 0.199,
+        "replay_events_per_s": 4364.5,
+        "counters": {
+          "source_verifications": 0,
+          "feed_builds": 0,
+          "cache_reused": true,
+          "cache_build_events": null,
+          "sort_spill_runs": null,
+          "events_applied": 8646,
+          "snapshots_built": 3,
+          "state_encodes": 3,
+          "transactions_committed": 3,
+          "checkpoints_committed": 2,
+          "delivery_rows_written": 0,
+          "restore_suffix_events": 0,
+          "prefix_restore_events": 0,
+          "cache_bytes_read": 567806,
+          "cache_partitions_read": 2,
+          "checkpoint_state_bytes": 30557,
+          "output_bytes": null,
+          "max_control_gap_seconds": 0.257,
+          "max_rss_bytes": 89997312,
+          "max_rss_source": "Windows PeakWorkingSetSize (process lifetime peak)",
+          "cpu_seconds": 2.641
+        },
+        "ranges": 2,
+        "delivery_rows": 0
+      },
+      "deep": {
+        "validation_id": "deep-20261002T223102-abc095",
+        "status": "completed",
+        "outcome": "match",
+        "compared": 12,
+        "covered": 8646,
+        "wall_including_process_spawn_s": 2.572,
+        "phase_active_s": {
+          "QUEUED": 0,
+          "PREPARING_SOURCE": 0.005,
+          "VALIDATING": 1.841,
+          "GENERATING_REPORT": 0.027
+        },
+        "events_per_s": 4696.4,
+        "max_rss_bytes": 72433664
+      }
+    },
+    "month": {
+      "synthetic_acquisition_s": 10.55,
+      "cold": {
+        "replay_id": "obs-20261002T223116-49b0d3",
+        "status": "completed",
+        "assurance": "passed",
+        "events": 129690,
+        "cursor": 129690,
+        "wall_including_process_spawn_s": 68.656,
+        "phase_active_s": {
+          "QUEUED": 0.0,
+          "PREPARING_SOURCE": 0.01,
+          "VERIFYING_SOURCE": 18.731,
+          "BUILDING_FEED": 18.069,
+          "INITIALIZING": 0.011,
+          "REPLAYING": 30.259,
+          "FINALIZING": 0.017,
+          "VALIDATING": 0.726,
+          "GENERATING_REPORT": 0.053
+        },
+        "phase_wall_s": {
+          "QUEUED": 0.022,
+          "PREPARING_SOURCE": 0.014,
+          "VERIFYING_SOURCE": 18.734,
+          "BUILDING_FEED": 18.073,
+          "INITIALIZING": 0.013,
+          "REPLAYING": 30.262,
+          "FINALIZING": 0.02,
+          "VALIDATING": 0.729,
+          "GENERATING_REPORT": 0.056
+        },
+        "preparation_active_s": 36.81,
+        "terminal_report_active_s": 0.796,
+        "replay_events_per_s": 4286.0,
+        "counters": {
+          "source_verifications": 1,
+          "feed_builds": 1,
+          "cache_reused": false,
+          "cache_build_events": 129690,
+          "sort_spill_runs": 14,
+          "events_applied": 129690,
+          "snapshots_built": 27,
+          "state_encodes": 27,
+          "transactions_committed": 27,
+          "checkpoints_committed": 26,
+          "delivery_rows_written": 0,
+          "restore_suffix_events": 0,
+          "prefix_restore_events": 0,
+          "cache_bytes_read": 8919597,
+          "cache_partitions_read": 26,
+          "checkpoint_state_bytes": 33390,
+          "output_bytes": null,
+          "max_control_gap_seconds": 0.256,
+          "max_rss_bytes": 139321344,
+          "max_rss_source": "Windows PeakWorkingSetSize (process lifetime peak)",
+          "cpu_seconds": 52.656
+        },
+        "ranges": 26,
+        "delivery_rows": 0
+      },
+      "warm": {
+        "replay_id": "obs-20261002T223224-7d2c97",
+        "status": "completed",
+        "assurance": "passed",
+        "events": 129690,
+        "cursor": 129690,
+        "wall_including_process_spawn_s": 31.381,
+        "phase_active_s": {
+          "QUEUED": 0.0,
+          "PREPARING_SOURCE": 0.072,
+          "INITIALIZING": 0.012,
+          "REPLAYING": 29.674,
+          "FINALIZING": 0.019,
+          "VALIDATING": 0.759,
+          "GENERATING_REPORT": 0.059
+        },
+        "phase_wall_s": {
+          "QUEUED": 0.021,
+          "PREPARING_SOURCE": 0.076,
+          "INITIALIZING": 0.016,
+          "REPLAYING": 29.677,
+          "FINALIZING": 0.023,
+          "VALIDATING": 0.763,
+          "GENERATING_REPORT": 0.072
+        },
+        "preparation_active_s": 0.072,
+        "terminal_report_active_s": 0.837,
+        "replay_events_per_s": 4370.5,
+        "counters": {
+          "source_verifications": 0,
+          "feed_builds": 0,
+          "cache_reused": true,
+          "cache_build_events": null,
+          "sort_spill_runs": null,
+          "events_applied": 129690,
+          "snapshots_built": 27,
+          "state_encodes": 27,
+          "transactions_committed": 27,
+          "checkpoints_committed": 26,
+          "delivery_rows_written": 0,
+          "restore_suffix_events": 0,
+          "prefix_restore_events": 0,
+          "cache_bytes_read": 8919597,
+          "cache_partitions_read": 26,
+          "checkpoint_state_bytes": 33390,
+          "output_bytes": null,
+          "max_control_gap_seconds": 0.267,
+          "max_rss_bytes": 101609472,
+          "max_rss_source": "Windows PeakWorkingSetSize (process lifetime peak)",
+          "cpu_seconds": 30.078
+        },
+        "ranges": 26,
+        "delivery_rows": 0
+      },
+      "pause_restore": {
+        "replay_id": "obs-20261002T223256-d2cec6",
+        "status": "completed",
+        "assurance": "passed",
+        "events": 129690,
+        "cursor": 129690,
+        "wall_including_process_spawn_s": 16.129,
+        "phase_active_s": {
+          "QUEUED": 0.0,
+          "PREPARING_SOURCE": 0.096,
+          "INITIALIZING": 0.077,
+          "REPLAYING": 29.594,
+          "FINALIZING": 0.02,
+          "VALIDATING": 0.751,
+          "GENERATING_REPORT": 0.065
+        },
+        "phase_wall_s": {
+          "QUEUED": 0.022,
+          "PREPARING_SOURCE": 0.103,
+          "INITIALIZING": 0.102,
+          "REPLAYING": 29.63,
+          "FINALIZING": 0.022,
+          "VALIDATING": 0.755,
+          "GENERATING_REPORT": 0.078
+        },
+        "preparation_active_s": 0.096,
+        "terminal_report_active_s": 0.836,
+        "replay_events_per_s": 4382.3,
+        "counters": {
+          "source_verifications": 0,
+          "feed_builds": 0,
+          "cache_reused": true,
+          "cache_build_events": null,
+          "sort_spill_runs": null,
+          "events_applied": 63543,
+          "snapshots_built": 14,
+          "state_encodes": 13,
+          "transactions_committed": 13,
+          "checkpoints_committed": 13,
+          "delivery_rows_written": 0,
+          "restore_suffix_events": 0,
+          "prefix_restore_events": 0,
+          "cache_bytes_read": 4572256,
+          "cache_partitions_read": 13,
+          "checkpoint_state_bytes": 33390,
+          "output_bytes": null,
+          "max_control_gap_seconds": 0.268,
+          "max_rss_bytes": 100556800,
+          "max_rss_source": "Windows PeakWorkingSetSize (process lifetime peak)",
+          "cpu_seconds": 15.266
+        },
+        "ranges": 27,
+        "delivery_rows": 0,
+        "pause_applied_s": 0.23,
+        "restore": {
+          "prefix_restore_events": 0,
+          "restore_suffix_events": 0,
+          "events_applied_after_resume": 63543,
+          "initializing_active_s": 0.077
+        }
+      },
+      "deep": {
+        "validation_id": "deep-20261002T223328-aa5074",
+        "status": "completed",
+        "outcome": "match",
+        "compared": 84,
+        "covered": 129690,
+        "wall_including_process_spawn_s": 28.574,
+        "phase_active_s": {
+          "QUEUED": 0,
+          "PREPARING_SOURCE": 0.031,
+          "VALIDATING": 27.79,
+          "GENERATING_REPORT": 0.03
+        },
+        "events_per_s": 4666.8,
+        "max_rss_bytes": 101036032
+      }
+    },
+    "partitions": {
+      "partition_events": 500,
+      "run": {
+        "replay_id": "obs-20261002T223357-8d0b90",
+        "status": "completed",
+        "assurance": "passed",
+        "events": 129690,
+        "cursor": 129690,
+        "wall_including_process_spawn_s": 69.345,
+        "phase_active_s": {
+          "QUEUED": 0.0,
+          "PREPARING_SOURCE": 0.003,
+          "VERIFYING_SOURCE": 18.049,
+          "BUILDING_FEED": 18.689,
+          "INITIALIZING": 0.012,
+          "REPLAYING": 31.614,
+          "FINALIZING": 0.044,
+          "VALIDATING": 0.713,
+          "GENERATING_REPORT": 0.057
+        },
+        "phase_wall_s": {
+          "QUEUED": 0.02,
+          "PREPARING_SOURCE": 0.007,
+          "VERIFYING_SOURCE": 18.052,
+          "BUILDING_FEED": 18.693,
+          "INITIALIZING": 0.016,
+          "REPLAYING": 31.617,
+          "FINALIZING": 0.047,
+          "VALIDATING": 0.716,
+          "GENERATING_REPORT": 0.07
+        },
+        "preparation_active_s": 36.741,
+        "terminal_report_active_s": 0.814,
+        "replay_events_per_s": 4102.3,
+        "counters": {
+          "source_verifications": 1,
+          "feed_builds": 1,
+          "cache_reused": false,
+          "cache_build_events": 129690,
+          "sort_spill_runs": 14,
+          "events_applied": 129690,
+          "snapshots_built": 27,
+          "state_encodes": 27,
+          "transactions_committed": 27,
+          "checkpoints_committed": 26,
+          "delivery_rows_written": 0,
+          "restore_suffix_events": 0,
+          "prefix_restore_events": 0,
+          "cache_bytes_read": 9037335,
+          "cache_partitions_read": 260,
+          "checkpoint_state_bytes": 33390,
+          "output_bytes": null,
+          "max_control_gap_seconds": 0.255,
+          "max_rss_bytes": 177946624,
+          "max_rss_source": "Windows PeakWorkingSetSize (process lifetime peak)",
+          "cpu_seconds": 62.812
+        },
+        "ranges": 26,
+        "delivery_rows": 0
+      }
+    },
+    "recording": {
+      "repeats": 60,
+      "run": {
+        "replay_id": "obs-20261002T223507-5e5940",
+        "status": "completed",
+        "assurance": "passed",
+        "events": 5,
+        "cursor": 5,
+        "wall_including_process_spawn_s": 1.179,
+        "phase_active_s": {
+          "QUEUED": 0.0,
+          "PREPARING_SOURCE": 0.01,
+          "VERIFYING_SOURCE": 0.13,
+          "BUILDING_FEED": 0.163,
+          "INITIALIZING": 0.011,
+          "REPLAYING": 0.016,
+          "FINALIZING": 0.016,
+          "VALIDATING": 0.011,
+          "GENERATING_REPORT": 0.046
+        },
+        "phase_wall_s": {
+          "QUEUED": 0.02,
+          "PREPARING_SOURCE": 0.014,
+          "VERIFYING_SOURCE": 0.143,
+          "BUILDING_FEED": 0.166,
+          "INITIALIZING": 0.014,
+          "REPLAYING": 0.019,
+          "FINALIZING": 0.023,
+          "VALIDATING": 0.015,
+          "GENERATING_REPORT": 0.05
+        },
+        "preparation_active_s": 0.303,
+        "terminal_report_active_s": 0.073,
+        "replay_events_per_s": 312.5,
+        "counters": {
+          "source_verifications": 1,
+          "feed_builds": 1,
+          "cache_reused": false,
+          "cache_build_events": 5,
+          "sort_spill_runs": 2,
+          "events_applied": 5,
+          "snapshots_built": 2,
+          "state_encodes": 2,
+          "transactions_committed": 2,
+          "checkpoints_committed": 1,
+          "delivery_rows_written": 0,
+          "restore_suffix_events": 0,
+          "prefix_restore_events": 0,
+          "cache_bytes_read": 1134,
+          "cache_partitions_read": 1,
+          "checkpoint_state_bytes": 1383,
+          "output_bytes": null,
+          "max_control_gap_seconds": 0.0,
+          "max_rss_bytes": 65081344,
+          "max_rss_source": "Windows PeakWorkingSetSize (process lifetime peak)",
+          "cpu_seconds": 0.625
+        },
+        "ranges": 1,
+        "delivery_rows": 0
+      }
+    },
+    "year": {
+      "days": 365,
+      "events": 1576800,
+      "partitions": 316,
+      "cache_bytes": 100166157,
+      "manifest_bytes": 196426,
+      "cold_cache_build_s": 157.36,
+      "replay_s": 326.31,
+      "replay_events_per_s": 4832.3,
+      "replay_segments": [
+        {
+          "cursor": 157680,
+          "events_per_s": 4686.2
+        },
+        {
+          "cursor": 315360,
+          "events_per_s": 4752.4
+        },
+        {
+          "cursor": 473040,
+          "events_per_s": 4801.4
+        },
+        {
+          "cursor": 630720,
+          "events_per_s": 4883.1
+        },
+        {
+          "cursor": 788400,
+          "events_per_s": 4897.2
+        },
+        {
+          "cursor": 946080,
+          "events_per_s": 4868.0
+        },
+        {
+          "cursor": 1103760,
+          "events_per_s": 4860.9
+        },
+        {
+          "cursor": 1261440,
+          "events_per_s": 4850.5
+        },
+        {
+          "cursor": 1419120,
+          "events_per_s": 4884.4
+        },
+        {
+          "cursor": 1576800,
+          "events_per_s": 4850.5
+        }
+      ],
+      "terminal_rehash_s": 6.79,
+      "checkpoints_equivalent": 315,
+      "state_blob_bytes": 28310,
+      "rss_peak_after_build_bytes": 89313280,
+      "rss_peak_after_replay_bytes": 94973952,
+      "max_rss_bytes": 101777408,
+      "rss_source": "Windows PeakWorkingSetSize (process lifetime peak)",
+      "heap_pass": {
+        "events": 300000,
+        "heap_peak_mb": 21.5,
+        "samples": [
+          {
+            "cursor": 30000,
+            "events_per_s": 1893.9,
+            "heap_current_mb": 10.42
+          },
+          {
+            "cursor": 60000,
+            "events_per_s": 1867.8,
+            "heap_current_mb": 10.61
+          },
+          {
+            "cursor": 90000,
+            "events_per_s": 1663.2,
+            "heap_current_mb": 10.65
+          },
+          {
+            "cursor": 120000,
+            "events_per_s": 1662.7,
+            "heap_current_mb": 10.65
+          },
+          {
+            "cursor": 150000,
+            "events_per_s": 1643.0,
+            "heap_current_mb": 10.65
+          },
+          {
+            "cursor": 180000,
+            "events_per_s": 1726.6,
+            "heap_current_mb": 10.01
+          },
+          {
+            "cursor": 210000,
+            "events_per_s": 1880.7,
+            "heap_current_mb": 10.69
+          },
+          {
+            "cursor": 240000,
+            "events_per_s": 1650.3,
+            "heap_current_mb": 10.66
+          },
+          {
+            "cursor": 270000,
+            "events_per_s": 1627.0,
+            "heap_current_mb": 10.66
+          },
+          {
+            "cursor": 300000,
+            "events_per_s": 1648.4,
+            "heap_current_mb": 10.66
+          }
+        ],
+        "note": "separate traced pass; timings in this pass are not used"
+      },
+      "sort": {
+        "order": {
+          "runs_created": 84,
+          "merge_passes": 1,
+          "max_open_runs": 16,
+          "max_buffer_records": 20000
+        },
+        "content": {
+          "runs_created": 84,
+          "merge_passes": 1,
+          "max_open_runs": 16,
+          "max_buffer_records": 20000
+        },
+        "block": 20000,
+        "fan_in": 16
+      },
+      "note": "component level: no job, DB transactions or process spawn; DB checkpoint cost per commit is measured in the month tier (one transaction per checkpoint). Cold preparation here is the cache build only (no source snapshot/verification)."
+    }
+  },
+  "budget_minutes": 60.0,
+  "gate_evaluation": [
+    {
+      "gate": "month cached observation (warm run, launch->terminal incl. process spawn)",
+      "measured_s": 31.381,
+      "limit_s": 120.0,
+      "result": "PASS"
+    },
+    {
+      "gate": "month terminal validation/report (warm run, active)",
+      "measured_s": 0.837,
+      "limit_s": 10.0,
+      "result": "PASS"
+    },
+    {
+      "gate": "month cold preparation (snapshot+verify+cache, active)",
+      "measured_s": 36.81,
+      "limit_s": 120.0,
+      "result": "PASS"
+    },
+    {
+      "gate": "year cached observation (component: kernel replay + checkpoint-cadence encoding)",
+      "measured_s": 326.31,
+      "limit_s": 900.0,
+      "result": "PASS"
+    },
+    {
+      "gate": "year terminal validation (component: consumed-input re-hash)",
+      "measured_s": 6.79,
+      "limit_s": 30.0,
+      "result": "PASS"
+    },
+    {
+      "gate": "year cold preparation (component: cache build only; snapshot/verify not included)",
+      "measured_s": 157.36,
+      "limit_s": 900.0,
+      "result": "PASS"
+    }
+  ]
+}

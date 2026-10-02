@@ -369,8 +369,10 @@ def test_dataset_replay_completes_durably_with_valid_artifacts_and_no_synthetic_
     assert m["validation"]["validator"] == "observe.stream-reconciliation"  # never labelled as the old validator
     assert {c["name"] for c in m["validation"]["checks"]} >= {
         "committed_ranges_contiguous", "input_commitment_chain", "terminal_state_verified", "feed_cache_integrity",
-        "completed_consumed_entire_feed"}
-    assert "Not a full reference re-execution" in m["validation"]["scope"]
+        "completed_consumed_entire_feed", "consumed_input_exact", "cache_receipt_and_pin", "commitments_reported"}
+    assert m["validation"]["validator_version"] == "2"
+    assert "No independent reference replay was performed in this run" in m["validation"]["scope"]
+    assert "Runtime integrity verified, engine reference-tested" in m["validation"]["scope"]
     assert m["config"]["availability_policy"]["basis"] == "MODELED" and not m["config"]["availability_policy"]["measured"]
     assert m["config"]["freshness_policy"]["note"].startswith("Inspection default")
     assert m["config"]["source"]["source_id"] == ds and m["source_reference"] == f"datasets/{ds}"

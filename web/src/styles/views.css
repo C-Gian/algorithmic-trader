@@ -515,3 +515,7 @@ details.more > .card { border: none; box-shadow: none; background: transparent; 
 .run-type.is-on { border-color: var(--brand); }
 .run-type.is-disabled, .run-type.is-planned { opacity: 0.7; }
 .run-type.is-planned { grid-template-columns: 1fr auto; }
+
+/* R1C: current assurance + Deep validation */
+.assurance-strip { margin: 8px 0; }
+.deep-row { display: grid; gap: 10px; }

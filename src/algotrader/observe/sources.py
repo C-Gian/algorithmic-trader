@@ -226,8 +226,13 @@ def snapshot_source(src: Path, dest: Path, hook: Progress) -> None:
         hook("snapshot source package", i, len(files), "files")
         out = dest / p.relative_to(src)
         out.parent.mkdir(parents=True, exist_ok=True)
+        size = p.stat().st_size
         with p.open("rb") as fi, out.open("wb") as fo:
-            shutil.copyfileobj(fi, fo, 1 << 20)
+            done = 0
+            for chunk in iter(lambda: fi.read(1 << 20), b""):
+                fo.write(chunk)
+                done += len(chunk)
+                hook(f"snapshot {p.name} (bytes)", done, size, "bytes")  # cancellation point per 1 MiB
     hook("snapshot source package", len(files), len(files), "files")
 
 
