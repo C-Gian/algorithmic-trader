@@ -131,14 +131,14 @@ def test_launch_is_durable_and_prompt_while_preparation_is_slow(database_url, en
                  "FINALIZING", "VALIDATING", "GENERATING_REPORT"):
         assert phases[name]["spans"] >= 1, name
     assert phases["VERIFYING_SOURCE"]["active_seconds"] >= 1.4  # the slow verification was measured
-    # the verified config was persisted before the first causal application, and BUILDING_FEED re-verifies
-    # (duplicate verification is a documented remaining cost removed in R1B)
+    # the verified config was persisted before the first causal application; R1B verifies the source ONCE and
+    # passes the verified stream to the cache build (no nested re-verification)
     m = api.get(f"/api/observations/{rid}/manifest").json()
     counters = m["operational_metrics"]
-    assert counters["source_verifications"] == 2 and counters["feed_builds"] == 1
-    assert counters["events_applied"] == counters["snapshots_built"] - 2 == m["total_events"]
-    assert counters["transactions_committed"] == counters["delivery_rows_written"] == m["total_events"]
-    assert counters["validation_deliveries_rederived"] == m["total_events"]
+    assert counters["source_verifications"] == 1 and counters["feed_builds"] == 1 and slow["calls"] == 1
+    assert counters["events_applied"] == m["total_events"] and counters["delivery_rows_written"] == 0
+    assert counters["transactions_committed"] == counters["checkpoints_committed"] + 1  # + initial checkpoint
+    assert counters["validation_deliveries_rederived"] == 0 and counters["prefix_restore_events"] == 0
     assert counters["cpu_seconds"] is not None
 
 
@@ -208,38 +208,38 @@ def test_preparation_failure_cancel_and_restart_are_visible(database_url, env, c
 # ---------------------------------------------------------------------------
 
 
-def test_cpu_bound_validation_longer_than_lease_stays_alive_without_false_recovery(database_url, env, conn):
+def test_cpu_bound_replay_longer_than_lease_stays_alive_without_false_recovery(database_url, env, conn):
     api, root, art, ds = env
     rid = api.post("/api/observations", json={"source_kind": "dataset", "source_id": ds, "speed": 0}).json()[
         "replay_id"]
-    # separate compute PROCESS (production mode); CPU-bound busy work per validated delivery makes
-    # VALIDATING last several times longer than the deliberately short 1.5 s lease
+    # separate compute PROCESS (production mode); CPU-bound busy work per applied event makes REPLAYING last
+    # several times longer than the deliberately short 1.5 s lease (R1B terminal validation is now cheap)
     w = ObservationWorker(database_url, root, art, worker_id="observe:iso", lease_seconds=1.5,
                           heartbeat_interval=0.3, poll_interval=0.05, isolate=True,
-                          faults={"VALIDATING_cpu_per_unit": 0.06})
+                          faults={"REPLAYING_cpu_per_unit": 0.1})
     t0 = time.perf_counter()
     t = in_thread(w.run_once)
-    wait_until(lambda: row_of(conn, rid)["phase"] == "VALIDATING", timeout=90)
+    wait_until(lambda: row_of(conn, rid)["phase"] == "REPLAYING", timeout=90)
     observed = []
     while t.is_alive():
         v = api.get(f"/api/observations/{rid}").json()
-        if v["operation"]["phase"] == "VALIDATING" and v["status"] == "running":
+        if v["operation"]["phase"] == "REPLAYING" and v["status"] == "running":
             observed.append((v["runtime_state"], v["operation"]["health"], v["lease_expired"],
                              v["operation"]["supervisor"].get("child_pid")))
         time.sleep(0.2)
     t.join()
     elapsed = time.perf_counter() - t0
     r = row_of(conn, rid)
-    validating = sum(e["active_seconds"] or 0 for e in r["phase_history"] if e["phase"] == "VALIDATING")
-    assert validating > 3 * 1.5, validating  # genuinely longer than the lease
+    replaying = sum(e["active_seconds"] or 0 for e in r["phase_history"] if e["phase"] == "REPLAYING")
+    assert replaying > 3 * 1.5, replaying  # genuinely longer than the lease
     assert len(observed) >= 5
-    assert all(o[0] == "finishing" and o[1] == "progressing" and o[2] is False for o in observed), observed
+    assert all(o[0] == "running" and o[1] == "progressing" and o[2] is False for o in observed), observed
     assert all(o[3] for o in observed)  # the supervisor tracks a live compute child
     assert r["status"] == "completed" and r["attempt"] == 1 and r["lease_generation"] == 1
     assert r["recovery_log"] == [] and r["manifest"]["validation"]["passed"]
     assert r["supervisor"]["isolated_compute"] is True and r["supervisor"]["supervisor_pid"] != r["supervisor"][
         "child_pid"]
-    print(f"cpu-bound validation fixture: {elapsed:.1f}s wall, VALIDATING {validating:.1f}s active, lease 1.5s")
+    print(f"cpu-bound replay fixture: {elapsed:.1f}s wall, REPLAYING {replaying:.1f}s active, lease 1.5s")
 
 
 def test_alive_without_progress_dead_compute_and_reclaim_are_distinct(database_url, env, conn):
@@ -262,7 +262,8 @@ def test_alive_without_progress_dead_compute_and_reclaim_are_distinct(database_u
     rid = api.post("/api/observations", json={"source_kind": "dataset", "source_id": ds, "speed": 0}).json()[
         "replay_id"]
     dead = ObservationWorker(database_url, root, art, worker_id="observe:dead", lease_seconds=30,
-                             heartbeat_interval=0.3, isolate=True, faults={"REPLAYING_hard_exit": 9})
+                             heartbeat_interval=0.3, isolate=True, checkpoint_events=5, progress_interval=0.0,
+                             faults={"REPLAYING_hard_exit": 9, "REPLAYING_hard_exit_at": 12})
     dead.run_once()  # returns after the child died
     v = api.get(f"/api/observations/{rid}").json()
     assert v["operation"]["health"] == "compute_lost" and v["runtime_state"] == "unresponsive"
@@ -279,10 +280,10 @@ def test_alive_without_progress_dead_compute_and_reclaim_are_distinct(database_u
     seen = []
     orig = ReplayJob._restore
 
-    def observe_restore(self, core, reclaimed):
-        pos = orig(self, core, reclaimed)
+    def observe_restore(self, *a, **kw):
+        k = orig(self, *a, **kw)
         seen.append(api.get(f"/api/observations/{rid}").json())
-        return pos
+        return k
 
     ReplayJob._restore = observe_restore
     try:
@@ -294,6 +295,9 @@ def test_alive_without_progress_dead_compute_and_reclaim_are_distinct(database_u
     r = row_of(conn, rid)
     assert r["status"] == "completed" and r["lease_generation"] == 2 and r["manifest"]["validation"]["passed"]
     assert "exited (code 9)" in r["recovery_log"][-1]["detail"]
+    g2 = r["metrics"]["2"]
+    assert g2["prefix_restore_events"] == 0 and g2["events_applied"] == r["total_events"] - seen[0][
+        "progress"]["applied_events"]  # restored directly at the committed checkpoint
 
 
 def test_database_outage_is_disconnected_never_a_fake_stall_or_save(database_url, env, conn, tmp_path):
@@ -377,7 +381,7 @@ def test_stale_finalizer_cannot_overwrite_published_artifacts(database_url, env,
     assert pub.directory.name == "g0" and pub.directory != gdir
     assert {p.name: p.read_bytes() for p in gdir.iterdir()} == before
     assert row_of(conn, rid)["manifest"]["artifact_dir"] == r["manifest"]["artifact_dir"]
-    assert api.get(f"/api/observations/{rid}/files/deliveries.jsonl").content == before["deliveries.jsonl"]
+    assert api.get(f"/api/observations/{rid}/files/ranges.jsonl").content == before["ranges.jsonl"]
 
 
 # ---------------------------------------------------------------------------
@@ -385,11 +389,14 @@ def test_stale_finalizer_cannot_overwrite_published_artifacts(database_url, env,
 # ---------------------------------------------------------------------------
 
 
-def test_cancel_during_validation_at_full_cursor_is_incomplete_not_pass(database_url, env, conn):
+def test_cancel_during_validation_at_full_cursor_is_incomplete_not_pass(database_url, env, conn, monkeypatch):
     api, root, art, ds = env
+    from algotrader.observe import feedcache
+
+    monkeypatch.setattr(feedcache, "PARTITION_EVENTS", 4)  # 16 partitions -> many bounded integrity units
     rid = api.post("/api/observations", json={"source_kind": "dataset", "source_id": ds, "speed": 0}).json()[
         "replay_id"]
-    w = inline(database_url, root, art, progress_interval=0.02, faults={"VALIDATING_cpu_per_unit": 0.05})
+    w = inline(database_url, root, art, progress_interval=0.02, faults={"VALIDATING_cpu_per_unit": 0.1})
     t = in_thread(w.run_once)
     wait_until(lambda: row_of(conn, rid)["phase"] == "VALIDATING", timeout=60)
     v = api.get(f"/api/observations/{rid}").json()
@@ -412,10 +419,10 @@ def test_cancel_during_validation_at_full_cursor_is_incomplete_not_pass(database
     assert r["cursor"] == r["total_events"] and m["applied_events"] == m["total_events"]
     assert r["assurance"]["state"] == "incomplete"
     assert "final_snapshot.json" not in {a["name"] for a in m["artifacts"]}
-    rederived = m["operational_metrics"]["validation_deliveries_rederived"]
-    assert rederived < m["total_events"]  # did not finish a full reference replay
+    assert m["operational_metrics"]["validation_deliveries_rederived"] == 0  # no reference re-derivation at all
+    assert m["validation"]["validator"] == "observe.stream-reconciliation"
     assert took < 5.0, took
-    print(f"cancel during VALIDATING applied in {took:.2f} s ({rederived}/{m['total_events']} deliveries re-derived)")
+    print(f"cancel consumed during VALIDATING applied in {took:.2f} s (stream reconciliation; 0 events re-derived)")
 
 
 def test_evaluation_reports_in_every_state(database_url, conn, tmp_path, plan_file):  # noqa: F811

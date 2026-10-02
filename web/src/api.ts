@@ -547,8 +547,8 @@ export interface Delivery {
   event_end_time: string | null;
   available_time: string;
   quality_reason: string | null;
-  snapshot_digest: string;
-  changes: ChannelChange[];
+  snapshot_digest: string | null; // null for streaming runs (snapshots only at checkpoints)
+  changes: ChannelChange[]; // empty for streaming runs (no per-event delta)
   payload: Record<string, string | null> | null;
 }
 
@@ -780,7 +780,8 @@ export interface EvaluationReport {
     max_attempts: number;
     recoveries: number;
   };
-  validation: { ran: boolean; passed: boolean | null; outcome: string | null; checks: { name: string; passed: boolean; detail: string }[] };
+  validation: { ran: boolean; passed: boolean | null; outcome: string | null; validator?: string | null; scope?: string | null;
+                checks: { name: string; passed: boolean; detail: string }[] };
   operation: null | { phase: string | null; health: string; assurance: OpsAssurance; active_seconds_total: number };
   stopped_at: null | { applied_events: number; total_events: number | null; information_time: string | null; reason: string | null };
   warnings: string[];

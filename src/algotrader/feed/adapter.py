@@ -341,3 +341,179 @@ def build_feed(dataset_path: Path, policy: AvailabilityPolicy | None = None,
     hook("normalize families", len(channels), len(channels), "families")
     return assemble_feed(events, coverage, policy, (m.dataset_id,), inst.inst_id, inst.index_id, instrument,
                          progress=hook)
+
+
+# ---------------------------------------------------------------------------
+# Streaming dataset adapter (WP-008-R1B)
+# ---------------------------------------------------------------------------
+#
+# Produces exactly the events of ``build_feed`` (same ids, payloads, sources, availability and quality
+# classification) without materializing a family table, the event list or the raw-page key maps:
+# parquet rows are read in bounded record batches and absent slots are classified against the raw pages
+# only for the absent keys. The caller owns verification: this function is used inside a preparation
+# trust boundary that has just verified the dataset once, so it does not verify again.
+# Events are yielded per channel in source row order; the caller establishes the total order.
+
+
+@dataclass(frozen=True)
+class DatasetFeedMeta:
+    dataset_id: str
+    inst_id: str
+    index_id: str
+    coverage: tuple[ChannelCoverage, ...]
+    instrument: dict
+    channels: tuple[tuple[Family, ChannelRef], ...]
+
+
+def dataset_feed_meta(dataset_path: Path) -> DatasetFeedMeta:
+    m: DatasetManifest = load_manifest(dataset_path)
+    inst = m.instrument
+    channels = (
+        (Family.TRADE_BAR_1M, ChannelRef(source=SOURCE, family=Family.TRADE_BAR_1M, series_id=inst.inst_id)),
+        (Family.MARK_BAR_1M, ChannelRef(source=SOURCE, family=Family.MARK_BAR_1M, series_id=inst.inst_id)),
+        (Family.INDEX_BAR_1M, ChannelRef(source=SOURCE, family=Family.INDEX_BAR_1M, series_id=inst.index_id)),
+        (Family.FUNDING_SETTLEMENT, ChannelRef(source=SOURCE, family=Family.FUNDING_SETTLEMENT,
+                                               series_id=inst.inst_id)),
+    )
+    start, end = m.request.start, m.request.end
+    coverage = tuple(
+        ChannelCoverage(channel=ch, covered_from=start, covered_until=end,
+                        expected_cadence=BAR if fam in BAR_FAMILIES else None)
+        for fam, ch in channels
+    )
+    instrument = {
+        "inst_id": inst.inst_id, "index_id": inst.index_id, "ct_val": str(inst.ct_val),
+        "ct_val_ccy": inst.ct_val_ccy, "ct_mult": str(inst.ct_mult), "base_ccy": inst.base_ccy,
+        "quote_ccy": inst.quote_ccy, "settle_ccy": inst.settle_ccy,
+    }
+    return DatasetFeedMeta(m.dataset_id, inst.inst_id, inst.index_id, coverage, instrument, channels)
+
+
+def _iter_rows(path: Path, batch_rows: int):
+    pf = pq.ParquetFile(path)
+    i = 0
+    for batch in pf.iter_batches(batch_size=batch_rows):
+        for row in batch.to_pylist():
+            yield i, row
+            i += 1
+
+
+def _absent_slots(path: Path, start: datetime, end: datetime, batch_rows: int) -> set[int]:
+    """Absent 1m slots in [start, end) from the open_time column, read in bounded batches."""
+    absent: set[int] = set()
+    expected = start
+    for batch in pq.ParquetFile(path).iter_batches(batch_size=batch_rows, columns=["open_time"]):
+        for t in batch.column(0).to_pylist():
+            if t < expected - BAR:  # not in market-time order: exact fallback (bounded by the row count)
+                return _absent_slots_unordered(path, start, end, batch_rows)
+            while expected < t and expected < end:
+                absent.add(int(expected.timestamp() * 1000))
+                expected += BAR
+            if t >= expected:
+                expected = t + BAR
+    while expected < end:
+        absent.add(int(expected.timestamp() * 1000))
+        expected += BAR
+    return absent
+
+
+def _absent_slots_unordered(path: Path, start: datetime, end: datetime, batch_rows: int) -> set[int]:
+    present: set[datetime] = set()
+    for batch in pq.ParquetFile(path).iter_batches(batch_size=batch_rows, columns=["open_time"]):
+        present.update(batch.column(0).to_pylist())
+    absent, t = set(), start
+    while t < end:
+        if t not in present:
+            absent.add(int(t.timestamp() * 1000))
+        t += BAR
+    return absent
+
+
+def _absent_slot_classes(path: Path, md_family: MdFamily, absent: set[int]):
+    """Raw-page evidence restricted to the absent keys (bounded by the number of missing slots)."""
+    confirmed: dict[int, set[str]] = {}
+    unconfirmed: set[int] = set()
+    if not absent:
+        return confirmed, unconfirmed
+    with (path / "request_log.jsonl").open(encoding="utf-8") as f:
+        for line in f:
+            page = RawPageRef.model_validate_json(line)
+            if page.family != md_family:
+                continue
+            doc = json.loads((path / page.file).read_bytes())
+            for row in doc.get("data", []):
+                if not isinstance(row, list) or not row or not str(row[0]).isdigit():
+                    continue
+                key = int(str(row[0]))
+                if key not in absent:
+                    continue
+                if str(row[-1]) == "1":
+                    confirmed.setdefault(key, set()).add(json.dumps(row))
+                else:
+                    unconfirmed.add(key)
+    return confirmed, unconfirmed
+
+
+def iter_dataset_events(dataset_path: Path, policy: AvailabilityPolicy | None = None,
+                        progress: BuildProgress | None = None, batch_rows: int = 4096):
+    """Yield the events of ``build_feed(dataset_path, policy)`` (unordered across channels), streaming."""
+    policy = policy or modeled_availability()
+    hook = progress or _no_hook
+    m: DatasetManifest = load_manifest(dataset_path)
+    meta = dataset_feed_meta(dataset_path)
+    start, end = m.request.start, m.request.end
+    for k, (fam, ch) in enumerate(meta.channels):
+        hook("stream normalized families", k, len(meta.channels), "families")
+        artifact = f"{MD_FAMILY[fam].value}.parquet"
+        apath = dataset_path / artifact
+
+        def src(row_index: int | None, row: dict | None, artifact: str = artifact) -> SourceRef:
+            return SourceRef(
+                dataset_id=m.dataset_id, artifact=artifact, row_index=row_index,
+                raw_page_ref=row["raw_page_ref"] if row else None,
+                retrieved_at=row["retrieved_at"] if row else None,
+                source_availability_policy=m.availability_policy,
+            )
+
+        if fam == Family.FUNDING_SETTLEMENT:
+            for i, row in _iter_rows(apath, batch_rows):
+                yield make_event(
+                    ch, EventKind.FUNDING_OBSERVATION, row["funding_time"], None, row["available_time"], policy,
+                    src(i, row),
+                    FundingPayload(
+                        funding_rate=Decimal(row["funding_rate"]),
+                        realized_rate=Decimal(row["realized_rate"]) if row["realized_rate"] is not None else None,
+                        method=row["method"], formula_type=row["formula_type"],
+                    ))
+            continue
+        absent = _absent_slots(apath, start, end, batch_rows)
+        for i, row in _iter_rows(apath, batch_rows):
+            t, close_t = row["open_time"], row["close_time"]
+            if row["quality"] == "OK":
+                yield make_event(ch, EventKind.BAR_OBSERVATION, t, close_t, row["available_time"], policy,
+                                 src(i, row), _bar_payload(fam, row))
+            else:
+                yield make_event(
+                    ch, EventKind.SLOT_QUALITY, t, close_t, row["available_time"], policy, src(i, row),
+                    SlotQualityPayload(reason=QualityReason.INVALID_ROW,
+                                       detail="row failed source validity checks; values withheld from valid state",
+                                       flags=tuple(row["quality_flags"] or ())),
+                )
+        confirmed, unconfirmed = _absent_slot_classes(dataset_path, MD_FAMILY[fam], absent)
+        for key in sorted(absent):
+            t = datetime.fromtimestamp(key / 1000, tz=start.tzinfo)
+            if len(confirmed.get(key, ())) > 1:
+                reason, detail = QualityReason.CONFLICTING_DUPLICATE, "source returned conflicting values; none admitted"
+            elif key in unconfirmed and key not in confirmed:
+                reason, detail = QualityReason.INCOMPLETE_REJECTED, "only an unconfirmed (confirm=0) bar was returned"
+            elif key in confirmed:
+                reason, detail = QualityReason.EXCLUDED_UNCLASSIFIED, "raw record present but not normalized"
+            else:
+                reason, detail = QualityReason.MISSING, "no source record for this slot; not filled"
+            yield make_event(
+                ch, EventKind.SLOT_QUALITY, t, t + BAR, t + BAR, policy,
+                SourceRef(dataset_id=m.dataset_id, artifact=f"{artifact} (absent slot)", row_index=None,
+                          raw_page_ref=None, retrieved_at=None, source_availability_policy=m.availability_policy),
+                SlotQualityPayload(reason=reason, detail=detail),
+            )
+    hook("stream normalized families", len(meta.channels), len(meta.channels), "families")

@@ -34,6 +34,7 @@ from algotrader.observe import control
 from algotrader.observe.contracts import ReplayStatus, SourceKind
 from algotrader.observe.core import ReplayCore, as_of
 from algotrader.observe.sources import SourceRejected, load_dataset, load_recording
+from algotrader.observe.job import LeaseLost
 from algotrader.observe.worker import ObservationWorker, SimulatedCrash
 from algotrader.recorder.feed_bridge import build_recorded_feed
 from algotrader.recorder.journal import finalize, iter_records, ns_to_dt, recordings_dir
@@ -306,6 +307,7 @@ def test_real_replay_domain_path_imports_no_synthetic_trader_modules():
 def worker(database_url, root, art, **kw) -> ObservationWorker:
     kw.setdefault("worker_id", "observe:test")
     kw.setdefault("isolate", False)
+    kw.setdefault("checkpoint_events", 5)  # small cadence so short fixtures cross several checkpoints
     return ObservationWorker(database_url, root, art, lease_seconds=5, poll_interval=0.01, sleep=lambda s: None, **kw)
 
 
@@ -320,13 +322,28 @@ def replay_row(c, rid):
 
 
 def deliveries(c, rid):
+    """Legacy per-event delivery rows (streaming runs never write them)."""
     return c.execute("SELECT seq, event_id FROM observation_deliveries WHERE replay_id = %s ORDER BY seq",
                      (rid,)).fetchall()
+
+
+def ranges(c, rid):
+    return c.execute("SELECT * FROM observation_ranges WHERE replay_id = %s ORDER BY from_cursor", (rid,)).fetchall()
 
 
 def expire_lease(c, rid):
     c.execute("UPDATE observation_replays SET lease_expires_at = now() - interval '1 second' WHERE replay_id = %s",
               (rid,))
+
+
+def assert_contiguous(rs, cursor):
+    expect = 0
+    for r in rs:
+        assert r["from_cursor"] == expect and r["event_count"] == r["to_cursor"] - r["from_cursor"]
+        expect = r["to_cursor"]
+    assert expect == cursor
+    for a, b in zip(rs, rs[1:]):
+        assert a["commitment_after"] == b["commitment_before"]
 
 
 @pytest.fixture
@@ -346,27 +363,38 @@ def test_dataset_replay_completes_durably_with_valid_artifacts_and_no_synthetic_
     total = src.feed.manifest.event_count
     assert row["status"] == "completed" and row["cursor"] == total == row["total_events"]
     pure = snapshot_at(src.feed, as_of(src.feed, total), FRESH)
-    assert row["snapshot_digest"] == pure.content_digest
+    assert row["snapshot_digest"] == pure.content_digest  # final state == pure reference cutoff snapshot
     m = row["manifest"]
     assert m["validation"]["passed"], m["validation"]
+    assert m["validation"]["validator"] == "observe.stream-reconciliation"  # never labelled as the old validator
     assert {c["name"] for c in m["validation"]["checks"]} >= {
-        "deliveries_follow_feed_order", "digests_match_pure_replay", "no_future_knowledge",
-        "completed_equals_pure_cutoff_snapshot", "no_duplicate_delivery"}
+        "committed_ranges_contiguous", "input_commitment_chain", "terminal_state_verified", "feed_cache_integrity",
+        "completed_consumed_entire_feed"}
+    assert "Not a full reference re-execution" in m["validation"]["scope"]
     assert m["config"]["availability_policy"]["basis"] == "MODELED" and not m["config"]["availability_policy"]["measured"]
     assert m["config"]["freshness_policy"]["note"].startswith("Inspection default")
     assert m["config"]["source"]["source_id"] == ds and m["source_reference"] == f"datasets/{ds}"
+    # canonical identities preserved exactly
+    assert m["config"]["feed"]["content_identity"] == src.feed.manifest.content_identity
+    assert m["config"]["feed"]["ordered_event_hash"] == src.feed.manifest.ordered_event_hash
     out = art / "observations" / rid / m["artifact_dir"]
     assert m["artifact_dir"] == f"g{m['lease_generation']}" and m["schema_revision"] == 2
     names = {a["name"] for a in m["artifacts"]}
-    assert names == {"config.json", "deliveries.jsonl", "final_snapshot.json", "validation.json"}
-    lines = (out / "deliveries.jsonl").read_text(encoding="utf-8").splitlines()
-    assert [json.loads(x)["event_id"] for x in lines] == [e.event_id for e in src.feed.events]
+    assert names == {"config.json", "engine.json", "ranges.jsonl", "final_snapshot.json", "validation.json"}
     assert json.loads((out / "final_snapshot.json").read_text())["content_digest"] == pure.content_digest
+    assert row["engine_format"] == "observe.stream.v1" and row["engine"]["state_format"] == "algotrader.observe-state.v1"
+    # sparse persistence: no per-event delivery rows; compact contiguous committed ranges
+    assert not deliveries(conn, rid)
+    rs = ranges(conn, rid)
+    assert_contiguous(rs, total) and len(rs) == -(-total // 5)
+    c = row["metrics"][str(row["lease_generation"])]
+    assert c["delivery_rows_written"] == 0 and c["transactions_committed"] == len(rs) + 1  # + initial checkpoint
+    assert c["events_applied"] == total and c["snapshots_built"] == len(rs) + 1  # checkpoints + initial only
+    assert c["source_verifications"] == 1 and c["feed_builds"] == 1  # verified once; no nested re-verification
     # separation: no synthetic run / semantic journal rows, no interpretation records
     assert conn.execute("SELECT count(*) AS n FROM runs").fetchone()["n"] == 0
     assert conn.execute("SELECT count(*) AS n FROM run_events").fetchone()["n"] == 0
-    kinds = {r["kind"] for r in conn.execute("SELECT DISTINCT kind FROM observation_deliveries").fetchall()}
-    assert kinds <= {k.value for k in EventKind}
+
     def keys(obj):
         if isinstance(obj, dict):
             for k, v in obj.items():
@@ -392,6 +420,11 @@ def test_recording_replay_completes_with_recorded_availability(database_url, con
     assert row["status"] == "completed" and row["manifest"]["validation"]["passed"]
     assert row["manifest"]["config"]["availability_policy"]["basis"] == "RECORDED"
     assert row["manifest"]["source_reference"] == f"recordings/{sid}"
+    src = load_recording(root, sid)
+    assert row["manifest"]["config"]["feed"]["ordered_event_hash"] == src.feed.manifest.ordered_event_hash
+    assert row["manifest"]["config"]["source"]["exclusions"] == list(src.summary.exclusions)
+    assert row["snapshot_digest"] == snapshot_at(src.feed, as_of(src.feed, src.feed.manifest.event_count),
+                                                 FRESH).content_digest
 
 
 @pytest.mark.db
@@ -401,6 +434,8 @@ def test_pause_step_resume_speed_are_durable_and_do_not_change_digests(database_
     ref = control.create_replay(conn, root, SourceKind.DATASET, ds, speed=0)
     drain(worker(database_url, root, art))
     reference = replay_row(conn, ref)
+    src = load_dataset(root, ds)
+    core = ReplayCore(src.feed, FRESH)
 
     rid = control.create_replay(conn, root, SourceKind.DATASET, ds, speed=5, paused=True)
     with pytest.raises(control.ControlRejected, match="PENDING"):
@@ -408,14 +443,17 @@ def test_pause_step_resume_speed_are_durable_and_do_not_change_digests(database_
     w = worker(database_url, root, art)
     assert w.run_once()  # paused launch: the worker prepares the source, then parks at cursor 0
     row = replay_row(conn, rid)
-    assert row["status"] == "paused" and row["cursor"] == 0 and not deliveries(conn, rid)
+    assert row["status"] == "paused" and row["cursor"] == 0
     assert row["total_events"] == reference["total_events"] and row["config"] is not None
     assert not w.run_once()  # parked: nothing to claim
     for n in (1, 2):
         control.step(conn, rid)
         drain(w)
         row = replay_row(conn, rid)
-        assert row["status"] == "paused" and row["cursor"] == n and len(deliveries(conn, rid)) == n
+        # STEP: exactly one source event, durably committed (its own range), reference-identical state
+        assert row["status"] == "paused" and row["cursor"] == n and len(ranges(conn, rid)) == n
+        assert ranges(conn, rid)[-1]["event_count"] == 1
+        assert row["snapshot_digest"] == core.at(n).snapshot.content_digest
         assert row["step_budget"] == 0 and row["lease_owner"] is None  # parked at a committed cursor
     control.set_speed(conn, rid, 250)  # pacing change while paused
     control.resume(conn, rid)
@@ -423,7 +461,8 @@ def test_pause_step_resume_speed_are_durable_and_do_not_change_digests(database_
     row = replay_row(conn, rid)
     assert row["status"] == "completed"
     assert row["snapshot_digest"] == reference["snapshot_digest"]
-    assert [d["event_id"] for d in deliveries(conn, rid)] == [d["event_id"] for d in deliveries(conn, ref)]
+    assert_contiguous(ranges(conn, rid), row["total_events"])
+    assert not deliveries(conn, rid)
     commands = [e["command"] for e in row["control_log"]]
     assert commands[:1] == ["start"] and commands.count("step") == 2 and "parked" in commands
     assert "speed" in commands and "resume" in commands
@@ -433,7 +472,7 @@ def test_pause_step_resume_speed_are_durable_and_do_not_change_digests(database_
 
 @pytest.mark.db
 @pytest.mark.parametrize("when", ["before_commit", "after_commit"])
-def test_worker_crash_and_reclaim_never_duplicate_a_delivery(database_url, conn, tmp_path, when):
+def test_worker_crash_and_reclaim_restore_directly_without_duplicate_ranges(database_url, conn, tmp_path, when):
     root, art = tmp_path / "data", tmp_path / "art"
     ds = dataset(root)
     ref = control.create_replay(conn, root, SourceKind.DATASET, ds, speed=0)
@@ -442,8 +481,8 @@ def test_worker_crash_and_reclaim_never_duplicate_a_delivery(database_url, conn,
 
     rid = control.create_replay(conn, root, SourceKind.DATASET, ds, speed=0)
 
-    def crash(replay_id, seq):
-        if replay_id == rid and seq == 7:
+    def crash(replay_id, cursor):
+        if replay_id == rid and cursor == 35:
             raise SimulatedCrash()
 
     a = worker(database_url, root, art, worker_id="observe:a", **{when: crash})
@@ -451,22 +490,29 @@ def test_worker_crash_and_reclaim_never_duplicate_a_delivery(database_url, conn,
         a.run_once()
     a.close()
     row = replay_row(conn, rid)
-    committed = 7 if when == "before_commit" else 8  # rolled back vs. committed-then-died
-    assert row["status"] == "running" and row["cursor"] == committed == len(deliveries(conn, rid))
+    committed = 30 if when == "before_commit" else 35  # checkpoint transaction rolled back vs. committed-then-died
+    assert row["status"] == "running" and row["cursor"] == committed
+    assert_contiguous(ranges(conn, rid), committed)
     expire_lease(conn, rid)
     drain(worker(database_url, root, art, worker_id="observe:b"))
     row = replay_row(conn, rid)
-    ids = [d["event_id"] for d in deliveries(conn, rid)]
-    assert row["status"] == "completed" and len(ids) == len(set(ids)) == row["total_events"]
-    assert [d["seq"] for d in deliveries(conn, rid)] == list(range(row["total_events"]))
+    rs = ranges(conn, rid)
+    assert row["status"] == "completed"
+    assert_contiguous(rs, row["total_events"])  # no gap, no overlap, no duplicate committed range
     assert row["snapshot_digest"] == reference["snapshot_digest"]  # digest-identical after restart
+    assert {r["generation"] for r in rs} == {1, 2}
     assert row["recovery_log"][0]["event"] == "lease_expired_reclaimed"
     assert f"committed feed cursor {committed}" in row["recovery_log"][0]["detail"]
     assert row["attempt"] == 2 and row["manifest"]["validation"]["passed"]
+    g2 = row["metrics"]["2"]
+    # direct restore: the second attempt neither rebuilt the cache nor replayed the committed prefix
+    assert g2["prefix_restore_events"] == 0 and g2["restore_suffix_events"] == 0
+    assert g2["events_applied"] == row["total_events"] - committed
+    assert g2["source_verifications"] == 0 and g2["feed_builds"] == 0 and g2["cache_reused"] is True
 
 
 @pytest.mark.db
-def test_stale_writer_cannot_commit_twice(database_url, conn, tmp_path):
+def test_stale_generation_cannot_commit_and_cursor_cas_refuses_a_retried_range(database_url, conn, tmp_path):
     root, art = tmp_path / "data", tmp_path / "art"
     rid = control.create_replay(conn, root, SourceKind.DATASET, dataset(root), speed=0, paused=True)
     w = worker(database_url, root, art)
@@ -475,21 +521,29 @@ def test_stale_writer_cannot_commit_twice(database_url, conn, tmp_path):
     drain(w)
     row = replay_row(conn, rid)
     assert row["cursor"] == 1
-    # a second commit of the same delivery (e.g. a retried transaction) is refused by the cursor CAS
-    from algotrader.observe.job import JobSpec, ReplayJob, _AlreadyApplied
+    from algotrader.observe import feedcache as fc
+    from algotrader.observe.job import JobSpec, ReplayJob, _UnsafeRecovery
+    from algotrader.observe.kernel import Kernel
 
-    src = load_dataset(root, row["source_id"])
-    core = ReplayCore(src.feed, FRESH)
-    before = core.at(0)
-    after, rec = core.step(before)
+    cache = fc.open_cache(root, row["engine"]["cache_id"])
+    reader = fc.CacheReader(cache)
+    k = Kernel(cache.feed_meta, FRESH, None, fc.initial_commitment(cache.cache_id))
+    line = reader.lines(0, 1)[0][1]
+    before = k.commitment
+    k.apply_line(line)
     gen = row["lease_generation"]
     conn.execute("UPDATE observation_replays SET status = 'running', lease_owner = %s WHERE replay_id = %s",
                  (w.worker_id, rid))
     job = ReplayJob(JobSpec(database_url, rid, w.worker_id, gen, str(root), str(art)))
-    with pytest.raises(_AlreadyApplied):
-        job.commit(before, after, rec, {}, consume_step=False)
-    assert len(deliveries(conn, rid)) == 1
+    # a retried commit of the already committed first event: the cursor CAS (expected prior 0) refuses it
+    with pytest.raises(_UnsafeRecovery):
+        job.commit_checkpoint(k, 0, before, "a", "b", row["engine"])
+    stale = ReplayJob(JobSpec(database_url, rid, w.worker_id, gen - 1, str(root), str(art)))
+    with pytest.raises(LeaseLost):  # an older generation (same worker id) cannot commit at all
+        stale.commit_checkpoint(k, 1, before, "a", "b", row["engine"])
+    assert len(ranges(conn, rid)) == 1 and replay_row(conn, rid)["cursor"] == 1
     job.close()
+    stale.close()
 
 
 @pytest.mark.db
@@ -551,12 +605,12 @@ def test_cancel_is_durable(database_url, conn, tmp_path):
     drain(worker(database_url, root, art))
     row = replay_row(conn, rid)
     assert row["status"] == ReplayStatus.CANCELLED and row["cursor"] == 1
-    # bounded cancellation (R1A correction): no prefix load / source reload / reference re-derivation;
-    # assurance is INCOMPLETE and the committed delivery stays preserved in the database
+    # bounded cancellation: no prefix load / source reload / reference re-derivation; assurance INCOMPLETE and
+    # the committed input range stays preserved in the database
     m = row["manifest"]
     assert m["status"] == "cancelled" and m["validation"]["outcome"] == "incomplete" and not m["validation"]["passed"]
     assert {a["name"] for a in m["artifacts"]} == {"config.json", "validation.json"}
-    assert len(deliveries(conn, rid)) == 1
+    assert len(ranges(conn, rid)) == 1 and not deliveries(conn, rid)
     with pytest.raises(control.ControlRejected):
         control.resume(conn, rid)
 
@@ -615,6 +669,11 @@ def test_observation_api_sources_preflight_launch_state_and_artifacts(database_u
     st = api.get(f"/api/observations/{rid}/state").json()
     assert st["replay"]["runtime_state"] == "paused" and st["replay"]["progress"]["applied_events"] == 1
     assert st["state"]["cursor"]["applied_events"] == 1 and "history" not in st["state"]["channels"][0]
+    # committed-prefix inspection: only admission positions < committed cursor (1) are ever exposed
+    early = api.get(f"/api/observations/{rid}/deliveries", params={"latest": 50}).json()
+    assert [d["seq"] for d in early] == [0] and early[0]["snapshot_digest"] is None
+    assert api.get(f"/api/observations/{rid}/deliveries", params={"after_seq": 0}).json() == []
+    assert all(b["seq"] < 1 for b in api.get(f"/api/observations/{rid}/traded-bars").json()["bars"])
     assert api.post(f"/api/observations/{rid}/resume").status_code == 200
     drain(w)
     done = api.get(f"/api/observations/{rid}").json()

@@ -8,9 +8,9 @@ Algorithmic Trader is a clean-room, local BTC trading adviser: professional mark
 
 The 30 September Owner clarification supersedes the mandatory pullback-only/RP-001 research path. Read FOUNDATION.md v3.1 and task.md for the current Director handoff. Old reviews/research are historical evidence, not current work authorization.
 
-### SR-003 current work — R1A accepted, R1B active, R1B/R1C not implemented
+### SR-003 current work — R1A accepted; R1B implemented (Director review pending); R1C not implemented
 
-The Owner's September run exposed a replay/finalization performance defect. The Director approved a bounded redesign in `strategic_reviews/SR-003-DIRECTOR-DISPOSITION.md`. **WP-008-R1A (observable lifecycle and diagnosis) is accepted by the Director at `0919001` for its operational scope; WP-008-R1B is now the active task**; see *Observable job lifecycle (WP-008-R1A)* below. It makes long operations visible, truthful and diagnosable; **it does not make replay faster.** The WP-007 engine costs (eager feed build, one transaction + delivery row + full snapshot per event, full prefix rebuild on restore, full terminal re-derivation of a run that completes) remain until R1B/R1C. Since the R1A correction an observed cancellation never triggers that re-derivation.
+The Owner's September run exposed a replay/finalization performance defect. The Director approved a bounded redesign in `strategic_reviews/SR-003-DIRECTOR-DISPOSITION.md`. **WP-008-R1A (observable lifecycle and diagnosis) is accepted at `0919001`. WP-008-R1B (streaming replay and restorable checkpoints) is implemented by the executor and awaits Director review**; see *Streaming replay engine (WP-008-R1B)* below. New runs no longer build the feed eagerly, snapshot every event, write a delivery row/transaction per event or rebuild the prefix on restore. R1C (layered assurance closure, Deep validation, release performance gates) is not implemented, and no month/year performance budget is claimed.
 
 Do not retry the real month after R1A alone (**NOT READY FOR OWNER MARKET REPLAY**). The Director will hand off READY FOR OWNER MARKET REPLAY after R1B/C and review. Reuse September locally in a new run; preserve old rows/artifacts/identity. No automatic old-run salvage or September download. No professional adviser or achieved speedup is claimed.
 
@@ -206,6 +206,41 @@ Shared operational contract `algotrader.ops.v1` (`src/algotrader/ops.py`) for ob
 2. Update the checkout (`git pull --ff-only origin main`), then `docker compose up --build -d`. The `migrate` service applies migration 6 before any new worker starts.
 3. Migration 6 adds an operational **suspension** to every pre-upgrade nonterminal replay (e.g. the September run): its rows, checkpoint, delivery rows, configuration, source binding and any files stay exactly as they were; new workers never claim, restore or finalize it; controls are disabled. Open it in Replay Lab or the Historical Workbench and use **Copy diagnostics for chat** (it reports the committed cursor, missing terminal validation and whether a manifest exists on disk).
 4. Do not start a replacement September run yet; R1C will hand that off (new run, same verified local dataset, no download).
+
+## Streaming replay engine (WP-008-R1B) — new runs only
+
+New observation replays (lifecycle 3, `engine_format = observe.stream.v1`) use one sequential causal kernel for max-speed, paced and STEP execution. Semantics are unchanged: the same canonical event order, identities, decimals, quality admission, channel roles and MODELED/RECORDED availability, and the same pure reducer (`feed.state.apply`). `observe.core` remains the small-fixture reference; differential tests compare snapshot digests at every committed cursor.
+
+- **Immutable feed cache** (`<data root>/feedcache/<cache_id>/`, internal format `algotrader.observe-feedcache.v1`): one per verified source. The cache id hashes the source kind/id, the SHA-256 of the source package's own manifest, and the adapter, ordering, availability and cache-format versions; path/mtime are never trusted.
+  - **Cold preparation** verifies the source once (VERIFYING_SOURCE), then stream-builds the cache (BUILDING_FEED) with no nested re-verification. Datasets are read in bounded Parquet batches; recordings use the streaming bridge. Two bounded external sorts produce the content identity and duplicate-slot check, and the canonical order.
+  - **Cache contents:** gzip partitions of canonical `FeedEvent` lines with SHA-256, size and order bounds; the canonical `content_identity` and `ordered_event_hash` (identical to `feed.adapter`); and a rolling consumed-prefix commitment (`observe.prefix-commitment.v1`, separate from the canonical hash and from state digests).
+  - **Publication** is one directory rename; an interrupted build leaves nothing published.
+  - **Warm runs** reuse the cache without touching the source package (its manifest SHA-256 is rechecked).
+  - **Integrity on read:** every partition is SHA-256-verified before any of its events is applied. A corrupt or incompatible cache is quarantined (`.invalid-*`) and the run fails visibly; the next launch rebuilds.
+- **Sparse persistence:** events are applied without a per-event snapshot, delta, delivery record, row or transaction. A checkpoint is one fenced transaction (owner + generation + cursor compare-and-set) containing:
+  - a compact committed input range (`observation_ranges`: contiguous cursors, count, first/last order key, commitment before/after);
+  - a restore point (`observation_restore_points`: explicit JSON state `algotrader.observe-state.v1`, zlib-compressed with its SHA-256, compatibility fingerprint, materialized snapshot digest, commitment);
+  - the committed snapshot view.
+- **Cadence:** a checkpoint is taken after 2 s of active compute or 5,000 events (paced runs also every 2 s of wall time), and at pause, STEP, end and cancel. Controls are polled every 0.25 s of wall time. STEP applies and commits exactly one event. The latest two restore points (plus the terminal one) are retained atomically.
+- **Restore:** a reclaimed or resumed run restores the newest verified restore point directly and reprocesses only the bounded uncommitted suffix, with no source reload and no prefix replay. A rejected point (corrupt, incompatible, inconsistent commitment) falls back to an older verified one with `restore_point_rejected` / `restore_fallback` diagnostics. No valid point is a visible failure; nothing is ever silently replayed from zero.
+- **Committed-prefix inspection:** `deliveries` and `traded-bars` for streaming runs read the verified cache by admission position strictly below the committed cursor, in bounded windows (≤ 5,000), with no per-event snapshot digest or delta. Diagnostic reports add engine identities and storage facts (ranges, restore points, delivery rows = 0).
+- **Terminal path:** validator `observe.stream-reconciliation` v1, a bounded reconciliation that does not replay history. It checks:
+  - range continuity;
+  - the commitment chain to the terminal checkpoint;
+  - the verified terminal state and committed snapshot digest;
+  - cache partition SHA-256;
+  - for completed runs, exactly-once consumption of the whole canonical stream.
+
+  Artifacts are `config.json`, `engine.json`, `ranges.jsonl`, `final_snapshot.json`, `validation.json` and `manifest.json`. Its scope says it is **not** a full reference re-execution; Deep validation is R1C. Observed cancellation keeps the R1A bounded path.
+- **Compatibility:** migration 7 is additive. Pre-R1B nonterminal R1A runs are suspended read-only exactly like pre-R1A runs; legacy and R1A runs, delivery rows, manifests and readers are unchanged. No `observe.v1` contract revision was needed, and all schema baselines are byte-identical.
+- **Bounded engineering evidence**, not month/year claims. Synthetic 4-day fixture, 17,292 events, Windows, separate compute process:
+  - cold cache build 2.3 s, replay ~4,300 events/s, reconciliation 0.08 s, 4 checkpoints, 5 transactions, 0 delivery rows;
+  - warm run: no build, replay ~3,700 events/s;
+  - Python-heap peak (tracemalloc) 15.0 MB → 16.1 MB from 4,323 → 17,292 events with sort block 1,500 / partition 1,000.
+
+### Owner upgrade to R1B
+
+Same procedure as R1A: stop the application containers (`docker compose stop api worker recorder observer corpus`), update the checkout, `docker compose up --build -d` (never `--volumes`). Migration 7 suspends any unfinished R1A run read-only. Feed caches are created on the existing market-data volume on first use. Do not start the replacement September run yet (R1C).
 
 ## Owner evaluation workbench (WP-008) — observation-only, no adviser
 

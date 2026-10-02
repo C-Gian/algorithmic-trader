@@ -289,7 +289,63 @@ ALTER TABLE corpus_jobs ADD COLUMN IF NOT EXISTS last_progress_at timestamptz;
 ALTER TABLE corpus_chunks ADD COLUMN IF NOT EXISTS bound_generation bigint;
 """
 
-MIGRATIONS: dict[int, str] = {1: SCHEMA_V1, 2: SCHEMA_V2, 3: SCHEMA_V3, 4: SCHEMA_V4, 5: SCHEMA_V5, 6: SCHEMA_V6}
+# WP-008-R1B: streaming engine storage (operational; additive). New runs (lifecycle_version 3, engine_format
+# 'observe.stream.v1') persist compact committed input ranges and restorable checkpoints instead of one
+# delivery row/transaction per event. Pre-R1B nonterminal R1A runs (lifecycle 2) receive the same additive
+# suspension as pre-R1A runs: preserved read-only, never reclaimed under the new engine.
+SCHEMA_V7 = """
+ALTER TABLE observation_replays ADD COLUMN IF NOT EXISTS engine_format text;
+ALTER TABLE observation_replays ADD COLUMN IF NOT EXISTS engine jsonb;
+
+CREATE TABLE IF NOT EXISTS observation_ranges (
+    replay_id          text NOT NULL REFERENCES observation_replays(replay_id) ON DELETE CASCADE,
+    range_seq          integer NOT NULL CHECK (range_seq >= 0),
+    generation         bigint NOT NULL,
+    from_cursor        integer NOT NULL CHECK (from_cursor >= 0),
+    to_cursor          integer NOT NULL,
+    event_count        integer NOT NULL,
+    first_order        text NOT NULL,
+    last_order         text NOT NULL,
+    commitment_before  text NOT NULL,
+    commitment_after   text NOT NULL,
+    committed_at       timestamptz NOT NULL DEFAULT now(),
+    PRIMARY KEY (replay_id, range_seq),
+    UNIQUE (replay_id, from_cursor),
+    UNIQUE (replay_id, to_cursor),
+    CHECK (to_cursor > from_cursor AND event_count = to_cursor - from_cursor)
+);
+
+CREATE TABLE IF NOT EXISTS observation_restore_points (
+    replay_id        text NOT NULL REFERENCES observation_replays(replay_id) ON DELETE CASCADE,
+    cursor           integer NOT NULL CHECK (cursor >= 0),
+    generation       bigint NOT NULL,
+    state_format     text NOT NULL,
+    fingerprint      text NOT NULL,
+    state_blob       bytea NOT NULL,
+    state_sha256     text NOT NULL,
+    snapshot_id      text NOT NULL,
+    snapshot_digest  text NOT NULL,
+    info_time        timestamptz NOT NULL,
+    commitment       text NOT NULL,
+    terminal         boolean NOT NULL DEFAULT false,
+    created_at       timestamptz NOT NULL DEFAULT now(),
+    PRIMARY KEY (replay_id, cursor)
+);
+
+UPDATE observation_replays
+   SET suspended_at = now(),
+       suspension = jsonb_build_object(
+         'reason', 'pre-R1B nonterminal observation replay (lifecycle v2, per-event engine) suspended at the '
+                   || 'WP-008-R1B upgrade; preserved read-only, never reclaimed or converted by the streaming engine',
+         'historical_status', status,
+         'historical_lease_owner', lease_owner,
+         'historical_lease_expires_at', lease_expires_at,
+         'migration', 7)
+ WHERE lifecycle_version = 2 AND status IN ('queued', 'running', 'paused') AND suspended_at IS NULL;
+"""
+
+MIGRATIONS: dict[int, str] = {1: SCHEMA_V1, 2: SCHEMA_V2, 3: SCHEMA_V3, 4: SCHEMA_V4, 5: SCHEMA_V5, 6: SCHEMA_V6,
+                              7: SCHEMA_V7}
 SCHEMA_VERSION = max(MIGRATIONS)
 
 

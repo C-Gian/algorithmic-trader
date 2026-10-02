@@ -254,7 +254,10 @@ def render_markdown(r: dict[str, Any]) -> str:
         f"- Runtime: elapsed {rt['elapsed_seconds'] and round(rt['elapsed_seconds'], 1)} s · throughput "
         f"{rt['throughput_events_per_second'] and round(rt['throughput_events_per_second'], 1)} events/s · "
         f"attempts {rt['attempts']}/{rt['max_attempts']} · recoveries {rt['recoveries']}",
-        f"- Validation: {vtext} ({npass}/{len(v['checks'])} checks)",
+        f"- Validation: {vtext} ({npass}/{len(v['checks'])} checks)"
+        + (f" · validator {v.get('validator')}" + (" — bounded stream reconciliation, not a full reference "
+                                                    "re-execution" if v.get("validator") == "observe.stream-reconciliation"
+                                                    else "") if v.get("validator") else ""),
     ]
     if r["stopped_at"]:
         s = r["stopped_at"]

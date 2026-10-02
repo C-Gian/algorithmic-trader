@@ -23,6 +23,8 @@ from . import control
 from . import diagnostics as diag
 from .artifacts import files_dir
 from .contracts import LABELS, ObservationReplayConfig, SourceKind
+from .feedcache import CacheError, CacheReader, decode, open_cache
+from .kernel import ENGINE_FORMAT
 from .sources import MODELED_LABEL, RECORDED_LABEL, SourceRejected, locate_source
 
 REPLAY_SELECT = """
@@ -108,6 +110,46 @@ def replay_view(row: dict[str, Any]) -> dict[str, Any]:
         "code_version": (cfg.code_version if cfg else (row.get("launch") or {}).get("code_version")),
         "labels": list(cfg.labels) if cfg else list(LABELS),
     }
+
+
+MAX_WINDOW = 5000  # bounded inspection windows (events / bars per request)
+DEFAULT_BARS = 240
+
+
+def is_stream(row: dict[str, Any]) -> bool:
+    return row.get("engine_format") == ENGINE_FORMAT
+
+
+def _committed_reader(md_root: Path, row: dict[str, Any]) -> tuple[CacheReader, int]:
+    """Reader over the pinned feed cache + the committed cursor (the only admission boundary exposed)."""
+    eng = row["engine"]
+    try:
+        cache = open_cache(md_root, eng["cache_id"], expected_manifest_sha256=eng["cache_manifest_sha256"],
+                           check_files=False)
+    except CacheError as exc:
+        raise HTTPException(410, f"feed cache unavailable for inspection: {exc}") from None
+    return CacheReader(cache), int(row.get("applied") or 0)
+
+
+def _delivery_doc(seq: int, e) -> dict[str, Any]:
+    return {"seq": seq, "event_id": e.event_id, "channel_id": e.channel.channel_id, "family": e.channel.family.value,
+            "kind": e.kind.value, "event_time": e.event_time.isoformat(),
+            "event_end_time": e.event_end_time.isoformat() if e.event_end_time else None,
+            "available_time": e.available_time.isoformat(), "quality_reason": getattr(e.payload, "reason", None),
+            "snapshot_id": None, "snapshot_digest": None, "changes": [],
+            "payload": e.payload.model_dump(mode="json"),
+            "note": "streaming run: committed feed evidence read from the verified cache; no per-event snapshot"}
+
+
+def storage_facts(c, replay_id: str) -> dict[str, Any]:
+    """Bounded facts about durable storage of one replay (aggregates only)."""
+    r = c.execute("SELECT count(*) AS n, max(to_cursor) AS hi FROM observation_ranges WHERE replay_id = %s",
+                  (replay_id,)).fetchone()
+    rps = c.execute("SELECT cursor, terminal, generation FROM observation_restore_points WHERE replay_id = %s "
+                    "ORDER BY cursor", (replay_id,)).fetchall()
+    d = c.execute("SELECT count(*) AS n FROM observation_deliveries WHERE replay_id = %s", (replay_id,)).fetchone()
+    return {"ranges": r["n"], "ranges_to_cursor": r["hi"], "restore_points": [dict(x) for x in rps],
+            "delivery_rows": d["n"]}
 
 
 def build_router(conn: Callable, md_root: Path, art_root: Path) -> APIRouter:
@@ -217,7 +259,15 @@ def build_router(conn: Callable, md_root: Path, art_root: Path) -> APIRouter:
     def deliveries(replay_id: str, after_seq: int = -1, latest: int | None = Query(None, ge=1, le=1000),
                    limit: int = Query(500, ge=1, le=5000)) -> list[dict[str, Any]]:
         with conn() as c:
-            get_row(c, replay_id)
+            row = get_row(c, replay_id)
+            if is_stream(row):
+                reader, committed = _committed_reader(md_root, row)
+                if latest is not None:
+                    lo, hi = max(0, committed - latest), committed
+                else:
+                    lo = after_seq + 1
+                    hi = min(committed, lo + min(limit, MAX_WINDOW))
+                return [_delivery_doc(seq, decode(line)) for seq, line in reader.lines(lo, hi)] if lo < hi else []
             if latest is not None:
                 rows = c.execute("SELECT record, payload FROM observation_deliveries WHERE replay_id = %s "
                                  "ORDER BY seq DESC LIMIT %s", (replay_id, latest)).fetchall()
@@ -235,6 +285,8 @@ def build_router(conn: Callable, md_root: Path, art_root: Path) -> APIRouter:
         """
         with conn() as c:
             row = get_row(c, replay_id)
+            if is_stream(row):
+                return stream_bars(row, tail)
             if tail is None:
                 rows = c.execute(
                     "SELECT record, payload FROM observation_deliveries WHERE replay_id = %s "
@@ -254,6 +306,38 @@ def build_router(conn: Callable, md_root: Path, art_root: Path) -> APIRouter:
             bars.append(item)
         return {"channel_family": "trade_bar_1m", "information_time": row["info_time"].isoformat()
                 if row.get("info_time") else None, "bars": bars}
+
+    def stream_bars(row: dict[str, Any], tail: int | None) -> dict[str, Any]:
+        """Latest traded-bar evidence strictly before the committed cursor (bounded backward scan)."""
+        want = min(tail or DEFAULT_BARS, MAX_WINDOW)
+        reader, committed = _committed_reader(md_root, row)
+        pe = reader.cache.manifest["partition_events"]
+        bars: list[dict[str, Any]] = []
+        scanned, budget = 0, want * 20
+        idx = (committed - 1) // pe if committed else -1
+        while idx >= 0 and len(bars) < want and scanned < budget:
+            p = reader.cache.partitions[idx]
+            lines = reader.partition_lines(idx)
+            for j in range(min(committed - p["first_seq"], p["count"]) - 1, -1, -1):
+                scanned += 1
+                e = decode(lines[j])
+                if e.channel.family.value != "trade_bar_1m":
+                    continue
+                item = {"seq": p["first_seq"] + j, "event_time": e.event_time.isoformat(),
+                        "available_time": e.available_time.isoformat(), "kind": e.kind.value,
+                        "quality_reason": getattr(e.payload, "reason", None)}
+                if e.kind.value == "bar_observation":
+                    pl = e.payload.model_dump(mode="json")
+                    item.update({k: pl[k] for k in ("open", "high", "low", "close", "volume_base", "volume_base_ccy")})
+                bars.append(item)
+                if len(bars) >= want:
+                    break
+            idx -= 1
+        bars.reverse()
+        return {"channel_family": "trade_bar_1m",
+                "information_time": row["info_time"].isoformat() if row.get("info_time") else None,
+                "bars": bars, "bounded_window": want, "committed_cursor": committed,
+                "source": "verified feed cache, committed prefix only"}
 
     def command(replay_id: str, fn, *args) -> dict[str, Any]:
         with conn() as c:
@@ -317,7 +401,8 @@ def build_router(conn: Callable, md_root: Path, art_root: Path) -> APIRouter:
         with conn() as c:
             row = get_row(c, replay_id)
             ev = c.execute("SELECT evaluation_id FROM evaluations WHERE replay_id = %s", (replay_id,)).fetchone()
-        return diag.diagnostic_report(row, art_root, datetime.now(UTC), ev)
+            storage = storage_facts(c, replay_id)
+        return diag.diagnostic_report(row, art_root, datetime.now(UTC), ev, storage)
 
     @r.get("/{replay_id}/report.json")
     def report_json(replay_id: str, download: bool = False) -> PlainTextResponse:

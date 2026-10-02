@@ -639,7 +639,9 @@ def test_ui_market_replay_dataset_and_recording_observation_only(stack, browser,
     expect(page.get_by_test_id("channel-funding_settlement")).to_contain_text("Settled funding")
     expect(page.get_by_test_id("delivery-timeline").get_by_test_id("delivery-row").first).to_be_visible()
     expect(page.get_by_test_id("market-chart")).to_be_visible()
-    expect(page.get_by_test_id("obs-artifacts")).to_contain_text("deliveries.jsonl")
+    expect(page.get_by_test_id("obs-artifacts")).to_contain_text("ranges.jsonl")  # streaming: compact committed ranges
+    expect(page.get_by_test_id("obs-artifacts")).to_contain_text("engine.json")
+    expect(page.get_by_test_id("obs-artifacts")).not_to_contain_text("deliveries.jsonl")
     expect(page.get_by_test_id("obs-artifacts")).to_contain_text("final_snapshot.json")
     assert no_horizontal_overflow(page)
     page.screenshot(path=str(evidence_dir / "15-market-replay-completed-dataset.png"), full_page=True)

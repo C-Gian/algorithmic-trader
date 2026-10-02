@@ -173,3 +173,113 @@ def load_source(root: Path, kind: SourceKind | str, source_id: str, progress: Pr
     if kind == SourceKind.DATASET:
         return load_dataset(root, source_id, progress, build_progress)
     return load_recording(root, source_id, progress, build_progress)
+
+
+# ---------------------------------------------------------------------------
+# Streaming preparation (WP-008-R1B): verify once, build or reuse the immutable feed cache
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class PreparedSource:
+    loaded: LoadedSource  # ``loaded.feed`` carries the feed manifest only (never the event list)
+    cache: object  # feedcache.FeedCache
+    warm: bool
+    source_manifest_sha256: str
+
+
+def prepare_stream_source(root: Path, kind: SourceKind | str, source_id: str, *,
+                          verify_hook: Progress | None = None, build_hook: Progress | None = None,
+                          on_phase=None, counters: dict | None = None,
+                          expected_manifest_sha256: str | None = None) -> PreparedSource:
+    """Locate -> (reuse a verified cache | verify the source once and stream-build the cache).
+
+    Trust boundary: the source package is identified by the SHA-256 of its own manifest; a reused cache must
+    carry exactly that key (and its partitions are SHA-256-verified when read). A cold build verifies the
+    package once and passes the verified stream to construction (no nested re-verification).
+    """
+    from . import feedcache as fc
+    from ..feed.adapter import dataset_feed_meta, iter_dataset_events
+    from ..recorder.feed_bridge import FUNDING_NOTE, RECORDED_POLICY, RecordedStream
+
+    kind = SourceKind(kind)
+    counters = counters if counters is not None else {}
+    on_phase = on_phase or (lambda _p: None)
+    path = locate_source(root, kind, source_id)
+    msha = manifest_sha256(path)
+    if expected_manifest_sha256 is not None and msha != expected_manifest_sha256:
+        raise SourceRejected(f"dataset {source_id} manifest changed since it was bound to the corpus "
+                             f"(sha256 {msha[:16]} != bound {expected_manifest_sha256[:16]}); not replayed")
+    policy = modeled_availability() if kind == SourceKind.DATASET else RECORDED_POLICY
+    key = fc.cache_key(kind.value, source_id, msha, policy)
+    cid = fc.cache_id_for(key)
+    cache = None
+    if (fc.cache_root(root) / cid).exists():
+        try:
+            cache = fc.open_cache(root, cid, key)
+        except fc.CacheError as exc:
+            # incompatible/corrupt cache: quarantine it and rebuild from the verified source
+            moved = fc.quarantine(fc.FeedCache(cid, fc.cache_root(root) / cid, {}, ""), str(exc))
+            counters["cache_quarantined"] = str(moved.name) if moved else "quarantine failed"
+            cache = None
+    warm = cache is not None
+    rec_manifest = rj.load_manifest(path) if kind == SourceKind.RECORDING else None
+    if rec_manifest is not None and rec_manifest.status == SessionStatus.FAILED:
+        raise SourceRejected(f"recording {source_id} is FAILED (no usable market data); it cannot be replayed")
+    checked = datetime.now(UTC)
+    if not warm:
+        on_phase("VERIFYING_SOURCE")
+        counters["source_verifications"] = counters.get("source_verifications", 0) + 1
+        problems = (md.verify(path, progress=verify_hook) if kind == SourceKind.DATASET
+                    else rj.verify(path, progress=verify_hook))
+        if problems:
+            raise SourceRejected(f"{kind.value} {source_id} failed verification: {'; '.join(problems)}")
+        on_phase("BUILDING_FEED")
+        counters["feed_builds"] = counters.get("feed_builds", 0) + 1
+        try:
+            if kind == SourceKind.DATASET:
+                meta = dataset_feed_meta(path)
+                quality = md.load_quality(path).status.value
+                cache = fc.build_cache(
+                    root, key, iter_dataset_events(path, policy, progress=build_hook), lambda: meta.coverage, policy,
+                    (meta.dataset_id,), lambda: (meta.inst_id, meta.index_id, meta.instrument),
+                    lambda: {"quality": quality, "exclusions": [], "notes": []}, hook=build_hook, counters=counters)
+            else:
+                stream = RecordedStream(path)
+                cache = fc.build_cache(
+                    root, key, stream.events(), lambda: stream.coverage, policy, (stream.config.session_id,),
+                    lambda: (stream.inst.inst_id, stream.inst.index_id, stream.instrument),
+                    lambda: {"quality": rec_manifest.status.value, "exclusions": list(stream.excluded),
+                             "notes": [FUNDING_NOTE]}, hook=build_hook, counters=counters)
+        except FeedError as exc:
+            raise SourceRejected(f"{kind.value} {source_id}: feed not built ({exc})") from None
+    if not cache.manifest.get("usable"):
+        raise SourceRejected(f"{kind.value} {source_id} contains no usable market evidence (no valid observation)")
+    facts = cache.manifest["source_facts"]
+    fm = cache.feed_manifest
+    warnings: list[str] = []
+    if kind == SourceKind.DATASET:
+        if facts["quality"] != "clean":
+            warnings.append(f"dataset quality {facts['quality'].upper()}: missing/rejected slots are delivered as "
+                            "quality events and never filled")
+        schema, label, ref = MARKETDATA_SCHEMA_VERSION, MODELED_LABEL, f"datasets/{source_id}"
+    else:
+        if rec_manifest.status == SessionStatus.PARTIAL:
+            warnings.append("PARTIAL session: " + (rec_manifest.stop_reason or "recorded with outages or missing channels"))
+        for o in rj.load_report(path).outages:
+            conn = o.connection.value if o.connection else "session"
+            end = o.end.isoformat() if o.end else "session end"
+            warnings.append(f"recorder outage ({conn}) {o.start.isoformat()} -> {end}: recorder availability loss, "
+                            "not a market gap; no gap events are fabricated")
+        schema, label, ref = RECORDER_SCHEMA_VERSION, RECORDED_LABEL, f"recordings/{source_id}"
+    summary = SourceSummary(kind=kind, source_id=source_id, source_schema=schema, inst_id=fm.inst_id,
+                            index_id=fm.index_id, source_status=facts["quality"], coverage=fm.coverage,
+                            warnings=tuple(warnings), exclusions=tuple(facts["exclusions"]), notes=tuple(facts["notes"]))
+    method = ((f"{schema} verify of the source package (once, inside the preparation trust boundary), then a "
+               f"streaming build of feed cache {cache.cache_id}") if not warm else
+              (f"reused feed cache {cache.cache_id}, built from this package after a full {schema} verification "
+               f"({cache.manifest['built_at']}); the package manifest SHA-256 {msha[:16]} was rechecked now and every "
+               "cache partition is SHA-256-verified when read"))
+    verification = SourceVerification(verified=True, method=method, problems=(), checked_at=checked)
+    loaded = LoadedSource(summary, verification, cache.feed_meta, label, ref)
+    return PreparedSource(loaded, cache, warm, msha)

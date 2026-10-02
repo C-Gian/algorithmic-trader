@@ -27,6 +27,10 @@ TERMINAL = {"completed", "cancelled", "failed"}
 PREP = {"QUEUED", "PREPARING_SOURCE", "VERIFYING_SOURCE", "BUILDING_FEED", "INITIALIZING"}
 POST = {"FINALIZING", "VALIDATING", "GENERATING_REPORT"}
 
+STREAM_NOTE = (
+    "Streaming engine (observe.stream.v1): every event is applied by one incremental kernel; snapshots are "
+    "materialized only at checkpoints; committed input is persisted as compact ranges plus restorable "
+    "checkpoints (no per-event delivery rows/transactions); restore is direct from a verified checkpoint.")
 REMAINING_COSTS = (
     "R1A keeps the WP-007 engine costs on purpose (removed in R1B/R1C): eager full feed construction in memory, "
     "duplicate source verification inside feed construction, one PostgreSQL transaction + one delivery row + one "
@@ -260,8 +264,13 @@ def next_diagnostic(row: dict[str, Any], op: dict[str, Any]) -> str:
     return "In progress: this is a snapshot, not a result. Re-copy later or wait for the terminal report."
 
 
+STREAM_REMAINING = (
+    "Remaining for R1C: layered assurance closure and the optional observable Deep validation (reference "
+    "re-execution), full release performance gates on representative data, and the Owner's September run.")
+
+
 def diagnostic_report(row: dict[str, Any], art_root: Path, now: datetime,
-                      evaluation: dict[str, Any] | None = None) -> dict[str, Any]:
+                      evaluation: dict[str, Any] | None = None, storage: dict[str, Any] | None = None) -> dict[str, Any]:
     op = operation(row, now)
     terminal = row["status"] in TERMINAL
     cfg = row.get("config")
@@ -328,7 +337,9 @@ def diagnostic_report(row: dict[str, Any], art_root: Path, now: datetime,
         "manifest": manifest_check(art_root, row),
         "suspension": op["suspension"],
         "error": row["error"],
-        "limitations": [REMAINING_COSTS,
+        "stream_engine": row.get("engine"),
+        "storage": storage,
+        "limitations": [*((STREAM_NOTE, STREAM_REMAINING) if row.get("engine_format") else (REMAINING_COSTS,)),
                         "Diagnostic export from persisted operational facts only; it does not re-verify the source "
                         "or re-derive deliveries and is not terminal assurance."],
         "next_diagnostic": next_diagnostic(row, op),
@@ -409,6 +420,14 @@ def render_markdown(r: dict[str, Any]) -> str:
                   f"- Historical status at upgrade: {r['suspension'].get('historical_status')}"]
     if r["error"]:
         lines += ["", "## Error", f"- {r['error']}"]
+    eng, st = r.get("stream_engine"), r.get("storage")
+    if eng:
+        lines += ["", "## Engine", f"- {eng.get('format')} · state {eng.get('state_format')} · cache "
+                  f"`{eng.get('cache_id')}` ({'reused' if eng.get('cache_reused_at_preparation') else 'built'} at "
+                  f"preparation) · checkpoint policy {eng.get('checkpoint_policy')}"]
+    if st:
+        lines.append(f"- Storage: {st.get('ranges')} committed range(s) to cursor {st.get('ranges_to_cursor')} · "
+                     f"restore points {st.get('restore_points')} · per-event delivery rows {st.get('delivery_rows')}")
     lines += ["", "## Limitations"] + [f"- {x}" for x in r["limitations"]]
     lines += ["", f"Next diagnostic: {r['next_diagnostic']}", "", f"_Format {r['report_format']}_", ""]
     return "\n".join(lines)

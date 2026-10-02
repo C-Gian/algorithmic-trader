@@ -64,6 +64,7 @@ def wait_until(pred, timeout=60.0, every=0.02):
 
 def worker(database_url, root, art, **kw) -> ObservationWorker:
     kw.setdefault("worker_id", "observe:fix")
+    kw.setdefault("checkpoint_events", 5)
     kw.setdefault("isolate", False)
     return ObservationWorker(database_url, root, art, lease_seconds=5, poll_interval=0.01, **kw)
 
@@ -111,8 +112,10 @@ def test_cancel_after_partial_prefix_is_bounded(database_url, env, conn, isolate
     assert_bounded_cancel(row, prefix)
     c = counters(row)
     assert c["deliveries_loaded_for_finalize"] == 0  # no full-prefix load
-    assert c["source_verifications"] == 2 and c["feed_builds"] == 1  # preparation only: no source reload
-    assert n_deliveries(conn, rid) == prefix  # committed evidence preserved
+    assert c["source_verifications"] == 1 and c["feed_builds"] == 1  # preparation only (once): no source reload
+    rs = conn.execute("SELECT * FROM observation_ranges WHERE replay_id = %s ORDER BY from_cursor", (rid,)).fetchall()
+    assert rs[-1]["to_cursor"] == prefix and sum(r["event_count"] for r in rs) == prefix  # committed input preserved
+    assert n_deliveries(conn, rid) == 0  # no per-event rows in the streaming engine
     assert ack < 1.0 and latency < 2.0, (ack, latency)
     print(f"[{'process' if isolate else 'inline'}] cancel after {prefix} committed events: acknowledged "
           f"{ack * 1000:.0f} ms, terminal CANCELLED in {latency:.2f} s; re-derived 0, delivery rows loaded 0")
@@ -309,8 +312,8 @@ def test_interrupted_spans_stay_unknown_and_terminal_text_follows_the_cursor(dat
     rid = control.create_replay(conn, root, SourceKind.DATASET, ds, speed=0)
     from algotrader.observe.job import SimulatedCrash
 
-    def crash(replay_id, seq):
-        if seq == 5:
+    def crash(replay_id, cursor):
+        if cursor == 10:
             raise SimulatedCrash()
 
     with pytest.raises(SimulatedCrash):

@@ -528,7 +528,8 @@ function ReportCard({ ev }: { ev: Evaluation }) {
                       : report.validation.passed ? "pos" : "neg"}>
                       {!report.validation.ran ? "NOT RUN" : report.validation.outcome === "incomplete" ? "INCOMPLETE"
                         : report.validation.passed ? "PASS" : "FAIL"}</Badge>}
-                    hint={`${report.validation.checks.filter((c) => c.passed).length}/${report.validation.checks.length} checks`} />
+                    hint={`${report.validation.checks.filter((c) => c.passed).length}/${report.validation.checks.length} checks`
+                      + (report.validation.validator ? ` · ${report.validation.validator}` : "")} />
             <Metric label="Final information time" value={fmtTime(report.coverage.final_information_time)} />
             <Metric label="Runtime" value={fmtSecs(report.runtime.elapsed_seconds)}
                     hint={report.runtime.throughput_events_per_second

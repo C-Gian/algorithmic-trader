@@ -347,9 +347,9 @@ def stage_bounded_artifacts(root: Path, row: dict[str, Any], status: ReplayStatu
             passed=False, outcome=ValidationOutcome.INCOMPLETE, validator=VALIDATOR_ID,
             validator_version=VALIDATOR_VERSION, scope=VALIDATOR_SCOPE,
             checks=(ValidationCheck(name="validation_not_run", passed=False, detail=(
-                f"{reason}: the reference re-derivation did not run (bounded cancellation). The {cursor} committed "
-                "deliveries and the committed checkpoint remain preserved in the database; deliveries.jsonl and "
-                "final_snapshot.json were not exported. Assurance INCOMPLETE, not PASS or FAIL.")),))
+                f"{reason}: terminal validation did not run (bounded terminal path). The committed input up to cursor "
+                f"{cursor} and the committed checkpoint remain preserved in the database; no per-event trace or "
+                "final snapshot was exported. Assurance INCOMPLETE, not PASS or FAIL.")),))
         (staging / "config.json").write_text(config.model_dump_json(indent=2), encoding="utf-8")
         (staging / "validation.json").write_text(validation.model_dump_json(indent=2), encoding="utf-8")
         files = _hash_files(staging, _no_hook)
@@ -360,6 +360,51 @@ def stage_bounded_artifacts(root: Path, row: dict[str, Any], status: ReplayStatu
             final_digest=ck.get("snapshot_digest") or "",
             source_reference=f"{config.source.kind.value}s/{config.source.source_id}",
             timings=timings, metrics=metrics)
+        (staging / "manifest.json").write_text(manifest.model_dump_json(indent=2), encoding="utf-8")
+    except BaseException:
+        staged.discard()
+        raise
+    staged.manifest = manifest
+    return staged
+
+
+def stage_stream_artifacts(root: Path, row: dict[str, Any], status: ReplayStatus, error: str | None,
+                           finished_at: datetime, cursor: int, ranges: list[dict], engine: dict,
+                           validation: ReplayValidation, final: ObservableSnapshot | None,
+                           committed_digest: str, *, generation: int, hook: Hook | None = None,
+                           timings: Callable[[], list[dict]] | None = None,
+                           metrics: Callable[[], dict] | None = None) -> StagedArtifacts:
+    """Terminal artifacts of a streaming run (bounded: no per-event records exist or are synthesized).
+
+    ``engine.json`` (pinned engine/state/cache identities), ``ranges.jsonl`` (compact committed input ranges),
+    ``final_snapshot.json`` (materialized from the verified terminal state), ``validation.json``
+    (stream reconciliation, explicitly scoped) and ``manifest.json``.
+    """
+    hook = hook or _no_hook
+    staging, final_dir, existing = _staging(root, row["replay_id"], generation)
+    if existing is not None:
+        return StagedArtifacts(existing, None, final_dir)
+    staged = StagedArtifacts(None, staging, final_dir)  # type: ignore[arg-type]
+    try:
+        import json as _json
+
+        config = ObservationReplayConfig.model_validate(row["config"])
+        (staging / "config.json").write_text(config.model_dump_json(indent=2), encoding="utf-8")
+        (staging / "engine.json").write_text(_json.dumps(engine, indent=2, sort_keys=True), encoding="utf-8")
+        with (staging / "ranges.jsonl").open("w", encoding="utf-8", newline="\n") as f:
+            for r in ranges:
+                f.write(_json.dumps({k: (v.isoformat() if hasattr(v, "isoformat") else v) for k, v in r.items()},
+                                    sort_keys=True) + "\n")
+        if final is not None:
+            (staging / "final_snapshot.json").write_text(final.model_dump_json(indent=2), encoding="utf-8")
+        (staging / "validation.json").write_text(validation.model_dump_json(indent=2), encoding="utf-8")
+        files = _hash_files(staging, hook)
+        manifest = _manifest(
+            row, config, status, error, finished_at, cursor, validation, files, generation, final_dir,
+            final_as_of=final.as_of if final is not None else finished_at,
+            final_snapshot_id=final.snapshot_id if final is not None else "", final_digest=committed_digest,
+            source_reference=f"{config.source.kind.value}s/{config.source.source_id}", timings=timings,
+            metrics=metrics)
         (staging / "manifest.json").write_text(manifest.model_dump_json(indent=2), encoding="utf-8")
     except BaseException:
         staged.discard()

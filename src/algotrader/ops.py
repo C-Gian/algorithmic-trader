@@ -30,6 +30,7 @@ OPS_CONTRACT = "algotrader.ops.v1"
 # Operation lifecycle version of an observation replay row.
 LIFECYCLE_LEGACY = 1  # WP-007/WP-008: verified config + total fixed inside the launch request
 LIFECYCLE_R1A = 2  # R1A: durable launch envelope first; worker-owned preparation persists the config
+LIFECYCLE_R1B = 3  # R1B: streaming engine (feed cache, sparse committed ranges, restorable checkpoints)
 
 
 class Status(StrEnum):
@@ -335,6 +336,28 @@ def environment() -> dict[str, Any]:
     }
 
 
+def _windows_peak_working_set() -> int | None:
+    import ctypes
+    from ctypes import wintypes
+
+    class PMC(ctypes.Structure):
+        _fields_ = [("cb", wintypes.DWORD), ("PageFaultCount", wintypes.DWORD),
+                    ("PeakWorkingSetSize", ctypes.c_size_t), ("WorkingSetSize", ctypes.c_size_t),
+                    ("QuotaPeakPagedPoolUsage", ctypes.c_size_t), ("QuotaPagedPoolUsage", ctypes.c_size_t),
+                    ("QuotaPeakNonPagedPoolUsage", ctypes.c_size_t), ("QuotaNonPagedPoolUsage", ctypes.c_size_t),
+                    ("PagefileUsage", ctypes.c_size_t), ("PeakPagefileUsage", ctypes.c_size_t)]
+
+    pmc = PMC()
+    pmc.cb = ctypes.sizeof(PMC)
+    k32 = ctypes.WinDLL("kernel32", use_last_error=True)
+    psapi = ctypes.WinDLL("psapi", use_last_error=True)
+    k32.GetCurrentProcess.restype = wintypes.HANDLE
+    psapi.GetProcessMemoryInfo.argtypes = [wintypes.HANDLE, ctypes.POINTER(PMC), wintypes.DWORD]
+    if not psapi.GetProcessMemoryInfo(k32.GetCurrentProcess(), ctypes.byref(pmc), pmc.cb):
+        return None
+    return int(pmc.PeakWorkingSetSize)
+
+
 def process_metrics() -> dict[str, Any]:
     out: dict[str, Any] = {"cpu_seconds": round(time.process_time(), 3)}
     try:
@@ -342,7 +365,17 @@ def process_metrics() -> dict[str, Any]:
 
         rss = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
         out["max_rss_bytes"] = int(rss) * (1 if sys.platform == "darwin" else 1024)
+        out["max_rss_source"] = "getrusage ru_maxrss (process lifetime peak)"
     except (ImportError, OSError):
-        out["max_rss_bytes"] = None
-        out["max_rss_unknown_reason"] = "resource.getrusage unavailable on this platform"
+        peak = None
+        if sys.platform == "win32":
+            try:
+                peak = _windows_peak_working_set()
+            except (OSError, AttributeError):
+                peak = None
+        out["max_rss_bytes"] = peak
+        if peak is None:
+            out["max_rss_unknown_reason"] = "no supported peak-memory API on this platform"
+        else:
+            out["max_rss_source"] = "Windows PeakWorkingSetSize (process lifetime peak)"
     return out

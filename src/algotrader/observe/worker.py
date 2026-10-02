@@ -72,6 +72,9 @@ class ObservationWorker:
         stall_limit: float | None = None,
         progress_interval: float = 0.5,
         faults: dict[str, float] | None = None,
+        checkpoint_seconds: float = 2.0,
+        checkpoint_events: int = 5000,
+        control_poll: float = 0.25,
     ) -> None:
         from ..marketdata.dataset import default_data_root
 
@@ -93,6 +96,8 @@ class ObservationWorker:
         self.stall_limit = stall_limit
         self.progress_interval = progress_interval
         self.faults = dict(faults or {})
+        self.checkpoint_seconds, self.checkpoint_events, self.control_poll = (checkpoint_seconds, checkpoint_events,
+                                                                              control_poll)
         self._conn: psycopg.Connection | None = None
         self._beat_at = 0.0
         self._outage_since: float | None = None
@@ -146,6 +151,8 @@ class ObservationWorker:
         spec = JobSpec(url=self.url, replay_id=row["replay_id"], worker_id=self.worker_id, generation=generation,
                        data_root=str(self.data_root), artifact_root=str(self.artifact_root),
                        progress_interval=self.progress_interval, stall_limit=self.stall_limit,
+                       checkpoint_seconds=self.checkpoint_seconds, checkpoint_events=self.checkpoint_events,
+                       control_poll=self.control_poll,
                        finalize=finalize, finalize_error=reason, faults=self.faults)
         if self.isolate:
             self._supervise_process(spec)
@@ -162,7 +169,7 @@ class ObservationWorker:
                 """
                 SELECT r.*, c.cursor AS ckpt_cursor
                 FROM observation_replays r LEFT JOIN observation_checkpoints c USING (replay_id)
-                WHERE r.lifecycle_version >= 2 AND r.suspended_at IS NULL AND (
+                WHERE r.lifecycle_version >= 3 AND r.suspended_at IS NULL AND (
                       (r.status = 'queued' AND (r.config IS NULL OR NOT r.paused OR r.step_budget > 0
                                                 OR r.cancel_requested))
                    OR (r.status = 'paused' AND (NOT r.paused OR r.step_budget > 0 OR r.cancel_requested))

@@ -23,7 +23,7 @@ from ..corpus import state
 from ..corpus.plan import load_plan
 from ..observe import control
 from ..observe import diagnostics as diag
-from ..observe.api import REPLAY_SELECT, replay_view
+from ..observe.api import REPLAY_SELECT, replay_view, storage_facts
 from ..observe.contracts import SourceKind
 from ..observe.sources import SourceRejected
 from . import report as rp
@@ -149,8 +149,10 @@ def build_router(conn: Callable, data_root: Path, art_root: Path) -> APIRouter:
         with conn() as c:
             ev, replay = get(c, evaluation_id)
         now = datetime.now(UTC)
+        with conn() as c:
+            storage = storage_facts(c, replay["replay_id"])
         return rp.build_report(ev, replay, replay["manifest"], diag.operation(replay, now),
-                               diag.diagnostic_report(replay, art_root, now, ev), now)
+                               diag.diagnostic_report(replay, art_root, now, ev, storage), now)
 
     @r.get("/{evaluation_id}/report.json")
     def report_json(evaluation_id: str, download: bool = False) -> PlainTextResponse:
