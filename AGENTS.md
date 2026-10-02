@@ -6,7 +6,7 @@ This is the clean-room Algorithmic Trader project.
 
 Read FOUNDATION.md in full, then STATE.md, this file and task.md. Read only the compatible specifications/sources required for that task.
 
-Current Owner instructions supersede earlier project documents. FOUNDATION.md v3.0 implements the 30 September direct clarification. Historical ACCEPTED/READY/HOLD labels in strategic_reviews/ and research/ do not authorize work; the current task must explicitly activate compatible scope. Report unresolved conflicts instead of silently choosing an old instruction.
+Current Owner instructions supersede earlier project documents. FOUNDATION.md v3.1 retains the 30 September direct clarification. Historical ACCEPTED/READY/HOLD labels in strategic_reviews/ and research/ do not authorize work; the current task must explicitly activate compatible scope. Report unresolved conflicts instead of silently choosing an old instruction.
 
 ## Roles and scope
 
@@ -40,3 +40,7 @@ Report:
 - Owner app backtest handoff when applicable.
 
 The Director independently reviews; an executor's PASS is not acceptance.
+
+## SR-003 operational boundary
+
+Read `strategic_reviews/SR-003-DIRECTOR-DISPOSITION.md` for approved execution architecture. The Astra review is evidence; only task.md activates a package. R1A is not a real-month retry release. Preserve pre-upgrade September runs/datasets and legacy readers; no automatic salvage/relabel/redownload. All expensive phases need durable progress and incomplete diagnostic export. Changed provisional operational contracts require explicit revision/changelog and compatibility; frozen evidence/DEMO baselines remain unchanged. No advisory semantic.v2 during performance hardening. Never claim health/progress from CPU activity or heartbeat alone.

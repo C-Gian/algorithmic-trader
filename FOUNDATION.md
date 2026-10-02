@@ -1,6 +1,6 @@
 # Algorithmic Trader — Foundation
 
-Version: **3.0 — Owner-directed product realignment, 30 September 2026**  
+Version: **3.1 — SR-003 temporal and operational clarification, 2 October 2026**
 Authority: canonical product, architecture and delivery directive. Implements the Owner's direct clarification of 30 September, superseding inconsistent earlier review/disposition/research instructions.
 
 ## 1. Product and authority
@@ -154,6 +154,20 @@ Traded, mark, index and funding are separate. Traded evidence supports price-str
 
 semantic.v1 stays frozen DEMO; marketdata.v1 stays frozen evidence; feed/recorder/observe retain version discipline. Introduce advisory semantic.v2 with a bounded coherent process/call specification. **RP-001 closure is no longer its mandatory gate.** No personal account fields, inferred fills or sizing policy. Hypothetical normalized outcomes belong to separate evaluation semantics.
 
+### SR-003 execution and temporal clarification
+
+Approved direction: `strategic_reviews/SR-003-DIRECTOR-DISPOSITION.md`; implementation is activated only by current task.md.
+
+Evidence events, derived updates, reasoning dispatches, durable checkpoints, audit records and UI frames have separate cadences. Keep completed 1m base evidence; use a hybrid clock with selected closes, relevant material changes and explicit timers. Initial versioned roles are 15m setup, 1h tactical, 4h/daily broad and weekly/monthly context, with 1m pertinent entry/lifecycle monitoring. These roles are design conventions requiring coherent method definitions, not calibrated performance claims or compulsory votes/vetoes. UTC completion, known-at, admitted-prefix and dependency-specific freshness must be explicit; late inputs cannot rewrite earlier advice.
+
+One sequential causal kernel supports live, paced and fast execution through operational policies. Stream bounded input, update incremental state, persist restorable checkpoints and concise outputs rather than requiring a full snapshot/database row per event. Preserve canonical source/order identities and cutoff-safe inspection. Checkpoint time/work cadence cannot change economic semantics. Normal assurance checks input/admission/runtime/terminal integrity; protected reference/fault tests and optional observable Deep validation supply deeper assurance. No mandatory full-history re-execution on every completion.
+
+All significant preparation/verification/feed/recovery/validation/report work has durable visible phases. Separate liveness, observed progress, actual recovery and assurance. Fence every durable/publication boundary by ownership generation. Diagnostic copy/export works before completion; replay 100% is not whole-job completion. Existing September data/run are preserved and read honestly; replacement is a new run after performance acceptance, without network reacquisition.
+
+Keep the twelve-month evaluation window. Additional fine/coarse context depth is decided against actual method dependencies and obtainable instrument history; suggested 30-day/two-year/five-year tiers are provisional request envelopes, not universal warmup gates. Bounded method closure precedes final context acquisition/preset activation. Source switches/overlaps/readiness and outcome tails are declared; no silent spot/perpetual splice.
+
+Historical Workbench distinguishes Market replay (data/engine check) from the future Adviser backtest. Initial cached observation release objectives on declared reference hardware are <=2 minutes/month and <=15 minutes/year; ordinary terminal validation/report <=10 seconds/month and <=30 seconds/year. Cold construction is separately visible/measured. These budgets are not achieved claims. Only the Owner's app-launched replacement September run can close the observed performance incident. R1A alone is not retry-ready.
+
 ## 9. Delivery and acceptance
 
 Deliver vertical slices: usable operation → integrated reading/calls → Owner-run backtest → diagnosed improvement. The next Director plan jointly covers method definition and app/data/report gaps. Each targeted study has a concrete missing decision, bounded sources/cases and a deliverable enabling implementation. Optional unresolved concepts cannot block all progress.
@@ -181,6 +195,8 @@ Preserve accepted M1–M3 work. Mark former narrow mandates and research HOLD ga
 Executors commit/push bounded work normally, no force-push, and report SHA/branch/checks/limitations. The Director reviews and replaces task.md; the Owner relays between chats. Repository changes cannot edit private Project Instructions in another chat: the Owner must synchronize those separately.
 
 ## Revision history
+
+- 2026-10-02 — v3.1: Director SR-003 disposition; separate clocks, bounded streaming/checkpoints, layered assurance, complete operation visibility, legacy-run preservation and method-led context sequencing. Product intent remains v3.0.
 
 - 2026-09-30 — v3.0: direct Owner realignment. Call-first adviser, integrated coverage including cycle/event assessment, persistent entry validity, Owner-run visual backtests/reports, fixed reusable corpus, intermittent local use, inactivity diagnosis. Supersedes SR-002/RP-001's mandatory narrow path; preserves causal correctness.
 - 2026-09-30 — v2.0: separated market advice from human capital allocation/execution; boundary retained.

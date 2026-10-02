@@ -1,8 +1,8 @@
 # Foundation v3 — Integrated Adviser Delivery Plan
 
 Status: ACTIVE DIRECTOR PLAN  
-Date: 2026-09-30  
-Authority: FOUNDATION.md v3.0, STATE.md, Owner realignment
+Updated: 2026-10-02
+Authority: FOUNDATION.md v3.1, STATE.md, Owner realignment and SR-003 Director disposition
 
 ## 1. Product interpretation
 
@@ -425,80 +425,24 @@ Win rate alone is not acceptance.
 
 Systematic NO_TRADE is explicitly diagnosed.
 
-## 9. Delivery sequence
+## 9. Current delivery sequence after SR-003
 
-### WP-008 — Owner Evaluation Workbench + Corpus Bootstrap
+The earlier WP-008 implementation is accepted but its real-month operation exposed a performance/observability defect. Preserve it; the former immediate WP-008 mandate is historical. Governing decision: `../strategic_reviews/SR-003-DIRECTOR-DISPOSITION.md`.
 
-Build the reusable Owner workflow first:
-- durable corpus acquisition/preparation from the app;
-- initial Sep-2025 monthly chunk preset;
-- corpus inventory/verification/size visibility;
-- dedicated Backtest/Evaluation page;
-- launch real observation replay from that workflow;
-- visual progress/candles;
-- compact Copy report + Markdown/JSON;
-- report honestly says adviser/call metrics unavailable;
-- READY FOR OWNER DATA PREP / observation evaluation handoff.
+| Order | Package | Exit and dependency |
+|---|---|---|
+| 1 | WP-008-R1A — Observable job lifecycle and diagnosis | Durable prompt launch, all-phase progress, supervision/fencing, incomplete copy reports, legacy preservation and truthful run types. Director review only; no month retry. |
+| 2 | WP-008-R1B — Streaming replay and checkpoints | Bounded source/cache, incremental hot path, sparse persistence, validated restorable state and committed-prefix inspection. Protected differential/fault checks. |
+| 3 | WP-008-R1C — Assurance and performance acceptance | Layered runtime validation, explicit deep diagnostics, bounded structural benchmarks/reporting; Director review then READY FOR OWNER MARKET REPLAY. |
+| 4 | Owner September Market replay | New ID on the existing local dataset, no download. Actual phase/assurance/report evidence closes the defect. No adviser metrics yet. |
+| 5 | WP-008-R2 — Causal multi-horizon substrate | Versioned UTC aggregation, completion/known-at, admitted dispatch cursor, deadlines, readiness/freshness and bounded horizon state. No directional rules. |
+| 6 | MP-001 — Bounded integrated method closure | Concrete observations/scenarios/candidate families, actionability, persistent call lifecycle, cycle/event disposition and required lookbacks/readiness. Specify semantic.v2; no parameter/timeframe tournament. |
+| 7 | WP-008-R3 — Context corpus and evaluation presets | Acquire only method-required obtainable fine/coarse history through Owner app jobs; reusable packs, overlap/source checks, continuous monthly runs and registered development/protected/tail rules before economic evaluation. |
+| 8 | WP-009 — Integrated adviser v0 | Implement semantic.v2, same engine, Home/Workbench calls and separate normalized evaluation. Short tests, then READY FOR OWNER BACKTEST. |
+| 9 | Owner Backtest A, bounded corrections | Evaluate correctness, practical entry windows, coverage/frequency/funnel and outcomes. Versioned diagnosed improvements, then protected/prospective checks. |
 
-This is not another generic infrastructure project: it is the exact workflow the real adviser will later reuse.
-
-### MP-001 — Integrated Adviser Method Closure
-
-A bounded Director/source task, not open-ended research.
-
-It will freeze:
-- initial horizon roles;
-- concrete structure/location method;
-- movement/momentum/participation/volatility roles;
-- cycle/timing disposition;
-- event/news disposition;
-- initial candidate-plan family or small complementary set;
-- actionability policy;
-- persistent call lifecycle;
-- the minimal advisory semantic.v2 contract.
-
-Only specific source questions identified above may expand the corpus.
-
-### WP-009 — Adviser Core v0 + semantic.v2
-
-Implement:
-- causal derived observations;
-- integrated MarketView/scenarios;
-- candidate plan/actionability;
-- persistent call lifecycle;
-- Home integration;
-- historical evaluation integration into WP-008.
-
-No account sizing/execution.
-
-### Owner Backtest A
-
-Executor stops at READY FOR OWNER BACKTEST.
-
-Owner runs a registered development preset in the app and copies the report.
-
-Director diagnoses:
-- coverage;
-- call frequency;
-- no-call reasons;
-- correctness;
-- practical entry duration;
-- outcomes/cost sensitivity;
-- visible reasoning quality.
-
-### WP-010+ — Bounded diagnosed improvements
-
-Only versioned changes tied to observed failure modes.
-
-Then:
-- protected evaluation;
-- manageable prospective live sessions;
-- no real-capital authorization without explicit Owner approval.
+Preliminary source capability/size checks may inform MP-001 without substantial acquisition or outcome inspection. R3 follows method closure so the proposed history lengths do not dictate the method. Optional unavailable long-range/cycle/news context remains explicit with limited authority, not an indefinite gate.
 
 ## 10. Immediate active package
 
-The active implementation package is WP-008.
-
-No trader semantics are authorized by WP-008.
-
-The purpose is to make the next real adviser immediately testable by the Owner through the product rather than through agent shells.
+**WP-008-R1A only.** Current task.md defines implementation and acceptance. No trader semantics, substantial replay or September acquisition is authorized. A documentation disposition does not mean the application already implements these changes.

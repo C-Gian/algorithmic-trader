@@ -1,0 +1,67 @@
+# SR-003 — Director disposition
+
+Status: **ACCEPT WITH MODIFICATION — direction approved; implementation unverified**
+Date: 2026-10-02
+Reviewed main: `009c3420b588f2f0422d08fbe5d92e8ddf88b15f`
+Authority: current Owner instructions, FOUNDATION.md v3.1, current STATE/task.
+Review: `ASTRA-SR-003-REPLAY-CLOCK-PERFORMANCE-REVIEW.md` (original supplied by Owner; retained unchanged).
+
+## Decision and independent basis
+
+Replace the event/snapshot/transaction coupling with one sequential causal kernel, bounded streaming input, recoverable checkpoints, sparse outputs and layered assurance. Separate evidence, reasoning, persistence and presentation clocks. The accepted market-evidence semantics remain unchanged.
+
+The Director independently inspected `observe/core.py`, `worker.py`, `artifacts.py`, `control.py`, `api.py`, `sources.py`, `feed/state.py`, `feed/adapter.py`, `evaluation/api.py`, the corpus heartbeat path and historical `task.md` at `d1d85d75b60b6fdd4860ec6607ec89aa6fbe3d46`. Findings confirm full snapshot/delta creation on every step, one transaction/delivery row per event, full-prefix restore, repeated snapshot replay at validation, lease renewal absent from synchronous finalization, source loading before job insertion, duplicate dataset verification, eager feed materialization, and report access gated by a terminal manifest. These establish architectural costs and failure modes, not measured cost proportions. No profiler, app run, CI verification or benchmark was executed by this Director.
+
+Owner-reported September timings/counts are diagnostic evidence, not a reproduced baseline or proof of replay correctness. The Director has no access to the Owner's local DB, dataset, manifest or worker. Artifact presence and terminal assurance must be checked by the implementation on that machine, never inferred solely from the UI.
+
+Relevant source-level passages in LIB-008 support caution about redundant linear price filters, without establishing optimal BTC intervals. LIB-020 separates forecasting/actionability/execution and does not establish BTC candle fill realism. Dossier project interpretations and legacy prescriptions are not adopted. No new literature search is needed for this infrastructure disposition. Native source interval/depth capabilities remain a later verified data question.
+
+## Substantive dispositions
+
+| Decision | Disposition | Reason and operational consequence |
+|---|---|---|
+| Completed 1m traded evidence; existing mark/index retained | ACCEPT | Appropriate baseline for a bar-based, human-used adviser. Preserve every admitted event and exact decimals. No tick/order-flow/fill claims or September redownload. |
+| Hybrid reasoning clock | ACCEPT | Closes, relevant dependency changes and explicit timers are distinct from raw arrivals. Cheap factual updates on each event; no unconditional full thesis evaluation per reference update. R2 specifies dispatch semantics; R1 implements no strategy. |
+| Initial horizon hierarchy | ACCEPT WITH MODIFICATION | Adopt 15m setup, 1h tactical, 4h/daily broad, weekly/monthly context as versioned starting roles. They are engineering/method-design conventions, not calibrated superiority or an obligation for every call to await every lens. MP-001 must justify exact observations/lookbacks and can revise a role with source/causal reasoning before evaluation, without a timeframe tournament. No mandatory 5m/30m/45m/annual layer. |
+| Cross-horizon conflicts | ACCEPT | Preserve conditional relationships and alternatives, not majority votes or universal higher-horizon vetoes. Distinguish bar interval, lookback, forecast horizon, holding duration and deadline. |
+| Aggregation/completion/freshness | ACCEPT | UTC half-open intervals, Monday weeks, calendar months; exact OHLC/units; missing constituents cannot become complete. Known-at follows the latest prerequisite. Late bars do not regress latest state. Dependency freshness cannot inherit two-minute inspection defaults. Native overlap/source-boundary checks belong to R2/R3. |
+| Dispatch ties and live parity | ACCEPT WITH MODIFICATION | A modeled scheduled boundary uses the admitted prefix through its deadline before reasoning. Live uses explicit admitted cursor/dispatch receipt; it cannot wait for a perfect historical same-time group. Late receipt changes only later decisions. Stable timer ordering, expiry before new publication, no-event deadlines and pending tied boundaries are checkpointed. Coalescing may merge identical scheduled reasons, but must not erase a material transition or an earlier legitimate recorded dispatch. R2 freezes the exact contract. |
+| Historical depth/warmup | ACCEPT WITH MODIFICATION | Keep evaluation `[2025-09-01, 2026-09-01)` UTC. Thirty fine days, two years hourly and five years daily are provisional capacity/request envelopes, subject to method lookbacks and obtainable exact-instrument history. They are not universal readiness or release gates. Final required history is settled in MP-001 before R3 acquisition/preset activation. No spot/perpetual splice, duplicate overlap or coarse initialization of fine path features. |
+| Warmup/evaluation/outcome tail | ACCEPT | Readiness per observation; warmup unscored; initial protocol resets candidate/call state at evaluation start and discloses the boundary effect. Subsequent monthly chunks preserve state. Register development/protected windows and tail rules before adviser outcomes. September and revealed RP-001 cases are development. No forced terminal wins/exits. |
+| Single streaming engine and immutable feed cache | ACCEPT | Same causal semantics in fast, paced, STEP and eventual live/adviser modes. Input iteration and history remain bounded. Pin actual content/version/order/availability; eliminate repeated verification only inside a valid trust boundary. Existing canonical identities must match; a rolling prefix hash is a separate commitment. |
+| Sparse persistence and cutoff-safe inspection | ACCEPT | New fast runs need no raw delivery row per event. Retain sources, prefix integrity, checkpoints, phase history and future semantic records. Old readers remain. UI queries filter by committed knowledge cursor, not market time alone; no future suffix or full-period administrative metadata enters reasoning. |
+| Checkpoint and publication design | ACCEPT WITH MODIFICATION | Validated versioned restore state, exact source position, cursor/order, integrity, output boundary, later timers/derived state. Start with small state/output in PostgreSQL; do not build a bulk file journal until needed. If files are used, immutable publication precedes fenced references and must be crash-tested. Every ownership claim gets a monotonic fencing generation, including same-worker reacquisition. Invalid latest state falls back explicitly to a verified prior checkpoint; no silent full-prefix restart. |
+| Checkpoint/control cadence | ACCEPT WITH MODIFICATION | Initial limit is either 2 active-compute seconds or 5,000 events, plus pause/STEP/terminal boundaries. Retain two verified checkpoints with an atomic referenced-file retention policy. Poll controls about 250ms; target <=2s response, <=5s bounded safe unit. Measure; record an overrun instead of claiming a hard guarantee for unknown future methods. STEP remains exactly one source event. |
+| Layered assurance | ACCEPT | Admission invariants and consumed input integrity every run; bounded terminal reconciliation; protected differential plus hand-calculated/fault fixtures. Routine finalization never reruns full history. Explicit optional Deep validation has separate observable job/version/results. It is diagnostic, not a checksum substitute for reference tests. |
+| Parallelism | ACCEPT | Independent preparation/hashing may run concurrently, initially conservatively. Evolving state/dispatch/lifecycle and commits remain sequential. No independent monthly trader runs merged afterward, no distributed platform. |
+| Performance budgets | ACCEPT WITH MODIFICATION | Adopt review ceilings as release objectives on its declared reference environment: cached observation month <=120s, year <=900s; month terminal validation/report <=10s, year <=30s; cold construction separately <=120s/month and <=900s/year. Future adviser reservations: <=10min/month, <=60min/year. They are not achieved or hardware-independent promises. A >=20x Owner improvement is a goal, not a claim against an unmatched synthetic baseline. Owner rerun and phase timings close the incident. |
+| Unified phases/health/reporting | ACCEPT | Separate status, phase, health, assurance. Durable launch before expensive work. Current-phase bar/timeline; ETA only from comparable measured work. Separate supervisor from CPU work, with child-liveness checks and compute milestones. Healthy heartbeat does not establish progress. Recovery label only when a fenced restore has actually begun. Copy diagnostic reports at every status. |
+| Workbench language | ACCEPT | Destination Historical Workbench; explicit Market replay — data and engine check; Adviser backtest unavailable until real adviser exists; Deep validation attached diagnostic. Preserve existing routes where useful. No cosmetic redesign. |
+| Existing September run | ACCEPT WITH MODIFICATION | Preserve rows/checkpoint/source/artifacts, inspect existing manifest if any, and export facts read-only. Quiesce/fence old work; never auto-salvage or relabel. An additive operational suspension/annotation may prevent legacy automatic reclaim without rewriting its historical execution result. Replacement gets new ID and same verified local dataset after R1C; link once it exists. |
+| Contract changes | ACCEPT WITH MODIFICATION | Frozen semantic.v1 and marketdata.v1 unchanged; R1A may revise only operational observe contract with revision/changelog and legacy reader. No false pre-verification config/identity. Feed/recorder changes require a later explicit task/revision. No advisory semantic.v2 in R1–R3. |
+| Package order | ACCEPT WITH MODIFICATION | R1A -> R1B -> R1C -> Owner September replay -> R2 -> MP-001 -> R3 -> WP-009 -> Owner Backtest A. Move bounded method closure ahead of final context acquisition/presets to avoid fixing data lengths before knowing actual dependencies. Preliminary source capability/size checks may inform MP-001 without launching substantial acquisition or inspecting outcomes. |
+| Original R1 draft unchanged / salvage gate | REJECT | Retaining all delivery rows, permissive prefix restore and mandatory pure final replay leaves key costs; forced legacy salvage expands scope without improving the new pipeline. Historical draft is non-governing. |
+
+## Active task and release boundaries
+
+Only **WP-008-R1A — Observable job lifecycle and diagnosis** is activated by `task.md`. Approval of this architecture does not authorize R1B/C, R2/R3 or the adviser. Each needs a reviewed task.
+
+R1A must make preparation, replay, validation and reporting visible; eliminate false recovery; fence all publication; provide incomplete diagnostics and preserve old evidence. It may add cooperative progress/control hooks to existing verification/validation without changing calculations. It is not the performance release and does not authorize a real-month retry.
+
+R1B removes eager input/hot snapshots/per-event persistence and adds bounded restore/inspection. R1C closes runtime assurance and structural performance, then stops at READY FOR OWNER MARKET REPLAY. The Owner uses the existing September dataset in a new run; no network acquisition. No package closes merely because transaction count fell.
+
+## Acceptance of the eventual performance release
+
+Use Astra section 15 as the acceptance inventory, subject to these dispositions and the exact activated task. Required: differential and independently expected causal fixtures; ties/late/gaps/future-suffix tests; crash/lease/publication corruption tests; no normal per-event snapshots or delivery rows; verified bounded restore and memory; all phase/control/diagnostic paths; separately labeled validation scope; and a terminal Owner September report with actual hardware/counts/timings. No substantial historical CLI evaluation or hidden parameter sweep.
+
+Budget overruns identify a failing gate and named bottleneck, not unconditional acceptance. No P&L/strategy evidence exists yet.
+
+## Repository reconciliation and private instructions
+
+Foundation v3.1 records the architectural clarification without replacing product intent. STATE/task/plan/README are reconciled in this documentation change; AGENTS receives the operational contract/release boundary. Source dossiers, frozen research, all source code and schema baselines are unchanged.
+
+Private Project Instructions still describe a discretionary “when practical” boundary. The Owner's current Foundation/handover make substantial app launches mandatory. Minimum synchronization text:
+
+> For Algorithmic Trader, use current Owner instructions, latest FOUNDATION.md, STATE.md, AGENTS.md and task.md from main. Build the BTC adviser with persistent calls; capital/leverage/orders stay human. The Owner launches substantial historical evaluations and acquisitions in the app; executors run bounded engineering checks. Current SR-003 disposition governs architecture; only task.md activates implementation. No legacy import, automatic RP-001 revival or September redownload.
+
+This Git update does not modify any private chat instructions.

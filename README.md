@@ -1,12 +1,20 @@
 # Algorithmic Trader
 
-Algorithmic Trader is a clean-room, local BTC trading adviser: professional market reading and persistent trade calls for a human who independently chooses capital, size, leverage and orders. FOUNDATION.md v3.0 is the canonical direction.
+Algorithmic Trader is a clean-room, local BTC trading adviser: professional market reading and persistent trade calls for a human who independently chooses capital, size, leverage and orders. FOUNDATION.md v3.1 is the canonical direction.
 
 ## Current state
 
 **M3 is complete:** immutable real evidence, causal feed/state, public recorder and durable observation replay are implemented. **No production professional analyst or trade-call engine exists yet.** Synthetic trader/account output is DEMO.
 
-The 30 September Owner clarification supersedes the mandatory pullback-only/RP-001 research path. Read FOUNDATION.md v3.0 and task.md for the current Director handoff. Old reviews/research are historical evidence, not current work authorization.
+The 30 September Owner clarification supersedes the mandatory pullback-only/RP-001 research path. Read FOUNDATION.md v3.1 and task.md for the current Director handoff. Old reviews/research are historical evidence, not current work authorization.
+
+### SR-003 current work — approved, not implemented
+
+The Owner's September run exposed a replay/finalization performance defect. The Director approved a bounded redesign in `strategic_reviews/SR-003-DIRECTOR-DISPOSITION.md`. **Only WP-008-R1A (observable lifecycle and diagnosis) is active in task.md.** Current code behavior below remains the WP-008 implementation until executor delivery/review.
+
+Planned changes: prompt durable launch, visible preparation/validation/report phases, reliable supervision/fencing, copyable incomplete reports, followed by streaming/sparse persistence/restorable checkpoints and layered assurance. The current **Backtest** destination will become **Historical Workbench** with explicit Market replay and later Adviser backtest run types. This naming change is not yet implemented.
+
+Do not retry the real month after R1A alone. The Director will hand off READY FOR OWNER MARKET REPLAY after R1B/C and review. Reuse September locally in a new run; preserve old rows/artifacts/identity. An upgrade must stop old workers before migration and preserve volumes; no automatic old-run salvage or September download. No professional adviser or achieved speedup is claimed by this documentation update.
 
 ### Required next product capabilities — not yet implemented
 

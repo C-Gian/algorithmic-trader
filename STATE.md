@@ -1,10 +1,10 @@
 # Project State
 
-Updated: 2026-09-30 — direct Owner product realignment
+Updated: 2026-10-02 — Director SR-003 disposition; R1A activated
 
 ## Authority and active direction
 
-Canonical directive: **FOUNDATION.md v3.0**. The Owner's direct clarification supersedes the SR-002 mandatory pullback scope and RP-001 completion gate. Historical ACCEPTED/READY/HOLD labels cannot reactivate them.
+Canonical directive: **FOUNDATION.md v3.1**. The Owner's direct clarification supersedes the SR-002 mandatory pullback scope and RP-001 completion gate. Historical ACCEPTED/READY/HOLD labels cannot reactivate them.
 
 Build an integrated BTC adviser with persistent actionable LONG/SHORT calls, entry area, targets, stop/exit guidance and holding horizon. Human capital/size/leverage/orders remain outside the algorithm. Home exposes live reasoning; the Owner launches substantial backtests in the app and copies their reports. Operation must fit an intermittently running local PC.
 
@@ -62,45 +62,23 @@ Acceptance evidence:
 Accepted limitations to measure on the Owner machine:
 - real Sep-2025 acquisition throughput/ETA is not yet measured;
 - a month is expected to produce roughly 130k feed events, and the current observation worker commits one transaction per event and re-derives state for terminal validation, so replay may take many minutes;
-- this is a measurement gate, not yet evidence of an unacceptable performance defect;
+- historical acceptance note: at WP-008 this was a measurement gate; the subsequent Owner run now establishes a product-blocking performance defect (SR-003);
 - storage mechanism for the eventual reusable corpus pack remains undecided until measured month size is available;
 - local startup catch-up and the real adviser remain pending.
 
 ## Current action
 
-# 🚨🚨🚨 QUESTO VA MANDATO AD ASTRA 🚨🚨🚨
+**WP-008-R1A — Observable job lifecycle and diagnosis** is READY and is the only active implementation package. See `task.md`.
 
-**SR-003 — Replay/Backtest Architecture, Professional Timeframes and Owner Observability**
+SR-003 review is now retained at `strategic_reviews/ASTRA-SR-003-REPLAY-CLOCK-PERFORMANCE-REVIEW.md`. Director disposition: `strategic_reviews/SR-003-DIRECTOR-DISPOSITION.md`, ACCEPT WITH MODIFICATION. This is documentation/architecture acceptance, not an implemented performance fix or a reproduced benchmark.
 
-Brief:
-- `strategic_reviews/SR-003-REPLAY-CLOCK-PERFORMANCE-BRIEF.md`
+Confirmed base: `009c3420b588f2f0422d08fbe5d92e8ddf88b15f`. Director inspected relevant source and the historical R1 draft; no runtime tests, benchmarks or Owner artifacts were accessed. Current code still has per-event full snapshots/transactions, prefix restore and expensive terminal revalidation. R1A makes operation trustworthy/observable; R1B/C remove those costs and close assurance/performance.
 
-The Director's first WP-008-R1 draft is intentionally paused until Astra reviews it.
+Owner-reported September evidence: CLEAN preparation; 129,600 events; roughly one hour replay plus at least twenty minutes validation without visible terminal report; false stalled/RECOVERING health. Preserve dataset, old run, bindings and artifacts; no redownload, automatic salvage or new-engine relabeling. Verify actual manifest presence before describing local terminal state.
 
-The review was triggered by the first real Owner month run:
-- Sep-2025 preparation completed successfully and the corpus remained CLEAN;
-- the replay reached all `129600 / 129600` feed events;
-- processing required roughly one hour on the Owner machine;
-- terminal validation then remained CPU-bound for at least another ~20 minutes at ~99% of one logical CPU;
-- the observer remained alive but stopped heartbeating during validation, so the UI falsely reported `RECOVERING / stalled / System Degraded`;
-- no visible validation progress/ETA existed.
+Release sequence: R1A -> R1B -> R1C -> Owner September Market replay -> R2 causal temporal substrate -> MP-001 integrated method closure -> R3 method-required context/presets -> WP-009 adviser -> Owner Backtest A. Only task.md authorizes implementation; all later packages are planned. R1A completion is READY FOR DIRECTOR REVIEW, not READY FOR OWNER MARKET REPLAY.
 
-The Owner additionally raised the professional-design question of whether 1m should be only the causal evidence resolution rather than the trader's reasoning timeframe.
-
-SR-003 must jointly decide:
-- evidence clock vs reasoning clock;
-- initial professional horizon hierarchy;
-- corpus depth for higher-timeframe context;
-- fast replay/backtest persistence/checkpoint design;
-- efficient validation assurance;
-- practical performance budgets;
-- complete phase/progress/elapsed/ETA UX for every long operation;
-- product terminology for observation replay vs real adviser backtest;
-- exact bounded implementation sequence.
-
-No Claude/Codex implementation is active until the Director disposes SR-003.
-
-The Sep-2025 dataset must not be deleted or redownloaded.
+Initial horizon roles and provisional context requests are versioned conventions, not profitability results. Final data depth depends on method requirements and available source history. No new adviser/semantic.v2 or long historical CLI evaluation is authorized.
 
 ## Research retained, not governing
 
