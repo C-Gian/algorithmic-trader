@@ -1,7 +1,7 @@
 # WP-008-R2 — Director review
 Date: 2026-10-03
 Reviewed implementation: `44ce68a62ff315d476c712aedd76bef5fd3f8d89` (base `9169096`).
-Decision: **CORRECTION REQUIRED — ONE BLOCKING FINDING**. No next package or Owner replay is authorized.
+Current decision: **ACCEPTED after correction at `ddc1831`** (see closure below). The initial finding and evidence below are historical. No new Owner replay is requested.
 
 ## Scope and evidence
 Source review of the temporal engine/reference, streaming kernel, reconciliation and Deep validation, against WP-008-R2-CAUSAL-TEMPORAL-SPEC.md, especially §§5, 7 and evidence J.
@@ -29,3 +29,17 @@ At a calendar-month boundary, this omission can exclude precisely the final high
 The reference aggregator is separate for aggregate math; readiness/deadline/dispatch checks use a shadow fold of the same temporal engine. The disclosed distinction is acceptable for this bounded slice; it is not independent verification of those components. Real tape input, multi-chunk application runs, annual application gates and Windows directory fsync remain explicit limits, not new tasks here.
 The recorded 120-second closure allowance is an engineering convention, not an adviser threshold. Default finite end currently includes the allowance; retain and clearly document that departure from the specification's coverage-end shorthand. MP-001 must choose actual method timing/dependencies.
 The measured monthly synthetic overhead does not justify optimization work while the monthly gate passes. MP-001/R3/WP-009 remain inactive until the correction is reviewed.
+
+## Correction review and acceptance — 2026-10-03
+Implementation: `ddc1831b5015692e0b34969bc23390c2dff82a46`; correction base `35d73fc`.
+**ACCEPTED — WP-008-R2 factual temporal slice. Finding 1 is closed.**
+
+Independent source review confirms launch-time pins of the completed run's clock_end, artifact directory/generation, manifest artifact hash/size and temporal reference. Deep v3 applies finish to both shadow and separate reference and performs eleven comparisons against the published evidence. Missing/unlisted/corrupt required evidence fails; internally consistent but incorrect finished aggregate commitments mismatch. Paused/cancelled/failed targets remain prefix-only. Existing stored v2 plans without terminal pins retain the boundary-only path and saved scope; legacy streaming runs retain Deep v1. No schemas, migrations or original-run writes were added by this correction.
+
+Independent bounded probe used the actual `_terminal_compare` function extracted by AST, real temporal engine/reference and the original fifteen-minute fixture: valid finished output gives eleven comparisons, six reference records and no mismatch; changing only the finished aggregate chain in both output and manifest reference produces terminal_aggregate_chain and terminal_shadow_aggregate_chain mismatches while pre-finish input/state is untouched. Artifact loading/database regression coverage was inspected in tests, not independently rerun locally. The same import stubs/runtime limitations as the initial probe apply; no production behavior was stubbed in the comparison.
+
+CI run **37138450907** independently checked: checks SUCCESS (web typecheck/build, non-E2E and E2E steps), compose-smoke SUCCESS. Executor reports local 439 non-E2E, zero skipped, 10 E2E and six schema baselines matching; Director does not claim a second full local suite. Regression source covers final pending ties, month-end higher horizons, finished-output-only tampering, absent/corrupt/unlisted artifacts, paused/cancelled prefix scope and resumed Deep execution.
+
+Accepted scope remains factual UTC aggregation/clock/readiness and bounded checkpoint restore, not an adviser or profitability evidence. Normal temporal runs use reconciliation v3; new Deep temporal launches use v3, with distinct shared-engine vs separate aggregate reference scope. Default finite clock end is coverage end plus the pinned engineering closure allowance. Annual application gates, Windows directory fsync, real live tapes and application-level multi-chunk execution remain open as previously declared. No new benchmark or Owner run is needed for this closure.
+
+Next is **Director MP-001 integrated method specification**, not more general infrastructure hardening. R3 acquisition and WP-009 implementation require their own later activation.

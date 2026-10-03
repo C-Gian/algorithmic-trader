@@ -1,8 +1,8 @@
 # Project State
 
-Updated: 2026-10-03 — September Market replay check closed; WP-010 accepted; R2 terminal reference correction active
+Updated: 2026-10-03 — September Market replay check closed; WP-010 accepted; WP-008-R2 accepted; Director MP-001 specification active
 
-**Current task: [task.md](task.md) — WP-008-R2 terminal reference correction (ACTIVE executor correction).** Product authority: [FOUNDATION.md](FOUNDATION.md) v3.1. Executor rules: [AGENTS.md](AGENTS.md). How to run the app: [README.md](README.md). Chronology and earlier package evidence: [delivery/DELIVERY-HISTORY.md](delivery/DELIVERY-HISTORY.md).
+**Current task: [task.md](task.md) — MP-001 integrated method closure (ACTIVE Director specification; no executor implementation).** Product authority: [FOUNDATION.md](FOUNDATION.md) v3.1. Executor rules: [AGENTS.md](AGENTS.md). How to run the app: [README.md](README.md). Chronology and earlier package evidence: [delivery/DELIVERY-HISTORY.md](delivery/DELIVERY-HISTORY.md).
 
 Goal (Foundation v3.1): an integrated BTC adviser with persistent actionable LONG/SHORT calls, entry area, targets, stop/exit guidance and holding horizon. Capital, size, leverage and orders stay human. Historical ACCEPTED/READY/HOLD labels in older documents do not authorize work; only task.md does.
 
@@ -12,12 +12,12 @@ Goal (Foundation v3.1): an integrated BTC adviser with persistent actionable LON
 
 Implemented and in use:
 - OKX BTC-USDT-SWAP public evidence (`marketdata.v1`, frozen), causal feed/observable state (`feed.v1`, provisional), public live recorder with measured local receipt times (`recorder.v1`, provisional).
-- Durable observation replay (`observe.v1` revision 2, provisional) on the streaming engine: immutable receipt-pinned feed cache, one incremental causal kernel, sparse checkpoints with direct restore, fenced publication, bounded terminal reconciliation `observe.stream-reconciliation` v2.
+- Durable observation replay (`observe.v1` revision 3, provisional) on the streaming engine: immutable receipt-pinned feed cache, one incremental causal kernel, sparse checkpoints with direct restore, fenced publication, bounded terminal reconciliation `observe.stream-reconciliation` v2 for legacy runs and v3 for temporal runs.
 - Shared operational contract `algotrader.ops.v1`: status, phase, health and assurance as separate facts; durable launch; phase timing/ETA; pause/step/speed/cancel; diagnostic copy/export at every status.
-- Optional Deep validation (`observe.deep-reference` v1): an explicitly launched reference re-execution of a run's committed prefix over its canonical feed cache, along a separate execution path but with the shared reducer; not a wholly independent method and not an audit of the original source files.
+- Optional Deep validation (`observe.deep-reference` v1 for legacy runs, v3 for new temporal launches; stored v2 results unchanged): an explicitly launched reference re-execution of a run's committed prefix over its canonical feed cache, along a separate execution path but with the shared reducer; not a wholly independent method and not an audit of the original source files.
 - Historical Workbench (`#backtest`): prepare a month of the corpus (only `btc-okx-2025-09` is preparable), start a *Market replay — data and engine check*, follow it and **Copy report for chat**. Adviser backtest is shown as unavailable.
 - Task-first UI pass (`d8144ad`): plain run status shared by Workbench and Replay Lab, technical detail behind disclosures. It improves Workbench/Replay Lab only.
-- **Causal temporal substrate (WP-008-R2, executor evidence; Director review pending):** `algotrader.temporal.v1` r1 (provisional) factual UTC 15m/1h/4h/day/Monday-week/calendar-month aggregates per trade/mark/index series, seal-no-revision late policy, explicit logical clock and dispatches (modeled complete-prefix, recorded synthetic-barrier, dispatch-tape fixture interface), deadlines, dependency readiness, bounded explicit restore state in the fenced checkpoints of new `observe.stream.v2` runs (lifecycle 4), reconciliation v3 and Deep validation v2 for those runs, temporal inspection and copy-report section. No observations, thresholds, calls or `semantic.v2`.
+- **Causal temporal substrate (WP-008-R2 accepted at `ddc1831`):** `algotrader.temporal.v1` r1 (provisional) factual UTC 15m/1h/4h/day/Monday-week/calendar-month aggregates per trade/mark/index series, seal-no-revision late policy, explicit logical clock and dispatches (modeled complete-prefix, recorded synthetic-barrier, dispatch-tape fixture interface), deadlines, dependency readiness, bounded explicit restore state in the fenced checkpoints of new `observe.stream.v2` runs (lifecycle 4), reconciliation v3 and Deep validation v3 for new diagnostic launches on those runs, temporal inspection and copy-report section. No observations, thresholds, calls or `semantic.v2`.
 
 Historical datasets use **modeled** availability (a declared convention: a bar counts as known at its close, funding at its funding time), not measured historical publication or receipt times. Recordings use **recorded** client receipt times.
 
@@ -31,6 +31,7 @@ Historical datasets use **modeled** availability (a declared convention: a bar c
 | WP-008-R1B streaming replay | `9d814ec`, [review](delivery/WP-008-R1B-DIRECTOR-REVIEW.md) | Structural slice |
 | WP-008-R1C assurance + gates | `99e0ca5`, CI `37111371473`, [review](delivery/WP-008-R1C-DIRECTOR-REVIEW.md), [gate inventory](delivery/evidence/WP-008-R1C-benchmark-gates-v2.md) | Month-only release; synthetic structural benchmark |
 | **Owner September Market replay check — CLOSED** | Evaluation `eval-20261003T091928-a7eb00`, replay `obs-20261003T091928-363a3d` | See below |
+| WP-008-R2 causal temporal substrate | `ddc1831`, CI `37138450907`, [review](delivery/WP-008-R2-DIRECTOR-REVIEW.md) | Factual temporal slice; Deep terminal correction accepted; no adviser |
 | UX pass | `d8144ad`, CI `37116003888` (checks incl. E2E, compose-smoke) | Workbench/Replay Lab only |
 
 **September closure (Director decision, 2026-10-03).** COMPLETED; coverage COMPLETE 129600/129600; runtime assurance PASSED; `observe.stream-reconciliation` v2 PASS 9/9; trusted receipt/cache/run pin matched; entire feed consumed; elapsed 60.4 s; 27 committed transactions; zero delivery rows; zero recoveries. The original replay performance incident is closed. Evidence is the Owner's copied terminal report reviewed by the Director, not an independently rerun benchmark. No Deep validation of this run was performed. No adviser or trading performance was evaluated.
@@ -48,13 +49,13 @@ These remain open after the September closure; they are not contradicted by it:
 
 ## 4. Next step
 
-1. **Now:** R2 implementation `44ce68a` required one bounded correction (Deep v2 omitted the terminal clock barrier/published temporal output); the executor correction is recorded below and awaits Director review. See [Director review](delivery/WP-008-R2-DIRECTOR-REVIEW.md) and task.md. WP-010 is accepted; MP-001, R3 and WP-009 remain inactive.
-2. **Next Director action:** review R2 implementation against the temporal specification, then define MP-001 integrated method closure before context acquisition.
+1. **Now:** MP-001 Director specification only: close the integrated method and semantic.v2 design. No executor implementation is active; R2 is accepted at `ddc1831`.
+2. **Next Director action:** define observable facts, MarketView/scenarios, candidate/actionability rules, persistent call lifecycle, method-required lookbacks/context, cycle/news dispositions and evaluation assumptions. Do not acquire history or code an isolated signal first.
 3. Remaining Foundation/SR-003 sequence (each needs its own task.md activation): R2 → MP-001 → R3 method-required context/presets → WP-009 integrated adviser v0 → Owner Backtest A. Sequence and rationale: [integrated delivery plan](delivery/FOUNDATION-V3-INTEGRATED-PLAN.md) §9–10 and [SR-003 disposition](strategic_reviews/SR-003-DIRECTOR-DISPOSITION.md).
 
-### WP-008-R2 executor evidence (base `9169096`; Director review pending)
+### WP-008-R2 executor evidence (base `9169096`; accepted after correction `ddc1831`)
 
-Implemented against [the temporal specification](delivery/WP-008-R2-CAUSAL-TEMPORAL-SPEC.md); not accepted until Director review.
+Implemented against [the temporal specification](delivery/WP-008-R2-CAUSAL-TEMPORAL-SPEC.md); original executor evidence below is retained. Current acceptance and corrected Deep version: [Director review](delivery/WP-008-R2-DIRECTOR-REVIEW.md).
 - **New/changed formats:** contract `algotrader.temporal.v1` r1 (new baseline `schemas/algotrader.temporal.v1.json`); `algotrader.observe.v1` r3 (optional manifest `temporal`; changelog entry; r1/r2 readable); engine `observe.stream.v2` (v1 kept for existing runs; factual compatibility fingerprint now includes the engine format); temporal engine `temporal.engine.v1`, state `algotrader.temporal-state.v1`; validators `observe.stream-reconciliation` v3 and `observe.deep-reference` v2 (temporal runs only; v2/v1 and their claims unchanged for R1B/R1C runs); additive migration 10 (temporal columns; suspends pre-R2 unfinished lifecycle-3 runs read-only); lifecycle 4. `feed.v1`, `marketdata.v1`, `semantic.v1`, `recorder.v1` baselines byte-identical.
 - **Clock/seal policies:** `temporal.clock.modeled-complete-prefix.v1`, `temporal.clock.recorded-replay-synthetic-barrier.v1` (named convention, not a live-decision reproduction), `temporal.clock.recorded-dispatch-tape.v1` (fixture/tape interface); `temporal.seal-no-revision.v1`; profile `temporal.utc-horizons.v1` with engineering demonstration dependencies only.
 - **Evidence:** `tests/test_temporal.py` (21 pure: UTC anchors incl. leap/non-leap February and DST days, partial coverage, exact OHLC/Decimal volumes per family, slot-order independence, missing/rejected, late before/after seal, cutoff perturbation, modeled tie groups and pending-boundary restore, per-event restore equality, recorded equal-time receipts, tape replay = live-style, deadline ordering and no-event timers, finite clock end, monotonicity, differential vs the separate reference aggregator for both streamed policies, readiness/staleness/unavailable/capacity rejection, bounded state, contiguous continuation and discontinuity reset); `tests/test_temporal_integration.py` (12 DB: cadence 7/333/5000 range-by-range equality with the pure fold, STEP/pause/paced, crash after commit at 1/15/42 without duplicate dispatch, corrupt temporal restore fallback, reconciliation v3 tamper/scope, Deep v2 match + tamper detection + pause/resume re-fold, legacy `observe.stream.v1` run with validator v2 / Deep v1, migration-10 suspension, inspection view and copy report); Workbench E2E asserts the temporal disclosure.
@@ -102,6 +103,10 @@ ACCEPTED at `f7ad4bc8d067d3b5ab46945cd899da8d074f04d3`. Independently checked co
 
 Director specification completed and implementation activated: `delivery/WP-008-R2-CAUSAL-TEMPORAL-SPEC.md`. Bounded factual aggregation/clock/readiness and restorable state only, no economic rules. Default horizon roles are conventions; MP-001 owns actual observation lookbacks and decision authority. No new Owner replay, acquisition or general hardening is assigned. Earlier specification-only pointers are historical.
 
-## R2 Director review — 2026-10-03
+## R2 initial Director review — historical, superseded by correction acceptance
 
 **Correction required at `44ce68a`:** [one blocking finding](delivery/WP-008-R2-DIRECTOR-REVIEW.md). The Director reproduced a 15-minute modeled fixture where the pre-finish Deep chains match with zero sealed records, but the published clock-end finish produces six unexamined records. The active task extends the optional reference check to that terminal output, without changing the original evidence or partial-prefix semantics. CI 37135564664: compose-smoke, web and non-E2E steps succeeded; final checks/E2E were still pending at this review. No new Owner replay or next package is authorized.
+
+## R2 correction accepted — 2026-10-03
+
+ACCEPTED at `ddc1831b5015692e0b34969bc23390c2dff82a46`. Finding 1 closed: Deep v3 pins and compares completed clock-end output; unusable evidence fails, inconsistent output mismatches, partial targets retain prefix-only scope. Source/test review, independent fifteen-minute terminal-comparison probe and CI 37138450907 (checks including E2E and compose-smoke SUCCESS) support acceptance. Local full suites are executor evidence, not Director reruns. No new Owner run requested. task.md now assigns Director MP-001 specification only; R3/WP-009 and adviser implementation remain inactive.
