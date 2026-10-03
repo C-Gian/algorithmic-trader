@@ -1,32 +1,27 @@
 # Algorithmic Trader
 
-Algorithmic Trader is a clean-room, local BTC trading adviser: professional market reading and persistent trade calls for a human who independently chooses capital, size, leverage and orders. FOUNDATION.md v3.1 is the canonical direction.
+Algorithmic Trader is a clean-room, local BTC trading adviser in development: professional market reading and persistent trade calls for a human who independently chooses capital, size, leverage and orders. [FOUNDATION.md](FOUNDATION.md) v3.1 is the product authority; [STATE.md](STATE.md) has the current status and [task.md](task.md) the single active task.
 
-## Current state
+## What works today
 
-**M3 is complete:** immutable real evidence, causal feed/state, public recorder and durable observation replay are implemented. **No production professional analyst or trade-call engine exists yet.** Synthetic trader/account output is DEMO.
+- **Historical Workbench** — prepare a month of real OKX BTC-USDT-SWAP history once, replay it through the causal engine as a *Market replay — data and engine check*, and copy a plain report into chat. Only September 2025 is preparable today.
+- **Replay Lab** — inspect a replay of a dataset or recording event by event (pause, step, speed), or run the separate **Synthetic Demo**.
+- **Data** — datasets on this computer with coverage, quality, gaps and hashes.
+- **Recorder** — record live public OKX data with measured local receipt times while the app runs.
 
-The 30 September Owner clarification supersedes the mandatory pullback-only/RP-001 research path. Read FOUNDATION.md v3.1 and task.md for the current Director handoff. Old reviews/research are historical evidence, not current work authorization.
+**Not built yet:** the professional adviser. There is no market prediction, no trade call and no adviser backtest; Market shows the reserved cockpit as pending, and the Workbench lists *Adviser backtest* as unavailable. Synthetic trader/account output is DEMO only. Other open limits (annual performance gates not measured, Windows directory durability unproven, Data/Recorder/mobile UX not yet reworked) are listed in [STATE.md](STATE.md#3-open-limits).
 
-### SR-003 current work — R1A and R1B accepted; R1C accepted for the month-only Owner check
+How the project got here (package reviews, acceptance and correction chronology): [delivery/DELIVERY-HISTORY.md](delivery/DELIVERY-HISTORY.md). Old reviews/research are evidence, not work authorization.
 
-The Owner's September run exposed a replay/finalization performance defect. The Director approved a bounded redesign in `strategic_reviews/SR-003-DIRECTOR-DISPOSITION.md`. **WP-008-R1A (observable lifecycle and diagnosis) is accepted at `0919001`. WP-008-R1B (streaming replay and restorable checkpoints) is accepted at correction `9d814ec` for the structural slice**; see *Streaming replay engine (WP-008-R1B)* below. New runs no longer build the feed eagerly, snapshot every event, write a delivery row/transaction per event or rebuild the prefix on restore. R1C (layered assurance, optional Deep validation, control/durability closure, structural benchmark) is accepted at correction `99e0ca5` for the month-only Owner check; see *Assurance, Deep validation and release gates (WP-008-R1C)*. Synthetic structural gates are not an achieved Owner month/year result.
-
-Do not retry the real month after R1A alone (**NOT READY FOR OWNER MARKET REPLAY**). The Director will hand off READY FOR OWNER MARKET REPLAY after R1B/C and review. Reuse September locally in a new run; preserve old rows/artifacts/identity. No automatic old-run salvage or September download. No professional adviser or achieved speedup is claimed.
-
-### Required next product capabilities — not yet implemented
-
-Live Home chart and changing professional-lens results, dominant directional view and persistent entry-valid call; integrated context including explicit cycle/event decisions; optional local sessions with catch-up; fixed repository historical pack (only the September 2025 bootstrap chunk is preparable today; the storage mechanism is undecided); advisory call/outcome sections in the Backtest report. The Owner-operated **observation-only** evaluation workflow with copy/export reports exists (WP-008, below).
-
-The Owner launches substantial evaluations from the app. Executors run bounded engineering checks, then hand off **READY FOR OWNER BACKTEST**. Never mistake the existing observation-only replay for evaluation of a real trader.
-
-## Read first
+## Read first (executors)
 
 1. `FOUNDATION.md` — canonical product, architecture and research directive.
-2. `STATE.md` — current milestone, active task and next action.
+2. `STATE.md` — current implementation, accepted evidence, open limits and next step.
 3. `AGENTS.md` — executor workflow and clean-room rules.
 4. `task.md` — the single current task to implement.
 5. `source_notes/` and `knowledge/registry.yaml` — professional knowledge provenance.
+
+The Owner launches substantial evaluations from the app. Executors run bounded engineering checks, then hand off **READY FOR OWNER BACKTEST**. Never mistake the existing observation-only replay for evaluation of a real trader.
 
 ## Product scope
 
@@ -55,11 +50,45 @@ uv run algotrader serve          # migrates, starts supervised run/recorder/obse
 
 Useful environment variables: `ALGOTRADER_ARTIFACT_ROOT` (default `./var/artifacts`, outside Git), `ALGOTRADER_PORT`, `ALGOTRADER_LEASE_SECONDS`.
 
-## Implemented operation (synthetic controls unless specified)
+### Upgrade an existing installation (keeps your data, runs and reports)
+
+1. Stop the application containers, leaving the database running: `docker compose stop api worker recorder observer corpus`.
+2. Update the checkout, then `docker compose up --build -d`. The `migrate` service applies any new additive database migrations before the workers start.
+3. **Never use `docker compose down --volumes`** (or delete the `pgdata`, `marketdata` or `artifacts` volumes): that deletes the database, the prepared months and every run artifact.
+
+Runs that were unfinished when an upgrade changed the engine are kept **suspended and read-only**: they are never resumed, salvaged or relabelled, and their diagnostics can still be copied. Start a new run instead. A prepared month is reused by new runs without downloading it again.
+
+**Code version.** Reports record the commit the application image was built from as `<sha>+image` (uncommitted local changes cannot be detected), or *not available* when no git metadata entered the build. Health and the sidebar show the same build commit.
+
+### Where data and reports live
+
+| What | Docker volume (path in the container) | Without Docker |
+|---|---|---|
+| Prepared months, recordings, feed caches | `marketdata` (`/data/market`: `datasets/`, `recordings/`, `feedcache/`) | `ALGOTRADER_DATA_ROOT`, default `./var/data` |
+| Run artifacts | `artifacts` (`/data/artifacts`: `observations/<replay_id>/g<generation>/`, `runs/<run_id>/`) | `ALGOTRADER_ARTIFACT_ROOT`, default `./var/artifacts` |
+| Runs, jobs, checkpoints, receipts | `pgdata` (PostgreSQL) | your PostgreSQL database |
+
+You do not need to open these folders. Every run's report is in the app: **Copy report for chat** (or the Markdown/JSON download) in the Historical Workbench result, **Copy diagnostics for chat** in Replay Lab, and a separate report in each Deep validation panel. The same reports are served at `/api/evaluations/{id}/report.md|json`, `/api/observations/{id}/report.md|json` and `/api/observations/deep-validations/{id}/report.md|json`.
+
+## Normal path: check a month in the Historical Workbench
+
+1. Open **Historical Workbench** (`#backtest`). In **1 · Choose and prepare a month of data**, pick September 2025. If it is *Not on this computer yet*, press **Prepare**: it downloads and verifies the month once (public OKX data, no keys). When it reads *Ready — nothing is downloaded again*, it is reused for every later check.
+2. In **2 · Start a check**, keep *Market replay — data and engine check*, speed **max**, and press **Start the check**. Each start creates a new run.
+3. In **3 · Follow the run and get the report**, the plain status moves through *Preparing the data → Replaying market history → Checking & writing the report → Finished*. The first run on a month also builds its feed cache. The Owner's September check took about one minute; your hardware may differ.
+   - **Pause** is a request: the status reads *Pause requested* while the worker finishes and saves its current unit of work, and *Paused* only once it has stopped. **Step one event** works only while paused. **Cancel run** ends the run with incomplete coverage and still writes a report.
+4. Read **Result and report**: three separate facts — the run (finished/cancelled/failed and coverage), the integrity checks (the run's own bounded reconciliation) and the trading adviser (not built yet). Press **Copy report for chat** and paste it to the Director; if the copy confirmation does not appear, download the Markdown report instead.
+5. **Deep validation** (optional, later) re-executes the run's committed events along a separate reference path over the stored feed cache and compares the results. It shares the reducer code and does not re-read the original source files, so it is not a wholly independent method or a source audit. It has its own progress and report, and never changes the run.
+
+**What a Market replay result means.** It shows that stored data, the causal feed and the durable replay worked end to end. Historical datasets use **modeled availability**: a declared convention in which each completed bar counts as known at its close and each funding event at its funding time. These are not measured historical publication or receipt times; only recordings carry measured (local receipt) times. The result says nothing about trading performance.
+
+**Limits.** Only September 2025 is preparable; do not launch other months or a year (annual application gates are not measured). No CLI commands, raw logs or retries are needed: if a run fails or is cancelled, copy its report as it is.
+
+
+## Synthetic DEMO runs (Replay Lab → Synthetic Demo)
 
 - **Runs**: start (replay speed, optional DEMO fault injection), cancel, status, progress, elapsed time, heartbeat, attempt, failure text and recovery log.
 - **Replay controls** (UI buttons; `POST /api/runs/{id}/pause|resume|step|cancel`, `POST /api/runs/{id}/speed {"speed": n}`): all control state is persisted in PostgreSQL and survives browser close and API/worker restarts.
-  - *Pause* lets the worker finish the bar in progress, then parks the run at the committed checkpoint (status `paused`, no lease held, no new events). Pause is not cancel and not terminal.
+  - *Pause* is a request: the run shows `pausing` while the worker finishes the bar in progress, then parks it at the committed checkpoint (status `paused`, no lease held, no new events). Only `paused` means nothing more is processed. Pause is not cancel and not terminal.
   - *Step one bar* (only while paused) advances exactly one input bar, committed normally, and the run stays paused. Repeated steps are queued one bar each.
   - *Resume* continues a paused run. *Speed* (bars/s, `max` = no pacing) can change at any time before the run ends. *Cancel* also works while paused.
   - Speed and control are operational pacing only: they are not part of the run config or the semantic trace, and are recorded separately in the run's `control_log` (shown in the UI, manifest and `report.md`).
@@ -83,6 +112,7 @@ uv run playwright install chromium            # once; CI uses --with-deps
 export ALGOTRADER_TEST_DATABASE_URL=postgresql://postgres:PASS@localhost:5432/postgres
 uv run pytest --ignore=tests/e2e              # unit, contracts, accounting, determinism, idempotency/recovery, API
 uv run pytest tests/e2e                       # browser UI -> API -> worker process -> PostgreSQL -> UI
+# tests/test_ux_wording.py runs web/src/views/replay/runStory.ts with Node 24 (type stripping); no browser needed
 python scripts/stack_smoke.py http://127.0.0.1:8000   # against a running stack
 ```
 
@@ -185,7 +215,7 @@ A separate operational path from the synthetic `semantic.v1` shell: **verified e
 - **Clock**: one step = one causal feed delivery in the accepted total order; information time = that delivery's `available_time`. Pacing is **events/s** (`max` allowed) and never changes order, state or digests. Freshness uses the named inspection default (`feed.freshness.v1(...)`), persisted per replay.
 - **Durability**: `observe-worker` processes (`observe:` worker ids; Compose service `observer`) own replays under a lease. Each delivery commits atomically: cursor compare-and-set (`k → k+1`) + snapshot digest/view + append-only delivery row (unique per `(replay, seq)` and `(replay, event_id)`). On claim the state is rebuilt as the pure feed prefix and must match the persisted digest, otherwise the replay fails explicitly. Pause parks at a committed cursor; *Step one event* applies exactly one delivery; 3 consecutive interruptions without progress fail the replay.
 - **API**: `/api/observations` (`sources`, `sources/{kind}/{id}` preflight, create/list/get, `state`, `deliveries`, `traded-bars`, `pause|resume|step|speed|cancel`, `stream` (SSE), `manifest`, `files/{name}`).
-- **Artifacts** (revision 1: `<artifact root>/observations/<replay_id>/`; revision 2: the generation-scoped `observations/<replay_id>/g<generation>/`): `config.json`, `deliveries.jsonl`, `final_snapshot.json`, `validation.json` (independent re-derivation from the immutable source: order, no duplicates, per-delivery digests, no future knowledge, final = `snapshot_at`) and `manifest.json` (hashes; source evidence referenced, not copied).
+- **Artifacts** (revision 1: `<artifact root>/observations/<replay_id>/`; revision 2: the generation-scoped `observations/<replay_id>/g<generation>/`): `config.json`, `deliveries.jsonl`, `final_snapshot.json`, `validation.json` (full re-derivation from the immutable source with the same reducer code, not an independent implementation: order, no duplicates, per-delivery digests, no future knowledge, final = `snapshot_at`) and `manifest.json` (hashes; source evidence referenced, not copied).
 - **Health** (`GET /api/health` → `capabilities`) is capability-aware: core, market replay, recorder and synthetic replay each report `available`, `unavailable` (worker offline; limits that capability only) or `stalled` (jobs waiting with no worker).
 
 ## Observable job lifecycle (WP-008-R1A) — operational only, not a speedup
@@ -200,12 +230,6 @@ Shared operational contract `algotrader.ops.v1` (`src/algotrader/ops.py`) for ob
 - **Diagnostics at every status**: `GET /api/observations/{id}/report.md|json`, `/api/evaluations/{id}/report.md|json` (snapshot with capture time while non-terminal or without a manifest; terminal reports stay byte-deterministic) and `/api/corpus/jobs/{id}/report.md|json`. Built from persisted facts only (no source re-execution, no full delivery read); manifest existence/size/hash is checked where claimed. A failed final publication leaves a failed run with no manifest and a working diagnostic export.
 - **Contracts**: `algotrader.observe.v1` revision 2 (Director-approved, additive optional fields; revision-1 manifests remain readable and unchanged). `semantic.v1`, `marketdata.v1`, `feed.v1`, `recorder.v1` baselines are byte-identical. DB migration 6 is additive.
 
-### Owner upgrade to R1A (preserves the September evidence)
-
-1. Stop **all** old application containers first so no old binary can keep publishing during the migration: `docker compose stop api worker recorder observer corpus` (leave `db` running). Do **not** use `down --volumes`.
-2. Update the checkout (`git pull --ff-only origin main`), then `docker compose up --build -d`. The `migrate` service applies migration 6 before any new worker starts.
-3. Migration 6 adds an operational **suspension** to every pre-upgrade nonterminal replay (e.g. the September run): its rows, checkpoint, delivery rows, configuration, source binding and any files stay exactly as they were; new workers never claim, restore or finalize it; controls are disabled. Open it in Replay Lab or the Historical Workbench and use **Copy diagnostics for chat** (it reports the committed cursor, missing terminal validation and whether a manifest exists on disk).
-4. Do not start a replacement September run yet; R1C will hand that off (new run, same verified local dataset, no download).
 
 ## Streaming replay engine (WP-008-R1B) — new runs only
 
@@ -262,11 +286,8 @@ New observation replays (lifecycle 3, `engine_format = observe.stream.v1`) use o
   - warm run: no build, replay ~3,700 events/s;
   - Python-heap peak (tracemalloc) 15.0 MB → 16.1 MB from 4,323 → 17,292 events with sort block 1,500 / partition 1,000.
 
-### Owner upgrade to R1B
 
-Caches built by the first R1B commit carry no receipt and are quarantined/rebuilt on first use (migration 8). Same procedure as R1A: stop the application containers (`docker compose stop api worker recorder observer corpus`), update the checkout, `docker compose up --build -d` (never `--volumes`). Migration 7 suspends any unfinished R1A run read-only. Feed caches are created on the existing market-data volume on first use. Do not start the replacement September run yet (R1C).
-
-## Assurance, Deep validation and release gates (WP-008-R1C) — executor evidence, Director review pending
+## Assurance, Deep validation and release gates (WP-008-R1C)
 
 - **Layered assurance (what a normal run actually establishes).** Layer 1, *admission*: the source snapshot is verified once and only receipt-pinned, SHA-256-verified cache partitions are applied; the replay loop refuses any admission discontinuity (`seq != cursor`). Layer 2, *runtime + bounded terminal integrity*: validator **`observe.stream-reconciliation` v2** (migration 9 adds each range's `snapshot_digest` / `state_sha256`). It never replays the reducer, rebuilds a prefix or synthesizes deliveries. Checks:
   - `committed_ranges_contiguous` — positive contiguous ranges/counts with strictly increasing first/last order keys;
@@ -280,8 +301,8 @@ Caches built by the first R1B commit carry no receipt and are quarantined/rebuil
   Its scope reads *"Runtime integrity verified, engine reference-tested … No independent reference replay was performed in this run"*. Layer 3, *reference*: protected differential/hand-expected fixtures, plus the optional Deep validation below. R1A/R1B runs keep their original validator claims. Adviser/horizon checks remain unavailable.
 - **Artifact publication.** Staged files are fsynced, renamed, the parent directory fsynced where the OS supports it (POSIX; on Windows directory fsync is unavailable and stays unproven), then every manifest artifact is re-hashed; a partial/corrupt publication is an error and is never referenced. Diagnostic exports re-hash referenced artifacts ≤ 64 MiB.
 - **Deep validation (optional, never automatic).** Launched only from a run's *Deep validation* panel (Historical Workbench or Replay Lab) for a streaming run that is completed, cancelled, failed or paused with committed events. It is its own durable job (`observation_deep_validations`, `deep-*` ids, one active per run) claimed by the same observation worker in a separate compute process, with its own phase timeline, progress, health, fencing generation, pause/resume/cancel and Copy/Markdown/JSON report at every status.
-  - Validator **`observe.deep-reference` v1**: an independent sequential fold of the accepted pure reducer from the initial state over the run's committed prefix, compared at every committed range boundary and retained restore point (input commitment, state SHA-256, snapshot digest).
-  - **Scope:** input is the receipt-checked canonical feed cache only — the original source is *not* re-normalized, so this is not an independent source audit, and the reducer code is shared with the engine.
+  - Validator **`observe.deep-reference` v1**: a reference re-execution: its own sequential fold (separate from the production kernel's checkpoint/restore/commit path) of the accepted pure reducer from the initial state over the run's committed prefix, compared at every committed range boundary and retained restore point (input commitment, state SHA-256, snapshot digest).
+  - **Scope:** input is the receipt-checked canonical feed cache only — the original source is *not* re-normalized, so this is not an independent source audit, and the reducer code is shared with the engine, so it is not a wholly independent method.
   - Streams bounded input; saves resumable state every 5,000 events / 2 s; pause/cancel/restart resume from the saved cursor; cancellation is INCOMPLETE.
   - **Terminal boundary (R1C correction):** the terminal commit locks the diagnostic row under its fencing generation, the same lock the Cancel command takes. A cancel accepted before that commit — in preparation, during the reference run, during report generation or just before the lock — ends the job CANCELLED with an INCOMPLETE result (exact covered/target events kept, no MATCH). A cancel arriving after the commit is rejected because the job is already terminal. A stale generation cannot write a terminal result.
   - The originating run's records, artifacts and terminal report never change. A mismatch is a persistent linked **assurance warning** shown in the run panel (*current assurance*) and in its copied diagnostics. Re-running a completed validation reproduces the same result without duplicate links.
@@ -314,20 +335,6 @@ Windows 10, Python 3.14.7, 8 logical CPUs, 32 GiB; full evidence in `delivery/ev
 
 Month: 27 transactions, 0 delivery rows, direct restore after pause (0 prefix events), Deep validation 28.6 s MATCH. Year components: flat ~4,850 events/s across deciles, Python-heap plateau ~10.7 MB, peak RSS ≤ 102 MB, manifest metadata ≈ 620 B per 5,000-event partition. These are structural infrastructure results, not the Owner's September result or a hardware prediction.
 
-### Owner upgrade to R1C and the replacement September run — authorized month-only handoff
-
-The Director accepted `99e0ca5` for this **month-only** check: **READY FOR OWNER MARKET REPLAY — SEPTEMBER 2025 ONLY**. Annual application gates stay NOT_MEASURED/PENDING; do not launch other months or a year.
-
-1. Stop the application containers (`docker compose stop api worker recorder observer corpus`; leave `db`), update the checkout, `docker compose up --build -d`. Never `down --volumes`. Migration 9 is additive; the old September run stays suspended and read-only.
-2. Historical Workbench → **2 · Start a check** → *Market replay — data and engine check* → select the **existing prepared September 2025 chunk** (badge *Verified*; nothing is downloaded) → pacing **max** → no start-paused → **Start**. This creates a **new** run id; the old run is not resumed, salvaged or relabeled.
-3. **Expected time.** The first run builds the feed cache: *Verifying source → Building feed*, then *Replaying → Validating → Generating report*. Release objectives on the reference machine are ≤120 s cold preparation, ≤120 s cached observation and ≤10 s terminal validation/report. The executor's synthetic month took ~70 s cold. Your hardware differs; if the run goes far beyond ~10 minutes, copy the diagnostic report while it is still running instead of waiting.
-4. **Check the copied report** (all fields are in it; nothing needs a terminal):
-   - status COMPLETED, last phase *Generating report* closed, no unmeasured spans;
-   - assurance **passed** (`observe.stream-reconciliation` v2), including `cache_receipt_and_pin` and `completed_consumed_entire_feed`;
-   - the *Current assurance* section's Runtime and Reference lines, plus every WARNING and Limitation line;
-   - **coverage:** the committed cursor must equal *this run's* verified total events (report *Feed* / *Committed cursor* lines and the `completed_consumed_entire_feed` detail `cursor N/N`). The earlier Owner-reported count of 129,600 is only a comparison: report any difference to the Director. Neither number is assumed.
-5. **Copy report for chat** (run panel in Historical Workbench or Replay Lab) and paste it to the Director. It contains build, worker host, feed identity and counts, per-phase timings, counters, controls, assurance and limits. **Deep validation** is optional: if you run it, copy its own report from its panel. If Copy provides no confirmation, download the Markdown report and attach it; the earlier CI copy-feedback failure is recorded for follow-up. Also copy the old suspended run's diagnostics if not already shared.
-6. No CLI commands, raw logs or retries are needed. If anything fails or is cancelled, copy the report as it is.
 
 ## Owner evaluation workbench (WP-008) — observation-only, no adviser
 
@@ -337,7 +344,7 @@ The page is one guided task in three numbered steps (route `#backtest` kept); a 
 
 - **1 · Choose and prepare a month of data**: the twelve-month ledger from the checked-in plan and the selected month with a plain-language state (*Not on this computer yet* / *Preparing* / *Ready — nothing is downloaded again* / *needs attention*) next to its **Prepare** (or *Verify again*) action. Each chunk's local state (`prepared`, `preparing`, `not_prepared`, `invalid`, `planned`), dataset identity, verification, quality, measured bytes (raw / Parquet / metadata, files, pages, rows) and reuse state are under **Data details**. **Prepare** only inserts a durable PostgreSQL job (`corpus_jobs`); the `corpus-worker` (Compose service `corpus`, `corpus:` worker ids) owns it: it reuses a verified binding or adopts an exactly matching local dataset without network, otherwise acquires the month via the accepted `OkxPublicClient` + `marketdata.dataset.acquire` (official OKX hosts only), verifies it and only then binds it (`corpus_chunks`). Progress shows phase, fixed windows done/total, pages, bytes, elapsed, heartbeat and an ETA only after measured throughput. Cancel stops at the next source page and binds nothing; finalized datasets are never deleted. A crashed worker's job is reclaimed after its lease and the chunk restarts **from scratch** (no byte-level resume; 3 interruptions fail it).
 - **2 · Start a check**: *What will run* (explicit run types — **Market replay — data and engine check** available, **Adviser backtest** unavailable until the adviser exists, **Deep validation** an optional per-run check started later from a finished/paused run; canonical-cache scope) beside *Settings* (the month — following the month selected in step 1 when prepared —, replay speed with *max* recommended, optional start-paused) and the **Start the check** button. There are no model parameters: *Professional adviser not connected yet.*
-- **3 · Follow the run and get the report**: *Your runs* (newest first) and the selected run. The run panel opens with one plain status (*Waiting to start*, *Preparing the data*, *Replaying market history*, *Checking & writing the report*, *Paused*, *Finished*, *Cancelled*, *Failed*, *Recovering*, *Not responding*), one sentence explaining it, the events progress bar and the controls that act on it (Pause / Resume / Step one event / Speed / Cancel run), plus a four-step summary. Errors, data-quality warnings, bridge exclusions, a missing worker, an expired lease and assurance warnings are always shown; **Phases and timing** and **Technical details** (status/phase/health/assurance as separate facts, committed vs computed cursor, ETA, worker service, heartbeat, attempt, pacing, source, coverage, feed identity, code version, availability policy, technical diagnostics export, recovery/control logs) open on demand. Directly below is **Result and report**: while running it states that the result is not ready (a diagnostic snapshot can still be copied); when terminal it shows the verdict, three separate facts — **the run** (finished/cancelled/failed and coverage), **integrity checks** (the run's own bounded reconciliation, PASS/FAIL with n/m) and **trading adviser** (not built yet, no calls) —, any failed check, the limits of the result, and the **Next step** with **Copy report for chat**, Markdown and JSON. **Report details** lists timing, quality, every check and the adviser metrics (`UNAVAILABLE` with value `null`, never zero). Then the chart (bounded 240-bar tail refreshed at most once per second while the worker processes every event), the optional Deep validation (the run's assurance summary refreshes when it finishes, without a page reload), and *More inspection* (observable state, artifacts). Every run has a copyable report at every status: a diagnostic snapshot while queued/running/paused/validating, a terminal report (`OBSERVATION_ONLY_EVALUATION`) once completed, cancelled or failed.
+- **3 · Follow the run and get the report**: *Your runs* (newest first) and the selected run. The run panel opens with one plain status (*Waiting to start*, *Preparing the data*, *Replaying market history*, *Checking & writing the report*, *Pause requested* (until the worker acknowledges), *Paused*, *Finished*, *Cancelled*, *Failed*, *Recovering*, *Not responding*), one sentence explaining it, the events progress bar and the controls that act on it (Pause / Resume / Step one event / Speed / Cancel run), plus a four-step summary. Errors, data-quality warnings, bridge exclusions, a missing worker, an expired lease and assurance warnings are always shown; **Phases and timing** and **Technical details** (status/phase/health/assurance as separate facts, committed vs computed cursor, ETA, worker service, heartbeat, attempt, pacing, source, coverage, feed identity, code version, availability policy, technical diagnostics export, recovery/control logs) open on demand. Directly below is **Result and report**: while running it states that the result is not ready (a diagnostic snapshot can still be copied); when terminal it shows the verdict, three separate facts — **the run** (finished/cancelled/failed and coverage), **integrity checks** (the run's own bounded reconciliation, PASS/FAIL with n/m) and **trading adviser** (not built yet, no calls) —, any failed check, the limits of the result, and the **Next step** with **Copy report for chat**, Markdown and JSON. **Report details** lists timing, quality, every check and the adviser metrics (`UNAVAILABLE` with value `null`, never zero). Then the chart (bounded 240-bar tail refreshed at most once per second while the worker processes every event), the optional Deep validation (the run's assurance summary refreshes when it finishes, without a page reload), and *More inspection* (observable state, artifacts). Every run has a copyable report at every status: a diagnostic snapshot while queued/running/paused/validating, a terminal report (`OBSERVATION_ONLY_EVALUATION`) once completed, cancelled or failed.
 - **API**: `/api/corpus` (status, `chunks/{id}/prepare`, `jobs`, `jobs/{id}`, `jobs/{id}/cancel`) and `/api/evaluations` (create/list/get, `report.md`, `report.json`, `?download=true`). Health reports a `corpus` capability.
 
 ## Semantic contract baseline
@@ -377,33 +384,3 @@ Without `ALGOTRADER_TEST_DATABASE_URL` the database tests are skipped (CI sets `
 Toolchain pins: Python 3.14.7 (`.python-version`, `uv.lock`), Node 24.14.1 (`.nvmrc`, `web/package-lock.json`), PostgreSQL 18.6 image, uv 0.12.10.
 
 The Project & Research Director replaces `task.md` after reviewing each pushed implementation.
-
-### Historical initial R1B Director review
-
-The initial implementation at `464f449` required corrections, now closed by `9d814ec`. Streaming/sparse persistence/direct restore are implemented, but cold preparation still has input-sized memory and unbounded merge fan-in, and the verified-source/cache metadata trust boundaries require correction. See `delivery/WP-008-R1B-DIRECTOR-REVIEW.md`. Short fixture rates/memory do not establish month/year readiness. R1C and Owner September retry remain inactive.
-
-### Current R1C status
-
-The earlier R1B findings are closed by Director review of `9d814ec`. R1C is implemented by the executor and awaits Director review; it is not accepted. No Owner September retry is authorized yet; Windows power-loss directory durability and actual (non-synthetic) month/year timings on the Owner's hardware remain unproven.
-
-### Director R1C review — corrections required
-
-Review of `6745117` requires receipt enforcement, Deep terminal-cancel correctness and truthful separation of runtime versus reference assurance. See `delivery/WP-008-R1C-DIRECTOR-REVIEW.md`. The full synthetic month measurements are useful; annual component comparisons do not establish full annual application/preparation/report gates, which remain NOT_MEASURED/PENDING. No Owner September retry is authorized yet.
-
-### R1C correction — executor evidence, Director review pending
-
-The correction implements all three findings: required trusted receipt, Deep terminal boundary under the row lock, and separate runtime/reference assurance. It also adds the gate inventory evaluator v2 with month-only handoff and annual gates PENDING. Details are above. Director acceptance is pending, and the Owner September run stays blocked until then.
-
-### Owner usability pass — executor evidence, Director review pending
-
-Owner-requested UX restructuring after the September check, preserving the visual identity, every datum, control and inspection path, and the engine/assurance semantics:
-
-- **Task-first navigation**: plain purpose under each sidebar entry; *What you can do now* on Market; global *Working / Nothing running* indicator.
-- **Historical Workbench** as three numbered steps with settings next to the action they affect; result and **Copy report for chat** directly below the run status; technical facts behind labelled disclosures (see *Owner evaluation workbench*).
-- **One plain run status** shared by Historical Workbench and Replay Lab; a finished run never shows its last phase as current (*All phases done*; reports say `finished (last phase … closed)`), and pending runtime checks during a run are *pending*, not an assurance warning (a FAILED result still is). Replay Lab states its purpose (event-by-event inspection) and links to the Workbench for routine checks; its diagnostics export stays visible.
-- **Report wording**: the WORKFLOW_VALID text says the run's own runtime integrity checks (bounded terminal reconciliation) passed and that no independent reference re-execution was performed (optional Deep validation). A duplicated data-quality limit line is no longer repeated.
-- **Code version**: `ALGOTRADER_CODE_VERSION` defaults to empty in Compose (it used to default to the literal `unknown`). The image records the commit it is built from (only `.git/HEAD`, `.git/refs`, `.git/packed-refs` enter the build context) as `<sha>+image`, described as *commit the application image was built from; uncommitted local changes cannot be detected*. Without git metadata nothing is recorded and reports say *not available*. Runs recorded earlier keep their stored value (`unknown` is shown as not available). Health and the sidebar show the build commit.
-
-### Director release status — 2026-10-03
-
-R1C correction at `99e0ca5` is accepted for the single September Owner app check above. Earlier review-pending/blocked notes describe prior checkpoints and are superseded for that bounded action. Annual application readiness remains pending. The earlier E2E failure was terminal Copy feedback, not an established replay/assurance failure; its root cause is unisolated. Final CI passed on the same product code. The real September incident closes only after the Director reviews the Owner report.

@@ -2,7 +2,7 @@
 
 An explicitly launched, durable diagnostic job linked to one terminal (or parked) streaming run. It is never
 started automatically and is never required for a normal report. It re-executes the run's admitted prefix with
-an INDEPENDENT reference loop - its own sequential fold with the accepted pure reducer ``feed.state.apply`` and
+a SEPARATE reference loop - its own sequential fold with the accepted pure reducer ``feed.state.apply`` and
 snapshot function, starting from the initial state, without the production kernel's checkpoint / restore /
 commit path - and compares, at every committed range boundary and retained restore point:
 
@@ -43,12 +43,13 @@ log = logging.getLogger("algotrader.observe.deep")
 VALIDATOR_ID = "observe.deep-reference"
 VALIDATOR_VERSION = "1"
 SCOPE = (
-    "Independent reference re-execution of the run's committed admitted prefix from the initial state, using its "
+    "Reference re-execution of the run's committed admitted prefix from the initial state, using its "
     "own sequential fold of the accepted pure reducer and snapshot function (not the production kernel, "
     "checkpoint, restore or commit path), compared with every committed range boundary (input commitment, "
     "state SHA-256, snapshot digest where recorded) and every retained restore point. Input: the run's receipt- "
     "and pin-checked canonical feed cache; the original source package is NOT re-normalized, so this is not an "
-    "independent source audit, and the reducer code is shared with the engine.")
+    "independent source audit, and the reducer code is shared with the engine, so it is not a wholly independent "
+    "method.")
 SAVE_EVENTS = 5000
 SAVE_SECONDS = 2.0
 MAX_MISMATCHES = 20

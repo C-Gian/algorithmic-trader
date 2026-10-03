@@ -4,8 +4,9 @@ import { fmtInt, fmtSecs, fmtTime } from "../../lib/format";
 import { Badge, Button, Card, Metric, Notice, statusTone, Tone } from "../../ui/primitives";
 import { CopyDiagnostics, healthTone } from "./MarketReplay";
 
-// Current assurance of a run + the optional Deep validation diagnostic (an independent reference execution over the
-// run's canonical feed cache). Deep validation is launched only by an explicit Owner action, is its own durable job
+// Current assurance of a run + the optional Deep validation diagnostic (a reference re-execution over the run's
+// canonical feed cache along a separate execution path; the reducer code is shared, so it is not a wholly independent
+// method or a source audit). Deep validation is launched only by an explicit Owner action, is its own durable job
 // with its own progress/health/controls/report, and never changes the originating run's records or report.
 
 const DEEP_TERMINAL = new Set(["completed", "cancelled", "failed"]);
@@ -74,18 +75,21 @@ export function DeepValidationPanel({ r, onChanged }: { r: ObsReplay; onChanged?
 
   return (
     <Card title="Deep validation — optional extra check" icon="shield" testid="deep-panel"
-          eyebrow="Not needed for a normal result · independent reference execution of this run's committed prefix"
+          eyebrow="Not needed for a normal result · reference re-execution of this run's committed prefix"
           actions={<Button icon="play" variant="secondary" disabled={!canLaunch || busy} data-testid="deep-launch"
                            title={canLaunch ? undefined : active ? "a Deep validation of this run is already active"
                              : "available once the run is completed, cancelled, failed or paused with committed events"}
                            onClick={() => act(() => deepApi.launch(r.replay_id))}>Run Deep validation</Button>}>
       <p className="small-text deep-plain">
-        Want more certainty? This re-computes the run a second, independent way and compares the two. It takes about as
-        long as the run itself and has its own progress and report. You can skip it.
+        Want more certainty? This re-computes the run along a separate path (same reducer code, same stored feed) and
+        compares the two. It can reveal discrepancies introduced by the run's checkpoint, restore and commit path; it is
+        not a wholly independent method and does not re-check the original source files. It takes about as long as the run itself
+        and has its own progress and report. You can skip it.
       </p>
       <p className="muted small-text">
-        Never launched automatically. Re-executes the committed feed events with an independent reference reducer and
-        compares input commitments, snapshot digests and state hashes at every committed range / restore point. Scope:
+        Never launched automatically. Re-executes the committed feed events in its own sequential reference loop (the
+        reducer code is shared with the engine) and compares input commitments, snapshot digests and state hashes at
+        every committed range / restore point. Scope:
         the canonical feed cache only (not an independent audit of the original source files). The run's own records,
         artifacts and terminal report are never changed; a mismatch is shown as a linked assurance warning.
       </p>
@@ -143,6 +147,12 @@ function DeepRow({ d, busy, act }: { d: DeepValidation; busy: boolean; act: (fn:
           reference <span className="mono">{m.reference.slice(0, 16)}</span>
         </Notice>
       ))}
+      {d.paused && !terminal && d.status !== "paused" && (
+        <p className="muted small-text" data-testid="deep-pause-requested">
+          Pause requested: the validation stops at its next saved point; until its status shows PAUSED it may still be
+          working.
+        </p>
+      )}
       {d.error && <Notice tone="warn">{d.error}</Notice>}
       <div className="diag-row">
         {!terminal && (

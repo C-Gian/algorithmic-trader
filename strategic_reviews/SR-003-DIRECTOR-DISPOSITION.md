@@ -44,7 +44,9 @@ Relevant source-level passages in LIB-008 support caution about redundant linear
 
 ## Active task and release boundaries
 
-R1A is accepted at `0919001` for its operational slice and R1B correction at `9d814ec` for its structural slice. R1C correction at `99e0ca5` is accepted for the **month-only Owner September Market replay check**, now activated by task.md. No executor implementation package/R2/R3/method/adviser work is active; annual application gates remain pending. The Director reviews the actual Owner result before the next activation.
+R1A is accepted at `0919001` for its operational slice and R1B correction at `9d814ec` for its structural slice. R1C correction at `99e0ca5` was accepted for the **month-only Owner September Market replay check**, activated by the task.md of that time; the Director reviewed the actual Owner result before the next activation.
+
+**Current pointer (2026-10-03):** the Owner September check is **closed** — evaluation `eval-20261003T091928-a7eb00`, COMPLETED, 129600/129600, runtime assurance PASSED; reviewed from the Owner's copied report, not an independently rerun benchmark, with no Deep validation and no adviser evaluation. This closes the observed replay performance incident. Annual application gates remain NOT_MEASURED/PENDING and Windows directory fsync durability unproven. The active task is WP-010 (documentation clarity and bounded UX wording; see `../task.md`), which does not activate R2/R3/method/adviser work. The next Director action is a bounded R2 causal temporal substrate specification reviewed against adviser dependencies, followed by MP-001 integrated method closure; the package order in the dispositions table above is unchanged. Current status: `../STATE.md`; chronology: `../delivery/DELIVERY-HISTORY.md`.
 
 R1A must make preparation, replay, validation and reporting visible; eliminate false recovery; fence all publication; provide incomplete diagnostics and preserve old evidence. It may add cooperative progress/control hooks to existing verification/validation without changing calculations. It is not the performance release and does not authorize a real-month retry.
 

@@ -36,6 +36,14 @@ function stepOf(phase: string | null | undefined): number {
 /** Where the finished result lives: the Workbench shows a report card; Replay Lab lists checks + diagnostics. */
 export type ResultPlace = "report" | "lab";
 
+/** How a replay orders knowledge. A dataset's times are a modeled convention, never measured historical availability. */
+export function knowledgeOrder(r: Pick<ObsReplay, "availability" | "source">): string {
+  const basis = r.availability?.basis ?? (r.source.kind === "recording" ? "RECORDED" : "MODELED");
+  return basis === "RECORDED"
+    ? "in the order this computer received them while recording (measured local receipt times, not exchange publication)."
+    : "in time order under the dataset's modeled availability convention (a bar counts as known at its close, funding at its funding time), not measured historical publication or receipt times.";
+}
+
 export function runStory(r: ObsReplay, workersAlive?: number, place: ResultPlace = "report"): RunStory {
   const op = r.operation;
   const p = r.progress;
@@ -79,16 +87,27 @@ export function runStory(r: ObsReplay, workersAlive?: number, place: ResultPlace
     return { ...base, title: "Not responding", tone: "neg", working: false,
       sentence: `${op.health_detail} If this persists, check that the application is running and copy the diagnostics for chat.` };
   }
-  if (r.control.paused || r.runtime_state === "paused" || r.runtime_state === "pausing") {
-    return { ...base, title: "Paused", tone: "warn", working: false,
-      sentence: `Paused at ${of}. Nothing is processed until you press Resume (or Step one event).` };
+  // A pause is only a request until the worker acknowledges it by parking the run (status "paused"); until then the
+  // worker may still prepare or finish its current unit of work, so "nothing is processed" is never promised early.
+  if (r.control.paused && r.control.step_budget > 0) {
+    return { ...base, title: "Paused · stepping", tone: "warn", working: true,
+      sentence: `Paused at ${of}; applying the requested single event, then the run stays paused.` };
   }
+  if (r.status === "paused") {
+    return { ...base, title: "Paused", tone: "warn", working: false,
+      sentence: `Paused at ${of}. No further events are processed until you press Resume (or Step one event).` };
+  }
+  if (r.control.paused && r.status === "running" && !PREP.has(op.phase ?? "")) {
+    return { ...base, title: "Pause requested", tone: "warn", working: true,
+      sentence: `Pausing: the worker finishes and saves its current unit of work (now at ${of}), then the run shows Paused. Until then events may still be processed.` };
+  }
+  const thenPause = r.control.paused ? " A pause was requested: the run will stop before replaying the first event." : "";
   if (r.status === "queued" || op.phase === "QUEUED" || !op.phase) {
     const noWorker = workersAlive === 0;
     return { ...base, title: "Waiting to start", tone: noWorker ? "warn" : "info", working: !noWorker,
-      sentence: noWorker
+      sentence: (noWorker
         ? "Queued, but no replay worker is running, so it cannot start yet. Start the application's worker services."
-        : "Queued: a replay worker will pick it up in a moment." };
+        : "Queued: a replay worker will pick it up in a moment.") + thenPause };
   }
   if (op.health === "alive_no_progress") {
     return { ...base, title: "Working, but no recent progress", tone: "warn", working: true,
@@ -96,11 +115,11 @@ export function runStory(r: ObsReplay, workersAlive?: number, place: ResultPlace
   }
   if (PREP.has(op.phase ?? "")) {
     return { ...base, title: "Preparing the data", tone: "info", working: true,
-      sentence: `${op.phase_label}: checking and indexing the stored data before replaying. Total events are known after this step.` };
+      sentence: `${op.phase_label}: checking and indexing the stored data before replaying. Total events are known after this step.${thenPause}` };
   }
   if (op.phase === "REPLAYING") {
     return { ...base, title: "Replaying market history", tone: "info", working: true,
-      sentence: `Replayed ${of} so far, in time order, exactly as they would have been known.` };
+      sentence: `Replayed ${of} so far, ${knowledgeOrder(r)}` };
   }
   return { ...base, title: "Checking & writing the report", tone: "info", working: true,
     sentence: `All events are replayed; ${op.phase_label.toLowerCase()} is in progress. The run is not finished until the report is written.` };

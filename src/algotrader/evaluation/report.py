@@ -90,9 +90,10 @@ def build_report(ev: dict[str, Any], replay: dict[str, Any], manifest: dict[str,
         verdict = "WORKFLOW_VALID"
         text = ("Corpus data, causal feed and durable observation replay worked end to end: every feed event of the "
                 "prepared chunk was applied and the run's own runtime integrity checks (bounded terminal "
-                "reconciliation) passed. No independent reference re-execution was performed (that is the "
-                "optional Deep validation). This says nothing about trading performance; no adviser was "
-                "evaluated.")
+                "reconciliation) passed. No reference re-execution was performed in this run (the optional Deep "
+                "validation provides one: a separate execution path over the canonical feed cache with the "
+                "shared reducer, not a wholly independent method or a source audit). This says nothing about "
+                "trading performance; no adviser was evaluated.")
     elif status == "completed":
         verdict = "OPERATIONAL_FAILURE"
         text = ("The replay reached the end of the feed but validation FAILED; the data/replay path needs diagnosis."

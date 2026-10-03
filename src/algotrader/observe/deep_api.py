@@ -103,7 +103,7 @@ def assurance_summary(c, replay_id: str, op_assurance: dict[str, Any] | None,
             mismatch_found = True
             done = r["status"] == "completed"
             warnings.append(f"Deep validation {r['validation_id']} found {len(res['mismatches'])} mismatch(es) between "
-                            "the independent reference execution and the run's committed records"
+                            "the reference re-execution and the run's committed records"
                             + ("" if done else f" before it stopped ({r['status']}, {_coverage(res)})"))
     deep_state = "not_run"
     if latest is not None:

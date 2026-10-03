@@ -157,7 +157,7 @@ const TASKS: { section: "backtest" | "replay" | "data" | "recorder"; icon: IconN
   { section: "backtest", icon: "gauge", primary: true, title: "Check a month of historical data",
     text: "Prepare a month of BTC data, replay it through the engine and copy a plain report into chat.", cta: "Open Historical Workbench" },
   { section: "replay", icon: "replay", title: "Inspect a replay event by event",
-    text: "Pause, step and slow down a replay to see exactly what was known at each instant.", cta: "Open Replay Lab" },
+    text: "Pause, step and slow down a replay to see what it had admitted at each step (modeled times for datasets, measured receipt times for recordings).", cta: "Open Replay Lab" },
   { section: "data", icon: "data", title: "See the stored data and its quality",
     text: "Datasets on this computer: coverage, gaps and verification.", cta: "Open Data" },
   { section: "recorder", icon: "recorder", title: "Record live public market data",

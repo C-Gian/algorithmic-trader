@@ -361,9 +361,10 @@ function RunSetup({ corpus, preferred, onStarted }: {
           <div className="run-type is-planned" data-testid="run-type-deep-validation">
             <span>
               <b>Deep validation <span className="muted">(optional, later)</span></b>
-              <span className="muted small-text">An extra check you can start from a finished run in step 3: an independent
-                reference re-execution of the committed prefix over the canonical feed cache, with its own progress and
-                report. Not an audit of the original source files; never changes the run.</span>
+              <span className="muted small-text">An extra check you can start from a finished run in step 3: a reference
+                re-execution of the committed prefix over the canonical feed cache, along a separate execution path but with
+                the same reducer code, with its own progress and report. Not a wholly independent method or an audit of the
+                original source files; never changes the run.</span>
             </span>
             <Badge tone="info">Implemented · per run</Badge>
           </div>
@@ -538,7 +539,7 @@ function ReportCard({ ev }: { ev: Evaluation }) {
               <span className="outcome-label">2 · Integrity checks</span>
               <span className="outcome-value"><Badge tone={checksTone}>{checksText}</Badge>{" "}
                 {v && `${v.checks.filter((c) => c.passed).length}/${v.checks.length} passed`}</span>
-              <span className="outcome-hint">The run's own checks (bounded reconciliation) — not an independent re-execution;
+              <span className="outcome-hint">The run's own checks (bounded reconciliation) — not a reference re-execution;
                 that is the optional Deep validation below.</span>
             </li>
             <li className="outcome-fact tone-pending" data-testid="fact-adviser">
@@ -863,7 +864,8 @@ export function Backtest() {
         <Icon name="replay" size={18} />
         <div>
           <strong>HISTORICAL · OBSERVATION ONLY</strong> — past OKX evidence replayed on a simulated clock with modeled
-          availability. Nothing here is live, and no trade call exists yet.
+          availability (a declared convention: each bar counts as known at its close; not measured historical timing).
+          Nothing here is live, and no trade call exists yet.
         </div>
       </div>
       {error && <Notice tone="neg" title="Something went wrong">{error}</Notice>}

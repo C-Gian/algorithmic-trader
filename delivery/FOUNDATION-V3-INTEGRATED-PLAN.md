@@ -1,7 +1,7 @@
 # Foundation v3 — Integrated Adviser Delivery Plan
 
 Status: ACTIVE DIRECTOR PLAN  
-Updated: 2026-10-02
+Updated: 2026-10-03 (current-action pointers: September check closed, WP-010 active)
 Authority: FOUNDATION.md v3.1, STATE.md, Owner realignment and SR-003 Director disposition
 
 ## 1. Product interpretation
@@ -434,7 +434,7 @@ The earlier WP-008 implementation is accepted but its real-month operation expos
 | 1 | WP-008-R1A — Observable job lifecycle and diagnosis | Durable prompt launch, all-phase progress, supervision/fencing, incomplete copy reports, legacy preservation and truthful run types. Director review only; no month retry. |
 | 2 | WP-008-R1B — Streaming replay and checkpoints | Bounded source/cache, incremental hot path, sparse persistence, validated restorable state and committed-prefix inspection. Protected differential/fault checks. |
 | 3 | WP-008-R1C — Assurance and performance acceptance | Layered runtime validation, explicit deep diagnostics, bounded structural benchmarks/reporting; Director review then READY FOR OWNER MARKET REPLAY. |
-| 4 | Owner September Market replay | New ID on the existing local dataset, no download. Actual phase/assurance/report evidence closes the defect. No adviser metrics yet. |
+| 4 | Owner September Market replay — **CLOSED 2026-10-03** | New ID on the existing local dataset, no download. Owner report reviewed by the Director: COMPLETED, 129600/129600, runtime assurance PASSED; incident closed (see STATE.md). No adviser metrics. Annual application gates remain pending. |
 | 5 | WP-008-R2 — Causal multi-horizon substrate | Versioned UTC aggregation, completion/known-at, admitted dispatch cursor, deadlines, readiness/freshness and bounded horizon state. No directional rules. |
 | 6 | MP-001 — Bounded integrated method closure | Concrete observations/scenarios/candidate families, actionability, persistent call lifecycle, cycle/event disposition and required lookbacks/readiness. Specify semantic.v2; no parameter/timeframe tournament. |
 | 7 | WP-008-R3 — Context corpus and evaluation presets | Acquire only method-required obtainable fine/coarse history through Owner app jobs; reusable packs, overlap/source checks, continuous monthly runs and registered development/protected/tail rules before economic evaluation. |
@@ -445,4 +445,10 @@ Preliminary source capability/size checks may inform MP-001 without substantial 
 
 ## 10. Immediate active action
 
-**Owner September Market replay check only — READY FOR OWNER MARKET REPLAY.** R1C correction `99e0ca5` is accepted for this month-only action; see `delivery/WP-008-R1C-DIRECTOR-REVIEW.md`. Current task.md defines the existing-local-dataset app handoff and Director evidence review. No executor implementation package/R2/adviser work is active yet; annual application gates remain pending. No acquisition, old-run salvage or real historical agent-CLI evaluation is authorized.
+**WP-010 — Documentation clarity and bounded UX wording** is the active task (`task.md`): current STATE/README/pointers, preserved history and three corrected UX descriptions. It is a closure task and does not activate R2, MP-001, R3 or WP-009.
+
+The Owner September Market replay check is closed (Director review of the Owner's copied report; not an independently rerun benchmark, no Deep validation, no adviser evaluation). Annual application gates remain NOT_MEASURED/PENDING; recording-volume evidence is limited; Windows directory fsync durability is unproven. Chronology: `DELIVERY-HISTORY.md`.
+
+**Next Director action:** a bounded **R2 causal temporal substrate specification**, reviewed against the adviser's actual dependencies, followed by **MP-001 integrated method closure**. The table order in section 9 is unchanged; each package still needs explicit task.md activation. No acquisition, old-run salvage or real historical agent-CLI evaluation is authorized.
+
+Historical pointer (2026-10-03, before closure): the previous immediate action was the month-only Owner September Market replay check after R1C correction `99e0ca5`; see `WP-008-R1C-DIRECTOR-REVIEW.md`.
