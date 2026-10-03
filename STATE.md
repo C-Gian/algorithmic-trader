@@ -1,8 +1,8 @@
 # Project State
 
-Updated: 2026-10-03 — September Market replay check closed; WP-010 accepted; WP-008-R2 accepted; MP-001 v0.2 method design closed; R3 context/preset implementation active
+Updated: 2026-10-03 — September Market replay check closed; WP-010 accepted; WP-008-R2 accepted; MP-001 v0.2 method design closed; R3 correction required at33c2b83
 
-**Current task: [task.md](task.md) — WP-008-R3 bounded context/preset implementation.** Product authority: [FOUNDATION.md](FOUNDATION.md) v3.1. Executor rules: [AGENTS.md](AGENTS.md). How to run the app: [README.md](README.md). Chronology and earlier package evidence: [delivery/DELIVERY-HISTORY.md](delivery/DELIVERY-HISTORY.md).
+**Current task: [task.md](task.md) — WP-008-R3 correction — Director findings1–3.** Product authority: [FOUNDATION.md](FOUNDATION.md) v3.1. Executor rules: [AGENTS.md](AGENTS.md). How to run the app: [README.md](README.md). Chronology and earlier package evidence: [delivery/DELIVERY-HISTORY.md](delivery/DELIVERY-HISTORY.md).
 
 Goal (Foundation v3.1): an integrated BTC adviser with persistent actionable LONG/SHORT calls, entry area, targets, stop/exit guidance and holding horizon. Capital, size, leverage and orders stay human. Historical ACCEPTED/READY/HOLD labels in older documents do not authorize work; only task.md does.
 
@@ -135,3 +135,7 @@ Method design closed at `btc.context-action.v0.2`; B1–B8 resolved with explici
 ## R3 specification and activation — 2026-10-03
 
 Director completed the bounded context/preset specification and registered logical windows before new economic results. September default requests96h warmup and365m tail; verified September sources reused. Contiguous multi-month packs preserve one causal/temporal state and cross-source ties. Missing funding/calendar/historical metadata proof stays limited, not silently neutral. New pack manifest/receipt and additive operational compatibility are authorized; no method, semantic.v2 or economic metrics. Executor implementation active under task.md, not accepted yet. No Owner download/run requested by this activation.
+
+## R3 Director review — 2026-10-03
+
+CORRECTION REQUIRED at33c2b83: contributor metadata reread outside verified-byte ownership, publication references intended hashes without checking actual artifacts and persisting the staging directory, and unconditional cleanup of other active attempts' staging. Three exact-code AST probes reproduced the isolated defects; full local suites were not rerun. Independently inspected CI37149503468: checks and compose-smoke SUCCESS. Executor458/11 tests remain evidence, not acceptance. Review/task activate only these corrections; WP-009 and Owner preparation handoff remain inactive.
