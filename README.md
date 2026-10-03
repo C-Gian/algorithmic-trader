@@ -8,9 +8,9 @@ Algorithmic Trader is a clean-room, local BTC trading adviser: professional mark
 
 The 30 September Owner clarification supersedes the mandatory pullback-only/RP-001 research path. Read FOUNDATION.md v3.1 and task.md for the current Director handoff. Old reviews/research are historical evidence, not current work authorization.
 
-### SR-003 current work — R1A and R1B accepted; R1C implemented, Director corrections required
+### SR-003 current work — R1A and R1B accepted; R1C accepted for the month-only Owner check
 
-The Owner's September run exposed a replay/finalization performance defect. The Director approved a bounded redesign in `strategic_reviews/SR-003-DIRECTOR-DISPOSITION.md`. **WP-008-R1A (observable lifecycle and diagnosis) is accepted at `0919001`. WP-008-R1B (streaming replay and restorable checkpoints) is accepted at correction `9d814ec` for the structural slice**; see *Streaming replay engine (WP-008-R1B)* below. New runs no longer build the feed eagerly, snapshot every event, write a delivery row/transaction per event or rebuild the prefix on restore. R1C (layered assurance, optional Deep validation, control/durability closure, structural benchmark) is implemented but requires Director corrections before acceptance; see *Assurance, Deep validation and release gates (WP-008-R1C)*. Synthetic structural gates are not an achieved Owner month/year result.
+The Owner's September run exposed a replay/finalization performance defect. The Director approved a bounded redesign in `strategic_reviews/SR-003-DIRECTOR-DISPOSITION.md`. **WP-008-R1A (observable lifecycle and diagnosis) is accepted at `0919001`. WP-008-R1B (streaming replay and restorable checkpoints) is accepted at correction `9d814ec` for the structural slice**; see *Streaming replay engine (WP-008-R1B)* below. New runs no longer build the feed eagerly, snapshot every event, write a delivery row/transaction per event or rebuild the prefix on restore. R1C (layered assurance, optional Deep validation, control/durability closure, structural benchmark) is accepted at correction `99e0ca5` for the month-only Owner check; see *Assurance, Deep validation and release gates (WP-008-R1C)*. Synthetic structural gates are not an achieved Owner month/year result.
 
 Do not retry the real month after R1A alone (**NOT READY FOR OWNER MARKET REPLAY**). The Director will hand off READY FOR OWNER MARKET REPLAY after R1B/C and review. Reuse September locally in a new run; preserve old rows/artifacts/identity. No automatic old-run salvage or September download. No professional adviser or achieved speedup is claimed.
 
@@ -314,9 +314,9 @@ Windows 10, Python 3.14.7, 8 logical CPUs, 32 GiB; full evidence in `delivery/ev
 
 Month: 27 transactions, 0 delivery rows, direct restore after pause (0 prefix events), Deep validation 28.6 s MATCH. Year components: flat ~4,850 events/s across deciles, Python-heap plateau ~10.7 MB, peak RSS ≤ 102 MB, manifest metadata ≈ 620 B per 5,000-event partition. These are structural infrastructure results, not the Owner's September result or a hardware prediction.
 
-### Owner upgrade to R1C and the replacement September run — proposed month-only handoff, NOT yet authorized
+### Owner upgrade to R1C and the replacement September run — authorized month-only handoff
 
-This is a **month-only** check for Director review. Annual application gates stay NOT_MEASURED/PENDING, so do not launch other months or a year. Only after the Director accepts the R1C correction and hands off READY FOR OWNER MARKET REPLAY:
+The Director accepted `99e0ca5` for this **month-only** check: **READY FOR OWNER MARKET REPLAY — SEPTEMBER 2025 ONLY**. Annual application gates stay NOT_MEASURED/PENDING; do not launch other months or a year.
 
 1. Stop the application containers (`docker compose stop api worker recorder observer corpus`; leave `db`), update the checkout, `docker compose up --build -d`. Never `down --volumes`. Migration 9 is additive; the old September run stays suspended and read-only.
 2. Historical Workbench → **B · Run setup** → *Market replay — data and engine check* → select the **existing prepared September 2025 chunk** (badge *Verified*; nothing is downloaded) → pacing **max** → no start-paused → **Start**. This creates a **new** run id; the old run is not resumed, salvaged or relabeled.
@@ -326,7 +326,7 @@ This is a **month-only** check for Director review. Annual application gates sta
    - assurance **passed** (`observe.stream-reconciliation` v2), including `cache_receipt_and_pin` and `completed_consumed_entire_feed`;
    - the *Current assurance* section's Runtime and Reference lines, plus every WARNING and Limitation line;
    - **coverage:** the committed cursor must equal *this run's* verified total events (report *Feed* / *Committed cursor* lines and the `completed_consumed_entire_feed` detail `cursor N/N`). The earlier Owner-reported count of 129,600 is only a comparison: report any difference to the Director. Neither number is assumed.
-5. **Copy report for chat** (run panel in Historical Workbench or Replay Lab) and paste it to the Director. It contains build, worker host, feed identity and counts, per-phase timings, counters, controls, assurance and limits. **Deep validation** is optional: if you run it, copy its own report from its panel. Also copy the old suspended run's diagnostics if not already shared.
+5. **Copy report for chat** (run panel in Historical Workbench or Replay Lab) and paste it to the Director. It contains build, worker host, feed identity and counts, per-phase timings, counters, controls, assurance and limits. **Deep validation** is optional: if you run it, copy its own report from its panel. If Copy provides no confirmation, download the Markdown report and attach it; the earlier CI copy-feedback failure is recorded for follow-up. Also copy the old suspended run's diagnostics if not already shared.
 6. No CLI commands, raw logs or retries are needed. If anything fails or is cancelled, copy the report as it is.
 
 ## Owner evaluation workbench (WP-008) — observation-only, no adviser
@@ -391,3 +391,7 @@ Review of `6745117` requires receipt enforcement, Deep terminal-cancel correctne
 ### R1C correction — executor evidence, Director review pending
 
 The correction implements all three findings: required trusted receipt, Deep terminal boundary under the row lock, and separate runtime/reference assurance. It also adds the gate inventory evaluator v2 with month-only handoff and annual gates PENDING. Details are above. Director acceptance is pending, and the Owner September run stays blocked until then.
+
+### Director release status — 2026-10-03
+
+R1C correction at `99e0ca5` is accepted for the single September Owner app check above. Earlier review-pending/blocked notes describe prior checkpoints and are superseded for that bounded action. Annual application readiness remains pending. The earlier E2E failure was terminal Copy feedback, not an established replay/assurance failure; its root cause is unisolated. Final CI passed on the same product code. The real September incident closes only after the Director reviews the Owner report.

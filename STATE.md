@@ -1,6 +1,6 @@
 # Project State
 
-Updated: 2026-10-03 — R1C correction implemented by the executor; Director review pending
+Updated: 2026-10-03 — R1C accepted for month-only Owner September check
 
 ## Authority and active direction
 
@@ -68,7 +68,7 @@ Accepted limitations to measure on the Owner machine:
 
 ## Current action
 
-**WP-008-R1A is ACCEPTED at `0919001fb689909080e139801641eb4c7105702f` for the operational slice. R1B correction is ACCEPTED at `9d814ec` for the structural slice. WP-008-R1C correction is the only active implementation package (`task.md`); Director review of `6745117`: CHANGES REQUIRED.** NOT READY FOR OWNER MARKET REPLAY until Director release acceptance.
+**WP-008-R1A is ACCEPTED at `0919001fb689909080e139801641eb4c7105702f` for the operational slice. R1B correction is ACCEPTED at `9d814ec` for the structural slice. R1C correction `99e0ca5` is ACCEPTED for the month-only Owner check. No implementation package is active.** **READY FOR OWNER MARKET REPLAY — SEPTEMBER 2025 ONLY** (task.md).
 
 Executor evidence (base `fb19de247350f205ad8c9da2cb18adeb7ea885b6`, final `66a2dce90619848776e891e7f50f0f8440d95eb4`; claims below are subject to the Director findings):
 - shared operational contract `algotrader.ops.v1` (`src/algotrader/ops.py`): separate status / phase / health / assurance; current-phase-only ETA; phase spans with active vs wall time;
@@ -356,3 +356,11 @@ Implementation `6745117ee1010510abfa6247bfc40c1331fff7c1`: **CHANGES REQUIRED**.
 Retain useful full-month synthetic measurements and implemented integrity/Deep functionality. Blocking findings: reconciliation accepts an absent receipt; Deep final success can overwrite an accepted cancel; Deep MATCH headline can incorrectly promote failed runtime assurance. Independent focused stdlib code probes confirmed these behaviors. Annual component timings are useful but annual application gates remain NOT_MEASURED/PENDING. See `delivery/WP-008-R1C-DIRECTOR-REVIEW.md`. Director review may authorize a scoped September app check after fixes; no annual-readiness claim or real historical CLI evaluation is accepted.
 
 R1C correction pushed by the executor (see *R1C correction executor evidence* above): READY FOR DIRECTOR REVIEW — R1C CORRECTION ONLY. Annual application gates remain NOT_MEASURED/PENDING; the proposed Owner handoff is month-only and is not active before Director acceptance.
+
+## Director R1C closure — Owner September check active
+
+Accepted correction `99e0ca5` for the month-only app check; **READY FOR OWNER MARKET REPLAY — SEPTEMBER 2025 ONLY**. Mandatory receipt, locked Deep cancellation, separated assurance and gate interpretation reviewed; independent actual-summary probes pass. CI `37111371473` checks/compose-smoke SUCCESS independently verified. Full test/benchmark timings remain executor evidence, not local Director reruns.
+
+Previous CI failure is now localized from retrieved job `111166819975`: Workbench terminal Copy did not show Copied within 5 s at E2E line 173; 1 failed/9 passed. Root cause unisolated; an older uncancelled copy-reset timer is a hypothesis. Final CI on unchanged product code passes. Record follow-up; use downloaded Markdown if feedback/copy fails. See review closure for evidence limits.
+
+Current task is one Owner-launched NEW September run on the existing Verified local chunk, preserving old run/data/volumes. No executor implementation package or R2 activation. The real incident remains open until actual Owner source/count/assurance/timing report is reviewed; no replacement ID has been invented. Annual application gates NOT_MEASURED/PENDING and Windows directory durability remain qualified.

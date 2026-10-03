@@ -443,6 +443,6 @@ The earlier WP-008 implementation is accepted but its real-month operation expos
 
 Preliminary source capability/size checks may inform MP-001 without substantial acquisition or outcome inspection. R3 follows method closure so the proposed history lengths do not dictate the method. Optional unavailable long-range/cycle/news context remains explicit with limited authority, not an indefinite gate.
 
-## 10. Immediate active package
+## 10. Immediate active action
 
-**WP-008-R1C correction only.** Review of `6745117` requires receipt/Deep correctness and benchmark-scope corrections; see `delivery/WP-008-R1C-DIRECTOR-REVIEW.md`. R1A and R1B correction are accepted for their operational/structural slices; R1B final review is recorded in `delivery/WP-008-R1B-DIRECTOR-REVIEW.md` at `9d814ec`. Current task.md activates layered assurance, optional Deep validation and performance/control release gates. No trader semantics, real historical CLI evaluation or September acquisition/retry is authorized. The Owner Market replay handoff requires Director R1C acceptance.
+**Owner September Market replay check only — READY FOR OWNER MARKET REPLAY.** R1C correction `99e0ca5` is accepted for this month-only action; see `delivery/WP-008-R1C-DIRECTOR-REVIEW.md`. Current task.md defines the existing-local-dataset app handoff and Director evidence review. No executor implementation package/R2/adviser work is active yet; annual application gates remain pending. No acquisition, old-run salvage or real historical agent-CLI evaluation is authorized.

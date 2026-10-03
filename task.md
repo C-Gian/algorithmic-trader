@@ -1,26 +1,24 @@
-# Active Task — WP-008-R1C correction
+# Current Task — Owner September Market replay check
 
-Status: **READY — ONLY ACTIVE IMPLEMENTATION PACKAGE**
+Status: **READY FOR OWNER MARKET REPLAY — SEPTEMBER 2025 ONLY**
 Date: 2026-10-03 (Europe/Rome)
-Implementation under review: `6745117ee1010510abfa6247bfc40c1331fff7c1`.
+Accepted implementation: `99e0ca5b9bfed7cb57cae1aff5c7b899234e8cac`.
+Director release decision: `delivery/WP-008-R1C-DIRECTOR-REVIEW.md` (correction closure).
 
-Correct all findings in `delivery/WP-008-R1C-DIRECTOR-REVIEW.md` under AGENTS.md and the accepted SR-003 disposition. Retain the implemented R1C pipeline and useful measured month evidence.
+No executor implementation package is active. R2 and later packages remain HOLD while the Owner runs the app check. Do not launch real historical work in an agent CLI.
 
-## Required outcomes
+## Owner action
 
-- Reconciliation v2 requires a trusted receipt matching the run/cache pin. An absent receipt cannot produce PASS. Preserve historical stored validator claims/readers.
-- Deep cancellation and terminal publication are serialized under the diagnostic row lock and generation fence. A cancellation accepted before terminal commit yields CANCELLED/INCOMPLETE; a later command rejects the terminal job. Cover every applicable phase, including report generation and the final boundary, while keeping original replay records immutable.
-- Assurance headlines keep original runtime integrity and Deep reference outcome distinct. Deep MATCH cannot promote failed/incomplete/not_checked runtime assurance or conceal warnings/limited coverage.
-- Benchmark/report gates distinguish complete measured month application paths from annual component comparisons. Annual application gates are NOT_MEASURED/PENDING unless actually measured end-to-end under a bounded synthetic engineering budget. Preserve both previous raw measurement runs; no real historical CLI evaluation. A proposed month-only September handoff is permitted for Director review, with annual readiness explicitly pending.
+1. Stop old application containers, update the prepared checkout and start the rebuilt stack with the controlled README upgrade. Preserve database/data/artifact volumes.
+2. Historical Workbench → Run setup → Market replay → EXISTING Verified September 2025 chunk → pacing max, not start-paused → Start. One new run ID; preserve the old suspended run and local source; no Prepare/download/salvage.
+3. Copy terminal Markdown/report into the Director chat. If failed, cancelled or slow, copy its current diagnostic instead. If Copy gives no confirmation, attach the downloaded Markdown. Deep validation is optional and has its own report.
 
-## Required verification and handoff
+Expected useful result: COMPLETED, committed cursor equal to this run's verified total, runtime assurance passed with cache_receipt_and_pin and completed_consumed_entire_feed, actual timings/host/source identity and disclosed warnings/limits. The historical 129,600 is a comparison fact, not a hard-coded acceptance test. Synthetic reference timing is not a promise for the Owner PC.
 
-Implement the regression inventory in the Director review: missing receipt in a real terminal path; Deep preparation/report/final-lock cancellation and post-commit rejection; stale generation; failed/incomplete runtime plus Deep MATCH; cancelled follow-up diagnostics; report determinism and original immutability. Retain existing protected/DB/API/E2E/control/durability checks and run required isolated CI. No redundant benchmark rerun unless changed code affects that measurement.
+If the run is substantially beyond ~10 minutes, send the current diagnostic and do not launch another run. The Director assesses it; no manual logs/SQL/CLI benchmark is required.
 
-Update benchmark evaluator/evidence interpretation, README/STATE and proposed app handoff consistently. Keep previous measurement files as historical evidence. Use actual verified run totals and manifests; do not hard-code the Owner-reported 129,600 as proof. Surface warnings and residual limits; no acquisition or automatic retry.
+## Director next action
 
-## Boundary and exit
+Review the Owner result against source/preset, preserved old evidence, actual coverage, runtime/reference assurance, controls, phase timing and claimed structural improvement. Link old/new IDs when actually supplied. Close the September incident or define a bounded evidence-based correction; only then activate the next implementation package.
 
-R2/method/adviser work, real historical CLI runs, new corpus acquisition and September retry remain inactive.
-
-Finish **READY FOR DIRECTOR REVIEW — R1C CORRECTION ONLY**, with the revised concrete Owner app handoff and any unclosed annual gates. **Do not announce READY FOR OWNER MARKET REPLAY before Director acceptance.**
+Annual application gates remain NOT_MEASURED/PENDING, recording volume remains limited, and Windows directory-fsync power-loss durability is unproven. The earlier Copy feedback E2E failure is recorded for follow-up; final CI passes but root cause is not isolated. No annual-readiness or adviser/P&L claim is authorized.
