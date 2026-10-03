@@ -27,6 +27,15 @@ naive reference aggregator (``temporal.reference.v1``), whose recomputed aggrega
 digest, sealing barrier, admitted cursor) is compared with the run's recorded aggregate chain. Both use the same
 streamed canonical-cache input (the declared clock-command tape is derived from it by the pinned clock policy). The
 temporal folds are not persisted: a resumed job re-folds the temporal part from cursor 0 (disclosed counter).
+
+Version 3 (WP-008-R2 correction; launches after it) keeps every version-2 comparison and, for a genuinely COMPLETED
+temporal run, also consumes the run's pinned terminal clock command (``clock_end``) in both the shadow fold and the
+separate reference aggregator, then compares the finished aggregate chain and temporal output (sealed/dispatch
+commitments, dispatch sequence, clock time) with the immutable published ``temporal.json`` of the pinned artifact
+generation (SHA-256/size from the manifest, values cross-checked with the manifest's temporal reference). Missing or
+corrupt required terminal evidence fails the validation (no MATCH); inconsistent evidence is a mismatch. Paused,
+cancelled, failed or partial targets keep the exact committed-prefix scope: no finish is applied or implied. Results
+saved under version 2 keep their recorded boundary-only claim.
 """
 
 from __future__ import annotations
@@ -61,13 +70,33 @@ SCOPE = (
     "and pin-checked canonical feed cache; the original source package is NOT re-normalized, so this is not an "
     "independent source audit, and the reducer code is shared with the engine, so it is not a wholly independent "
     "method.")
-VALIDATOR_VERSION_TEMPORAL = "2"
+VALIDATOR_VERSION_TEMPORAL = "3"
 SCOPE_TEMPORAL = SCOPE + (
-    " Version 2 (temporal-enabled runs) additionally re-folds the causal temporal substrate over the same input: a "
+    " Version 3 (temporal-enabled runs) additionally re-folds the causal temporal substrate over the same input: a "
     "shadow fold of the shared temporal engine (pinned profile and clock policy) compared with every recorded "
     "temporal state SHA-256 and output commitment, and a separate naive reference aggregator (temporal.reference.v1; "
     "shares only the UTC calendar helpers and record-content formula) whose aggregate chain is compared with the "
-    "run's recorded aggregate chain. Dispatch readiness/deadline callbacks are covered by the shadow fold only.")
+    "run's recorded aggregate chain. For a completed run both paths also apply the pinned terminal clock command "
+    "(clock_end) and are compared with the immutable published temporal.json (pinned generation and SHA-256); missing "
+    "or corrupt terminal evidence fails the validation instead of matching. Paused, cancelled, failed or partial "
+    "targets keep exact committed-prefix scope (no finish applied or implied). Dispatch readiness/deadline "
+    "callbacks are covered by the shadow fold only.")
+TERMINAL_KEYS = ("aggregate_chain", "sealed_commitment", "dispatch_commitment", "dispatch_seq", "clock_time")
+
+
+class TerminalEvidenceError(Exception):
+    """Required published clock-end evidence of a completed run is absent or corrupt."""
+
+
+def terminal_pin(row: dict[str, Any]) -> dict[str, Any] | None:
+    """Launch-time pin of a completed temporal run's published clock-end output (None: prefix-only scope)."""
+    eng = row["engine"] or {}
+    if not eng.get("temporal") or row["status"] != "completed":
+        return None
+    m = row.get("manifest") or {}
+    art = next((a for a in m.get("artifacts") or [] if a.get("name") == "temporal.json"), None)
+    return {"required": True, "clock_end": eng["temporal"]["clock_end"], "artifact_dir": m.get("artifact_dir"),
+            "lease_generation": m.get("lease_generation"), "artifact": art, "reference": m.get("temporal")}
 SAVE_EVENTS = 5000
 SAVE_SECONDS = 2.0
 MAX_MISMATCHES = 20
@@ -101,11 +130,13 @@ def create_deep_validation(conn, replay_id: str) -> str:
         raise DeepRejected("the run has no committed events to validate")
     eng = row["engine"]
     temporal = bool(eng.get("temporal"))
+    pin = terminal_pin(row) if temporal else None
     plan = {"replay_id": replay_id, "committed_cursor": row["cursor"], "total_events": row["total_events"],
             "run_status_at_launch": row["status"], "cache_id": eng["cache_id"],
             "cache_manifest_sha256": eng["cache_manifest_sha256"], "state_format": eng["state_format"],
             "validator": VALIDATOR_ID, "validator_version": VALIDATOR_VERSION_TEMPORAL if temporal else VALIDATOR_VERSION,
-            "mode": "canonical-cache-only", "scope": SCOPE_TEMPORAL if temporal else SCOPE, "temporal": temporal}
+            "mode": "canonical-cache-only", "scope": SCOPE_TEMPORAL if temporal else SCOPE, "temporal": temporal,
+            "terminal": pin}
     vid = new_validation_id()
     conn.commit()  # end the read transaction: the launch below is its own committed transaction
     try:
@@ -260,6 +291,67 @@ class DeepJob(ReplayJob):
 
     # -- reference execution ------------------------------------------------------------------
 
+    def _load_published_temporal(self, replay_id: str, pin: dict[str, Any]) -> dict[str, Any]:
+        """The pinned, immutable published temporal.json, verified against the manifest's SHA-256 and size."""
+        import hashlib
+        import json
+
+        from .artifacts import files_dir
+
+        art, ref = pin.get("artifact"), pin.get("reference")
+        if not art or not ref:
+            raise TerminalEvidenceError("the completed run's manifest lists no temporal.json / temporal reference")
+        path = files_dir(self.artifact_root, replay_id, {"artifact_dir": pin.get("artifact_dir")}) / "temporal.json"
+        try:
+            data = path.read_bytes()
+        except OSError as exc:
+            raise TerminalEvidenceError(f"published temporal.json unreadable ({exc.__class__.__name__})") from None
+        if len(data) != art.get("bytes") or hashlib.sha256(data).hexdigest() != art.get("sha256"):
+            raise TerminalEvidenceError(f"published temporal.json in {pin.get('artifact_dir')} does not match the "
+                                        "manifest's SHA-256/size (corrupt or replaced)")
+        try:
+            doc = json.loads(data)
+        except ValueError:
+            raise TerminalEvidenceError("published temporal.json is not valid JSON") from None
+        if not isinstance(doc, dict) or any(k not in doc for k in TERMINAL_KEYS):
+            raise TerminalEvidenceError("published temporal.json lacks required terminal fields")
+        return doc
+
+    def _terminal_compare(self, plan: dict[str, Any], pin: dict[str, Any], shadow, ref, comparisons: dict[str, Any],
+                          target: int) -> dict[str, Any]:
+        """Apply the pinned terminal clock command in both paths and compare with the published finished output."""
+        published = self._load_published_temporal(plan["replay_id"], pin)
+        clock_end = datetime.fromisoformat(pin["clock_end"])
+        self.milestone("terminal clock-end barrier", target, target, "events", force=True)
+        shadow.finish(clock_end)
+        ref.finish(clock_end)
+        manifest_ref = pin["reference"]
+        checks = [(f"terminal_evidence_{k}", "published temporal.json vs manifest temporal reference",
+                   str(published[k]), str(manifest_ref.get(k))) for k in TERMINAL_KEYS]
+        checks += [
+            ("terminal_aggregate_chain", "clock-end finish: published output vs separate reference aggregator",
+             str(published["aggregate_chain"]), str(ref.chain)),
+            ("terminal_shadow_aggregate_chain", "clock-end finish: published output vs shadow temporal fold",
+             str(published["aggregate_chain"]), str(shadow.aggregate_chain)),
+            ("terminal_sealed_commitment", "clock-end finish: published output vs shadow temporal fold",
+             str(published["sealed_commitment"]), str(shadow.sealed_commitment)),
+            ("terminal_dispatch_commitment", "clock-end finish: published output vs shadow temporal fold",
+             str(published["dispatch_commitment"]), str(shadow.dispatch_commitment)),
+            ("terminal_dispatch_seq", "clock-end finish: published output vs shadow temporal fold",
+             str(published["dispatch_seq"]), str(shadow.dispatch_seq)),
+            ("terminal_clock_time", "clock-end finish: published output vs pinned clock_end",
+             str(published["clock_time"]), clock_end.isoformat()),
+        ]
+        for kind, label, want, actual in checks:
+            comparisons["compared"] += 1
+            if want != actual and len(comparisons["mismatches"]) < MAX_MISMATCHES:
+                comparisons["mismatches"].append({"cursor": target, "kind": kind, "at": label, "expected": want,
+                                                  "reference": actual})
+        return {"compared": True, "comparisons": len(checks), "clock_end": pin["clock_end"],
+                "artifact_dir": pin.get("artifact_dir"), "lease_generation": pin.get("lease_generation"),
+                "artifact_sha256": pin["artifact"]["sha256"], "reference_sealed_records_final": len(ref.sealed),
+                "shadow_sealed_records_final": shadow.counters["sealed"], "shadow_dispatches_final": shadow.dispatch_seq}
+
     def _validate(self, row: dict[str, Any]) -> None:
         plan = row["plan"]
         replay = self.conn.execute("SELECT config, engine FROM observation_replays WHERE replay_id = %s",
@@ -394,8 +486,26 @@ class DeepJob(ReplayJob):
         except CacheError as exc:
             self._finish("failed", f"feed cache rejected during Deep validation: {exc}")
             return
-        self.enter_phase("GENERATING_REPORT")
         covered = cursor == target
+        terminal = None
+        if shadow is not None:
+            pin = plan.get("terminal")
+            if pin and covered:
+                try:
+                    terminal = self._terminal_compare(plan, pin, shadow, ref, comparisons, target)
+                except TerminalEvidenceError as exc:
+                    self._save(cursor, commitment, state, comparisons)
+                    self._finish("failed", f"required terminal temporal evidence of the completed run is unusable: "
+                                           f"{exc}; no match is possible without it")
+                    return
+                if self.cancel_seen:
+                    self._cancel_now(cursor, commitment, state, comparisons, target)
+                    return
+            else:
+                terminal = {"compared": False, "scope": (
+                    "committed prefix only: the target is not a completed run with a published clock-end finish "
+                    "(paused, cancelled, failed or partial); no finish was applied or implied")}
+        self.enter_phase("GENERATING_REPORT")
         mism = comparisons["mismatches"]
         result = {
             "outcome": "mismatch" if mism else ("match" if covered else "incomplete"),
@@ -414,6 +524,9 @@ class DeepJob(ReplayJob):
                                   "reference_sealed_records": len(ref.sealed), "shadow_sealed_records":
                                       shadow.counters["sealed"], "shadow_dispatches": shadow.dispatch_seq,
                                   "temporal_refold_events": self.counters_deep.get("temporal_refold_events", 0),
-                                  "note": "comparisons at committed range boundaries / restore points only"}
+                                  "terminal": terminal,
+                                  "note": ("committed range boundaries / restore points, plus the clock-end finish "
+                                           "for completed runs" if terminal and terminal.get("compared") else
+                                           "comparisons at committed range boundaries / restore points only")}
         self._save(cursor, commitment, state, comparisons)
         self._finish("completed", None, result=result)

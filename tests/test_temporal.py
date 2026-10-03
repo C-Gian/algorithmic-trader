@@ -714,3 +714,53 @@ def test_discontinuity_resets_only_the_affected_channel_and_records_why():
     assert eng.continuations[-1]["content_identity"] == "feedcontent.next"
     assert te.unpack(*te.pack(eng)).commitment() == eng.commitment()
 
+
+# ---------------------------------------------------------------------------
+# Terminal clock command (Director review R2 finding 1)
+# ---------------------------------------------------------------------------
+
+
+def test_pending_final_tie_is_closed_only_by_the_terminal_clock_command_in_both_paths():
+    """15 valid modeled bars 00:00-00:15: before finish nothing is sealed (00:15 barrier pending) and the chains are
+    equal; only engine.finish() seals the six records, so a reference without the terminal command would differ."""
+    end = T0 + timedelta(minutes=15)
+    covs = [cov(TRADE, T0, end)]
+    eng = engine(covs)
+    ref = ReferenceAggregator(tuple(covs), te.HORIZON_ORDER, timedelta(0), ClockPolicy.MODELED_COMPLETE_PREFIX)
+    for i, e in enumerate(order_events(minutes(TRADE, T0, 15))):
+        eng.on_event(e, i)
+        ref.feed(e)
+    assert eng.counters["sealed"] == 0 and len(ref.sealed) == 0 and eng.aggregate_chain == ref.chain
+    eng.finish()
+    assert eng.counters["sealed"] == 6 and eng.aggregate_chain != ref.chain  # the omission is observable
+    ref.finish(eng.default_clock_end())
+    assert len(ref.sealed) == 6 and eng.aggregate_chain == ref.chain
+    m15 = [r for r in eng.sealed_records(TRADE.channel_id, Horizon.M15)]
+    assert len(m15) == 1 and m15[0]["status"] == "COMPLETE"
+
+
+def test_month_end_higher_horizon_records_exist_only_after_the_terminal_command():
+    start, end = datetime(2025, 9, 29, tzinfo=UTC), datetime(2025, 10, 1, tzinfo=UTC)  # Monday .. month end
+    covs = [cov(TRADE, start, end)]
+    eng = engine(covs)
+    ref = ReferenceAggregator(tuple(covs), te.HORIZON_ORDER, timedelta(0), ClockPolicy.MODELED_COMPLETE_PREFIX)
+    for i, e in enumerate(order_events(minutes(TRADE, start, 2 * 1440))):
+        eng.on_event(e, i)
+        ref.feed(e)
+    assert eng.aggregate_chain == ref.chain
+    def total(h):
+        return sum(eng.tracks[f"{TRADE.channel_id}/{h.value}"].sealed_by_status.values())
+
+    before = {h: total(h) for h in te.HORIZON_ORDER}
+    eng.finish()
+    ref.finish(eng.default_clock_end())
+    after = {h: eng.sealed_records(TRADE.channel_id, h) for h in te.HORIZON_ORDER}
+    # the final 15m/1h/4h/day closures and the cut week/month are produced by the terminal barrier only
+    for h in te.HORIZON_ORDER:
+        assert total(h) == before[h] + 1, h
+    assert after[Horizon.D1][-1]["interval_start"] == "2025-09-30T00:00:00Z" and after[Horizon.D1][-1]["status"] == \
+        "COMPLETE"
+    assert after[Horizon.H4][-1]["status"] == "COMPLETE"
+    assert after[Horizon.W1][-1]["status"] == after[Horizon.MO1][-1]["status"] == "OUTSIDE_COVERAGE"
+    assert eng.aggregate_chain == ref.chain and eng.counters["sealed"] == len(ref.sealed)
+

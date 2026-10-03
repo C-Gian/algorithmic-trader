@@ -263,9 +263,12 @@ def test_deep_validation_v2_matches_and_detects_a_tampered_aggregate_chain(datab
     d = conn.execute("SELECT * FROM observation_deep_validations WHERE validation_id = %s", (vid,)).fetchone()
     res = d["result"]
     assert d["status"] == "completed" and res["outcome"] == "match", res
-    assert res["validator_version"] == "2" and "separate naive reference aggregator" in res["scope"]
+    assert res["validator_version"] == "3" and "separate naive reference aggregator" in res["scope"]
+    term = res["temporal"]["terminal"]
+    assert term["compared"] and term["comparisons"] == 11 and term["clock_end"]
+    assert term["reference_sealed_records_final"] == term["shadow_sealed_records_final"] > 100
     assert res["temporal"]["reference_sealed_records"] == res["temporal"]["shadow_sealed_records"] > 100
-    assert res["compared"] >= 6 * len(ranges(conn, rid))
+    assert res["compared"] >= 6 * len(ranges(conn, rid)) + 11
     # tamper one recorded aggregate chain: the separate reference aggregator reports the mismatch
     target = ranges(conn, rid)[2]
     conn.execute("UPDATE observation_ranges SET aggregate_chain = %s WHERE replay_id = %s AND range_seq = %s",
@@ -276,6 +279,7 @@ def test_deep_validation_v2_matches_and_detects_a_tampered_aggregate_chain(datab
                         (vid2,)).fetchone()["result"]
     assert res2["outcome"] == "mismatch"
     assert {(m["kind"], m["cursor"]) for m in res2["mismatches"]} == {("aggregate_chain", target["to_cursor"])}
+    assert res2["temporal"]["terminal"]["compared"]  # boundary tamper does not disturb the terminal comparison
     # the originating run is never modified by Deep validation
     assert row_of(conn, rid)["status"] == "completed"
 
@@ -299,6 +303,108 @@ def test_paused_and_resumed_deep_v2_refolds_the_temporal_prefix(database_url, co
                      (vid,)).fetchone()
     assert d["status"] == "completed" and d["result"]["outcome"] == "match", d["result"]
     assert d["result"]["temporal"]["temporal_refold_events"] == 500  # disclosed re-fold of the covered prefix
+    assert d["result"]["temporal"]["terminal"]["compared"]
+
+
+def _deep(conn, database_url, root, art, rid):
+    vid = deep.create_deep_validation(conn, rid)
+    drain(worker(database_url, root, art))
+    return conn.execute("SELECT * FROM observation_deep_validations WHERE validation_id = %s", (vid,)).fetchone()
+
+
+def _published(art, row):
+    m = row["manifest"]
+    return art / "observations" / row["replay_id"] / m["artifact_dir"] / "temporal.json"
+
+
+@pytest.mark.db
+def test_deep_v3_pending_final_tie_run_compares_the_clock_end_finish(database_url, conn, tmp_path):
+    """The fixture feed ends exactly on its last barrier: the final closures exist only in the published finish."""
+    root, art = tmp_path / "data", tmp_path / "art"
+    ds = fixture_dataset(root)
+    rid = control.create_replay(conn, root, SourceKind.DATASET, ds, speed=0)
+    drain(worker(database_url, root, art, checkpoint_events=1000))
+    row = row_of(conn, rid)
+    last = ranges(conn, rid)[-1]
+    published = json.loads(_published(art, row).read_text(encoding="utf-8"))
+    assert published["aggregate_chain"] != last["aggregate_chain"]  # the finish sealed records after the last range
+    d = _deep(conn, database_url, root, art, rid)
+    res = d["result"]
+    assert d["status"] == "completed" and res["outcome"] == "match", res
+    assert res["temporal"]["terminal"]["compared"] and res["temporal"]["terminal"]["comparisons"] == 11
+
+
+@pytest.mark.db
+def test_deep_v3_detects_tampering_of_only_the_finished_temporal_output(database_url, conn, tmp_path):
+    root, art = tmp_path / "data", tmp_path / "art"
+    ds = fixture_dataset(root)
+    rid = control.create_replay(conn, root, SourceKind.DATASET, ds, speed=0)
+    drain(worker(database_url, root, art))
+    row = row_of(conn, rid)
+    path = _published(art, row)
+    doc = json.loads(path.read_text(encoding="utf-8"))
+    doc["aggregate_chain"] = "e" * 64  # a consistent but wrong finished output; pre-finish records untouched
+    data = json.dumps(doc, indent=2, sort_keys=True).encode()
+    path.write_bytes(data)
+    import hashlib
+
+    m = row["manifest"]
+    m["artifacts"] = [dict(a, sha256=hashlib.sha256(data).hexdigest(), bytes=len(data)) if a["name"] == "temporal.json"
+                      else a for a in m["artifacts"]]
+    m["temporal"]["aggregate_chain"] = "e" * 64
+    conn.execute("UPDATE observation_replays SET manifest = %s WHERE replay_id = %s",
+                 (psycopg.types.json.Jsonb(m), rid))
+    before = [dict(r) for r in ranges(conn, rid)]
+    d = _deep(conn, database_url, root, art, rid)
+    res = d["result"]
+    assert res["outcome"] == "mismatch", res
+    assert {x["kind"] for x in res["mismatches"]} == {"terminal_aggregate_chain", "terminal_shadow_aggregate_chain"}
+    assert [dict(r) for r in ranges(conn, rid)] == before  # the original run's records are never modified
+
+
+@pytest.mark.db
+@pytest.mark.parametrize("damage", ["absent", "corrupt", "unlisted"])
+def test_deep_v3_without_usable_terminal_evidence_never_matches(database_url, conn, tmp_path, damage):
+    root, art = tmp_path / "data", tmp_path / "art"
+    ds = fixture_dataset(root)
+    rid = control.create_replay(conn, root, SourceKind.DATASET, ds, speed=0)
+    drain(worker(database_url, root, art))
+    row = row_of(conn, rid)
+    path = _published(art, row)
+    if damage == "absent":
+        path.unlink()
+    elif damage == "corrupt":
+        path.write_bytes(path.read_bytes().replace(b"aggregate_chain", b"aggregate_chaim"))
+    else:
+        m = row["manifest"]
+        m["artifacts"] = [a for a in m["artifacts"] if a["name"] != "temporal.json"]
+        conn.execute("UPDATE observation_replays SET manifest = %s WHERE replay_id = %s",
+                     (psycopg.types.json.Jsonb(m), rid))
+    d = _deep(conn, database_url, root, art, rid)
+    assert d["status"] == "failed" and d["result"]["outcome"] == "error", d["result"]
+    assert "terminal temporal evidence" in d["error"]
+
+
+@pytest.mark.db
+def test_deep_v3_keeps_prefix_only_scope_for_cancelled_and_paused_targets(database_url, conn, tmp_path):
+    root, art = tmp_path / "data", tmp_path / "art"
+    ds = fixture_dataset(root)
+    rid = control.create_replay(conn, root, SourceKind.DATASET, ds, speed=0, paused=True)
+    drain(worker(database_url, root, art))
+    for _ in range(20):
+        control.step(conn, rid)
+        drain(worker(database_url, root, art))
+    assert row_of(conn, rid)["status"] == "paused"
+    d = _deep(conn, database_url, root, art, rid)
+    res = d["result"]
+    assert res["outcome"] == "match" and res["covered_events"] == 20 and res["target_events"] == 20
+    assert res["temporal"]["terminal"]["compared"] is False and "no finish" in res["temporal"]["terminal"]["scope"]
+    assert d["plan"]["terminal"] is None
+    control.cancel(conn, rid)
+    drain(worker(database_url, root, art))
+    assert row_of(conn, rid)["status"] == "cancelled"
+    d2 = _deep(conn, database_url, root, art, rid)
+    assert d2["result"]["outcome"] == "match" and d2["result"]["temporal"]["terminal"]["compared"] is False
 
 
 # ---------------------------------------------------------------------------
