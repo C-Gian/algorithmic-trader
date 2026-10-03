@@ -68,6 +68,6 @@ Private Project Instructions still describe a discretionary “when practical”
 
 This Git update does not modify any private chat instructions.
 
-## Current pointer — R3 accepted; WP-009 Director specification, 2026-10-03
+## Current pointer — WP-009 implementation, 2026-10-03
 
-R2 accepted atddc1831, MP-001 v0.2 method design closed and R3 accepted at09e23fd after correction: [review](../delivery/WP-008-R3-DIRECTOR-REVIEW.md). task.md activates Director WP-009 integrated specification only, no executor implementation. Owner September pack preparation/report is authorized; no replay/backtest requested. September incident and WP-010 remain closed. Optional source gaps remain explicit; economic performance and annual application gates are unvalidated.
+R2/R3 accepted, MP-001 v0.2 method design closed; Owner September pack preparation [completed](../delivery/evidence/WP-008-R3-OWNER-SEPTEMBER-PREPARATION.md), no replay/economic run. task.md activates WP-009 first integrated adviser under the [Director specification](../delivery/WP-009-INTEGRATED-ADVISER-SPEC.md). No isolated signal, full-year prerequisite or parameter tournament. Economic usefulness remains Owner evidence after implementation/review; no backtest handoff before Director acceptance.

@@ -1,8 +1,8 @@
 # Project State
 
-Updated: 2026-10-03 — R3 accepted at09e23fd; Owner September pack preparation authorized; Director WP-009 specification active
+Updated: 2026-10-03 — R3 accepted; Owner September pack preparation CLOSED; WP-009 integrated implementation active
 
-**Current task: [task.md](task.md) — Director WP-009 integrated adviser specification only.** Product authority: [FOUNDATION.md](FOUNDATION.md) v3.1. Executor rules: [AGENTS.md](AGENTS.md). How to run the app: [README.md](README.md). Chronology and earlier package evidence: [delivery/DELIVERY-HISTORY.md](delivery/DELIVERY-HISTORY.md).
+**Current task: [task.md](task.md) — WP-009 first integrated adviser implementation (not yet built).** Product authority: [FOUNDATION.md](FOUNDATION.md) v3.1. Executor rules: [AGENTS.md](AGENTS.md). How to run the app: [README.md](README.md). Chronology and earlier package evidence: [delivery/DELIVERY-HISTORY.md](delivery/DELIVERY-HISTORY.md).
 
 Goal (Foundation v3.1): an integrated BTC adviser with persistent actionable LONG/SHORT calls, entry area, targets, stop/exit guidance and holding horizon. Capital, size, leverage and orders stay human. Historical ACCEPTED/READY/HOLD labels in older documents do not authorize work; only task.md does.
 
@@ -34,6 +34,7 @@ Historical datasets use **modeled** availability (a declared convention: a bar c
 | WP-008-R1C assurance + gates | `99e0ca5`, CI `37111371473`, [review](delivery/WP-008-R1C-DIRECTOR-REVIEW.md), [gate inventory](delivery/evidence/WP-008-R1C-benchmark-gates-v2.md) | Month-only release; synthetic structural benchmark |
 | **Owner September Market replay check — CLOSED** | Evaluation `eval-20261003T091928-a7eb00`, replay `obs-20261003T091928-363a3d` | See below |
 | WP-008-R2 causal temporal substrate | `ddc1831`, CI `37138450907`, [review](delivery/WP-008-R2-DIRECTOR-REVIEW.md) | Factual temporal slice; Deep terminal correction accepted; no adviser |
+| Owner September pack preparation — CLOSED | `pack-427d5f5d0e26d595ff0c131c70a9435b26692dbe`, [evidence](delivery/evidence/WP-008-R3-OWNER-SEPTEMBER-PREPARATION.md) | Owner copied report; complete price windows, funding/metadata/calendar limited; no replay or trading result |
 | WP-008-R3 context packs | `09e23fd`, CI37152698917, [review](delivery/WP-008-R3-DIRECTOR-REVIEW.md) | Preparation/continuous observation infrastructure; real boundaries unmeasured; no adviser |
 | MP-001 integrated method design | v0.2, [disposition](delivery/MP-001-DIRECTOR-DISPOSITION.md) | Design only; no profitability, frequency or product implementation accepted |
 | UX pass | `d8144ad`, CI `37116003888` (checks incl. E2E, compose-smoke) | Workbench/Replay Lab only |
@@ -54,8 +55,8 @@ These remain open after the September closure; they are not contradicted by it:
 ## 4. Next step
 
 1. **Now:** MP-001 v0.2 is closed as method design after the [Astra review](delivery/MP-001-ASTRA-REVIEW.md) and [Director disposition](delivery/MP-001-DIRECTOR-DISPOSITION.md). The [rules](delivery/MP-001-INTEGRATED-METHOD-PROPOSAL.md) and [parameter register](delivery/MP-001-PARAMETERS.json) are current; this is not economic validation or implemented adviser capability.
-2. **Now:** Owner may prepare only the September development pack and send **Copy preparation report for chat**, under [R3 acceptance/handoff](delivery/WP-008-R3-DIRECTOR-REVIEW.md). No replay/backtest requested. Director WP-009 integrated specification is active independently; no executor implementation yet.
-3. Remaining sequence (separate task activations required): R3 implementation/review → WP-009 integrated adviser v0 → Owner Backtest A. No new general infrastructure pass or isolated signal prototype. [Delivery plan](delivery/FOUNDATION-V3-INTEGRATED-PLAN.md) §9–10.
+2. **Now:** Owner September pack preparation is [CLOSED](delivery/evidence/WP-008-R3-OWNER-SEPTEMBER-PREPARATION.md): COMPLETED/READY,147975 events, complete trade/mark/index warmup/evaluation/tail, no gaps. No replay/economic result. Executor implements [WP-009 specification](delivery/WP-009-INTEGRATED-ADVISER-SPEC.md) under task.md; adviser remains unavailable until delivered and accepted.
+3. Remaining sequence: WP-009 implementation/review → Owner Backtest A → diagnosed bounded improvement/protected/prospective checks under separate tasks. No new general infrastructure pass or isolated signal prototype. [Delivery plan](delivery/FOUNDATION-V3-INTEGRATED-PLAN.md) §9–10.
 
 ### WP-008-R3 correction executor evidence (base `6aa982e`; Director review pending)
 
@@ -153,3 +154,7 @@ CORRECTION REQUIRED at33c2b83: contributor metadata reread outside verified-byte
 ## R3 correction accepted — 2026-10-03
 
 ACCEPTED at09e23fd: verified contributor metadata, byte-checked durable publication and attempt-owned cleanup close findings1–3. Independent focused source/test review and exact-function probes; CI37152698917 checks/E2E and compose-smoke SUCCESS. Full469/11 local suites remain executor evidence. Owner September pack preparation authorized with report-only handoff, no replay/backtest. Director WP-009 specification next; no executor implementation.
+
+## WP-009 specification and implementation activation — 2026-10-03
+
+Director completed integrated contract/state/live/evaluation/UI/test specification from MP-001 v0.2. Owner prepared September pack without new replay; actual boundary rows and storage recorded, no economic outcome inspected. WP-009 executor implementation active: semantic.v2 and all A/B/C families, call lifecycle, separate evaluator, durable live/current-practicability and Home/Workbench. Current implementation still has no adviser until this work is delivered/reviewed. Owner economic handoff remains pending Director acceptance; no agent backtest or parameter search.
