@@ -1,7 +1,9 @@
 # WP-008-R3 — Director review
+
+**Current status: ACCEPTED at `09e23fdb06ad496c8c29d42d0d8785c6e5c84282` — R3 only. READY FOR OWNER SEPTEMBER PACK PREPARATION.** WP-009 executor implementation is not active.
 Date: 2026-10-03
 Reviewed: `33c2b8345245ddc3646fd215964411786c095c20`, base `1dac5bad1af93906f02142bc8e9dbb6a455c89cb`.
-Decision: **CORRECTION REQUIRED — R3 ONLY**. No Owner preparation handoff or WP-009 activation yet.
+Initial decision (historical): **CORRECTION REQUIRED — R3 ONLY** at33c2b83. Superseded by correction acceptance below.
 
 ## Scope and evidence
 Reviewed the source diff, pack contracts/presets/planner/composition/source preparation/publication, pack job/API, replay reconciliation and tests. Independently inspected CI run37149503468 jobs: checks (web build/typecheck, non-E2E, E2E) and compose-smoke completed SUCCESS. Executor reports458 non-E2E and11 E2E, isolated migration11 smoke and two-size measurements; those complete suites were not rerun by the Director.
@@ -43,3 +45,23 @@ Required correction: scope staging ownership and cleanup to the current safely a
 
 ## Handoff
 Correct findings1–3 only, retaining existing behavior and tests. Full relevant checks and isolated CI; no new substantial acquisition/benchmark/Owner replay. Update STATE with executor evidence and leave Director acceptance pending. Completion: **READY FOR DIRECTOR REVIEW — R3 CORRECTION ONLY**.
+
+## Correction acceptance — 2026-10-03
+
+ACCEPTED at `09e23fdb06ad496c8c29d42d0d8785c6e5c84282` (base6aa982e). Findings1–3 closed:
+- Contributor facts are parsed from one byte buffer whose SHA equals the verified manifest/source receipt pin. Cold/warm/rebuild mutation cannot combine new facts with an old pin.
+- Actual manifest/provenance bytes checked at staging/publication/after rename before receipts; files, staged directory, published directory and packs parent are fsynced on supported platforms. Bad staged bytes fail; bad published bytes quarantined. Good existing content is verified before convergence.
+- Attempt-owned staging and abandonment checks replace the global cleanup. Own older generations and terminal-job leftovers can be removed; another live job's staging is preserved.
+
+Independently read the focused diff and eleven regression cases in `tests/test_pack_correction.py` (including parameterized cold mutations), earlier retained pack tests and publication-lock flow. Independently inspected CI37152698917: checks with web/non-E2E/E2E and compose-smoke SUCCESS. Executor reports469 non-E2E, zero skips and11 E2E locally; complete suites were not rerun by the Director.
+
+Director exact-function AST probes with standard-library dependency stubs and temporary directories now pass: matching metadata accepted/changed buffer rejected; altered staged and post-rename bytes rejected; correct publication/convergence; staging-directory fsync invoked; own older generation removed while another live generation remains. These isolate code paths, not a DB integration rerun or a power-loss experiment. No real market bytes, acquisition, Owner stack or replay was used. Frozen contracts unchanged in the correction.
+
+Residual limits retained: Windows directory fsync unavailable/unproven; R1B feedcache cleanup outside this correction; real boundary availability/bytes unmeasured; funding completeness, historical metadata and calendar/incident/quote coverage limited; annual application gates unmeasured. No economic acceptance or trading method implementation.
+
+### Owner preparation handoff — September only
+Upgrade following README (stop app services, update checkout, rebuild/start; preserve all volumes). In Historical Workbench, **1 · Prepare data**, retain **September 2025 — development**. Check windows: warmup28Aug→1Sep2025; evaluation1Sep→1Oct; tail1Oct00:00→06:05. Click **Prepare data** once. It reuses September and acquires only missing ranges; actual source availability and byte size are measured here, so no download-time promise.
+
+When the job is terminal (COMPLETED, FAILED or CANCELLED), click **Copy preparation report for chat** and send it to the Director. Ready/Ready with limitations is a preparation result; full feed and economic outcomes are not tested. Do not start the data/engine check, Deep validation, other months or a backtest for this handoff. On failure, copy the report as-is rather than retrying blindly. This preparation is authorized after acceptance; it is not a prerequisite for drafting WP-009.
+
+Next Director task: specify the integrated WP-009 implementation/semantic.v2/UI/evaluation acceptance against MP-001 and the accepted substrate. No executor work or economic run assigned yet.

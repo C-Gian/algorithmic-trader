@@ -1,8 +1,8 @@
 # Project State
 
-Updated: 2026-10-03 — September Market replay check closed; WP-010 accepted; WP-008-R2 accepted; MP-001 v0.2 method design closed; R3 correction required at33c2b83, executor correction delivered (review pending)
+Updated: 2026-10-03 — R3 accepted at09e23fd; Owner September pack preparation authorized; Director WP-009 specification active
 
-**Current task: [task.md](task.md) — WP-008-R3 correction — Director findings1–3.** Product authority: [FOUNDATION.md](FOUNDATION.md) v3.1. Executor rules: [AGENTS.md](AGENTS.md). How to run the app: [README.md](README.md). Chronology and earlier package evidence: [delivery/DELIVERY-HISTORY.md](delivery/DELIVERY-HISTORY.md).
+**Current task: [task.md](task.md) — Director WP-009 integrated adviser specification only.** Product authority: [FOUNDATION.md](FOUNDATION.md) v3.1. Executor rules: [AGENTS.md](AGENTS.md). How to run the app: [README.md](README.md). Chronology and earlier package evidence: [delivery/DELIVERY-HISTORY.md](delivery/DELIVERY-HISTORY.md).
 
 Goal (Foundation v3.1): an integrated BTC adviser with persistent actionable LONG/SHORT calls, entry area, targets, stop/exit guidance and holding horizon. Capital, size, leverage and orders stay human. Historical ACCEPTED/READY/HOLD labels in older documents do not authorize work; only task.md does.
 
@@ -12,14 +12,14 @@ Goal (Foundation v3.1): an integrated BTC adviser with persistent actionable LON
 
 Implemented and in use:
 - OKX BTC-USDT-SWAP public evidence (`marketdata.v1`, frozen), causal feed/observable state (`feed.v1`, provisional), public live recorder with measured local receipt times (`recorder.v1`, provisional).
-- Durable observation replay (`observe.v1` revision 3, provisional) on the streaming engine: immutable receipt-pinned feed cache, one incremental causal kernel, sparse checkpoints with direct restore, fenced publication, bounded terminal reconciliation `observe.stream-reconciliation` v2 for legacy runs and v3 for temporal runs.
+- Durable observation replay (`observe.v1` revision 4, provisional) on the streaming engine: immutable receipt-pinned feed cache, one incremental causal kernel, sparse checkpoints with direct restore, fenced publication, bounded terminal reconciliation `observe.stream-reconciliation` v2 for legacy runs v3 for temporal runs and v4 for pack runs.
 - Shared operational contract `algotrader.ops.v1`: status, phase, health and assurance as separate facts; durable launch; phase timing/ETA; pause/step/speed/cancel; diagnostic copy/export at every status.
 - Optional Deep validation (`observe.deep-reference` v1 for legacy runs, v3 for new temporal launches; stored v2 results unchanged): an explicitly launched reference re-execution of a run's committed prefix over its canonical feed cache, along a separate execution path but with the shared reducer; not a wholly independent method and not an audit of the original source files.
-- Historical Workbench (`#backtest`): prepare a month of the corpus (only `btc-okx-2025-09` is preparable), start a *Market replay — data and engine check*, follow it and **Copy report for chat**. Adviser backtest is shown as unavailable.
+- Historical Workbench (`#backtest`): prepare registered evaluation packs (September default, contiguous months on explicit request) or the legacy September chunk, start a *Market replay — data and engine check*, follow it and **Copy report for chat**. Adviser backtest is shown as unavailable.
 - Task-first UI pass (`d8144ad`): plain run status shared by Workbench and Replay Lab, technical detail behind disclosures. It improves Workbench/Replay Lab only.
 - **Causal temporal substrate (WP-008-R2 accepted at `ddc1831`):** `algotrader.temporal.v1` r1 (provisional) factual UTC 15m/1h/4h/day/Monday-week/calendar-month aggregates per trade/mark/index series, seal-no-revision late policy, explicit logical clock and dispatches (modeled complete-prefix, recorded synthetic-barrier, dispatch-tape fixture interface), deadlines, dependency readiness, bounded explicit restore state in the fenced checkpoints of new `observe.stream.v2` runs (lifecycle 4), reconciliation v3 and Deep validation v3 for new diagnostic launches on those runs, temporal inspection and copy-report section. No observations, thresholds, calls or `semantic.v2`.
 
-- **Evaluation packs (WP-008-R3, executor evidence; Director review pending):** registered presets (`algotrader.corpus-presets.v1`, byte-identical packaged copy) with warmup/evaluation/tail windows; an Owner-triggered durable pack job reusing local packages, acquiring only missing slices (month/31-day split), composing one immutable receipt-pinned `algotrader.corpus-pack.v1` pack over the full requested interval; one continuous replay per pack (observe source kind `pack`, reconciliation v4, Deep v3 through the pack cache); pack-first Workbench steps with honest capability/coverage facts. No adviser, calls, outcomes or `semantic.v2`.
+- **Evaluation packs (WP-008-R3 accepted at09e23fd):** registered presets (`algotrader.corpus-presets.v1`, byte-identical packaged copy) with warmup/evaluation/tail windows; an Owner-triggered durable pack job reusing local packages, acquiring only missing slices (month/31-day split), composing one immutable receipt-pinned `algotrader.corpus-pack.v1` pack over the full requested interval; one continuous replay per pack (observe source kind `pack`, reconciliation v4, Deep v3 through the pack cache); pack-first Workbench steps with honest capability/coverage facts. No adviser, calls, outcomes or `semantic.v2`.
 
 Historical datasets use **modeled** availability (a declared convention: a bar counts as known at its close, funding at its funding time), not measured historical publication or receipt times. Recordings use **recorded** client receipt times.
 
@@ -34,6 +34,7 @@ Historical datasets use **modeled** availability (a declared convention: a bar c
 | WP-008-R1C assurance + gates | `99e0ca5`, CI `37111371473`, [review](delivery/WP-008-R1C-DIRECTOR-REVIEW.md), [gate inventory](delivery/evidence/WP-008-R1C-benchmark-gates-v2.md) | Month-only release; synthetic structural benchmark |
 | **Owner September Market replay check — CLOSED** | Evaluation `eval-20261003T091928-a7eb00`, replay `obs-20261003T091928-363a3d` | See below |
 | WP-008-R2 causal temporal substrate | `ddc1831`, CI `37138450907`, [review](delivery/WP-008-R2-DIRECTOR-REVIEW.md) | Factual temporal slice; Deep terminal correction accepted; no adviser |
+| WP-008-R3 context packs | `09e23fd`, CI37152698917, [review](delivery/WP-008-R3-DIRECTOR-REVIEW.md) | Preparation/continuous observation infrastructure; real boundaries unmeasured; no adviser |
 | MP-001 integrated method design | v0.2, [disposition](delivery/MP-001-DIRECTOR-DISPOSITION.md) | Design only; no profitability, frequency or product implementation accepted |
 | UX pass | `d8144ad`, CI `37116003888` (checks incl. E2E, compose-smoke) | Workbench/Replay Lab only |
 
@@ -42,7 +43,7 @@ Historical datasets use **modeled** availability (a declared convention: a bar c
 ## 3. Open limits
 
 These remain open after the September closure; they are not contradicted by it:
-- **Annual application performance gates: NOT_MEASURED / PENDING.** Annual component timings are comparisons, not gates. Only September 2025 is preparable; do not launch other months or a year.
+- **Annual application performance gates: NOT_MEASURED / PENDING.** Annual component timings are comparisons, not gates. Pack preparations may select contiguous months explicitly; the legacy chunk workflow still only prepares September. No annual release claim or year run handoff.
 - Recording-volume evidence is limited.
 - Windows directory fsync (power-loss durability of publication) remains unproven.
 - Data, Recorder and mobile UX are not closed by the UX pass.
@@ -53,7 +54,7 @@ These remain open after the September closure; they are not contradicted by it:
 ## 4. Next step
 
 1. **Now:** MP-001 v0.2 is closed as method design after the [Astra review](delivery/MP-001-ASTRA-REVIEW.md) and [Director disposition](delivery/MP-001-DIRECTOR-DISPOSITION.md). The [rules](delivery/MP-001-INTEGRATED-METHOD-PROPOSAL.md) and [parameter register](delivery/MP-001-PARAMETERS.json) are current; this is not economic validation or implemented adviser capability.
-2. **Active executor assignment:** R3 correction (findings 1–3 of the [Director review](delivery/WP-008-R3-DIRECTOR-REVIEW.md)) implemented by the executor (evidence below): **READY FOR DIRECTOR REVIEW — R3 CORRECTION ONLY**. No Owner preparation/run handoff; substantial preparation stays Owner-triggered in the app after acceptance; no agent economic run; WP-009 inactive.
+2. **Now:** Owner may prepare only the September development pack and send **Copy preparation report for chat**, under [R3 acceptance/handoff](delivery/WP-008-R3-DIRECTOR-REVIEW.md). No replay/backtest requested. Director WP-009 integrated specification is active independently; no executor implementation yet.
 3. Remaining sequence (separate task activations required): R3 implementation/review → WP-009 integrated adviser v0 → Owner Backtest A. No new general infrastructure pass or isolated signal prototype. [Delivery plan](delivery/FOUNDATION-V3-INTEGRATED-PLAN.md) §9–10.
 
 ### WP-008-R3 correction executor evidence (base `6aa982e`; Director review pending)
@@ -148,3 +149,7 @@ Director completed the bounded context/preset specification and registered logic
 ## R3 Director review — 2026-10-03
 
 CORRECTION REQUIRED at33c2b83: contributor metadata reread outside verified-byte ownership, publication references intended hashes without checking actual artifacts and persisting the staging directory, and unconditional cleanup of other active attempts' staging. Three exact-code AST probes reproduced the isolated defects; full local suites were not rerun. Independently inspected CI37149503468: checks and compose-smoke SUCCESS. Executor458/11 tests remain evidence, not acceptance. Review/task activate only these corrections; WP-009 and Owner preparation handoff remain inactive.
+
+## R3 correction accepted — 2026-10-03
+
+ACCEPTED at09e23fd: verified contributor metadata, byte-checked durable publication and attempt-owned cleanup close findings1–3. Independent focused source/test review and exact-function probes; CI37152698917 checks/E2E and compose-smoke SUCCESS. Full469/11 local suites remain executor evidence. Owner September pack preparation authorized with report-only handoff, no replay/backtest. Director WP-009 specification next; no executor implementation.

@@ -1,10 +1,8 @@
-# Current Task — WP-008-R3 correction
-Status: **ACTIVE — EXECUTOR CORRECTION ONLY**
+# Current Task — WP-009 integrated adviser specification
+Status: **ACTIVE — DIRECTOR SPECIFICATION ONLY**
 Date: 2026-10-03
-Reviewed implementation: 33c2b83. Decision: CORRECTION REQUIRED.
+Prerequisites: R2 accepted atddc1831; MP-001 v0.2 method design closed ate69e0ac; R3 accepted at09e23fd.
 
-Fix findings1–3 in [Director review](delivery/WP-008-R3-DIRECTOR-REVIEW.md): verified ownership of contributor facts, actual artifact-byte validation/POSIX directory durability before receipt publication, and staging cleanup scoped to safe attempt ownership. Preserve the [R3 specification](delivery/WP-008-R3-CONTEXT-PRESETS-SPEC.md), registered windows, source/frozen contract semantics and accepted method.
+Director prepares a concrete integrated implementation specification from [MP-001 rules](delivery/MP-001-INTEGRATED-METHOD-PROPOSAL.md), [parameter register](delivery/MP-001-PARAMETERS.json) and the accepted temporal/pack substrate. Define semantic.v2, observations→MarketView→scenarios→candidate/actionability→persistent call/lifecycle, causal current-practicability/startup catch-up, Home/Workbench presentation and separate normalized hypothetical evaluation/reporting. Include immutable composite method/profile identities and the hand-expected fixture matrix. Preserve human capital/size/leverage/orders and current model conventions. No isolated-signal prototype or economic tuning.
 
-Required regressions: real cold/warm contributor mutation and pinned rebuild; altered manifest/provenance with no successful trusted publication, fsync ordering/crash/cancel/fence/convergence; two concurrent pack jobs/workers and reclaim without deleting another live staging directory. Keep earlier composition/continuity/reuse/Deep/browser tests and required checks. Report actual evidence and unresolved limits in STATE. Standing workflow is in AGENTS.md.
-
-No Owner preparation/run handoff, substantial acquisition, method change, semantic.v2 or WP-009 activation. Completion: READY FOR DIRECTOR REVIEW — R3 CORRECTION ONLY.
+No executor implementation is assigned until the specification and task are concrete. No profitability run, parameter sweep, full-year acquisition or new research framework. Owner may independently prepare the September pack under [R3 handoff](delivery/WP-008-R3-DIRECTOR-REVIEW.md) and copy its preparation report; no replay/backtest requested. Missing optional source capability remains explicitly limited, not an indefinite prerequisite for this specification.
