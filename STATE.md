@@ -1,8 +1,8 @@
 # Project State
 
-Updated: 2026-10-03 — September Market replay check closed; WP-010 accepted; WP-008-R2 accepted; Director MP-001 specification active
+Updated: 2026-10-03 — September Market replay check closed; WP-010 accepted; WP-008-R2 accepted; MP-001 proposal written; bounded method review active
 
-**Current task: [task.md](task.md) — MP-001 integrated method closure (ACTIVE Director specification; no executor implementation).** Product authority: [FOUNDATION.md](FOUNDATION.md) v3.1. Executor rules: [AGENTS.md](AGENTS.md). How to run the app: [README.md](README.md). Chronology and earlier package evidence: [delivery/DELIVERY-HISTORY.md](delivery/DELIVERY-HISTORY.md).
+**Current task: [task.md](task.md) — MP-001 integrated method review (Director closure / Astra advisory challenge; no executor implementation).** Product authority: [FOUNDATION.md](FOUNDATION.md) v3.1. Executor rules: [AGENTS.md](AGENTS.md). How to run the app: [README.md](README.md). Chronology and earlier package evidence: [delivery/DELIVERY-HISTORY.md](delivery/DELIVERY-HISTORY.md).
 
 Goal (Foundation v3.1): an integrated BTC adviser with persistent actionable LONG/SHORT calls, entry area, targets, stop/exit guidance and holding horizon. Capital, size, leverage and orders stay human. Historical ACCEPTED/READY/HOLD labels in older documents do not authorize work; only task.md does.
 
@@ -49,8 +49,8 @@ These remain open after the September closure; they are not contradicted by it:
 
 ## 4. Next step
 
-1. **Now:** MP-001 Director specification only: close the integrated method and semantic.v2 design. No executor implementation is active; R2 is accepted at `ddc1831`.
-2. **Next Director action:** define observable facts, MarketView/scenarios, candidate/actionability rules, persistent call lifecycle, method-required lookbacks/context, cycle/news dispositions and evaluation assumptions. Do not acquire history or code an isolated signal first.
+1. **Now:** MP-001 [integrated proposal](delivery/MP-001-INTEGRATED-METHOD-PROPOSAL.md) and [conventions](delivery/MP-001-PARAMETERS.json) are written. Bounded Astra challenge under [the review brief](delivery/MP-001-REVIEW-BRIEF.md), then Director disposition; no executor implementation is active.
+2. **Next Director action:** resolve specific method findings and close MP-001 before method-led R3 context and WP-009 implementation. No substantial acquisition or isolated signal prototype is authorized.
 3. Remaining Foundation/SR-003 sequence (each needs its own task.md activation): R2 → MP-001 → R3 method-required context/presets → WP-009 integrated adviser v0 → Owner Backtest A. Sequence and rationale: [integrated delivery plan](delivery/FOUNDATION-V3-INTEGRATED-PLAN.md) §9–10 and [SR-003 disposition](strategic_reviews/SR-003-DIRECTOR-DISPOSITION.md).
 
 ### WP-008-R2 executor evidence (base `9169096`; accepted after correction `ddc1831`)
@@ -110,3 +110,7 @@ Director specification completed and implementation activated: `delivery/WP-008-
 ## R2 correction accepted — 2026-10-03
 
 ACCEPTED at `ddc1831b5015692e0b34969bc23390c2dff82a46`. Finding 1 closed: Deep v3 pins and compares completed clock-end output; unusable evidence fails, inconsistent output mismatches, partial targets retain prefix-only scope. Source/test review, independent fifteen-minute terminal-comparison probe and CI 37138450907 (checks including E2E and compose-smoke SUCCESS) support acceptance. Local full suites are executor evidence, not Director reruns. No new Owner run requested. task.md now assigns Director MP-001 specification only; R3/WP-009 and adviser implementation remain inactive.
+
+## MP-001 proposal — 2026-10-03
+
+Director wrote the complete first adviser proposal and parameter register before new economic outcomes: continuation after reaction, compression exit/retest and failed range exit; explicit volatility/structure phase, event-risk windows/response, distinct execution adequacy, persistent call/entry/thesis lifecycles, semantic.v2 design, R3 input inventory and preregistered evaluation assumptions. Source concepts and provisional numerical translations are distinguished; no edge/frequency guarantee is claimed. Current authority is PROPOSED, subject to bounded Astra challenge and Director disposition. No adviser code, data or schema was changed, no market outcome was inspected and no historical run was launched.

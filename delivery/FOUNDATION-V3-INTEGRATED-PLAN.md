@@ -445,6 +445,6 @@ Preliminary source capability/size checks may inform MP-001 without substantial 
 
 ## 10. Immediate active action
 
-**MP-001 — Director integrated method specification only** is active in task.md. WP-008-R2 is accepted at `ddc1831`; [Director review](WP-008-R2-DIRECTOR-REVIEW.md) closes the terminal reference comparison. CI 37138450907 checks and compose-smoke SUCCESS independently verified. WP-010 and the Owner September incident remain closed.
+**MP-001 — bounded integrated method review** is active in task.md. The Director wrote [the method proposal](MP-001-INTEGRATED-METHOD-PROPOSAL.md), [parameter register](MP-001-PARAMETERS.json) and [Astra review brief](MP-001-REVIEW-BRIEF.md). These are proposals, not an implementation mandate or economic evidence. Astra challenges concrete coherence/causality/source/coverage problems; the Director resolves findings and closes the method before R3/WP-009.
 
-Define the first integrated adviser method before method-led R3 context acquisition and WP-009 implementation. No new real-month check or general hardening programme is requested. Annual application gates and other declared operational limits remain open. Earlier activation pointers are superseded; package evidence is retained in STATE and the named reviews.
+R2 is accepted at ddc1831; CI 37138450907 checks and compose-smoke SUCCESS independently verified. WP-010 and September remain closed. No acquisition, new market run, parameter tournament or general hardening is assigned. Annual application gates and declared operational limits remain open.

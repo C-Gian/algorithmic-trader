@@ -1,0 +1,132 @@
+{
+  "model": "btc.context-action.v0.1",
+  "status": "PROPOSED_NOT_IMPLEMENTATION_AUTHORIZATION",
+  "classification": "All numerical method parameters are uncalibrated preregistered conventions; metadata ticks are source facts.",
+  "scale": {
+    "median_tr_bars": 20,
+    "required_previous_close": true
+  },
+  "tactical": {
+    "horizon": "1h",
+    "transitions": 8,
+    "direction_displacement_scale": 1.0,
+    "efficiency_min": 0.35
+  },
+  "phase": {
+    "short_tr_count": 4,
+    "preceding_tr_count": 20,
+    "compression_ratio_max": 0.75,
+    "compression_er6_max": 0.35,
+    "expansion_er6_min": 0.55,
+    "expansion_displacement_scale": 1.5,
+    "rotation_er8_max": 0.25
+  },
+  "levels": {
+    "pivot_left": 2,
+    "pivot_right": 2,
+    "pivot_strict": true,
+    "zone_halfwidth_scale": 0.1,
+    "zone_min_ticks": 2,
+    "max_pivots_per_horizon": 64,
+    "age_15m_hours": 24,
+    "age_1h_hours": 168
+  },
+  "continuation": {
+    "impulse_transitions": 6,
+    "impulse_er_min": 0.55,
+    "impulse_displacement_scale": 1.5,
+    "reaction_min_scale": 0.25,
+    "reaction_max_15m_bars": 8,
+    "hard_thesis_hours": 4,
+    "expected_minutes": [
+      30,
+      180
+    ]
+  },
+  "compression_retest": {
+    "box_prior_bars": 16,
+    "box_er_max": 0.35,
+    "box_width_scale": [
+      2,
+      6
+    ],
+    "edge_touch_count": 2,
+    "box_lifetime_hours": 4,
+    "retest_max_15m_bars": 4,
+    "hard_thesis_hours": 6,
+    "expected_minutes": [
+      30,
+      240
+    ]
+  },
+  "failed_exit": {
+    "setup_lifetime_minutes": 30,
+    "hard_thesis_hours": 2,
+    "expected_minutes": [
+      15,
+      90
+    ]
+  },
+  "entry": {
+    "area_each_side_scale": 0.25,
+    "net_reward_risk_min": 1.2,
+    "trigger_offset_ticks": 1,
+    "maximum_active_theses": 1,
+    "same_direction_priority": [
+      "A",
+      "B",
+      "C"
+    ]
+  },
+  "freshness": {
+    "trade_1m_seconds": 120,
+    "trade_15m_seconds": 1200,
+    "trade_1h_seconds": 4500,
+    "trade_4h_seconds": 18000,
+    "trade_day_seconds": 93600,
+    "trade_week_seconds": 691200,
+    "trade_month_seconds": 2764800,
+    "live_quote_seconds": 5,
+    "both_event_end_and_known_at": true
+  },
+  "events": {
+    "pre_minutes": 15,
+    "post_minimum_minutes": 15,
+    "post_event_complete_15m_bar_required": true
+  },
+  "execution": {
+    "base_fee_bps_per_leg": 5,
+    "base_allowance_bps_per_leg": 2,
+    "stress_fee_bps_per_leg": 5,
+    "stress_allowance_bps_per_leg": 5,
+    "fees_are_assumptions_not_verified_account_rates": true
+  },
+  "progress": {
+    "at_fraction_of_hard_horizon": 0.5,
+    "minimum_favorable_scale": 0.5
+  },
+  "evaluation": {
+    "primary_delay_seconds": 60,
+    "sensitivity_delay_seconds": [
+      0,
+      120
+    ],
+    "fine_warmup_hours": 96,
+    "outcome_tail_hours": 6,
+    "development": [
+      "2025-09-01T00:00:00Z",
+      "2026-01-01T00:00:00Z"
+    ],
+    "protected": [
+      "2026-01-01T00:00:00Z",
+      "2026-09-01T00:00:00Z"
+    ],
+    "contamination_check_required": true,
+    "original_rp001_cases_are_development_only": true
+  },
+  "readiness": {
+    "trade_15m_required_bars": 25,
+    "trade_1h_required_bars": 21,
+    "optional_horizons_not_global_gates": true
+  }
+}
