@@ -71,3 +71,7 @@ This Git update does not modify any private chat instructions.
 ## Current pointer — WP-010 Director closure, 2026-10-03
 
 WP-010 accepted at `f7ad4bc`; CI `37127341286` checks and compose-smoke SUCCESS independently verified. September remains closed. Current task.md now activates Director R2 specification only; no executor implementation or historical acquisition is active. Earlier WP-010-active pointers are historical. R2 must remain the bounded causal temporal substrate needed for the integrated adviser; then MP-001 method closure, method-led R3 context and WP-009. No new general consolidation programme.
+
+## Current pointer — R2 implementation activation, 2026-10-03
+
+Director-approved `delivery/WP-008-R2-CAUSAL-TEMPORAL-SPEC.md` now governs the bounded factual temporal slice. task.md activates its implementation; the earlier specification-only pointer is historical. No strategy, call, semantic.v2 or corpus acquisition is active. Next: Director R2 review, then MP-001 integrated method closure. No new September check is requested.

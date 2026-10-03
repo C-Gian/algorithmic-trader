@@ -1,8 +1,8 @@
 # Project State
 
-Updated: 2026-10-03 — September Market replay check closed; WP-010 accepted; Director R2 specification next
+Updated: 2026-10-03 — September Market replay check closed; WP-010 accepted; R2 implementation active
 
-**Current task: [task.md](task.md) — Director R2 causal temporal substrate specification (no executor implementation active).** Product authority: [FOUNDATION.md](FOUNDATION.md) v3.1. Executor rules: [AGENTS.md](AGENTS.md). How to run the app: [README.md](README.md). Chronology and earlier package evidence: [delivery/DELIVERY-HISTORY.md](delivery/DELIVERY-HISTORY.md).
+**Current task: [task.md](task.md) — WP-008-R2 causal temporal substrate (ACTIVE executor implementation).** Product authority: [FOUNDATION.md](FOUNDATION.md) v3.1. Executor rules: [AGENTS.md](AGENTS.md). How to run the app: [README.md](README.md). Chronology and earlier package evidence: [delivery/DELIVERY-HISTORY.md](delivery/DELIVERY-HISTORY.md).
 
 Goal (Foundation v3.1): an integrated BTC adviser with persistent actionable LONG/SHORT calls, entry area, targets, stop/exit guidance and holding horizon. Capital, size, leverage and orders stay human. Historical ACCEPTED/READY/HOLD labels in older documents do not authorize work; only task.md does.
 
@@ -47,8 +47,8 @@ These remain open after the September closure; they are not contradicted by it:
 
 ## 4. Next step
 
-1. **Now:** WP-010 accepted at `f7ad4bc`; Director R2 specification only. No executor implementation is active; R2 implementation, MP-001, R3 and WP-009 require their own activation.
-2. **Next Director action:** a bounded **R2 causal temporal substrate specification**, reviewed against the adviser's actual dependencies, followed by **MP-001 integrated method closure**.
+1. **Now:** WP-008-R2 implementation is activated by task.md and [the bounded temporal specification](delivery/WP-008-R2-CAUSAL-TEMPORAL-SPEC.md). WP-010 is accepted. MP-001, R3 and WP-009 are not active.
+2. **Next Director action:** review R2 implementation against the temporal specification, then define MP-001 integrated method closure before context acquisition.
 3. Remaining Foundation/SR-003 sequence (each needs its own task.md activation): R2 → MP-001 → R3 method-required context/presets → WP-009 integrated adviser v0 → Owner Backtest A. Sequence and rationale: [integrated delivery plan](delivery/FOUNDATION-V3-INTEGRATED-PLAN.md) §9–10 and [SR-003 disposition](strategic_reviews/SR-003-DIRECTOR-DISPOSITION.md).
 
 ### WP-010 accepted evidence (base `e9c01b9`; implementation `f7ad4bc`)
@@ -80,3 +80,7 @@ The next product objective is the first complete adviser path, not an isolated r
 ## WP-010 Director closure — 2026-10-03
 
 ACCEPTED at `f7ad4bc8d067d3b5ab46945cd899da8d074f04d3`. Independently checked commit diff, current documents/history organization, pause/availability/reference wording and CI `37127341286`: checks (including E2E, web typecheck/build) and compose-smoke SUCCESS. Full local suites were reported by the executor, not rerun by the Director. Scope remains documentation and truthful presentation; no method or assurance criteria changed. The reconciliation v2 sentence “No independent reference replay was performed in this run” stays unchanged: it is a negative scope claim, and Deep's shared reducer/cache limits are explicit. The reported executor fetch --dry-run violated the standing no-sync rule; no update occurred, and the rule remains in AGENTS without a new approval flow. Next is a bounded Director R2 specification, not another general infrastructure pass.
+
+## R2 activation — 2026-10-03
+
+Director specification completed and implementation activated: `delivery/WP-008-R2-CAUSAL-TEMPORAL-SPEC.md`. Bounded factual aggregation/clock/readiness and restorable state only, no economic rules. Default horizon roles are conventions; MP-001 owns actual observation lookbacks and decision authority. No new Owner replay, acquisition or general hardening is assigned. Earlier specification-only pointers are historical.

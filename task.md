@@ -1,13 +1,22 @@
-# Current Task — Director R2 causal temporal substrate specification
-
-Status: **ACTIVE DIRECTOR SPECIFICATION — NO EXECUTOR IMPLEMENTATION**
+# Current Task — WP-008-R2 causal temporal substrate
+Status: **ACTIVE — EXECUTOR IMPLEMENTATION**
 Date: 2026-10-03 (Europe/Rome)
+Prerequisites: R1A/B/C and WP-010 accepted; Owner September incident closed.
 
-WP-010 is accepted at `f7ad4bc`; independently verified CI `37127341286` checks and compose-smoke SUCCESS. Owner September replay is closed with the evidence in STATE.md. No new Owner run is requested.
+Read AGENTS.md for standing workflow rules and implement [WP-008-R2-CAUSAL-TEMPORAL-SPEC.md](delivery/WP-008-R2-CAUSAL-TEMPORAL-SPEC.md) in full.
 
-## Director assignment
-Prepare the bounded WP-008-R2 specification using FOUNDATION.md v3.1 and the integrated delivery plan. Define only the minimum shared causal temporal substrate needed by the first complete adviser path: UTC aggregation/completion, event/known-at/admitted-prefix distinctions, late/missing input policy, deterministic dispatch/timers, dependency-specific readiness/freshness, bounded restorable horizon state and inspection. Trace each requirement to an adviser dependency or existing Foundation rule. Existing provisional horizon roles are conventions, not calibrated economic claims.
+## Purpose
+Add shared factual UTC multi-horizon aggregation and explicit causal clock/dispatch state to the accepted streaming kernel, with bounded incremental state and direct checkpoint restore. This enables the first integrated adviser; it is not a strategy or a new general infrastructure programme.
 
-State testable causal/restore/cadence invariants, compatibility/versioning implications, explicit exclusions and an implementation handoff. Do not decide economic thresholds or silently make all context horizons mandatory warmup gates. Record remaining method-dependent decisions for MP-001. Method closure precedes final context acquisition.
+## Required result
+- Separate trade/mark/index aggregates: 15m, 1h, 4h, day, Monday week and calendar month; exact completion/known-at and explicit incomplete/outside-coverage states.
+- Conservative sealed-interval late policy; modeled complete-prefix barriers distinct from logged recorded receipt/dispatch barriers; deterministic timers, finite clock horizon, pause/STEP semantics.
+- Dependency-specific readiness/freshness, bounded retention and restorable temporal/dispatch state in the existing fenced checkpoints.
+- Explicit new contract/state/engine/validator versions where necessary; preserve legacy runs, cache/source identities, readers and immutable evidence.
+- Minimal expandable temporal inspection and copyable diagnostics; no broader UX redesign.
+- The specification's hand-expected, cutoff, clock/tie, timer, restore, bounded-state and compatibility evidence plus required checks.
 
-No executor may start R2 from this document. Director review and a replacement task.md will activate implementation. MP-001, R3 and WP-009 remain unactivated. No new general infrastructure, corpus acquisition, profitability run or Owner stack work is assigned. Annual performance gates remain PENDING and do not automatically block specification.
+## Exclusions
+No semantic.v2, professional observations/economic thresholds, scenarios/calls, P&L, corpus acquisition, real-month agent run, live connections or Owner stack changes. Do not activate MP-001/R3/WP-009. Production lookbacks and decision authority remain MP-001 choices; optional horizon unavailability is not a universal gate.
+
+Report actual changes/checks/limits and contract revisions precisely. Director review only; no new September Owner run is requested.
