@@ -18,7 +18,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from .. import ops
+from .. import ops, version
 from .artifacts import files_dir
 from .contracts import ReplayRuntimeState
 
@@ -378,8 +378,10 @@ def render_markdown(r: dict[str, Any]) -> str:
         f"**{r['report_kind']}** · replay `{r['replay_id']}`"
         + (f" · evaluation `{r['evaluation_id']}`" if r.get("evaluation_id") else "")
         + (f" · captured {r['captured_at']}" if r["captured_at"] else ""),
-        f"**Status:** {r['status'].upper()} · phase **{r['phase'] or '—'}** · health **{r['health']['state']}** · "
-        f"assurance **{str(a.get('state')).upper()}**",
+        f"**Status:** {r['status'].upper()} · "
+        + (f"phase **{r['phase'] or '—'}** · health **{r['health']['state']}** · " if r["snapshot"] else
+           f"finished (last phase {r['phase'] or '—'} closed) · ")
+        + f"assurance **{str(a.get('state')).upper()}**",
         "",
         f"> {r['run_type']}. A diagnostic export is not terminal assurance.",
         "",
@@ -388,7 +390,7 @@ def render_markdown(r: dict[str, Any]) -> str:
         f"verified {ident['verified']}",
         f"- Feed: {ident['feed_content_identity']} · total events {ident['total_events']} · availability "
         f"{ident['availability_basis']}",
-        f"- Engine: code {r['engine']['code_version'] or 'unknown'} · lifecycle v{r['lifecycle_version']}",
+        f"- Engine: code version {version.describe(r['engine']['code_version'])} · lifecycle v{r['lifecycle_version']}",
         f"- Worker host: {_host_line(r['engine']['environment'])}",
         "",
         "## Progress",

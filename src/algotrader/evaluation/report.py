@@ -18,6 +18,8 @@ import json
 from datetime import datetime
 from typing import Any
 
+from .. import version
+
 REPORT_KIND = "OBSERVATION_ONLY_EVALUATION"
 REPORT_FORMAT = "algotrader.evaluation-report.v0"  # operational report format (not a domain contract)
 RUN_TYPE_LABEL = "Market replay — data and engine check (observation only)"
@@ -72,7 +74,8 @@ def build_report(ev: dict[str, Any], replay: dict[str, Any], manifest: dict[str,
     phase = (op or {}).get("phase") or replay.get("phase")
 
     warnings: list[str] = [*source.get("warnings", []), *source.get("exclusions", [])]
-    if corpus.get("quality_status") not in (None, "clean"):
+    if corpus.get("quality_status") not in (None, "clean") and not any(
+            w.startswith("dataset quality") for w in warnings):  # the source already states it
         warnings.append(f"dataset quality {str(corpus['quality_status']).upper()}: missing/rejected slots were "
                         "delivered as quality events and never filled")
     warnings.append("MODELED availability: historical bar/funding knowledge times follow the zero-extra-delay "
@@ -86,8 +89,10 @@ def build_report(ev: dict[str, Any], replay: dict[str, Any], manifest: dict[str,
     elif complete and outcome == "passed":
         verdict = "WORKFLOW_VALID"
         text = ("Corpus data, causal feed and durable observation replay worked end to end: every feed event of the "
-                "prepared chunk was applied and independent validation passed. This says nothing about trading "
-                "performance; no adviser was evaluated.")
+                "prepared chunk was applied and the run's own runtime integrity checks (bounded terminal "
+                "reconciliation) passed. No independent reference re-execution was performed (that is the "
+                "optional Deep validation). This says nothing about trading performance; no adviser was "
+                "evaluated.")
     elif status == "completed":
         verdict = "OPERATIONAL_FAILURE"
         text = ("The replay reached the end of the feed but validation FAILED; the data/replay path needs diagnosis."
@@ -215,7 +220,9 @@ def render_markdown(r: dict[str, Any]) -> str:
         "",
         f"**{r['report_kind']}** · evaluation `{r['evaluation_id']}` · replay `{r['replay_id']}`"
         + (f" · captured {r['captured_at']}" if r.get("captured_at") else ""),
-        f"**Status:** {r['status'].upper()}" + (f" · phase **{op.get('phase')}** · health **{op.get('health')}**"
+        f"**Status:** {r['status'].upper()}" + ((f" · phase **{op.get('phase')}** · health **{op.get('health')}**"
+                                                if r.get("snapshot") else
+                                                f" · finished (last phase {op.get('phase') or '—'} closed)")
                                                if op else "")
         + f" · coverage **{r['completion']}** ({cov['applied_events']:,}/{total} feed events) · validation **{vtext}**",
         "",
@@ -312,7 +319,7 @@ def render_markdown(r: dict[str, Any]) -> str:
     ]
     if r["warnings"]:
         lines += ["", "## Warnings / limitations"] + [f"- {w}" for w in r["warnings"]]
-    lines += ["", f"_Report format {r['report_format']} · code {r['code_version'] or 'unknown'}_", ""]
+    lines += ["", f"_Report format {r['report_format']} · code version {version.describe(r['code_version'])}_", ""]
     return "\n".join(lines)
 
 

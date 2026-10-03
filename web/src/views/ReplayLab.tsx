@@ -23,9 +23,9 @@ export function ReplayLab() {
   return (
     <div className="page page-replay" data-testid="page-replay">
       <PageHeader
-        eyebrow="Workbench · replay"
+        eyebrow="Inspect · event by event"
         title="Replay Lab"
-        lede="Move through market time with play, pause, one-event steps and pacing. Market Replay uses real, verified evidence and stops at observable state; the synthetic demo exercises the shell."
+        lede="Inspect market history event by event: play, pause, step one event and change speed, and see exactly what the system knew at each instant. Market Replay uses real, verified evidence; the Synthetic Demo is a separate practice shell with made-up data."
         meta={
           <div className="mode-switch" role="tablist" aria-label="Replay mode">
             <button type="button" role="tab" aria-selected={mode === "market"} data-testid="mode-market"

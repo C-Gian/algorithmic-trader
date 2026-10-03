@@ -9,7 +9,7 @@ x-app: &app
     ALGOTRADER_DATABASE_URL: postgresql://algotrader:algotrader@db:5432/algotrader
     ALGOTRADER_ARTIFACT_ROOT: /data/artifacts
     ALGOTRADER_DATA_ROOT: /data/market
-    ALGOTRADER_CODE_VERSION: ${ALGOTRADER_CODE_VERSION:-unknown}
+    ALGOTRADER_CODE_VERSION: ${ALGOTRADER_CODE_VERSION:-}
   volumes:
     - artifacts:/data/artifacts
     - marketdata:/data/market

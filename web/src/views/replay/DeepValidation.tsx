@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AssuranceSummary, deepApi, DeepValidation, ObsReplay } from "../../api";
 import { fmtInt, fmtSecs, fmtTime } from "../../lib/format";
 import { Badge, Button, Card, Metric, Notice, statusTone, Tone } from "../../ui/primitives";
@@ -33,7 +33,7 @@ export function AssuranceStrip({ a }: { a: AssuranceSummary | undefined }) {
   );
 }
 
-export function DeepValidationPanel({ r }: { r: ObsReplay }) {
+export function DeepValidationPanel({ r, onChanged }: { r: ObsReplay; onChanged?: () => void }) {
   const [rows, setRows] = useState<DeepValidation[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -41,6 +41,15 @@ export function DeepValidationPanel({ r }: { r: ObsReplay }) {
     deepApi.list(r.replay_id).then((x) => { setRows(x); setError(null); }).catch((e) => setError((e as Error).message));
   }, [r.replay_id]);
   const active = rows?.find((d) => !DEEP_TERMINAL.has(d.status));
+  // When a Deep validation finishes, the run's linked assurance summary changes: ask the owner view to re-read it
+  // (a finished run no longer streams updates, so it would otherwise stay stale until a page reload).
+  const finishedCount = rows?.filter((d) => DEEP_TERMINAL.has(d.status)).length ?? null;
+  const seen = useRef<number | null>(null);
+  useEffect(() => {
+    if (finishedCount === null) return;
+    if (seen.current !== null && finishedCount !== seen.current) onChanged?.();
+    seen.current = finishedCount;
+  }, [finishedCount, onChanged]);
   useEffect(() => {
     refresh();
     if (!active) return;
@@ -64,12 +73,16 @@ export function DeepValidationPanel({ r }: { r: ObsReplay }) {
   const latest = rows?.[0];
 
   return (
-    <Card title="Deep validation" icon="shield" testid="deep-panel"
-          eyebrow="Optional diagnostic · independent reference execution of this run's committed prefix"
+    <Card title="Deep validation — optional extra check" icon="shield" testid="deep-panel"
+          eyebrow="Not needed for a normal result · independent reference execution of this run's committed prefix"
           actions={<Button icon="play" variant="secondary" disabled={!canLaunch || busy} data-testid="deep-launch"
                            title={canLaunch ? undefined : active ? "a Deep validation of this run is already active"
                              : "available once the run is completed, cancelled, failed or paused with committed events"}
                            onClick={() => act(() => deepApi.launch(r.replay_id))}>Run Deep validation</Button>}>
+      <p className="small-text deep-plain">
+        Want more certainty? This re-computes the run a second, independent way and compares the two. It takes about as
+        long as the run itself and has its own progress and report. You can skip it.
+      </p>
       <p className="muted small-text">
         Never launched automatically. Re-executes the committed feed events with an independent reference reducer and
         compares input commitments, snapshot digests and state hashes at every committed range / restore point. Scope:

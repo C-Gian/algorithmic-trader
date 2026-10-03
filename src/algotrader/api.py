@@ -21,7 +21,7 @@ from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from . import __version__, control, db
+from . import __version__, control, db, version
 from .contracts import SCHEMA_VERSION, FaultMode, ReplayControl, Run, RunConfig, RunProgress, RuntimeState
 from .control import TERMINAL
 from .corpus.api import build_router as corpus_router
@@ -208,6 +208,7 @@ def create_app(
     art_root = artifact_root or default_artifact_root()
     md_root = data_root or default_data_root()
     dist = web_dist or Path(os.environ.get("ALGOTRADER_WEB_DIST", DEFAULT_WEB_DIST))
+    code_version = version.code_version()  # once per process; never guessed
 
     def conn():
         return db.connection(database_url, connect_timeout=3)
@@ -321,6 +322,8 @@ def create_app(
             },
             "status": "ok",
             "version": __version__,
+            "code_version": code_version,
+            "code_version_label": version.describe(code_version),
             "schema_version": SCHEMA_VERSION,
             "database": "ok",
             "latest_running_heartbeat": running["hb"].isoformat() if running["hb"] else None,

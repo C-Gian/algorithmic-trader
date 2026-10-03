@@ -11,7 +11,6 @@ import hashlib
 import json
 import os
 import shutil
-import subprocess
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -27,17 +26,9 @@ LABELS = ("DEMO", "SYNTHETIC", "NOT_RESEARCH_EVIDENCE")
 
 
 def code_version() -> str | None:
-    env = os.environ.get("ALGOTRADER_CODE_VERSION")
-    if env:
-        return env
-    try:
-        sha = subprocess.run(
-            ["git", "rev-parse", "HEAD"], capture_output=True, text=True, timeout=5, check=True
-        ).stdout.strip()
-        dirty = subprocess.run(["git", "status", "--porcelain"], capture_output=True, text=True, timeout=5).stdout
-        return sha + ("-dirty" if dirty.strip() else "")
-    except (OSError, subprocess.SubprocessError):
-        return None
+    from . import version
+
+    return version.code_version()
 
 
 def _sha256(path: Path) -> str:

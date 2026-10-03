@@ -75,18 +75,24 @@ def _coverage(res: dict[str, Any]) -> str:
     return text
 
 
-def assurance_summary(c, replay_id: str, op_assurance: dict[str, Any] | None) -> dict[str, Any]:
+def assurance_summary(c, replay_id: str, op_assurance: dict[str, Any] | None,
+                      status: str | None = None) -> dict[str, Any]:
     """Current assurance of a run: its own runtime/terminal validation and the linked Deep validation results,
     always reported side by side. A Deep (reference) MATCH never promotes a failed, incomplete or unchecked
-    runtime result, and never hides runtime warnings or limited diagnostic coverage."""
+    runtime result, and never hides runtime warnings or limited diagnostic coverage.
+
+    ``status`` is the run's operational status. While the run is not finished, an unchecked or in-progress
+    runtime result is the normal state ("pending"), not a warning; a FAILED result is always a warning."""
     rows = c.execute("SELECT validation_id, status, result, finished_at FROM observation_deep_validations "
                      "WHERE replay_id = %s ORDER BY created_at DESC", (replay_id,)).fetchall()
     latest = rows[0] if rows else None
     run_state = (op_assurance or {}).get("state")
-    runtime_label = _RUNTIME_LABEL.get(str(run_state), f"Runtime assurance {str(run_state or 'pending').upper()}")
+    pending = status is not None and status not in deep.TERMINAL and run_state in (None, "not_checked", "incomplete")
+    runtime_label = ("Runtime checks pending - they run when the replay finishes" if pending else
+                     _RUNTIME_LABEL.get(str(run_state), f"Runtime assurance {str(run_state or 'pending').upper()}"))
     warnings: list[str] = []
     limitations: list[str] = []
-    if run_state is not None and run_state != "passed":
+    if run_state is not None and run_state != "passed" and not pending:
         detail = (op_assurance or {}).get("detail")
         warnings.append(f"{runtime_label}" + (f": {detail}" if detail else "")
                         + " - a Deep validation result does not change this runtime outcome")
@@ -127,7 +133,8 @@ def assurance_summary(c, replay_id: str, op_assurance: dict[str, Any] | None) ->
         headline = f"ASSURANCE WARNING - Deep validation mismatch; {runtime_label}"
     elif warnings:
         headline = f"ASSURANCE WARNING - {headline}"
-    return {"headline": headline, "run_validation": run_state, "runtime": {"state": run_state, "label": runtime_label},
+    return {"headline": headline, "run_validation": run_state,
+            "runtime": {"state": run_state, "label": runtime_label, "pending": pending},
             "deep_validation": deep_state, "reference": {"state": deep_state, "label": reference_label,
                                                          "earlier_match": earlier_match["validation_id"]
                                                          if earlier_match else None},
@@ -210,10 +217,11 @@ def build_router(conn: Callable) -> APIRouter:
     @r.get("/{replay_id}/assurance")
     def assurance(replay_id: str) -> dict[str, Any]:
         with conn() as c:
-            row = c.execute("SELECT assurance FROM observation_replays WHERE replay_id = %s", (replay_id,)).fetchone()
+            row = c.execute("SELECT assurance, status FROM observation_replays WHERE replay_id = %s",
+                            (replay_id,)).fetchone()
             if row is None:
                 raise HTTPException(404, f"observation replay {replay_id} not found")
-            return assurance_summary(c, replay_id, row["assurance"])
+            return assurance_summary(c, replay_id, row["assurance"], row["status"])
 
     @r.get("/deep-validations/{vid}")
     def detail(vid: str) -> dict[str, Any]:

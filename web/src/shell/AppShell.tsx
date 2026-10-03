@@ -9,6 +9,8 @@ const CAP_SHORT = { market_replay: "Market replay", corpus: "Corpus prep", recor
 interface NavItem {
   id: Section;
   label: string;
+  /** Plain-language purpose shown under the label: what you can do there. */
+  sub: string;
   icon: IconName;
   hint: string;
   chip?: { text: string; tone: string };
@@ -16,18 +18,19 @@ interface NavItem {
 
 const NAV: { group: string; items: NavItem[] }[] = [
   {
-    group: "Desk",
+    group: "Main",
     items: [
-      { id: "market", label: "Market", icon: "market", hint: "BTC cockpit and system readiness" },
-      { id: "backtest", label: "Historical Workbench", icon: "gauge", hint: "Corpus, market replay runs (data and engine check) and copyable reports" },
+      { id: "market", label: "Market", sub: "Adviser cockpit · not built yet", icon: "market", hint: "BTC cockpit and system readiness" },
+      { id: "backtest", label: "Historical Workbench", sub: "Check historical data · get a report", icon: "gauge",
+        hint: "Prepare a month of data, run a market replay (data and engine check) and copy its report" },
     ],
   },
   {
-    group: "Workbench",
+    group: "Inspect & collect",
     items: [
-      { id: "replay", label: "Replay Lab", icon: "replay", hint: "Real-market observation replay and synthetic demo" },
-      { id: "data", label: "Data", icon: "data", hint: "Historical evidence datasets" },
-      { id: "recorder", label: "Recorder", icon: "recorder", hint: "Public live evidence collection" },
+      { id: "replay", label: "Replay Lab", sub: "Inspect a run event by event", icon: "replay", hint: "Real-market observation replay and synthetic demo" },
+      { id: "data", label: "Data", sub: "Stored datasets and their quality", icon: "data", hint: "Historical evidence datasets" },
+      { id: "recorder", label: "Recorder", sub: "Record live public market data", icon: "recorder", hint: "Public live evidence collection" },
     ],
   },
 ];
@@ -88,7 +91,10 @@ function GlobalHealth() {
             </div>
           );
         })}
-        <div><dt>Build</dt><dd className="mono">{h?.version ?? "—"}</dd></div>
+        <div title={h?.code_version_label ?? undefined}>
+          <dt>Build</dt>
+          <dd className="mono" data-testid="build-version">{h?.version ?? "—"}{h ? ` · ${h.code_version ? h.code_version.slice(0, 7) : "commit n/a"}` : ""}</dd>
+        </div>
       </dl>
     </div>
   );
@@ -102,6 +108,29 @@ function Legend() {
       <div className="legend-row"><span className="swatch m-synthetic" aria-hidden /> Synthetic — demo only</div>
       <div className="legend-row"><span className="swatch m-pending" aria-hidden /> Pending — not built yet</div>
     </div>
+  );
+}
+
+/** Global "is anything working?" indicator: real active operations from the health document (queued/running). */
+function Activity() {
+  const caps = useHealth().health?.capabilities;
+  if (!caps) return null;
+  const replay = caps.market_replay?.active_jobs ?? 0;
+  const corpus = caps.corpus?.active_jobs ?? 0;
+  const rec = caps.recorder?.active_jobs ?? 0;
+  const total = replay + corpus + rec;
+  const stalled = [caps.market_replay, caps.corpus, caps.recorder].some((c) => c?.status === "stalled");
+  const parts = [replay && `${replay} replay${replay > 1 ? "s" : ""}`, corpus && `${corpus} data preparation${corpus > 1 ? "s" : ""}`,
+    rec && `${rec} recording${rec > 1 ? "s" : ""}`].filter(Boolean).join(" · ");
+  const target: Section = replay || corpus ? "backtest" : "recorder";
+  return (
+    <button type="button" className={cx("activity-pill", total ? (stalled ? "tone-warn" : "is-busy") : "is-idle")}
+            data-testid="activity" onClick={() => total && navigate(target)} disabled={!total}
+            title={total ? `${parts} queued or running${stalled ? " — a needed worker is not running" : ""}. Click to open.`
+              : "No replay, data preparation or recording is queued or running."}>
+      <span className={cx("pulse-dot", total ? (stalled ? "tone-warn" : "tone-info") : "tone-neutral")} aria-hidden />
+      {total ? `${stalled ? "Waiting · " : "Working · "}${parts}` : "Nothing running"}
+    </button>
   );
 }
 
@@ -132,7 +161,10 @@ export function AppShell({ section, children }: { section: Section; children: Re
                   title={it.hint}
                 >
                   <Icon name={it.icon} size={18} />
-                  <span className="nav-label">{it.label}</span>
+                  <span className="nav-text">
+                    <span className="nav-label">{it.label}</span>
+                    <span className="nav-sub">{it.sub}</span>
+                  </span>
                   {it.chip && <span className={cx("nav-chip", `tone-${it.chip.tone}`)}>{it.chip.text}</span>}
                 </button>
               ))}
@@ -153,6 +185,7 @@ export function AppShell({ section, children }: { section: Section; children: Re
             <span className="crumb-current">{TITLES[section]}</span>
           </div>
           <div className="topbar-right">
+            <Activity />
             <span className="instrument-chip" title="Primary analysed instrument; OKX is a public, read-only reference source">
               <span className="instrument-sym">BTC-USDT-SWAP</span>
               <span className="muted">OKX public reference</span>

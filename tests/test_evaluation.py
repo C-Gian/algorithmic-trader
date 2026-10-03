@@ -102,6 +102,10 @@ def test_completed_evaluation_produces_deterministic_markdown_and_json(database_
     total = doc["coverage"]["total_events"]
     assert f"PASS `completed_consumed_entire_feed`: cursor {total}/{total}" in md_text  # Owner coverage comparison
     assert "PASS `cache_receipt_and_pin`" in md_text and "trusted receipt" in md_text
+    # a finished run is never headed with its last phase as if it were still running; wording is exact
+    assert "finished (last phase GENERATING_REPORT closed)" in md_text and "phase **GENERATING_REPORT**" not in md_text
+    assert "independent validation passed" not in md_text and "runtime integrity checks" in md_text
+    assert "code version " in md_text and "code unknown" not in md_text
     # deterministic: the same terminal state yields the same bytes
     assert api.get(f"/api/evaluations/{eid}/report.md").text == md_text
     assert api.get(f"/api/evaluations/{eid}/report.json").text == api.get(f"/api/evaluations/{eid}/report.json").text

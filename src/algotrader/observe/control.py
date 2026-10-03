@@ -63,19 +63,9 @@ def new_replay_id() -> str:
 
 
 def code_version() -> str | None:
-    import os
-    import subprocess
+    from .. import version
 
-    env = os.environ.get("ALGOTRADER_CODE_VERSION")
-    if env:
-        return env
-    try:
-        sha = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True, timeout=5,
-                             check=True).stdout.strip()
-        dirty = subprocess.run(["git", "status", "--porcelain"], capture_output=True, text=True, timeout=5).stdout
-        return sha + ("-dirty" if dirty.strip() else "")
-    except (OSError, subprocess.SubprocessError):
-        return None
+    return version.code_version()
 
 
 def build_config(replay_id: str, source: LoadedSource) -> ObservationReplayConfig:

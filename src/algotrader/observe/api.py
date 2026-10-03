@@ -19,6 +19,7 @@ from pydantic import BaseModel, Field
 
 from ..marketdata import dataset as md
 from ..recorder import journal as rj
+from .. import version
 from . import control
 from . import diagnostics as diag
 from .artifacts import files_dir
@@ -114,6 +115,8 @@ def replay_view(row: dict[str, Any]) -> dict[str, Any]:
         },
         "operation": op,
         "code_version": (cfg.code_version if cfg else (row.get("launch") or {}).get("code_version")),
+        "code_version_label": version.describe(cfg.code_version if cfg else (row.get("launch") or {}).get(
+            "code_version")),
         "labels": list(cfg.labels) if cfg else list(LABELS),
     }
 
@@ -250,7 +253,7 @@ def build_router(conn: Callable, md_root: Path, art_root: Path) -> APIRouter:
         with conn() as c:
             row = get_row(c, replay_id)
             v = replay_view(row)
-            v["assurance_summary"] = assurance_summary(c, replay_id, v["operation"]["assurance"])
+            v["assurance_summary"] = assurance_summary(c, replay_id, v["operation"]["assurance"], v["status"])
             return v
 
     def state(c, replay_id: str) -> dict[str, Any]:
@@ -258,7 +261,7 @@ def build_router(conn: Callable, md_root: Path, art_root: Path) -> APIRouter:
         ck = c.execute("SELECT snapshot_view FROM observation_checkpoints WHERE replay_id = %s",
                        (replay_id,)).fetchone()
         v = replay_view(row)
-        v["assurance_summary"] = assurance_summary(c, replay_id, v["operation"]["assurance"])
+        v["assurance_summary"] = assurance_summary(c, replay_id, v["operation"]["assurance"], v["status"])
         return {"replay": v, "state": ck["snapshot_view"] if ck else None}
 
     @r.get("/{replay_id}/state")
@@ -413,7 +416,7 @@ def build_router(conn: Callable, md_root: Path, art_root: Path) -> APIRouter:
             row = get_row(c, replay_id)
             ev = c.execute("SELECT evaluation_id FROM evaluations WHERE replay_id = %s", (replay_id,)).fetchone()
             storage = storage_facts(c, replay_id)
-            current = assurance_summary(c, replay_id, row.get("assurance"))
+            current = assurance_summary(c, replay_id, row.get("assurance"), row["status"])
         doc = diag.diagnostic_report(row, art_root, datetime.now(UTC), ev, storage)
         doc["current_assurance"] = {**current, "captured_at": datetime.now(UTC).isoformat(),
                                     "note": "current linked assurance (may change when Deep validations run); the "

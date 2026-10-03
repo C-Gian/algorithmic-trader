@@ -112,6 +112,9 @@ def test_owner_prepares_corpus_runs_observation_evaluation_and_copies_report(wor
     expect(chunk_status(page)).to_have_text("PREPARED", timeout=60_000)
     expect(page.get_by_test_id("prep-outcome")).to_contain_text("Downloaded from OKX public REST, verified and bound")
     expect(page.get_by_test_id("chunk-verification")).to_contain_text("verified")
+    expect(page.get_by_test_id("chunk-plain")).to_contain_text("Ready")  # plain-language state of the month
+    expect(page.get_by_test_id("storage-facts")).to_be_hidden()  # technical facts are behind "Data details"
+    page.get_by_test_id("chunk-more").locator("summary").click()
     expect(page.get_by_test_id("storage-facts")).to_be_visible()
     expect(page.get_by_test_id("chunk-reuse")).to_contain_text("nothing is downloaded again")
     calls_after_prepare = len(fake.calls)
@@ -134,10 +137,15 @@ def test_owner_prepares_corpus_runs_observation_evaluation_and_copies_report(wor
     # a diagnostic snapshot (never a result) is copyable while the run is still going
     expect(page.get_by_test_id("report-card")).to_have_attribute("data-state", "snapshot")
     wait_for(lambda: stack.get(f"/api/observations/{rid}")["progress"]["applied_events"] >= 3, timeout=30)
+    expect(page.get_by_test_id("obs-op-timeline")).to_be_hidden()  # beginners see the 4-step summary first
+    page.get_by_test_id("run-steps-detail").locator("summary").click()
     expect(page.get_by_test_id("obs-op-timeline")).to_be_visible()
     expect(page.get_by_test_id("phase-VERIFYING_SOURCE")).to_have_attribute("data-state", "done")
     expect(page.get_by_test_id("phase-REPLAYING")).to_have_attribute("data-state", "current")
     expect(page.get_by_test_id("obs-op-health")).to_contain_text("Progressing")
+    expect(page.get_by_test_id("run-story-title")).to_have_text("Replaying market history")
+    expect(page.get_by_test_id("activity")).to_contain_text("1 replay")  # visible from any page
+    expect(page.get_by_test_id("obs-panel")).not_to_contain_text("ASSURANCE WARNING")  # pending checks are normal
     page.get_by_test_id("copy-report").click()
     expect(page.get_by_test_id("copy-report")).to_contain_text("Copied")
     snap = page.evaluate("() => navigator.clipboard.readText()")
@@ -159,6 +167,17 @@ def test_owner_prepares_corpus_runs_observation_evaluation_and_copies_report(wor
     expect(page.get_by_test_id("report-card")).to_have_attribute("data-state", "ready", timeout=15_000)
     expect(page.get_by_test_id("report-verdict")).to_contain_text("workflow valid", ignore_case=True)
     expect(page.get_by_test_id("report-completion")).to_have_text("COMPLETE")
+    # a finished run reads as finished everywhere: no lingering phase, three separate outcome facts
+    expect(page.get_by_test_id("run-story-title")).to_have_text("Finished")
+    expect(page.get_by_test_id("obs-op-phase")).to_have_text("All phases done")
+    expect(page.get_by_test_id("obs-replay-progress-note")).not_to_contain_text("not finished")
+    expect(page.get_by_test_id("stage-run")).to_contain_text("report ready")
+    expect(page.get_by_test_id("fact-operation")).to_contain_text("Finished")
+    expect(page.get_by_test_id("fact-checks")).to_contain_text("PASS")
+    expect(page.get_by_test_id("fact-adviser")).to_contain_text("Not built yet")
+    expect(page.get_by_test_id("report-verdict")).to_contain_text("Data and engine check passed")
+    expect(page.get_by_test_id("report-verdict")).not_to_contain_text("independent validation")
+    expect(page.get_by_test_id("activity")).to_contain_text("Nothing running", timeout=10_000)
     caps = page.get_by_test_id("report-capabilities")
     expect(caps).to_contain_text("Call count")
     expect(caps).to_contain_text("UNAVAILABLE", ignore_case=True)
@@ -176,6 +195,8 @@ def test_owner_prepares_corpus_runs_observation_evaluation_and_copies_report(wor
     assert copied == md
     assert "OBSERVATION_ONLY_EVALUATION" in copied and NOT_CONNECTED in copied
     assert "| Call count | UNAVAILABLE |" in copied and "WORKFLOW_VALID" in copied
+    assert "finished (last phase GENERATING_REPORT closed)" in copied and "phase **GENERATING_REPORT**" not in copied
+    assert "independent validation passed" not in copied and "code version " in copied and "code unknown" not in copied
     with page.expect_download() as dl:
         page.get_by_test_id("download-md").click()
     assert Path(dl.value.path()).read_text(encoding="utf-8") == md
@@ -208,6 +229,7 @@ def test_owner_prepares_corpus_runs_observation_evaluation_and_copies_report(wor
     assert "Deep validation report" in deep_md and "MATCH" in deep_md and rid in deep_md
     manifest_after = httpx.get(f"{stack.base}/api/observations/{rid}/manifest", timeout=10).json()
     assert manifest_after == manifest_before  # the run's records/artifacts never change
+    expect(page.get_by_test_id("assurance-deep")).to_have_text("match", timeout=10_000)  # refreshed without a reload
     page.reload()
     expect(page.get_by_test_id("assurance-headline")).to_contain_text("Deep validation", timeout=10_000)
     expect(page.get_by_test_id("assurance-deep")).to_have_text("match")

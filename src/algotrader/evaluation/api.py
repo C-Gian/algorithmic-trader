@@ -85,7 +85,8 @@ def build_router(conn: Callable, data_root: Path, art_root: Path) -> APIRouter:
     def view(ev: dict[str, Any], replay: dict[str, Any], c=None) -> dict[str, Any]:
         rv = replay_view(replay)
         if c is not None:
-            rv["assurance_summary"] = assurance_summary(c, replay["replay_id"], rv["operation"]["assurance"])
+            rv["assurance_summary"] = assurance_summary(c, replay["replay_id"], rv["operation"]["assurance"],
+                                                        rv["status"])
         terminal = rv["status"] in control.TERMINAL
         return {
             "evaluation_id": ev["evaluation_id"],

@@ -1,4 +1,8 @@
-.git
+# git metadata: only HEAD and refs reach the image build (commit identification)
+.git/*
+!.git/HEAD
+!.git/refs
+!.git/packed-refs
 .venv
 var
 web/node_modules

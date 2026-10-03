@@ -20,6 +20,11 @@ RUN uv sync --locked --no-dev --no-install-project
 COPY src ./src
 RUN uv sync --locked --no-dev
 COPY --from=web /web/dist ./web/dist
+# Record the commit this image is built from (HEAD/refs only; see .dockerignore). Without git metadata no file is
+# written and the app reports the code version as not available - it is never guessed.
+COPY scripts/build_commit.py /tmp/build_commit.py
+COPY .gi[t] /tmp/gitmeta/
+RUN python /tmp/build_commit.py /tmp/gitmeta /app/BUILD_COMMIT && rm -rf /tmp/gitmeta /tmp/build_commit.py
 ENV PATH=/opt/venv/bin:$PATH \
     ALGOTRADER_WEB_DIST=/app/web/dist \
     ALGOTRADER_ARTIFACT_ROOT=/data/artifacts

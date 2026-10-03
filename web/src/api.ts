@@ -61,6 +61,8 @@ export interface Run {
 export interface Health {
   status: string;
   version?: string;
+  code_version?: string | null;
+  code_version_label?: string;
   database?: string;
   schema_version: string;
   recorder_workers?: {
@@ -484,6 +486,7 @@ export interface ObsReplay {
     eta_basis: string;
   };
   code_version: string | null;
+  code_version_label?: string;
   labels: string[];
   operation: Operation;
   assurance_summary?: AssuranceSummary;

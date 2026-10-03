@@ -153,6 +153,43 @@ function LatestRecording({ s }: { s: RecorderSession | undefined }) {
   );
 }
 
+const TASKS: { section: "backtest" | "replay" | "data" | "recorder"; icon: IconName; title: string; text: string; cta: string; primary?: boolean }[] = [
+  { section: "backtest", icon: "gauge", primary: true, title: "Check a month of historical data",
+    text: "Prepare a month of BTC data, replay it through the engine and copy a plain report into chat.", cta: "Open Historical Workbench" },
+  { section: "replay", icon: "replay", title: "Inspect a replay event by event",
+    text: "Pause, step and slow down a replay to see exactly what was known at each instant.", cta: "Open Replay Lab" },
+  { section: "data", icon: "data", title: "See the stored data and its quality",
+    text: "Datasets on this computer: coverage, gaps and verification.", cta: "Open Data" },
+  { section: "recorder", icon: "recorder", title: "Record live public market data",
+    text: "Collect live public OKX data with measured receipt times while the app is running.", cta: "Open Recorder" },
+];
+
+/** Task-first entry point: what a person can actually do today, before the reserved adviser cockpit. */
+function StartHere() {
+  return (
+    <section className="start-here reveal" data-testid="start-here" aria-labelledby="start-here-title" style={{ ["--i" as string]: 0 }}>
+      <div className="start-here-head">
+        <h2 className="start-here-title" id="start-here-title">What you can do now</h2>
+        <p className="muted small-text">The trading adviser (calls, entries, targets) is not built yet — its reserved cockpit is
+          further down this page. These tools work today:</p>
+      </div>
+      <ul className="task-grid">
+        {TASKS.map((t) => (
+          <li key={t.section}>
+            <button type="button" className={cx("task-card", t.primary && "is-primary")} onClick={() => navigate(t.section)}
+                    data-testid={`task-${t.section}`}>
+              <span className="task-icon"><Icon name={t.icon} size={18} /></span>
+              <span className="task-title">{t.title}</span>
+              <span className="task-text">{t.text}</span>
+              <span className="task-cta">{t.cta} <Icon name="chevron" size={13} /></span>
+            </button>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
 export function Overview() {
   const healthState = useHealth();
   const verdict = systemVerdict(healthState);
@@ -172,6 +209,8 @@ export function Overview() {
         title="Market"
         lede="What BTC is doing, which scenarios are plausible and whether a professional trade exists — LONG, SHORT or NO_TRADE, with trigger, invalidation and targets. Capital, size, leverage and execution stay with you."
       />
+
+      <StartHere />
 
       {/* Market identity + intelligence status */}
       <section className="market-strip reveal" style={{ ["--i" as string]: 0 }}>
