@@ -1,8 +1,9 @@
 import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   barsTail, corpusApi, CorpusChunk, CorpusJob, CorpusStatus, evalApi, Evaluation, EvaluationReport, obsApi, ObsReplay,
-  ObsStateDoc, StorageSummary, TradedBar,
+  ObsStateDoc, packApi, PackListItem, PresetsResponse, StorageSummary, TradedBar,
 } from "../api";
+import { PackPrepare } from "./PackPrep";
 import { fmtBytes, fmtInt, fmtSecs, fmtTime, humanize } from "../lib/format";
 import { evalFromHash, replaceHash } from "../lib/route";
 import { usePoll } from "../lib/usePoll";
@@ -308,10 +309,15 @@ function ChunkDetail({ chunk, plan, onPrepare, onCancel, busy }: {
 // Step 2. Start a check
 // ---------------------------------------------------------------------------
 
-function RunSetup({ corpus, preferred, onStarted }: {
-  corpus: CorpusStatus | null; preferred: string | null; onStarted: (e: Evaluation) => void;
+function RunSetup({ corpus, preferred, packs, presets, onStarted }: {
+  corpus: CorpusStatus | null; preferred: string | null; packs: PackListItem[]; presets: PresetsResponse | null;
+  onStarted: (e: Evaluation) => void;
 }) {
   const prepared = (corpus?.chunks ?? []).filter((c) => c.status === "prepared");
+  const usablePacks = packs.filter((x) => x.usable);
+  const [source, setSource] = useState("");
+  const [picked, setPicked] = useState(false); // the Owner chose a source explicitly
+  const [ack, setAck] = useState(false);
   const [chunkId, setChunkId] = useState("");
   const [speed, setSpeed] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -324,11 +330,24 @@ function RunSetup({ corpus, preferred, onStarted }: {
     else if (!prepared.some((c) => c.chunk_id === chunkId)) setChunkId(prepared[0]?.chunk_id ?? "");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ids, preferred]);
-  const chunk = prepared.find((c) => c.chunk_id === chunkId);
+  const packKey = usablePacks.map((x) => x.pack_id).join();
+  useEffect(() => {
+    // evaluation packs are the primary source; the earlier single-month datasets stay selectable
+    if (!picked || !source || (source.startsWith("pack:") && !usablePacks.some((x) => `pack:${x.pack_id}` === source))) {
+      setSource(usablePacks[0] ? `pack:${usablePacks[0].pack_id}` : "month");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [packKey]);
+  useEffect(() => setAck(false), [source]);
+  const pack = usablePacks.find((x) => `pack:${x.pack_id}` === source) ?? null;
+  const packView = pack ? presets?.presets.find((v) => v.published?.pack_id === pack.pack_id) ?? null : null;
+  const chunk = source === "month" ? prepared.find((c) => c.chunk_id === chunkId) : undefined;
+  const needsAck = pack?.status === "READY_WITH_LIMITATIONS";
+  const canStart = pack ? !needsAck || ack : !!chunk;
   const start = async () => {
     setBusy(true);
     try {
-      onStarted(await evalApi.start(chunkId, speed, paused));
+      onStarted(pack ? await evalApi.startPack(pack.pack_id, speed, paused, ack) : await evalApi.start(chunkId, speed, paused));
       setError(null);
     } catch (e) {
       setError((e as Error).message.replace(/^\d+ /, ""));
@@ -374,13 +393,43 @@ function RunSetup({ corpus, preferred, onStarted }: {
 
       <div className="setup-how">
         <div className="setup-col-title">Settings</div>
-        <Field label="Month to check" hint={prepared.length ? "Prepared months only (step 1)." : undefined}>
-          <select className="control" value={chunkId} onChange={(e) => setChunkId(e.target.value)} data-testid="eval-chunk"
-                  disabled={!prepared.length}>
-            {!prepared.length && <option value="">none prepared yet — do step 1 first</option>}
-            {prepared.map((c) => <option key={c.chunk_id} value={c.chunk_id}>{c.label} · {c.chunk_id}</option>)}
+        <Field label="Data to check" hint="Prepared evaluation packs (step 1); earlier single-month datasets stay available.">
+          <select className="control" value={source} onChange={(e) => { setPicked(true); setSource(e.target.value); }} data-testid="eval-source">
+            {usablePacks.map((x) => (
+              <option key={x.pack_id} value={`pack:${x.pack_id}`}>
+                {presets?.presets.find((v) => v.published?.pack_id === x.pack_id)?.preset.label ?? x.preset_id} · pack
+                {x.status === "READY_WITH_LIMITATIONS" ? " · with limitations" : ""}
+              </option>
+            ))}
+            <option value="month">Single month (earlier workflow)</option>
           </select>
         </Field>
+        {source === "month" && (
+          <Field label="Month to check" hint={prepared.length ? "Prepared months only." : undefined}>
+            <select className="control" value={chunkId} onChange={(e) => setChunkId(e.target.value)} data-testid="eval-chunk"
+                    disabled={!prepared.length}>
+              {!prepared.length && <option value="">none prepared yet</option>}
+              {prepared.map((c) => <option key={c.chunk_id} value={c.chunk_id}>{c.label} · {c.chunk_id}</option>)}
+            </select>
+          </Field>
+        )}
+        {pack && (
+          <div className="setup-facts" data-testid="eval-pack-facts">
+            <Badge tone="pos" icon="shield">Verified pack</Badge>
+            <Badge tone={pack.status === "READY" ? "pos" : "warn"}>{pack.status === "READY" ? "Ready" : "Ready with limitations"}</Badge>
+            <Badge tone="info" icon="clock" title="Historical knowledge times follow a declared convention; they are not measured">Modeled availability</Badge>
+            <span className="muted small-text mono">{fmtInt(pack.event_count)} events · warmup and tail are not scored</span>
+          </div>
+        )}
+        {needsAck && (
+          <Notice tone="warn" title="This pack has source gaps" testid="eval-ack-notice">
+            {(packView?.published?.limitations ?? ["missing or rejected minutes are kept as explicit gaps, never filled"]).join(" · ")}
+            <label className="check">
+              <input type="checkbox" checked={ack} onChange={(e) => setAck(e.target.checked)} data-testid="eval-ack" />
+              <span>I understand: this inspection run includes these gaps and is not complete market coverage.</span>
+            </label>
+          </Notice>
+        )}
         {chunk?.local && (
           <div className="setup-facts">
             <Badge tone="pos" icon="shield">Verified</Badge>
@@ -401,12 +450,12 @@ function RunSetup({ corpus, preferred, onStarted }: {
           <span>Start paused <span className="muted">(advanced: step one event at a time before playing)</span></span>
         </label>
         {error && <Notice tone="neg" title="Could not start">{error}</Notice>}
-        <Button icon="play" className="btn-block btn-lg" onClick={start} disabled={!chunk || busy} data-testid="start-evaluation">
-          {chunk ? `Start the check · ${chunk.label}` : "Start the check"}
+        <Button icon="play" className="btn-block btn-lg" onClick={start} disabled={!canStart || busy} data-testid="start-evaluation">
+          {pack ? "Start the check · prepared pack" : chunk ? `Start the check · ${chunk.label}` : "Start the check"}
         </Button>
         <p className="muted small-text">
-          {chunk ? "Starts in the background — you can close the browser; progress and the report appear in step 3."
-            : "Prepare a month in step 1 first. No model parameters: there is no adviser to configure yet."}
+          {pack || chunk ? "Starts in the background — you can close the browser; progress and the report appear in step 3."
+            : "Prepare data in step 1 first. No model parameters: there is no adviser to configure yet."}
         </p>
       </div>
     </div>
@@ -547,6 +596,19 @@ function ReportCard({ ev }: { ev: Evaluation }) {
               <span className="outcome-value"><Badge tone="pending" icon="clock">Not built yet</Badge></span>
               <span className="outcome-hint">No trade calls were made or judged. Call metrics are shown as unavailable, never as zero.</span>
             </li>
+            {report.pack && (
+              <li className={cx("outcome-fact", report.pack.source_coverage.missing_or_rejected ? "tone-warn" : "tone-pos")}
+                  data-testid="fact-coverage">
+                <span className="outcome-label">4 · Data coverage</span>
+                <span className="outcome-value">
+                  <Badge tone={report.pack.source_coverage.missing_or_rejected ? "warn" : "pos"}>
+                    {report.pack.source_coverage.missing_or_rejected ? "With source gaps" : "No source gaps"}</Badge>{" "}
+                  {fmtInt(report.pack.source_coverage.missing_or_rejected)} of {fmtInt(report.pack.source_coverage.expected_bar_slots)} bar minutes missing/rejected
+                </span>
+                <span className="outcome-hint">Separate from feed integrity: the whole feed can be consumed ({report.pack.feed_consumed}) while
+                  the source itself has gaps. Warmup {fmtTime(report.pack.windows.warmup.start)} and tail up to {fmtTime(report.pack.windows.tail.end)} are not scored.</span>
+              </li>
+            )}
           </ul>
 
           {failed.length > 0 && (
@@ -793,6 +855,8 @@ function StepNav({ corpus, ev }: { corpus: CorpusStatus | null; ev: Evaluation |
 
 export function Backtest() {
   const corpusPoll = usePoll(corpusApi.status, 2000);
+  const presetsPoll = usePoll(packApi.presets, 3000);
+  const packsPoll = usePoll(packApi.list, 3000);
   const evalsPoll = usePoll(evalApi.list, 3000);
   const corpus = corpusPoll.data;
   const [chunkSel, setChunkSel] = useState<string | null>(null);
@@ -871,8 +935,24 @@ export function Backtest() {
       {error && <Notice tone="neg" title="Something went wrong">{error}</Notice>}
       <StepNav corpus={corpus} ev={evDetail} />
 
-      <StepCard n={1} id="step-data" testid="corpus-card" title="Choose and prepare a month of data"
-                lede="Pick a month. If it is not on this computer yet, Prepare downloads and verifies it once; it is reused for every later check."
+      <StepCard n={1} id="step-data" testid="pack-card" title="Prepare data"
+                lede="The September 2025 development check needs 4 days before it (warmup) and 6 hours after it (tail). Data already on this computer is reused; Prepare downloads only what is missing, verifies everything once and composes one immutable pack."
+                status={presetsPoll.data && (() => {
+                  const def = presetsPoll.data.presets.find((x) => x.preset.default);
+                  return def?.published?.usable
+                    ? <Badge tone={def.published.status === "READY" ? "pos" : "warn"} testid="pack-ready-badge">Pack ready</Badge>
+                    : <Badge tone="neutral">Not prepared yet</Badge>;
+                })()}>
+        {!presetsPoll.data ? (presetsPoll.error ? <Notice tone="neg" title="Presets unavailable">{presetsPoll.error}</Notice> : <Skeleton lines={4} />)
+          : <PackPrepare data={presetsPoll.data} onChanged={() => { void presetsPoll.refresh(); void packsPoll.refresh(); }} />}
+      </StepCard>
+
+      <details className="more" data-testid="corpus-card-legacy">
+        <summary><Icon name="chevron" size={14} className="summary-chevron" /> Single-month data (earlier workflow)
+          <span className="summary-hint">the monthly corpus ledger, its preparation jobs and reports</span></summary>
+        <div className="more-body">
+      <StepCard n={1} id="step-month" testid="corpus-card" title="Single month"
+                lede="Earlier workflow: one calendar month without warmup or tail. Kept for its existing runs and reports."
                 status={corpus && (
                   <span className="corpus-summary">
                     <Badge tone="pos" testid="corpus-prepared-count">{corpus.summary.prepared} prepared</Badge>
@@ -891,10 +971,13 @@ export function Backtest() {
           </>
         )}
       </StepCard>
+        </div>
+      </details>
 
-      <StepCard n={2} id="step-start" title="Start a check"
-                lede="Choose the prepared month and press Start. The check runs in the background; you can close the browser.">
-        <RunSetup corpus={corpus} preferred={chunk?.status === "prepared" ? chunk.chunk_id : null} onStarted={onStarted} />
+      <StepCard n={2} id="step-start" title="Check data and engine"
+                lede="Choose the prepared data and press Start. Observation only — no adviser. The check runs in the background; you can close the browser.">
+        <RunSetup corpus={corpus} preferred={chunk?.status === "prepared" ? chunk.chunk_id : null}
+                  packs={packsPoll.data ?? []} presets={presetsPoll.data ?? null} onStarted={onStarted} />
       </StepCard>
 
       <StepCard n={3} id="step-result" title="Follow the run and get the report"

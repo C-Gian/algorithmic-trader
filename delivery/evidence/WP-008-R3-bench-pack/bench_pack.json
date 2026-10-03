@@ -1,0 +1,98 @@
+{
+  "note": "tiny synthetic engineering fixtures; not a historical evaluation, gate or annual claim",
+  "platform": "Windows-10-10.0.19045-SP0 \u00b7 Python 3.14.7 \u00b7 8 logical CPUs",
+  "sizes": [
+    {
+      "eval_hours": 6,
+      "pack": {
+        "children_downloaded": 2,
+        "event_count": 1531,
+        "okx_requests": 13,
+        "pack_cache_bytes_added": 98181,
+        "pack_cache_partitions": 1,
+        "prepare_wall_s": 1.31,
+        "source_package_bytes": 290319,
+        "sources": 3,
+        "status": "READY"
+      },
+      "replay": {
+        "passed": true,
+        "pause_applied_s": 0.064,
+        "per_generation": {
+          "1": {
+            "checkpoint_state_bytes": 25677,
+            "checkpoint_temporal_bytes": 10903,
+            "checkpoints_committed": 4,
+            "cpu_seconds": 0.891,
+            "delivery_rows_written": 0,
+            "events_applied": 609,
+            "max_rss_bytes": 73891840,
+            "prefix_restore_events": 0,
+            "transactions_committed": 5
+          },
+          "2": {
+            "checkpoint_state_bytes": 30054,
+            "checkpoint_temporal_bytes": 19351,
+            "checkpoints_committed": 5,
+            "cpu_seconds": 1.641,
+            "delivery_rows_written": 0,
+            "events_applied": 922,
+            "max_rss_bytes": 85463040,
+            "prefix_restore_events": 0,
+            "transactions_committed": 5
+          }
+        },
+        "status": "completed",
+        "validator_version": "4",
+        "wall_s": 6.34
+      },
+      "requested_minutes": 510
+    },
+    {
+      "eval_hours": 24,
+      "pack": {
+        "children_downloaded": 2,
+        "event_count": 4773,
+        "okx_requests": 13,
+        "pack_cache_bytes_added": 304896,
+        "pack_cache_partitions": 1,
+        "prepare_wall_s": 2.4,
+        "source_package_bytes": 785578,
+        "sources": 3,
+        "status": "READY"
+      },
+      "replay": {
+        "passed": true,
+        "pause_applied_s": 0.079,
+        "per_generation": {
+          "1": {
+            "checkpoint_state_bytes": 29923,
+            "checkpoint_temporal_bytes": 20006,
+            "checkpoints_committed": 9,
+            "cpu_seconds": 2.0,
+            "delivery_rows_written": 0,
+            "events_applied": 1602,
+            "max_rss_bytes": 79867904,
+            "prefix_restore_events": 0,
+            "transactions_committed": 10
+          },
+          "2": {
+            "checkpoint_state_bytes": 30112,
+            "checkpoint_temporal_bytes": 43777,
+            "checkpoints_committed": 16,
+            "cpu_seconds": 3.25,
+            "delivery_rows_written": 0,
+            "events_applied": 3171,
+            "max_rss_bytes": 94298112,
+            "prefix_restore_events": 0,
+            "transactions_committed": 16
+          }
+        },
+        "status": "completed",
+        "validator_version": "4",
+        "wall_s": 16.25
+      },
+      "requested_minutes": 1590
+    }
+  ]
+}

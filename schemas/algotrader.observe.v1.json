@@ -887,7 +887,8 @@
     "SourceKind": {
       "enum": [
         "dataset",
-        "recording"
+        "recording",
+        "pack"
       ],
       "title": "SourceKind",
       "type": "string"
@@ -1045,6 +1046,11 @@
       "date": "2026-10-03",
       "note": "WP-008-R2 causal temporal substrate (Director-authorized additive optional field): manifest adds optional ``temporal`` - a reference to the run's algotrader.temporal.v1 substrate (contract/engine/state format, profile id + fingerprint, clock and seal policy, finite clock end, commitments; details in the temporal.json artifact). Absent for revision-1/2 manifests and for observe.stream.v1 runs, which remain readable unchanged. Factual replay semantics, order, digests and the factual state format are unchanged.",
       "revision": 3
+    },
+    {
+      "date": "2026-10-03",
+      "note": "WP-008-R3 evaluation packs (additive): SourceKind adds 'pack' - an immutable receipt-pinned algotrader.corpus-pack.v1 composition of verified marketdata.v1 slices replayed as ONE canonical feed. Dataset and recording sources, all earlier manifests and readers are unchanged.",
+      "revision": 4
     }
   ],
   "clock_policy": "Event-driven replay clock: one step applies exactly one causal feed delivery, in the accepted feed.v1 total order; replay/information time becomes that delivery's available_time. Pacing (events/s) is operational only and never changes order, state or digests.",
@@ -1066,7 +1072,7 @@
     "SourceVerification": "#/$defs/SourceVerification",
     "ValidationCheck": "#/$defs/ValidationCheck"
   },
-  "revision": 3,
+  "revision": 4,
   "schema_version": "algotrader.observe.v1",
   "status": "PROVISIONAL",
   "title": "Algorithmic Trader observation-replay contracts (algotrader.observe.v1, PROVISIONAL)"

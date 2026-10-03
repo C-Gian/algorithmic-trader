@@ -846,6 +846,7 @@ export interface Evaluation {
     quality_status: string;
     bytes_on_disk: number;
     storage: StorageSummary;
+    pack?: PackFacts;
   };
   replay: ObsReplay;
   report_available: boolean;
@@ -894,7 +895,67 @@ export interface EvaluationReport {
   capabilities: Record<string, CapabilityRow>;
   conclusion: { verdict: string; text: string };
   next_diagnostic: string;
+  pack?: null | {
+    pack_id: string; status: string; preset_id: string; feed_consumed: string;
+    source_coverage: { expected_bar_slots: number; missing_or_rejected: number };
+    windows: PackWindows; limitations: string[]; acknowledged_limitations?: boolean;
+  };
 }
+
+// ---- Evaluation packs (algotrader.corpus-pack.v1; data preparation only, no adviser) ----
+
+export interface PackWindow { start: string; end: string; scored: boolean; minutes: number }
+export interface PackWindows { warmup: PackWindow; evaluation: PackWindow; tail: PackWindow; requested: { start: string; end: string } }
+export interface PackCoverage { family: string; window: string; expected_slots: number | null; valid: number; missing: number; rejected: number }
+export interface PackCapability { capability: string; status: string; detail: string }
+export interface PackSourceSlice { dataset_id: string; start: string; end: string }
+export interface PackFacts {
+  pack_id: string; status: "READY" | "READY_WITH_LIMITATIONS"; windows: PackWindows; coverage: PackCoverage[];
+  capabilities: PackCapability[]; limitations: string[]; sources: PackSourceSlice[];
+  input_readiness_preview: Record<string, string | number>; clock_end: string; tail_end: string;
+}
+export interface PublishedPack {
+  pack_id: string; usable: boolean; problem: string | null; status: "READY" | "READY_WITH_LIMITATIONS";
+  created_at: string; event_count: number; limitations: string[]; coverage: PackCoverage[];
+  capabilities: PackCapability[]; sources: PackSourceSlice[];
+  storage: { source_package_bytes: number; pack_cache_bytes: number; pack_cache_partitions: number; note: string } | null;
+  overlap: { overlapping_slots: number; identical_collapsed: number; gap_replaced_by_valid: number } | null;
+  input_readiness_preview: Record<string, string | number> | null; clock_end: string | null;
+}
+export interface PackChild { kind: string; start: string; end: string; status: string; dataset_id?: string; bytes?: number; error?: string }
+export interface PackJob {
+  operation: Operation; job_id: string; preset_id: string; status: "queued" | "running" | "completed" | "cancelled" | "failed";
+  cancel_requested: boolean; outcome: string | null; pack_id: string | null; children: PackChild[];
+  downloaded: { children: number; bytes: number }; error: string | null; created_at: string; finished_at: string | null;
+  plan: null | { slices: { dataset_id: string; start: string; end: string }[]; acquisitions: string[][] };
+}
+export interface PresetView {
+  preset: { preset_id: string; label: string; default: boolean; evidence_class: string };
+  preset_sha256: string; windows: PackWindows;
+  classification: { label: string; note: string; portions: { class: string; start: string; end: string; contamination: string }[] };
+  local: { dataset_id: string; start: string; end: string }[];
+  needed: { start: string; end: string }[];
+  estimate: { estimated_bytes: number | null; minutes: number; basis: string };
+  published: PublishedPack | null; latest_job: PackJob | null; note: string; adviser: string;
+}
+export interface PresetsResponse {
+  file: { schema_version: string; version: number; method: string; rules_version: string; register_sha256: string;
+          capability_profile: Record<string, string> };
+  presets: PresetView[]; months: { month: string; label: string; class: string }[]; note: string;
+}
+
+export interface PackListItem { pack_id: string; preset_id: string; status: "READY" | "READY_WITH_LIMITATIONS"; event_count: number; created_at: string; usable: boolean; problem: string | null }
+
+export const packApi = {
+  presets: () => req<PresetsResponse>("/api/corpus/presets"),
+  list: () => req<PackListItem[]>("/api/corpus/packs"),
+  selection: (months: string[]) => req<PresetView>(`/api/corpus/selection?months=${encodeURIComponent(months.join(","))}`),
+  preparePreset: (presetId: string) => req<PackJob>(`/api/corpus/presets/${encodeURIComponent(presetId)}/prepare`, { method: "POST" }),
+  prepareSelection: (months: string[]) => req<PackJob>("/api/corpus/selection/prepare", { method: "POST", body: JSON.stringify({ months }) }),
+  cancel: (jobId: string) => req<PackJob>(`/api/corpus/pack-jobs/${jobId}/cancel`, { method: "POST" }),
+  reportMarkdown: (jobId: string) => text(`/api/corpus/pack-jobs/${jobId}/report.md`),
+  downloadUrl: (jobId: string, fmt: "md" | "json") => `/api/corpus/pack-jobs/${jobId}/report.${fmt}?download=true`,
+};
 
 async function text(path: string): Promise<string> {
   const res = await fetch(path);
@@ -922,6 +983,8 @@ export const evalApi = {
   detail: (id: string) => req<Evaluation>(`${E}/${id}`),
   start: (chunkId: string, speed: number, paused: boolean) =>
     req<Evaluation>(E, { method: "POST", body: JSON.stringify({ chunk_id: chunkId, speed, paused }) }),
+  startPack: (packId: string, speed: number, paused: boolean, acknowledge: boolean) =>
+    req<Evaluation>(E, { method: "POST", body: JSON.stringify({ pack_id: packId, speed, paused, acknowledge_limitations: acknowledge }) }),
   report: (id: string) => req<EvaluationReport>(`${E}/${id}/report.json`),
   reportMarkdown: (id: string) => text(`${E}/${id}/report.md`),
   downloadUrl: (id: string, fmt: "md" | "json") => `${E}/${id}/report.${fmt}?download=true`,

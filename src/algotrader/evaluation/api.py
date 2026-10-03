@@ -34,7 +34,9 @@ PRESET_LABEL = "Market replay — data and engine check"
 
 
 class StartEvaluation(BaseModel):
-    chunk_id: str = Field(min_length=1, max_length=100)
+    chunk_id: str | None = Field(default=None, min_length=1, max_length=100)  # earlier single-month workflow
+    pack_id: str | None = Field(default=None, min_length=1, max_length=100)  # prepared evaluation pack (R3)
+    acknowledge_limitations: bool = False  # explicit Owner acknowledgement for a READY_WITH_LIMITATIONS pack
     speed: float = Field(default=0.0, ge=0, le=control.MAX_SPEED)
     paused: bool = False
 
@@ -72,6 +74,42 @@ def corpus_snapshot(c, plan, chunk, binding: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def pack_snapshot(c, data_root: Path, pack_id: str, acknowledged: bool) -> dict[str, Any]:
+    """Pack facts frozen into the evaluation at launch (identities, windows, coverage, capabilities, limits)."""
+    from ..corpus import pack as pk
+
+    rec = pk.pack_receipt(c, pack_id)
+    doc = pk.open_pack(data_root, pack_id, rec)
+    job = c.execute("SELECT job_id, outcome, started_at, finished_at, children, base_url FROM corpus_pack_jobs "
+                    "WHERE pack_id = %s ORDER BY created_at LIMIT 1", (pack_id,)).fetchone()
+    st = doc["storage"]
+    downloaded = [x for x in (job["children"] if job else []) if x.get("status") == "completed"]
+    return {
+        "plan_id": doc["presets_schema"], "plan_version": doc["presets_version"],
+        "chunk_id": doc["preset"]["preset_id"], "chunk_label": doc["preset"]["label"],
+        "start": doc["requested_start"], "end": doc["requested_end"],
+        "dataset_id": pack_id, "manifest_sha256": rec["manifest_sha256"], "base_url": job["base_url"] if job else None,
+        "quality_status": "clean" if doc["status"] == "READY" else "degraded",
+        "verified_at": rec["created_at"].isoformat(), "retrieved_at": None,
+        "bytes_on_disk": (st.get("source_package_bytes") or 0) + (st.get("pack_cache_bytes") or 0),
+        "storage": {"total_bytes": (st.get("source_package_bytes") or 0) + (st.get("pack_cache_bytes") or 0),
+                    "source_package_bytes": st.get("source_package_bytes"),
+                    "pack_cache_bytes": st.get("pack_cache_bytes")},
+        "binding_outcome": job["outcome"] if job else None,
+        "acquisition": ({"job_id": job["job_id"], "outcome": job["outcome"],
+                         "elapsed_seconds": ((job["finished_at"] - job["started_at"]).total_seconds()
+                                             if job["started_at"] and job["finished_at"] else None),
+                         "downloaded_children": len(downloaded),
+                         "bytes_fetched": sum(x.get("bytes") or 0 for x in downloaded)} if job else None),
+        "pack": {k: doc[k] for k in ("pack_id", "preset", "preset_sha256", "method", "rules_version", "register_sha256",
+                                     "capability_profile", "capability_profile_sha256", "windows", "boundaries",
+                                     "evidence_classes", "requested_start", "requested_end", "tail_end", "clock_end",
+                                     "instrument", "sources", "feed", "coverage", "overlap", "capabilities",
+                                     "input_readiness_preview", "status", "limitations", "storage")}
+                | {"manifest_sha256": rec["manifest_sha256"], "acknowledged_limitations": acknowledged},
+    }
+
+
 def build_router(conn: Callable, data_root: Path, art_root: Path) -> APIRouter:
     r = APIRouter(prefix="/api/evaluations")
 
@@ -102,8 +140,41 @@ def build_router(conn: Callable, data_root: Path, art_root: Path) -> APIRouter:
             "report_terminal": terminal,
         }
 
+    def start_pack(body: StartEvaluation) -> dict[str, Any]:
+        from ..corpus import pack as pk
+
+        with conn() as c:
+            try:
+                snapshot = pack_snapshot(c, data_root, body.pack_id, body.acknowledge_limitations)
+            except pk.PackError as exc:
+                raise HTTPException(409, f"pack {body.pack_id} is not usable: {exc}") from None
+            p = snapshot["pack"]
+            if p["status"] == "READY_WITH_LIMITATIONS" and not body.acknowledge_limitations:
+                raise HTTPException(409, "this pack is READY WITH LIMITATIONS (source gaps); acknowledge the listed "
+                                         "limitations to start an inspection run: " + "; ".join(p["limitations"]))
+            c.commit()
+            evaluation_id = new_evaluation_id()
+            try:
+                with c.transaction():
+                    replay_id = control.create_replay(c, data_root, SourceKind.PACK, body.pack_id, body.speed,
+                                                      body.paused, evaluation_id=evaluation_id,
+                                                      expected_manifest_sha256=snapshot["manifest_sha256"])
+                    c.execute(
+                        """INSERT INTO evaluations (evaluation_id, replay_id, run_type, preset, plan_id, chunk_id,
+                               dataset_id, corpus, pack_id, preset_id)
+                           VALUES (%s, %s, 'observation_only', %s, %s, %s, %s, %s, %s, %s)""",
+                        (evaluation_id, replay_id, PRESET, snapshot["plan_id"], snapshot["chunk_id"], body.pack_id,
+                         Jsonb(snapshot), body.pack_id, snapshot["chunk_id"]))
+            except (SourceRejected, control.ControlRejected) as exc:
+                raise HTTPException(422, str(exc)) from None
+            return view(*get(c, evaluation_id), c)
+
     @r.post("", status_code=201)
     def start(body: StartEvaluation) -> dict[str, Any]:
+        if (body.pack_id is None) == (body.chunk_id is None):
+            raise HTTPException(422, "give exactly one of pack_id (evaluation pack) or chunk_id (single month)")
+        if body.pack_id is not None:
+            return start_pack(body)
         plan = load_plan()
         chunk = plan.chunk(body.chunk_id)
         if chunk is None:

@@ -74,6 +74,13 @@ VALIDATOR_SCOPE_TEMPORAL = VALIDATOR_SCOPE + (
     "range's records; and, for completed runs, the clock-end finish derived from that verified state. No independent "
     "temporal re-execution was performed in this run (optional Deep validation v2).")
 
+VALIDATOR_VERSION_PACK = "4"
+VALIDATOR_SCOPE_PACK = VALIDATOR_SCOPE_TEMPORAL + (
+    " Version 4 (evaluation-pack runs, source kind pack) additionally verifies the pack pins: the pack manifest file "
+    "SHA-256 equals the run pin and the trusted publication receipt, its body re-hashes to the pack id, and its "
+    "feed cache id/manifest SHA-256 equal the run's pinned cache. Consuming the whole canonical feed is reported "
+    "separately from per-minute source coverage: a completed pack run can contain explicit source gaps.")
+
 Hook = Callable[[str, int, int | None, str], None]
 
 
@@ -93,7 +100,8 @@ def output_commitment(ranges: list[dict[str, Any]]) -> str:
 def reconcile(*, status: ReplayStatus, cache: FeedCache, ranges: list[dict[str, Any]], cursor: int,
               terminal: dict[str, Any] | None, committed_snapshot_digest: str, engine: dict[str, Any],
               freshness, hook: Hook, receipt: dict[str, Any] | None = None,
-              temporal_out: dict[str, Any] | None = None) -> tuple[ReplayValidation, Any]:
+              temporal_out: dict[str, Any] | None = None,
+              pack: dict[str, Any] | None = None) -> tuple[ReplayValidation, Any]:
     """Returns (validation, terminal snapshot or None). ``hook`` may raise OperationCancelled. For temporal runs the
     verified (and, when completed, clock-end finished) temporal summary is written to ``temporal_out``."""
     from ..ops import OperationCancelled
@@ -105,7 +113,8 @@ def reconcile(*, status: ReplayStatus, cache: FeedCache, ranges: list[dict[str, 
         checks.append(ValidationCheck(name=name, passed=ok, detail=detail))
 
     temporal_cfg = engine.get("temporal")
-    version, scope = ((VALIDATOR_VERSION_TEMPORAL, VALIDATOR_SCOPE_TEMPORAL) if temporal_cfg
+    version, scope = ((VALIDATOR_VERSION_PACK, VALIDATOR_SCOPE_PACK) if engine.get("pack") else
+                      (VALIDATOR_VERSION_TEMPORAL, VALIDATOR_SCOPE_TEMPORAL) if temporal_cfg
                       else (VALIDATOR_VERSION, VALIDATOR_SCOPE))
 
     def result(outcome: ValidationOutcome) -> ReplayValidation:
@@ -243,6 +252,8 @@ def reconcile(*, status: ReplayStatus, cache: FeedCache, ranges: list[dict[str, 
               "cache's full-stream commitment")
     if temporal_cfg:
         _temporal_checks(check, status, ranges, terminal, cursor, engine, commitments, temporal_out)
+    if engine.get("pack"):
+        _pack_checks(check, engine, pack or {}, cache, status, cursor)
     commitments["output"] = output_commitment(ranges)
     check("observation_only", snap is None or set(snap.labels) >= {"OBSERVATION_ONLY", "NO_INTERPRETATION"},
           "observation-only snapshot labels; no MarketView/decision/order/account records")
@@ -310,3 +321,42 @@ def _temporal_checks(check, status: ReplayStatus, ranges: list[dict[str, Any]], 
     if out is not None:
         out.update(eng.summary(recent=10))
         out["finished_at_clock_end"] = status == ReplayStatus.COMPLETED
+
+
+def _pack_checks(check, engine: dict[str, Any], pack: dict[str, Any], cache: FeedCache, status: ReplayStatus,
+                 cursor: int) -> None:
+    from ..corpus.pack import pack_id_for
+
+    pin = engine["pack"]
+    rec, doc, file_sha = pack.get("receipt"), pack.get("manifest"), pack.get("file_sha256")
+    problems = []
+    if rec is None:
+        problems.append("no trusted publication receipt for the pack")
+    if file_sha is None or doc is None:
+        problems.append("pack manifest file missing or unreadable")
+    if file_sha is not None and file_sha != pin["pack_manifest_sha256"]:
+        problems.append("pack manifest file differs from the run pin")
+    if rec is not None and rec["manifest_sha256"] != pin["pack_manifest_sha256"]:
+        problems.append("publication receipt differs from the run pin")
+    if doc is not None:
+        if doc.get("pack_id") != pin["pack_id"] or pack_id_for(doc) != pin["pack_id"]:
+            problems.append("pack manifest body does not hash to its identity")
+        feed = doc.get("feed") or {}
+        if feed.get("cache_id") != cache.cache_id or feed.get("cache_manifest_sha256") != cache.manifest_sha256 \
+                or feed.get("cache_manifest_sha256") != engine.get("cache_manifest_sha256"):
+            problems.append("pack feed cache identity differs from the run's pinned cache")
+    check("pack_receipt_and_pins", not problems,
+          "; ".join(problems) or f"pack {pin['pack_id']} manifest {pin['pack_manifest_sha256'][:16]} == run pin == "
+                                  f"publication receipt; feed cache {cache.cache_id} pinned")
+    if doc is not None:
+        bars = [c for c in doc.get("coverage", []) if c.get("expected_slots")]
+        expected = sum(c["expected_slots"] for c in bars)
+        gaps = sum(c["missing"] + c["rejected"] for c in bars)
+        trade = [c for c in bars if c["family"] == "trade_bar_1m"]
+        tg = sum(c["missing"] + c["rejected"] for c in trade)
+        consumed = status == ReplayStatus.COMPLETED and cursor == cache.event_count
+        check("pack_coverage_reported", True,
+              f"feed consumed {'entirely' if consumed else f'to cursor {cursor}/{cache.event_count}'}; source "
+              f"coverage (separate fact): {gaps} missing/rejected of {expected} expected bar slots, trade "
+              f"{tg} missing/rejected of {sum(c['expected_slots'] for c in trade)} (pack status {doc.get('status')})")
+

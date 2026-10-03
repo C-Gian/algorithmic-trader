@@ -203,6 +203,32 @@ def build_report(ev: dict[str, Any], replay: dict[str, Any], manifest: dict[str,
                             or "Copy this report to the Director for diagnosis."),
         "code_version": (cfg or {}).get("code_version") or (replay.get("launch") or {}).get("code_version"),
         "temporal": (diagnostic or {}).get("temporal"),
+        "pack": pack_section(corpus.get("pack"), applied, total, status),
+    }
+
+
+def pack_section(p: dict[str, Any] | None, applied: int, total: int | None, status: str) -> dict[str, Any] | None:
+    """Evaluation-pack facts (R3): identities, windows, per-family/window coverage, capabilities and limits.
+    Full feed consumption and per-minute source coverage are reported as separate facts."""
+    if not p:
+        return None
+    cov = p["coverage"]
+    bars = [c for c in cov if c.get("expected_slots")]
+    return {
+        "pack_id": p["pack_id"], "status": p["status"], "acknowledged_limitations": p.get("acknowledged_limitations"),
+        "preset_id": p["preset"]["preset_id"], "preset_sha256": p["preset_sha256"], "method": p["method"],
+        "rules_version": p["rules_version"], "register_sha256": p["register_sha256"],
+        "capability_profile_sha256": p["capability_profile_sha256"], "capability_profile": p["capability_profile"],
+        "windows": p["windows"], "evidence_classes": p["evidence_classes"], "boundaries": p["boundaries"],
+        "clock_end": p["clock_end"], "tail_end": p["tail_end"],
+        "feed_consumed": ("entirely" if status == "completed" and total is not None and applied == total
+                          else f"{applied}/{total if total is not None else 'PENDING'}"),
+        "source_coverage": {"expected_bar_slots": sum(c["expected_slots"] for c in bars),
+                            "missing_or_rejected": sum(c["missing"] + c["rejected"] for c in bars)},
+        "coverage": cov, "capabilities": p["capabilities"], "limitations": p["limitations"],
+        "sources": p["sources"], "overlap": p["overlap"], "instrument": p["instrument"],
+        "input_readiness_preview": p["input_readiness_preview"], "storage": p["storage"],
+        "scoring_note": "warmup and tail are never scored; no adviser exists, so nothing is scored in this run",
     }
 
 
@@ -232,9 +258,13 @@ def render_markdown(r: dict[str, Any]) -> str:
         "",
         "## Data",
         f"- Preset: {r['preset']}",
-        f"- Corpus chunk: `{c['chunk_id']}` ({c.get('chunk_label')}), plan `{c['plan_id']}` v{c.get('plan_version')}",
-        f"- Dataset: `{c['dataset_id']}` · manifest sha256 `{str(c.get('manifest_sha256'))[:16]}…` · "
-        f"quality {str(r['quality_status']).upper()}",
+        (f"- Evaluation preset: `{c['chunk_id']}` ({c.get('chunk_label')}), presets `{c['plan_id']}` "
+         f"v{c.get('plan_version')}" if c.get("pack") else
+         f"- Corpus chunk: `{c['chunk_id']}` ({c.get('chunk_label')}), plan `{c['plan_id']}` v{c.get('plan_version')}"),
+        (f"- Pack: `{c['dataset_id']}` · manifest sha256 `{str(c.get('manifest_sha256'))[:16]}…` · "
+         f"source quality {str(r['quality_status']).upper()}" if c.get("pack") else
+         f"- Dataset: `{c['dataset_id']}` · manifest sha256 `{str(c.get('manifest_sha256'))[:16]}…` · "
+         f"quality {str(r['quality_status']).upper()}"),
         f"- Source: OKX public REST {r['source']['base_url']} · {r['source']['inst_id']} "
         f"(index {r['source']['index_id']})",
         f"- Requested: {cov['requested']['start']} → {cov['requested']['end']}",
@@ -302,6 +332,41 @@ def render_markdown(r: dict[str, Any]) -> str:
     if mc:
         lines.append("- Terminal manifest: " + ("not recorded" if not mc.get("claimed") else
                      f"{mc.get('artifact_dir')} · file present {mc.get('manifest_file_present')}"))
+    pk = r.get("pack")
+    if pk:
+        w = pk["windows"]
+        lines += ["", "## Evaluation pack (observation only; no adviser)",
+                  f"- Pack `{pk['pack_id']}` · status **{pk['status']}**"
+                  + (" · limitations acknowledged for this inspection run" if pk.get("acknowledged_limitations")
+                     else ""),
+                  f"- Preset `{pk['preset_id']}` ({pk['evidence_classes']['label']}) · method {pk['method']} / "
+                  f"{pk['rules_version']} (register `{pk['register_sha256'][:12]}`, input requirements only) · "
+                  f"profile `{pk['capability_profile_sha256'][:12]}`",
+                  f"- Warmup {w['warmup']['start']} → {w['warmup']['end']} (unscored) · evaluation "
+                  f"{w['evaluation']['start']} → {w['evaluation']['end']} · tail {w['tail']['start']} → "
+                  f"{w['tail']['end']} (unscored) · engine clock end {pk['clock_end']}",
+                  f"- Feed consumed: {pk['feed_consumed']} · source coverage (separate fact): "
+                  f"{pk['source_coverage']['missing_or_rejected']} missing/rejected of "
+                  f"{pk['source_coverage']['expected_bar_slots']} expected bar slots"]
+        for c in pk["coverage"]:
+            if c["expected_slots"] is not None:
+                lines.append(f"  - {c['family']} {c['window']}: {c['valid']}/{c['expected_slots']} usable · missing "
+                             f"{c['missing']} · rejected {c['rejected']}")
+            else:
+                lines.append(f"  - {c['family']} {c['window']}: {c['valid']} settlement row(s) observed "
+                             "(not a completeness proof)")
+        for x in pk["capabilities"]:
+            lines.append(f"  - capability {x['capability']}: {x['status']}")
+        lines += [f"- Limitation: {x}" for x in pk["limitations"]]
+        lines.append(f"- {pk['input_readiness_preview']['label']}: trade 15m "
+                     f"{pk['input_readiness_preview']['trade_15m_contiguous_complete']}/"
+                     f"{pk['input_readiness_preview']['trade_15m_required_by_mp001']}, 1h "
+                     f"{pk['input_readiness_preview']['trade_1h_contiguous_complete']}/"
+                     f"{pk['input_readiness_preview']['trade_1h_required_by_mp001']} contiguous complete bars before "
+                     "the evaluation start")
+        lines.append("- Sources: " + "; ".join(f"{s['dataset_id']} [{s['start']}, {s['end']})"
+                                               for s in pk["sources"]))
+        lines.append(f"- {pk['scoring_note']}")
     t = r.get("temporal")
     if t:
         c = t.get("committed") or {}

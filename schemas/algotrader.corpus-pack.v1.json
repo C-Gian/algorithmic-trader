@@ -1,0 +1,744 @@
+{
+  "$defs": {
+    "CapabilityFact": {
+      "additionalProperties": false,
+      "properties": {
+        "capability": {
+          "title": "Capability",
+          "type": "string"
+        },
+        "detail": {
+          "title": "Detail",
+          "type": "string"
+        },
+        "status": {
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "capability",
+        "status",
+        "detail"
+      ],
+      "title": "CapabilityFact",
+      "type": "object"
+    },
+    "FeedRef": {
+      "additionalProperties": false,
+      "properties": {
+        "availability_policy_id": {
+          "title": "Availability Policy Id",
+          "type": "string"
+        },
+        "cache_id": {
+          "title": "Cache Id",
+          "type": "string"
+        },
+        "cache_manifest_sha256": {
+          "title": "Cache Manifest Sha256",
+          "type": "string"
+        },
+        "content_identity": {
+          "title": "Content Identity",
+          "type": "string"
+        },
+        "event_count": {
+          "title": "Event Count",
+          "type": "integer"
+        },
+        "event_counts": {
+          "additionalProperties": {
+            "type": "integer"
+          },
+          "title": "Event Counts",
+          "type": "object"
+        },
+        "ordered_event_hash": {
+          "title": "Ordered Event Hash",
+          "type": "string"
+        },
+        "ordering_policy_id": {
+          "title": "Ordering Policy Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "cache_id",
+        "cache_manifest_sha256",
+        "content_identity",
+        "ordered_event_hash",
+        "ordering_policy_id",
+        "availability_policy_id",
+        "event_count",
+        "event_counts"
+      ],
+      "title": "FeedRef",
+      "type": "object"
+    },
+    "InstrumentPin": {
+      "additionalProperties": false,
+      "properties": {
+        "definition": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Definition",
+          "type": "object"
+        },
+        "definition_sha256": {
+          "title": "Definition Sha256",
+          "type": "string"
+        },
+        "note": {
+          "title": "Note",
+          "type": "string"
+        },
+        "policy": {
+          "title": "Policy",
+          "type": "string"
+        },
+        "snapshot_dataset_id": {
+          "title": "Snapshot Dataset Id",
+          "type": "string"
+        },
+        "snapshot_raw_sha256": {
+          "title": "Snapshot Raw Sha256",
+          "type": "string"
+        },
+        "snapshot_retrieved_at": {
+          "format": "date-time",
+          "title": "Snapshot Retrieved At",
+          "type": "string"
+        }
+      },
+      "required": [
+        "policy",
+        "definition",
+        "definition_sha256",
+        "snapshot_dataset_id",
+        "snapshot_retrieved_at",
+        "snapshot_raw_sha256",
+        "note"
+      ],
+      "title": "InstrumentPin",
+      "type": "object"
+    },
+    "OverlapSummary": {
+      "additionalProperties": false,
+      "properties": {
+        "conflicts": {
+          "title": "Conflicts",
+          "type": "integer"
+        },
+        "gap_replaced_by_valid": {
+          "title": "Gap Replaced By Valid",
+          "type": "integer"
+        },
+        "identical_collapsed": {
+          "title": "Identical Collapsed",
+          "type": "integer"
+        },
+        "overlapping_slots": {
+          "title": "Overlapping Slots",
+          "type": "integer"
+        },
+        "provenance_file": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Provenance File"
+        },
+        "provenance_sha256": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Provenance Sha256"
+        }
+      },
+      "required": [
+        "overlapping_slots",
+        "identical_collapsed",
+        "gap_replaced_by_valid",
+        "conflicts",
+        "provenance_file",
+        "provenance_sha256"
+      ],
+      "title": "OverlapSummary",
+      "type": "object"
+    },
+    "PackManifest": {
+      "additionalProperties": false,
+      "properties": {
+        "boundaries": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Boundaries",
+          "type": "object"
+        },
+        "capabilities": {
+          "items": {
+            "$ref": "#/$defs/CapabilityFact"
+          },
+          "title": "Capabilities",
+          "type": "array"
+        },
+        "capability_profile": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Capability Profile",
+          "type": "object"
+        },
+        "capability_profile_sha256": {
+          "title": "Capability Profile Sha256",
+          "type": "string"
+        },
+        "clock_end": {
+          "format": "date-time",
+          "title": "Clock End",
+          "type": "string"
+        },
+        "composition_policy": {
+          "title": "Composition Policy",
+          "type": "string"
+        },
+        "contract_status": {
+          "title": "Contract Status",
+          "type": "string"
+        },
+        "coverage": {
+          "items": {
+            "$ref": "#/$defs/WindowCounts"
+          },
+          "title": "Coverage",
+          "type": "array"
+        },
+        "evidence_classes": {
+          "additionalProperties": true,
+          "title": "Evidence Classes",
+          "type": "object"
+        },
+        "feed": {
+          "$ref": "#/$defs/FeedRef"
+        },
+        "input_readiness_preview": {
+          "additionalProperties": true,
+          "title": "Input Readiness Preview",
+          "type": "object"
+        },
+        "instrument": {
+          "$ref": "#/$defs/InstrumentPin"
+        },
+        "labels": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Labels",
+          "type": "array"
+        },
+        "limitations": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Limitations",
+          "type": "array"
+        },
+        "method": {
+          "title": "Method",
+          "type": "string"
+        },
+        "overlap": {
+          "$ref": "#/$defs/OverlapSummary"
+        },
+        "pack_id": {
+          "title": "Pack Id",
+          "type": "string"
+        },
+        "preset": {
+          "additionalProperties": true,
+          "title": "Preset",
+          "type": "object"
+        },
+        "preset_sha256": {
+          "title": "Preset Sha256",
+          "type": "string"
+        },
+        "presets_schema": {
+          "title": "Presets Schema",
+          "type": "string"
+        },
+        "presets_version": {
+          "title": "Presets Version",
+          "type": "integer"
+        },
+        "register_sha256": {
+          "title": "Register Sha256",
+          "type": "string"
+        },
+        "requested_end": {
+          "format": "date-time",
+          "title": "Requested End",
+          "type": "string"
+        },
+        "requested_start": {
+          "format": "date-time",
+          "title": "Requested Start",
+          "type": "string"
+        },
+        "rules_version": {
+          "title": "Rules Version",
+          "type": "string"
+        },
+        "schema_revision": {
+          "title": "Schema Revision",
+          "type": "integer"
+        },
+        "schema_version": {
+          "const": "algotrader.corpus-pack.v1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "slice_policy": {
+          "title": "Slice Policy",
+          "type": "string"
+        },
+        "sources": {
+          "items": {
+            "$ref": "#/$defs/SourceSlice"
+          },
+          "title": "Sources",
+          "type": "array"
+        },
+        "status": {
+          "enum": [
+            "READY",
+            "READY_WITH_LIMITATIONS"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "storage": {
+          "additionalProperties": true,
+          "title": "Storage",
+          "type": "object"
+        },
+        "tail_end": {
+          "format": "date-time",
+          "title": "Tail End",
+          "type": "string"
+        },
+        "windows": {
+          "additionalProperties": true,
+          "title": "Windows",
+          "type": "object"
+        }
+      },
+      "required": [
+        "schema_version",
+        "contract_status",
+        "schema_revision",
+        "pack_id",
+        "preset",
+        "preset_sha256",
+        "presets_schema",
+        "presets_version",
+        "method",
+        "rules_version",
+        "register_sha256",
+        "capability_profile",
+        "capability_profile_sha256",
+        "windows",
+        "boundaries",
+        "evidence_classes",
+        "requested_start",
+        "requested_end",
+        "tail_end",
+        "clock_end",
+        "instrument",
+        "sources",
+        "slice_policy",
+        "composition_policy",
+        "feed",
+        "coverage",
+        "overlap",
+        "capabilities",
+        "input_readiness_preview",
+        "status",
+        "limitations",
+        "storage",
+        "labels"
+      ],
+      "title": "PackManifest",
+      "type": "object"
+    },
+    "Preset": {
+      "additionalProperties": false,
+      "properties": {
+        "adviser_implemented": {
+          "const": false,
+          "title": "Adviser Implemented",
+          "type": "boolean"
+        },
+        "automatic_prepare": {
+          "const": false,
+          "title": "Automatic Prepare",
+          "type": "boolean"
+        },
+        "default": {
+          "title": "Default",
+          "type": "boolean"
+        },
+        "evaluation": {
+          "$ref": "#/$defs/Window"
+        },
+        "evidence_class": {
+          "title": "Evidence Class",
+          "type": "string"
+        },
+        "label": {
+          "title": "Label",
+          "type": "string"
+        },
+        "preset_id": {
+          "title": "Preset Id",
+          "type": "string"
+        },
+        "tail": {
+          "$ref": "#/$defs/Window"
+        },
+        "warmup": {
+          "$ref": "#/$defs/Window"
+        }
+      },
+      "required": [
+        "preset_id",
+        "label",
+        "default",
+        "warmup",
+        "evaluation",
+        "tail",
+        "evidence_class",
+        "adviser_implemented",
+        "automatic_prepare"
+      ],
+      "title": "Preset",
+      "type": "object"
+    },
+    "PresetsFile": {
+      "additionalProperties": false,
+      "properties": {
+        "acquisition_max_span_days": {
+          "title": "Acquisition Max Span Days",
+          "type": "integer"
+        },
+        "acquisition_split": {
+          "title": "Acquisition Split",
+          "type": "string"
+        },
+        "availability": {
+          "title": "Availability",
+          "type": "string"
+        },
+        "boundaries": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Boundaries",
+          "type": "object"
+        },
+        "capability_profile": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Capability Profile",
+          "type": "object"
+        },
+        "development": {
+          "$ref": "#/$defs/Window"
+        },
+        "fine_warmup_hours": {
+          "title": "Fine Warmup Hours",
+          "type": "integer"
+        },
+        "fixture": {
+          "default": false,
+          "title": "Fixture",
+          "type": "boolean"
+        },
+        "instrument": {
+          "title": "Instrument",
+          "type": "string"
+        },
+        "method": {
+          "title": "Method",
+          "type": "string"
+        },
+        "outcome_tail_minutes": {
+          "title": "Outcome Tail Minutes",
+          "type": "integer"
+        },
+        "presets": {
+          "items": {
+            "$ref": "#/$defs/Preset"
+          },
+          "title": "Presets",
+          "type": "array"
+        },
+        "protected_provisional": {
+          "$ref": "#/$defs/Protected"
+        },
+        "rules_version": {
+          "title": "Rules Version",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "algotrader.corpus-presets.v1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "source": {
+          "const": "okx",
+          "title": "Source",
+          "type": "string"
+        },
+        "target": {
+          "$ref": "#/$defs/Window"
+        },
+        "version": {
+          "title": "Version",
+          "type": "integer"
+        },
+        "window_convention": {
+          "const": "UTC_HALF_OPEN_WHOLE_MINUTES",
+          "title": "Window Convention",
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema_version",
+        "version",
+        "method",
+        "rules_version",
+        "source",
+        "instrument",
+        "availability",
+        "fine_warmup_hours",
+        "outcome_tail_minutes",
+        "window_convention",
+        "acquisition_max_span_days",
+        "acquisition_split",
+        "target",
+        "development",
+        "protected_provisional",
+        "capability_profile",
+        "boundaries",
+        "presets"
+      ],
+      "title": "PresetsFile",
+      "type": "object"
+    },
+    "Protected": {
+      "additionalProperties": false,
+      "properties": {
+        "contamination": {
+          "title": "Contamination",
+          "type": "string"
+        },
+        "end": {
+          "format": "date-time",
+          "title": "End",
+          "type": "string"
+        },
+        "start": {
+          "format": "date-time",
+          "title": "Start",
+          "type": "string"
+        }
+      },
+      "required": [
+        "start",
+        "end",
+        "contamination"
+      ],
+      "title": "Protected",
+      "type": "object"
+    },
+    "SourceSlice": {
+      "additionalProperties": false,
+      "properties": {
+        "cache_id": {
+          "title": "Cache Id",
+          "type": "string"
+        },
+        "cache_manifest_sha256": {
+          "title": "Cache Manifest Sha256",
+          "type": "string"
+        },
+        "dataset_id": {
+          "title": "Dataset Id",
+          "type": "string"
+        },
+        "end": {
+          "format": "date-time",
+          "title": "End",
+          "type": "string"
+        },
+        "request_end": {
+          "format": "date-time",
+          "title": "Request End",
+          "type": "string"
+        },
+        "request_start": {
+          "format": "date-time",
+          "title": "Request Start",
+          "type": "string"
+        },
+        "source_manifest_sha256": {
+          "title": "Source Manifest Sha256",
+          "type": "string"
+        },
+        "start": {
+          "format": "date-time",
+          "title": "Start",
+          "type": "string"
+        }
+      },
+      "required": [
+        "dataset_id",
+        "source_manifest_sha256",
+        "request_start",
+        "request_end",
+        "start",
+        "end",
+        "cache_id",
+        "cache_manifest_sha256"
+      ],
+      "title": "SourceSlice",
+      "type": "object"
+    },
+    "Window": {
+      "additionalProperties": false,
+      "properties": {
+        "end": {
+          "format": "date-time",
+          "title": "End",
+          "type": "string"
+        },
+        "start": {
+          "format": "date-time",
+          "title": "Start",
+          "type": "string"
+        }
+      },
+      "required": [
+        "start",
+        "end"
+      ],
+      "title": "Window",
+      "type": "object"
+    },
+    "WindowCounts": {
+      "additionalProperties": false,
+      "properties": {
+        "expected_slots": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Expected Slots"
+        },
+        "family": {
+          "title": "Family",
+          "type": "string"
+        },
+        "missing": {
+          "title": "Missing",
+          "type": "integer"
+        },
+        "reasons": {
+          "additionalProperties": {
+            "type": "integer"
+          },
+          "title": "Reasons",
+          "type": "object"
+        },
+        "rejected": {
+          "title": "Rejected",
+          "type": "integer"
+        },
+        "valid": {
+          "title": "Valid",
+          "type": "integer"
+        },
+        "window": {
+          "enum": [
+            "warmup",
+            "evaluation",
+            "tail"
+          ],
+          "title": "Window",
+          "type": "string"
+        }
+      },
+      "required": [
+        "family",
+        "window",
+        "expected_slots",
+        "valid",
+        "missing",
+        "rejected",
+        "reasons"
+      ],
+      "title": "WindowCounts",
+      "type": "object"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "changelog": [
+    {
+      "date": "2026-10-03",
+      "note": "Initial provisional baseline (WP-008-R3): preset/profile/register identities, windows and boundary policies, pinned instrument definition, ordered source slices, composed feed identities, per-family/window coverage, overlap accounting, capability facts and status.",
+      "revision": 1
+    }
+  ],
+  "composition_policy": {
+    "id": "corpus.compose.slot-dedup-no-merge.v1",
+    "text": "Overlap identity is (channel, market slot) - for funding the settlement time. Identical normalized semantic content collapses once (every contributor kept in provenance); conflicting OHLC/volume/status/settlement payloads fail composition (never first/last wins); an explicit MISSING placeholder plus valid evidence from a compatible contributor admits the valid evidence once and keeps the gap provenance; rejected evidence versus valid evidence, or two different quality reasons, fail. The primary SourceRef of a collapsed slot is chosen deterministically by (source manifest SHA-256, dataset id, artifact, row index). The composed events are ordered once by the accepted feed.v1 ordering over the full requested interval."
+  },
+  "metadata_policy": "PINNED_RETRIEVAL_SNAPSHOT_ASSUMED_FOR_WINDOW",
+  "presets_schema_version": "algotrader.corpus-presets.v1",
+  "public_contracts": {
+    "CapabilityFact": "#/$defs/CapabilityFact",
+    "FeedRef": "#/$defs/FeedRef",
+    "InstrumentPin": "#/$defs/InstrumentPin",
+    "OverlapSummary": "#/$defs/OverlapSummary",
+    "PackManifest": "#/$defs/PackManifest",
+    "Preset": "#/$defs/Preset",
+    "PresetsFile": "#/$defs/PresetsFile",
+    "Protected": "#/$defs/Protected",
+    "SourceSlice": "#/$defs/SourceSlice",
+    "Window": "#/$defs/Window",
+    "WindowCounts": "#/$defs/WindowCounts"
+  },
+  "revision": 1,
+  "schema_version": "algotrader.corpus-pack.v1",
+  "slice_policy": "corpus.slice.bound-first-then-longest-covering.v1",
+  "status": "PROVISIONAL",
+  "title": "Algorithmic Trader evaluation pack contracts (algotrader.corpus-pack.v1, PROVISIONAL)"
+}

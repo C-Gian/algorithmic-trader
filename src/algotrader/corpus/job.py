@@ -60,7 +60,10 @@ RECOVERY_BEHAVIOR = (
 
 # corpus progress phase names -> shared operational phases (algotrader.ops.v1)
 _SHARED = {"checking_local": "PREPARING_SOURCE", "verifying": "VERIFYING_SOURCE", "binding": "BINDING",
-           "completed": "BINDING", "cancelled": None, "failed": None}
+           "completed": "BINDING", "cancelled": None, "failed": None,
+           # evaluation-pack jobs (WP-008-R3)
+           "planning": "PREPARING_SOURCE", "source_caches": "VERIFYING_SOURCE", "composing": "BUILDING_FEED",
+           "publishing": "BINDING"}
 
 
 def ops_phase(name: str | None) -> str | None:
@@ -142,9 +145,10 @@ class _Heartbeat(threading.Thread):
     """Extends the lease, publishes progress and reads cancellation independently of network waits."""
 
     def __init__(self, worker: CorpusWorker, job_id: str, generation: int, attempt: int,
-                 history: list[dict[str, Any]]) -> None:
+                 history: list[dict[str, Any]], table: str = "corpus_jobs") -> None:
         super().__init__(daemon=True, name=f"heartbeat-{job_id}")
         self.worker, self.job_id = worker, job_id
+        self.table = table  # corpus_jobs (single month chunk) or corpus_pack_jobs (evaluation pack)
         self.generation, self.attempt = generation, attempt
         self.progress: dict[str, Any] = {}
         self.cancel = False
@@ -185,7 +189,7 @@ class _Heartbeat(threading.Thread):
             progress, seq, history = dict(self.progress), self.seq, list(self.history)
         with db.connect(self.worker.url, autocommit=True, connect_timeout=5) as c:
             row = c.execute(
-                """UPDATE corpus_jobs SET heartbeat_at = now(), progress = %s,
+                f"""UPDATE {self.table} SET heartbeat_at = now(), progress = %s,
                        lease_expires_at = now() + make_interval(secs => %s),
                        last_progress_at = CASE WHEN progress_seq < %s THEN now() ELSE last_progress_at END,
                        progress_seq = greatest(progress_seq, %s), phase_history = %s
@@ -217,7 +221,7 @@ class CorpusWorker:
     def __init__(self, url: str | None = None, data_root: Path | None = None, worker_id: str | None = None,
                  lease_seconds: float = 60.0, poll_interval: float = 1.0, heartbeat_interval: float = 2.0,
                  sleep: Callable[[float], None] = time.sleep, client_factory: ClientFactory | None = None,
-                 plan: CorpusPlan | None = None) -> None:
+                 plan: CorpusPlan | None = None, pack_fault: Callable[[str], None] | None = None) -> None:
         self.url = url or db.database_url()
         self.data_root = data_root or md.default_data_root()
         self.worker_id = worker_id or f"{WORKER_PREFIX}{socket.gethostname()}-{os.getpid()}-{uuid.uuid4().hex[:6]}"
@@ -230,6 +234,7 @@ class CorpusWorker:
         self.client_factory = client_factory or default_client_factory
         self._plan = plan
         self.generation = 0
+        self.pack_fault = pack_fault  # test-only crash hook for evaluation-pack jobs (never exposed)
 
     @property
     def plan(self) -> CorpusPlan:
@@ -341,7 +346,9 @@ class CorpusWorker:
             self.beat(conn, None)
             claimed = self.claim(conn)
             if claimed is None:
-                return False
+                from .pack_job import PackJobRunner
+
+                return PackJobRunner(self).run_once(conn)
             row, fail_reason = claimed
             if row["cancel_requested"]:
                 self._finish(conn, row["job_id"], "cancelled", "cancelled by the Owner before completion; no chunk bound")

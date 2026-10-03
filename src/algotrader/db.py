@@ -443,8 +443,72 @@ UPDATE observation_replays
  WHERE lifecycle_version = 3 AND status IN ('queued', 'running', 'paused') AND suspended_at IS NULL;
 """
 
+# WP-008-R3: evaluation packs (additive). A durable parent pack job (owned by the corpus worker) coordinates bounded
+# acquisitions and the composition of an immutable pack; ``corpus_packs`` is the trusted publication receipt pinning
+# the pack manifest and its feed cache. Evaluations may reference a pack; observation replays accept source kind
+# 'pack'. Existing chunk bindings, month evaluations and replays are unchanged.
+SCHEMA_V11 = """
+CREATE TABLE IF NOT EXISTS corpus_pack_jobs (
+    job_id             text PRIMARY KEY,
+    preset_id          text NOT NULL,
+    preset             jsonb NOT NULL,
+    preset_sha256      text NOT NULL,
+    created_at         timestamptz NOT NULL DEFAULT now(),
+    status             text NOT NULL CHECK (status IN ('queued','running','completed','cancelled','failed')),
+    cancel_requested   boolean NOT NULL DEFAULT false,
+    base_url           text NOT NULL,
+    lease_owner        text,
+    lease_expires_at   timestamptz,
+    heartbeat_at       timestamptz,
+    lease_generation   bigint NOT NULL DEFAULT 0,
+    attempt            integer NOT NULL DEFAULT 0,
+    max_attempts       integer NOT NULL DEFAULT 3,
+    interruptions      integer NOT NULL DEFAULT 0,
+    attempt_started_at timestamptz,
+    recovery_log       jsonb NOT NULL DEFAULT '[]'::jsonb,
+    diagnostic_log     jsonb NOT NULL DEFAULT '[]'::jsonb,
+    progress           jsonb NOT NULL DEFAULT '{}'::jsonb,
+    progress_seq       bigint NOT NULL DEFAULT 0,
+    last_progress_at   timestamptz,
+    phase_history      jsonb NOT NULL DEFAULT '[]'::jsonb,
+    plan               jsonb,
+    children           jsonb NOT NULL DEFAULT '[]'::jsonb,
+    started_at         timestamptz,
+    finished_at        timestamptz,
+    outcome            text,
+    pack_id            text,
+    result             jsonb,
+    error              text
+);
+CREATE INDEX IF NOT EXISTS corpus_pack_jobs_created_idx ON corpus_pack_jobs (created_at);
+CREATE UNIQUE INDEX IF NOT EXISTS corpus_pack_jobs_one_active
+    ON corpus_pack_jobs (preset_id) WHERE status IN ('queued','running');
+
+CREATE TABLE IF NOT EXISTS corpus_packs (
+    pack_id                text PRIMARY KEY,
+    manifest_sha256        text NOT NULL,
+    preset_id              text NOT NULL,
+    preset_sha256          text NOT NULL,
+    cache_id               text NOT NULL,
+    cache_manifest_sha256  text NOT NULL,
+    content_identity       text NOT NULL,
+    event_count            integer NOT NULL,
+    status                 text NOT NULL,
+    created_by_job         text,
+    generation             bigint,
+    created_at             timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS corpus_packs_preset_idx ON corpus_packs (preset_sha256, created_at);
+
+ALTER TABLE evaluations ADD COLUMN IF NOT EXISTS pack_id text;
+ALTER TABLE evaluations ADD COLUMN IF NOT EXISTS preset_id text;
+ALTER TABLE observation_replays DROP CONSTRAINT IF EXISTS observation_replays_source_kind_check;
+ALTER TABLE observation_replays ADD CONSTRAINT observation_replays_source_kind_check
+    CHECK (source_kind IN ('dataset', 'recording', 'pack'));
+"""
+
 MIGRATIONS: dict[int, str] = {1: SCHEMA_V1, 2: SCHEMA_V2, 3: SCHEMA_V3, 4: SCHEMA_V4, 5: SCHEMA_V5, 6: SCHEMA_V6,
-                              7: SCHEMA_V7, 8: SCHEMA_V8, 9: SCHEMA_V9, 10: SCHEMA_V10}
+                              7: SCHEMA_V7, 8: SCHEMA_V8, 9: SCHEMA_V9, 10: SCHEMA_V10, 11: SCHEMA_V11}
 SCHEMA_VERSION = max(MIGRATIONS)
 
 

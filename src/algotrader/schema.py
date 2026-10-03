@@ -176,12 +176,39 @@ def temporal_baseline() -> dict[str, Any]:
     }
 
 
+def pack_baseline() -> dict[str, Any]:
+    """PROVISIONAL baseline for evaluation packs (``algotrader.corpus-pack.v1``) and the presets file format."""
+    from .corpus import pack_contracts as pc
+    from .corpus import presets as pr
+
+    models = sorted([*pc.PUBLIC_CONTRACTS, pr.PresetsFile, pr.Preset, pr.Window, pr.Protected],
+                    key=lambda m: m.__name__)
+    refs, schema = models_json_schema(
+        [(m, "serialization") for m in models], ref_template="#/$defs/{model}"
+    )
+    return {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "title": f"Algorithmic Trader evaluation pack contracts ({pc.PACK_SCHEMA_VERSION}, {pc.PACK_CONTRACT_STATUS})",
+        "schema_version": pc.PACK_SCHEMA_VERSION,
+        "status": pc.PACK_CONTRACT_STATUS,
+        "revision": pc.PACK_SCHEMA_REVISION,
+        "changelog": [{"revision": r, "date": d, "note": n} for r, d, n in pc.PACK_CHANGELOG],
+        "presets_schema_version": pr.PRESETS_SCHEMA_VERSION,
+        "composition_policy": {"id": pc.COMPOSITION_POLICY, "text": pc.COMPOSITION_POLICY_TEXT},
+        "slice_policy": pc.SLICE_POLICY,
+        "metadata_policy": pc.METADATA_POLICY,
+        "public_contracts": {m.__name__: refs[(m, "serialization")]["$ref"] for m in models},
+        "$defs": schema["$defs"],
+    }
+
+
 def baselines() -> dict[str, Any]:
     """Every current contract baseline, keyed by schema version."""
     from .feed.contracts import FEED_SCHEMA_VERSION
     from .marketdata.contracts import MARKETDATA_SCHEMA_VERSION
     from .observe.contracts import OBSERVE_SCHEMA_VERSION
     from .recorder.contracts import RECORDER_SCHEMA_VERSION
+    from .corpus.pack_contracts import PACK_SCHEMA_VERSION
     from .temporal.contracts import TEMPORAL_SCHEMA_VERSION
 
     return {
@@ -191,6 +218,7 @@ def baselines() -> dict[str, Any]:
         RECORDER_SCHEMA_VERSION: recorder_baseline,
         OBSERVE_SCHEMA_VERSION: observe_baseline,
         TEMPORAL_SCHEMA_VERSION: temporal_baseline,
+        PACK_SCHEMA_VERSION: pack_baseline,
     }
 
 

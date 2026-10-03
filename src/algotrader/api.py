@@ -284,7 +284,7 @@ def create_app(
                           AND suspended_at IS NULL) AS observations,
                        (SELECT count(*) FROM observation_replays WHERE suspended_at IS NOT NULL
                           AND status NOT IN ('completed','cancelled','failed')) AS suspended_observations,
-                       (SELECT count(*) FROM corpus_jobs WHERE status IN ('queued','running')) AS corpus_jobs
+                       ((SELECT count(*) FROM corpus_jobs WHERE status IN ('queued','running')) + (SELECT count(*) FROM corpus_pack_jobs WHERE status IN ('queued','running'))) AS corpus_jobs
                 """
             ).fetchone()
         alive = [w for w in workers if w["age"] < WORKER_ALIVE_SECONDS]

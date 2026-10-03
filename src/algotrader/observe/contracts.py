@@ -31,7 +31,7 @@ from ..feed.contracts import AvailabilityPolicy, ChannelChange, ChannelCoverage,
 
 OBSERVE_SCHEMA_VERSION = "algotrader.observe.v1"
 OBSERVE_CONTRACT_STATUS = "PROVISIONAL"
-OBSERVE_SCHEMA_REVISION = 3
+OBSERVE_SCHEMA_REVISION = 4
 OBSERVE_CHANGELOG: tuple[tuple[int, str, str], ...] = (
     (1, "2026-09-30", "Initial provisional baseline (WP-007): observation-replay config, source verification, "
                       "feed identity, committed delivery records, manifest and validation."),
@@ -48,6 +48,10 @@ OBSERVE_CHANGELOG: tuple[tuple[int, str, str], ...] = (
                       "end, commitments; details in the temporal.json artifact). Absent for revision-1/2 manifests "
                       "and for observe.stream.v1 runs, which remain readable unchanged. Factual replay semantics, "
                       "order, digests and the factual state format are unchanged."),
+    (4, "2026-10-03", "WP-008-R3 evaluation packs (additive): SourceKind adds 'pack' - an immutable receipt-pinned "
+                      "algotrader.corpus-pack.v1 composition of verified marketdata.v1 slices replayed as ONE "
+                      "canonical feed. Dataset and recording sources, all earlier manifests and readers are "
+                      "unchanged."),
 )
 VALIDATOR_ID = "observe.terminal-revalidation"
 VALIDATOR_VERSION = "1"
@@ -69,6 +73,7 @@ class Record(BaseModel):
 class SourceKind(StrEnum):
     DATASET = "dataset"  # verified historical marketdata.v1 dataset (MODELED availability)
     RECORDING = "recording"  # finalized recorder.v1 session (RECORDED first-completion receipt)
+    PACK = "pack"  # receipt-pinned algotrader.corpus-pack.v1 composition of verified datasets (MODELED)
 
 
 class ReplayStatus(StrEnum):

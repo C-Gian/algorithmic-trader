@@ -43,7 +43,13 @@ from .. import db, ops
 from ..feed.ordering import FeedError
 from ..ops import OperationCancelled
 from .artifacts import StagedArtifacts, stage_bounded_artifacts, stage_stream_artifacts
-from .contracts import ObservationLaunch, ObservationReplayConfig, ReplayStatus, ValidationOutcome
+from .contracts import (
+    ObservationLaunch,
+    ObservationReplayConfig,
+    ReplayStatus,
+    SourceKind,
+    ValidationOutcome,
+)
 from .core import snapshot_view
 from .feedcache import (
     CACHE_FORMAT,
@@ -421,6 +427,8 @@ class ReplayJob:
             "source_manifest_sha256": prepared.source_manifest_sha256,
             "fingerprint": fingerprint(cache.cache_id, config.freshness_policy, ENGINE_FORMAT),
             "temporal": temporal_config(cache.feed_manifest),
+            "pack": ({"pack_id": source_id, "pack_manifest_sha256": prepared.source_manifest_sha256}
+                     if kind == SourceKind.PACK else None),
             "checkpoint_policy": {"active_seconds": self.spec.checkpoint_seconds,
                                   "events": self.spec.checkpoint_events, "control_poll_seconds": self.spec.control_poll,
                                   "retained_restore_points": 2},
@@ -853,10 +861,11 @@ class ReplayJob:
             receipt = self.conn.execute("SELECT * FROM observation_feed_caches WHERE cache_id = %s",
                                         (engine["cache_id"],)).fetchone()
             temporal_doc: dict[str, Any] | None = {} if engine.get("temporal") else None
+            pack_facts = self._pack_facts(engine)
             validation, snap = reconcile(status=status, cache=cache, ranges=ranges, cursor=cursor, terminal=terminal,
                                          committed_snapshot_digest=ck["snapshot_digest"], engine=engine,
                                          freshness=cfg.freshness_policy, hook=vhook, receipt=receipt,
-                                         temporal_out=temporal_doc)
+                                         temporal_out=temporal_doc, pack=pack_facts)
             if validation.outcome == ValidationOutcome.INCOMPLETE:
                 status = ReplayStatus.CANCELLED
                 error = ("cancelled by user during VALIDATING: the replay cursor was complete, but reconciliation did "
@@ -896,6 +905,24 @@ class ReplayJob:
                            None, {"state": ops.Assurance.INCOMPLETE.value,
                                   "detail": "terminal publication failed; no manifest was recorded"},
                            expected_cursor=cursor)
+
+    def _pack_facts(self, engine: dict[str, Any]) -> dict[str, Any] | None:
+        """Pack pins re-read at finalization (manifest file, publication receipt) for reconciliation."""
+        pin = engine.get("pack")
+        if not pin:
+            return None
+        import hashlib
+
+        from ..corpus.pack import packs_root
+
+        path = packs_root(self.data_root) / pin["pack_id"] / "manifest.json"
+        try:
+            raw = path.read_bytes()
+            file_sha, doc = hashlib.sha256(raw).hexdigest(), json.loads(raw)
+        except (OSError, ValueError):
+            file_sha, doc = None, None
+        receipt = self.conn.execute("SELECT * FROM corpus_packs WHERE pack_id = %s", (pin["pack_id"],)).fetchone()
+        return {"pin": pin, "file_sha256": file_sha, "manifest": doc, "receipt": receipt}
 
     def _progress_target(self, status: ReplayStatus, cursor: int, total: int | None) -> None:
         self._progress = {**self._progress, "finalizing_as": status.value, "cursor": cursor, "total_events": total}

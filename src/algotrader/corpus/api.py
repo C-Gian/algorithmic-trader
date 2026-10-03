@@ -60,7 +60,7 @@ def _eta(p: dict[str, Any], state_: str) -> tuple[float | None, str]:
     return (total - done) / rate, f"measured {rate:.2f} windows/s over {secs:.0f}s of this attempt"
 
 
-def operation(row: dict[str, Any], now: datetime) -> dict[str, Any]:
+def operation(row: dict[str, Any], now: datetime, phases: tuple[str, ...] = ops.CORPUS_PHASES) -> dict[str, Any]:
     """Shared status / phase / health / assurance view (algotrader.ops.v1) of a corpus job."""
     status = row["status"]
     terminal = status in cj.TERMINAL
@@ -77,8 +77,12 @@ def operation(row: dict[str, Any], now: datetime) -> dict[str, Any]:
         generation=row.get("lease_generation") or 0, now=now)
     started = ops.parse_iso(p.get("phase_started_at"))
     tl = ops.timeline(list(row.get("phase_history") or []), None if terminal else phase, started,
-                      status == "running" and not lease_expired, now, ops.CORPUS_PHASES)
-    if status == "completed":
+                      status == "running" and not lease_expired, now, phases)
+    if status == "completed" and phases != ops.CORPUS_PHASES:  # evaluation pack
+        assurance = {"state": "passed", "validator": "marketdata.v1 verify + pack publication receipt", "scope":
+                     "every source package verified once through the receipt-pinned cache boundary; the pack "
+                     "manifest and its composed feed cache are pinned by publication receipts"}
+    elif status == "completed":
         assurance = {"state": "passed", "validator": "marketdata.v1 verify", "scope":
                      "every file hash/size, row counts, raw pages and dataset identity verified before binding"}
     elif terminal:
@@ -305,4 +309,7 @@ def build_router(conn: Callable, data_root: Path) -> APIRouter:
                 raise HTTPException(409, str(exc)) from None
             return job_view(get_job(c, job_id))
 
+    from .pack_api import add_routes
+
+    add_routes(r, conn, data_root)  # evaluation packs (WP-008-R3)
     return r

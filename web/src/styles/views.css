@@ -519,3 +519,8 @@ details.more > .card { border: none; box-shadow: none; background: transparent; 
 /* R1C: current assurance + Deep validation */
 .assurance-strip { margin: 8px 0; }
 .deep-row { display: grid; gap: 10px; }
+
+/* WP-008-R3 evaluation pack panel (same tokens as the corpus ledger/job boxes) */
+.pack-panel { display: flex; flex-direction: column; gap: var(--s-3); padding: var(--s-4); border-radius: var(--radius); border: 1px solid var(--line); background: var(--surface-1, var(--surface-2)); min-width: 0; }
+.pack-panel + .pack-panel, .more-body .pack-panel { margin-top: var(--s-3); }
+.pack-panel .list li { overflow-wrap: anywhere; }

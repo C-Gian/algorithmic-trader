@@ -55,6 +55,13 @@ def locate_source(root: Path, kind: SourceKind | str, source_id: str) -> Path:
     Full verification and feed construction happen later, inside the durable worker-owned job.
     """
     kind = SourceKind(kind)
+    if kind == SourceKind.PACK:
+        from ..corpus.pack import packs_root
+
+        p = packs_root(root) / source_id
+        if "/" in source_id or "\\" in source_id or not (p / "manifest.json").is_file():
+            raise SourceRejected(f"pack {source_id} not found in the local data root")
+        return p
     path = md.dataset_path(root, source_id) if kind == SourceKind.DATASET else rj.session_path(root, source_id)
     if path is None:
         raise SourceRejected(f"{kind.value} {source_id} not found in the local data root")
@@ -261,6 +268,12 @@ def prepare_stream_source(root: Path, kind: SourceKind | str, source_id: str, *,
     from ..recorder.feed_bridge import FUNDING_NOTE, RECORDED_POLICY, RecordedStream
 
     kind = SourceKind(kind)
+    if kind == SourceKind.PACK:
+        from ..corpus.pack import prepare_pack_source
+
+        return prepare_pack_source(root, source_id, receipts=receipts, verify_hook=verify_hook,
+                                   build_hook=build_hook, on_phase=on_phase, counters=counters,
+                                   expected_manifest_sha256=expected_manifest_sha256, fault=fault)
     counters = counters if counters is not None else {}
     on_phase = on_phase or (lambda _p: None)
     verify_hook = verify_hook or _no_hook

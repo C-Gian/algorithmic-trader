@@ -89,6 +89,9 @@ def test_owner_prepares_corpus_runs_observation_evaluation_and_copies_report(wor
     expect(page.get_by_test_id("history-banner")).to_contain_text("OBSERVATION ONLY")
     expect(page.get_by_test_id("capability-corpus")).to_contain_text("up", timeout=10_000)
 
+    # the single-month ledger is the earlier workflow, kept behind a labelled disclosure (R3: packs are primary)
+    expect(page.get_by_test_id("pack-card")).to_be_visible()
+    page.get_by_test_id("corpus-card-legacy").locator("summary").first.click()
     # 1-2. corpus: initial chunk unprepared, later chunk planned/locked
     expect(page.get_by_test_id("ledger-test-chunk")).to_have_attribute("data-status", "not_prepared")
     expect(page.get_by_test_id("ledger-test-locked")).to_have_attribute("data-status", "planned")
