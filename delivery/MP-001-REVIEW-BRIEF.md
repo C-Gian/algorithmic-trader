@@ -1,5 +1,6 @@
-# MP-001 — Bounded methodological challenge
+# MP-001 — Historical bounded methodological challenge
 Date: 2026-10-03
+Status: **COMPLETED / HISTORICAL**. Review received in [Astra report](MP-001-ASTRA-REVIEW.md); current authority is [Director disposition](MP-001-DIRECTOR-DISPOSITION.md) and method v0.2. The instructions below record the original review mandate; they do not assign a new review.
 Recipient: Astra, advisory review. Owner relays the prompt; no executor implementation is active.
 
 Read current FOUNDATION.md, STATE.md, task.md, delivery/MP-001-INTEGRATED-METHOD-PROPOSAL.md and delivery/MP-001-PARAMETERS.json. R2 is accepted at ddc1831; the proposal translates the whole adviser path and is not an accepted trading model.
