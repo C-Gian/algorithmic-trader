@@ -1,0 +1,85 @@
+{
+  "schema_version": "algotrader.corpus-presets.v1",
+  "version": 1,
+  "method": "btc.context-action.v0.2",
+  "rules_version": "mp001.rules.v0.2",
+  "source": "okx",
+  "instrument": "BTC-USDT-SWAP",
+  "availability": "MODELED_ZERO_EXTRA_DELAY",
+  "fine_warmup_hours": 96,
+  "outcome_tail_minutes": 365,
+  "window_convention": "UTC_HALF_OPEN_WHOLE_MINUTES",
+  "acquisition_max_span_days": 31,
+  "acquisition_split": "UTC_MONTH_AND_MAX_SPAN",
+  "target": {
+    "start": "2025-09-01T00:00:00Z",
+    "end": "2026-09-01T00:00:00Z"
+  },
+  "development": {
+    "start": "2025-09-01T00:00:00Z",
+    "end": "2026-01-01T00:00:00Z"
+  },
+  "protected_provisional": {
+    "start": "2026-01-01T00:00:00Z",
+    "end": "2026-09-01T00:00:00Z",
+    "contamination": "UNKNOWN_REQUIRES_DIRECTOR_INVENTORY_BEFORE_ECONOMIC_USE"
+  },
+  "capability_profile": {
+    "execution": "HISTORICAL_BASE",
+    "calendar": "NONE_UNKNOWN",
+    "incident_tape": "NOT_COVERED",
+    "dislocation": "ENABLE_WHERE_SUPPORTED",
+    "funding_outcomes": "AUTHORITATIVE_IF_COVERED_ELSE_PRICE_NET_ONLY",
+    "metadata": "PINNED_RETRIEVAL_SNAPSHOT_ASSUMED_FOR_WINDOW"
+  },
+  "boundaries": {
+    "warmup": "UNSCORED_FACTUAL_DERIVED_INITIALIZATION",
+    "evaluation_start": "RESET_CANDIDATES_CALLS_KEEP_FACTUAL_DERIVED_CONTEXT_IN_WP009",
+    "internal_month": "CONTINUE_NO_FINISH_NO_RESET",
+    "evaluation_end": "NO_NEW_CALLS_MONITOR_EXISTING_IN_WP009",
+    "tail_end": "CENSOR_UNRESOLVED_IN_WP009",
+    "clock_end": "FULL_COVERAGE_END_PLUS_DECLARED_CLOSURE_ALLOWANCE"
+  },
+  "presets": [
+    {
+      "preset_id": "btc-september-development-v1",
+      "label": "September 2025 — development",
+      "default": true,
+      "warmup": {
+        "start": "2025-08-28T00:00:00Z",
+        "end": "2025-09-01T00:00:00Z"
+      },
+      "evaluation": {
+        "start": "2025-09-01T00:00:00Z",
+        "end": "2025-10-01T00:00:00Z"
+      },
+      "tail": {
+        "start": "2025-10-01T00:00:00Z",
+        "end": "2025-10-01T06:05:00Z"
+      },
+      "evidence_class": "DEVELOPMENT",
+      "adviser_implemented": false,
+      "automatic_prepare": false
+    },
+    {
+      "preset_id": "btc-september-october-continuity-v1",
+      "label": "September–October 2025 — continuity/development",
+      "default": false,
+      "warmup": {
+        "start": "2025-08-28T00:00:00Z",
+        "end": "2025-09-01T00:00:00Z"
+      },
+      "evaluation": {
+        "start": "2025-09-01T00:00:00Z",
+        "end": "2025-11-01T00:00:00Z"
+      },
+      "tail": {
+        "start": "2025-11-01T00:00:00Z",
+        "end": "2025-11-01T06:05:00Z"
+      },
+      "evidence_class": "DEVELOPMENT",
+      "adviser_implemented": false,
+      "automatic_prepare": false
+    }
+  ]
+}

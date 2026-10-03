@@ -1,10 +1,10 @@
-# Current Task — WP-008-R3 bounded context/preset specification
-Status: **ACTIVE — DIRECTOR SPECIFICATION ONLY**
+# Current Task — WP-008-R3 context packs and evaluation presets
+Status: **ACTIVE — EXECUTOR IMPLEMENTATION**
 Date: 2026-10-03
-Prerequisites: R1A/B/C, WP-010 and R2 accepted; Owner September incident closed; MP-001 v0.2 method design closed.
+Prerequisites: R2 accepted at ddc1831; MP-001 v0.2 method design closed at e69e0ac; September incident closed.
 
-Authority: [Foundation](FOUNDATION.md), [MP-001 rules](delivery/MP-001-INTEGRATED-METHOD-PROPOSAL.md), [register](delivery/MP-001-PARAMETERS.json), [disposition](delivery/MP-001-DIRECTOR-DISPOSITION.md). Method closure is not economic validation.
+Implement [R3 specification](delivery/WP-008-R3-CONTEXT-PRESETS-SPEC.md) and [registered presets](delivery/WP-008-R3-PRESETS.json). Enable durable Owner-triggered preparation of reusable source slices, immutable receipt-pinned packs and one continuous observation replay with warmup/evaluation/tail windows. Reuse September, acquire only missing ranges on an explicit Owner app action, preserve source/ordering/fencing/restore/Deep guarantees, and show optional capability limitations honestly. No adviser or economic outcomes.
 
-Director deliverable: a bounded R3 specification and concrete executor acceptance criteria for reusable context packs and evaluation presets. Inventory each input against its named consumer, core/optional role, actual contiguous dependency, causal availability/provenance, obtainable same-instrument coverage and storage cost. Reuse existing September evidence. Define 96h fine warmup envelope, unscored initialization, development/protected windows, 6h5m outcome tail, source overlap checks and continuous monthly state without independent per-month adviser resets. Expose jobs and coverage through the Owner app. Unknown calendar vintages or optional context remain explicit limitations, not invented causal evidence or universal blockers. Do not require a full year, H24, paid feeds or long history without an actual consumer.
+Required evidence: specification §8 A–H, including overlap/tie/gap composition oracle, boundary continuation/restore/terminal Deep, source/receipt/publication fault cases, local reuse/network spy, window/scope tests and browser flow. Capability probes are optional and strictly limited by §2; substantive acquisition/replay stays Owner-only. Baseline schemas/version changes follow §5; no semantic.v2, frozen schema changes or method tuning.
 
-No executor work is assigned yet. No product code, schemas, substantial acquisition, market outcomes, profitability evaluation or parameter search. R3 executor implementation and WP-009 require separately prepared tasks. Preserve source dossiers, frozen cases, schemas and Owner data. Before activating implementation, make the complete specification reviewable and resolve source gaps with only bounded capability checks.
+Read AGENTS.md for standing execution rules. Update README/STATE with actual evidence and limitations. Completion: READY FOR DIRECTOR REVIEW — R3 ONLY. Do not activate WP-009 or ask for an Owner economic run.

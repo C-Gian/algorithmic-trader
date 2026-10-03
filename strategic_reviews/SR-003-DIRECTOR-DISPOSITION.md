@@ -68,6 +68,6 @@ Private Project Instructions still describe a discretionary “when practical”
 
 This Git update does not modify any private chat instructions.
 
-## Current pointer — MP-001 design closed; R3 Director specification, 2026-10-03
+## Current pointer — MP-001 design closed; R3 implementation, 2026-10-03
 
-WP-008-R2 accepted at `ddc1831`; MP-001 v0.2 method design closed after the [Astra review](../delivery/MP-001-ASTRA-REVIEW.md) and [Director disposition](../delivery/MP-001-DIRECTOR-DISPOSITION.md). task.md activates Director R3 bounded context/preset specification only. R3 executor acquisition/implementation and WP-009 remain inactive. September and WP-010 remain closed; no new Owner run or general infrastructure pass is assigned. Economic performance and annual application gates remain unvalidated.
+WP-008-R2 accepted at `ddc1831`; MP-001 v0.2 method design closed after the [Astra review](../delivery/MP-001-ASTRA-REVIEW.md) and [Director disposition](../delivery/MP-001-DIRECTOR-DISPOSITION.md). task.md activates bounded R3 implementation under the [context/preset specification](../delivery/WP-008-R3-CONTEXT-PRESETS-SPEC.md). Substantial acquisition stays Owner-triggered through the app; WP-009 remains inactive. September and WP-010 remain closed; no new Owner run or general infrastructure pass is assigned. Economic performance and annual application gates remain unvalidated.

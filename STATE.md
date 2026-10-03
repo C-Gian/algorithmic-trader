@@ -1,8 +1,8 @@
 # Project State
 
-Updated: 2026-10-03 — September Market replay check closed; WP-010 accepted; WP-008-R2 accepted; MP-001 v0.2 method design closed; R3 Director specification next
+Updated: 2026-10-03 — September Market replay check closed; WP-010 accepted; WP-008-R2 accepted; MP-001 v0.2 method design closed; R3 context/preset implementation active
 
-**Current task: [task.md](task.md) — WP-008-R3 bounded context/preset specification (Director only; no executor implementation).** Product authority: [FOUNDATION.md](FOUNDATION.md) v3.1. Executor rules: [AGENTS.md](AGENTS.md). How to run the app: [README.md](README.md). Chronology and earlier package evidence: [delivery/DELIVERY-HISTORY.md](delivery/DELIVERY-HISTORY.md).
+**Current task: [task.md](task.md) — WP-008-R3 bounded context/preset implementation.** Product authority: [FOUNDATION.md](FOUNDATION.md) v3.1. Executor rules: [AGENTS.md](AGENTS.md). How to run the app: [README.md](README.md). Chronology and earlier package evidence: [delivery/DELIVERY-HISTORY.md](delivery/DELIVERY-HISTORY.md).
 
 Goal (Foundation v3.1): an integrated BTC adviser with persistent actionable LONG/SHORT calls, entry area, targets, stop/exit guidance and holding horizon. Capital, size, leverage and orders stay human. Historical ACCEPTED/READY/HOLD labels in older documents do not authorize work; only task.md does.
 
@@ -51,8 +51,8 @@ These remain open after the September closure; they are not contradicted by it:
 ## 4. Next step
 
 1. **Now:** MP-001 v0.2 is closed as method design after the [Astra review](delivery/MP-001-ASTRA-REVIEW.md) and [Director disposition](delivery/MP-001-DIRECTOR-DISPOSITION.md). The [rules](delivery/MP-001-INTEGRATED-METHOD-PROPOSAL.md) and [parameter register](delivery/MP-001-PARAMETERS.json) are current; this is not economic validation or implemented adviser capability.
-2. **Next Director action:** WP-008-R3 bounded context/preset specification, tied to those actual consumers: reusable warmup/evaluation/tail packs and continuous monthly state. No executor implementation, acquisition or Owner economic run is active.
-3. Remaining sequence (separate task activations required): R3 specification → R3 implementation → WP-009 integrated adviser v0 → Owner Backtest A. No new general infrastructure pass or isolated signal prototype. [Delivery plan](delivery/FOUNDATION-V3-INTEGRATED-PLAN.md) §9–10.
+2. **Active executor assignment:** implement [R3 specification](delivery/WP-008-R3-CONTEXT-PRESETS-SPEC.md) and [registered presets](delivery/WP-008-R3-PRESETS.json): reusable warmup/evaluation/tail packs and continuous monthly observation replay. Not implemented yet. Substantial preparation stays Owner-triggered in the app; no agent economic run.
+3. Remaining sequence (separate task activations required): R3 implementation/review → WP-009 integrated adviser v0 → Owner Backtest A. No new general infrastructure pass or isolated signal prototype. [Delivery plan](delivery/FOUNDATION-V3-INTEGRATED-PLAN.md) §9–10.
 
 ### WP-008-R2 executor evidence (base `9169096`; accepted after correction `ddc1831`)
 
@@ -118,4 +118,8 @@ Director wrote the complete first adviser proposal and parameter register before
 
 ## MP-001 Director closure — 2026-10-03
 
-Method design closed at `btc.context-action.v0.2`; B1–B8 resolved with explicit ownership/renewal, phase/context authority, frozen landmarks, admissible entry prices, terminal retirement, publication/residual-time, exit/funding accounting and composite capability identity. E1–E6 remain registered economic diagnostics, not tuned away. Original Astra attachment preserved unchanged. Independent document-level arithmetic/time/link checks only; no code, market outcomes, acquisition or new run. Cycle periodicity and comprehensive news interpretation remain limited, not declared solved. Current task is Director R3 specification only.
+Method design closed at `btc.context-action.v0.2`; B1–B8 resolved with explicit ownership/renewal, phase/context authority, frozen landmarks, admissible entry prices, terminal retirement, publication/residual-time, exit/funding accounting and composite capability identity. E1–E6 remain registered economic diagnostics, not tuned away. Original Astra attachment preserved unchanged. Independent document-level arithmetic/time/link checks only; no code, market outcomes, acquisition or new run. Cycle periodicity and comprehensive news interpretation remain limited, not declared solved. That specification-only pointer is superseded by the R3 activation below.
+
+## R3 specification and activation — 2026-10-03
+
+Director completed the bounded context/preset specification and registered logical windows before new economic results. September default requests96h warmup and365m tail; verified September sources reused. Contiguous multi-month packs preserve one causal/temporal state and cross-source ties. Missing funding/calendar/historical metadata proof stays limited, not silently neutral. New pack manifest/receipt and additive operational compatibility are authorized; no method, semantic.v2 or economic metrics. Executor implementation active under task.md, not accepted yet. No Owner download/run requested by this activation.
