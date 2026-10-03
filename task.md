@@ -1,24 +1,37 @@
-# Current Task — Owner September Market replay check
-
-Status: **READY FOR OWNER MARKET REPLAY — SEPTEMBER 2025 ONLY**
+# Current Task — WP-010 Documentation clarity and bounded UX wording
+Status: **ACTIVE — EXECUTOR IMPLEMENTATION**
 Date: 2026-10-03 (Europe/Rome)
-Accepted implementation: `99e0ca5b9bfed7cb57cae1aff5c7b899234e8cac`.
-Director release decision: `delivery/WP-008-R1C-DIRECTOR-REVIEW.md` (correction closure).
+Director assignment following the Owner's instruction to proceed. Read AGENTS.md for permanent workflow rules.
 
-No executor implementation package is active. R2 and later packages remain HOLD while the Owner runs the app check. Do not launch real historical work in an agent CLI.
+## Purpose
+Make the current operational truth immediately readable, preserve historical evidence, and correct three misleading UX descriptions. This is a bounded closure task, not a new strategic review, redesign or infrastructure programme.
 
-## Owner action
+## Current Director decisions
+The Owner September check is accepted and its original replay performance incident is closed:
+- evaluation `eval-20261003T091928-a7eb00`; replay `obs-20261003T091928-363a3d`;
+- COMPLETED; coverage COMPLETE 129600/129600; runtime assurance PASSED; observe.stream-reconciliation v2 PASS 9/9;
+- trusted receipt/cache/run pin matched; entire feed consumed; elapsed 60.4 s; 27 committed transactions; zero delivery rows; zero recoveries;
+- evidence is the Owner's copied terminal report, reviewed by the Director, not an independently rerun benchmark;
+- no Deep validation of this run was performed; no adviser or trading performance was evaluated.
+Annual application performance gates remain NOT_MEASURED/PENDING; recording-volume evidence is limited; Windows directory fsync power-loss durability remains unproven.
+The UX pass at `d8144ad` has independently green CI `37116003888` (checks including E2E and compose-smoke). It improves Workbench/Replay Lab; it does not close the UX of Data, Recorder or mobile. Old Copy-feedback failure cause remains plausible, not proven.
 
-1. Stop old application containers, update the prepared checkout and start the rebuilt stack with the controlled README upgrade. Preserve database/data/artifact volumes.
-2. Historical Workbench → Run setup → Market replay → EXISTING Verified September 2025 chunk → pacing max, not start-paused → Start. One new run ID; preserve the old suspended run and local source; no Prepare/download/salvage.
-3. Copy terminal Markdown/report into the Director chat. If failed, cancelled or slow, copy its current diagnostic instead. If Copy gives no confirmation, attach the downloaded Markdown. Deep validation is optional and has its own report.
+## Work
+1. Reorganize STATE.md as current implementation, accepted evidence, open limits and next step. Move its displaced chronology to one clearly historical document in an existing review/delivery area, preserving factual evidence and links. Do not create a new ADR/changelog framework.
+2. Make README an operational guide to implemented capabilities: startup/upgrade, reusable local data, normal Workbench path, report location and relevant limitations. Link history rather than repeat acceptance/rejection chronology.
+3. Update the integrated delivery plan and SR-003 disposition's current-action pointers: September is closed, this task is active, and the next Director action is a bounded R2 substrate specification reviewed against adviser dependencies, followed by integrated method closure. Preserve the Foundation's sequence; this task does not activate R2, MP-001, R3 or WP-009.
+4. Correct UX/report wording wherever shared:
+   - a pause REQUEST or pausing state must say pause requested/pausing until actually paused; do not promise no processing before acknowledgement;
+   - modeled historical replay must not claim exact measured historical availability; explain the dataset availability convention, retaining measured-vs-modeled distinctions;
+   - Deep validation is a reference re-execution with a shared reducer and canonical-cache scope, not a wholly independent method or original-source audit.
+5. Maintain the same visual style and all data/control access. Make no broader UX redesign.
+6. Validate changed state presentations and documentation links. Use small meaningful regressions for pause-state and availability wording; use required existing checks appropriate to the changes. Report checks unavailable locally honestly.
 
-Expected useful result: COMPLETED, committed cursor equal to this run's verified total, runtime assurance passed with cache_receipt_and_pin and completed_consumed_entire_feed, actual timings/host/source identity and disclosed warnings/limits. The historical 129,600 is a comparison fact, not a hard-coded acceptance test. Synthetic reference timing is not a promise for the Owner PC.
+## Boundaries
+No engine/reducer, fencing, checkpoint or assurance-criteria changes. No schema/migration/contract changes; no acquisition, historical profitability runs, Owner stack access or modification of frozen sources/cases. No new general infrastructure or automatic documentation bureaucracy.
+FOUNDATION.md stays the stable product authority; AGENTS.md contains recurring execution rules. Existing review evidence must remain traceable.
+The next product objective is the first complete adviser path, not a rushed isolated LONG rule. Timing/cycle/news/derivatives roles require explicit bounded dispositions; missing optional context cannot become endless infrastructure work or silent neutral confirmation.
 
-If the run is substantially beyond ~10 minutes, send the current diagnostic and do not launch another run. The Director assesses it; no manual logs/SQL/CLI benchmark is required.
-
-## Director next action
-
-Review the Owner result against source/preset, preserved old evidence, actual coverage, runtime/reference assurance, controls, phase timing and claimed structural improvement. Link old/new IDs when actually supplied. Close the September incident or define a bounded evidence-based correction; only then activate the next implementation package.
-
-Annual application gates remain NOT_MEASURED/PENDING, recording volume remains limited, and Windows directory-fsync power-loss durability is unproven. The earlier Copy feedback E2E failure is recorded for follow-up; final CI passes but root cause is not isolated. No annual-readiness or adviser/P&L claim is authorized.
+## Acceptance
+A fresh executor can find the current status/task without reconstructing the delivery chronology. README describes actual usage. September closure and residual limits are distinct. Historical facts remain accessible with working links. Pause pending vs paused, modeled vs measured availability, and reference-vs-runtime assurance are explained truthfully across affected UI text.
+In the completion report identify historical content moved, authoritative current sections, wording corrected, checks actually run and any unresolved inconsistencies. Director review is required; do not activate the next package.
