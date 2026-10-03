@@ -574,38 +574,131 @@ def render_manifest(doc: dict) -> bytes:
     return (json.dumps(doc, indent=2, sort_keys=True, ensure_ascii=True) + "\n").encode()
 
 
-def stage_pack(data_root: Path, doc: dict, provenance: Path | None) -> Path:
-    root = packs_root(data_root)
-    root.mkdir(parents=True, exist_ok=True)
-    tmp = root / f".tmp-{doc['pack_id']}-{uuid.uuid4().hex[:8]}"
+def staging_root(data_root: Path) -> Path:
+    return packs_root(data_root) / ".staging"
+
+
+def staging_dir(data_root: Path, job_id: str, generation: int) -> Path:
+    """Staging owned by exactly one job attempt: ``packs/.staging/<job_id>/g<generation>/``."""
+    if not job_id or "/" in job_id or "\\" in job_id or job_id.startswith("."):
+        raise PackError(f"invalid staging owner {job_id!r}")
+    return staging_root(data_root) / job_id / f"g{generation}"
+
+
+def expected_files(doc: dict) -> dict[str, str]:
+    """Pinned SHA-256 of every pack artifact: the rendered manifest and (if any) the overlap provenance."""
+    out = {"manifest.json": hashlib.sha256(render_manifest(doc)).hexdigest()}
+    prov = doc["overlap"].get("provenance_file")
+    if prov:
+        out[prov] = doc["overlap"]["provenance_sha256"]
+    return out
+
+
+def check_files(directory: Path, expected: dict[str, str]) -> list[str]:
+    """Re-hash ACTUAL artifact bytes against their pins; unexpected extra entries are problems too."""
+    problems = []
+    names = {x.name for x in directory.iterdir()} if directory.is_dir() else set()
+    for name, sha in expected.items():
+        f = directory / name
+        if not f.is_file():
+            problems.append(f"{name} missing")
+        elif hashlib.sha256(f.read_bytes()).hexdigest() != sha:
+            problems.append(f"{name} bytes differ from its pin")
+    extra = names - set(expected)
+    if extra:
+        problems.append(f"unexpected entries {sorted(extra)}")
+    return problems
+
+
+def stage_pack(data_root: Path, doc: dict, provenance: Path | None, job_id: str, generation: int) -> Path:
+    """Write artifacts into this attempt's own staging directory, fsync every file and (where supported) the
+    staging directory itself so its entries persist, then re-hash the actual bytes against their pins."""
+    owner = staging_dir(data_root, job_id, generation)
+    owner.mkdir(parents=True, exist_ok=True)
+    tmp = owner / f"{doc['pack_id']}-{uuid.uuid4().hex[:8]}"
     tmp.mkdir()
-    if provenance is not None and provenance.exists():
+    exp = expected_files(doc)
+    if "provenance.jsonl" in exp:
+        if provenance is None or not provenance.exists():
+            raise PackError("provenance is declared but its file is missing")
         shutil.copyfile(provenance, tmp / "provenance.jsonl")
         fc._fsync_file(tmp / "provenance.jsonl")
     (tmp / "manifest.json").write_bytes(render_manifest(doc))
     fc._fsync_file(tmp / "manifest.json")
+    fc._fsync_dir(tmp)  # persist the directory entries themselves (POSIX; unavailable on Windows - declared)
+    problems = check_files(tmp, exp)
+    if problems:
+        shutil.rmtree(tmp, ignore_errors=True)
+        raise PackError(f"staged pack {doc['pack_id']} failed its byte check: {problems}")
     return tmp
 
 
-def publish_staged(data_root: Path, pack_id: str, staged: Path) -> str:
-    """One directory rename. Identical existing content converges. A directory with the same content-derived id but
-    different bytes cannot be a legitimate pack (the id hashes the body): it is moved aside to ``.invalid-*`` (never
-    deleted or overwritten in place) and the verified staging is published."""
-    final = packs_root(data_root) / pack_id
+def publish_staged(data_root: Path, doc: dict, staged: Path, fault=None) -> str:
+    """Publish one verified staging directory. Called under the publication row lock, BEFORE the receipt.
+
+    1. re-hash the staged bytes (a staging altered after it was written is never published);
+    2. a destination with identical verified bytes converges; any other destination with the same content-derived
+       id cannot be legitimate and is moved aside to ``.invalid-*`` (never overwritten in place or deleted);
+    3. one directory rename, then fsync of the published directory and of ``packs/`` (POSIX);
+    4. re-hash the PUBLISHED bytes; a mismatch moves them aside and fails (no receipt, no COMPLETED).
+    """
+    pack_id = doc["pack_id"]
+    exp = expected_files(doc)
+    root = packs_root(data_root)
+    final = root / pack_id
+    problems = check_files(staged, exp)
+    if problems:
+        shutil.rmtree(staged, ignore_errors=True)
+        raise PackError(f"staged pack {pack_id} changed before publication: {problems}; nothing published")
+    how = "published"
     if final.exists():
-        same = all((final / n).is_file() and (final / n).read_bytes() == (staged / n).read_bytes()
-                   for n in [p.name for p in staged.iterdir()])
-        if same:
+        if not check_files(final, exp):
             shutil.rmtree(staged, ignore_errors=True)
+            fc._fsync_dir(final)
+            fc._fsync_dir(root)
             return "converged"
-        aside = packs_root(data_root) / f".invalid-{pack_id}-{uuid.uuid4().hex[:8]}"
-        final.rename(aside)
-        staged.rename(final)
-        fc._fsync_dir(packs_root(data_root))
-        return "published_after_quarantine"
+        final.rename(root / f".invalid-{pack_id}-{uuid.uuid4().hex[:8]}")
+        how = "published_after_quarantine"
     staged.rename(final)
-    fc._fsync_dir(packs_root(data_root))
-    return "published"
+    if fault is not None:
+        fault("renamed_before_check")  # test seam: bytes altered between the rename and the re-hash
+    fc._fsync_dir(final)
+    fc._fsync_dir(root)
+    problems = check_files(final, exp)
+    if problems:
+        final.rename(root / f".invalid-{pack_id}-{uuid.uuid4().hex[:8]}")
+        fc._fsync_dir(root)
+        raise PackError(f"published pack {pack_id} bytes differ from their pins after the rename: {problems}; moved "
+                        "aside, no receipt")
+    return how
+
+
+def cleanup_abandoned_staging(conn, data_root: Path, job_id: str, generation: int) -> list[str]:
+    """Remove only staging that is positively abandoned: older generations of THIS job (fenced out by our newer
+    lease generation) and staging of jobs whose row is already terminal. Live attempts of other jobs, or of this
+    job's current generation, are never touched; no age-based sweep exists."""
+    removed = []
+    root = staging_root(data_root)
+    if not root.is_dir():
+        return removed
+    for jdir in sorted(root.iterdir()):
+        if not jdir.is_dir():
+            continue
+        if jdir.name == job_id:
+            for g in sorted(jdir.iterdir()):
+                try:
+                    gen = int(g.name.removeprefix("g"))
+                except ValueError:
+                    continue
+                if g.name.startswith("g") and gen < generation:
+                    shutil.rmtree(g, ignore_errors=True)
+                    removed.append(f"{jdir.name}/{g.name}")
+            continue
+        row = conn.execute("SELECT status FROM corpus_pack_jobs WHERE job_id = %s", (jdir.name,)).fetchone()
+        if row is not None and row["status"] in ("completed", "cancelled", "failed"):
+            shutil.rmtree(jdir, ignore_errors=True)
+            removed.append(jdir.name)
+    return removed
 
 
 def manifest_sha256(data_root: Path, pack_id: str) -> str:
@@ -660,11 +753,37 @@ def prepare_contributors(data_root: Path, receipts, slices: list[tuple[str, date
                                      created_by={"pack_contributor": ds})
         if pin and prep.cache.manifest_sha256 != pin[1]:
             raise PackError(f"source cache of {ds} does not reproduce the pinned cache manifest")
-        m = md.load_manifest(md.dataset_path(data_root, ds))
+        m = verified_manifest(data_root, ds, prep)
         out.append(Contributor(ds, prep.source_manifest_sha256, m.request.start, m.request.end, a, b, origin,
                                prep.cache, m.instrument, sum(x.bytes for x in m.files)))
     hook("prepare source caches", len(slices), len(slices), "sources")
     return out
+
+
+def verified_manifest(data_root: Path, dataset_id: str, prep) -> DatasetManifest:
+    """Contributor facts (request bounds, instrument snapshot, file sizes) parsed ONLY from manifest bytes whose
+    SHA-256 equals the manifest SHA-256 that the accepted source boundary verified (cold: the private snapshot's
+    manifest; warm: the manifest that selected the receipt-pinned cache). Facts are never read from a later,
+    unchecked copy: a manifest changed after verification is rejected, so new facts can never be combined with an
+    old verified identity."""
+    expected = prep.source_manifest_sha256
+    rec_sha = (prep.receipt or {}).get("source_manifest_sha256")
+    if rec_sha is not None and rec_sha != expected:
+        raise PackError(f"source {dataset_id}: cache receipt pins manifest {str(rec_sha)[:16]}, verified "
+                        f"{expected[:16]}")
+    path = md.dataset_path(data_root, dataset_id)
+    try:
+        raw = (path / "manifest.json").read_bytes() if path is not None else b""
+    except OSError:
+        raw = b""
+    if hashlib.sha256(raw).hexdigest() != expected:
+        raise PackError(f"source {dataset_id}: its manifest changed after verification (sha256 "
+                        f"{hashlib.sha256(raw).hexdigest()[:16]} != verified {expected[:16]}); its facts are not "
+                        "used and nothing is published")
+    m = DatasetManifest.model_validate_json(raw)
+    if m.dataset_id != dataset_id:
+        raise PackError(f"source {dataset_id}: verified manifest names {m.dataset_id}")
+    return m
 
 
 def pack_receipt(conn, pack_id: str) -> dict | None:

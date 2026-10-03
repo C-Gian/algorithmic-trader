@@ -255,8 +255,11 @@ class PackJobRunner:
         ps.check_windows(f, preset)
         if ps.preset_sha256(f, preset) != row["preset_sha256"]:
             raise pk.PackError("the preset identity changed since the job was created; prepare again")
-        for stale in pk.packs_root(self.data_root).glob(".tmp-*") if pk.packs_root(self.data_root).is_dir() else ():
-            shutil.rmtree(stale, ignore_errors=True)  # an interrupted attempt's unpublished staging only
+        # only positively abandoned staging: this job's older (fenced-out) generations and terminal jobs' leftovers
+        removed = pk.cleanup_abandoned_staging(conn, self.data_root, job_id, self.w.generation)
+        if removed:
+            self._update(conn, job_id, diagnostic_log=[{"event": "abandoned_staging_removed", "detail": x}
+                                                       for x in removed])
 
         # 1. reuse a trustworthy published pack: no network
         doc, problems = published_pack(conn, self.data_root, row["preset_sha256"])
@@ -349,11 +352,17 @@ class PackJobRunner:
             if stats.provenance_lines:
                 prov_name, prov_sha = "provenance.jsonl", hashlib.sha256(prov.read_bytes()).hexdigest()
             doc = pk.manifest_body(f, preset, contribs, cache, stats, prov_sha, prov_name)
-            staged = pk.stage_pack(self.data_root, doc, prov if prov_name else None)
+            staged = pk.stage_pack(self.data_root, doc, prov if prov_name else None, job_id, self.w.generation)
         finally:
             shutil.rmtree(work, ignore_errors=True)
+        try:
+            self._publish(conn, row, job_id, preset, doc, cache, staged, hb)
+        except Exception:
+            shutil.rmtree(staged, ignore_errors=True)  # only this attempt's own unpublished staging
+            raise
 
-        # 6. fenced publication: rename + receipt + COMPLETED under the row lock
+    def _publish(self, conn, row, job_id: str, preset, doc: dict, cache, staged, hb: _Heartbeat) -> None:
+        # 6. fenced publication: byte-verified rename + directory fsync + receipt + COMPLETED under the row lock
         hb.publish({"phase": "publishing", "detail": f"publishing {doc['pack_id']} (fenced)"})
         self._fault("before_publish_lock")
         msha = hashlib.sha256(pk.render_manifest(doc)).hexdigest()
@@ -366,7 +375,7 @@ class PackJobRunner:
             if lock["cancel_requested"]:
                 shutil.rmtree(staged, ignore_errors=True)
                 raise AcquisitionCancelled()
-            how = pk.publish_staged(self.data_root, doc["pack_id"], staged)
+            how = pk.publish_staged(self.data_root, doc, staged, fault=self._fault)
             self._fault("after_rename")
             conn.execute(
                 """INSERT INTO corpus_packs (pack_id, manifest_sha256, preset_id, preset_sha256, cache_id,
