@@ -28,7 +28,7 @@ import psycopg
 from psycopg.types.json import Jsonb
 
 from ..feed.ordering import default_freshness
-from ..ops import LIFECYCLE_R1B
+from ..ops import LIFECYCLE_R2
 from .contracts import (
     CLOCK_POLICY,
     LABELS,
@@ -113,7 +113,7 @@ def create_replay(conn: psycopg.Connection, data_root: Path, kind: SourceKind | 
             VALUES (%s, 'queued', %s, %s, NULL, NULL, %s, %s, %s, %s, %s, NULL, %s)
             """,
             (replay_id, kind.value, source_id, speed, paused, _entry("start", speed=speed, paused=paused),
-             LIFECYCLE_R1B, Jsonb(json.loads(launch.model_dump_json())),
+             LIFECYCLE_R2, Jsonb(json.loads(launch.model_dump_json())),
              Jsonb({"waiting": "queued: waiting for an observation worker to prepare the source"})),
         )
     return replay_id

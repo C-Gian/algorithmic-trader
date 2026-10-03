@@ -28,9 +28,10 @@ PREP = {"QUEUED", "PREPARING_SOURCE", "VERIFYING_SOURCE", "BUILDING_FEED", "INIT
 POST = {"FINALIZING", "VALIDATING", "GENERATING_REPORT"}
 
 STREAM_NOTE = (
-    "Streaming engine (observe.stream.v1): every event is applied by one incremental kernel; snapshots are "
-    "materialized only at checkpoints; committed input is persisted as compact ranges plus restorable "
-    "checkpoints (no per-event delivery rows/transactions); restore is direct from a verified checkpoint.")
+    "Streaming engine (observe.stream.v1; v2 adds the causal temporal substrate): every event is applied by one "
+    "incremental kernel; snapshots are materialized only at checkpoints; committed input is persisted as compact "
+    "ranges plus restorable checkpoints (no per-event delivery rows/transactions); restore is direct from a verified "
+    "checkpoint.")
 REMAINING_COSTS = (
     "R1A keeps the WP-007 engine costs on purpose (removed in R1B/R1C): eager full feed construction in memory, "
     "duplicate source verification inside feed construction, one PostgreSQL transaction + one delivery row + one "
@@ -288,8 +289,17 @@ def next_diagnostic(row: dict[str, Any], op: dict[str, Any]) -> str:
 
 
 STREAM_REMAINING = (
-    "Remaining for R1C: layered assurance closure and the optional observable Deep validation (reference "
-    "re-execution), full release performance gates on representative data, and the Owner's September run.")
+    "Annual application performance gates remain NOT_MEASURED/PENDING; Windows directory fsync (power-loss durability "
+    "of publication) remains unproven.")
+TEMPORAL_INVARIANTS = (
+    "UTC half-open intervals: 15m/1h/4h/day anchored at UTC midnight, Monday-00:00-UTC weeks, calendar months",
+    "trade/mark/index aggregated separately; funding stays sparse settlement context (no candle, no schedule)",
+    "COMPLETE only when every expected minute was admitted valid by the closure barrier; values only when COMPLETE",
+    "seal-no-revision: a sealed interval is never reopened; later evidence is counted late-excluded",
+    "a barrier admits the prefix it declares (modeled: whole <=t tie group; recorded: logged receipts) and never "
+    "reads past it; clock and cursor are monotone; dispatch ids are sequence-unique",
+    "restore uses the explicit temporal state committed with the factual checkpoint (no prefix replay)",
+)
 
 
 def diagnostic_report(row: dict[str, Any], art_root: Path, now: datetime,
@@ -361,11 +371,40 @@ def diagnostic_report(row: dict[str, Any], art_root: Path, now: datetime,
         "suspension": op["suspension"],
         "error": row["error"],
         "stream_engine": row.get("engine"),
+        "temporal": temporal_report(row),
         "storage": storage,
         "limitations": [*((STREAM_NOTE, STREAM_REMAINING) if row.get("engine_format") else (REMAINING_COSTS,)),
                         "Diagnostic export from persisted operational facts only; it does not re-verify the source "
                         "or re-derive deliveries and is not terminal assurance."],
         "next_diagnostic": next_diagnostic(row, op),
+    }
+
+
+def temporal_report(row: dict[str, Any]) -> dict[str, Any] | None:
+    """Temporal substrate facts for copy reports (R2 runs): coverage/warmup/clock policy and named invariants.
+    No performance or market advice; readiness concerns engineering demonstration dependencies only."""
+    tc = (row.get("engine") or {}).get("temporal")
+    if not tc:
+        return None
+    v = row.get("temporal_view") or {}
+    tracks = v.get("tracks") or []
+    return {
+        "label": "temporal substrate only; no adviser",
+        "contract": f"{tc['contract']} r{tc['contract_revision']}", "engine": tc["engine"],
+        "profile_id": tc["profile"]["profile_id"], "profile_fingerprint": tc["fingerprint"],
+        "clock_policy": tc["clock_policy"], "seal_policy": tc["seal_policy"], "clock_end": tc["clock_end"],
+        "closure_allowance": tc["profile"]["closure_allowance"],
+        "committed": {"clock_time": v.get("clock_time"), "admitted_cursor": v.get("admitted_cursor"),
+                      "pending_tie_time": v.get("pending_tie_time"), "next_deadline": v.get("next_deadline"),
+                      "dispatch_seq": v.get("dispatch_seq"), "counters": v.get("counters")} if v else None,
+        "newest_sealed": [{"track": t["track"], "role": t["role"], **(t["newest_sealed"] or {}),
+                           "late_excluded": t["late_excluded"], "sealed_by_status": t["sealed_by_status"]}
+                          for t in tracks],
+        "readiness": [{"dependency": x["dependency"], "status": x["status"], "blockers": x["blockers"]}
+                      for x in v.get("readiness") or []],
+        "readiness_note": ("engineering demonstration dependencies only; production lookbacks and decision authority "
+                           "are MP-001 choices; an unavailable optional horizon is not a universal gate"),
+        "invariants": list(TEMPORAL_INVARIANTS),
     }
 
 
@@ -455,6 +494,30 @@ def render_markdown(r: dict[str, Any]) -> str:
     if st:
         lines.append(f"- Storage: {st.get('ranges')} committed range(s) to cursor {st.get('ranges_to_cursor')} · "
                      f"restore points {st.get('restore_points')} · per-event delivery rows {st.get('delivery_rows')}")
+    t = r.get("temporal")
+    if t:
+        c = t.get("committed") or {}
+        lines += ["", "## Temporal substrate (temporal substrate only; no adviser)",
+                  f"- {t['contract']} · {t['engine']} · profile {t['profile_id']} (`{t['profile_fingerprint'][:16]}`)",
+                  f"- Clock policy {t['clock_policy']} · seal policy {t['seal_policy']} · closure allowance "
+                  f"{t['closure_allowance']} · finite clock end {t['clock_end']}",
+                  f"- Committed clock {c.get('clock_time') or '—'} · admitted cursor {c.get('admitted_cursor')} · "
+                  f"pending tie {c.get('pending_tie_time') or 'none'} · next deadline {c.get('next_deadline') or '—'} · "
+                  f"dispatches {c.get('dispatch_seq')}"]
+        cnt = c.get("counters") or {}
+        if cnt:
+            lines.append(f"- Sealed {cnt.get('sealed')} · late-excluded {cnt.get('late_excluded')} · misaligned "
+                         f"{cnt.get('misaligned_excluded')} · outside coverage {cnt.get('outside_coverage_excluded')}")
+        for x in t["newest_sealed"]:
+            if x.get("record_id"):
+                lines.append(f"  - {x['track']} ({x['role']}): newest {x['status']} {x['interval_start']} "
+                             f"{x['valid']}/{x['expected']} valid · known {x['known_at']} · late-excluded "
+                             f"{x['late_excluded']}")
+        for x in t["readiness"]:
+            lines.append(f"  - readiness {x['dependency']}: {x['status']}"
+                         + (f" — {'; '.join(x['blockers'][:2])}" if x["blockers"] else ""))
+        lines.append(f"- Note: {t['readiness_note']}")
+        lines += [f"- Invariant: {x}" for x in t["invariants"]]
     ca = r.get("current_assurance")
     if ca:
         rt, ref = ca.get("runtime") or {}, ca.get("reference") or {}

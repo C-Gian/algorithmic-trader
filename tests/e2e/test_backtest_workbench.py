@@ -175,6 +175,13 @@ def test_owner_prepares_corpus_runs_observation_evaluation_and_copies_report(wor
     expect(page.get_by_test_id("fact-operation")).to_contain_text("Finished")
     expect(page.get_by_test_id("fact-checks")).to_contain_text("PASS")
     expect(page.get_by_test_id("fact-adviser")).to_contain_text("Not built yet")
+    # R2: the temporal substrate is inspectable inside the run's details, labelled as infrastructure only
+    temporal = page.get_by_test_id("run-temporal")
+    temporal.locator("summary").click()
+    expect(temporal).to_contain_text("temporal substrate only; no adviser")
+    expect(temporal).to_contain_text("temporal.clock.modeled-complete-prefix.v1")
+    expect(page.get_by_test_id("temporal-track").first).to_be_visible()
+    expect(page.get_by_test_id("temporal-readiness")).to_contain_text("demo.trade.15m")
     expect(page.get_by_test_id("report-verdict")).to_contain_text("Data and engine check passed")
     expect(page.get_by_test_id("report-verdict")).not_to_contain_text("independent validation")
     expect(page.get_by_test_id("activity")).to_contain_text("Nothing running", timeout=10_000)

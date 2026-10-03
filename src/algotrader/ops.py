@@ -31,6 +31,7 @@ OPS_CONTRACT = "algotrader.ops.v1"
 LIFECYCLE_LEGACY = 1  # WP-007/WP-008: verified config + total fixed inside the launch request
 LIFECYCLE_R1A = 2  # R1A: durable launch envelope first; worker-owned preparation persists the config
 LIFECYCLE_R1B = 3  # R1B: streaming engine (feed cache, sparse committed ranges, restorable checkpoints)
+LIFECYCLE_R2 = 4  # R2: streaming engine v2 with the causal temporal substrate in every checkpoint
 
 
 class Status(StrEnum):

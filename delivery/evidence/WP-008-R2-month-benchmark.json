@@ -1,0 +1,288 @@
+{
+  "kind": "R1C synthetic engineering benchmark (not a historical evaluation)",
+  "environment": {
+    "captured_at": "2026-10-03T15:27:36.908019+00:00",
+    "build": "91690966919bc34fbb709a5f82da7a02521bf653",
+    "worktree_dirty": true,
+    "os": "Windows-10-10.0.19045-SP0",
+    "python": "3.14.7",
+    "cpu": "Intel64 Family 6 Model 158 Stepping 9, GenuineIntel",
+    "logical_cpus": 8,
+    "ram_bytes": 34316906496,
+    "storage": {
+      "path": "C:\\Users\\Gian\\AppData\\Local\\Temp\\claude\\C--Projects-algorithmic-trader\\9e85264a-9e8d-47dd-a0be-2b155058d391\\scratchpad\\bench2",
+      "total_bytes": 999507046400,
+      "free_bytes": 407011475456
+    },
+    "runtime_limits": "local machine, no container CPU/memory limits applied by the benchmark"
+  },
+  "gates": {
+    "month_cached_observation_s": 120.0,
+    "month_terminal_report_s": 10.0,
+    "month_cold_preparation_s": 120.0,
+    "year_cached_observation_s": 900.0,
+    "year_terminal_report_s": 30.0,
+    "year_cold_preparation_s": 900.0
+  },
+  "tiers": {
+    "month": {
+      "synthetic_acquisition_s": 10.57,
+      "cold": {
+        "replay_id": "obs-20261003T152747-b45ad4",
+        "status": "completed",
+        "assurance": "passed",
+        "events": 129690,
+        "cursor": 129690,
+        "wall_including_process_spawn_s": 80.237,
+        "phase_active_s": {
+          "QUEUED": 0.0,
+          "PREPARING_SOURCE": 0.011,
+          "VERIFYING_SOURCE": 18.103,
+          "BUILDING_FEED": 18.016,
+          "INITIALIZING": 0.012,
+          "REPLAYING": 42.372,
+          "FINALIZING": 0.021,
+          "VALIDATING": 0.736,
+          "GENERATING_REPORT": 0.069
+        },
+        "phase_wall_s": {
+          "QUEUED": 0.068,
+          "PREPARING_SOURCE": 0.016,
+          "VERIFYING_SOURCE": 18.107,
+          "BUILDING_FEED": 18.019,
+          "INITIALIZING": 0.015,
+          "REPLAYING": 42.375,
+          "FINALIZING": 0.024,
+          "VALIDATING": 0.739,
+          "GENERATING_REPORT": 0.072
+        },
+        "preparation_active_s": 36.13,
+        "terminal_report_active_s": 0.826,
+        "replay_events_per_s": 3060.7,
+        "counters": {
+          "source_verifications": 1,
+          "feed_builds": 1,
+          "cache_reused": false,
+          "cache_build_events": 129690,
+          "sort_spill_runs": 14,
+          "events_applied": 129690,
+          "snapshots_built": 27,
+          "state_encodes": 27,
+          "transactions_committed": 27,
+          "checkpoints_committed": 26,
+          "delivery_rows_written": 0,
+          "restore_suffix_events": 0,
+          "prefix_restore_events": 0,
+          "cache_bytes_read": 8919597,
+          "cache_partitions_read": 26,
+          "checkpoint_state_bytes": 33390,
+          "output_bytes": null,
+          "max_control_gap_seconds": 0.268,
+          "max_rss_bytes": 140881920,
+          "max_rss_source": "Windows PeakWorkingSetSize (process lifetime peak)",
+          "cpu_seconds": 65.766
+        },
+        "ranges": 26,
+        "delivery_rows": 0
+      },
+      "warm": {
+        "replay_id": "obs-20261003T152908-bfdede",
+        "status": "completed",
+        "assurance": "passed",
+        "events": 129690,
+        "cursor": 129690,
+        "wall_including_process_spawn_s": 43.812,
+        "phase_active_s": {
+          "QUEUED": 0.0,
+          "PREPARING_SOURCE": 0.073,
+          "INITIALIZING": 0.011,
+          "REPLAYING": 42.043,
+          "FINALIZING": 0.02,
+          "VALIDATING": 0.775,
+          "GENERATING_REPORT": 0.078
+        },
+        "phase_wall_s": {
+          "QUEUED": 0.042,
+          "PREPARING_SOURCE": 0.077,
+          "INITIALIZING": 0.013,
+          "REPLAYING": 42.046,
+          "FINALIZING": 0.024,
+          "VALIDATING": 0.778,
+          "GENERATING_REPORT": 0.082
+        },
+        "preparation_active_s": 0.073,
+        "terminal_report_active_s": 0.873,
+        "replay_events_per_s": 3084.7,
+        "counters": {
+          "source_verifications": 0,
+          "feed_builds": 0,
+          "cache_reused": true,
+          "cache_build_events": null,
+          "sort_spill_runs": null,
+          "events_applied": 129690,
+          "snapshots_built": 27,
+          "state_encodes": 27,
+          "transactions_committed": 27,
+          "checkpoints_committed": 26,
+          "delivery_rows_written": 0,
+          "restore_suffix_events": 0,
+          "prefix_restore_events": 0,
+          "cache_bytes_read": 8919597,
+          "cache_partitions_read": 26,
+          "checkpoint_state_bytes": 33390,
+          "output_bytes": null,
+          "max_control_gap_seconds": 0.258,
+          "max_rss_bytes": 107933696,
+          "max_rss_source": "Windows PeakWorkingSetSize (process lifetime peak)",
+          "cpu_seconds": 42.609
+        },
+        "ranges": 26,
+        "delivery_rows": 0
+      },
+      "pause_restore": {
+        "replay_id": "obs-20261003T152952-76443f",
+        "status": "completed",
+        "assurance": "passed",
+        "events": 129690,
+        "cursor": 129690,
+        "wall_including_process_spawn_s": 22.884,
+        "phase_active_s": {
+          "QUEUED": 0.0,
+          "PREPARING_SOURCE": 0.089,
+          "INITIALIZING": 0.099,
+          "REPLAYING": 42.355,
+          "FINALIZING": 0.022,
+          "VALIDATING": 1.048,
+          "GENERATING_REPORT": 0.077
+        },
+        "phase_wall_s": {
+          "QUEUED": 0.024,
+          "PREPARING_SOURCE": 0.106,
+          "INITIALIZING": 0.106,
+          "REPLAYING": 42.363,
+          "FINALIZING": 0.025,
+          "VALIDATING": 1.052,
+          "GENERATING_REPORT": 0.08
+        },
+        "preparation_active_s": 0.089,
+        "terminal_report_active_s": 1.147,
+        "replay_events_per_s": 3062.0,
+        "counters": {
+          "source_verifications": 0,
+          "feed_builds": 0,
+          "cache_reused": true,
+          "cache_build_events": null,
+          "sort_spill_runs": null,
+          "events_applied": 63081,
+          "snapshots_built": 14,
+          "state_encodes": 13,
+          "transactions_committed": 13,
+          "checkpoints_committed": 13,
+          "delivery_rows_written": 0,
+          "restore_suffix_events": 0,
+          "prefix_restore_events": 0,
+          "cache_bytes_read": 4572256,
+          "cache_partitions_read": 13,
+          "checkpoint_state_bytes": 33390,
+          "output_bytes": null,
+          "max_control_gap_seconds": 0.26,
+          "max_rss_bytes": 107999232,
+          "max_rss_source": "Windows PeakWorkingSetSize (process lifetime peak)",
+          "cpu_seconds": 21.5
+        },
+        "ranges": 27,
+        "delivery_rows": 0,
+        "pause_applied_s": 0.371,
+        "restore": {
+          "prefix_restore_events": 0,
+          "restore_suffix_events": 0,
+          "events_applied_after_resume": 63081,
+          "initializing_active_s": 0.099
+        }
+      },
+      "deep": {
+        "validation_id": "deep-20261003T153037-f34ec2",
+        "status": "completed",
+        "outcome": "match",
+        "compared": 164,
+        "covered": 129690,
+        "wall_including_process_spawn_s": 54.948,
+        "phase_active_s": {
+          "QUEUED": 0,
+          "PREPARING_SOURCE": 0.01,
+          "VALIDATING": 54.11,
+          "GENERATING_REPORT": 0.031
+        },
+        "events_per_s": 2396.8,
+        "max_rss_bytes": 235704320
+      }
+    }
+  },
+  "budget_minutes": 20.0,
+  "gate_evaluation": {
+    "evaluator_version": "2",
+    "month_application_gates": [
+      {
+        "gate": "month cached observation",
+        "kind": "application (measured end to end)",
+        "measured_s": 43.812,
+        "limit_s": 120.0,
+        "run_status": "completed",
+        "run_assurance": "passed",
+        "path": "warm job, durable launch -> terminal commit, incl. compute-process spawn and DB checkpoints",
+        "result": "PASS"
+      },
+      {
+        "gate": "month terminal validation/report",
+        "kind": "application (measured end to end)",
+        "measured_s": 0.873,
+        "limit_s": 10.0,
+        "run_status": "completed",
+        "run_assurance": "passed",
+        "path": "warm job FINALIZING + VALIDATING + GENERATING_REPORT active time (actual reconciliation + report)",
+        "result": "PASS"
+      },
+      {
+        "gate": "month cold preparation",
+        "kind": "application (measured end to end)",
+        "measured_s": 36.13,
+        "limit_s": 120.0,
+        "run_status": "completed",
+        "run_assurance": "passed",
+        "path": "cold job PREPARING_SOURCE + VERIFYING_SOURCE + BUILDING_FEED active time",
+        "result": "PASS"
+      }
+    ],
+    "annual_component_comparisons": [],
+    "annual_application_gates": [
+      {
+        "gate": "year cached observation",
+        "kind": "application",
+        "measured_s": null,
+        "limit_s": 900.0,
+        "result": "NOT_MEASURED",
+        "status": "PENDING - no end-to-end year application run was measured; annual readiness is not claimed (component comparisons are not substitutes)"
+      },
+      {
+        "gate": "year terminal validation/report",
+        "kind": "application",
+        "measured_s": null,
+        "limit_s": 30.0,
+        "result": "NOT_MEASURED",
+        "status": "PENDING - no end-to-end year application run was measured; annual readiness is not claimed (component comparisons are not substitutes)"
+      },
+      {
+        "gate": "year cold preparation",
+        "kind": "application",
+        "measured_s": null,
+        "limit_s": 900.0,
+        "result": "NOT_MEASURED",
+        "status": "PENDING - no end-to-end year application run was measured; annual readiness is not claimed (component comparisons are not substitutes)"
+      }
+    ],
+    "summary": {
+      "month_application_gates_pass": true,
+      "annual_application_gates": "NOT_MEASURED / PENDING"
+    }
+  }
+}

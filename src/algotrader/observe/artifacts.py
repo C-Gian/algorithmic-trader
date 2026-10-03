@@ -286,7 +286,7 @@ def _manifest(row: dict[str, Any], config: ObservationReplayConfig, status: Repl
               finished_at: datetime, cursor: int, validation: ReplayValidation, files: tuple[ArtifactFile, ...],
               generation: int, final_dir: Path, *, final_as_of: datetime, final_snapshot_id: str, final_digest: str,
               source_reference: str, timings: Callable[[], list[dict]] | None,
-              metrics: Callable[[], dict] | None) -> ObservationReplayManifest:
+              metrics: Callable[[], dict] | None, temporal: dict | None = None) -> ObservationReplayManifest:
     return ObservationReplayManifest(
         schema_version=OBSERVE_SCHEMA_VERSION, contract_status=OBSERVE_CONTRACT_STATUS,
         schema_revision=OBSERVE_SCHEMA_REVISION, replay_id=row["replay_id"], status=status, labels=LABELS,
@@ -296,8 +296,24 @@ def _manifest(row: dict[str, Any], config: ObservationReplayConfig, status: Repl
         recovery_log=list(row["recovery_log"]), control_log=list(row["control_log"]), error=error,
         validation=validation, source_reference=source_reference, artifacts=files, lease_generation=generation,
         artifact_dir=final_dir.name, phase_timings=timings() if timings else None,
-        operational_metrics=metrics() if metrics else None,
+        operational_metrics=metrics() if metrics else None, temporal=temporal,
     )
+
+
+def temporal_reference(engine: dict, summary: dict | None) -> dict | None:
+    """Revision-3 manifest reference to the temporal substrate (identities + commitments; details in temporal.json)."""
+    tc = (engine or {}).get("temporal")
+    if not tc:
+        return None
+    s = summary or {}
+    return {"artifact": "temporal.json" if summary is not None else None, "contract": tc["contract"],
+            "contract_revision": tc["contract_revision"], "engine": tc["engine"], "state_format": tc["state_format"],
+            "profile_id": tc["profile"]["profile_id"], "profile_fingerprint": tc["fingerprint"],
+            "clock_policy": tc["clock_policy"], "seal_policy": tc["seal_policy"], "clock_end": tc["clock_end"],
+            "clock_time": s.get("clock_time"), "admitted_cursor": s.get("admitted_cursor"),
+            "dispatch_seq": s.get("dispatch_seq"), "sealed_commitment": s.get("sealed_commitment"),
+            "aggregate_chain": s.get("aggregate_chain"), "dispatch_commitment": s.get("dispatch_commitment"),
+            "labels": tc["labels"]}
 
 
 def stage_replay_artifacts(root: Path, row: dict[str, Any], status: ReplayStatus, error: str | None,
@@ -385,7 +401,7 @@ def stage_bounded_artifacts(root: Path, row: dict[str, Any], status: ReplayStatu
             final_as_of=ck.get("info_time") or finished_at, final_snapshot_id=ck.get("snapshot_id") or "",
             final_digest=ck.get("snapshot_digest") or "",
             source_reference=f"{config.source.kind.value}s/{config.source.source_id}",
-            timings=timings, metrics=metrics)
+            timings=timings, metrics=metrics, temporal=temporal_reference(row.get("engine") or {}, None))
         (staging / "manifest.json").write_text(manifest.model_dump_json(indent=2), encoding="utf-8")
     except BaseException:
         staged.discard()
@@ -399,8 +415,13 @@ def stage_stream_artifacts(root: Path, row: dict[str, Any], status: ReplayStatus
                            validation: ReplayValidation, final: ObservableSnapshot | None,
                            committed_digest: str, *, generation: int, hook: Hook | None = None,
                            timings: Callable[[], list[dict]] | None = None,
-                           metrics: Callable[[], dict] | None = None) -> StagedArtifacts:
+                           metrics: Callable[[], dict] | None = None,
+                           temporal: dict | None = None) -> StagedArtifacts:
     """Terminal artifacts of a streaming run (bounded: no per-event records exist or are synthesized).
+
+    Temporal-enabled runs (``observe.stream.v2``) add ``temporal.json``: the verified terminal temporal summary
+    (finished at the declared clock end for completed runs) - profile, clock/seal policy, newest sealed record per
+    channel/horizon, readiness of the configured dependencies, late-excluded counts and commitments.
 
     ``engine.json`` (pinned engine/state/cache identities), ``ranges.jsonl`` (compact committed input ranges),
     ``final_snapshot.json`` (materialized from the verified terminal state), ``validation.json``
@@ -424,13 +445,15 @@ def stage_stream_artifacts(root: Path, row: dict[str, Any], status: ReplayStatus
         if final is not None:
             (staging / "final_snapshot.json").write_text(final.model_dump_json(indent=2), encoding="utf-8")
         (staging / "validation.json").write_text(validation.model_dump_json(indent=2), encoding="utf-8")
+        if temporal is not None:
+            (staging / "temporal.json").write_text(_json.dumps(temporal, indent=2, sort_keys=True), encoding="utf-8")
         files = _hash_files(staging, hook)
         manifest = _manifest(
             row, config, status, error, finished_at, cursor, validation, files, generation, final_dir,
             final_as_of=final.as_of if final is not None else finished_at,
             final_snapshot_id=final.snapshot_id if final is not None else "", final_digest=committed_digest,
             source_reference=f"{config.source.kind.value}s/{config.source.source_id}", timings=timings,
-            metrics=metrics)
+            metrics=metrics, temporal=temporal_reference(engine, temporal))
         (staging / "manifest.json").write_text(manifest.model_dump_json(indent=2), encoding="utf-8")
     except BaseException:
         staged.discard()

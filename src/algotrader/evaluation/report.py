@@ -202,6 +202,7 @@ def build_report(ev: dict[str, Any], replay: dict[str, Any], manifest: dict[str,
                             if complete else (diagnostic or {}).get("next_diagnostic")
                             or "Copy this report to the Director for diagnosis."),
         "code_version": (cfg or {}).get("code_version") or (replay.get("launch") or {}).get("code_version"),
+        "temporal": (diagnostic or {}).get("temporal"),
     }
 
 
@@ -301,6 +302,19 @@ def render_markdown(r: dict[str, Any]) -> str:
     if mc:
         lines.append("- Terminal manifest: " + ("not recorded" if not mc.get("claimed") else
                      f"{mc.get('artifact_dir')} · file present {mc.get('manifest_file_present')}"))
+    t = r.get("temporal")
+    if t:
+        c = t.get("committed") or {}
+        lines += ["", "## Temporal substrate (temporal substrate only; no adviser)",
+                  f"- {t['contract']} · profile {t['profile_id']} · clock policy {t['clock_policy']} · seal policy "
+                  f"{t['seal_policy']} · finite clock end {t['clock_end']}",
+                  f"- Committed clock {c.get('clock_time') or '—'} · admitted cursor {c.get('admitted_cursor')} · "
+                  f"dispatches {c.get('dispatch_seq')} · late-excluded {(c.get('counters') or {}).get('late_excluded')}"
+                  " (the clock-end finish is in the temporal.json artifact and the temporal validation checks)"]
+        warm = [x for x in t["readiness"] if x["status"] != "READY"]
+        lines.append("- Demonstration readiness: " + (", ".join(f"{x['dependency']} {x['status']}" for x in warm)
+                                                      if warm else "all READY"))
+        lines.append(f"- {t['readiness_note']}")
     lines += [
         "",
         "## Adviser capabilities",

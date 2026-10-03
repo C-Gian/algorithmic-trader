@@ -174,7 +174,7 @@ class ObservationWorker:
                 """
                 SELECT r.*, c.cursor AS ckpt_cursor
                 FROM observation_replays r LEFT JOIN observation_checkpoints c USING (replay_id)
-                WHERE r.lifecycle_version >= 3 AND r.suspended_at IS NULL AND (
+                WHERE r.lifecycle_version >= 4 AND r.suspended_at IS NULL AND (
                       (r.status = 'queued' AND (r.config IS NULL OR NOT r.paused OR r.step_budget > 0
                                                 OR r.cancel_requested))
                    OR (r.status = 'paused' AND (NOT r.paused OR r.step_budget > 0 OR r.cancel_requested))

@@ -150,12 +150,39 @@ def observe_baseline() -> dict[str, Any]:
     }
 
 
+def temporal_baseline() -> dict[str, Any]:
+    """PROVISIONAL baseline for the causal temporal substrate (``algotrader.temporal.v1``)."""
+    from .temporal import contracts as tc
+
+    models = sorted(tc.PUBLIC_CONTRACTS, key=lambda m: m.__name__)
+    refs, schema = models_json_schema(
+        [(m, "serialization") for m in models], ref_template="#/$defs/{model}"
+    )
+    return {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "title": f"Algorithmic Trader causal temporal substrate contracts ({tc.TEMPORAL_SCHEMA_VERSION}, "
+                 f"{tc.TEMPORAL_CONTRACT_STATUS})",
+        "schema_version": tc.TEMPORAL_SCHEMA_VERSION,
+        "status": tc.TEMPORAL_CONTRACT_STATUS,
+        "revision": tc.TEMPORAL_SCHEMA_REVISION,
+        "changelog": [{"revision": r, "date": d, "note": n} for r, d, n in tc.TEMPORAL_CHANGELOG],
+        "profile_id": tc.PROFILE_ID,
+        "seal_policy": {"id": tc.SEAL_POLICY_ID, "text": tc.SEAL_POLICY_TEXT},
+        "clock_policies": {k.value: v for k, v in sorted(tc.CLOCK_POLICY_TEXT.items())},
+        "horizon_roles": {h.value: tc.HORIZON_ROLE[h] for h in tc.HORIZON_ORDER},
+        "readiness_precedence": [x.value for x in tc.READINESS_PRECEDENCE],
+        "public_contracts": {m.__name__: refs[(m, "serialization")]["$ref"] for m in models},
+        "$defs": schema["$defs"],
+    }
+
+
 def baselines() -> dict[str, Any]:
     """Every current contract baseline, keyed by schema version."""
     from .feed.contracts import FEED_SCHEMA_VERSION
     from .marketdata.contracts import MARKETDATA_SCHEMA_VERSION
     from .observe.contracts import OBSERVE_SCHEMA_VERSION
     from .recorder.contracts import RECORDER_SCHEMA_VERSION
+    from .temporal.contracts import TEMPORAL_SCHEMA_VERSION
 
     return {
         c.SCHEMA_VERSION: baseline,
@@ -163,6 +190,7 @@ def baselines() -> dict[str, Any]:
         FEED_SCHEMA_VERSION: feed_baseline,
         RECORDER_SCHEMA_VERSION: recorder_baseline,
         OBSERVE_SCHEMA_VERSION: observe_baseline,
+        TEMPORAL_SCHEMA_VERSION: temporal_baseline,
     }
 
 

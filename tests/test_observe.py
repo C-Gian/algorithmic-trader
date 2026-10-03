@@ -86,11 +86,12 @@ def test_observe_contract_is_separate_provisional_and_baselined():
     from algotrader.observe import contracts as oc
 
     assert oc.OBSERVE_SCHEMA_VERSION == "algotrader.observe.v1" and oc.OBSERVE_CONTRACT_STATUS == "PROVISIONAL"
-    assert oc.OBSERVE_CHANGELOG[-1][0] == oc.OBSERVE_SCHEMA_REVISION == 2  # R1A Director-approved revision
-    assert [r for r, _, _ in oc.OBSERVE_CHANGELOG] == [1, 2]
+    assert oc.OBSERVE_CHANGELOG[-1][0] == oc.OBSERVE_SCHEMA_REVISION == 3  # R2 additive optional temporal reference
+    assert [r for r, _, _ in oc.OBSERVE_CHANGELOG] == [1, 2, 3]
     stored = json.loads(schema.baseline_path(oc.OBSERVE_SCHEMA_VERSION).read_text(encoding="utf-8"))
     assert stored == schema.observe_baseline(), "observe contract drift: bump OBSERVE_SCHEMA_REVISION + changelog"
-    assert (stored["status"], stored["revision"]) == ("PROVISIONAL", 2)
+    assert (stored["status"], stored["revision"]) == ("PROVISIONAL", 3)
+    assert "temporal" not in stored["$defs"]["ObservationReplayManifest"]["required"]  # r3 addition is optional
     # revision-2 additions are optional: revision-1 manifests/validations stay readable unchanged
     for name in ("lease_generation", "artifact_dir", "phase_timings", "operational_metrics"):
         assert name not in stored["$defs"]["ObservationReplayManifest"]["required"]
@@ -370,7 +371,12 @@ def test_dataset_replay_completes_durably_with_valid_artifacts_and_no_synthetic_
     assert {c["name"] for c in m["validation"]["checks"]} >= {
         "committed_ranges_contiguous", "input_commitment_chain", "terminal_state_verified", "feed_cache_integrity",
         "completed_consumed_entire_feed", "consumed_input_exact", "cache_receipt_and_pin", "commitments_reported"}
-    assert m["validation"]["validator_version"] == "2"
+    # R2 temporal-enabled runs: version 3 (= v2 checks + the temporal substrate checks), claim scoped explicitly
+    assert m["validation"]["validator_version"] == "3"
+    assert {c["name"] for c in m["validation"]["checks"]} >= {
+        "temporal_ranges_recorded", "temporal_state_verified", "temporal_clock_end_finish"}
+    assert "No independent temporal re-execution was performed in this run" in m["validation"]["scope"]
+    assert m["temporal"]["artifact"] == "temporal.json" and m["temporal"]["contract"] == "algotrader.temporal.v1"
     assert "No independent reference replay was performed in this run" in m["validation"]["scope"]
     assert "Runtime integrity verified, engine reference-tested" in m["validation"]["scope"]
     assert m["config"]["availability_policy"]["basis"] == "MODELED" and not m["config"]["availability_policy"]["measured"]
@@ -380,11 +386,12 @@ def test_dataset_replay_completes_durably_with_valid_artifacts_and_no_synthetic_
     assert m["config"]["feed"]["content_identity"] == src.feed.manifest.content_identity
     assert m["config"]["feed"]["ordered_event_hash"] == src.feed.manifest.ordered_event_hash
     out = art / "observations" / rid / m["artifact_dir"]
-    assert m["artifact_dir"] == f"g{m['lease_generation']}" and m["schema_revision"] == 2
+    assert m["artifact_dir"] == f"g{m['lease_generation']}" and m["schema_revision"] == 3
     names = {a["name"] for a in m["artifacts"]}
-    assert names == {"config.json", "engine.json", "ranges.jsonl", "final_snapshot.json", "validation.json"}
+    assert names == {"config.json", "engine.json", "ranges.jsonl", "final_snapshot.json", "validation.json",
+                     "temporal.json"}
     assert json.loads((out / "final_snapshot.json").read_text())["content_digest"] == pure.content_digest
-    assert row["engine_format"] == "observe.stream.v1" and row["engine"]["state_format"] == "algotrader.observe-state.v1"
+    assert row["engine_format"] == "observe.stream.v2" and row["engine"]["state_format"] == "algotrader.observe-state.v1"
     # sparse persistence: no per-event delivery rows; compact contiguous committed ranges
     assert not deliveries(conn, rid)
     rs = ranges(conn, rid)

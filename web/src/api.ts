@@ -490,6 +490,48 @@ export interface ObsReplay {
   labels: string[];
   operation: Operation;
   assurance_summary?: AssuranceSummary;
+  temporal?: TemporalView | null;
+}
+
+// ---- Causal temporal substrate (algotrader.temporal.v1; factual infrastructure, no adviser) ----
+
+export interface TemporalTrack {
+  track: string;
+  family: string;
+  horizon: string;
+  role: string;
+  newest_sealed: null | {
+    record_id: string; status: string; known_at: string; interval_start: string; interval_end: string;
+    valid: number; expected: number;
+  };
+  forming: { interval_start: string; valid: number; missing: number; rejected: number; expected: number }[];
+  next_unsealed_start: string | null;
+  late_excluded: number;
+  sealed_by_status: Record<string, number>;
+  retained: number;
+  retention: number;
+}
+
+export interface TemporalView {
+  note: string;
+  contract: string;
+  contract_revision: number;
+  profile_id: string;
+  profile_fingerprint: string;
+  clock_policy: string;
+  seal_policy: string;
+  clock_end: string;
+  closure_allowance: string;
+  committed: null | {
+    clock_time: string | null;
+    admitted_cursor: number;
+    pending_tie_time: string | null;
+    next_deadline: string | null;
+    dispatch_seq: number;
+    counters: { sealed: number; late_excluded: number; dispatches: number; [k: string]: number };
+    tracks: TemporalTrack[];
+    readiness: { dependency: string; status: string; blockers: string[] }[];
+  };
 }
 
 export interface AssuranceSummary {

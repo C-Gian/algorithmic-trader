@@ -416,8 +416,35 @@ CREATE UNIQUE INDEX IF NOT EXISTS observation_deep_validations_one_active
     ON observation_deep_validations (replay_id) WHERE status IN ('queued','running','paused');
 """
 
+# WP-008-R2: causal temporal substrate (additive). New runs (lifecycle_version 4, engine_format 'observe.stream.v2')
+# store the explicit temporal restore state (algotrader.temporal-state.v1) beside the factual state in the same fenced
+# checkpoint transaction, the temporal state SHA-256 and output commitments at every committed range, and a concise
+# temporal inspection view at the committed checkpoint. Pre-R2 nonterminal streaming runs (lifecycle 3) receive the
+# same additive suspension as earlier upgrades: preserved read-only, never reclaimed, converted or replayed.
+SCHEMA_V10 = """
+ALTER TABLE observation_restore_points ADD COLUMN IF NOT EXISTS temporal_format text;
+ALTER TABLE observation_restore_points ADD COLUMN IF NOT EXISTS temporal_blob bytea;
+ALTER TABLE observation_restore_points ADD COLUMN IF NOT EXISTS temporal_sha256 text;
+ALTER TABLE observation_ranges ADD COLUMN IF NOT EXISTS temporal_sha256 text;
+ALTER TABLE observation_ranges ADD COLUMN IF NOT EXISTS temporal_commitment text;
+ALTER TABLE observation_ranges ADD COLUMN IF NOT EXISTS aggregate_chain text;
+ALTER TABLE observation_ranges ADD COLUMN IF NOT EXISTS dispatch_seq integer;
+ALTER TABLE observation_checkpoints ADD COLUMN IF NOT EXISTS temporal_view jsonb;
+
+UPDATE observation_replays
+   SET suspended_at = now(),
+       suspension = jsonb_build_object(
+         'reason', 'pre-R2 nonterminal observation replay (lifecycle v3, streaming engine without temporal state) '
+                   || 'suspended at the WP-008-R2 upgrade; preserved read-only, never reclaimed, converted or replayed',
+         'historical_status', status,
+         'historical_lease_owner', lease_owner,
+         'historical_lease_expires_at', lease_expires_at,
+         'migration', 10)
+ WHERE lifecycle_version = 3 AND status IN ('queued', 'running', 'paused') AND suspended_at IS NULL;
+"""
+
 MIGRATIONS: dict[int, str] = {1: SCHEMA_V1, 2: SCHEMA_V2, 3: SCHEMA_V3, 4: SCHEMA_V4, 5: SCHEMA_V5, 6: SCHEMA_V6,
-                              7: SCHEMA_V7, 8: SCHEMA_V8, 9: SCHEMA_V9}
+                              7: SCHEMA_V7, 8: SCHEMA_V8, 9: SCHEMA_V9, 10: SCHEMA_V10}
 SCHEMA_VERSION = max(MIGRATIONS)
 
 

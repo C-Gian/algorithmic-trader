@@ -26,11 +26,11 @@ from .artifacts import files_dir
 from .contracts import LABELS, ObservationReplayConfig, SourceKind
 from .deep_api import assurance_summary
 from .feedcache import CacheError, CacheReader, decode, open_cache
-from .kernel import ENGINE_FORMAT
+from .kernel import STREAM_ENGINE_FORMATS
 from .sources import MODELED_LABEL, RECORDED_LABEL, SourceRejected, locate_source
 
 REPLAY_SELECT = """
-SELECT r.*, c.cursor AS applied, c.info_time, c.last_event_id, c.snapshot_id, c.snapshot_digest
+SELECT r.*, c.cursor AS applied, c.info_time, c.last_event_id, c.snapshot_id, c.snapshot_digest, c.temporal_view
 FROM observation_replays r LEFT JOIN observation_checkpoints c USING (replay_id)
 """
 
@@ -118,7 +118,22 @@ def replay_view(row: dict[str, Any]) -> dict[str, Any]:
         "code_version_label": version.describe(cfg.code_version if cfg else (row.get("launch") or {}).get(
             "code_version")),
         "labels": list(cfg.labels) if cfg else list(LABELS),
+        "temporal": temporal_view(row),
     }
+
+
+def temporal_view(row: dict[str, Any]) -> dict[str, Any] | None:
+    """Committed temporal substrate inspection (R2 runs): pinned configuration + the view committed with the latest
+    checkpoint. Factual infrastructure only - no adviser, no interpretation. None for runs without it."""
+    tc = (row.get("engine") or {}).get("temporal")
+    if not tc:
+        return None
+    return {"note": "temporal substrate only; no adviser", "contract": tc["contract"],
+            "contract_revision": tc["contract_revision"], "profile_id": tc["profile"]["profile_id"],
+            "profile_fingerprint": tc["fingerprint"], "clock_policy": tc["clock_policy"],
+            "seal_policy": tc["seal_policy"], "clock_end": tc["clock_end"],
+            "closure_allowance": tc["profile"]["closure_allowance"],
+            "committed": row.get("temporal_view")}
 
 
 MAX_WINDOW = 5000  # bounded inspection windows (events / bars per request)
@@ -126,7 +141,7 @@ DEFAULT_BARS = 240
 
 
 def is_stream(row: dict[str, Any]) -> bool:
-    return row.get("engine_format") == ENGINE_FORMAT
+    return row.get("engine_format") in STREAM_ENGINE_FORMATS
 
 
 def _committed_reader(md_root: Path, row: dict[str, Any]) -> tuple[CacheReader, int]:

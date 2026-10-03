@@ -19,6 +19,14 @@ Input is streamed partition by partition; reference state is bounded by the hist
 so a reclaimed or resumed job continues from there (pause parks there). Results are stored only in the
 diagnostic row; the originating run's records, artifacts and terminal report are never modified. A mismatch
 becomes a persistent linked assurance warning shown with the run.
+
+Version 2 (WP-008-R2) applies to temporal-enabled ``observe.stream.v2`` runs only (v1 runs keep version 1 and its
+claim). Beside the factual fold it runs (a) a shadow fold of the shared temporal engine under the run's pinned
+profile/clock policy, compared with the recorded temporal state SHA-256 and output commitment, and (b) the separate
+naive reference aggregator (``temporal.reference.v1``), whose recomputed aggregate chain (record identity, content
+digest, sealing barrier, admitted cursor) is compared with the run's recorded aggregate chain. Both use the same
+streamed canonical-cache input (the declared clock-command tape is derived from it by the pinned clock policy). The
+temporal folds are not persisted: a resumed job re-folds the temporal part from cursor 0 (disclosed counter).
 """
 
 from __future__ import annotations
@@ -37,7 +45,10 @@ from ..ops import OperationCancelled
 from .contracts import ObservationReplayConfig
 from .feedcache import CacheError, CacheReader, extend_commitment, initial_commitment, open_cache
 from .job import JobSpec, LeaseLost, ReplayJob
-from .kernel import pack_state, unpack_state
+from ..temporal import engine as temporal_engine
+from ..temporal.contracts import ClockPolicy, Horizon
+from ..temporal.reference import REFERENCE_ID, ReferenceAggregator
+from .kernel import STREAM_ENGINE_FORMATS, new_temporal, pack_state, unpack_state
 
 log = logging.getLogger("algotrader.observe.deep")
 VALIDATOR_ID = "observe.deep-reference"
@@ -50,6 +61,13 @@ SCOPE = (
     "and pin-checked canonical feed cache; the original source package is NOT re-normalized, so this is not an "
     "independent source audit, and the reducer code is shared with the engine, so it is not a wholly independent "
     "method.")
+VALIDATOR_VERSION_TEMPORAL = "2"
+SCOPE_TEMPORAL = SCOPE + (
+    " Version 2 (temporal-enabled runs) additionally re-folds the causal temporal substrate over the same input: a "
+    "shadow fold of the shared temporal engine (pinned profile and clock policy) compared with every recorded "
+    "temporal state SHA-256 and output commitment, and a separate naive reference aggregator (temporal.reference.v1; "
+    "shares only the UTC calendar helpers and record-content formula) whose aggregate chain is compared with the "
+    "run's recorded aggregate chain. Dispatch readiness/deadline callbacks are covered by the shadow fold only.")
 SAVE_EVENTS = 5000
 SAVE_SECONDS = 2.0
 MAX_MISMATCHES = 20
@@ -75,18 +93,19 @@ def create_deep_validation(conn, replay_id: str) -> str:
         "WHERE replay_id = %s", (replay_id,)).fetchone()
     if row is None:
         raise LookupError(replay_id)
-    if row.get("engine_format") != "observe.stream.v1" or row["engine"] is None:
-        raise DeepRejected("Deep validation applies to streaming-engine runs (observe.stream.v1) only")
+    if row.get("engine_format") not in STREAM_ENGINE_FORMATS or row["engine"] is None:
+        raise DeepRejected("Deep validation applies to streaming-engine runs (observe.stream.v1/v2) only")
     if row["status"] not in ("completed", "cancelled", "failed", "paused"):
         raise DeepRejected(f"the run is {row['status']}; Deep validation runs on a finished or paused run")
     if not row["cursor"]:
         raise DeepRejected("the run has no committed events to validate")
     eng = row["engine"]
+    temporal = bool(eng.get("temporal"))
     plan = {"replay_id": replay_id, "committed_cursor": row["cursor"], "total_events": row["total_events"],
             "run_status_at_launch": row["status"], "cache_id": eng["cache_id"],
             "cache_manifest_sha256": eng["cache_manifest_sha256"], "state_format": eng["state_format"],
-            "validator": VALIDATOR_ID, "validator_version": VALIDATOR_VERSION, "mode": "canonical-cache-only",
-            "scope": SCOPE}
+            "validator": VALIDATOR_ID, "validator_version": VALIDATOR_VERSION_TEMPORAL if temporal else VALIDATOR_VERSION,
+            "mode": "canonical-cache-only", "scope": SCOPE_TEMPORAL if temporal else SCOPE, "temporal": temporal}
     vid = new_validation_id()
     conn.commit()  # end the read transaction: the launch below is its own committed transaction
     try:
@@ -171,7 +190,9 @@ class DeepJob(ReplayJob):
     @staticmethod
     def _incomplete_result(row: dict[str, Any], outcome: str, detail: str | None) -> dict[str, Any]:
         comparisons = row["comparisons"] or {}
-        return {"outcome": outcome, "validator": VALIDATOR_ID, "validator_version": VALIDATOR_VERSION, "scope": SCOPE,
+        plan = row["plan"]
+        return {"outcome": outcome, "validator": VALIDATOR_ID,
+                "validator_version": plan.get("validator_version", VALIDATOR_VERSION), "scope": plan.get("scope", SCOPE),
                 "compared": comparisons.get("compared", 0), "mismatches": comparisons.get("mismatches", []),
                 "covered_events": row["resume_cursor"], "target_events": row["plan"]["committed_cursor"],
                 "run_total_events": row["plan"].get("total_events"), "detail": detail}
@@ -260,11 +281,14 @@ class DeepJob(ReplayJob):
             return
         target = plan["committed_cursor"]
         ranges = self.conn.execute(
-            "SELECT range_seq, to_cursor, commitment_after, snapshot_digest, state_sha256 FROM observation_ranges "
+            "SELECT range_seq, to_cursor, commitment_after, snapshot_digest, state_sha256, temporal_sha256, "
+            "temporal_commitment, aggregate_chain FROM observation_ranges "
             "WHERE replay_id = %s AND to_cursor <= %s ORDER BY to_cursor", (plan["replay_id"], target)).fetchall()
         points = self.conn.execute(
-            "SELECT cursor, state_sha256, snapshot_digest, commitment, terminal FROM observation_restore_points "
-            "WHERE replay_id = %s AND cursor <= %s", (plan["replay_id"], target)).fetchall()
+            "SELECT cursor, state_sha256, snapshot_digest, commitment, terminal, temporal_sha256 "
+            "FROM observation_restore_points WHERE replay_id = %s AND cursor <= %s",
+            (plan["replay_id"], target)).fetchall()
+        temporal = bool(plan.get("temporal"))
         expect: dict[int, list[tuple[str, str, str]]] = {}
         for r in ranges:
             expect.setdefault(r["to_cursor"], []).append(("commitment", r["commitment_after"],
@@ -272,11 +296,18 @@ class DeepJob(ReplayJob):
             if r["snapshot_digest"]:
                 expect[r["to_cursor"]].append(("snapshot", r["snapshot_digest"], f"range {r['range_seq']}"))
                 expect[r["to_cursor"]].append(("state", r["state_sha256"], f"range {r['range_seq']}"))
+            if temporal:
+                expect[r["to_cursor"]].extend([
+                    ("temporal_state", r["temporal_sha256"], f"range {r['range_seq']} (shadow temporal fold)"),
+                    ("temporal_commitment", r["temporal_commitment"], f"range {r['range_seq']} (shadow temporal fold)"),
+                    ("aggregate_chain", r["aggregate_chain"], f"range {r['range_seq']} (reference aggregator)")])
         for p in points:
             label = "terminal restore point" if p["terminal"] else "restore point"
             expect.setdefault(p["cursor"], []).extend([("commitment", p["commitment"], label),
                                                        ("snapshot", p["snapshot_digest"], label),
                                                        ("state", p["state_sha256"], label)])
+            if temporal:
+                expect[p["cursor"]].append(("temporal_state", p["temporal_sha256"], label + " (shadow temporal fold)"))
         feed_meta = cache.feed_meta
         comparisons = row["comparisons"] or {"compared": 0, "mismatches": []}
         if row["resume_cursor"] and row["resume_state"] is not None:
@@ -290,9 +321,29 @@ class DeepJob(ReplayJob):
             state = initial_state(feed_meta, cfg.freshness_policy)
             commitment = initial_commitment(cache.cache_id)
             start = 0
-        self.enter_phase("VALIDATING", detail="independent reference re-execution of the committed prefix",
-                         total=target, done=start, unit="events")
         reader = CacheReader(cache, {})
+        shadow = ref = None
+        if temporal:
+            shadow = new_temporal(cache.feed_manifest, replay["engine"])
+            prof = shadow.profile
+            ref = ReferenceAggregator(tuple(cache.feed_manifest.coverage), tuple(Horizon(h) for h in prof.horizons),
+                                      prof.closure_allowance, ClockPolicy(prof.clock_policy))
+            if start:  # temporal folds are not persisted: re-fold them over the already covered prefix
+                self.enter_phase("VALIDATING", detail="re-folding the temporal reference over the covered prefix",
+                                 total=start, done=0, unit="events")
+                for seq, line in reader.iter_from(0):
+                    if seq >= start:
+                        break
+                    e = FeedEvent.model_validate_json(line)
+                    shadow.on_event(e, seq)
+                    ref.feed(e)
+                    self.counters_deep["temporal_refold_events"] = seq + 1
+                    self.milestone("temporal re-fold of the covered prefix", seq + 1, start, "events")
+                    if self.cancel_seen:  # the saved factual diagnostic state stays as it was
+                        self._cancel_now(start, None, None, None, target)
+                        return
+        self.enter_phase("VALIDATING", detail="reference re-execution of the committed prefix",
+                         total=target, done=start, unit="events")
         last_save, saved_at = start, time.monotonic()
         cursor = start
         if self.cancel_seen:
@@ -305,6 +356,9 @@ class DeepJob(ReplayJob):
                 e = FeedEvent.model_validate_json(line)
                 state = apply(state, e)
                 commitment = extend_commitment(commitment, line)
+                if shadow is not None:
+                    shadow.on_event(e, seq)
+                    ref.feed(e)
                 cursor = seq + 1
                 self.counters_deep["events_reexecuted"] += 1
                 checks = expect.get(cursor)
@@ -314,6 +368,9 @@ class DeepJob(ReplayJob):
                     sha = pack_state(state)[1]
                     self.counters_deep["state_encodes"] += 1
                     actual = {"commitment": commitment.hex(), "snapshot": snap.content_digest, "state": sha}
+                    if shadow is not None:
+                        actual.update(temporal_state=temporal_engine.pack(shadow)[1],
+                                      temporal_commitment=shadow.commitment(), aggregate_chain=ref.chain)
                     for kind, want, label in checks:
                         comparisons["compared"] += 1
                         if want is not None and actual[kind] != want and len(comparisons["mismatches"]) < MAX_MISMATCHES:
@@ -342,7 +399,8 @@ class DeepJob(ReplayJob):
         mism = comparisons["mismatches"]
         result = {
             "outcome": "mismatch" if mism else ("match" if covered else "incomplete"),
-            "validator": VALIDATOR_ID, "validator_version": VALIDATOR_VERSION, "scope": SCOPE,
+            "validator": VALIDATOR_ID, "validator_version": plan.get("validator_version", VALIDATOR_VERSION),
+            "scope": plan.get("scope", SCOPE),
             "mode": plan["mode"], "input_examined": "canonical feed cache only (source package not re-normalized)",
             "covered_events": cursor, "target_events": target, "run_total_events": plan["total_events"],
             "comparison_cursors": len(expect), "compared": comparisons["compared"], "mismatches": mism,
@@ -350,5 +408,12 @@ class DeepJob(ReplayJob):
             "ranges_without_recorded_snapshot": sum(1 for r in ranges if not r["snapshot_digest"]),
             "cache_id": plan["cache_id"], "cache_manifest_sha256": plan["cache_manifest_sha256"],
         }
+        if shadow is not None:
+            result["temporal"] = {"reference": REFERENCE_ID, "shadow_engine": temporal_engine.ENGINE_ID,
+                                  "clock_policy": shadow.profile.clock_policy.value,
+                                  "reference_sealed_records": len(ref.sealed), "shadow_sealed_records":
+                                      shadow.counters["sealed"], "shadow_dispatches": shadow.dispatch_seq,
+                                  "temporal_refold_events": self.counters_deep.get("temporal_refold_events", 0),
+                                  "note": "comparisons at committed range boundaries / restore points only"}
         self._save(cursor, commitment, state, comparisons)
         self._finish("completed", None, result=result)

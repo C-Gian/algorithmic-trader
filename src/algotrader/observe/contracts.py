@@ -31,7 +31,7 @@ from ..feed.contracts import AvailabilityPolicy, ChannelChange, ChannelCoverage,
 
 OBSERVE_SCHEMA_VERSION = "algotrader.observe.v1"
 OBSERVE_CONTRACT_STATUS = "PROVISIONAL"
-OBSERVE_SCHEMA_REVISION = 2
+OBSERVE_SCHEMA_REVISION = 3
 OBSERVE_CHANGELOG: tuple[tuple[int, str, str], ...] = (
     (1, "2026-09-30", "Initial provisional baseline (WP-007): observation-replay config, source verification, "
                       "feed identity, committed delivery records, manifest and validation."),
@@ -42,6 +42,12 @@ OBSERVE_CHANGELOG: tuple[tuple[int, str, str], ...] = (
                       "(passed/failed/incomplete), validator id/version and scope. All additions are optional, so "
                       "revision-1 manifests remain readable unchanged. Replay semantics, order, digests and "
                       "validation mathematics are unchanged."),
+    (3, "2026-10-03", "WP-008-R2 causal temporal substrate (Director-authorized additive optional field): manifest "
+                      "adds optional ``temporal`` - a reference to the run's algotrader.temporal.v1 substrate "
+                      "(contract/engine/state format, profile id + fingerprint, clock and seal policy, finite clock "
+                      "end, commitments; details in the temporal.json artifact). Absent for revision-1/2 manifests "
+                      "and for observe.stream.v1 runs, which remain readable unchanged. Factual replay semantics, "
+                      "order, digests and the factual state format are unchanged."),
 )
 VALIDATOR_ID = "observe.terminal-revalidation"
 VALIDATOR_VERSION = "1"
@@ -236,6 +242,8 @@ class ObservationReplayManifest(Record):
     artifact_dir: str | None = None  # generation-scoped immutable directory (relative to the replay directory)
     phase_timings: list[dict] | None = None  # measured operational phase spans up to publication
     operational_metrics: dict | None = None  # cheap bounded counters (events, snapshots, transactions, bytes)
+    # revision 3 (optional; absent in revision-1/2 manifests and observe.stream.v1 runs)
+    temporal: dict | None = None  # reference to the algotrader.temporal.v1 substrate (see temporal.json)
 
 
 PUBLIC_CONTRACTS: tuple[type[Record], ...] = (

@@ -11,6 +11,7 @@ import { Badge, Button, Card, cx, EmptyState, Field, Metric, Mono, Notice, Skele
 import { AssuranceStrip, DeepValidationPanel } from "./DeepValidation";
 import { MarketChart } from "./MarketChart";
 import { ResultPlace, RUN_STEPS, RunStory, runStory } from "./runStory";
+import { TemporalPanel } from "./TemporalPanel";
 
 // Market Replay: durable observation-only replay of REAL market evidence through the causal feed.
 // It shows what the system was allowed to know at each replay instant and the resulting observable state.
@@ -647,6 +648,8 @@ export function ReplayPanel({ r, live, onCommand, eyebrow = "Market replay · re
           <OperationPanel op={r.operation} testid="obs-op" what="market replay" facts={false} />
         </div>
       </details>
+
+      {r.temporal && <TemporalPanel t={r.temporal} />}
 
       <details className="more inset" data-testid="run-technical">
         <summary><Icon name="chevron" size={14} className="summary-chevron" /> Technical details

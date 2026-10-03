@@ -755,6 +755,19 @@
         "status": {
           "$ref": "#/$defs/ReplayStatus"
         },
+        "temporal": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Temporal"
+        },
         "total_events": {
           "title": "Total Events",
           "type": "integer"
@@ -1027,6 +1040,11 @@
       "date": "2026-10-02",
       "note": "WP-008-R1A operational lifecycle (Director-approved limited revision): durable ObservationLaunch envelope persisted before worker-owned source preparation; manifest adds optional fencing generation, generation-scoped immutable artifact directory, measured phase timings and operational counters; validation adds optional outcome (passed/failed/incomplete), validator id/version and scope. All additions are optional, so revision-1 manifests remain readable unchanged. Replay semantics, order, digests and validation mathematics are unchanged.",
       "revision": 2
+    },
+    {
+      "date": "2026-10-03",
+      "note": "WP-008-R2 causal temporal substrate (Director-authorized additive optional field): manifest adds optional ``temporal`` - a reference to the run's algotrader.temporal.v1 substrate (contract/engine/state format, profile id + fingerprint, clock and seal policy, finite clock end, commitments; details in the temporal.json artifact). Absent for revision-1/2 manifests and for observe.stream.v1 runs, which remain readable unchanged. Factual replay semantics, order, digests and the factual state format are unchanged.",
+      "revision": 3
     }
   ],
   "clock_policy": "Event-driven replay clock: one step applies exactly one causal feed delivery, in the accepted feed.v1 total order; replay/information time becomes that delivery's available_time. Pacing (events/s) is operational only and never changes order, state or digests.",
@@ -1048,7 +1066,7 @@
     "SourceVerification": "#/$defs/SourceVerification",
     "ValidationCheck": "#/$defs/ValidationCheck"
   },
-  "revision": 2,
+  "revision": 3,
   "schema_version": "algotrader.observe.v1",
   "status": "PROVISIONAL",
   "title": "Algorithmic Trader observation-replay contracts (algotrader.observe.v1, PROVISIONAL)"

@@ -11,6 +11,12 @@ State format ``algotrader.observe-state.v1``: explicit validated JSON (never pic
 freshness policy, feed manifest reference, every channel's coverage / latest valid / latest slot / last
 quality / counts / bounded history / rejection flag, and the cursor (applied count, last event id, last
 total-order key). Stored zlib-compressed with the SHA-256 of its canonical JSON.
+
+Engine ``observe.stream.v2`` (WP-008-R2) additionally drives the causal temporal substrate
+(``algotrader.temporal.v1``, engine ``temporal.engine.v1``) with every applied event, beside - never inside - the
+factual reducer. Its explicit restore state (``algotrader.temporal-state.v1``) is stored separately next to the
+unchanged factual state, so the factual state SHA-256 / snapshot digests keep their exact R1B/R1C meaning.
+``observe.stream.v1`` runs (no temporal state) remain readable and keep their own compatibility fingerprint.
 """
 
 from __future__ import annotations
@@ -18,6 +24,7 @@ from __future__ import annotations
 import hashlib
 import zlib
 from datetime import datetime
+from typing import Any
 
 from ..feed.adapter import Feed
 from ..feed.contracts import (
@@ -30,10 +37,15 @@ from ..feed.contracts import (
 )
 from ..feed.ordering import canonical
 from ..feed.state import ChannelState, ObservableState, apply, initial_state, snapshot
+from ..temporal import engine as temporal_engine
+from ..temporal.contracts import TEMPORAL_SCHEMA_REVISION, TEMPORAL_SCHEMA_VERSION
+from ..temporal.engine import TemporalError
 from .feedcache import extend_commitment
 
 STATE_FORMAT = "algotrader.observe-state.v1"
-ENGINE_FORMAT = "observe.stream.v1"
+ENGINE_FORMAT_V1 = "observe.stream.v1"  # R1B/R1C runs: factual state only
+ENGINE_FORMAT = "observe.stream.v2"  # R2 runs: factual state + causal temporal substrate
+STREAM_ENGINE_FORMATS = frozenset({ENGINE_FORMAT_V1, ENGINE_FORMAT})
 
 
 class StateError(Exception):
@@ -107,21 +119,67 @@ def unpack_state(blob: bytes, sha256: str) -> ObservableState:
     return state
 
 
-def fingerprint(cache_id: str, freshness: FreshnessPolicy) -> str:
-    """Compatibility fingerprint: engine/state format + feed cache + freshness/history policy."""
-    return hashlib.sha256(canonical({"engine": ENGINE_FORMAT, "state": STATE_FORMAT, "cache": cache_id,
+def fingerprint(cache_id: str, freshness: FreshnessPolicy, engine_format: str = ENGINE_FORMAT_V1) -> str:
+    """Compatibility fingerprint of the factual state: engine/state format + feed cache + freshness/history policy.
+    (The temporal state carries its own profile fingerprint.)"""
+    return hashlib.sha256(canonical({"engine": engine_format, "state": STATE_FORMAT, "cache": cache_id,
                                      "freshness": freshness.model_dump(mode="json")})).hexdigest()
+
+
+def temporal_config(manifest) -> dict[str, Any]:
+    """Pinned temporal configuration of a new R2 run (profile, clock policy, finite clock end, fingerprint)."""
+    profile = temporal_engine.profile_for_feed(manifest)
+    eng = temporal_engine.for_feed(manifest, profile)
+    return {"contract": TEMPORAL_SCHEMA_VERSION, "contract_revision": TEMPORAL_SCHEMA_REVISION,
+            "engine": temporal_engine.ENGINE_ID, "state_format": temporal_engine.STATE_FORMAT,
+            "profile": temporal_engine.profile_doc(profile), "fingerprint": eng.fingerprint,
+            "clock_policy": profile.clock_policy.value, "seal_policy": profile.seal_policy_id,
+            "clock_end": eng.default_clock_end().isoformat(), "labels": list(profile.labels)}
+
+
+def new_temporal(manifest, engine: dict[str, Any]) -> temporal_engine.TemporalEngine | None:
+    """A fresh temporal engine for a run's pinned configuration (None for observe.stream.v1 runs)."""
+    tc = engine.get("temporal")
+    if not tc:
+        return None
+    from ..temporal.contracts import TemporalProfile
+
+    eng = temporal_engine.for_feed(manifest, TemporalProfile.model_validate(tc["profile"]))
+    if eng.fingerprint != tc["fingerprint"]:
+        raise StateError("temporal profile fingerprint differs from the configuration pinned at preparation")
+    return eng
+
+
+def restore_temporal(rp: dict[str, Any], engine: dict[str, Any]) -> temporal_engine.TemporalEngine | None:
+    """Decode and verify a restore point's temporal state (required for temporal-enabled runs)."""
+    tc = engine.get("temporal")
+    if not tc:
+        return None
+    if rp.get("temporal_format") != tc["state_format"] or rp.get("temporal_blob") is None:
+        raise StateError(f"restore point {rp['cursor']} has no {tc['state_format']} temporal state")
+    try:
+        eng = temporal_engine.unpack(bytes(rp["temporal_blob"]), rp["temporal_sha256"])
+    except TemporalError as exc:
+        raise StateError(f"temporal state at cursor {rp['cursor']}: {exc}") from None
+    if eng.fingerprint != tc["fingerprint"]:
+        raise StateError(f"temporal fingerprint mismatch at cursor {rp['cursor']}")
+    if eng.cursor != rp["cursor"]:
+        raise StateError(f"temporal cursor {eng.cursor} != restore point {rp['cursor']}")
+    return eng
 
 
 class Kernel:
     """Sequential application of canonical event lines to the observable state."""
 
     def __init__(self, feed_meta: Feed, freshness: FreshnessPolicy, state: ObservableState | None,
-                 commitment: bytes) -> None:
+                 commitment: bytes, temporal: temporal_engine.TemporalEngine | None = None) -> None:
         self.feed = feed_meta
         self.freshness = freshness
         self.state = state if state is not None else initial_state(feed_meta, freshness)
         self.commitment = commitment
+        self.temporal = temporal
+        if temporal is not None and temporal.cursor != self.state.cursor.applied_events:
+            raise StateError(f"temporal cursor {temporal.cursor} != factual cursor {self.state.cursor.applied_events}")
         self.counters = {"events_decoded": 0, "events_applied": 0, "snapshots_built": 0, "state_encodes": 0}
 
     @property
@@ -131,7 +189,10 @@ class Kernel:
     def apply_line(self, line: bytes) -> FeedEvent:
         e = FeedEvent.model_validate_json(line)
         self.counters["events_decoded"] += 1
+        before = self.state.cursor.applied_events
         self.state = apply(self.state, e)  # the accepted pure reducer (ordering/duplicate checks included)
+        if self.temporal is not None:
+            self.temporal.on_event(e, before)  # factual admission first, then the temporal clock policy
         self.commitment = extend_commitment(self.commitment, line)
         self.counters["events_applied"] += 1
         return e
@@ -149,3 +210,6 @@ class Kernel:
     def pack(self) -> tuple[bytes, str]:
         self.counters["state_encodes"] += 1
         return pack_state(self.state)
+
+    def pack_temporal(self) -> tuple[bytes, str] | None:
+        return None if self.temporal is None else temporal_engine.pack(self.temporal)

@@ -266,7 +266,7 @@ def pause_restore(url: str, root: Path, art: Path, ds: str) -> dict:
             r = c.execute("SELECT total_events, progress FROM observation_replays WHERE replay_id = %s",
                           (rid,)).fetchone()
             c.commit()
-            if r["total_events"] and (r["progress"] or {}).get("done", 0) >= r["total_events"] // 2:
+            if r["total_events"] and ((r["progress"] or {}).get("done") or 0) >= r["total_events"] // 2:
                 break
             time.sleep(0.05)
         t0 = time.perf_counter()

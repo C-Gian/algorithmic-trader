@@ -26,6 +26,18 @@ Assurance layers (WP-008-R1C):
   Separate commitments are reported: input (rolling prefix commitment), state (state SHA-256 / snapshot
   digest) and output (SHA-256 of the committed range records).
 
+* **Temporal** (version 3, ``observe.stream.v2`` runs only; R1B/R1C runs keep version 2 and its claims):
+
+  7. every committed range records the temporal state SHA-256, the combined temporal output commitment, the
+     aggregate chain and the dispatch sequence; dispatch sequences never decrease;
+  8. the terminal temporal restore state (format, profile/context fingerprint pinned at preparation, SHA-256, exact
+     round-trip, cursor == committed cursor) equals the last range's recorded temporal SHA-256 / commitment;
+  9. completed runs: the finite clock-end finish (declared ``clock_end``) is derived deterministically from that
+     verified terminal state, without reading any event beyond the committed cursor.
+
+  This verifies the integrity of the committed temporal state and its recorded commitments. It is NOT an
+  independent temporal re-execution; that is the optional Deep validation (v2 for temporal runs).
+
 * **Reference** (outside normal runs): protected differential and hand-expected fixtures in the test suite,
   and the optional, explicitly launched Deep validation job. A normal run never performs an independent
   reference replay; its wording says so.
@@ -41,7 +53,7 @@ from typing import Any
 from ..feed.ordering import canonical
 from .contracts import ReplayStatus, ReplayValidation, ValidationCheck, ValidationOutcome
 from .feedcache import FeedCache, decode, extend_commitment, initial_commitment, order_sort_key
-from .kernel import StateError, fingerprint, unpack_state
+from .kernel import StateError, fingerprint, restore_temporal, unpack_state
 
 VALIDATOR_ID = "observe.stream-reconciliation"
 VALIDATOR_VERSION = "2"
@@ -53,6 +65,14 @@ VALIDATOR_SCOPE = (
     "exactly-once consumption of the whole canonical stream. No independent reference replay was performed in "
     "this run: kernel/reference equivalence is covered by protected differential fixtures and by the optional "
     "Deep validation job.")
+
+VALIDATOR_VERSION_TEMPORAL = "3"
+VALIDATOR_SCOPE_TEMPORAL = VALIDATOR_SCOPE + (
+    " Version 3 (temporal-enabled observe.stream.v2 runs) additionally verifies the committed temporal substrate: "
+    "temporal state SHA-256, output/aggregate commitments and dispatch sequence recorded at every committed range; "
+    "the terminal temporal restore state (pinned profile fingerprint, exact round-trip, cursor) equal to the last "
+    "range's records; and, for completed runs, the clock-end finish derived from that verified state. No independent "
+    "temporal re-execution was performed in this run (optional Deep validation v2).")
 
 Hook = Callable[[str, int, int | None, str], None]
 
@@ -72,8 +92,10 @@ def output_commitment(ranges: list[dict[str, Any]]) -> str:
 
 def reconcile(*, status: ReplayStatus, cache: FeedCache, ranges: list[dict[str, Any]], cursor: int,
               terminal: dict[str, Any] | None, committed_snapshot_digest: str, engine: dict[str, Any],
-              freshness, hook: Hook, receipt: dict[str, Any] | None = None) -> tuple[ReplayValidation, Any]:
-    """Returns (validation, terminal snapshot or None). ``hook`` may raise OperationCancelled."""
+              freshness, hook: Hook, receipt: dict[str, Any] | None = None,
+              temporal_out: dict[str, Any] | None = None) -> tuple[ReplayValidation, Any]:
+    """Returns (validation, terminal snapshot or None). ``hook`` may raise OperationCancelled. For temporal runs the
+    verified (and, when completed, clock-end finished) temporal summary is written to ``temporal_out``."""
     from ..ops import OperationCancelled
 
     checks: list[ValidationCheck] = []
@@ -82,9 +104,13 @@ def reconcile(*, status: ReplayStatus, cache: FeedCache, ranges: list[dict[str, 
     def check(name: str, ok: bool, detail: str) -> None:
         checks.append(ValidationCheck(name=name, passed=ok, detail=detail))
 
+    temporal_cfg = engine.get("temporal")
+    version, scope = ((VALIDATOR_VERSION_TEMPORAL, VALIDATOR_SCOPE_TEMPORAL) if temporal_cfg
+                      else (VALIDATOR_VERSION, VALIDATOR_SCOPE))
+
     def result(outcome: ValidationOutcome) -> ReplayValidation:
         return ReplayValidation(passed=outcome == ValidationOutcome.PASSED, checks=tuple(checks), outcome=outcome,
-                                validator=VALIDATOR_ID, validator_version=VALIDATOR_VERSION, scope=VALIDATOR_SCOPE)
+                                validator=VALIDATOR_ID, validator_version=version, scope=scope)
 
     # 1. range continuity, positive counts and order bounds
     expect, problems, prev_last = 0, [], None
@@ -188,7 +214,7 @@ def reconcile(*, status: ReplayStatus, cache: FeedCache, ranges: list[dict[str, 
     else:
         try:
             if terminal["state_format"] != engine["state_format"] or terminal["fingerprint"] != fingerprint(
-                    cache.cache_id, freshness):
+                    cache.cache_id, freshness, engine.get("format") or "observe.stream.v1"):
                 raise StateError("format/compatibility fingerprint mismatch")
             state = unpack_state(bytes(terminal["state_blob"]), terminal["state_sha256"])
             if state.cursor.applied_events != cursor or terminal["cursor"] != cursor:
@@ -215,6 +241,8 @@ def reconcile(*, status: ReplayStatus, cache: FeedCache, ranges: list[dict[str, 
               f"cursor {cursor}/{cache.event_count}; final commitment "
               f"{'equals' if terminal_commit == cache.manifest['final_commitment'] else 'differs from'} the "
               "cache's full-stream commitment")
+    if temporal_cfg:
+        _temporal_checks(check, status, ranges, terminal, cursor, engine, commitments, temporal_out)
     commitments["output"] = output_commitment(ranges)
     check("observation_only", snap is None or set(snap.labels) >= {"OBSERVATION_ONLY", "NO_INTERPRETATION"},
           "observation-only snapshot labels; no MarketView/decision/order/account records")
@@ -224,3 +252,61 @@ def reconcile(*, status: ReplayStatus, cache: FeedCache, ranges: list[dict[str, 
           "(three distinct commitments; none substitutes for another)")
     outcome = ValidationOutcome.PASSED if all(c.passed for c in checks) else ValidationOutcome.FAILED
     return result(outcome), snap
+
+
+def _temporal_checks(check, status: ReplayStatus, ranges: list[dict[str, Any]], terminal: dict[str, Any] | None,
+                     cursor: int, engine: dict[str, Any], commitments: dict[str, Any],
+                     out: dict[str, Any] | None) -> None:
+    from datetime import datetime
+
+    from ..temporal.engine import TemporalError
+
+    problems, prev = [], 0
+    for r in ranges:
+        if not (r.get("temporal_sha256") and r.get("temporal_commitment") and r.get("aggregate_chain")) \
+                or r.get("dispatch_seq") is None:
+            problems.append(f"range {r['range_seq']} has no recorded temporal state/commitments")
+            continue
+        if r["dispatch_seq"] < prev:
+            problems.append(f"range {r['range_seq']} dispatch sequence {r['dispatch_seq']} decreases from {prev}")
+        prev = r["dispatch_seq"]
+    check("temporal_ranges_recorded", not problems,
+          "; ".join(problems[:5]) or f"{len(ranges)} ranges record temporal state SHA-256, output/aggregate "
+                                     f"commitments and a non-decreasing dispatch sequence (last {prev})")
+    if terminal is None:
+        check("temporal_state_verified", False, "no terminal restorable checkpoint exists")
+        return
+    try:
+        eng = restore_temporal(terminal, engine)
+        if eng.cursor != cursor:
+            raise StateError(f"terminal temporal cursor {eng.cursor} != committed {cursor}")
+        last = ranges[-1] if ranges else None
+        if last is not None and (last["temporal_sha256"] != terminal["temporal_sha256"]
+                                 or last["temporal_commitment"] != eng.commitment()
+                                 or last["aggregate_chain"] != eng.aggregate_chain
+                                 or last["dispatch_seq"] != eng.dispatch_seq):
+            raise StateError("terminal temporal state differs from the last committed range's recorded commitments")
+        commitments["temporal"] = {"state_sha256": terminal["temporal_sha256"], "output": eng.commitment(),
+                                   "aggregate_chain": eng.aggregate_chain, "dispatch_seq": eng.dispatch_seq}
+        check("temporal_state_verified", True,
+              f"terminal temporal state (cursor {cursor}, profile {engine['temporal']['profile']['profile_id']}, "
+              f"{eng.profile.clock_policy.value}) verified; {eng.counters['sealed']} sealed records, "
+              f"{eng.dispatch_seq} dispatches, late-excluded {eng.counters['late_excluded']}")
+    except (StateError, TemporalError) as exc:
+        check("temporal_state_verified", False, str(exc))
+        return
+    if status == ReplayStatus.COMPLETED:
+        try:
+            clock_end = datetime.fromisoformat(engine["temporal"]["clock_end"])
+            before = eng.dispatch_seq
+            eng.finish(clock_end)
+            forming = sum(len(t.open) + (0 if t.done() else 1) for t in eng.tracks.values())
+            check("temporal_clock_end_finish", eng.clock == clock_end,
+                  f"finite clock end {clock_end.isoformat()} derived from the verified terminal state without "
+                  f"further input: {eng.dispatch_seq - before} final dispatch(es); {forming} interval(s) still "
+                  "unsealed at clock end")
+        except TemporalError as exc:
+            check("temporal_clock_end_finish", False, str(exc))
+    if out is not None:
+        out.update(eng.summary(recent=10))
+        out["finished_at_clock_end"] = status == ReplayStatus.COMPLETED

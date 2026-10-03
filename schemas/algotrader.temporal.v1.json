@@ -1,0 +1,849 @@
+{
+  "$defs": {
+    "Admit": {
+      "additionalProperties": false,
+      "properties": {
+        "command": {
+          "default": "admit",
+          "title": "Command",
+          "type": "string"
+        },
+        "cursor": {
+          "title": "Cursor",
+          "type": "integer"
+        },
+        "event_id": {
+          "title": "Event Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "cursor",
+        "event_id"
+      ],
+      "title": "Admit",
+      "type": "object"
+    },
+    "AdvanceTo": {
+      "additionalProperties": false,
+      "properties": {
+        "barrier_id": {
+          "title": "Barrier Id",
+          "type": "string"
+        },
+        "command": {
+          "default": "advance",
+          "title": "Command",
+          "type": "string"
+        },
+        "time": {
+          "format": "date-time",
+          "title": "Time",
+          "type": "string"
+        }
+      },
+      "required": [
+        "time",
+        "barrier_id"
+      ],
+      "title": "AdvanceTo",
+      "type": "object"
+    },
+    "AggregateStatus": {
+      "enum": [
+        "FORMING",
+        "COMPLETE",
+        "INCOMPLETE",
+        "OUTSIDE_COVERAGE"
+      ],
+      "title": "AggregateStatus",
+      "type": "string"
+    },
+    "AggregateValues": {
+      "additionalProperties": false,
+      "properties": {
+        "close": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Close",
+          "type": "string"
+        },
+        "high": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "High",
+          "type": "string"
+        },
+        "index_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Index Id"
+        },
+        "low": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Low",
+          "type": "string"
+        },
+        "open": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Open",
+          "type": "string"
+        },
+        "volume_base": {
+          "anyOf": [
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Volume Base"
+        },
+        "volume_base_ccy": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Volume Base Ccy"
+        },
+        "volume_contracts": {
+          "anyOf": [
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Volume Contracts"
+        },
+        "volume_quote": {
+          "anyOf": [
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Volume Quote"
+        },
+        "volume_quote_ccy": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Volume Quote Ccy"
+        }
+      },
+      "required": [
+        "open",
+        "high",
+        "low",
+        "close"
+      ],
+      "title": "AggregateValues",
+      "type": "object"
+    },
+    "AvailabilityBasis": {
+      "enum": [
+        "MODELED",
+        "RECORDED"
+      ],
+      "title": "AvailabilityBasis",
+      "type": "string"
+    },
+    "CancelDeadline": {
+      "additionalProperties": false,
+      "properties": {
+        "command": {
+          "default": "cancel",
+          "title": "Command",
+          "type": "string"
+        },
+        "deadline_id": {
+          "title": "Deadline Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "deadline_id"
+      ],
+      "title": "CancelDeadline",
+      "type": "object"
+    },
+    "ChannelRef": {
+      "additionalProperties": false,
+      "properties": {
+        "family": {
+          "$ref": "#/$defs/Family"
+        },
+        "series_id": {
+          "title": "Series Id",
+          "type": "string"
+        },
+        "source": {
+          "title": "Source",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source",
+        "family",
+        "series_id"
+      ],
+      "title": "ChannelRef",
+      "type": "object"
+    },
+    "ClockPolicy": {
+      "enum": [
+        "temporal.clock.modeled-complete-prefix.v1",
+        "temporal.clock.recorded-replay-synthetic-barrier.v1",
+        "temporal.clock.recorded-dispatch-tape.v1"
+      ],
+      "title": "ClockPolicy",
+      "type": "string"
+    },
+    "ConstituentCounts": {
+      "additionalProperties": false,
+      "properties": {
+        "expected": {
+          "title": "Expected",
+          "type": "integer"
+        },
+        "missing": {
+          "title": "Missing",
+          "type": "integer"
+        },
+        "reasons": {
+          "additionalProperties": {
+            "type": "integer"
+          },
+          "title": "Reasons",
+          "type": "object"
+        },
+        "rejected": {
+          "title": "Rejected",
+          "type": "integer"
+        },
+        "valid": {
+          "title": "Valid",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "expected",
+        "valid",
+        "missing",
+        "rejected",
+        "reasons"
+      ],
+      "title": "ConstituentCounts",
+      "type": "object"
+    },
+    "Deadline": {
+      "additionalProperties": false,
+      "properties": {
+        "deadline_id": {
+          "title": "Deadline Id",
+          "type": "string"
+        },
+        "due": {
+          "format": "date-time",
+          "title": "Due",
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/DeadlineKind",
+          "default": "reasoning"
+        },
+        "priority": {
+          "default": 0,
+          "title": "Priority",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "deadline_id",
+        "due"
+      ],
+      "title": "Deadline",
+      "type": "object"
+    },
+    "DeadlineKind": {
+      "enum": [
+        "expiry",
+        "reasoning",
+        "publication"
+      ],
+      "title": "DeadlineKind",
+      "type": "string"
+    },
+    "Dependency": {
+      "additionalProperties": false,
+      "description": "One declared observation dependency. R2 demonstrates the query; MP-001 chooses production values.",
+      "properties": {
+        "family": {
+          "$ref": "#/$defs/Family"
+        },
+        "freshness_allowance": {
+          "format": "duration",
+          "title": "Freshness Allowance",
+          "type": "string"
+        },
+        "horizon": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Horizon"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "optional": {
+          "default": true,
+          "title": "Optional",
+          "type": "boolean"
+        },
+        "required_complete": {
+          "minimum": 1,
+          "title": "Required Complete",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "name",
+        "family",
+        "horizon",
+        "required_complete",
+        "freshness_allowance"
+      ],
+      "title": "Dependency",
+      "type": "object"
+    },
+    "Dispatch": {
+      "additionalProperties": false,
+      "properties": {
+        "admitted_cursor": {
+          "title": "Admitted Cursor",
+          "type": "integer"
+        },
+        "barrier": {
+          "title": "Barrier",
+          "type": "string"
+        },
+        "callbacks": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Callbacks",
+          "type": "array"
+        },
+        "clock_policy_id": {
+          "title": "Clock Policy Id",
+          "type": "string"
+        },
+        "clock_time": {
+          "format": "date-time",
+          "title": "Clock Time",
+          "type": "string"
+        },
+        "closed_record_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Closed Record Ids",
+          "type": "array"
+        },
+        "dispatch_id": {
+          "title": "Dispatch Id",
+          "type": "string"
+        },
+        "last_order": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Last Order"
+        },
+        "profile_fingerprint": {
+          "title": "Profile Fingerprint",
+          "type": "string"
+        },
+        "readiness": {
+          "items": {
+            "$ref": "#/$defs/Readiness"
+          },
+          "title": "Readiness",
+          "type": "array"
+        },
+        "reasons": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Reasons",
+          "type": "array"
+        },
+        "seq": {
+          "title": "Seq",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "dispatch_id",
+        "seq",
+        "clock_time",
+        "barrier",
+        "admitted_cursor",
+        "last_order",
+        "clock_policy_id",
+        "profile_fingerprint",
+        "reasons",
+        "callbacks",
+        "closed_record_ids",
+        "readiness"
+      ],
+      "title": "Dispatch",
+      "type": "object"
+    },
+    "Family": {
+      "description": "Role-specific source families. No generic 'price' channel exists.",
+      "enum": [
+        "trade_bar_1m",
+        "mark_bar_1m",
+        "index_bar_1m",
+        "funding_settlement"
+      ],
+      "title": "Family",
+      "type": "string"
+    },
+    "Horizon": {
+      "enum": [
+        "15m",
+        "1h",
+        "4h",
+        "1d",
+        "1w",
+        "1mo"
+      ],
+      "title": "Horizon",
+      "type": "string"
+    },
+    "Readiness": {
+      "additionalProperties": false,
+      "properties": {
+        "age_since_end": {
+          "anyOf": [
+            {
+              "format": "duration",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Age Since End"
+        },
+        "age_since_known": {
+          "anyOf": [
+            {
+              "format": "duration",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Age Since Known"
+        },
+        "blockers": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Blockers",
+          "type": "array"
+        },
+        "complete_consecutive": {
+          "title": "Complete Consecutive",
+          "type": "integer"
+        },
+        "dependency": {
+          "title": "Dependency",
+          "type": "string"
+        },
+        "latest_record_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Latest Record Id"
+        },
+        "required": {
+          "title": "Required",
+          "type": "integer"
+        },
+        "status": {
+          "$ref": "#/$defs/ReadinessStatus"
+        }
+      },
+      "required": [
+        "dependency",
+        "status",
+        "blockers",
+        "complete_consecutive",
+        "required",
+        "latest_record_id",
+        "age_since_end",
+        "age_since_known"
+      ],
+      "title": "Readiness",
+      "type": "object"
+    },
+    "ReadinessStatus": {
+      "enum": [
+        "READY",
+        "WARMING_UP",
+        "GAP",
+        "STALE",
+        "OUTSIDE_COVERAGE",
+        "UNAVAILABLE"
+      ],
+      "title": "ReadinessStatus",
+      "type": "string"
+    },
+    "RegisterDeadline": {
+      "additionalProperties": false,
+      "properties": {
+        "command": {
+          "default": "register",
+          "title": "Command",
+          "type": "string"
+        },
+        "deadline": {
+          "$ref": "#/$defs/Deadline"
+        }
+      },
+      "required": [
+        "deadline"
+      ],
+      "title": "RegisterDeadline",
+      "type": "object"
+    },
+    "TemporalAggregate": {
+      "additionalProperties": false,
+      "properties": {
+        "admitted_cursor": {
+          "title": "Admitted Cursor",
+          "type": "integer"
+        },
+        "availability_basis": {
+          "$ref": "#/$defs/AvailabilityBasis"
+        },
+        "availability_policy_id": {
+          "title": "Availability Policy Id",
+          "type": "string"
+        },
+        "channel": {
+          "$ref": "#/$defs/ChannelRef"
+        },
+        "channel_id": {
+          "title": "Channel Id",
+          "type": "string"
+        },
+        "closure_dispatch_id": {
+          "title": "Closure Dispatch Id",
+          "type": "string"
+        },
+        "content_digest": {
+          "title": "Content Digest",
+          "type": "string"
+        },
+        "counts": {
+          "$ref": "#/$defs/ConstituentCounts"
+        },
+        "feed_content_identity": {
+          "title": "Feed Content Identity",
+          "type": "string"
+        },
+        "horizon": {
+          "$ref": "#/$defs/Horizon"
+        },
+        "interval_end": {
+          "format": "date-time",
+          "title": "Interval End",
+          "type": "string"
+        },
+        "interval_start": {
+          "format": "date-time",
+          "title": "Interval Start",
+          "type": "string"
+        },
+        "known_at": {
+          "format": "date-time",
+          "title": "Known At",
+          "type": "string"
+        },
+        "partial_diagnostic": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AggregateValues"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "profile_id": {
+          "title": "Profile Id",
+          "type": "string"
+        },
+        "record_id": {
+          "title": "Record Id",
+          "type": "string"
+        },
+        "role": {
+          "title": "Role",
+          "type": "string"
+        },
+        "seal_policy_id": {
+          "title": "Seal Policy Id",
+          "type": "string"
+        },
+        "sealed_at": {
+          "format": "date-time",
+          "title": "Sealed At",
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/AggregateStatus"
+        },
+        "values": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AggregateValues"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "record_id",
+        "profile_id",
+        "channel",
+        "channel_id",
+        "horizon",
+        "role",
+        "interval_start",
+        "interval_end",
+        "status",
+        "counts",
+        "values",
+        "partial_diagnostic",
+        "known_at",
+        "sealed_at",
+        "admitted_cursor",
+        "closure_dispatch_id",
+        "availability_basis",
+        "availability_policy_id",
+        "feed_content_identity",
+        "seal_policy_id",
+        "content_digest"
+      ],
+      "title": "TemporalAggregate",
+      "type": "object"
+    },
+    "TemporalProfile": {
+      "additionalProperties": false,
+      "description": "Versioned profile + execution configuration (fingerprinted; part of every restore point).",
+      "properties": {
+        "clock_end": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Clock End"
+        },
+        "clock_policy": {
+          "$ref": "#/$defs/ClockPolicy"
+        },
+        "closure_allowance": {
+          "format": "duration",
+          "title": "Closure Allowance",
+          "type": "string"
+        },
+        "deadlines": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/Deadline"
+          },
+          "title": "Deadlines",
+          "type": "array"
+        },
+        "dependencies": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/Dependency"
+          },
+          "title": "Dependencies",
+          "type": "array"
+        },
+        "horizons": {
+          "default": [
+            "15m",
+            "1h",
+            "4h",
+            "1d",
+            "1w",
+            "1mo"
+          ],
+          "items": {
+            "$ref": "#/$defs/Horizon"
+          },
+          "title": "Horizons",
+          "type": "array"
+        },
+        "labels": {
+          "default": [
+            "TEMPORAL_SUBSTRATE_ONLY",
+            "NO_ADVISER",
+            "NO_INTERPRETATION"
+          ],
+          "items": {
+            "type": "string"
+          },
+          "title": "Labels",
+          "type": "array"
+        },
+        "max_open_intervals": {
+          "maximum": 8,
+          "minimum": 1,
+          "title": "Max Open Intervals",
+          "type": "integer"
+        },
+        "profile_id": {
+          "default": "temporal.utc-horizons.v1",
+          "title": "Profile Id",
+          "type": "string"
+        },
+        "retention": {
+          "additionalProperties": {
+            "type": "integer"
+          },
+          "propertyNames": {
+            "$ref": "#/$defs/Horizon"
+          },
+          "title": "Retention",
+          "type": "object"
+        },
+        "seal_policy_id": {
+          "default": "temporal.seal-no-revision.v1",
+          "title": "Seal Policy Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "retention",
+        "closure_allowance",
+        "max_open_intervals",
+        "clock_policy"
+      ],
+      "title": "TemporalProfile",
+      "type": "object"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "changelog": [
+    {
+      "date": "2026-10-03",
+      "note": "Initial provisional baseline (WP-008-R2): UTC multi-horizon factual aggregates, seal-no-revision late policy, logical clock/dispatch records, clock commands and dependency readiness.",
+      "revision": 1
+    }
+  ],
+  "clock_policies": {
+    "temporal.clock.modeled-complete-prefix.v1": "Modeled historical execution: at every barrier time t the whole canonical prefix with available_time <= t (the entire tie group, any family order) is admitted first; then due intervals close, readiness is assessed, due expiry callbacks run, then scheduled reasoning, then publication. No event available after t contributes. The clock jumps from barrier to barrier; empty minutes are never iterated.",
+    "temporal.clock.recorded-dispatch-tape.v1": "Recorded/live-style execution from an explicit admission/clock command tape: only the logged prefix is admitted at each clock barrier; a later receipt at the same time causes a later dispatch with a different admitted cursor. Replaying the same tape reproduces the same dispatches exactly.",
+    "temporal.clock.recorded-replay-synthetic-barrier.v1": "Recorded replay WITHOUT a dispatch tape: a synthetic barrier follows every admitted receipt (its local receipt time and cursor); equal-timestamp receipts produce separate barriers in receipt order and never wait for a supposedly complete tie group. This is a named replay convention, NOT a reproduction of the decisions an unrecorded live adviser would have made."
+  },
+  "horizon_roles": {
+    "15m": "setup",
+    "1d": "broad",
+    "1h": "tactical",
+    "1mo": "context",
+    "1w": "context",
+    "4h": "broad"
+  },
+  "profile_id": "temporal.utc-horizons.v1",
+  "public_contracts": {
+    "Admit": "#/$defs/Admit",
+    "AdvanceTo": "#/$defs/AdvanceTo",
+    "AggregateValues": "#/$defs/AggregateValues",
+    "CancelDeadline": "#/$defs/CancelDeadline",
+    "ConstituentCounts": "#/$defs/ConstituentCounts",
+    "Deadline": "#/$defs/Deadline",
+    "Dependency": "#/$defs/Dependency",
+    "Dispatch": "#/$defs/Dispatch",
+    "Readiness": "#/$defs/Readiness",
+    "RegisterDeadline": "#/$defs/RegisterDeadline",
+    "TemporalAggregate": "#/$defs/TemporalAggregate",
+    "TemporalProfile": "#/$defs/TemporalProfile"
+  },
+  "readiness_precedence": [
+    "UNAVAILABLE",
+    "OUTSIDE_COVERAGE",
+    "GAP",
+    "STALE",
+    "WARMING_UP",
+    "READY"
+  ],
+  "revision": 1,
+  "schema_version": "algotrader.temporal.v1",
+  "seal_policy": {
+    "id": "temporal.seal-no-revision.v1",
+    "text": "Each interval is frozen at its scheduled closure barrier (interval end, clipped to coverage end, plus the declared closure allowance) or earlier, once every in-coverage minute has admitted evidence. If any prerequisite minute was not admitted valid by then, the interval is sealed INCOMPLETE (or OUTSIDE_COVERAGE) and is never reopened or repaired: evidence for a sealed interval is counted as late-excluded here and stays accepted factual evidence in the feed reducer. Consequence: late data can leave a horizon unavailable even though it was received later. A revision policy would need an explicit new version."
+  },
+  "status": "PROVISIONAL",
+  "title": "Algorithmic Trader causal temporal substrate contracts (algotrader.temporal.v1, PROVISIONAL)"
+}
