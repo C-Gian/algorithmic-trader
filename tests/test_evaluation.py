@@ -99,6 +99,9 @@ def test_completed_evaluation_produces_deterministic_markdown_and_json(database_
     assert "OBSERVATION_ONLY_EVALUATION" in md_text and rp.NOT_CONNECTED in md_text
     assert "| Call count | UNAVAILABLE |" in md_text and "| Professional adviser | NOT_IMPLEMENTED |" in md_text
     assert "WORKFLOW_VALID" in md_text and "validation **PASS**" in md_text
+    total = doc["coverage"]["total_events"]
+    assert f"PASS `completed_consumed_entire_feed`: cursor {total}/{total}" in md_text  # Owner coverage comparison
+    assert "PASS `cache_receipt_and_pin`" in md_text and "trusted receipt" in md_text
     # deterministic: the same terminal state yields the same bytes
     assert api.get(f"/api/evaluations/{eid}/report.md").text == md_text
     assert api.get(f"/api/evaluations/{eid}/report.json").text == api.get(f"/api/evaluations/{eid}/report.json").text

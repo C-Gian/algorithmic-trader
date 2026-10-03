@@ -492,10 +492,13 @@ export interface ObsReplay {
 export interface AssuranceSummary {
   headline: string;
   run_validation: string | null;
+  runtime?: { state: string | null; label: string };
   deep_validation: string;
+  reference?: { state: string; label: string; earlier_match: string | null };
   latest_deep_validation: string | null;
   deep_validations: number;
   warnings: string[];
+  limitations?: string[];
 }
 
 export interface DeepMismatch { cursor: number; at: string; kind: string; expected: string; reference: string }

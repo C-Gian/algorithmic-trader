@@ -59,30 +59,80 @@ def deep_view(row: dict[str, Any], now: datetime | None = None) -> dict[str, Any
     }
 
 
+_RUNTIME_LABEL = {
+    "passed": "Runtime integrity verified, engine reference-tested",
+    "failed": "Runtime integrity FAILED",
+    "incomplete": "Runtime assurance INCOMPLETE",
+    "not_checked": "Runtime assurance NOT CHECKED",
+}
+
+
+def _coverage(res: dict[str, Any]) -> str:
+    covered, target, total = res.get("covered_events"), res.get("target_events"), res.get("run_total_events")
+    text = f"{covered if covered is not None else '—'}/{target if target is not None else '—'} committed events"
+    if total is not None and target is not None and target != total:
+        text += f" (run total {total}: the uncommitted remainder was not examined)"
+    return text
+
+
 def assurance_summary(c, replay_id: str, op_assurance: dict[str, Any] | None) -> dict[str, Any]:
-    """Current assurance of a run: its own terminal validation plus linked Deep validation results."""
+    """Current assurance of a run: its own runtime/terminal validation and the linked Deep validation results,
+    always reported side by side. A Deep (reference) MATCH never promotes a failed, incomplete or unchecked
+    runtime result, and never hides runtime warnings or limited diagnostic coverage."""
     rows = c.execute("SELECT validation_id, status, result, finished_at FROM observation_deep_validations "
                      "WHERE replay_id = %s ORDER BY created_at DESC", (replay_id,)).fetchall()
     latest = rows[0] if rows else None
-    warnings = [f"Deep validation {r['validation_id']} found {len(r['result']['mismatches'])} mismatch(es) between "
-                "the independent reference execution and the run's committed records"
-                for r in rows if r["status"] == "completed" and (r["result"] or {}).get("outcome") == "mismatch"]
+    run_state = (op_assurance or {}).get("state")
+    runtime_label = _RUNTIME_LABEL.get(str(run_state), f"Runtime assurance {str(run_state or 'pending').upper()}")
+    warnings: list[str] = []
+    limitations: list[str] = []
+    if run_state is not None and run_state != "passed":
+        detail = (op_assurance or {}).get("detail")
+        warnings.append(f"{runtime_label}" + (f": {detail}" if detail else "")
+                        + " - a Deep validation result does not change this runtime outcome")
+    mismatch_found = False
+    for r in rows:
+        res = r["result"] or {}
+        if res.get("mismatches"):
+            mismatch_found = True
+            done = r["status"] == "completed"
+            warnings.append(f"Deep validation {r['validation_id']} found {len(res['mismatches'])} mismatch(es) between "
+                            "the independent reference execution and the run's committed records"
+                            + ("" if done else f" before it stopped ({r['status']}, {_coverage(res)})"))
     deep_state = "not_run"
     if latest is not None:
         deep_state = ((latest["result"] or {}).get("outcome") if latest["status"] in deep.TERMINAL
                       else latest["status"])
-    run_state = (op_assurance or {}).get("state")
-    if warnings:
-        headline = "ASSURANCE WARNING - Deep validation mismatch"
+    earlier_match = next((r for r in rows[1:] if r["status"] == "completed"
+                          and (r["result"] or {}).get("outcome") == "match"), None)
+    if latest is None:
+        reference_label = "no Deep validation of this run"
     elif deep_state == "match":
-        headline = "Runtime integrity verified; Deep validation (independent reference execution) matched"
-    elif run_state == "passed":
-        headline = "Runtime integrity verified, engine reference-tested; no Deep validation of this run"
+        reference_label = (f"Deep validation reference re-execution matched ({_coverage(latest['result'])}; "
+                           "canonical-cache scope)")
+        if (latest["result"] or {}).get("target_events") != (latest["result"] or {}).get("run_total_events"):
+            limitations.append(f"Deep validation {latest['validation_id']} examined only the committed prefix: "
+                               f"{_coverage(latest['result'])}")
+    elif deep_state == "mismatch":
+        reference_label = "Deep validation reference re-execution MISMATCH"
+    elif latest["status"] in deep.TERMINAL:
+        reference_label = (f"latest Deep validation {latest['status'].upper()} - INCOMPLETE, no reference conclusion "
+                           f"({_coverage(latest['result'] or {})})")
+        if earlier_match is not None:
+            reference_label += f"; earlier Deep validation {earlier_match['validation_id']} matched"
     else:
-        headline = f"Run assurance {str(run_state).replace('_', ' ')}"
-    return {"headline": headline, "run_validation": run_state, "deep_validation": deep_state,
+        reference_label = f"Deep validation {latest['status']}"
+    headline = f"{runtime_label}; {reference_label}"
+    if mismatch_found:
+        headline = f"ASSURANCE WARNING - Deep validation mismatch; {runtime_label}"
+    elif warnings:
+        headline = f"ASSURANCE WARNING - {headline}"
+    return {"headline": headline, "run_validation": run_state, "runtime": {"state": run_state, "label": runtime_label},
+            "deep_validation": deep_state, "reference": {"state": deep_state, "label": reference_label,
+                                                         "earlier_match": earlier_match["validation_id"]
+                                                         if earlier_match else None},
             "latest_deep_validation": latest["validation_id"] if latest else None,
-            "deep_validations": len(rows), "warnings": warnings}
+            "deep_validations": len(rows), "warnings": warnings, "limitations": limitations}
 
 
 def deep_report(row: dict[str, Any], now: datetime) -> dict[str, Any]:

@@ -19,13 +19,15 @@ export function AssuranceStrip({ a }: { a: AssuranceSummary | undefined }) {
   if (!a) return null;
   return (
     <div className="assurance-strip" data-testid="assurance-summary">
-      <Notice tone={a.warnings.length ? "neg" : a.deep_validation === "match" ? "pos" : "info"} icon="shield"
-              title={<span data-testid="assurance-headline">{a.headline}</span>}>
+      <Notice tone={a.warnings.length ? "neg" : a.run_validation === "passed" && a.deep_validation === "match" ? "pos" : "info"}
+              icon="shield" title={<span data-testid="assurance-headline">{a.headline}</span>}>
         <span className="small-text">
-          Run validation: <b>{a.run_validation ?? "pending"}</b> · Deep validation: <b data-testid="assurance-deep">{a.deep_validation.replace("_", " ")}</b>
+          Runtime (this run): <b data-testid="assurance-runtime">{(a.run_validation ?? "pending").replace("_", " ")}</b>
+          {" · "}Reference (Deep validation): <b data-testid="assurance-deep">{a.deep_validation.replace("_", " ")}</b>
           {a.deep_validations > 0 && ` (${a.deep_validations} linked)`}
         </span>
         {a.warnings.map((w) => <div key={w} className="text-warn small-text" data-testid="assurance-warning">{w}</div>)}
+        {(a.limitations ?? []).map((x) => <div key={x} className="small-text" data-testid="assurance-limitation">{x}</div>)}
       </Notice>
     </div>
   );

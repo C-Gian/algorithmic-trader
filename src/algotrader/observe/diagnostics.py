@@ -455,10 +455,15 @@ def render_markdown(r: dict[str, Any]) -> str:
                      f"restore points {st.get('restore_points')} · per-event delivery rows {st.get('delivery_rows')}")
     ca = r.get("current_assurance")
     if ca:
+        rt, ref = ca.get("runtime") or {}, ca.get("reference") or {}
         lines += ["", "## Current assurance (linked)", f"- {ca['headline']}",
-                  f"- Run validation: {ca['run_validation']} · Deep validation: {ca['deep_validation']}"
+                  f"- Runtime (this run's own validation): {ca['run_validation']}"
+                  + (f" — {rt['label']}" if rt.get("label") else ""),
+                  f"- Reference (optional Deep validation): {ca['deep_validation']}"
+                  + (f" — {ref['label']}" if ref.get("label") else "")
                   + (f" (latest `{ca['latest_deep_validation']}`)" if ca.get("latest_deep_validation") else "")]
         lines += [f"- WARNING: {w}" for w in ca["warnings"]]
+        lines += [f"- Limitation: {x}" for x in ca.get("limitations") or []]
     lines += ["", "## Limitations"] + [f"- {x}" for x in r["limitations"]]
     lines += ["", f"Next diagnostic: {r['next_diagnostic']}", "", f"_Format {r['report_format']}_", ""]
     return "\n".join(lines)

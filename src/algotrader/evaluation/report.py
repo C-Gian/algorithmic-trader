@@ -259,6 +259,9 @@ def render_markdown(r: dict[str, Any]) -> str:
                                                     "re-execution" if v.get("validator") == "observe.stream-reconciliation"
                                                     else "") if v.get("validator") else ""),
     ]
+    # coverage/identity checks the Owner compares, and every failed check, with their recorded details
+    lines += [f"  - {'PASS' if x['passed'] else 'FAIL'} `{x['name']}`: {x['detail']}" for x in v["checks"]
+              if not x["passed"] or x["name"] in ("cache_receipt_and_pin", "completed_consumed_entire_feed")]
     if r["stopped_at"]:
         s = r["stopped_at"]
         lines.append(f"- Stopped at: {s['applied_events']:,}/{s['total_events']:,} events · information time "

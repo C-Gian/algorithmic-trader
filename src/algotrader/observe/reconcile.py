@@ -17,7 +17,10 @@ Assurance layers (WP-008-R1C):
   3. range boundary order keys equal the canonical cache keys at those positions;
   4. terminal restorable state (format, compatibility fingerprint, SHA-256, exact round-trip, cursor) and a
      snapshot materialized from it equal the committed state/snapshot digests (and the last range's);
-  5. cache manifest SHA-256 == run pin == trusted receipt; every partition matches its pinned SHA-256;
+  5. cache manifest SHA-256 == run pin == trusted receipt; every partition matches its pinned SHA-256. The
+     trusted receipt is REQUIRED: an absent receipt, or one whose manifest/event count differs, fails the check
+     and can never yield PASS (R1C correction of v2; reports stored before it keep their recorded check
+     details, where an absent receipt is named "not supplied");
   6. completed runs: cursor == feed event count and final commitment == the cache's full-stream commitment.
 
   Separate commitments are reported: input (rolling prefix commitment), state (state SHA-256 / snapshot
@@ -115,10 +118,16 @@ def reconcile(*, status: ReplayStatus, cache: FeedCache, ranges: list[dict[str, 
           chain_bad or f"recorded input commitments chain through all ranges to {str(h)[:16]} (terminal checkpoint)")
     # 3. cache identity: manifest == run pin == trusted receipt
     pin = engine.get("cache_manifest_sha256")
-    rec = receipt["cache_manifest_sha256"] if receipt else None
-    check("cache_receipt_and_pin", cache.manifest_sha256 == pin and (rec is None or rec == pin),
-          f"cache manifest {cache.manifest_sha256[:16]}, run pin {str(pin)[:16]}, receipt "
-          f"{str(rec)[:16] if rec else 'not supplied'}")
+    if receipt is None:
+        check("cache_receipt_and_pin", False,
+              f"no trusted receipt exists for cache {cache.cache_id} (run pin {str(pin)[:16]}): the cache cannot be "
+              "tied to its verified preparation; assurance cannot pass")
+    else:
+        rec, rec_count = receipt.get("cache_manifest_sha256"), receipt.get("event_count")
+        count_ok = rec_count is None or rec_count == cache.event_count
+        check("cache_receipt_and_pin", cache.manifest_sha256 == pin == rec and count_ok,
+              f"cache manifest {cache.manifest_sha256[:16]}, run pin {str(pin)[:16]}, trusted receipt {str(rec)[:16]}"
+              + ("" if count_ok else f"; receipt event count {rec_count} != cache {cache.event_count}"))
     # 4. exact consumed input: re-hash every committed line from verified partitions; boundary keys
     bad_parts: list[str] = []
     mismatch = None

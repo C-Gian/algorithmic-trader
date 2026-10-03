@@ -423,7 +423,7 @@ class ObservationWorker:
         if spec.kind == "deep":
             from .deep import DeepJob
 
-            job = DeepJob(spec, sleep=self.sleep)
+            job = DeepJob(spec, sleep=self.sleep, before_commit=self.before_commit, after_commit=self.after_commit)
         else:
             job = ReplayJob(spec, sleep=self.sleep, before_commit=self.before_commit, after_commit=self.after_commit)
         try:

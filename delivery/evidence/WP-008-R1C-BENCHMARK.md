@@ -1,4 +1,4 @@
-# WP-008-R1C structural benchmark — executor evidence (Director review pending)
+# WP-008-R1C structural benchmark — executor evidence (gate inventory corrected; Director review pending)
 
 Synthetic infrastructure evidence only: deterministic generated OKX-shaped data served through the accepted offline
 acquisition path (no network), plus a captured recorder edge fixture. **Not** a historical month/year evaluation, a
@@ -8,16 +8,34 @@ strategy test, or an Owner-hardware speedup claim.
 - Machine: Windows 10 19045, Python 3.14.7, Intel Core (Family 6 Model 158), 8 logical CPUs, 32 GiB RAM, local disk (type not recorded); no container limits; disposable PostgreSQL 18.6 container on the same host. Build: base `d2ee918` + R1C working tree.
 - Full report: `WP-008-R1C-benchmark.json` (clean run, ~22 min wall). First run: `WP-008-R1C-benchmark-run1-traced.json` (see *Year tier, first run*).
 
-## Gates (clean run)
+## Gates (clean run) — corrected inventory (R1C correction, evaluator v2)
+
+The original table labelled all six rows as release gates PASS. That was wrong for the three year rows: they are
+component measurements, not application gates. The stored raw measurements are unchanged and were not rerun.
+`WP-008-R1C-benchmark-gates-v2.{json,md}` re-evaluates them with the corrected evaluator
+(`uv run python scripts/bench_observe.py --evaluate-only delivery/evidence/WP-008-R1C-benchmark.json --out
+delivery/evidence/WP-008-R1C-benchmark-gates-v2`). Both raw JSON files keep their original v1 `gate_evaluation` as
+historical record.
+
+**Month application gates** (measured end to end: durable launch, compute process, DB checkpoints, actual reconciliation and report)
 
 | Gate | Measured | Limit | Result | How measured |
 |---|---|---|---|---|
-| Month cached observation | 31.4 s | 120 s | PASS | warm job, launch → terminal, wall incl. compute-process spawn |
+| Month cached observation | 31.4 s | 120 s | PASS | warm job, launch → terminal, wall incl. compute-process spawn; run completed/passed |
 | Month terminal validation/report | 0.84 s | 10 s | PASS | FINALIZING + VALIDATING + GENERATING_REPORT active |
 | Month cold preparation | 36.8 s | 120 s | PASS | PREPARING_SOURCE + VERIFYING_SOURCE + BUILDING_FEED active |
-| Year cached observation | 326 s | 900 s | PASS | component: kernel replay + checkpoint-cadence snapshot/encode (no DB) |
-| Year terminal validation | 6.8 s | 30 s | PASS | component: SHA-256 of all 316 partitions + consumed-input commitment re-hash |
-| Year cold preparation | 157 s | 900 s | PASS | component: cache build only (bounded external sorts); snapshot/verification NOT included |
+
+**Annual component comparisons** (not gates)
+
+| Component | Measured | Annual limit | Not included |
+|---|---|---|---|
+| Kernel replay + checkpoint-cadence snapshot/encode | 326 s | 900 s | DB checkpoint transactions, durable job, process spawn |
+| SHA-256 of all 316 partitions + consumed-input commitment re-hash | 6.8 s | 30 s | full reconciliation path (ranges/state/receipt), report generation |
+| Cache build (bounded external sorts) | 157 s | 900 s | source snapshot and verification; the ~2 × 157 s cold estimate is not a measurement |
+
+**Annual application gates.** Year cached observation, year terminal validation/report and year cold preparation are
+all **NOT_MEASURED / PENDING**. No end-to-end year application run was measured, so annual readiness is not claimed.
+The proposed Owner handoff is month-only (September), for Director review.
 
 ## Month tier (30 days, 129,690 events, 2-day long gap + periodic missing slots, shuffled Parquet rows)
 

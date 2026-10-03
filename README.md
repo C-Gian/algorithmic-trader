@@ -272,7 +272,7 @@ Caches built by the first R1B commit carry no receipt and are quarantined/rebuil
   - `committed_ranges_contiguous` — positive contiguous ranges/counts with strictly increasing first/last order keys;
   - `input_commitment_chain` + `consumed_input_exact` — every consumed line is re-hashed against the pinned cache and the rolling **input commitment** is recomputed at every range boundary;
   - `terminal_state_verified` — the terminal restorable **state** (SHA-256) and committed **snapshot digest**;
-  - `feed_cache_integrity`, `cache_receipt_and_pin` — partition hashes, run pin and trusted receipt;
+  - `feed_cache_integrity`, `cache_receipt_and_pin` — partition hashes, run pin and trusted receipt. The trusted receipt is **required** (R1C correction): if it is absent at final reconciliation, or its manifest/event count differs from the cache and run pin, the check fails and assurance is FAILED, never PASS. Reports stored before the correction keep their recorded check details;
   - `completed_consumed_entire_feed` — exactly-once consumption (completed runs);
   - `commitments_reported` — input, state and **output** commitments (hash over the committed ranges) are reported separately;
   - `observation_only`, `validation_completed`; a cancelled or interrupted reconciliation is INCOMPLETE, never PASS.
@@ -283,35 +283,51 @@ Caches built by the first R1B commit carry no receipt and are quarantined/rebuil
   - Validator **`observe.deep-reference` v1**: an independent sequential fold of the accepted pure reducer from the initial state over the run's committed prefix, compared at every committed range boundary and retained restore point (input commitment, state SHA-256, snapshot digest).
   - **Scope:** input is the receipt-checked canonical feed cache only — the original source is *not* re-normalized, so this is not an independent source audit, and the reducer code is shared with the engine.
   - Streams bounded input; saves resumable state every 5,000 events / 2 s; pause/cancel/restart resume from the saved cursor; cancellation is INCOMPLETE.
+  - **Terminal boundary (R1C correction):** the terminal commit locks the diagnostic row under its fencing generation, the same lock the Cancel command takes. A cancel accepted before that commit — in preparation, during the reference run, during report generation or just before the lock — ends the job CANCELLED with an INCOMPLETE result (exact covered/target events kept, no MATCH). A cancel arriving after the commit is rejected because the job is already terminal. A stale generation cannot write a terminal result.
   - The originating run's records, artifacts and terminal report never change. A mismatch is a persistent linked **assurance warning** shown in the run panel (*current assurance*) and in its copied diagnostics. Re-running a completed validation reproduces the same result without duplicate links.
+- **Current assurance shows two separate results.** *Runtime* is the run's own validation (passed / failed / incomplete / not checked). *Reference* is the latest Deep validation (match / mismatch / incomplete / not run). A Deep MATCH never upgrades a failed, incomplete or unchecked runtime result: the headline keeps the runtime result and a warning. Mismatches are warnings even when found before a validation stopped. A cancelled or failed latest validation is shown as INCOMPLETE; an earlier match is only named as earlier. A Deep run covering only part of the run (e.g. a cancelled run's committed prefix) is listed as a limitation.
 - **Controls and durability.** Byte-level cooperative hooks (1 MiB) in source snapshot copy and single-file hashing (datasets and recordings); measured on generated large files: every control applied ≤ 0.7 s across snapshot copy, source hashing, gap walk, external merge, replay, reconciliation, report, pause and STEP (`tests/test_controls.py`, `CONTROL_MATRIX`). Acks ≤ 0.55 s; progress age ≤ 0.1 s. Terminal publication is a labelled atomic boundary. Lost cache → rebuilt and must reproduce its receipt exactly; lost cache with a changed source → fails safely with an actionable error; lost/corrupt artifacts → reported in the diagnostic export.
 - **UI.** Run setup lists Deep validation as *Implemented · per run* with its scope. The run panel shows the **committed cursor** (durable checkpoint, the only admission boundary) and the **computed cursor** (in-memory, may run ahead until the next commit), and the current assurance headline/warnings. Reports now include the worker host (OS, Python, CPU, logical CPUs, RAM, cgroup CPU/memory limits).
 - **Structural benchmark** (`scripts/bench_observe.py`, synthetic infrastructure evidence — **not** a historical month/year evaluation or Owner speedup): see *R1C benchmark results* below.
 
 ### R1C benchmark results (synthetic, this machine)
 
-Windows 10, Python 3.14.7, 8 logical CPUs, 32 GiB; full evidence in `delivery/evidence/WP-008-R1C-BENCHMARK.md`.
+Windows 10, Python 3.14.7, 8 logical CPUs, 32 GiB; full evidence in `delivery/evidence/WP-008-R1C-BENCHMARK.md`. Gate inventory corrected by evaluator v2 (`delivery/evidence/WP-008-R1C-benchmark-gates-v2.md`, computed from the unchanged stored raw report; no rerun).
 
-| Gate | Measured | Limit |
-|---|---|---|
-| Month (129,690 events, long gap, shuffled Parquet) cached observation, launch → terminal | 31.4 s | 120 s |
-| Month terminal validation + report | 0.84 s | 10 s |
-| Month cold preparation (snapshot + verify + cache) | 36.8 s | 120 s |
-| Year (1,576,800 events) component replay with checkpoint-cadence encoding | 326 s | 900 s |
-| Year component terminal re-hash | 6.8 s | 30 s |
-| Year component cache build (verification not included) | 157 s | 900 s |
+**Month application gates** — measured end to end through the application path: durable launch, compute process, DB checkpoints, actual reconciliation and report.
 
-Month: 27 transactions, 0 delivery rows, direct restore after pause (0 prefix events), Deep validation 28.6 s MATCH. Year: flat ~4,850 events/s across deciles, Python-heap plateau ~10.7 MB, peak RSS ≤ 102 MB, manifest metadata ≈ 620 B per 5,000-event partition. These are structural infrastructure results, not the Owner's September result or a hardware prediction.
+| Gate | Measured | Limit | Result |
+|---|---|---|---|
+| Month (129,690 events, long gap, shuffled Parquet) cached observation, launch → terminal | 31.4 s | 120 s | PASS |
+| Month terminal validation + report | 0.84 s | 10 s | PASS |
+| Month cold preparation (snapshot + verify + cache) | 36.8 s | 120 s | PASS |
 
-### Owner upgrade to R1C and the replacement September run — proposed, NOT yet authorized
+**Annual component comparisons** — these are not gates.
 
-Only after the Director accepts R1C and hands off READY FOR OWNER MARKET REPLAY:
+| Component (1,576,800 events) | Measured | Annual limit | Not included |
+|---|---|---|---|
+| Kernel replay with checkpoint-cadence encoding | 326 s | 900 s | DB transactions, durable job, process spawn |
+| Consumed-input re-hash | 6.8 s | 30 s | full reconciliation path, report generation |
+| Feed-cache build | 157 s | 900 s | source snapshot and verification (a ~2× estimate is not a measurement) |
+
+**Annual application gates** — year cached observation, year terminal validation/report and year cold preparation are all **NOT_MEASURED / PENDING**. No end-to-end year application run was measured, so annual readiness is not claimed.
+
+Month: 27 transactions, 0 delivery rows, direct restore after pause (0 prefix events), Deep validation 28.6 s MATCH. Year components: flat ~4,850 events/s across deciles, Python-heap plateau ~10.7 MB, peak RSS ≤ 102 MB, manifest metadata ≈ 620 B per 5,000-event partition. These are structural infrastructure results, not the Owner's September result or a hardware prediction.
+
+### Owner upgrade to R1C and the replacement September run — proposed month-only handoff, NOT yet authorized
+
+This is a **month-only** check for Director review. Annual application gates stay NOT_MEASURED/PENDING, so do not launch other months or a year. Only after the Director accepts the R1C correction and hands off READY FOR OWNER MARKET REPLAY:
 
 1. Stop the application containers (`docker compose stop api worker recorder observer corpus`; leave `db`), update the checkout, `docker compose up --build -d`. Never `down --volumes`. Migration 9 is additive; the old September run stays suspended and read-only.
-2. Historical Workbench → **B · Run setup** → *Market replay — data and engine check* → select the **existing prepared September 2025 chunk** (badge *Verified*; nothing is downloaded) → pacing **max** → **Start**. This creates a **new** run id; the old run is not resumed, salvaged or relabeled.
-3. Wait for COMPLETED. A useful result requires: phases *Verifying source → Building feed → Replaying → Validating → Generating report* all done, status COMPLETED, assurance **passed** (`observe.stream-reconciliation` v2), committed cursor = total events (129,600 expected), no unmeasured spans.
-4. **Copy report for chat** and paste it to the Director (it contains build, worker host, counts, per-phase timings, counters, controls and limits). Optionally run **Deep validation** on the new run and copy its report too. Also copy the old suspended run's diagnostics if not already shared.
-5. No CLI commands, raw logs or retries are needed; if anything fails, copy the report as it is.
+2. Historical Workbench → **B · Run setup** → *Market replay — data and engine check* → select the **existing prepared September 2025 chunk** (badge *Verified*; nothing is downloaded) → pacing **max** → no start-paused → **Start**. This creates a **new** run id; the old run is not resumed, salvaged or relabeled.
+3. **Expected time.** The first run builds the feed cache: *Verifying source → Building feed*, then *Replaying → Validating → Generating report*. Release objectives on the reference machine are ≤120 s cold preparation, ≤120 s cached observation and ≤10 s terminal validation/report. The executor's synthetic month took ~70 s cold. Your hardware differs; if the run goes far beyond ~10 minutes, copy the diagnostic report while it is still running instead of waiting.
+4. **Check the copied report** (all fields are in it; nothing needs a terminal):
+   - status COMPLETED, last phase *Generating report* closed, no unmeasured spans;
+   - assurance **passed** (`observe.stream-reconciliation` v2), including `cache_receipt_and_pin` and `completed_consumed_entire_feed`;
+   - the *Current assurance* section's Runtime and Reference lines, plus every WARNING and Limitation line;
+   - **coverage:** the committed cursor must equal *this run's* verified total events (report *Feed* / *Committed cursor* lines and the `completed_consumed_entire_feed` detail `cursor N/N`). The earlier Owner-reported count of 129,600 is only a comparison: report any difference to the Director. Neither number is assumed.
+5. **Copy report for chat** (run panel in Historical Workbench or Replay Lab) and paste it to the Director. It contains build, worker host, feed identity and counts, per-phase timings, counters, controls, assurance and limits. **Deep validation** is optional: if you run it, copy its own report from its panel. Also copy the old suspended run's diagnostics if not already shared.
+6. No CLI commands, raw logs or retries are needed. If anything fails or is cancelled, copy the report as it is.
 
 ## Owner evaluation workbench (WP-008) — observation-only, no adviser
 
@@ -371,3 +387,7 @@ The earlier R1B findings are closed by Director review of `9d814ec`. R1C is impl
 ### Director R1C review — corrections required
 
 Review of `6745117` requires receipt enforcement, Deep terminal-cancel correctness and truthful separation of runtime versus reference assurance. See `delivery/WP-008-R1C-DIRECTOR-REVIEW.md`. The full synthetic month measurements are useful; annual component comparisons do not establish full annual application/preparation/report gates, which remain NOT_MEASURED/PENDING. No Owner September retry is authorized yet.
+
+### R1C correction — executor evidence, Director review pending
+
+The correction implements all three findings: required trusted receipt, Deep terminal boundary under the row lock, and separate runtime/reference assurance. It also adds the gate inventory evaluator v2 with month-only handoff and annual gates PENDING. Details are above. Director acceptance is pending, and the Owner September run stays blocked until then.

@@ -432,14 +432,37 @@ def year_component(args: dict) -> dict:
 # ---------------------------------------------------------------------------
 
 
+def reevaluate(source: Path, out: Path) -> None:
+    """Apply the current gate evaluator to stored raw measurements; the stored report stays unchanged."""
+    raw = json.loads(source.read_text(encoding="utf-8"))
+    doc = {"kind": "R1C gate re-evaluation of a stored raw benchmark report (no new measurement)",
+           "source_report": source.name, "source_build": raw["environment"].get("build"),
+           "source_gate_evaluation_v1": raw.get("gate_evaluation"), "gate_evaluation": evaluate(raw)}
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.with_suffix(".json").write_text(json.dumps(doc, indent=2, default=str) + "\n", encoding="utf-8")
+    head = ["# R1C benchmark gate re-evaluation", "",
+            f"> Stored raw measurements from `{source.name}` (build `{doc['source_build']}`) re-evaluated with the "
+            "corrected gate inventory. No new measurement was taken; the stored report is unchanged.", ""]
+    out.with_suffix(".md").write_text("\n".join(head + render_gates(doc["gate_evaluation"])) + "\n", encoding="utf-8")
+    print("\n".join(render_gates(doc["gate_evaluation"])))
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--admin-url", required=True, help="disposable PostgreSQL server (a new database is created)")
+    ap.add_argument("--admin-url", help="disposable PostgreSQL server (a new database is created; measurement only)")
     ap.add_argument("--out", type=Path, default=ROOT / "var" / "benchmarks" / "r1c")
     ap.add_argument("--tiers", default="pilot,month,partitions,recording,year")
     ap.add_argument("--budget-minutes", type=float, default=60.0)
     ap.add_argument("--year-days", type=int, default=365)
+    ap.add_argument("--evaluate-only", type=Path, default=None,
+                    help="re-evaluate a stored raw report.json with the current gate evaluator (no measurement); "
+                         "writes <out>.json/.md, never modifies the input")
     a = ap.parse_args()
+    if a.evaluate_only is not None:
+        reevaluate(a.evaluate_only, a.out)
+        return
+    if not a.admin_url:
+        ap.error("--admin-url is required for a measurement run")
     import psycopg
     from psycopg import sql
 
@@ -529,31 +552,79 @@ def main() -> None:
     print(render(report))
 
 
-def evaluate(r: dict) -> list[dict]:
-    rows = []
+EVALUATOR_VERSION = "2"  # v1 (6745117) labelled annual component measurements as release gates PASS
+
+
+def evaluate(r: dict) -> dict:
+    """Gate inventory (evaluator v2, R1C correction).
+
+    * ``month_application_gates`` - measured end to end through the actual application path (durable launch,
+      separate compute process, DB checkpoints, terminal reconciliation and report); PASS only if within the limit
+      AND the measured run completed with PASSED assurance.
+    * ``annual_component_comparisons`` - year-scale component measurements (no DB/spawn, no real terminal report,
+      no source snapshot/verification) compared with the annual limits. Useful evidence; NOT gates.
+    * ``annual_application_gates`` - NOT_MEASURED / PENDING: this script has no end-to-end year application tier.
+      An estimate or a component measurement never closes them.
+    """
+    month_rows, comp_rows, annual_rows = [], [], []
     m = r["tiers"].get("month") or {}
     if "warm" in m:
-        rows += [
-            {"gate": "month cached observation (warm run, launch->terminal incl. process spawn)",
-             "measured_s": m["warm"]["wall_including_process_spawn_s"], "limit_s": GATES["month_cached_observation_s"]},
-            {"gate": "month terminal validation/report (warm run, active)",
-             "measured_s": m["warm"]["terminal_report_active_s"], "limit_s": GATES["month_terminal_report_s"]},
-            {"gate": "month cold preparation (snapshot+verify+cache, active)",
-             "measured_s": m["cold"]["preparation_active_s"], "limit_s": GATES["month_cold_preparation_s"]},
-        ]
+        for gate, run, key, limit, path in (
+                ("month cached observation", m["warm"], "wall_including_process_spawn_s", "month_cached_observation_s",
+                 "warm job, durable launch -> terminal commit, incl. compute-process spawn and DB checkpoints"),
+                ("month terminal validation/report", m["warm"], "terminal_report_active_s", "month_terminal_report_s",
+                 "warm job FINALIZING + VALIDATING + GENERATING_REPORT active time (actual reconciliation + report)"),
+                ("month cold preparation", m["cold"], "preparation_active_s", "month_cold_preparation_s",
+                 "cold job PREPARING_SOURCE + VERIFYING_SOURCE + BUILDING_FEED active time")):
+            measured, ok_run = run.get(key), run.get("status") == "completed" and run.get("assurance") == "passed"
+            result = ("PASS" if measured is not None and measured <= GATES[limit] and ok_run else
+                      "FAIL" if measured is not None else "NOT_MEASURED")
+            month_rows.append({"gate": gate, "kind": "application (measured end to end)", "measured_s": measured,
+                               "limit_s": GATES[limit], "run_status": run.get("status"),
+                               "run_assurance": run.get("assurance"), "path": path, "result": result})
     y = r["tiers"].get("year") or {}
     if "replay_s" in y:
-        rows += [
-            {"gate": "year cached observation (component: kernel replay + checkpoint-cadence encoding)",
-             "measured_s": y["replay_s"], "limit_s": GATES["year_cached_observation_s"]},
-            {"gate": "year terminal validation (component: consumed-input re-hash)",
-             "measured_s": y["terminal_rehash_s"], "limit_s": GATES["year_terminal_report_s"]},
-            {"gate": "year cold preparation (component: cache build only; snapshot/verify not included)",
-             "measured_s": y["cold_cache_build_s"], "limit_s": GATES["year_cold_preparation_s"]},
-        ]
-    for row in rows:
-        row["result"] = "PASS" if row["measured_s"] is not None and row["measured_s"] <= row["limit_s"] else "FAIL"
-    return rows
+        for comp, key, limit, omitted in (
+                ("year kernel replay + checkpoint-cadence encoding", "replay_s", "year_cached_observation_s",
+                 "no durable job, DB checkpoint transactions or compute-process spawn"),
+                ("year consumed-input re-hash", "terminal_rehash_s", "year_terminal_report_s",
+                 "no actual terminal reconciliation path (ranges/state/receipt checks) and no report generation"),
+                ("year feed-cache build", "cold_cache_build_s", "year_cold_preparation_s",
+                 "no source snapshot and no source verification (month: verification ~ build time; a ~2x estimate "
+                 "is not a measurement)")):
+            measured = y.get(key)
+            comp_rows.append({"component": comp, "kind": "component comparison (not a gate)", "measured_s": measured,
+                              "annual_limit_s": GATES[limit], "omits": omitted,
+                              "result": ("COMPONENT_WITHIN_LIMIT" if measured is not None and measured <= GATES[limit]
+                                         else "COMPONENT_OVER_LIMIT" if measured is not None else "NOT_MEASURED")})
+    for gate, limit in (("year cached observation", "year_cached_observation_s"),
+                        ("year terminal validation/report", "year_terminal_report_s"),
+                        ("year cold preparation", "year_cold_preparation_s")):
+        annual_rows.append({"gate": gate, "kind": "application", "measured_s": None, "limit_s": GATES[limit],
+                            "result": "NOT_MEASURED",
+                            "status": "PENDING - no end-to-end year application run was measured; annual readiness "
+                                      "is not claimed (component comparisons are not substitutes)"})
+    return {"evaluator_version": EVALUATOR_VERSION, "month_application_gates": month_rows,
+            "annual_component_comparisons": comp_rows, "annual_application_gates": annual_rows,
+            "summary": {"month_application_gates_pass": bool(month_rows) and all(x["result"] == "PASS"
+                                                                                 for x in month_rows),
+                        "annual_application_gates": "NOT_MEASURED / PENDING"}}
+
+
+def render_gates(g: dict) -> list[str]:
+    lines = [f"_Gate evaluator v{g['evaluator_version']}_", "", "### Month application gates (measured end to end)", "",
+             "| Gate | Measured s | Limit s | Run | Result |", "|---|---|---|---|---|"]
+    for x in g["month_application_gates"]:
+        lines.append(f"| {x['gate']} | {x['measured_s']} | {x['limit_s']} | {x['run_status']}/{x['run_assurance']} "
+                     f"| {x['result']} |")
+    lines += ["", "### Annual component comparisons (NOT gates)", "",
+              "| Component | Measured s | Annual limit s | Omits | Result |", "|---|---|---|---|---|"]
+    for x in g["annual_component_comparisons"]:
+        lines.append(f"| {x['component']} | {x['measured_s']} | {x['annual_limit_s']} | {x['omits']} | {x['result']} |")
+    lines += ["", "### Annual application gates", "", "| Gate | Limit s | Result | Status |", "|---|---|---|---|"]
+    for x in g["annual_application_gates"]:
+        lines.append(f"| {x['gate']} | {x['limit_s']} | {x['result']} | {x['status']} |")
+    return lines
 
 
 def render(r: dict) -> str:
@@ -564,10 +635,8 @@ def render(r: dict) -> str:
              f"- Build `{env['build']}` (dirty={env['worktree_dirty']}) · {env['os']} · Python {env['python']}",
              f"- CPU {env['cpu']} · {env['logical_cpus']} logical · RAM "
              f"{(env['ram_bytes'] or 0) / 2**30:.1f} GiB · storage free {env['storage']['free_bytes'] / 2**30:.1f} GiB",
-             f"- {env['runtime_limits']} · budget {r['budget_minutes']} min", "", "## Gates", "",
-             "| Gate | Measured s | Limit s | Result |", "|---|---|---|---|"]
-    for g in r["gate_evaluation"]:
-        lines.append(f"| {g['gate']} | {g['measured_s']} | {g['limit_s']} | {g['result']} |")
+             f"- {env['runtime_limits']} · budget {r['budget_minutes']} min", "", "## Gates", ""]
+    lines += render_gates(r["gate_evaluation"])
     for name, t in r["tiers"].items():
         lines += ["", f"## {name}", "", "```json", json.dumps(t, indent=1, default=str)[:6000], "```"]
     return "\n".join(lines) + "\n"

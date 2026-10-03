@@ -167,27 +167,62 @@ class DeepJob(ReplayJob):
             raise LeaseLost(self.rid)
         self.counters_deep["saves"] += 1
 
+    @staticmethod
+    def _incomplete_result(row: dict[str, Any], outcome: str, detail: str | None) -> dict[str, Any]:
+        comparisons = row["comparisons"] or {}
+        return {"outcome": outcome, "validator": VALIDATOR_ID, "validator_version": VALIDATOR_VERSION, "scope": SCOPE,
+                "compared": comparisons.get("compared", 0), "mismatches": comparisons.get("mismatches", []),
+                "covered_events": row["resume_cursor"], "target_events": row["plan"]["committed_cursor"],
+                "run_total_events": row["plan"].get("total_events"), "detail": detail}
+
     def _finish(self, status: str, error: str | None, *, incomplete: bool = False,
                 result: dict[str, Any] | None = None) -> None:
+        """Fenced terminal commit, serialized with ``control`` by the diagnostic row lock.
+
+        ``control`` locks the same row and rejects terminal jobs, so a cancel is ordered strictly before or after
+        this commit: a cancel that wins the lock turns a would-be COMPLETED result into CANCELLED / INCOMPLETE
+        (no conclusion about the run); a cancel arriving after the commit is rejected (already terminal).
+        Inline test seams: ``before_commit(id, -1)`` before the lock, ``(id, -2)`` while holding it,
+        ``after_commit(id, -1)`` after the commit."""
         cond, args = self.fence
-        row = self._row()
-        closing = [self._closed(self._phase, self._phase_started())] if self._phase else []
-        if result is None:
-            result = {"outcome": "incomplete" if incomplete else "error", "validator": VALIDATOR_ID,
-                      "validator_version": VALIDATOR_VERSION, "scope": SCOPE,
-                      "compared": (row["comparisons"] or {}).get("compared", 0),
-                      "mismatches": (row["comparisons"] or {}).get("mismatches", []),
-                      "covered_events": row["resume_cursor"], "target_events": row["plan"]["committed_cursor"],
-                      "detail": error}
-        done = self.conn.execute(
-            f"""UPDATE observation_deep_validations SET status = %s, error = %s, result = %s, finished_at = now(),
-                    lease_owner = NULL, lease_expires_at = NULL, heartbeat_at = now(),
-                    phase_history = phase_history || %s, phase_started_at = NULL, progress = progress || %s
-                WHERE {cond} RETURNING 1""",
-            (status, error, Jsonb(result), Jsonb(closing), Jsonb({"waiting": None}), *args)).fetchone()
-        if done is None:
-            raise LeaseLost(self.rid)
+        if self.before_commit is not None:
+            self.before_commit(self.rid, -1)  # test seam: just before the terminal lock
+        with self.conn.transaction():
+            row = self.conn.execute(f"SELECT * FROM observation_deep_validations WHERE {cond} FOR UPDATE",
+                                    args).fetchone()
+            if row is None:
+                raise LeaseLost(self.rid)
+            if self.before_commit is not None:
+                self.before_commit(self.rid, -2)  # test seam: holding the terminal lock
+            if row["cancel_requested"] and status == "completed":
+                where = self._phase or "the terminal boundary"
+                status = "cancelled"
+                error = (f"cancelled by user during {where}, before the terminal commit: the reference execution "
+                         f"covered {row['resume_cursor']}/{row['plan']['committed_cursor']} events, but the "
+                         "validation did not finish; INCOMPLETE (no conclusion about the run)")
+                result = self._incomplete_result(row, "incomplete", error)
+            elif result is None:
+                result = self._incomplete_result(row, "incomplete" if incomplete else "error", error)
+            closing = [self._closed(self._phase, self._phase_started())] if self._phase else []
+            self.conn.execute(
+                f"""UPDATE observation_deep_validations SET status = %s, error = %s, result = %s, finished_at = now(),
+                        lease_owner = NULL, lease_expires_at = NULL, heartbeat_at = now(),
+                        phase_history = phase_history || %s, phase_started_at = NULL, progress = progress || %s,
+                        metrics = metrics || %s
+                    WHERE {cond}""",
+                (status, error, Jsonb(result), Jsonb(closing), Jsonb({"waiting": None}),
+                 Jsonb(self._metrics_doc()), *args))
+        if self.after_commit is not None:
+            self.after_commit(self.rid, -1)  # test seam: just after the terminal commit
         log.info("%s finished %s (%s)", self.rid, status, result.get("outcome"))
+
+    def _cancel_now(self, cursor: int, commitment: bytes | None, state, comparisons: dict[str, Any] | None,
+                    target: int) -> None:
+        """Bounded cancellation: save what was computed (if anything) and finish CANCELLED / INCOMPLETE."""
+        if state is not None and commitment is not None and comparisons is not None:
+            self._save(cursor, commitment, state, comparisons)
+        self._finish("cancelled", f"cancelled by user during {self._phase} at reference cursor {cursor} of {target}; "
+                                  "INCOMPLETE (no conclusion about the run)", incomplete=True)
 
     def _park(self, cursor: int, commitment: bytes, state, comparisons: dict[str, Any]) -> bool:
         self._save(cursor, commitment, state, comparisons)
@@ -209,6 +244,9 @@ class DeepJob(ReplayJob):
                                    (plan["replay_id"],)).fetchone()
         cfg = ObservationReplayConfig.model_validate(replay["config"])
         self.enter_phase("PREPARING_SOURCE", detail="open the run's pinned canonical feed cache (pin + receipt)")
+        if self.cancel_seen:
+            self._cancel_now(0, None, None, None, plan["committed_cursor"])
+            return
         receipt = self.conn.execute("SELECT cache_manifest_sha256 FROM observation_feed_caches WHERE cache_id = %s",
                                     (plan["cache_id"],)).fetchone()
         try:
@@ -256,6 +294,9 @@ class DeepJob(ReplayJob):
         reader = CacheReader(cache, {})
         last_save, saved_at = start, time.monotonic()
         cursor = start
+        if self.cancel_seen:
+            self._cancel_now(cursor, None, None, None, target)
+            return
         try:
             for seq, line in reader.iter_from(start):
                 if seq >= target:
@@ -290,9 +331,7 @@ class DeepJob(ReplayJob):
                     self._save(cursor, commitment, state, comparisons)
                     last_save, saved_at = cursor, time.monotonic()
         except OperationCancelled:
-            self._save(cursor, commitment, state, comparisons)
-            self._finish("cancelled", f"cancelled by user at reference cursor {cursor} of {target}; INCOMPLETE "
-                                      "(no conclusion about the run)", incomplete=True)
+            self._cancel_now(cursor, commitment, state, comparisons, target)
             return
         except CacheError as exc:
             self._finish("failed", f"feed cache rejected during Deep validation: {exc}")

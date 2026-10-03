@@ -1,0 +1,134 @@
+{
+  "kind": "R1C gate re-evaluation of a stored raw benchmark report (no new measurement)",
+  "source_report": "WP-008-R1C-benchmark.json",
+  "source_build": "d2ee918e03cf9388d9c017060b528413ca10b378",
+  "source_gate_evaluation_v1": [
+    {
+      "gate": "month cached observation (warm run, launch->terminal incl. process spawn)",
+      "measured_s": 31.381,
+      "limit_s": 120.0,
+      "result": "PASS"
+    },
+    {
+      "gate": "month terminal validation/report (warm run, active)",
+      "measured_s": 0.837,
+      "limit_s": 10.0,
+      "result": "PASS"
+    },
+    {
+      "gate": "month cold preparation (snapshot+verify+cache, active)",
+      "measured_s": 36.81,
+      "limit_s": 120.0,
+      "result": "PASS"
+    },
+    {
+      "gate": "year cached observation (component: kernel replay + checkpoint-cadence encoding)",
+      "measured_s": 326.31,
+      "limit_s": 900.0,
+      "result": "PASS"
+    },
+    {
+      "gate": "year terminal validation (component: consumed-input re-hash)",
+      "measured_s": 6.79,
+      "limit_s": 30.0,
+      "result": "PASS"
+    },
+    {
+      "gate": "year cold preparation (component: cache build only; snapshot/verify not included)",
+      "measured_s": 157.36,
+      "limit_s": 900.0,
+      "result": "PASS"
+    }
+  ],
+  "gate_evaluation": {
+    "evaluator_version": "2",
+    "month_application_gates": [
+      {
+        "gate": "month cached observation",
+        "kind": "application (measured end to end)",
+        "measured_s": 31.381,
+        "limit_s": 120.0,
+        "run_status": "completed",
+        "run_assurance": "passed",
+        "path": "warm job, durable launch -> terminal commit, incl. compute-process spawn and DB checkpoints",
+        "result": "PASS"
+      },
+      {
+        "gate": "month terminal validation/report",
+        "kind": "application (measured end to end)",
+        "measured_s": 0.837,
+        "limit_s": 10.0,
+        "run_status": "completed",
+        "run_assurance": "passed",
+        "path": "warm job FINALIZING + VALIDATING + GENERATING_REPORT active time (actual reconciliation + report)",
+        "result": "PASS"
+      },
+      {
+        "gate": "month cold preparation",
+        "kind": "application (measured end to end)",
+        "measured_s": 36.81,
+        "limit_s": 120.0,
+        "run_status": "completed",
+        "run_assurance": "passed",
+        "path": "cold job PREPARING_SOURCE + VERIFYING_SOURCE + BUILDING_FEED active time",
+        "result": "PASS"
+      }
+    ],
+    "annual_component_comparisons": [
+      {
+        "component": "year kernel replay + checkpoint-cadence encoding",
+        "kind": "component comparison (not a gate)",
+        "measured_s": 326.31,
+        "annual_limit_s": 900.0,
+        "omits": "no durable job, DB checkpoint transactions or compute-process spawn",
+        "result": "COMPONENT_WITHIN_LIMIT"
+      },
+      {
+        "component": "year consumed-input re-hash",
+        "kind": "component comparison (not a gate)",
+        "measured_s": 6.79,
+        "annual_limit_s": 30.0,
+        "omits": "no actual terminal reconciliation path (ranges/state/receipt checks) and no report generation",
+        "result": "COMPONENT_WITHIN_LIMIT"
+      },
+      {
+        "component": "year feed-cache build",
+        "kind": "component comparison (not a gate)",
+        "measured_s": 157.36,
+        "annual_limit_s": 900.0,
+        "omits": "no source snapshot and no source verification (month: verification ~ build time; a ~2x estimate is not a measurement)",
+        "result": "COMPONENT_WITHIN_LIMIT"
+      }
+    ],
+    "annual_application_gates": [
+      {
+        "gate": "year cached observation",
+        "kind": "application",
+        "measured_s": null,
+        "limit_s": 900.0,
+        "result": "NOT_MEASURED",
+        "status": "PENDING - no end-to-end year application run was measured; annual readiness is not claimed (component comparisons are not substitutes)"
+      },
+      {
+        "gate": "year terminal validation/report",
+        "kind": "application",
+        "measured_s": null,
+        "limit_s": 30.0,
+        "result": "NOT_MEASURED",
+        "status": "PENDING - no end-to-end year application run was measured; annual readiness is not claimed (component comparisons are not substitutes)"
+      },
+      {
+        "gate": "year cold preparation",
+        "kind": "application",
+        "measured_s": null,
+        "limit_s": 900.0,
+        "result": "NOT_MEASURED",
+        "status": "PENDING - no end-to-end year application run was measured; annual readiness is not claimed (component comparisons are not substitutes)"
+      }
+    ],
+    "summary": {
+      "month_application_gates_pass": true,
+      "annual_application_gates": "NOT_MEASURED / PENDING"
+    }
+  }
+}
