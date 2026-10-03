@@ -1,8 +1,8 @@
 # Project State
 
-Updated: 2026-10-03 — September Market replay check closed; WP-010 documentation/UX wording closure active
+Updated: 2026-10-03 — September Market replay check closed; WP-010 accepted; Director R2 specification next
 
-**Current task: [task.md](task.md) — WP-010 Documentation clarity and bounded UX wording (ACTIVE, executor implementation).** Product authority: [FOUNDATION.md](FOUNDATION.md) v3.1. Executor rules: [AGENTS.md](AGENTS.md). How to run the app: [README.md](README.md). Chronology and earlier package evidence: [delivery/DELIVERY-HISTORY.md](delivery/DELIVERY-HISTORY.md).
+**Current task: [task.md](task.md) — Director R2 causal temporal substrate specification (no executor implementation active).** Product authority: [FOUNDATION.md](FOUNDATION.md) v3.1. Executor rules: [AGENTS.md](AGENTS.md). How to run the app: [README.md](README.md). Chronology and earlier package evidence: [delivery/DELIVERY-HISTORY.md](delivery/DELIVERY-HISTORY.md).
 
 Goal (Foundation v3.1): an integrated BTC adviser with persistent actionable LONG/SHORT calls, entry area, targets, stop/exit guidance and holding horizon. Capital, size, leverage and orders stay human. Historical ACCEPTED/READY/HOLD labels in older documents do not authorize work; only task.md does.
 
@@ -47,11 +47,11 @@ These remain open after the September closure; they are not contradicted by it:
 
 ## 4. Next step
 
-1. **Now:** WP-010 (this task.md) — executor implementation, then Director review. It does not activate R2, MP-001, R3 or WP-009.
+1. **Now:** WP-010 accepted at `f7ad4bc`; Director R2 specification only. No executor implementation is active; R2 implementation, MP-001, R3 and WP-009 require their own activation.
 2. **Next Director action:** a bounded **R2 causal temporal substrate specification**, reviewed against the adviser's actual dependencies, followed by **MP-001 integrated method closure**.
 3. Remaining Foundation/SR-003 sequence (each needs its own task.md activation): R2 → MP-001 → R3 method-required context/presets → WP-009 integrated adviser v0 → Owner Backtest A. Sequence and rationale: [integrated delivery plan](delivery/FOUNDATION-V3-INTEGRATED-PLAN.md) §9–10 and [SR-003 disposition](strategic_reviews/SR-003-DIRECTOR-DISPOSITION.md).
 
-### WP-010 executor evidence (base `e9c01b9`; Director review pending)
+### WP-010 accepted evidence (base `e9c01b9`; implementation `f7ad4bc`)
 
 - Chronology moved verbatim (heading levels only) from STATE.md and README.md to [delivery/DELIVERY-HISTORY.md](delivery/DELIVERY-HISTORY.md); STATE is reorganized as implementation / evidence / limits / next step; README is an operation guide (start, upgrade, data and report locations, normal Workbench path, limits); plan §9–10 and the SR-003 current pointer updated.
 - UX/report wording: pause shows *Pause requested* until the worker parks the run (no "nothing is processed" promise before `paused`); replay status no longer claims knowledge "exactly as it would have been known" and states the modeled availability convention vs recorded receipt times; Deep validation is described as a reference re-execution with the shared reducer and canonical-cache scope, not a wholly independent method or source audit (UI, Workbench report text, Deep scope string for new validations, mismatch warning). Stored reports, validator ids/versions and the reconciliation scope string are unchanged.
@@ -76,3 +76,7 @@ The next product objective is the first complete adviser path, not an isolated r
 **Knowledge baseline:** `source_notes/` and `knowledge/registry.yaml` (initial snapshot `3bf9de0d88fd97360bff7a6517bbb61544f5db68`) are provenance, not workflow instructions; preserve them unchanged.
 
 **Repository:** force pushes are prohibited; executors do not pull (AGENTS.md). The earlier stale-parent history repair merge `ea88a97` is recorded in the [history](delivery/DELIVERY-HISTORY.md).
+
+## WP-010 Director closure — 2026-10-03
+
+ACCEPTED at `f7ad4bc8d067d3b5ab46945cd899da8d074f04d3`. Independently checked commit diff, current documents/history organization, pause/availability/reference wording and CI `37127341286`: checks (including E2E, web typecheck/build) and compose-smoke SUCCESS. Full local suites were reported by the executor, not rerun by the Director. Scope remains documentation and truthful presentation; no method or assurance criteria changed. The reconciliation v2 sentence “No independent reference replay was performed in this run” stays unchanged: it is a negative scope claim, and Deep's shared reducer/cache limits are explicit. The reported executor fetch --dry-run violated the standing no-sync rule; no update occurred, and the rule remains in AGENTS without a new approval flow. Next is a bounded Director R2 specification, not another general infrastructure pass.

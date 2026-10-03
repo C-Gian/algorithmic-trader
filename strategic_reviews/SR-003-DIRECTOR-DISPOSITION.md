@@ -67,3 +67,7 @@ Private Project Instructions still describe a discretionary “when practical”
 > For Algorithmic Trader, use current Owner instructions, latest FOUNDATION.md, STATE.md, AGENTS.md and task.md from main. Build the BTC adviser with persistent calls; capital/leverage/orders stay human. The Owner launches substantial historical evaluations and acquisitions in the app; executors run bounded engineering checks. Current SR-003 disposition governs architecture; only task.md activates implementation. No legacy import, automatic RP-001 revival or September redownload.
 
 This Git update does not modify any private chat instructions.
+
+## Current pointer — WP-010 Director closure, 2026-10-03
+
+WP-010 accepted at `f7ad4bc`; CI `37127341286` checks and compose-smoke SUCCESS independently verified. September remains closed. Current task.md now activates Director R2 specification only; no executor implementation or historical acquisition is active. Earlier WP-010-active pointers are historical. R2 must remain the bounded causal temporal substrate needed for the integrated adviser; then MP-001 method closure, method-led R3 context and WP-009. No new general consolidation programme.

@@ -452,3 +452,7 @@ The Owner September Market replay check is closed (Director review of the Owner'
 **Next Director action:** a bounded **R2 causal temporal substrate specification**, reviewed against the adviser's actual dependencies, followed by **MP-001 integrated method closure**. The table order in section 9 is unchanged; each package still needs explicit task.md activation. No acquisition, old-run salvage or real historical agent-CLI evaluation is authorized.
 
 Historical pointer (2026-10-03, before closure): the previous immediate action was the month-only Owner September Market replay check after R1C correction `99e0ca5`; see `WP-008-R1C-DIRECTOR-REVIEW.md`.
+
+## Current pointer — WP-010 Director closure, 2026-10-03
+
+WP-010 accepted at `f7ad4bc`; CI `37127341286` checks and compose-smoke SUCCESS independently verified. September remains closed. Current task.md now activates Director R2 specification only; no executor implementation or historical acquisition is active. Earlier WP-010-active pointers are historical. R2 must remain the bounded causal temporal substrate needed for the integrated adviser; then MP-001 method closure, method-led R3 context and WP-009. No new general consolidation programme.
