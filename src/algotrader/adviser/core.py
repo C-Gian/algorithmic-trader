@@ -44,6 +44,7 @@ from .params import Params
 
 STATE_FORMAT = "algotrader.adviser-state.v1"
 MINUTE = timedelta(minutes=1)
+EPS = timedelta(microseconds=1)
 INITIAL_JOURNAL = hashlib.sha256(b"algotrader.adviser.journal.v1\x00").hexdigest()
 FAM_RANK = {"A": 0, "B": 1, "C": 2}
 PRICE_REASONS = frozenset({"PRICE_OUTSIDE_STRUCTURAL_AREA", "NO_ROOM_AFTER_COSTS", "AT_OR_BEYOND_INVALIDATION",
@@ -471,6 +472,10 @@ class AdviserCore:
         self.seq += 1
         self._inputs.append(("origin", {"origin": origin, "at": _iso(at)}))
 
+    def admit_restart(self, reason: str) -> None:
+        self.seq += 1
+        self._inputs.append(("restart", reason))
+
     def has_pending(self) -> bool:
         return bool(self._bars or self._sealed or self._inputs)
 
@@ -489,19 +494,20 @@ class AdviserCore:
         call = self.call
         if call is not None:
             c += [call.hard_deadline, call.progress_at, call.hard_deadline - timedelta(minutes=call.min_residual)]
+        # freshness holds while age <= allowance: staleness starts strictly after it (one microsecond later)
         if self.last_1m is not None:
-            c.append(max(self.last_1m.end, self.last_1m.known_at) + self.p.fresh_1m)
+            c.append(max(self.last_1m.end, self.last_1m.known_at) + self.p.fresh_1m + EPS)
         if self.m15:
-            c.append(max(self.m15[-1].end, self.m15[-1].known_at) + self.p.fresh_15m)
+            c.append(max(self.m15[-1].end, self.m15[-1].known_at) + self.p.fresh_15m + EPS)
         if self.h1:
-            c.append(max(self.h1[-1].end, self.h1[-1].known_at) + self.p.fresh_1h)
+            c.append(max(self.h1[-1].end, self.h1[-1].known_at) + self.p.fresh_1h + EPS)
         c += [lm.retire_at for lm in self.landmarks.values() if lm.retire_at is not None and lm.status == "ACTIVE"]
         for e in self.events.values():
             for k in ("restrict_start", "schedule_time", "post_min_end"):
                 if e.get(k):
                     c.append(_dt(e[k]))
         if self.quote is not None and self.cfg.profile.execution == Execution.LIVE_QUOTED:
-            c.append(min(self.quote.source_ts, self.quote.received_at) + self.p.fresh_quote)
+            c.append(min(self.quote.source_ts, self.quote.received_at) + self.p.fresh_quote + EPS)
         c += [x for x in (self.cfg.eval_start, self.cfg.eval_end) if x is not None]
         if self.clock is not None:
             c = [x for x in c if x > self.clock]
@@ -612,6 +618,9 @@ class AdviserCore:
             self.counters["quotes_admitted"] += 1
         elif kind == "event":
             self._event_input(x, t)
+        elif kind == "restart":
+            if self.call is not None and self.call.thesis == "ONGOING":
+                self._terminate(self.call, "UNASSESSABLE", x, t)
         elif kind == "origin":
             prev = self.origin
             self.origin = x["origin"]

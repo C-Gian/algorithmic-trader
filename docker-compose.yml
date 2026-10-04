@@ -99,6 +99,18 @@ services:
         condition: service_completed_successfully
     restart: unless-stopped
 
+  adviser:
+    <<: *app
+    # Local live adviser (public read-only OKX candles + ticker quotes; no credentials, no orders, no sizing). Idle
+    # until the Owner presses Start live adviser on Market. Owns its subscriptions explicitly under a fenced lease;
+    # while stopped nothing is monitored and no alert is produced. A restart reclaims the session after the lease
+    # expires and re-identifies the downtime (bounded <= 96 h reconstructed catch-up).
+    command: ["algotrader", "adviser-worker", "--lease-seconds", "20"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
 volumes:
   pgdata:
   artifacts:

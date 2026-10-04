@@ -5,6 +5,7 @@
     algotrader worker             run a durable run worker (synthetic DEMO replay)
     algotrader observe-worker     run a durable real-market observation-replay worker
     algotrader corpus-worker      run a durable corpus-preparation worker (public OKX, read-only)
+    algotrader adviser-worker     run the durable local live adviser worker (public OKX, read-only; no orders)
     algotrader serve              migrate + supervised worker + api (local, no Docker)
     algotrader replay             run the engine in-process and print the trace hash
     algotrader schema [--write]   check / write the semantic contract JSON Schema baseline
@@ -50,6 +51,7 @@ def _serve(args: argparse.Namespace) -> None:
         [sys.executable, "-m", "algotrader.cli", "recorder-worker"],
         [sys.executable, "-m", "algotrader.cli", "observe-worker"],
         [sys.executable, "-m", "algotrader.cli", "corpus-worker"],
+        [sys.executable, "-m", "algotrader.cli", "adviser-worker"],
     ]
 
     def supervise(cmd: list[str]) -> None:
@@ -87,6 +89,13 @@ def _corpus_worker(args: argparse.Namespace) -> None:
 
     CorpusWorker(data_root=args.root, lease_seconds=args.lease_seconds,
                  poll_interval=args.poll_interval).run_forever()
+
+
+def _adviser_worker(args: argparse.Namespace) -> None:
+    from . import version
+    from .adviser.live import LiveAdviserWorker
+
+    LiveAdviserWorker(lease_seconds=args.lease_seconds, build=version.code_version()).run_forever()
 
 
 def _recorder_worker(args: argparse.Namespace) -> None:
@@ -356,6 +365,9 @@ def main(argv: list[str] | None = None) -> None:
     cw.add_argument("--poll-interval", type=float, default=1.0)
     cw.add_argument("--root", type=Path, default=None, help="data root (ALGOTRADER_DATA_ROOT)")
     cw.set_defaults(fn=_corpus_worker)
+    aw = sub.add_parser("adviser-worker", help="durable local live adviser worker (public read-only data; no orders)")
+    aw.add_argument("--lease-seconds", type=float, default=20.0)
+    aw.set_defaults(fn=_adviser_worker)
     rec = sub.add_parser("recorder", help="public market recorder tools (no trading)")
     rsub = rec.add_subparsers(dest="recorder_cmd", required=True)
     rr = rsub.add_parser("run", help="foreground bounded public recording session (integration check)")

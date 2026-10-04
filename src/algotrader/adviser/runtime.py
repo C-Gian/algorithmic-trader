@@ -82,6 +82,10 @@ class AdviserRuntime:
     def origin(self, origin: str, at: datetime) -> None:
         self._push(at, "origin", origin)
 
+    def capability_restart(self, at: datetime, reason: str) -> None:
+        """Live restart after downtime: a gap overlapping an ongoing thesis makes it UNASSESSABLE (MP-001 §9)."""
+        self._push(at, "restart", reason)
+
     # -- clock ------------------------------------------------------------------------------------------------------
 
     def next_time(self) -> datetime | None:
@@ -140,6 +144,8 @@ class AdviserRuntime:
                 core.admit_capability(payload)
             elif kind == "origin":
                 core.set_origin(payload, t)
+            elif kind == "restart":
+                core.admit_restart(payload)
         if self.ev is not None:
             self.ev.on_minutes(_trade_items(trade_items, self.ev.last_trade_end), marks)
         entries = core.dispatch(t)

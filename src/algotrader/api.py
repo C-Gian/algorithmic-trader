@@ -254,7 +254,7 @@ def create_app(
                 SELECT worker_id, host, pid, started_at, current_run,
                        extract(epoch FROM now() - heartbeat_at)::float8 AS age
                 FROM workers WHERE worker_id NOT LIKE 'recorder:%%' AND worker_id NOT LIKE 'observe:%%'
-                  AND worker_id NOT LIKE 'corpus:%%'
+                  AND worker_id NOT LIKE 'corpus:%%' AND worker_id NOT LIKE 'adviser:%%'
                 ORDER BY heartbeat_at DESC LIMIT 10
                 """
             ).fetchall()
@@ -276,6 +276,14 @@ def create_app(
                 FROM workers WHERE worker_id LIKE 'corpus:%%' ORDER BY heartbeat_at DESC LIMIT 5
                 """
             ).fetchall()
+            advisers = c.execute(
+                """
+                SELECT worker_id, current_run, extract(epoch FROM now() - heartbeat_at)::float8 AS age
+                FROM workers WHERE worker_id LIKE 'adviser:%%' ORDER BY heartbeat_at DESC LIMIT 5
+                """
+            ).fetchall()
+            live_active = c.execute("SELECT count(*) AS n FROM adviser_live_sessions WHERE status IN "
+                                    "('queued','running')").fetchone()["n"]
             active = c.execute(
                 """
                 SELECT (SELECT count(*) FROM runs WHERE status IN ('queued','running')) AS runs,
@@ -291,6 +299,7 @@ def create_app(
         rec_alive = sum(1 for r in recorders if r["age"] < WORKER_ALIVE_SECONDS)
         obs_alive = sum(1 for r in observers if r["age"] < WORKER_ALIVE_SECONDS)
         corpus_alive = sum(1 for r in corpus_workers if r["age"] < WORKER_ALIVE_SECONDS)
+        adviser_alive = sum(1 for r in advisers if r["age"] < WORKER_ALIVE_SECONDS)
         return {
             # Capability-aware health: each capability has its own worker; a missing optional worker
             # limits that capability only (it is not a whole-system outage).
@@ -300,6 +309,7 @@ def create_app(
                 "market_replay": _capability("Real-market observation replay", obs_alive, active["observations"]),
                 "corpus": _capability("Corpus acquisition", corpus_alive, active["corpus_jobs"]),
                 "recorder": _capability("Public market recorder", rec_alive, active["recordings"]),
+                "live_adviser": _capability("Live adviser", adviser_alive, live_active),
                 "synthetic_replay": _capability("Synthetic DEMO replay", len(alive), active["runs"]),
             },
             "observation_workers": {
@@ -596,6 +606,9 @@ def create_app(
 
     app.include_router(corpus_router(conn, md_root))
     app.include_router(evaluation_router(conn, md_root, art_root))
+    from .adviser.api import build_router as adviser_router
+
+    app.include_router(adviser_router(conn, md_root))
 
     # -- market-data datasets (read-only inspection of the data root) ---------
 

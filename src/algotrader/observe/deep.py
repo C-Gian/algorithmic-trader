@@ -81,6 +81,15 @@ SCOPE_TEMPORAL = SCOPE + (
     "or corrupt terminal evidence fails the validation instead of matching. Paused, cancelled, failed or partial "
     "targets keep exact committed-prefix scope (no finish applied or implied). Dispatch readiness/deadline "
     "callbacks are covered by the shadow fold only.")
+VALIDATOR_VERSION_ADVISER = "4"
+SCOPE_ADVISER = SCOPE_TEMPORAL + (
+    " Version 4 (adviser evaluation runs, engine observe.stream.v3) additionally runs a shadow fold of the shared "
+    "professional method implementation (adviser core + evaluator, pinned identity/profile) over the same input and "
+    "compares, at every committed range boundary, the adviser state SHA-256 and commitments (professional sequence, "
+    "journal and evaluation sequence/chain), every regenerated semantic.v2 journal record and adviser-evaluation.v1 "
+    "record digest with the committed records, and for completed runs the professional clock-end finish commitment. "
+    "It shares the method/reducer implementation and the canonical cache: it is NOT an independent method validation, "
+    "an economic check or a source audit; the independent hand-expected reference fixtures live in the test suite.")
 TERMINAL_KEYS = ("aggregate_chain", "sealed_commitment", "dispatch_commitment", "dispatch_seq", "clock_time")
 
 
@@ -130,13 +139,22 @@ def create_deep_validation(conn, replay_id: str) -> str:
         raise DeepRejected("the run has no committed events to validate")
     eng = row["engine"]
     temporal = bool(eng.get("temporal"))
+    adviser = bool(eng.get("adviser"))
     pin = terminal_pin(row) if temporal else None
+    finish = None
+    if adviser and row["status"] == "completed":
+        f = conn.execute("SELECT commitment, adviser_sha256, from_cursor FROM adviser_finish WHERE run_id = %s",
+                         (replay_id,)).fetchone()
+        finish = dict(f) if f else None
     plan = {"replay_id": replay_id, "committed_cursor": row["cursor"], "total_events": row["total_events"],
             "run_status_at_launch": row["status"], "cache_id": eng["cache_id"],
             "cache_manifest_sha256": eng["cache_manifest_sha256"], "state_format": eng["state_format"],
-            "validator": VALIDATOR_ID, "validator_version": VALIDATOR_VERSION_TEMPORAL if temporal else VALIDATOR_VERSION,
-            "mode": "canonical-cache-only", "scope": SCOPE_TEMPORAL if temporal else SCOPE, "temporal": temporal,
-            "terminal": pin}
+            "validator": VALIDATOR_ID,
+            "validator_version": (VALIDATOR_VERSION_ADVISER if adviser else
+                                  VALIDATOR_VERSION_TEMPORAL if temporal else VALIDATOR_VERSION),
+            "mode": "canonical-cache-only",
+            "scope": SCOPE_ADVISER if adviser else SCOPE_TEMPORAL if temporal else SCOPE, "temporal": temporal,
+            "terminal": pin, "adviser": adviser, "adviser_finish": finish}
     vid = new_validation_id()
     conn.commit()  # end the read transaction: the launch below is its own committed transaction
     try:
@@ -352,6 +370,40 @@ class DeepJob(ReplayJob):
                 "artifact_sha256": pin["artifact"]["sha256"], "reference_sealed_records_final": len(ref.sealed),
                 "shadow_sealed_records_final": shadow.counters["sealed"], "shadow_dispatches_final": shadow.dispatch_seq}
 
+    def _adv_compare(self, comparisons: dict[str, Any], cursor: int) -> None:
+        """Every regenerated professional record must equal the committed record with the same sequence."""
+        journal, records = self._adv.take()
+        for table, rows in (("adviser_journal", journal), ("adviser_evaluation_records", records)):
+            for r in rows:
+                comparisons["compared"] += 1
+                want = self._adv_digests.get(table, {}).get(r["seq"])
+                if want != r["digest"] and len(comparisons["mismatches"]) < MAX_MISMATCHES:
+                    comparisons["mismatches"].append({"cursor": cursor, "kind": f"{table}_record",
+                                                      "at": f"seq {r['seq']}", "expected": want,
+                                                      "reference": r["digest"]})
+            self.counters_deep[f"{table}_compared"] = self.counters_deep.get(f"{table}_compared", 0) + len(rows)
+
+    def _adv_terminal(self, plan: dict[str, Any], adv, comparisons: dict[str, Any], target: int) -> dict[str, Any]:
+        """The shadow temporal fold was finished by the temporal terminal comparison; finish the shadow professional
+        fold at the same clock end and compare with the committed professional finish."""
+        import json as _json
+
+        from ..adviser.engine import pack_runtime
+
+        fin = plan.get("adviser_finish")
+        clock_end = datetime.fromisoformat(plan["terminal"]["clock_end"])
+        adv.finish(clock_end)
+        self._adv_compare(comparisons, target)
+        got = {**adv.commitment(), "adviser_sha256": pack_runtime(adv)[1]}
+        comparisons["compared"] += 1
+        want = None if fin is None else {k: fin["commitment"].get(k) for k in got}
+        if want != _json.loads(_json.dumps(got)) and len(comparisons["mismatches"]) < MAX_MISMATCHES:
+            comparisons["mismatches"].append({"cursor": target, "kind": "adviser_finish",
+                                              "at": "professional clock-end finish", "expected": want,
+                                              "reference": got})
+        return {"compared": fin is not None, "journal_seq": got["journal_seq"],
+                "evaluation_seq": got["evaluation_seq"]}
+
     def _validate(self, row: dict[str, Any]) -> None:
         plan = row["plan"]
         replay = self.conn.execute("SELECT config, engine FROM observation_replays WHERE replay_id = %s",
@@ -374,7 +426,7 @@ class DeepJob(ReplayJob):
         target = plan["committed_cursor"]
         ranges = self.conn.execute(
             "SELECT range_seq, to_cursor, commitment_after, snapshot_digest, state_sha256, temporal_sha256, "
-            "temporal_commitment, aggregate_chain FROM observation_ranges "
+            "temporal_commitment, aggregate_chain, adviser_sha256, adviser_commitment FROM observation_ranges "
             "WHERE replay_id = %s AND to_cursor <= %s ORDER BY to_cursor", (plan["replay_id"], target)).fetchall()
         points = self.conn.execute(
             "SELECT cursor, state_sha256, snapshot_digest, commitment, terminal, temporal_sha256 "
@@ -393,6 +445,13 @@ class DeepJob(ReplayJob):
                     ("temporal_state", r["temporal_sha256"], f"range {r['range_seq']} (shadow temporal fold)"),
                     ("temporal_commitment", r["temporal_commitment"], f"range {r['range_seq']} (shadow temporal fold)"),
                     ("aggregate_chain", r["aggregate_chain"], f"range {r['range_seq']} (reference aggregator)")])
+            if plan.get("adviser"):
+                import json as _json
+
+                expect[r["to_cursor"]].extend([
+                    ("adviser_state", r["adviser_sha256"], f"range {r['range_seq']} (shadow professional fold)"),
+                    ("adviser_commitment", _json.dumps(r["adviser_commitment"], sort_keys=True),
+                     f"range {r['range_seq']} (shadow professional fold)")])
         for p in points:
             label = "terminal restore point" if p["terminal"] else "restore point"
             expect.setdefault(p["cursor"], []).extend([("commitment", p["commitment"], label),
@@ -414,26 +473,40 @@ class DeepJob(ReplayJob):
             commitment = initial_commitment(cache.cache_id)
             start = 0
         reader = CacheReader(cache, {})
-        shadow = ref = None
+        shadow = ref = adv = None
+        adv_digests: dict[str, dict[int, str]] = {}
         if temporal:
             shadow = new_temporal(cache.feed_manifest, replay["engine"])
             prof = shadow.profile
             ref = ReferenceAggregator(tuple(cache.feed_manifest.coverage), tuple(Horizon(h) for h in prof.horizons),
                                       prof.closure_allowance, ClockPolicy(prof.clock_policy))
-            if start:  # temporal folds are not persisted: re-fold them over the already covered prefix
-                self.enter_phase("VALIDATING", detail="re-folding the temporal reference over the covered prefix",
-                                 total=start, done=0, unit="events")
-                for seq, line in reader.iter_from(0):
-                    if seq >= start:
-                        break
-                    e = FeedEvent.model_validate_json(line)
-                    shadow.on_event(e, seq)
-                    ref.feed(e)
-                    self.counters_deep["temporal_refold_events"] = seq + 1
-                    self.milestone("temporal re-fold of the covered prefix", seq + 1, start, "events")
-                    if self.cancel_seen:  # the saved factual diagnostic state stays as it was
-                        self._cancel_now(start, None, None, None, target)
-                        return
+        if plan.get("adviser") and shadow is not None:
+            from ..adviser.engine import new_runtime
+
+            adv = new_runtime(replay["engine"])
+            adv.attach(shadow)
+            for table in ("adviser_journal", "adviser_evaluation_records"):
+                adv_digests[table] = {r["seq"]: r["digest"] for r in self.conn.execute(
+                    f"SELECT seq, digest FROM {table} WHERE run_id = %s", (plan["replay_id"],)).fetchall()}
+        self._adv, self._adv_digests = adv, adv_digests
+        if temporal and start:  # temporal folds are not persisted: re-fold them over the already covered prefix
+            self.enter_phase("VALIDATING", detail="re-folding the temporal reference over the covered prefix",
+                             total=start, done=0, unit="events")
+            for seq, line in reader.iter_from(0):
+                if seq >= start:
+                    break
+                e = FeedEvent.model_validate_json(line)
+                shadow.on_event(e, seq)
+                ref.feed(e)
+                if adv is not None:
+                    adv.before_admit(e)
+                    adv.admit(e, seq)
+                    self._adv_compare(comparisons, seq + 1)
+                self.counters_deep["temporal_refold_events"] = seq + 1
+                self.milestone("temporal re-fold of the covered prefix", seq + 1, start, "events")
+                if self.cancel_seen:  # the saved factual diagnostic state stays as it was
+                    self._cancel_now(start, None, None, None, target)
+                    return
         self.enter_phase("VALIDATING", detail="reference re-execution of the committed prefix",
                          total=target, done=start, unit="events")
         last_save, saved_at = start, time.monotonic()
@@ -451,7 +524,12 @@ class DeepJob(ReplayJob):
                 if shadow is not None:
                     shadow.on_event(e, seq)
                     ref.feed(e)
+                if adv is not None:
+                    adv.before_admit(e)
+                    adv.admit(e, seq)
                 cursor = seq + 1
+                if adv is not None:
+                    self._adv_compare(comparisons, cursor)
                 self.counters_deep["events_reexecuted"] += 1
                 checks = expect.get(cursor)
                 if checks:
@@ -463,6 +541,13 @@ class DeepJob(ReplayJob):
                     if shadow is not None:
                         actual.update(temporal_state=temporal_engine.pack(shadow)[1],
                                       temporal_commitment=shadow.commitment(), aggregate_chain=ref.chain)
+                    if adv is not None:
+                        import json as _json
+
+                        from ..adviser.engine import pack_runtime
+
+                        actual.update(adviser_state=pack_runtime(adv)[1],
+                                      adviser_commitment=_json.dumps(adv.commitment(), sort_keys=True))
                     for kind, want, label in checks:
                         comparisons["compared"] += 1
                         if want is not None and actual[kind] != want and len(comparisons["mismatches"]) < MAX_MISMATCHES:
@@ -501,6 +586,8 @@ class DeepJob(ReplayJob):
                 if self.cancel_seen:
                     self._cancel_now(cursor, commitment, state, comparisons, target)
                     return
+                if adv is not None:
+                    terminal["adviser"] = self._adv_terminal(plan, adv, comparisons, target)
             else:
                 terminal = {"compared": False, "scope": (
                     "committed prefix only: the target is not a completed run with a published clock-end finish "

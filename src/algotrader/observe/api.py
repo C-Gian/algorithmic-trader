@@ -30,7 +30,8 @@ from .kernel import STREAM_ENGINE_FORMATS
 from .sources import MODELED_LABEL, RECORDED_LABEL, SourceRejected, locate_source
 
 REPLAY_SELECT = """
-SELECT r.*, c.cursor AS applied, c.info_time, c.last_event_id, c.snapshot_id, c.snapshot_digest, c.temporal_view
+SELECT r.*, c.cursor AS applied, c.info_time, c.last_event_id, c.snapshot_id, c.snapshot_digest, c.temporal_view,
+       c.adviser_view
 FROM observation_replays r LEFT JOIN observation_checkpoints c USING (replay_id)
 """
 
@@ -67,7 +68,9 @@ def replay_view(row: dict[str, Any]) -> dict[str, Any]:
     return {
         "replay_id": row["replay_id"],
         "kind": "market_observation_replay",
-        "run_type_label": "Market replay — data and engine check",
+        "run_type": (row.get("launch") or {}).get("run_type", "observation"),
+        "run_type_label": ("Adviser evaluation" if (row.get("launch") or {}).get("run_type") == "adviser_evaluation"
+                           else "Market replay — data and engine check"),
         "status": row["status"],
         "runtime_state": state.value,
         "runtime_detail": detail,
@@ -119,7 +122,28 @@ def replay_view(row: dict[str, Any]) -> dict[str, Any]:
             "code_version")),
         "labels": list(cfg.labels) if cfg else list(LABELS),
         "temporal": temporal_view(row),
+        "adviser": adviser_view(row),
     }
+
+
+def adviser_view(row: dict[str, Any]) -> dict[str, Any] | None:
+    """Committed professional inspection of an adviser evaluation run (latest committed checkpoint view)."""
+    adv = (row.get("engine") or {}).get("adviser")
+    if not adv:
+        return ({"pending": True, "note": "adviser configuration is pinned by the worker-owned preparation"}
+                if (row.get("launch") or {}).get("run_type") == "adviser_evaluation" else None)
+    v = row.get("adviser_view") or {}
+    return {"identity": {k: adv["identity"][k] for k in ("model", "rules_version", "rules_sha256", "register_sha256",
+                                                          "implementation", "capability_profile_sha256",
+                                                          "identity_sha256")},
+            "profile": adv["profile"], "windows": {"warmup_start": adv["warmup_start"], "evaluation_start":
+                                                   adv["eval_start"], "evaluation_end": adv["eval_end"],
+                                                   "tail_end": adv["tail_end"], "clock_end": adv["clock_end"]},
+            "committed": {k: v.get(k) for k in ("clock", "window", "origin", "view", "call", "recent_calls",
+                                                "attempts", "box", "lenses", "readiness", "journal_seq",
+                                                "professional_seq")} if v else None,
+            "counters": (v.get("counters") or {}) if v else None,
+            "note": "committed adviser state at the latest checkpoint; hypothetical outcomes are separate"}
 
 
 def temporal_view(row: dict[str, Any]) -> dict[str, Any] | None:
