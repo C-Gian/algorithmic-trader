@@ -17,19 +17,22 @@ import {
   Artifacts, CopyDiagnostics, ObservableStatePanel, OperationPanel, PACING, phaseText, ReplayPanel, useCopyFeedback,
 } from "./replay/MarketReplay";
 import { runStory } from "./replay/runStory";
+import { AdviserProgress, AdviserSummary, CallTimeline } from "./AdviserResult";
 
 // Historical Workbench (route #backtest kept): the Owner's evaluation workbench, organised as one guided task
 // (prepare data -> start a check -> follow it and get the report) over the SAME machinery:
 //   1. data   - checked-in logical plan + locally prepared, verified immutable datasets (details on demand);
-//   2. start  - explicit run types next to their settings: Market replay (data and engine check) is the only
-//               available one; Adviser backtest is unavailable until the adviser exists; Deep validation is an
-//               optional diagnostic launched explicitly from a finished/paused run (its own durable job);
+//   2. start  - explicit run types next to their settings: Adviser evaluation (MP-001 adviser + separate hypothetical
+//               evaluator, packs only) and Market replay (data and engine check); Deep validation is an optional
+//               diagnostic launched explicitly from a finished/paused run (its own durable job);
 //   3. result - plain run status with its controls, then the result/report (Copy for chat) directly below, then
 //               chart, optional Deep validation and every technical detail behind progressive disclosure.
-// No adviser is connected yet: no MarketView, calls or outcomes are shown or implied.
+// Market replay runs stay observation-only; adviser evaluation results come only from committed journal/records.
 
 const NOT_CONNECTED =
-  "Professional adviser not connected yet. This run validates data/replay/product workflow only; trade-call metrics are unavailable.";
+  "Market replay: this run validates data/replay/product workflow only; it makes and judges no trade calls.";
+const ADVISER_NOTICE =
+  "Adviser evaluation: the integrated adviser runs causally over the pack; outcomes are a separate normalized hypothetical simulation (one abstract unit, 60 s delay, declared costs) — never fills, size, leverage or account results.";
 const TERMINAL = new Set(["completed", "cancelled", "failed"]);
 const CHART_TAIL = 240; // bounded chart window: the latest 4 hours of traded 1m bars
 const CHART_MIN_INTERVAL_MS = 1000; // sampled UI frames; the worker still processes every event
@@ -323,6 +326,7 @@ function RunSetup({ corpus, preferred, packs, presets, onStarted }: {
   const [paused, setPaused] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [runType, setRunType] = useState<"adviser_evaluation" | "observation_only">("adviser_evaluation");
   const ids = prepared.map((c) => c.chunk_id).join();
   useEffect(() => {
     // follow the month selected in step 1 when it is prepared; otherwise keep a valid prepared month
@@ -343,11 +347,13 @@ function RunSetup({ corpus, preferred, packs, presets, onStarted }: {
   const packView = pack ? presets?.presets.find((v) => v.published?.pack_id === pack.pack_id) ?? null : null;
   const chunk = source === "month" ? prepared.find((c) => c.chunk_id === chunkId) : undefined;
   const needsAck = pack?.status === "READY_WITH_LIMITATIONS";
-  const canStart = pack ? !needsAck || ack : !!chunk;
+  const adviser = runType === "adviser_evaluation" && !!pack;
+  const canStart = pack ? !needsAck || ack : !!chunk && runType === "observation_only";
   const start = async () => {
     setBusy(true);
     try {
-      onStarted(pack ? await evalApi.startPack(pack.pack_id, speed, paused, ack) : await evalApi.start(chunkId, speed, paused));
+      onStarted(pack ? await evalApi.startPack(pack.pack_id, speed, paused, ack, runType)
+        : await evalApi.start(chunkId, speed, paused));
       setError(null);
     } catch (e) {
       setError((e as Error).message.replace(/^\d+ /, ""));
@@ -360,22 +366,27 @@ function RunSetup({ corpus, preferred, packs, presets, onStarted }: {
       <div className="setup-what">
         <div className="setup-col-title">What will run</div>
         <div className="run-types" role="radiogroup" aria-label="Run type" data-testid="run-types">
-          <label className="run-type is-on" data-testid="run-type-market-replay">
-            <input type="radio" name="run-type" checked readOnly />
+          <label className={cx("run-type", runType === "adviser_evaluation" ? "is-on" : undefined, !pack && "is-disabled")}
+                 data-testid="run-type-adviser">
+            <input type="radio" name="run-type" checked={runType === "adviser_evaluation"} disabled={!pack}
+                   onChange={() => setRunType("adviser_evaluation")} data-testid="run-type-adviser-input" />
+            <span>
+              <b>Adviser evaluation</b>
+              <span className="muted small-text">Runs the integrated adviser (MP-001 v0.2: market view, A/B/C candidates,
+                persistent calls) causally over the prepared pack, then scores its calls with a separate hypothetical
+                evaluator. Needs a prepared evaluation pack.</span>
+            </span>
+            <Badge tone={pack ? "pos" : "pending"}>{pack ? "Available" : "Needs a pack"}</Badge>
+          </label>
+          <label className={cx("run-type", runType === "observation_only" && "is-on")} data-testid="run-type-market-replay">
+            <input type="radio" name="run-type" checked={runType === "observation_only"}
+                   onChange={() => setRunType("observation_only")} data-testid="run-type-market-replay-input" />
             <span>
               <b>Market replay — data and engine check</b>
-              <span className="muted small-text">Replays the month's real market data in time order through the engine and
+              <span className="muted small-text">Replays the real market data in time order through the engine and
                 checks that everything was processed correctly. It does not make or judge trade calls.</span>
             </span>
             <Badge tone="pos">Available</Badge>
-          </label>
-          <label className="run-type is-disabled" data-testid="run-type-adviser-backtest" aria-disabled="true">
-            <input type="radio" name="run-type" disabled />
-            <span>
-              <b>Adviser backtest</b>
-              <span className="muted small-text">Will test the trading adviser's calls on the same data — unavailable until the adviser exists.</span>
-            </span>
-            <Badge tone="pending" icon="lock">Unavailable</Badge>
           </label>
           <div className="run-type is-planned" data-testid="run-type-deep-validation">
             <span>
@@ -388,7 +399,11 @@ function RunSetup({ corpus, preferred, packs, presets, onStarted }: {
             <Badge tone="info">Implemented · per run</Badge>
           </div>
         </div>
-        <Notice tone="warn" icon="compass" title="Observation-only" testid="adviser-notice">{NOT_CONNECTED}</Notice>
+        {adviser ? (
+          <Notice tone="info" icon="compass" title="Hypothetical evaluation" testid="adviser-notice">{ADVISER_NOTICE}</Notice>
+        ) : (
+          <Notice tone="warn" icon="compass" title="Observation-only" testid="adviser-notice">{NOT_CONNECTED}</Notice>
+        )}
       </div>
 
       <div className="setup-how">
@@ -412,6 +427,15 @@ function RunSetup({ corpus, preferred, packs, presets, onStarted }: {
               {prepared.map((c) => <option key={c.chunk_id} value={c.chunk_id}>{c.label} · {c.chunk_id}</option>)}
             </select>
           </Field>
+        )}
+        {adviser && (
+          <div className="setup-facts" data-testid="eval-adviser-pins">
+            <Badge tone="brand" icon="shield">MP-001 v0.2</Badge>
+            <Badge tone="info" title="Historical execution profile: modeled trade-minute closes, never measured quotes">HISTORICAL_BASE</Badge>
+            <Badge tone="info" title="Funding completeness unproven: total net is unavailable">Price-net only</Badge>
+            <Badge tone="pending" title="No historical as-known event calendar">Calendar unknown</Badge>
+            <span className="muted small-text">Pinned preset/profile; no parameter choices. Development data only.</span>
+          </div>
         )}
         {pack && (
           <div className="setup-facts" data-testid="eval-pack-facts">
@@ -451,11 +475,12 @@ function RunSetup({ corpus, preferred, packs, presets, onStarted }: {
         </label>
         {error && <Notice tone="neg" title="Could not start">{error}</Notice>}
         <Button icon="play" className="btn-block btn-lg" onClick={start} disabled={!canStart || busy} data-testid="start-evaluation">
-          {pack ? "Start the check · prepared pack" : chunk ? `Start the check · ${chunk.label}` : "Start the check"}
+          {adviser ? "Start adviser evaluation · prepared pack" : pack ? "Start the check · prepared pack"
+            : chunk ? `Start the check · ${chunk.label}` : "Start the check"}
         </Button>
         <p className="muted small-text">
           {pack || chunk ? "Starts in the background — you can close the browser; progress and the report appear in step 3."
-            : "Prepare data in step 1 first. No model parameters: there is no adviser to configure yet."}
+            : "Prepare data in step 1 first. No model parameters to choose: the method and profile are pinned."}
         </p>
       </div>
     </div>
@@ -502,6 +527,7 @@ function RunPicker({ items, selected, onSelect }: {
 }
 
 const VERDICT_TITLE: Record<string, string> = {
+  ADVISER_EVALUATION_COMPLETED: "Adviser evaluation completed",
   WORKFLOW_VALID: "Data and engine check passed",
   INCOMPLETE_CANCELLED: "Check not completed (cancelled)",
   OPERATIONAL_FAILURE: "Check failed — needs diagnosis",
@@ -559,7 +585,9 @@ function ReportCard({ ev }: { ev: Evaluation }) {
     );
   }
   const verdict = report?.conclusion.verdict ?? "";
-  const verdictTone: Tone = verdict === "WORKFLOW_VALID" ? "pos" : verdict === "INCOMPLETE_CANCELLED" ? "warn" : "neg";
+  const verdictTone: Tone = verdict === "WORKFLOW_VALID" || verdict === "ADVISER_EVALUATION_COMPLETED" ? "pos"
+    : verdict === "INCOMPLETE_CANCELLED" ? "warn" : "neg";
+  const adv = report?.adviser ?? null;
   const caps = report ? Object.entries(report.capabilities) : [];
   const v = report?.validation;
   const checksText = !v ? "" : !v.ran ? "NOT RUN" : v.outcome === "incomplete" ? "INCOMPLETE" : v.passed ? "PASS" : "FAIL";
@@ -591,11 +619,20 @@ function ReportCard({ ev }: { ev: Evaluation }) {
               <span className="outcome-hint">The run's own checks (bounded reconciliation) — not a reference re-execution;
                 that is the optional Deep validation below.</span>
             </li>
-            <li className="outcome-fact tone-pending" data-testid="fact-adviser">
-              <span className="outcome-label">3 · Trading adviser</span>
-              <span className="outcome-value"><Badge tone="pending" icon="clock">Not built yet</Badge></span>
-              <span className="outcome-hint">No trade calls were made or judged. Call metrics are shown as unavailable, never as zero.</span>
-            </li>
+            {adv && !adv.pending ? (
+              <li className={cx("outcome-fact", adv.calls.count ? "tone-pos" : "tone-warn")} data-testid="fact-adviser">
+                <span className="outcome-label">3 · Adviser calls</span>
+                <span className="outcome-value">{adv.calls.count} call{adv.calls.count === 1 ? "" : "s"} · {adv.calls.per_evaluated_week}/week</span>
+                <span className="outcome-hint">Hypothetical outcomes below are normalized simulations, not fills. Completion and
+                  coverage first; no win rate is reported alone.</span>
+              </li>
+            ) : (
+              <li className="outcome-fact tone-pending" data-testid="fact-adviser">
+                <span className="outcome-label">3 · Trading adviser</span>
+                <span className="outcome-value"><Badge tone="pending">Not in this run</Badge></span>
+                <span className="outcome-hint">Market replay makes and judges no trade calls; use an Adviser evaluation for calls.</span>
+              </li>
+            )}
             {report.pack && (
               <li className={cx("outcome-fact", report.pack.source_coverage.missing_or_rejected ? "tone-warn" : "tone-pos")}
                   data-testid="fact-coverage">
@@ -611,6 +648,14 @@ function ReportCard({ ev }: { ev: Evaluation }) {
             )}
           </ul>
 
+          {adv && (
+            <Card title="Adviser evaluation" icon="compass" testid="adviser-result"
+                  eyebrow="Calls, entry windows, funnel and hypothetical outcomes">
+              <AdviserSummary a={adv} />
+              <div className="adv-section-title">Calls (click one for its scenario, revisions and hypothetical path)</div>
+              <CallTimeline replayId={ev.replay.replay_id} a={adv} />
+            </Card>
+          )}
           {failed.length > 0 && (
             <Notice tone="neg" title={`${failed.length} check(s) failed`} testid="report-failed-checks">
               {failed.map((c) => <div key={c.name}><span className="mono">{c.name}</span> — {c.detail}</div>)}
@@ -668,13 +713,13 @@ function ReportCard({ ev }: { ev: Evaluation }) {
               <div className="cap-table" data-testid="report-capabilities">
                 <div className="cap-table-head">
                   <span className="eyebrow">Adviser metrics</span>
-                  <span className="muted small-text">Reason: no professional adviser connected yet — shown as unavailable, never as zero.</span>
+                  <span className="muted small-text">{adv ? "Reported in the adviser section above." : "Not part of a market replay — shown as unavailable, never as zero."}</span>
                 </div>
                 <ul>
                   {caps.map(([k, c]) => (
                     <li key={k}>
                       <span>{c.label ?? "Professional adviser"}</span>
-                      <Badge tone="pending" icon={k === "professional_adviser" ? "clock" : undefined}>{humanize(c.status)}</Badge>
+                      <Badge tone={adv ? "pos" : "pending"}>{humanize(c.status)}</Badge>
                     </li>
                   ))}
                 </ul>
@@ -758,16 +803,18 @@ function ActiveRun({ ev, onReplay }: { ev: Evaluation; onReplay: (r: ObsReplay) 
     <div className="run-stack" data-testid="active-run">
       {error && <Notice tone="neg" title="Something went wrong">{error}</Notice>}
       <ReplayPanel r={r} live={live} onCommand={command} place="report"
-                   eyebrow={`Market replay — data and engine check · ${ev.corpus.chunk_label}`} />
+                   eyebrow={`${ev.run_type === "adviser_evaluation" ? "Adviser evaluation" : "Market replay — data and engine check"} · ${ev.corpus.chunk_label}`} />
       <ReportCard ev={{ ...ev, replay: r, report_available: true, report_terminal: TERMINAL.has(r.status) }} />
-      <div className="boundary" data-testid="intelligence-boundary">
-        <Icon name="compass" size={18} />
-        <div>
-          <strong>No adviser in this run.</strong> Candles and observable state are real historical evidence replayed
-          causally; no market view, call, target or outcome is derived from them.
+      {ev.run_type === "adviser_evaluation" ? <AdviserProgress r={r} /> : (
+        <div className="boundary" data-testid="intelligence-boundary">
+          <Icon name="compass" size={18} />
+          <div>
+            <strong>No adviser in this run.</strong> Candles and observable state are real historical evidence replayed
+            causally; no market view, call, target or outcome is derived from them.
+          </div>
+          <Badge tone="pending">Market replay only</Badge>
         </div>
-        <Badge tone="pending" icon="clock">Adviser pending</Badge>
-      </div>
+      )}
       <Card title="Traded price" icon="market" testid="market-chart"
             eyebrow={`Latest ${CHART_TAIL} completed 1m bars as causally delivered · chart refreshes at most once per second`}
             actions={<Badge tone="brand">REAL · HISTORICAL</Badge>}>
@@ -921,7 +968,7 @@ export function Backtest() {
       <PageHeader
         eyebrow="Check historical data · step by step"
         title="Historical Workbench"
-        lede="Check that a month of real BTC market history replays correctly through the engine, then copy the report into chat. Three steps: prepare the data, start the check, read the result. The trading adviser's backtest will plug into this same page when it exists."
+        lede="Evaluate the integrated adviser on real BTC history (or check that the data replays correctly), then copy the report into chat. Three steps: prepare the data, start the run, read the result. Outcomes are hypothetical normalized simulations — no orders, size or leverage."
         meta={<Badge tone="brand" icon="clock" testid="historical-mode">HISTORICAL MODE</Badge>}
       />
       <div className="history-banner" data-testid="history-banner">
@@ -975,7 +1022,7 @@ export function Backtest() {
       </details>
 
       <StepCard n={2} id="step-start" title="Check data and engine"
-                lede="Choose the prepared data and press Start. Observation only — no adviser. The check runs in the background; you can close the browser.">
+                lede="Choose the run type and the prepared data, then press Start. The run continues in the background; you can close the browser.">
         <RunSetup corpus={corpus} preferred={chunk?.status === "prepared" ? chunk.chunk_id : null}
                   packs={packsPoll.data ?? []} presets={presetsPoll.data ?? null} onStarted={onStarted} />
       </StepCard>

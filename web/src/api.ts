@@ -71,7 +71,8 @@ export interface Health {
   };
   observation_workers?: { alive: number };
   corpus_workers?: { alive: number };
-  capabilities?: Record<"core" | "market_replay" | "corpus" | "recorder" | "synthetic_replay", Capability>;
+  adviser_workers?: { alive: number; active_sessions: number };
+  capabilities?: Record<"core" | "market_replay" | "corpus" | "recorder" | "synthetic_replay" | "live_adviser", Capability>;
   workers: {
     alive: number;
     alive_threshold_seconds: number;
@@ -895,11 +896,45 @@ export interface EvaluationReport {
   capabilities: Record<string, CapabilityRow>;
   conclusion: { verdict: string; text: string };
   next_diagnostic: string;
+  adviser?: AdviserSection | null;
   pack?: null | {
     pack_id: string; status: string; preset_id: string; feed_consumed: string;
     source_coverage: { expected_bar_slots: number; missing_or_rejected: number };
     windows: PackWindows; limitations: string[]; acknowledged_limitations?: boolean;
   };
+}
+
+export interface Dist { n: string; min: string | null; p25: string | null; median: string | null; p75: string | null; max: string | null }
+export interface VariantOutcome {
+  paths: number; status: Record<string, number>; exit_class: Record<string, number>; target_exits: number; stop_exits: number;
+  guidance_exits: number; no_entry: number; ambiguous: number; censored: number; unresolved: number; sum_gross: string;
+  sum_price_net: string; mean_price_net: string | null; sum_stress_price_net: string | null; price_net_bps_distribution: Dist;
+  held_minutes_distribution: Dist; positive_price_net: number; nonpositive_price_net: number; total_net: string;
+}
+export interface AdviserCallRow {
+  call_id: string; family: string; direction: string; issued_at: string; issue_reference: string; stop: string; target: string;
+  target_type: string; structural_area: [string, string]; hard_deadline: string; entry_available_minutes: string;
+  entry_reopens: number; terminal: string; terminal_reason: string | null; terminal_at: string | null;
+  limiting_landmark: string | null; gain_bps: string | null; risk_bps: string | null;
+}
+export interface AdviserSection {
+  section: string; pending?: boolean; text?: string;
+  identity: Record<string, unknown>;
+  windows: { warmup_start: string; evaluation: [string, string]; tail_end: string; clock_end: string; clock_end_reached: boolean };
+  coverage: { evaluation_minutes: number; covered_minutes: number; assessable_minutes: number; unavailable_minutes: number;
+              view_row_minutes: Record<string, number>; assessable_weeks: string; capabilities: Record<string, string> };
+  calls: { count: number; warmup_calls_not_scored: number; per_evaluated_week: string; per_assessable_week: string | null;
+           by_family: Record<string, number>; entry_available_minutes: Dist; entry_reopens: number;
+           longest_no_call_interval_hours: string; terminal: Record<string, number>; list: AdviserCallRow[] };
+  funnel: { births: Record<string, number>; arms: Record<string, number>; trigger_evaluations: number; issued: number;
+            ends: Record<string, number>; end_reasons: Record<string, number>; rejection_blockers: Record<string, number>;
+            slot_occupied: number; priority: number; conflicted: number };
+  gates: Record<string, Record<string, Dist>>;
+  limiting_landmarks: Record<string, number>;
+  outcomes: { note: string; variants: Record<string, VariantOutcome> };
+  view_samples: Record<string, unknown>;
+  diagnosis: string[];
+  conclusion: { verdict: string; text: string };
 }
 
 // ---- Evaluation packs (algotrader.corpus-pack.v1; data preparation only, no adviser) ----
@@ -983,8 +1018,10 @@ export const evalApi = {
   detail: (id: string) => req<Evaluation>(`${E}/${id}`),
   start: (chunkId: string, speed: number, paused: boolean) =>
     req<Evaluation>(E, { method: "POST", body: JSON.stringify({ chunk_id: chunkId, speed, paused }) }),
-  startPack: (packId: string, speed: number, paused: boolean, acknowledge: boolean) =>
-    req<Evaluation>(E, { method: "POST", body: JSON.stringify({ pack_id: packId, speed, paused, acknowledge_limitations: acknowledge }) }),
+  startPack: (packId: string, speed: number, paused: boolean, acknowledge: boolean,
+              runType: "observation_only" | "adviser_evaluation" = "observation_only") =>
+    req<Evaluation>(E, { method: "POST", body: JSON.stringify({ pack_id: packId, speed, paused, acknowledge_limitations: acknowledge,
+                                                              run_type: runType }) }),
   report: (id: string) => req<EvaluationReport>(`${E}/${id}/report.json`),
   reportMarkdown: (id: string) => text(`${E}/${id}/report.md`),
   downloadUrl: (id: string, fmt: "md" | "json") => `${E}/${id}/report.${fmt}?download=true`,

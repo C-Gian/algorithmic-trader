@@ -10,6 +10,7 @@ import "./styles/components.css";
 import "./styles/shell.css";
 import "./styles/views.css";
 import "./styles/flows.css";
+import "./styles/adviser.css";
 import { App } from "./App";
 
 createRoot(document.getElementById("root")!).render(

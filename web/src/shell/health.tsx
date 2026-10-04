@@ -28,7 +28,7 @@ export interface SystemVerdict {
   detail: string;
 }
 
-export const CAPABILITY_ORDER = ["market_replay", "corpus", "recorder", "synthetic_replay"] as const;
+export const CAPABILITY_ORDER = ["live_adviser", "market_replay", "corpus", "recorder", "synthetic_replay"] as const;
 export type CapabilityKey = (typeof CAPABILITY_ORDER)[number];
 
 export function capabilityTone(c: Capability | undefined): Tone {

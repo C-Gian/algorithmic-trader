@@ -4,7 +4,7 @@ import { Icon, IconName } from "../ui/Icon";
 import { cx } from "../ui/primitives";
 import { CAPABILITY_ORDER, capabilityLabel, capabilityTone, systemVerdict, useHealth } from "./health";
 
-const CAP_SHORT = { market_replay: "Market replay", corpus: "Corpus prep", recorder: "Recorder", synthetic_replay: "Synthetic demo" } as const;
+const CAP_SHORT = { live_adviser: "Live adviser", market_replay: "Market replay", corpus: "Corpus prep", recorder: "Recorder", synthetic_replay: "Synthetic demo" } as const;
 
 interface NavItem {
   id: Section;
@@ -20,9 +20,9 @@ const NAV: { group: string; items: NavItem[] }[] = [
   {
     group: "Main",
     items: [
-      { id: "market", label: "Market", sub: "Adviser cockpit · not built yet", icon: "market", hint: "BTC cockpit and system readiness" },
-      { id: "backtest", label: "Historical Workbench", sub: "Check historical data · get a report", icon: "gauge",
-        hint: "Prepare a month of data, run a market replay (data and engine check) and copy its report" },
+      { id: "market", label: "Market", sub: "Live adviser cockpit", icon: "market", hint: "Start/stop the live adviser: direction, call, lenses" },
+      { id: "backtest", label: "Historical Workbench", sub: "Evaluate the adviser · get a report", icon: "gauge",
+        hint: "Prepare a data pack, run an adviser evaluation or a data and engine check, copy its report" },
     ],
   },
   {

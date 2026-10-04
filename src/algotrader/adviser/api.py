@@ -20,6 +20,8 @@ from fastapi.responses import PlainTextResponse
 from . import live as lv
 
 MAX_PAGE = 2000
+NOTICE = ("Advice for a human decision only: no orders, size, leverage or account. Quotes are indicative; stops are "
+          "guidance, not orders or guaranteed fills.")
 
 
 def _row(c, sql: str, args: tuple) -> dict | None:
@@ -31,7 +33,8 @@ def live_status(c) -> dict[str, Any]:
     now = datetime.now(UTC)
     if s is None:
         return {"session": None, "state": "STOPPED", "running": False,
-                "message": "Live adviser is stopped: nothing is monitored and no alerts are produced."}
+                "message": "Live adviser is stopped: nothing is monitored and no alerts are produced.", "view": None,
+                "alerts": [], "notice": NOTICE}
     lease_ok = s["status"] == "running" and s["lease_expires_at"] is not None and s["lease_expires_at"] > now
     running = s["status"] in ("queued", "running")
     view = s["view"] or {}
@@ -53,11 +56,10 @@ def live_status(c) -> dict[str, Any]:
                     "WARMING_UP": "Warming up: waiting for current receipts/required history; no actionable entry.",
                     "DISCONNECTED": "Disconnected from the public feed: entry cannot be verified.",
                     "LIVE": "Live: current public data and quotes are being assessed."}.get(state, state),
-        "view": view if state not in ("STOPPED",) else ({**view, "stale_session": True} if view else None),
+        "view": (None if not view else view if state not in ("STOPPED",) else {**view, "stale_session": True}),
         "alerts": [{**{k: a[k] for k in ("alert_key", "change_type", "subject_id", "summary", "acknowledged")},
                     "created_at": a["created_at"].isoformat()} for a in alerts],
-        "notice": "Advice for a human decision only: no orders, size, leverage or account. Quotes are indicative; "
-                  "stops are guidance, not orders or guaranteed fills.",
+        "notice": NOTICE,
     }
 
 
@@ -123,6 +125,7 @@ def build_router(conn: Callable, data_root: Path) -> APIRouter:
                         "ORDER BY created_at DESC LIMIT 1", ())
             if s is None:
                 raise HTTPException(409, "no live adviser session is running")
+            c.commit()  # end the read transaction: the command below is its own committed transaction
             lv.stop_session(c, s["session_id"])
             return live_status(c)
 
@@ -134,12 +137,14 @@ def build_router(conn: Callable, data_root: Path) -> APIRouter:
             if s is None:
                 raise HTTPException(409, "manual reassessment needs a running live session")
             lv.request_reassess(c, s["session_id"])
+            c.commit()
             return live_status(c)
 
     @r.post("/live/alerts/{alert_key}/ack")
     def ack(alert_key: str) -> dict[str, Any]:
         with conn() as c:
             c.execute("UPDATE adviser_alerts SET acknowledged = true WHERE alert_key = %s", (alert_key,))
+            c.commit()
             return live_status(c)
 
     @r.get("/live/analysis.md")

@@ -325,6 +325,10 @@ def create_app(
                 "recent": [{"worker_id": r["worker_id"], "current_job": r["current_run"],
                             "heartbeat_age_seconds": round(r["age"], 3)} for r in corpus_workers],
             },
+            "adviser_workers": {
+                "alive": adviser_alive, "active_sessions": live_active,
+                "note": "while no live adviser session runs nothing is monitored and no alert is produced",
+            },
             "recorder_workers": {
                 "alive": rec_alive,
                 "recent": [{"worker_id": r["worker_id"], "current_session": r["current_run"],
