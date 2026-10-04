@@ -286,7 +286,8 @@ def _manifest(row: dict[str, Any], config: ObservationReplayConfig, status: Repl
               finished_at: datetime, cursor: int, validation: ReplayValidation, files: tuple[ArtifactFile, ...],
               generation: int, final_dir: Path, *, final_as_of: datetime, final_snapshot_id: str, final_digest: str,
               source_reference: str, timings: Callable[[], list[dict]] | None,
-              metrics: Callable[[], dict] | None, temporal: dict | None = None) -> ObservationReplayManifest:
+              metrics: Callable[[], dict] | None, temporal: dict | None = None,
+              adviser: dict | None = None) -> ObservationReplayManifest:
     return ObservationReplayManifest(
         schema_version=OBSERVE_SCHEMA_VERSION, contract_status=OBSERVE_CONTRACT_STATUS,
         schema_revision=OBSERVE_SCHEMA_REVISION, replay_id=row["replay_id"], status=status, labels=LABELS,
@@ -296,8 +297,24 @@ def _manifest(row: dict[str, Any], config: ObservationReplayConfig, status: Repl
         recovery_log=list(row["recovery_log"]), control_log=list(row["control_log"]), error=error,
         validation=validation, source_reference=source_reference, artifacts=files, lease_generation=generation,
         artifact_dir=final_dir.name, phase_timings=timings() if timings else None,
-        operational_metrics=metrics() if metrics else None, temporal=temporal,
+        operational_metrics=metrics() if metrics else None, temporal=temporal, adviser=adviser,
     )
+
+
+def adviser_reference(engine: dict, summary: dict | None) -> dict | None:
+    """Revision-5 manifest reference to the adviser outputs (identity, chains, counts; details in adviser.json)."""
+    adv = (engine or {}).get("adviser")
+    if not adv:
+        return None
+    s = summary or {}
+    return {"artifact": "adviser.json" if summary is not None else None, "runtime_format": adv["format"],
+            "semantic_contract": "algotrader.semantic.v2", "evaluation_contract": "algotrader.adviser-evaluation.v1",
+            "identity_sha256": adv["identity"]["identity_sha256"], "rules_sha256": adv["identity"]["rules_sha256"],
+            "register_sha256": adv["identity"]["register_sha256"],
+            "capability_profile_sha256": adv["identity"]["capability_profile_sha256"],
+            "evaluator_sha256": adv["evaluator"]["sha256"], "journal_records": s.get("journal_records"),
+            "journal_chain": s.get("journal_chain"), "evaluation_records": s.get("evaluation_records"),
+            "evaluation_chain": s.get("evaluation_chain"), "calls": s.get("calls"), "labels": adv["labels"]}
 
 
 def temporal_reference(engine: dict, summary: dict | None) -> dict | None:
@@ -416,7 +433,7 @@ def stage_stream_artifacts(root: Path, row: dict[str, Any], status: ReplayStatus
                            committed_digest: str, *, generation: int, hook: Hook | None = None,
                            timings: Callable[[], list[dict]] | None = None,
                            metrics: Callable[[], dict] | None = None,
-                           temporal: dict | None = None) -> StagedArtifacts:
+                           temporal: dict | None = None, adviser: dict | None = None) -> StagedArtifacts:
     """Terminal artifacts of a streaming run (bounded: no per-event records exist or are synthesized).
 
     Temporal-enabled runs (``observe.stream.v2``) add ``temporal.json``: the verified terminal temporal summary
@@ -447,13 +464,16 @@ def stage_stream_artifacts(root: Path, row: dict[str, Any], status: ReplayStatus
         (staging / "validation.json").write_text(validation.model_dump_json(indent=2), encoding="utf-8")
         if temporal is not None:
             (staging / "temporal.json").write_text(_json.dumps(temporal, indent=2, sort_keys=True), encoding="utf-8")
+        if adviser is not None:
+            (staging / "adviser.json").write_text(_json.dumps(adviser, indent=2, sort_keys=True, default=str),
+                                                  encoding="utf-8")
         files = _hash_files(staging, hook)
         manifest = _manifest(
             row, config, status, error, finished_at, cursor, validation, files, generation, final_dir,
             final_as_of=final.as_of if final is not None else finished_at,
             final_snapshot_id=final.snapshot_id if final is not None else "", final_digest=committed_digest,
             source_reference=f"{config.source.kind.value}s/{config.source.source_id}", timings=timings,
-            metrics=metrics, temporal=temporal_reference(engine, temporal))
+            metrics=metrics, temporal=temporal_reference(engine, temporal), adviser=adviser_reference(engine, adviser))
         (staging / "manifest.json").write_text(manifest.model_dump_json(indent=2), encoding="utf-8")
     except BaseException:
         staged.discard()

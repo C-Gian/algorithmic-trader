@@ -26,6 +26,10 @@ RUN_TYPE_LABEL = "Market replay — data and engine check (observation only)"
 NOT_CONNECTED = ("Professional adviser not connected yet. This run validates data/replay/product workflow only; "
                  "trade-call metrics are unavailable.")
 UNAVAILABLE_REASON = "no professional adviser connected yet"
+ADVISER_NOTICE = ("Adviser evaluation: the integrated MP-001 adviser replayed causally over the prepared pack, with a "
+                  "SEPARATE normalized hypothetical evaluator (one abstract unit, declared delay/costs). It never "
+                  "places orders or chooses size/leverage; outcomes are hypothetical, not fills or account results.")
+ADVISER_KIND = "ADVISER_EVALUATION"
 
 UNAVAILABLE_METRICS = (
     ("market_view_metrics", "MarketView metrics"),
@@ -52,7 +56,7 @@ def _mb(n: int | None) -> str:
 
 def build_report(ev: dict[str, Any], replay: dict[str, Any], manifest: dict[str, Any] | None,
                  op: dict[str, Any] | None = None, diagnostic: dict[str, Any] | None = None,
-                 now: datetime | None = None) -> dict[str, Any]:
+                 now: datetime | None = None, adviser: dict[str, Any] | None = None) -> dict[str, Any]:
     cfg = replay["config"]
     corpus = ev["corpus"]
     status = replay["status"]
@@ -86,6 +90,12 @@ def build_report(ev: dict[str, Any], replay: dict[str, Any], manifest: dict[str,
         verdict = "IN_PROGRESS_SNAPSHOT"
         text = (f"Diagnostic snapshot while {status.upper()} in phase {phase or '—'}: {applied:,} of {total_text} feed "
                 "events committed. This is not a result; terminal validation has not completed.")
+    elif complete and outcome == "passed" and adviser is not None:
+        verdict = "ADVISER_EVALUATION_COMPLETED"
+        text = ("The adviser evaluation ran end to end over the whole prepared pack and its runtime integrity checks "
+                "(bounded terminal reconciliation incl. adviser journal/evaluation commitments) passed. Integrity is "
+                "not profitability or forecast quality: the adviser section reports calls, entry windows, the "
+                "candidate funnel and hypothetical outcomes for Director diagnosis.")
     elif complete and outcome == "passed":
         verdict = "WORKFLOW_VALID"
         text = ("Corpus data, causal feed and durable observation replay worked end to end: every feed event of the "
@@ -135,11 +145,21 @@ def build_report(ev: dict[str, Any], replay: dict[str, Any], manifest: dict[str,
             "counters": op["metrics"],
             "environment": ((replay.get("supervisor") or {}).get("environment")),
         }
+    caps = {
+        "professional_adviser": {"status": "NOT_IMPLEMENTED", "reason": UNAVAILABLE_REASON},
+        **{key: {"label": label, "status": "UNAVAILABLE", "value": None, "reason": UNAVAILABLE_REASON}
+           for key, label in UNAVAILABLE_METRICS},
+    }
+    if adviser is not None:
+        caps = {"professional_adviser": {"status": "CONNECTED", "reason": "MP-001 btc.context-action.v0.2 adviser"},
+                **{key: {"label": label, "status": "REPORTED", "value": None, "reason": "see the adviser section"}
+                   for key, label in UNAVAILABLE_METRICS}}
     return {
-        "report_kind": REPORT_KIND,
+        "report_kind": ADVISER_KIND if adviser is not None else REPORT_KIND,
         "report_format": REPORT_FORMAT,
-        "run_type": RUN_TYPE_LABEL,
-        "notice": NOT_CONNECTED,
+        "run_type": "Adviser evaluation (hypothetical outcomes, no orders)" if adviser is not None else RUN_TYPE_LABEL,
+        "notice": ADVISER_NOTICE if adviser is not None else NOT_CONNECTED,
+        "adviser": adviser,
         "evaluation_id": ev["evaluation_id"],
         "preset": ev["preset"],
         "replay_id": replay["replay_id"],
@@ -191,13 +211,11 @@ def build_report(ev: dict[str, Any], replay: dict[str, Any], manifest: dict[str,
         "manifest_check": (diagnostic or {}).get("manifest"),
         "stopped_at": stopped,
         "warnings": warnings,
-        "capabilities": {
-            "professional_adviser": {"status": "NOT_IMPLEMENTED", "reason": UNAVAILABLE_REASON},
-            **{key: {"label": label, "status": "UNAVAILABLE", "value": None, "reason": UNAVAILABLE_REASON}
-               for key, label in UNAVAILABLE_METRICS},
-        },
+        "capabilities": caps,
         "conclusion": {"verdict": verdict, "text": text},
-        "next_diagnostic": (("Adviser evaluation pending: rerun this same prepared chunk once the professional "
+        "next_diagnostic": (("Copy this report to the Director: diagnose calls/coverage/funnel before any change; "
+                             "no parameter search.") if complete and adviser is not None else
+                            ("Adviser evaluation pending: rerun this same prepared chunk once the professional "
                              "adviser is connected; call/outcome sections will then be reported.")
                             if complete else (diagnostic or {}).get("next_diagnostic")
                             or "Copy this report to the Director for diagnosis."),
@@ -380,17 +398,25 @@ def render_markdown(r: dict[str, Any]) -> str:
         lines.append("- Demonstration readiness: " + (", ".join(f"{x['dependency']} {x['status']}" for x in warm)
                                                       if warm else "all READY"))
         lines.append(f"- {t['readiness_note']}")
+    if r.get("adviser"):
+        if r["adviser"].get("pending"):
+            lines += ["", "## Adviser evaluation", f"- PENDING: {r['adviser']['text']}"]
+        else:
+            from ..adviser.report import render_markdown as adviser_md
+
+            lines += adviser_md(r["adviser"])
+    else:
+        lines += [
+            "",
+            "## Adviser capabilities",
+            "| Capability | Status |",
+            "|---|---|",
+            f"| Professional adviser | {r['capabilities']['professional_adviser']['status']} |",
+        ]
+        for key, label in UNAVAILABLE_METRICS:
+            lines.append(f"| {label} | {r['capabilities'][key]['status']} |")
+        lines.append(f"Reason: {UNAVAILABLE_REASON}.")
     lines += [
-        "",
-        "## Adviser capabilities",
-        "| Capability | Status |",
-        "|---|---|",
-        f"| Professional adviser | {r['capabilities']['professional_adviser']['status']} |",
-    ]
-    for key, label in UNAVAILABLE_METRICS:
-        lines.append(f"| {label} | {r['capabilities'][key]['status']} |")
-    lines += [
-        f"Reason: {UNAVAILABLE_REASON}.",
         "",
         "## Conclusion",
         f"**{r['conclusion']['verdict']}** — {r['conclusion']['text']}",

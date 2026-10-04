@@ -31,12 +31,15 @@ from . import report as rp
 
 PRESET = "observation-only"
 PRESET_LABEL = "Market replay — data and engine check"
+ADVISER_PRESET = "adviser-evaluation"
+ADVISER_LABEL = "Adviser evaluation"
 
 
 class StartEvaluation(BaseModel):
     chunk_id: str | None = Field(default=None, min_length=1, max_length=100)  # earlier single-month workflow
     pack_id: str | None = Field(default=None, min_length=1, max_length=100)  # prepared evaluation pack (R3)
     acknowledge_limitations: bool = False  # explicit Owner acknowledgement for a READY_WITH_LIMITATIONS pack
+    run_type: str = Field(default="observation_only", pattern="^(observation_only|adviser_evaluation)$")
     speed: float = Field(default=0.0, ge=0, le=control.MAX_SPEED)
     paused: bool = False
 
@@ -110,6 +113,29 @@ def pack_snapshot(c, data_root: Path, pack_id: str, acknowledged: bool) -> dict[
     }
 
 
+def adviser_section(c, ev: dict[str, Any], replay: dict[str, Any]) -> dict[str, Any] | None:
+    """Adviser report section from committed records (any job state); None for observation-only evaluations."""
+    if ev["run_type"] != "adviser_evaluation":
+        return None
+    eng = replay.get("engine") or {}
+    if not eng.get("adviser"):
+        return {"section": "ADVISER_EVALUATION", "pending": True,
+                "text": "adviser configuration is pinned by the worker-owned preparation (not yet prepared)"}
+    from ..adviser import report as ar
+
+    rid = replay["replay_id"]
+    journal = c.execute("SELECT seq, kind, clock_time, record FROM adviser_journal WHERE run_id = %s ORDER BY seq",
+                        (rid,)).fetchall()
+    for e in journal:
+        e["clock_time"] = e["clock_time"].isoformat()
+    records = c.execute("SELECT seq, kind, record FROM adviser_evaluation_records WHERE run_id = %s ORDER BY seq",
+                        (rid,)).fetchall()
+    view = c.execute("SELECT adviser_view FROM observation_checkpoints WHERE replay_id = %s", (rid,)).fetchone()
+    fin = c.execute("SELECT 1 FROM adviser_finish WHERE run_id = %s", (rid,)).fetchone()
+    return ar.build(engine=eng, journal=journal, records=records, view=(view or {}).get("adviser_view"),
+                    status=replay["status"], clock_end_reached=fin is not None)
+
+
 def build_router(conn: Callable, data_root: Path, art_root: Path) -> APIRouter:
     r = APIRouter(prefix="/api/evaluations")
 
@@ -126,12 +152,13 @@ def build_router(conn: Callable, data_root: Path, art_root: Path) -> APIRouter:
             rv["assurance_summary"] = assurance_summary(c, replay["replay_id"], rv["operation"]["assurance"],
                                                         rv["status"])
         terminal = rv["status"] in control.TERMINAL
+        adviser = ev["run_type"] == "adviser_evaluation"
         return {
             "evaluation_id": ev["evaluation_id"],
             "run_type": ev["run_type"],
-            "run_type_label": PRESET_LABEL,
+            "run_type_label": ADVISER_LABEL if adviser else PRESET_LABEL,
             "preset": ev["preset"],
-            "notice": rp.NOT_CONNECTED,
+            "notice": rp.ADVISER_NOTICE if adviser else rp.NOT_CONNECTED,
             "created_at": ev["created_at"].isoformat(),
             "corpus": ev["corpus"],
             "replay": rv,
@@ -152,19 +179,25 @@ def build_router(conn: Callable, data_root: Path, art_root: Path) -> APIRouter:
             if p["status"] == "READY_WITH_LIMITATIONS" and not body.acknowledge_limitations:
                 raise HTTPException(409, "this pack is READY WITH LIMITATIONS (source gaps); acknowledge the listed "
                                          "limitations to start an inspection run: " + "; ".join(p["limitations"]))
+            adviser = body.run_type == "adviser_evaluation"
+            if adviser and any(x["class"] != "DEVELOPMENT" for x in p["evidence_classes"].get("portions", [])):
+                raise HTTPException(409, "protected (Jan-Aug 2026) evaluation is not enabled before the Director's "
+                                         "contamination inventory and model freeze; choose a development pack")
             c.commit()
             evaluation_id = new_evaluation_id()
             try:
                 with c.transaction():
                     replay_id = control.create_replay(c, data_root, SourceKind.PACK, body.pack_id, body.speed,
                                                       body.paused, evaluation_id=evaluation_id,
-                                                      expected_manifest_sha256=snapshot["manifest_sha256"])
+                                                      expected_manifest_sha256=snapshot["manifest_sha256"],
+                                                      run_type="adviser_evaluation" if adviser else "observation")
                     c.execute(
                         """INSERT INTO evaluations (evaluation_id, replay_id, run_type, preset, plan_id, chunk_id,
                                dataset_id, corpus, pack_id, preset_id)
-                           VALUES (%s, %s, 'observation_only', %s, %s, %s, %s, %s, %s, %s)""",
-                        (evaluation_id, replay_id, PRESET, snapshot["plan_id"], snapshot["chunk_id"], body.pack_id,
-                         Jsonb(snapshot), body.pack_id, snapshot["chunk_id"]))
+                           VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+                        (evaluation_id, replay_id, body.run_type, ADVISER_PRESET if adviser else PRESET,
+                         snapshot["plan_id"], snapshot["chunk_id"], body.pack_id, Jsonb(snapshot), body.pack_id,
+                         snapshot["chunk_id"]))
             except (SourceRejected, control.ControlRejected) as exc:
                 raise HTTPException(422, str(exc)) from None
             return view(*get(c, evaluation_id), c)
@@ -175,6 +208,8 @@ def build_router(conn: Callable, data_root: Path, art_root: Path) -> APIRouter:
             raise HTTPException(422, "give exactly one of pack_id (evaluation pack) or chunk_id (single month)")
         if body.pack_id is not None:
             return start_pack(body)
+        if body.run_type == "adviser_evaluation":
+            raise HTTPException(422, "an adviser evaluation needs a prepared evaluation pack (pack_id)")
         plan = load_plan()
         chunk = plan.chunk(body.chunk_id)
         if chunk is None:
@@ -226,8 +261,9 @@ def build_router(conn: Callable, data_root: Path, art_root: Path) -> APIRouter:
         now = datetime.now(UTC)
         with conn() as c:
             storage = storage_facts(c, replay["replay_id"])
+            adviser = adviser_section(c, ev, replay)
         return rp.build_report(ev, replay, replay["manifest"], diag.operation(replay, now),
-                               diag.diagnostic_report(replay, art_root, now, ev, storage), now)
+                               diag.diagnostic_report(replay, art_root, now, ev, storage), now, adviser=adviser)
 
     @r.get("/{evaluation_id}/report.json")
     def report_json(evaluation_id: str, download: bool = False) -> PlainTextResponse:

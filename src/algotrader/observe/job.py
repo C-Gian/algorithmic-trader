@@ -152,6 +152,11 @@ class Counters:
     cache_partitions_read: int = 0
     checkpoint_state_bytes: int = 0
     checkpoint_temporal_bytes: int = 0  # compressed temporal restore state (observe.stream.v2 runs)
+    checkpoint_adviser_bytes: int = 0  # compressed professional runtime state (observe.stream.v3 adviser runs)
+    journal_entries_committed: int = 0  # sparse semantic.v2 journal records (material changes only)
+    evaluation_records_committed: int = 0  # immutable hypothetical paths / view samples
+    adviser_records_verified: int = 0  # regenerated after a fallback suffix and matched to committed records
+    professional_dispatches: int = 0
     validation_deliveries_rederived: int = 0  # always 0: no reference re-derivation at finalization
     deliveries_loaded_for_finalize: int = 0  # always 0: no per-event records exist
     output_bytes: int | None = None
@@ -420,13 +425,32 @@ class ReplayJob:
         from .control import build_config
 
         config = build_config(self.rid, prepared.loaded)
+        run_type = launch.run_type
+        fmt, adviser = ENGINE_FORMAT, None
+        tconf = temporal_config(cache.feed_manifest)
+        if run_type == "adviser_evaluation":
+            if kind != SourceKind.PACK:
+                raise SourceRejected("an adviser evaluation needs a receipt-pinned evaluation pack")
+            from ..adviser.engine import ENGINE_FORMAT_V3, engine_config
+            from ..adviser.harness import mp001_dependencies
+            from ..corpus.pack import packs_root
+
+            raw = (packs_root(self.data_root) / source_id / "manifest.json").read_bytes()
+            import hashlib
+
+            if hashlib.sha256(raw).hexdigest() != prepared.source_manifest_sha256:
+                raise SourceRejected("pack manifest bytes differ from the verified pack pin")
+            fmt = ENGINE_FORMAT_V3
+            tconf = temporal_config(cache.feed_manifest, dependencies=mp001_dependencies())
+            adviser = engine_config(cache.feed_manifest, json.loads(raw), config.code_version)
         engine = {
-            "format": ENGINE_FORMAT, "state_format": STATE_FORMAT, "cache_format": CACHE_FORMAT,
+            "format": fmt, "state_format": STATE_FORMAT, "cache_format": CACHE_FORMAT,
             "commitment_format": COMMITMENT_FORMAT, "cache_id": cache.cache_id,
             "cache_manifest_sha256": cache.manifest_sha256, "partition_events": cache.manifest["partition_events"],
             "source_manifest_sha256": prepared.source_manifest_sha256,
-            "fingerprint": fingerprint(cache.cache_id, config.freshness_policy, ENGINE_FORMAT),
-            "temporal": temporal_config(cache.feed_manifest),
+            "fingerprint": fingerprint(cache.cache_id, config.freshness_policy, fmt),
+            "temporal": tconf,
+            "adviser": adviser,
             "pack": ({"pack_id": source_id, "pack_manifest_sha256": prepared.source_manifest_sha256}
                      if kind == SourceKind.PACK else None),
             "checkpoint_policy": {"active_seconds": self.spec.checkpoint_seconds,
@@ -438,8 +462,7 @@ class ReplayJob:
         done = self.conn.execute(
             f"""UPDATE observation_replays SET config = %s, total_events = %s, engine = %s, engine_format = %s
                 WHERE {cond} AND config IS NULL RETURNING 1""",
-            (Jsonb(json.loads(config.model_dump_json())), config.feed.event_count, Jsonb(engine), ENGINE_FORMAT,
-             *args),
+            (Jsonb(json.loads(config.model_dump_json())), config.feed.event_count, Jsonb(engine), fmt, *args),
         ).fetchone()
         if done is None:
             raise LeaseLost(self.rid)
@@ -468,8 +491,13 @@ class ReplayJob:
         if ck is None:
             self._restoring = False
             self.enter_phase("INITIALIZING", detail="initial observable state (cursor 0)")
+            adviser = None
+            if engine.get("adviser"):
+                from ..adviser.engine import new_runtime
+
+                adviser = new_runtime(engine)
             kernel = Kernel(cache.feed_meta, freshness, None, initial_commitment(cache.cache_id),
-                            new_temporal(cache.feed_manifest, engine))
+                            new_temporal(cache.feed_manifest, engine), adviser)
             snap = kernel.snapshot()
             blob, sha = kernel.pack()
             cond, args = self.fence
@@ -507,7 +535,8 @@ class ReplayJob:
                             .get("commitment_after"))
                 if rp["commitment"] != expected:
                     raise StateError(f"restore point {rp['cursor']} commitment does not match its committed range")
-                kernel = Kernel(cache.feed_meta, freshness, state, bytes.fromhex(rp["commitment"]), temporal)
+                adviser = self._restore_adviser(rp, engine)
+                kernel = Kernel(cache.feed_meta, freshness, state, bytes.fromhex(rp["commitment"]), temporal, adviser)
                 break
             except StateError as exc:
                 self.counters.restore_fallbacks += 1
@@ -532,6 +561,8 @@ class ReplayJob:
             if kernel.temporal is not None and kernel.pack_temporal()[1] != expected["temporal_sha256"]:
                 raise _UnsafeRecovery(f"suffix reprocessing to cursor {target} does not reproduce the committed "
                                       "temporal state; recovery is not safe")
+            if kernel.adviser is not None:
+                self._verify_reproduced_outputs(kernel, target)
             self._note({"event": "restore_fallback", "restored_cursor": target - self.counters.restore_suffix_events,
                         "committed_cursor": target, "suffix_events": self.counters.restore_suffix_events,
                         "detail": "newest restore point rejected; restored an older verified point and reprocessed "
@@ -542,19 +573,59 @@ class ReplayJob:
                                   f"committed {ck['snapshot_digest'][:16]}; recovery is not safe")
         return kernel
 
+    def _restore_adviser(self, rp: dict[str, Any], engine: dict[str, Any]):
+        if not engine.get("adviser"):
+            return None
+        from ..adviser.engine import AdviserStateError, unpack_runtime
+
+        if rp.get("adviser_format") != engine["adviser"]["format"] or rp.get("adviser_blob") is None:
+            raise StateError(f"restore point {rp['cursor']} has no {engine['adviser']['format']} adviser state")
+        try:
+            rt = unpack_runtime(bytes(rp["adviser_blob"]), rp["adviser_sha256"], engine)
+        except AdviserStateError as exc:
+            raise StateError(f"adviser state at cursor {rp['cursor']}: {exc}") from None
+        if rt.admitted != rp["cursor"]:
+            raise StateError(f"adviser cursor {rt.admitted} != restore point {rp['cursor']}")
+        return rt
+
+    def _verify_reproduced_outputs(self, kernel: Kernel, target: int) -> None:
+        """After a fallback suffix re-application the regenerated journal/evaluation records must equal the ones
+        already committed (digest by sequence) - they are never inserted twice - and the adviser state must equal
+        the committed range's adviser SHA-256."""
+        journal, records = kernel.adviser.take()
+        for table, rows in (("adviser_journal", journal), ("adviser_evaluation_records", records)):
+            for r in rows:
+                got = self.conn.execute(f"SELECT digest FROM {table} WHERE run_id = %s AND seq = %s",
+                                        (self.rid, r["seq"])).fetchone()
+                if got is None or got["digest"] != r["digest"]:
+                    raise _UnsafeRecovery(f"suffix reprocessing regenerated {table} seq {r['seq']} that differs "
+                                          "from the committed record; recovery is not safe")
+            self.counters.adviser_records_verified += len(rows)
+        row = self.conn.execute("SELECT adviser_sha256 FROM observation_ranges WHERE replay_id = %s AND to_cursor = %s",
+                                (self.rid, target)).fetchone()
+        if row is None or kernel.pack_adviser()[1] != row["adviser_sha256"]:
+            raise _UnsafeRecovery(f"suffix reprocessing to cursor {target} does not reproduce the committed adviser "
+                                  "state; recovery is not safe")
+
     def _insert_restore_point(self, kernel: Kernel, snap, blob: bytes, sha: str, engine: dict[str, Any],
-                              temporal: tuple[bytes, str] | None = None) -> None:
+                              temporal: tuple[bytes, str] | None = None,
+                              adviser: tuple[bytes, str] | None = None) -> None:
         if kernel.temporal is not None and temporal is None:
             temporal = kernel.pack_temporal()
+        if kernel.adviser is not None and adviser is None:
+            adviser = kernel.pack_adviser()
         self.conn.execute(
             """INSERT INTO observation_restore_points (replay_id, cursor, generation, state_format, fingerprint,
                    state_blob, state_sha256, snapshot_id, snapshot_digest, info_time, commitment, temporal_format,
-                   temporal_blob, temporal_sha256)
-               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+                   temporal_blob, temporal_sha256, adviser_format, adviser_blob, adviser_sha256)
+               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
             (self.rid, kernel.cursor, self.spec.generation, STATE_FORMAT, engine["fingerprint"], blob, sha,
              snap.snapshot_id, snap.content_digest, snap.as_of, kernel.commitment.hex(),
              temporal_engine.STATE_FORMAT if temporal else None, temporal[0] if temporal else None,
-             temporal[1] if temporal else None))
+             temporal[1] if temporal else None, engine["adviser"]["format"] if adviser else None,
+             adviser[0] if adviser else None, adviser[1] if adviser else None))
+        if adviser:
+            self.counters.checkpoint_adviser_bytes = len(adviser[0])
         # retention: the latest two non-terminal restore points (plus any terminal one), atomically
         self.conn.execute(
             """DELETE FROM observation_restore_points WHERE replay_id = %s AND NOT terminal AND cursor < (
@@ -564,6 +635,27 @@ class ReplayJob:
         self.counters.checkpoint_state_bytes = len(blob)
         if temporal:
             self.counters.checkpoint_temporal_bytes = len(temporal[0])
+
+    def _insert_outputs(self, journal: list[dict], records: list[dict]) -> None:
+        """Append-only semantic journal + evaluation records, inside the caller's fenced transaction."""
+        if journal:
+            with self.conn.cursor() as cur:
+                cur.executemany(
+                    """INSERT INTO adviser_journal (run_id, seq, kind, record_id, clock_time, professional_seq,
+                           factual_cursor, origin, subject, digest, chain, record, generation)
+                       VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+                    [(self.rid, e["seq"], e["kind"], e["record_id"], e["clock_time"], e["professional_seq"],
+                      e["factual_cursor"], e["origin"], e["subject"], e["digest"], e["chain"], Jsonb(e["record"]),
+                      self.spec.generation) for e in journal])
+            self.counters.journal_entries_committed += len(journal)
+        if records:
+            with self.conn.cursor() as cur:
+                cur.executemany(
+                    """INSERT INTO adviser_evaluation_records (run_id, seq, kind, record_id, digest, chain, record,
+                           generation) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""",
+                    [(self.rid, r["seq"], r["kind"], r["record_id"], r["digest"], r["chain"], Jsonb(r["record"]),
+                      self.spec.generation) for r in records])
+            self.counters.evaluation_records_committed += len(records)
 
     def control(self) -> dict[str, Any]:
         cond, args = self.fence
@@ -581,6 +673,12 @@ class ReplayJob:
         tview = kernel.temporal.summary() if kernel.temporal is not None else None
         tcols = ((tblob[1], kernel.temporal.commitment(), kernel.temporal.aggregate_chain, kernel.temporal.dispatch_seq)
                  if tblob is not None else (None, None, None, None))
+        journal, records, ablob, aview, acommit = [], [], None, None, None
+        if kernel.adviser is not None:
+            journal, records = kernel.adviser.take()
+            ablob = kernel.pack_adviser()
+            aview = kernel.adviser.core.inspect()
+            acommit = kernel.adviser.commitment()
         conn = self.conn
         cond, args = self.fence
         with conn.transaction():
@@ -605,13 +703,18 @@ class ReplayJob:
             conn.execute(
                 """INSERT INTO observation_ranges (replay_id, range_seq, generation, from_cursor, to_cursor,
                        event_count, first_order, last_order, commitment_before, commitment_after, snapshot_digest,
-                       state_sha256, temporal_sha256, temporal_commitment, aggregate_chain, dispatch_seq)
+                       state_sha256, temporal_sha256, temporal_commitment, aggregate_chain, dispatch_seq,
+                       adviser_sha256, adviser_commitment)
                    VALUES (%s, (SELECT coalesce(max(range_seq) + 1, 0) FROM observation_ranges WHERE replay_id = %s),
-                           %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+                           %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
                 (self.rid, self.rid, self.spec.generation, from_cursor, kernel.cursor, kernel.cursor - from_cursor,
                  first_order, last_order, commit_before.hex(), kernel.commitment.hex(), snap.content_digest, sha,
-                 *tcols))
-            self._insert_restore_point(kernel, snap, blob, sha, engine, tblob)
+                 *tcols, ablob[1] if ablob else None, Jsonb(acommit) if acommit else None))
+            self._insert_restore_point(kernel, snap, blob, sha, engine, tblob, ablob)
+            if kernel.adviser is not None:
+                self._insert_outputs(journal, records)
+                conn.execute("UPDATE observation_checkpoints SET adviser_view = %s WHERE replay_id = %s",
+                             (Jsonb(aview), self.rid))
             if self.before_commit is not None:
                 self.before_commit(self.rid, kernel.cursor)
         self.counters.transactions_committed += 1
@@ -787,7 +890,53 @@ class ReplayJob:
         if ctl["cancel_requested"]:
             self.finalize(ReplayStatus.CANCELLED, "cancelled by user before completion", None)
             return
+        if kernel.adviser is not None:
+            self._professional_finish(kernel, engine)
+            if self._cancel_requested():
+                self.finalize(ReplayStatus.CANCELLED, "cancelled by user before completion", None)
+                return
         self.finalize(ReplayStatus.COMPLETED, None, None)
+
+    def _professional_finish(self, kernel: Kernel, engine: dict[str, Any]) -> None:
+        """Declared finite clock end for an adviser run (after the whole canonical feed was committed): temporal
+        finish, remaining professional barriers/timers through the outcome tail, evaluator censoring of unresolved
+        paths. Committed once, fenced, with its journal/evaluation records; a reclaimed attempt that finds the finish
+        already committed recomputes it from the same terminal state and requires an identical commitment."""
+        from datetime import datetime as _dt
+
+        from ..adviser.engine import pack_runtime
+
+        clock_end = _dt.fromisoformat(engine["adviser"]["clock_end"].replace("Z", "+00:00"))
+        self.enter_phase("FINALIZING", detail="professional clock-end finish (tail timers, unresolved outcomes)",
+                         finalizing_as="completed", cursor=kernel.cursor)
+        kernel.finish(clock_end)
+        journal, records = kernel.adviser.take()
+        blob, sha = pack_runtime(kernel.adviser)
+        commit = {**kernel.adviser.commitment(), "temporal_commitment": kernel.temporal.commitment(),
+                  "temporal_clock": kernel.temporal.clock.isoformat(), "adviser_sha256": sha}
+        self.counters.professional_dispatches = kernel.adviser.dispatches
+        cond, args = self.fence
+        with self.conn.transaction():
+            if self.conn.execute(f"SELECT 1 FROM observation_replays WHERE {cond} FOR UPDATE", args).fetchone() is None:
+                raise LeaseLost(self.rid)
+            prior = self.conn.execute("SELECT commitment, from_cursor FROM adviser_finish WHERE run_id = %s",
+                                      (self.rid,)).fetchone()
+            if prior is not None:
+                if prior["commitment"] != json.loads(json.dumps(commit)) or prior["from_cursor"] != kernel.cursor:
+                    raise _UnsafeRecovery("a committed professional finish exists with a different commitment; the "
+                                          "finish is not reproducible")
+                self._note({"event": "finish_reverified", "detail": "professional finish already committed by an "
+                                                                    "earlier attempt; recomputed identically"})
+            else:
+                self.conn.execute(
+                    """INSERT INTO adviser_finish (run_id, generation, clock_end, from_cursor, adviser_format,
+                           adviser_blob, adviser_sha256, commitment) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""",
+                    (self.rid, self.spec.generation, clock_end, kernel.cursor, engine["adviser"]["format"], blob, sha,
+                     Jsonb(commit)))
+                self._insert_outputs(journal, records)
+                self.conn.execute("UPDATE observation_checkpoints SET adviser_view = %s WHERE replay_id = %s",
+                                  (Jsonb(kernel.adviser.core.inspect()), self.rid))
+        self.counters.transactions_committed += 1
 
     def _pace(self, ctl: dict[str, Any]) -> dict[str, Any]:
         """Sleep at the persisted pacing (events/s); re-read control every chunk. Never affects state."""
@@ -862,10 +1011,22 @@ class ReplayJob:
                                         (engine["cache_id"],)).fetchone()
             temporal_doc: dict[str, Any] | None = {} if engine.get("temporal") else None
             pack_facts = self._pack_facts(engine)
+            adviser_in = adviser_doc = None
+            if engine.get("adviser"):
+                adviser_doc = {}
+                adviser_in = {
+                    "journal": self.conn.execute("SELECT seq, kind, digest, chain, record FROM adviser_journal WHERE "
+                                                 "run_id = %s ORDER BY seq", (self.rid,)).fetchall(),
+                    "records": self.conn.execute("SELECT seq, kind, digest, chain, record FROM "
+                                                 "adviser_evaluation_records WHERE run_id = %s ORDER BY seq",
+                                                 (self.rid,)).fetchall(),
+                    "finish": self.conn.execute("SELECT * FROM adviser_finish WHERE run_id = %s",
+                                                (self.rid,)).fetchone()}
             validation, snap = reconcile(status=status, cache=cache, ranges=ranges, cursor=cursor, terminal=terminal,
                                          committed_snapshot_digest=ck["snapshot_digest"], engine=engine,
                                          freshness=cfg.freshness_policy, hook=vhook, receipt=receipt,
-                                         temporal_out=temporal_doc, pack=pack_facts)
+                                         temporal_out=temporal_doc, pack=pack_facts, adviser_in=adviser_in,
+                                         adviser_out=adviser_doc)
             if validation.outcome == ValidationOutcome.INCOMPLETE:
                 status = ReplayStatus.CANCELLED
                 error = ("cancelled by user during VALIDATING: the replay cursor was complete, but reconciliation did "
@@ -877,7 +1038,8 @@ class ReplayJob:
             staged = stage_stream_artifacts(
                 self.artifact_root, row, status, error, _now(), cursor, ranges, engine, validation, snap,
                 ck["snapshot_digest"], generation=self.spec.generation, hook=self.hook, timings=self._timings,
-                metrics=lambda: self._metrics_doc()[str(self.spec.generation)], temporal=temporal_doc or None)
+                metrics=lambda: self._metrics_doc()[str(self.spec.generation)], temporal=temporal_doc or None,
+                adviser=adviser_doc)
             self.counters.output_bytes = staged.output_bytes
             m = staged.manifest
             v = m.validation

@@ -31,7 +31,7 @@ from ..feed.contracts import AvailabilityPolicy, ChannelChange, ChannelCoverage,
 
 OBSERVE_SCHEMA_VERSION = "algotrader.observe.v1"
 OBSERVE_CONTRACT_STATUS = "PROVISIONAL"
-OBSERVE_SCHEMA_REVISION = 4
+OBSERVE_SCHEMA_REVISION = 5
 OBSERVE_CHANGELOG: tuple[tuple[int, str, str], ...] = (
     (1, "2026-09-30", "Initial provisional baseline (WP-007): observation-replay config, source verification, "
                       "feed identity, committed delivery records, manifest and validation."),
@@ -52,6 +52,12 @@ OBSERVE_CHANGELOG: tuple[tuple[int, str, str], ...] = (
                       "algotrader.corpus-pack.v1 composition of verified marketdata.v1 slices replayed as ONE "
                       "canonical feed. Dataset and recording sources, all earlier manifests and readers are "
                       "unchanged."),
+    (5, "2026-10-04", "WP-009 integrated adviser (additive, optional): ObservationLaunch adds optional run_type "
+                      "('observation' default | 'adviser_evaluation'); adviser evaluation runs use engine "
+                      "observe.stream.v3 (factual + temporal + algotrader.adviser-runtime.v1 state in the same fenced "
+                      "checkpoints) and their manifest adds optional ``adviser`` - a reference to the semantic.v2 "
+                      "journal / adviser-evaluation.v1 records, method identity and adviser commitments (details in "
+                      "adviser.json). Observation-only runs, every earlier manifest and reader are unchanged."),
 )
 VALIDATOR_ID = "observe.terminal-revalidation"
 VALIDATOR_VERSION = "1"
@@ -210,6 +216,8 @@ class ObservationLaunch(Record):
     evaluation_id: str | None
     expected_manifest_sha256: str | None  # corpus binding to re-check during preparation (evaluations)
     code_version: str | None
+    # revision 5 (optional; absent in earlier launches = observation)
+    run_type: str = "observation"  # observation | adviser_evaluation
 
 
 class ArtifactFile(Record):
@@ -249,6 +257,8 @@ class ObservationReplayManifest(Record):
     operational_metrics: dict | None = None  # cheap bounded counters (events, snapshots, transactions, bytes)
     # revision 3 (optional; absent in revision-1/2 manifests and observe.stream.v1 runs)
     temporal: dict | None = None  # reference to the algotrader.temporal.v1 substrate (see temporal.json)
+    # revision 5 (optional; adviser evaluation runs only)
+    adviser: dict | None = None  # reference to the semantic.v2 journal / evaluation records (see adviser.json)
 
 
 PUBLIC_CONTRACTS: tuple[type[Record], ...] = (

@@ -87,7 +87,8 @@ def build_config(replay_id: str, source: LoadedSource) -> ObservationReplayConfi
 
 def create_replay(conn: psycopg.Connection, data_root: Path, kind: SourceKind | str, source_id: str,
                   speed: float = 20.0, paused: bool = False, replay_id: str | None = None,
-                  evaluation_id: str | None = None, expected_manifest_sha256: str | None = None) -> str:
+                  evaluation_id: str | None = None, expected_manifest_sha256: str | None = None,
+                  run_type: str = "observation") -> str:
     """Durable launch (target <=1 s): validate cheap fields and local existence, persist the envelope.
 
     No verification, hashing, parsing or feed construction happens here; those are worker-owned
@@ -97,12 +98,16 @@ def create_replay(conn: psycopg.Connection, data_root: Path, kind: SourceKind | 
     if not 0 <= speed <= MAX_SPEED:
         raise ControlRejected(f"speed must be between 0 (max) and {MAX_SPEED:g} events/s")
     kind = SourceKind(kind)
+    if run_type not in ("observation", "adviser_evaluation"):
+        raise ControlRejected(f"unknown run type {run_type!r}")
+    if run_type == "adviser_evaluation" and kind != SourceKind.PACK:
+        raise ControlRejected("an adviser evaluation runs on a prepared evaluation pack")
     locate_source(data_root, kind, source_id)  # path existence only
     replay_id = replay_id or new_replay_id()
     launch = ObservationLaunch(
         schema_version=OBSERVE_SCHEMA_VERSION, replay_id=replay_id, source_kind=kind, source_id=source_id,
         requested_at=datetime.now(UTC), speed=speed, paused=paused, evaluation_id=evaluation_id,
-        expected_manifest_sha256=expected_manifest_sha256, code_version=code_version(),
+        expected_manifest_sha256=expected_manifest_sha256, code_version=code_version(), run_type=run_type,
     )
     with conn.transaction():
         conn.execute(

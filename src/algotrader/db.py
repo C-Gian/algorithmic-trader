@@ -507,8 +507,140 @@ ALTER TABLE observation_replays ADD CONSTRAINT observation_replays_source_kind_c
     CHECK (source_kind IN ('dataset', 'recording', 'pack'));
 """
 
+# WP-009: integrated adviser (additive). Adviser evaluation runs (engine 'observe.stream.v3') store the explicit
+# professional runtime state (algotrader.adviser-runtime.v1: core + evaluator + pending inputs) beside the factual and
+# temporal state in the SAME fenced checkpoint transaction, adviser commitments at every committed range, the sparse
+# append-only semantic journal (algotrader.semantic.v2 records) and the separate hypothetical evaluation records
+# (algotrader.adviser-evaluation.v1). The professional clock-end finish is a separate fenced commit. Live adviser
+# sessions own their own durable rows (lease/generation fencing), restorable checkpoints, input tape and alert dedup.
+# Existing runs, evaluations and their readers are unchanged; evaluations gain the run type 'adviser_evaluation'.
+SCHEMA_V12 = """
+ALTER TABLE observation_restore_points ADD COLUMN IF NOT EXISTS adviser_format text;
+ALTER TABLE observation_restore_points ADD COLUMN IF NOT EXISTS adviser_blob bytea;
+ALTER TABLE observation_restore_points ADD COLUMN IF NOT EXISTS adviser_sha256 text;
+ALTER TABLE observation_ranges ADD COLUMN IF NOT EXISTS adviser_sha256 text;
+ALTER TABLE observation_ranges ADD COLUMN IF NOT EXISTS adviser_commitment jsonb;
+ALTER TABLE observation_checkpoints ADD COLUMN IF NOT EXISTS adviser_view jsonb;
+
+CREATE TABLE IF NOT EXISTS adviser_journal (
+    run_id            text NOT NULL,
+    seq               integer NOT NULL CHECK (seq >= 1),
+    kind              text NOT NULL,
+    record_id         text NOT NULL,
+    clock_time        timestamptz NOT NULL,
+    professional_seq  bigint NOT NULL,
+    factual_cursor    integer NOT NULL,
+    origin            text NOT NULL,
+    subject           text,
+    digest            text NOT NULL,
+    chain             text NOT NULL,
+    record            jsonb NOT NULL,
+    generation        bigint NOT NULL,
+    committed_at      timestamptz NOT NULL DEFAULT now(),
+    PRIMARY KEY (run_id, seq)
+);
+CREATE INDEX IF NOT EXISTS adviser_journal_kind_idx ON adviser_journal (run_id, kind, seq);
+CREATE INDEX IF NOT EXISTS adviser_journal_subject_idx ON adviser_journal (run_id, subject, seq);
+CREATE INDEX IF NOT EXISTS adviser_journal_time_idx ON adviser_journal (run_id, clock_time, seq);
+
+CREATE TABLE IF NOT EXISTS adviser_evaluation_records (
+    run_id        text NOT NULL,
+    seq           integer NOT NULL CHECK (seq >= 1),
+    kind          text NOT NULL,
+    record_id     text NOT NULL,
+    digest        text NOT NULL,
+    chain         text NOT NULL,
+    record        jsonb NOT NULL,
+    generation    bigint NOT NULL,
+    committed_at  timestamptz NOT NULL DEFAULT now(),
+    PRIMARY KEY (run_id, seq)
+);
+CREATE INDEX IF NOT EXISTS adviser_evaluation_kind_idx ON adviser_evaluation_records (run_id, kind, seq);
+
+CREATE TABLE IF NOT EXISTS adviser_finish (
+    run_id           text PRIMARY KEY,
+    generation       bigint NOT NULL,
+    clock_end        timestamptz NOT NULL,
+    from_cursor      integer NOT NULL,
+    adviser_format   text NOT NULL,
+    adviser_blob     bytea NOT NULL,
+    adviser_sha256   text NOT NULL,
+    commitment       jsonb NOT NULL,
+    created_at       timestamptz NOT NULL DEFAULT now()
+);
+
+ALTER TABLE evaluations DROP CONSTRAINT IF EXISTS evaluations_run_type_check;
+ALTER TABLE evaluations ADD CONSTRAINT evaluations_run_type_check
+    CHECK (run_type IN ('observation_only', 'adviser_evaluation'));
+
+CREATE TABLE IF NOT EXISTS adviser_live_sessions (
+    session_id         text PRIMARY KEY,
+    created_at         timestamptz NOT NULL DEFAULT now(),
+    status             text NOT NULL CHECK (status IN ('queued','running','stopped','failed')),
+    stop_requested     boolean NOT NULL DEFAULT false,
+    reassess_requested integer NOT NULL DEFAULT 0,
+    lease_owner        text,
+    lease_generation   bigint NOT NULL DEFAULT 0,
+    lease_expires_at   timestamptz,
+    heartbeat_at       timestamptz,
+    attempt            integer NOT NULL DEFAULT 0,
+    started_at         timestamptz,
+    stopped_at         timestamptz,
+    phase              text,
+    progress           jsonb NOT NULL DEFAULT '{}'::jsonb,
+    connection         jsonb NOT NULL DEFAULT '{}'::jsonb,
+    config             jsonb NOT NULL,
+    identity           jsonb,
+    view               jsonb,
+    view_seq           bigint NOT NULL DEFAULT 0,
+    diagnostic_log     jsonb NOT NULL DEFAULT '[]'::jsonb,
+    error              text
+);
+CREATE UNIQUE INDEX IF NOT EXISTS adviser_live_one_active
+    ON adviser_live_sessions ((true)) WHERE status IN ('queued','running');
+
+-- Restorable live adviser state (temporal + professional runtime), reused across Owner Start/Stop sessions.
+CREATE TABLE IF NOT EXISTS adviser_live_state (
+    state_key         text PRIMARY KEY,
+    session_id        text NOT NULL,
+    generation        bigint NOT NULL,
+    compat            jsonb NOT NULL,
+    clock             timestamptz,
+    temporal_blob     bytea NOT NULL,
+    temporal_sha256   text NOT NULL,
+    adviser_blob      bytea NOT NULL,
+    adviser_sha256    text NOT NULL,
+    tape_seq          bigint NOT NULL,
+    journal_seq       integer NOT NULL,
+    updated_at        timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS adviser_input_tape (
+    run_id      text NOT NULL,
+    seq         bigint NOT NULL CHECK (seq >= 1),
+    session_id  text NOT NULL,
+    generation  bigint NOT NULL,
+    command     jsonb NOT NULL,
+    recorded_at timestamptz NOT NULL DEFAULT now(),
+    PRIMARY KEY (run_id, seq)
+);
+
+CREATE TABLE IF NOT EXISTS adviser_alerts (
+    alert_key     text PRIMARY KEY,
+    run_id        text NOT NULL,
+    session_id    text NOT NULL,
+    journal_seq   integer NOT NULL,
+    change_type   text NOT NULL,
+    subject_id    text NOT NULL,
+    summary       text NOT NULL,
+    created_at    timestamptz NOT NULL DEFAULT now(),
+    acknowledged  boolean NOT NULL DEFAULT false
+);
+CREATE INDEX IF NOT EXISTS adviser_alerts_created_idx ON adviser_alerts (created_at);
+"""
+
 MIGRATIONS: dict[int, str] = {1: SCHEMA_V1, 2: SCHEMA_V2, 3: SCHEMA_V3, 4: SCHEMA_V4, 5: SCHEMA_V5, 6: SCHEMA_V6,
-                              7: SCHEMA_V7, 8: SCHEMA_V8, 9: SCHEMA_V9, 10: SCHEMA_V10, 11: SCHEMA_V11}
+                              7: SCHEMA_V7, 8: SCHEMA_V8, 9: SCHEMA_V9, 10: SCHEMA_V10, 11: SCHEMA_V11, 12: SCHEMA_V12}
 SCHEMA_VERSION = max(MIGRATIONS)
 
 

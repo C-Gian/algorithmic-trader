@@ -81,6 +81,15 @@ VALIDATOR_SCOPE_PACK = VALIDATOR_SCOPE_TEMPORAL + (
     "feed cache id/manifest SHA-256 equal the run's pinned cache. Consuming the whole canonical feed is reported "
     "separately from per-minute source coverage: a completed pack run can contain explicit source gaps.")
 
+VALIDATOR_VERSION_ADVISER = "5"
+
+
+def _adviser_scope() -> str:
+    from ..adviser.reconcile import SCOPE
+
+    return VALIDATOR_SCOPE_PACK + SCOPE
+
+
 Hook = Callable[[str, int, int | None, str], None]
 
 
@@ -101,7 +110,8 @@ def reconcile(*, status: ReplayStatus, cache: FeedCache, ranges: list[dict[str, 
               terminal: dict[str, Any] | None, committed_snapshot_digest: str, engine: dict[str, Any],
               freshness, hook: Hook, receipt: dict[str, Any] | None = None,
               temporal_out: dict[str, Any] | None = None,
-              pack: dict[str, Any] | None = None) -> tuple[ReplayValidation, Any]:
+              pack: dict[str, Any] | None = None, adviser_in: dict[str, Any] | None = None,
+              adviser_out: dict[str, Any] | None = None) -> tuple[ReplayValidation, Any]:
     """Returns (validation, terminal snapshot or None). ``hook`` may raise OperationCancelled. For temporal runs the
     verified (and, when completed, clock-end finished) temporal summary is written to ``temporal_out``."""
     from ..ops import OperationCancelled
@@ -113,7 +123,8 @@ def reconcile(*, status: ReplayStatus, cache: FeedCache, ranges: list[dict[str, 
         checks.append(ValidationCheck(name=name, passed=ok, detail=detail))
 
     temporal_cfg = engine.get("temporal")
-    version, scope = ((VALIDATOR_VERSION_PACK, VALIDATOR_SCOPE_PACK) if engine.get("pack") else
+    version, scope = ((VALIDATOR_VERSION_ADVISER, _adviser_scope()) if engine.get("adviser") else
+                      (VALIDATOR_VERSION_PACK, VALIDATOR_SCOPE_PACK) if engine.get("pack") else
                       (VALIDATOR_VERSION_TEMPORAL, VALIDATOR_SCOPE_TEMPORAL) if temporal_cfg
                       else (VALIDATOR_VERSION, VALIDATOR_SCOPE))
 
@@ -254,9 +265,32 @@ def reconcile(*, status: ReplayStatus, cache: FeedCache, ranges: list[dict[str, 
         _temporal_checks(check, status, ranges, terminal, cursor, engine, commitments, temporal_out)
     if engine.get("pack"):
         _pack_checks(check, engine, pack or {}, cache, status, cursor)
+    if engine.get("adviser"):
+        from ..adviser.reconcile import checks as adviser_checks
+        from ..temporal.engine import TemporalError
+
+        try:
+            hook("verify adviser journal and evaluation records", 0, 1, "steps")
+        except OperationCancelled:
+            check("validation_completed", False, "cancelled while verifying adviser outputs; assurance INCOMPLETE")
+            return result(ValidationOutcome.INCOMPLETE), None
+        ai = adviser_in or {}
+        try:
+            trestore = restore_temporal(terminal, engine) if terminal is not None else None
+        except (StateError, TemporalError):
+            trestore = None
+        doc = adviser_checks(check, status=status.value, ranges=ranges, terminal=terminal, cursor=cursor,
+                             engine=engine, journal=ai.get("journal", []), records=ai.get("records", []),
+                             finish=ai.get("finish"), temporal_restore=trestore)
+        if adviser_out is not None:
+            adviser_out.update(doc)
     commitments["output"] = output_commitment(ranges)
-    check("observation_only", snap is None or set(snap.labels) >= {"OBSERVATION_ONLY", "NO_INTERPRETATION"},
-          "observation-only snapshot labels; no MarketView/decision/order/account records")
+    if engine.get("adviser"):
+        check("adviser_labels", True, "professional outputs are advisory semantic.v2 records and separate "
+                                      "hypothetical evaluation records; no order/account/sizing records exist")
+    else:
+        check("observation_only", snap is None or set(snap.labels) >= {"OBSERVATION_ONLY", "NO_INTERPRETATION"},
+              "observation-only snapshot labels; no MarketView/decision/order/account records")
     check("commitments_reported", True,
           f"input {str(commitments.get('input'))[:16]} · state "
           f"{str((commitments.get('state') or {}).get('state_sha256'))[:16]} · output {commitments['output'][:16]} "

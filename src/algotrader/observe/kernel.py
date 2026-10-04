@@ -45,7 +45,8 @@ from .feedcache import extend_commitment
 STATE_FORMAT = "algotrader.observe-state.v1"
 ENGINE_FORMAT_V1 = "observe.stream.v1"  # R1B/R1C runs: factual state only
 ENGINE_FORMAT = "observe.stream.v2"  # R2 runs: factual state + causal temporal substrate
-STREAM_ENGINE_FORMATS = frozenset({ENGINE_FORMAT_V1, ENGINE_FORMAT})
+ENGINE_FORMAT_V3 = "observe.stream.v3"  # WP-009 adviser evaluations: + algotrader.adviser-runtime.v1 professional state
+STREAM_ENGINE_FORMATS = frozenset({ENGINE_FORMAT_V1, ENGINE_FORMAT, ENGINE_FORMAT_V3})
 
 
 class StateError(Exception):
@@ -126,9 +127,11 @@ def fingerprint(cache_id: str, freshness: FreshnessPolicy, engine_format: str = 
                                      "freshness": freshness.model_dump(mode="json")})).hexdigest()
 
 
-def temporal_config(manifest) -> dict[str, Any]:
-    """Pinned temporal configuration of a new R2 run (profile, clock policy, finite clock end, fingerprint)."""
-    profile = temporal_engine.profile_for_feed(manifest)
+def temporal_config(manifest, dependencies=None) -> dict[str, Any]:
+    """Pinned temporal configuration of a new R2 run (profile, clock policy, finite clock end, fingerprint).
+    Adviser runs pin the MP-001 named dependencies for readiness inspection (the core applies its own rules)."""
+    profile = (temporal_engine.profile_for_feed(manifest) if dependencies is None else
+               temporal_engine.profile_for_feed(manifest, dependencies=dependencies))
     eng = temporal_engine.for_feed(manifest, profile)
     return {"contract": TEMPORAL_SCHEMA_VERSION, "contract_revision": TEMPORAL_SCHEMA_REVISION,
             "engine": temporal_engine.ENGINE_ID, "state_format": temporal_engine.STATE_FORMAT,
@@ -172,7 +175,7 @@ class Kernel:
     """Sequential application of canonical event lines to the observable state."""
 
     def __init__(self, feed_meta: Feed, freshness: FreshnessPolicy, state: ObservableState | None,
-                 commitment: bytes, temporal: temporal_engine.TemporalEngine | None = None) -> None:
+                 commitment: bytes, temporal: temporal_engine.TemporalEngine | None = None, adviser=None) -> None:
         self.feed = feed_meta
         self.freshness = freshness
         self.state = state if state is not None else initial_state(feed_meta, freshness)
@@ -180,6 +183,14 @@ class Kernel:
         self.temporal = temporal
         if temporal is not None and temporal.cursor != self.state.cursor.applied_events:
             raise StateError(f"temporal cursor {temporal.cursor} != factual cursor {self.state.cursor.applied_events}")
+        self.adviser = adviser  # AdviserRuntime (observe.stream.v3) or None
+        if adviser is not None:
+            if temporal is None:
+                raise StateError("an adviser runtime requires the temporal substrate")
+            adviser.attach(temporal)
+            if adviser.admitted != self.state.cursor.applied_events:
+                raise StateError(f"adviser cursor {adviser.admitted} != factual cursor "
+                                 f"{self.state.cursor.applied_events}")
         self.counters = {"events_decoded": 0, "events_applied": 0, "snapshots_built": 0, "state_encodes": 0}
 
     @property
@@ -193,6 +204,9 @@ class Kernel:
         self.state = apply(self.state, e)  # the accepted pure reducer (ordering/duplicate checks included)
         if self.temporal is not None:
             self.temporal.on_event(e, before)  # factual admission first, then the temporal clock policy
+        if self.adviser is not None:
+            self.adviser.before_admit(e)  # professional barriers strictly before this event's availability
+            self.adviser.admit(e, before)
         self.commitment = extend_commitment(self.commitment, line)
         self.counters["events_applied"] += 1
         return e
@@ -213,3 +227,18 @@ class Kernel:
 
     def pack_temporal(self) -> tuple[bytes, str] | None:
         return None if self.temporal is None else temporal_engine.pack(self.temporal)
+
+    def pack_adviser(self) -> tuple[bytes, str] | None:
+        if self.adviser is None:
+            return None
+        from ..adviser.engine import pack_runtime
+
+        return pack_runtime(self.adviser)
+
+    def finish(self, clock_end: datetime) -> None:
+        """Professional clock-end finish (adviser runs): the temporal finish (final closures) then the adviser's
+        remaining barriers/timers up to the declared finite clock end and the evaluator's tail censoring."""
+        if self.temporal is None or self.adviser is None:
+            raise StateError("finish() is only defined for adviser runs")
+        self.temporal.finish(clock_end)
+        self.adviser.finish(clock_end)
