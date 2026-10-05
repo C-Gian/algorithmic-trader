@@ -472,7 +472,7 @@ def test_ui_public_recorder_start_stop_and_completed_session(stack, browser, evi
     })
 
 
-PENDING_TRADER_AREAS = ("market-view", "scenarios", "decision", "geometry", "evidence", "changes")
+COCKPIT_AREAS = ("live-direction", "live-call", "live-price", "live-changes", "live-technical")
 SECTIONS = {"market": "page-overview", "backtest": "page-backtest", "replay": "page-replay", "data": "page-data",
             "recorder": "page-recorder"}
 
@@ -482,8 +482,9 @@ def no_horizontal_overflow(page: Page) -> bool:
 
 
 def test_shell_market_overview_is_default_honest_and_navigable(stack, browser, evidence_dir):
-    """Market overview is the landing page, reserves the trader areas as clearly pending and never shows
-    synthetic Replay Lab output; every destination is reachable, refresh-stable and free of page overflow."""
+    """Market (Home) is the landing page: the live adviser cockpit honestly states it is stopped (nothing monitored,
+    no current assessment) and never shows synthetic Replay Lab output; every destination is reachable,
+    refresh-stable and free of page overflow."""
     run_id = httpx.post(f"{stack.base}/api/runs", json={"speed": 0}, timeout=10).json()["run_id"]
     wait_for(lambda: stack.get(f"/api/runs/{run_id}")["status"] == "completed", timeout=30)
     latest = stack.get(f"/api/runs/{run_id}/snapshot")["latest"]
@@ -495,17 +496,16 @@ def test_shell_market_overview_is_default_honest_and_navigable(stack, browser, e
     overview = page.get_by_test_id("page-overview")
     expect(overview).to_be_visible()
     expect(page.get_by_test_id("nav-market")).to_have_attribute("aria-current", "page")
-    expect(page.get_by_test_id("trader-engine-status")).to_contain_text("Not yet implemented")
-    for area in PENDING_TRADER_AREAS:
-        card = page.get_by_test_id(f"pending-{area}")
-        expect(card).to_be_visible()
-        expect(card).to_have_attribute("data-state", "pending")
-        expect(card).to_contain_text("Not yet implemented")
-    expect(page.get_by_test_id("pending-decision")).to_contain_text("No decision published")
-    expect(page.get_by_test_id("pending-geometry")).to_contain_text("Awaiting engine")
+    expect(page.get_by_test_id("live-state")).to_contain_text("Stopped", timeout=15_000)
+    expect(page.get_by_test_id("live-message")).to_contain_text("nothing is monitored")
+    expect(page.get_by_test_id("live-start")).to_be_visible()
+    for area in COCKPIT_AREAS:
+        expect(page.get_by_test_id(area)).to_be_visible()
+    expect(page.get_by_test_id("live-call")).to_contain_text("No current assessment")
+    expect(page.get_by_test_id("live-expected")).to_have_text("Unavailable")
     # real readiness is shown; synthetic output is not
     expect(page.get_by_test_id("overview-run-workers")).to_have_text("1", timeout=10_000)
-    expect(page.get_by_test_id("readiness")).to_contain_text("Professional trader engine")
+    expect(page.get_by_test_id("readiness")).to_contain_text("Integrated adviser")
     for text in synthetic_texts:
         expect(overview).not_to_contain_text(text)
     for testid in ("permitted-action", "view-bias", "demo-banner", "run-panel", "position"):
@@ -544,7 +544,7 @@ def test_shell_market_overview_is_default_honest_and_navigable(stack, browser, e
     expect(page.get_by_test_id("run-panel")).to_contain_text(run_id)
     page.screenshot(path=str(evidence_dir / "13-replay-lab-1024.png"), full_page=True)
     ctx.close()
-    record(evidence_dir, "e2e-shell-overview", {"synthetic_run": run_id, "pending_areas": list(PENDING_TRADER_AREAS),
+    record(evidence_dir, "e2e-shell-overview", {"synthetic_run": run_id, "cockpit_areas": list(COCKPIT_AREAS),
                                                 "sections": list(SECTIONS)})
 
 

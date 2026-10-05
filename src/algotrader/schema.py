@@ -202,6 +202,39 @@ def pack_baseline() -> dict[str, Any]:
     }
 
 
+def _provisional(title: str, mod, models, extra: dict | None = None) -> dict[str, Any]:
+    refs, schema = models_json_schema([(m, "serialization") for m in sorted(models, key=lambda m: m.__name__)],
+                                      ref_template="#/$defs/{model}")
+    return {
+        "$schema": "https://json-schema.org/draft/2020-12/schema", "title": title, **(extra or {}),
+        "public_contracts": {m.__name__: refs[(m, "serialization")]["$ref"] for m in models},
+        "$defs": schema["$defs"],
+    }
+
+
+def semantic_v2_baseline() -> dict[str, Any]:
+    """PROVISIONAL advisory semantic contracts (``algotrader.semantic.v2``; WP-009). semantic.v1 stays frozen."""
+    from .adviser import contracts as ac
+
+    return _provisional(
+        f"Algorithmic Trader advisory semantic contracts ({ac.SEMANTIC_V2_VERSION}, {ac.SEMANTIC_V2_STATUS})", ac,
+        ac.PUBLIC_CONTRACTS,
+        {"schema_version": ac.SEMANTIC_V2_VERSION, "status": ac.SEMANTIC_V2_STATUS, "revision": ac.SEMANTIC_V2_REVISION,
+         "changelog": [{"revision": r, "date": d, "note": n} for r, d, n in ac.SEMANTIC_V2_CHANGELOG],
+         "journal_kinds": {k: f"#/$defs/{m.__name__}" for k, m in sorted(ac.KIND_CONTRACTS.items())}})
+
+
+def adviser_evaluation_baseline() -> dict[str, Any]:
+    """PROVISIONAL hypothetical evaluation contracts (``algotrader.adviser-evaluation.v1``; WP-009)."""
+    from .adviser import evaluation_contracts as ec
+
+    return _provisional(
+        f"Algorithmic Trader adviser evaluation contracts ({ec.EVALUATION_VERSION}, {ec.EVALUATION_STATUS})", ec,
+        ec.PUBLIC_CONTRACTS,
+        {"schema_version": ec.EVALUATION_VERSION, "status": ec.EVALUATION_STATUS, "revision": ec.EVALUATION_REVISION,
+         "changelog": [{"revision": r, "date": d, "note": n} for r, d, n in ec.EVALUATION_CHANGELOG]})
+
+
 def baselines() -> dict[str, Any]:
     """Every current contract baseline, keyed by schema version."""
     from .feed.contracts import FEED_SCHEMA_VERSION
@@ -219,6 +252,8 @@ def baselines() -> dict[str, Any]:
         OBSERVE_SCHEMA_VERSION: observe_baseline,
         TEMPORAL_SCHEMA_VERSION: temporal_baseline,
         PACK_SCHEMA_VERSION: pack_baseline,
+        "algotrader.semantic.v2": semantic_v2_baseline,
+        "algotrader.adviser-evaluation.v1": adviser_evaluation_baseline,
     }
 
 

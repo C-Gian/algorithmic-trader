@@ -326,7 +326,8 @@ function RunSetup({ corpus, preferred, packs, presets, onStarted }: {
   const [paused, setPaused] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [runType, setRunType] = useState<"adviser_evaluation" | "observation_only">("adviser_evaluation");
+  // default: Adviser evaluation when a pack is selected, Market replay otherwise, until the Owner picks explicitly
+  const [runChoice, setRunType] = useState<"adviser_evaluation" | "observation_only" | null>(null);
   const ids = prepared.map((c) => c.chunk_id).join();
   useEffect(() => {
     // follow the month selected in step 1 when it is prepared; otherwise keep a valid prepared month
@@ -347,7 +348,8 @@ function RunSetup({ corpus, preferred, packs, presets, onStarted }: {
   const packView = pack ? presets?.presets.find((v) => v.published?.pack_id === pack.pack_id) ?? null : null;
   const chunk = source === "month" ? prepared.find((c) => c.chunk_id === chunkId) : undefined;
   const needsAck = pack?.status === "READY_WITH_LIMITATIONS";
-  const adviser = runType === "adviser_evaluation" && !!pack;
+  const runType = !pack ? "observation_only" : (runChoice ?? "adviser_evaluation");
+  const adviser = runType === "adviser_evaluation";
   const canStart = pack ? !needsAck || ack : !!chunk && runType === "observation_only";
   const start = async () => {
     setBusy(true);

@@ -95,6 +95,9 @@ def test_owner_prepares_a_pack_and_checks_it_with_acknowledged_limitations(packb
     # Step 2: a gap-containing pack needs the explicit acknowledgement
     expect(page.get_by_test_id("eval-source")).to_contain_text("pack", timeout=10_000)
     expect(page.get_by_test_id("eval-ack-notice")).to_be_visible()
+    # WP-009: with a pack selected the default run type is the Adviser evaluation; this test checks the data/engine path
+    expect(page.get_by_test_id("run-type-adviser-input")).to_be_checked()
+    page.get_by_test_id("run-type-market-replay-input").check()
     expect(page.get_by_test_id("start-evaluation")).to_be_disabled()
     page.get_by_test_id("eval-ack").check()
     page.get_by_test_id("eval-speed").select_option("1")
@@ -112,7 +115,7 @@ def test_owner_prepares_a_pack_and_checks_it_with_acknowledged_limitations(packb
     expect(page.get_by_test_id("report-card")).to_have_attribute("data-state", "ready", timeout=20_000)
     expect(page.get_by_test_id("fact-coverage")).to_contain_text("With source gaps")
     expect(page.get_by_test_id("fact-checks")).to_contain_text("PASS")
-    expect(page.get_by_test_id("fact-adviser")).to_contain_text("Not built yet")
+    expect(page.get_by_test_id("fact-adviser")).to_contain_text("Not in this run")
     md = httpx.get(f"{stack.base}/api/evaluations/{eid}/report.md", timeout=10).text
     page.get_by_test_id("copy-report").click()
     expect(page.get_by_test_id("copy-report")).to_contain_text("Copied")

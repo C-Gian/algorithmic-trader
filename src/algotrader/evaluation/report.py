@@ -159,7 +159,7 @@ def build_report(ev: dict[str, Any], replay: dict[str, Any], manifest: dict[str,
         "report_format": REPORT_FORMAT,
         "run_type": "Adviser evaluation (hypothetical outcomes, no orders)" if adviser is not None else RUN_TYPE_LABEL,
         "notice": ADVISER_NOTICE if adviser is not None else NOT_CONNECTED,
-        "adviser": adviser,
+        **({"adviser": adviser} if adviser is not None else {}),
         "evaluation_id": ev["evaluation_id"],
         "preset": ev["preset"],
         "replay_id": replay["replay_id"],
@@ -221,11 +221,12 @@ def build_report(ev: dict[str, Any], replay: dict[str, Any], manifest: dict[str,
                             or "Copy this report to the Director for diagnosis."),
         "code_version": (cfg or {}).get("code_version") or (replay.get("launch") or {}).get("code_version"),
         "temporal": (diagnostic or {}).get("temporal"),
-        "pack": pack_section(corpus.get("pack"), applied, total, status),
+        "pack": pack_section(corpus.get("pack"), applied, total, status, adviser is not None),
     }
 
 
-def pack_section(p: dict[str, Any] | None, applied: int, total: int | None, status: str) -> dict[str, Any] | None:
+def pack_section(p: dict[str, Any] | None, applied: int, total: int | None, status: str,
+                 adviser: bool = False) -> dict[str, Any] | None:
     """Evaluation-pack facts (R3): identities, windows, per-family/window coverage, capabilities and limits.
     Full feed consumption and per-minute source coverage are reported as separate facts."""
     if not p:
@@ -246,7 +247,10 @@ def pack_section(p: dict[str, Any] | None, applied: int, total: int | None, stat
         "coverage": cov, "capabilities": p["capabilities"], "limitations": p["limitations"],
         "sources": p["sources"], "overlap": p["overlap"], "instrument": p["instrument"],
         "input_readiness_preview": p["input_readiness_preview"], "storage": p["storage"],
-        "scoring_note": "warmup and tail are never scored; no adviser exists, so nothing is scored in this run",
+        "scoring_note": ("warmup and tail are never scored; only calls issued inside the evaluation window are scored "
+                         "(hypothetical evaluator)" if adviser else
+                         "warmup and tail are never scored; no adviser exists, so nothing is scored in this run"),
+        **({"adviser_run": True} if adviser else {}),
     }
 
 
@@ -353,7 +357,7 @@ def render_markdown(r: dict[str, Any]) -> str:
     pk = r.get("pack")
     if pk:
         w = pk["windows"]
-        lines += ["", "## Evaluation pack (observation only; no adviser)",
+        lines += ["", "## Evaluation pack" if pk.get("adviser_run") else "## Evaluation pack (observation only; no adviser)",
                   f"- Pack `{pk['pack_id']}` · status **{pk['status']}**"
                   + (" · limitations acknowledged for this inspection run" if pk.get("acknowledged_limitations")
                      else ""),

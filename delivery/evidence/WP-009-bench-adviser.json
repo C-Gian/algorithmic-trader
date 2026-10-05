@@ -1,0 +1,51 @@
+{
+  "label": "WP-009 bounded engineering measurement \u2014 synthetic fixtures, executor machine; not a month/year or economic result",
+  "python": "3.14.7",
+  "sizes": [
+    {
+      "synthetic_days": 1,
+      "events": 4320,
+      "wall_seconds": 2.027,
+      "events_per_second": 2130.9,
+      "professional_dispatches": 1441,
+      "journal_records": 94,
+      "journal_bytes": 190918,
+      "evaluation_records": 25,
+      "evaluation_bytes": 9117,
+      "calls": 0,
+      "restore_state_compressed_bytes": 9769,
+      "restore_encode_decode_seconds": 0.0024,
+      "peak_traced_python_bytes": 19129235,
+      "process": {
+        "cpu_seconds": 2.406,
+        "max_rss_bytes": 81375232,
+        "max_rss_source": "Windows PeakWorkingSetSize (process lifetime peak)"
+      }
+    },
+    {
+      "synthetic_days": 2,
+      "events": 8640,
+      "wall_seconds": 4.037,
+      "events_per_second": 2140.1,
+      "professional_dispatches": 2881,
+      "journal_records": 249,
+      "journal_bytes": 515775,
+      "evaluation_records": 49,
+      "evaluation_bytes": 18205,
+      "calls": 0,
+      "restore_state_compressed_bytes": 12413,
+      "restore_encode_decode_seconds": 0.003,
+      "peak_traced_python_bytes": 36029417,
+      "process": {
+        "cpu_seconds": 6.438,
+        "max_rss_bytes": 111382528,
+        "max_rss_source": "Windows PeakWorkingSetSize (process lifetime peak)"
+      }
+    }
+  ],
+  "scaling": {
+    "wall_ratio_2d_over_1d": 1.99,
+    "state_ratio_2d_over_1d": 1.27
+  },
+  "qualified_month_estimate_seconds_fold_only": 60.6
+}

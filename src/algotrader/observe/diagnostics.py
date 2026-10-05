@@ -316,7 +316,9 @@ def diagnostic_report(row: dict[str, Any], art_root: Path, now: datetime,
     return {
         "report_kind": "OBSERVATION_REPLAY_DIAGNOSTIC",
         "report_format": DIAGNOSTIC_FORMAT,
-        "run_type": "Market replay — data and engine check (observation only; no adviser)",
+        "run_type": ("Adviser evaluation (MP-001 adviser + separate hypothetical evaluator)"
+                     if launch.get("run_type") == "adviser_evaluation" else
+                     "Market replay — data and engine check (observation only; no adviser)"),
         "snapshot": not terminal,
         "captured_at": None if terminal else now.isoformat(),
         "replay_id": row["replay_id"],

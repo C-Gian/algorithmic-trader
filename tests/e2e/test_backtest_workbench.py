@@ -32,8 +32,11 @@ from test_corpus import TEST_PLAN  # noqa: E402
 
 from algotrader.corpus.job import CorpusWorker  # noqa: E402
 
+# backend report text for observation-only runs (unchanged: existing terminal reports stay byte-stable)
 NOT_CONNECTED = ("Professional adviser not connected yet. This run validates data/replay/product workflow only; "
                  "trade-call metrics are unavailable.")
+# WP-009 UI wording for the Market replay run type (the adviser now exists as its own run type)
+UI_MARKET_REPLAY_NOTICE = "Market replay: this run validates data/replay/product workflow only"
 
 
 @pytest.fixture
@@ -79,10 +82,10 @@ def test_owner_prepares_corpus_runs_observation_evaluation_and_copies_report(wor
     expect(page.get_by_test_id("nav-backtest")).to_have_attribute("aria-current", "page")
     expect(page.get_by_test_id("nav-backtest")).to_contain_text("Historical Workbench")
     expect(page.get_by_test_id("page-backtest")).to_contain_text("Historical Workbench")
-    # explicit run types: Market replay available; Adviser backtest unavailable; Deep validation implemented per run
+    # explicit run types: Market replay available; Adviser evaluation needs a prepared pack (none here); Deep per run
     expect(page.get_by_test_id("run-type-market-replay")).to_contain_text("Market replay — data and engine check")
-    expect(page.get_by_test_id("run-type-adviser-backtest")).to_contain_text("Unavailable")
-    expect(page.get_by_test_id("run-type-adviser-backtest").locator("input")).to_be_disabled()
+    expect(page.get_by_test_id("run-type-adviser")).to_contain_text("Needs a pack")
+    expect(page.get_by_test_id("run-type-adviser-input")).to_be_disabled()
     expect(page.get_by_test_id("run-type-deep-validation")).to_contain_text("Implemented")
     expect(page.get_by_test_id("run-type-deep-validation")).to_contain_text("canonical feed cache")
     expect(page.get_by_test_id("historical-mode")).to_contain_text("HISTORICAL MODE")
@@ -100,7 +103,7 @@ def test_owner_prepares_corpus_runs_observation_evaluation_and_copies_report(wor
     expect(page.get_by_test_id("prepare-chunk")).to_have_count(0)
     page.get_by_test_id("ledger-test-chunk").click()
     expect(chunk_status(page)).to_have_text("NOT PREPARED")
-    expect(page.get_by_test_id("adviser-notice")).to_contain_text(NOT_CONNECTED)
+    expect(page.get_by_test_id("adviser-notice")).to_contain_text(UI_MARKET_REPLAY_NOTICE)
     expect(page.get_by_test_id("start-evaluation")).to_be_disabled()
     assert no_horizontal_overflow(page)
     page.screenshot(path=str(evidence_dir / "17-backtest-unprepared-1440.png"), full_page=True)
@@ -177,7 +180,7 @@ def test_owner_prepares_corpus_runs_observation_evaluation_and_copies_report(wor
     expect(page.get_by_test_id("stage-run")).to_contain_text("report ready")
     expect(page.get_by_test_id("fact-operation")).to_contain_text("Finished")
     expect(page.get_by_test_id("fact-checks")).to_contain_text("PASS")
-    expect(page.get_by_test_id("fact-adviser")).to_contain_text("Not built yet")
+    expect(page.get_by_test_id("fact-adviser")).to_contain_text("Not in this run")
     # R2: the temporal substrate is inspectable inside the run's details, labelled as infrastructure only
     temporal = page.get_by_test_id("run-temporal")
     temporal.locator("summary").click()
@@ -191,7 +194,7 @@ def test_owner_prepares_corpus_runs_observation_evaluation_and_copies_report(wor
     caps = page.get_by_test_id("report-capabilities")
     expect(caps).to_contain_text("Call count")
     expect(caps).to_contain_text("UNAVAILABLE", ignore_case=True)
-    expect(caps).to_contain_text("NOT IMPLEMENTED", ignore_case=True)
+    expect(caps).to_contain_text("NOT IMPLEMENTED", ignore_case=True)  # unchanged backend report capability rows
     for word in ("BULLISH", "BEARISH", "LONG ", "SHORT "):
         expect(page.get_by_test_id("active-run")).not_to_contain_text(word)
     page.screenshot(path=str(evidence_dir / "21-backtest-completed-report-1440.png"), full_page=True)

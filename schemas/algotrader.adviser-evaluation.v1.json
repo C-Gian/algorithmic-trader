@@ -1,0 +1,516 @@
+{
+  "$defs": {
+    "EvaluatorProfile": {
+      "additionalProperties": false,
+      "properties": {
+        "adequacy_envelope_bps": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Adequacy Envelope Bps",
+          "type": "string"
+        },
+        "allowance_per_leg": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Allowance Per Leg",
+          "type": "string"
+        },
+        "boundary_alignment": {
+          "default": "UTC_CEIL_MINUTE",
+          "title": "Boundary Alignment",
+          "type": "string"
+        },
+        "entry_delay_seconds": {
+          "title": "Entry Delay Seconds",
+          "type": "integer"
+        },
+        "exit_delay_seconds": {
+          "title": "Exit Delay Seconds",
+          "type": "integer"
+        },
+        "exit_mode": {
+          "title": "Exit Mode",
+          "type": "string"
+        },
+        "fee_per_leg": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Fee Per Leg",
+          "type": "string"
+        },
+        "funding": {
+          "title": "Funding",
+          "type": "string"
+        },
+        "notional_unit": {
+          "default": "N0=1 abstract USDT reporting unit; q=N0/E constant; not a human size",
+          "title": "Notional Unit",
+          "type": "string"
+        },
+        "opening_condition": {
+          "default": "PREOPEN_EVIDENCE_PLUS_OWN_OPEN_GEOMETRY_NO_FUTURE_HLC",
+          "title": "Opening Condition",
+          "type": "string"
+        },
+        "profile_id": {
+          "default": "mp001.evaluation.primary.v1",
+          "title": "Profile Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "entry_delay_seconds",
+        "exit_delay_seconds",
+        "fee_per_leg",
+        "allowance_per_leg",
+        "adequacy_envelope_bps",
+        "funding",
+        "exit_mode"
+      ],
+      "title": "EvaluatorProfile",
+      "type": "object"
+    },
+    "Fill": {
+      "additionalProperties": false,
+      "properties": {
+        "price": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Price",
+          "type": "string"
+        },
+        "reason": {
+          "title": "Reason",
+          "type": "string"
+        },
+        "time_end": {
+          "format": "date-time",
+          "title": "Time End",
+          "type": "string"
+        },
+        "time_start": {
+          "format": "date-time",
+          "title": "Time Start",
+          "type": "string"
+        }
+      },
+      "required": [
+        "price",
+        "reason",
+        "time_start",
+        "time_end"
+      ],
+      "title": "Fill",
+      "type": "object"
+    },
+    "HypotheticalPath": {
+      "additionalProperties": false,
+      "properties": {
+        "allowances": {
+          "anyOf": [
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Allowances"
+        },
+        "bounds": {
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "title": "Bounds",
+          "type": "object"
+        },
+        "call_id": {
+          "title": "Call Id",
+          "type": "string"
+        },
+        "censored_from": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Censored From"
+        },
+        "direction": {
+          "title": "Direction",
+          "type": "string"
+        },
+        "entry": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Fill"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "entry_attempts": {
+          "title": "Entry Attempts",
+          "type": "integer"
+        },
+        "exit": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Fill"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "exit_class": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Exit Class"
+        },
+        "family": {
+          "title": "Family",
+          "type": "string"
+        },
+        "fees": {
+          "anyOf": [
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Fees"
+        },
+        "funding": {
+          "anyOf": [
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Funding"
+        },
+        "funding_status": {
+          "title": "Funding Status",
+          "type": "string"
+        },
+        "gross": {
+          "anyOf": [
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Gross"
+        },
+        "held_minutes": {
+          "anyOf": [
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Held Minutes"
+        },
+        "mae": {
+          "anyOf": [
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Mae"
+        },
+        "mfe": {
+          "anyOf": [
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Mfe"
+        },
+        "notes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Notes",
+          "type": "array"
+        },
+        "path_id": {
+          "title": "Path Id",
+          "type": "string"
+        },
+        "price_net": {
+          "anyOf": [
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Price Net"
+        },
+        "profile": {
+          "$ref": "#/$defs/EvaluatorProfile"
+        },
+        "rejected_opens": {
+          "title": "Rejected Opens",
+          "type": "integer"
+        },
+        "status": {
+          "title": "Status",
+          "type": "string"
+        },
+        "stress_price_net": {
+          "anyOf": [
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Stress Price Net"
+        },
+        "total_net": {
+          "anyOf": [
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Total Net"
+        },
+        "variant": {
+          "title": "Variant",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path_id",
+        "call_id",
+        "profile",
+        "variant",
+        "family",
+        "direction",
+        "status",
+        "exit_class",
+        "entry",
+        "exit",
+        "entry_attempts",
+        "rejected_opens",
+        "gross",
+        "fees",
+        "allowances",
+        "price_net",
+        "stress_price_net",
+        "funding",
+        "total_net",
+        "funding_status",
+        "bounds",
+        "mfe",
+        "mae",
+        "held_minutes",
+        "censored_from",
+        "notes"
+      ],
+      "title": "HypotheticalPath",
+      "type": "object"
+    },
+    "ViewSample": {
+      "additionalProperties": false,
+      "properties": {
+        "anchor_price": {
+          "anyOf": [
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Anchor Price"
+        },
+        "antecedent_activated_1h": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Antecedent Activated 1H"
+        },
+        "antecedent_activated_4h": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Antecedent Activated 4H"
+        },
+        "conditional": {
+          "title": "Conditional",
+          "type": "boolean"
+        },
+        "outcome_1h": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Outcome 1H"
+        },
+        "outcome_4h": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Outcome 4H"
+        },
+        "persistence": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Persistence"
+        },
+        "return_1h": {
+          "anyOf": [
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Return 1H"
+        },
+        "return_4h": {
+          "anyOf": [
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Return 4H"
+        },
+        "sample_time": {
+          "format": "date-time",
+          "title": "Sample Time",
+          "type": "string"
+        },
+        "scenario_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Scenario Id"
+        },
+        "view": {
+          "title": "View",
+          "type": "string"
+        }
+      },
+      "required": [
+        "sample_time",
+        "anchor_price",
+        "view",
+        "conditional",
+        "scenario_id",
+        "persistence",
+        "outcome_1h",
+        "outcome_4h",
+        "return_1h",
+        "return_4h",
+        "antecedent_activated_1h",
+        "antecedent_activated_4h"
+      ],
+      "title": "ViewSample",
+      "type": "object"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "changelog": [
+    {
+      "date": "2026-10-04",
+      "note": "Initial provisional baseline (WP-009): evaluator profile, hypothetical path (primary, entry-delay sensitivities, horizon-only baseline), normalized one-unit accounting, view samples and report aggregates.",
+      "revision": 1
+    }
+  ],
+  "public_contracts": {
+    "EvaluatorProfile": "#/$defs/EvaluatorProfile",
+    "Fill": "#/$defs/Fill",
+    "HypotheticalPath": "#/$defs/HypotheticalPath",
+    "ViewSample": "#/$defs/ViewSample"
+  },
+  "revision": 1,
+  "schema_version": "algotrader.adviser-evaluation.v1",
+  "status": "PROVISIONAL",
+  "title": "Algorithmic Trader adviser evaluation contracts (algotrader.adviser-evaluation.v1, PROVISIONAL)"
+}

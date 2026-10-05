@@ -134,6 +134,15 @@ function DirectionPanel({ v }: { v: LiveView | null }) {
 function CallPanel({ v }: { v: LiveView | null }) {
   const c: CallView | null = v?.call ?? null;
   const mv = v?.market_view;
+  if (!v) {
+    return (
+      <section className="call-panel is-none" data-testid="live-call">
+        <div className="call-none-title">No current assessment</div>
+        <div className="call-none-why">Start the live adviser to assess the market now. While it is stopped nothing is
+          monitored.</div>
+      </section>
+    );
+  }
   if (!c) {
     const top = mv?.blockers?.[0] ?? (mv ? ROW_TEXT[mv.table_row] : null);
     return (

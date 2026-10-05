@@ -1,0 +1,1745 @@
+{
+  "$defs": {
+    "Actionability": {
+      "additionalProperties": false,
+      "properties": {
+        "actionable": {
+          "title": "Actionable",
+          "type": "boolean"
+        },
+        "admissible_bounds": {
+          "anyOf": [
+            {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                  "type": "string"
+                },
+                {
+                  "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                  "type": "string"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Admissible Bounds"
+        },
+        "blockers": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Blockers",
+          "type": "array"
+        },
+        "cost_envelope_bps": {
+          "anyOf": [
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Cost Envelope Bps"
+        },
+        "env": {
+          "$ref": "#/$defs/Envelope"
+        },
+        "execution_mode": {
+          "title": "Execution Mode",
+          "type": "string"
+        },
+        "gain_bps": {
+          "anyOf": [
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Gain Bps"
+        },
+        "limiting_landmark": {
+          "anyOf": [
+            {
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Limiting Landmark"
+        },
+        "remaining_minutes": {
+          "anyOf": [
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Remaining Minutes"
+        },
+        "reward_risk_margin": {
+          "anyOf": [
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Reward Risk Margin"
+        },
+        "risk_bps": {
+          "anyOf": [
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Risk Bps"
+        },
+        "side_price": {
+          "anyOf": [
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Side Price"
+        },
+        "side_price_source": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Side Price Source"
+        },
+        "structural_area": {
+          "anyOf": [
+            {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                  "type": "string"
+                },
+                {
+                  "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                  "type": "string"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Structural Area"
+        },
+        "subject_id": {
+          "title": "Subject Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "env",
+        "subject_id",
+        "actionable",
+        "blockers",
+        "execution_mode",
+        "side_price",
+        "side_price_source",
+        "cost_envelope_bps",
+        "gain_bps",
+        "risk_bps",
+        "reward_risk_margin",
+        "structural_area",
+        "admissible_bounds",
+        "remaining_minutes",
+        "limiting_landmark"
+      ],
+      "title": "Actionability",
+      "type": "object"
+    },
+    "AdviserCall": {
+      "additionalProperties": false,
+      "properties": {
+        "actionability": {
+          "$ref": "#/$defs/Actionability"
+        },
+        "attempt_id": {
+          "title": "Attempt Id",
+          "type": "string"
+        },
+        "call_id": {
+          "title": "Call Id",
+          "type": "string"
+        },
+        "cost_assumptions": {
+          "title": "Cost Assumptions",
+          "type": "string"
+        },
+        "direction": {
+          "$ref": "#/$defs/Direction"
+        },
+        "entry_status": {
+          "title": "Entry Status",
+          "type": "string"
+        },
+        "env": {
+          "$ref": "#/$defs/Envelope"
+        },
+        "expected_minutes": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "integer"
+            }
+          ],
+          "title": "Expected Minutes",
+          "type": "array"
+        },
+        "family": {
+          "$ref": "#/$defs/Family"
+        },
+        "frozen_scale": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Frozen Scale",
+          "type": "string"
+        },
+        "hard_deadline": {
+          "format": "date-time",
+          "title": "Hard Deadline",
+          "type": "string"
+        },
+        "invalidation": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Invalidation",
+          "type": "string"
+        },
+        "issue_reference": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Issue Reference",
+          "type": "string"
+        },
+        "issued_at": {
+          "format": "date-time",
+          "title": "Issued At",
+          "type": "string"
+        },
+        "limiting_landmark": {
+          "anyOf": [
+            {
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Limiting Landmark"
+        },
+        "minimum_residual_minutes": {
+          "title": "Minimum Residual Minutes",
+          "type": "integer"
+        },
+        "premise": {
+          "title": "Premise",
+          "type": "string"
+        },
+        "progress_check_at": {
+          "format": "date-time",
+          "title": "Progress Check At",
+          "type": "string"
+        },
+        "structural_area": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            }
+          ],
+          "title": "Structural Area",
+          "type": "array"
+        },
+        "target": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Target",
+          "type": "string"
+        },
+        "target_type": {
+          "title": "Target Type",
+          "type": "string"
+        },
+        "thesis": {
+          "title": "Thesis",
+          "type": "string"
+        },
+        "thesis_status": {
+          "title": "Thesis Status",
+          "type": "string"
+        },
+        "trigger_minute_start": {
+          "format": "date-time",
+          "title": "Trigger Minute Start",
+          "type": "string"
+        },
+        "uncertainties": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Uncertainties",
+          "type": "array"
+        }
+      },
+      "required": [
+        "env",
+        "call_id",
+        "attempt_id",
+        "family",
+        "direction",
+        "thesis",
+        "trigger_minute_start",
+        "issue_reference",
+        "issued_at",
+        "invalidation",
+        "target",
+        "target_type",
+        "limiting_landmark",
+        "frozen_scale",
+        "structural_area",
+        "expected_minutes",
+        "minimum_residual_minutes",
+        "hard_deadline",
+        "progress_check_at",
+        "premise",
+        "entry_status",
+        "thesis_status",
+        "actionability",
+        "cost_assumptions",
+        "uncertainties"
+      ],
+      "title": "AdviserCall",
+      "type": "object"
+    },
+    "CallRevision": {
+      "additionalProperties": false,
+      "properties": {
+        "call_id": {
+          "title": "Call Id",
+          "type": "string"
+        },
+        "changed": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Changed",
+          "type": "array"
+        },
+        "current_admissible_bounds": {
+          "anyOf": [
+            {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                  "type": "string"
+                },
+                {
+                  "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                  "type": "string"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Current Admissible Bounds"
+        },
+        "duration_window_minutes": {
+          "anyOf": [
+            {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                  "type": "string"
+                },
+                {
+                  "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                  "type": "string"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Duration Window Minutes"
+        },
+        "entry_conditions_enabled": {
+          "title": "Entry Conditions Enabled",
+          "type": "boolean"
+        },
+        "entry_reasons": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Entry Reasons",
+          "type": "array"
+        },
+        "entry_status": {
+          "title": "Entry Status",
+          "type": "string"
+        },
+        "env": {
+          "$ref": "#/$defs/Envelope"
+        },
+        "guidance": {
+          "title": "Guidance",
+          "type": "string"
+        },
+        "progress_max_favorable_scale": {
+          "anyOf": [
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Progress Max Favorable Scale"
+        },
+        "remaining_minutes": {
+          "anyOf": [
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Remaining Minutes"
+        },
+        "revision": {
+          "title": "Revision",
+          "type": "integer"
+        },
+        "terminal_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Terminal Reason"
+        },
+        "thesis_status": {
+          "title": "Thesis Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "env",
+        "call_id",
+        "revision",
+        "entry_status",
+        "entry_reasons",
+        "entry_conditions_enabled",
+        "thesis_status",
+        "terminal_reason",
+        "current_admissible_bounds",
+        "remaining_minutes",
+        "duration_window_minutes",
+        "guidance",
+        "changed",
+        "progress_max_favorable_scale"
+      ],
+      "title": "CallRevision",
+      "type": "object"
+    },
+    "CandidatePlan": {
+      "additionalProperties": false,
+      "properties": {
+        "arm_published_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Arm Published At"
+        },
+        "attempt_id": {
+          "title": "Attempt Id",
+          "type": "string"
+        },
+        "direction": {
+          "$ref": "#/$defs/Direction"
+        },
+        "env": {
+          "$ref": "#/$defs/Envelope"
+        },
+        "expires_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Expires At"
+        },
+        "family": {
+          "$ref": "#/$defs/Family"
+        },
+        "invalidation_level": {
+          "anyOf": [
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Invalidation Level"
+        },
+        "owner_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Owner Id"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Reason"
+        },
+        "setup": {
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "title": "Setup",
+          "type": "object"
+        },
+        "status": {
+          "title": "Status",
+          "type": "string"
+        },
+        "transition": {
+          "title": "Transition",
+          "type": "string"
+        },
+        "trigger_level": {
+          "anyOf": [
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Trigger Level"
+        }
+      },
+      "required": [
+        "env",
+        "attempt_id",
+        "owner_id",
+        "family",
+        "direction",
+        "status",
+        "transition",
+        "reason",
+        "trigger_level",
+        "invalidation_level",
+        "setup",
+        "arm_published_at",
+        "expires_at"
+      ],
+      "title": "CandidatePlan",
+      "type": "object"
+    },
+    "DependencyRef": {
+      "additionalProperties": false,
+      "properties": {
+        "digest": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Digest"
+        },
+        "event_end": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Event End"
+        },
+        "known_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Known At"
+        },
+        "latest_ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Latest Ref"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "status": {
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "status",
+        "latest_ref",
+        "event_end",
+        "known_at"
+      ],
+      "title": "DependencyRef",
+      "type": "object"
+    },
+    "Direction": {
+      "enum": [
+        "LONG",
+        "SHORT"
+      ],
+      "title": "Direction",
+      "type": "string"
+    },
+    "Envelope": {
+      "additionalProperties": false,
+      "properties": {
+        "clock_policy": {
+          "title": "Clock Policy",
+          "type": "string"
+        },
+        "clock_time": {
+          "format": "date-time",
+          "title": "Clock Time",
+          "type": "string"
+        },
+        "dependencies": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/DependencyRef"
+          },
+          "title": "Dependencies",
+          "type": "array"
+        },
+        "event_end": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Event End"
+        },
+        "event_start": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Event Start"
+        },
+        "factual_cursor": {
+          "title": "Factual Cursor",
+          "type": "integer"
+        },
+        "instrument": {
+          "title": "Instrument",
+          "type": "string"
+        },
+        "kind": {
+          "title": "Kind",
+          "type": "string"
+        },
+        "known_at": {
+          "format": "date-time",
+          "title": "Known At",
+          "type": "string"
+        },
+        "limitations": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Limitations",
+          "type": "array"
+        },
+        "lineage": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Lineage",
+          "type": "array"
+        },
+        "method": {
+          "$ref": "#/$defs/MethodRef"
+        },
+        "origin": {
+          "$ref": "#/$defs/Origin"
+        },
+        "price_role": {
+          "title": "Price Role",
+          "type": "string"
+        },
+        "professional_seq": {
+          "title": "Professional Seq",
+          "type": "integer"
+        },
+        "published_at": {
+          "format": "date-time",
+          "title": "Published At",
+          "type": "string"
+        },
+        "record_id": {
+          "title": "Record Id",
+          "type": "string"
+        },
+        "revision": {
+          "default": 0,
+          "title": "Revision",
+          "type": "integer"
+        },
+        "schema_version": {
+          "default": "algotrader.semantic.v2",
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "record_id",
+        "kind",
+        "method",
+        "instrument",
+        "price_role",
+        "origin",
+        "clock_policy",
+        "professional_seq",
+        "factual_cursor",
+        "clock_time",
+        "event_start",
+        "event_end",
+        "known_at",
+        "published_at"
+      ],
+      "title": "Envelope",
+      "type": "object"
+    },
+    "EventContext": {
+      "additionalProperties": false,
+      "properties": {
+        "cancelled": {
+          "default": false,
+          "title": "Cancelled",
+          "type": "boolean"
+        },
+        "content_known_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Content Known At"
+        },
+        "coverage_end": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Coverage End"
+        },
+        "coverage_start": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Coverage Start"
+        },
+        "env": {
+          "$ref": "#/$defs/Envelope"
+        },
+        "event_id": {
+          "title": "Event Id",
+          "type": "string"
+        },
+        "event_revision": {
+          "title": "Event Revision",
+          "type": "integer"
+        },
+        "event_type": {
+          "title": "Event Type",
+          "type": "string"
+        },
+        "provenance_sha256": {
+          "title": "Provenance Sha256",
+          "type": "string"
+        },
+        "restriction_end": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Restriction End"
+        },
+        "restriction_start": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Restriction Start"
+        },
+        "schedule_known_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Schedule Known At"
+        },
+        "schedule_time": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Schedule Time"
+        },
+        "scope": {
+          "title": "Scope",
+          "type": "string"
+        },
+        "status": {
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "env",
+        "event_id",
+        "event_revision",
+        "event_type",
+        "scope",
+        "schedule_time",
+        "schedule_known_at",
+        "content_known_at",
+        "provenance_sha256",
+        "coverage_start",
+        "coverage_end",
+        "restriction_start",
+        "restriction_end",
+        "status"
+      ],
+      "title": "EventContext",
+      "type": "object"
+    },
+    "EventResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "displacement_scale": {
+          "anyOf": [
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Displacement Scale"
+        },
+        "env": {
+          "$ref": "#/$defs/Envelope"
+        },
+        "event_id": {
+          "title": "Event Id",
+          "type": "string"
+        },
+        "label": {
+          "default": "OBSERVED_PRICE_RESPONSE",
+          "title": "Label",
+          "type": "string"
+        },
+        "pre_event_reference": {
+          "anyOf": [
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Pre Event Reference"
+        },
+        "pre_event_reference_time": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Pre Event Reference Time"
+        },
+        "pre_event_scale": {
+          "anyOf": [
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Pre Event Scale"
+        },
+        "reclaim_flags": {
+          "additionalProperties": {
+            "type": "boolean"
+          },
+          "title": "Reclaim Flags",
+          "type": "object"
+        },
+        "response_bar_start": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Response Bar Start"
+        },
+        "true_range_scale": {
+          "anyOf": [
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "True Range Scale"
+        },
+        "unavailable_fields": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Unavailable Fields",
+          "type": "array"
+        }
+      },
+      "required": [
+        "env",
+        "event_id",
+        "pre_event_reference",
+        "pre_event_reference_time",
+        "pre_event_scale",
+        "response_bar_start",
+        "displacement_scale",
+        "true_range_scale",
+        "reclaim_flags",
+        "unavailable_fields"
+      ],
+      "title": "EventResponse",
+      "type": "object"
+    },
+    "Family": {
+      "enum": [
+        "A",
+        "B",
+        "C"
+      ],
+      "title": "Family",
+      "type": "string"
+    },
+    "Landmark": {
+      "additionalProperties": false,
+      "properties": {
+        "env": {
+          "$ref": "#/$defs/Envelope"
+        },
+        "extremum_time": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Extremum Time"
+        },
+        "frozen_scale": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Frozen Scale",
+          "type": "string"
+        },
+        "horizon": {
+          "title": "Horizon",
+          "type": "string"
+        },
+        "landmark_id": {
+          "title": "Landmark Id",
+          "type": "string"
+        },
+        "landmark_type": {
+          "title": "Landmark Type",
+          "type": "string"
+        },
+        "owner": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Owner"
+        },
+        "price": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Price",
+          "type": "string"
+        },
+        "side": {
+          "title": "Side",
+          "type": "string"
+        },
+        "source_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Source Ids",
+          "type": "array"
+        },
+        "status": {
+          "title": "Status",
+          "type": "string"
+        },
+        "status_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Status Reason"
+        },
+        "zone_halfwidth": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Zone Halfwidth",
+          "type": "string"
+        },
+        "zone_high": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Zone High",
+          "type": "string"
+        },
+        "zone_low": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Zone Low",
+          "type": "string"
+        }
+      },
+      "required": [
+        "env",
+        "landmark_id",
+        "landmark_type",
+        "side",
+        "price",
+        "zone_low",
+        "zone_high",
+        "zone_halfwidth",
+        "frozen_scale",
+        "horizon",
+        "source_ids",
+        "extremum_time",
+        "status",
+        "status_reason",
+        "owner"
+      ],
+      "title": "Landmark",
+      "type": "object"
+    },
+    "MarketView": {
+      "additionalProperties": false,
+      "properties": {
+        "alternatives": {
+          "items": {
+            "$ref": "#/$defs/Scenario"
+          },
+          "title": "Alternatives",
+          "type": "array"
+        },
+        "blockers": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Blockers",
+          "type": "array"
+        },
+        "conditional": {
+          "title": "Conditional",
+          "type": "boolean"
+        },
+        "counterevidence": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Counterevidence",
+          "type": "array"
+        },
+        "env": {
+          "$ref": "#/$defs/Envelope"
+        },
+        "expected_direction": {
+          "title": "Expected Direction",
+          "type": "string"
+        },
+        "horizon_minutes": {
+          "anyOf": [
+            {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "integer"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Horizon Minutes"
+        },
+        "levels": {
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "title": "Levels",
+          "type": "object"
+        },
+        "observed_context": {
+          "title": "Observed Context",
+          "type": "string"
+        },
+        "ongoing_call_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Ongoing Call Id"
+        },
+        "phase": {
+          "title": "Phase",
+          "type": "string"
+        },
+        "principal": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Scenario"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reasons": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Reasons",
+          "type": "array"
+        },
+        "table_row": {
+          "title": "Table Row",
+          "type": "string"
+        },
+        "uncertainty": {
+          "default": "QUALITATIVE_ONLY_NOT_CALIBRATED",
+          "title": "Uncertainty",
+          "type": "string"
+        }
+      },
+      "required": [
+        "env",
+        "observed_context",
+        "phase",
+        "expected_direction",
+        "conditional",
+        "table_row",
+        "principal",
+        "alternatives",
+        "ongoing_call_id",
+        "horizon_minutes",
+        "levels",
+        "reasons",
+        "counterevidence",
+        "blockers"
+      ],
+      "title": "MarketView",
+      "type": "object"
+    },
+    "MaterialChange": {
+      "additionalProperties": false,
+      "properties": {
+        "alertable": {
+          "title": "Alertable",
+          "type": "boolean"
+        },
+        "change_id": {
+          "title": "Change Id",
+          "type": "string"
+        },
+        "change_type": {
+          "title": "Change Type",
+          "type": "string"
+        },
+        "env": {
+          "$ref": "#/$defs/Envelope"
+        },
+        "subject_id": {
+          "title": "Subject Id",
+          "type": "string"
+        },
+        "summary": {
+          "title": "Summary",
+          "type": "string"
+        }
+      },
+      "required": [
+        "env",
+        "change_id",
+        "subject_id",
+        "change_type",
+        "summary",
+        "alertable"
+      ],
+      "title": "MaterialChange",
+      "type": "object"
+    },
+    "MethodRef": {
+      "additionalProperties": false,
+      "properties": {
+        "build": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Build"
+        },
+        "implementation": {
+          "title": "Implementation",
+          "type": "string"
+        },
+        "model": {
+          "title": "Model",
+          "type": "string"
+        },
+        "profile_sha256": {
+          "title": "Profile Sha256",
+          "type": "string"
+        },
+        "register_sha256": {
+          "title": "Register Sha256",
+          "type": "string"
+        },
+        "rules_sha256": {
+          "title": "Rules Sha256",
+          "type": "string"
+        },
+        "rules_version": {
+          "title": "Rules Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "model",
+        "rules_version",
+        "rules_sha256",
+        "register_sha256",
+        "profile_sha256",
+        "implementation",
+        "build"
+      ],
+      "title": "MethodRef",
+      "type": "object"
+    },
+    "Observation": {
+      "additionalProperties": false,
+      "properties": {
+        "category": {
+          "title": "Category",
+          "type": "string"
+        },
+        "decision_role": {
+          "title": "Decision Role",
+          "type": "string"
+        },
+        "env": {
+          "$ref": "#/$defs/Envelope"
+        },
+        "lens": {
+          "title": "Lens",
+          "type": "string"
+        },
+        "meaning": {
+          "title": "Meaning",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "values": {
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "title": "Values",
+          "type": "object"
+        }
+      },
+      "required": [
+        "env",
+        "lens",
+        "name",
+        "values",
+        "category",
+        "decision_role",
+        "meaning"
+      ],
+      "title": "Observation",
+      "type": "object"
+    },
+    "Origin": {
+      "enum": [
+        "HISTORICAL_MODELED",
+        "RECONSTRUCTED",
+        "LIVE"
+      ],
+      "title": "Origin",
+      "type": "string"
+    },
+    "PhaseState": {
+      "additionalProperties": false,
+      "properties": {
+        "authority": {
+          "default": "BOX_BIRTH_AND_ADVERSE_EXPANSION_GATES_ONLY; AGE_DESCRIPTIVE",
+          "title": "Authority",
+          "type": "string"
+        },
+        "compression_ratio": {
+          "anyOf": [
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Compression Ratio"
+        },
+        "direction": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Direction"
+        },
+        "displacement6_scale": {
+          "anyOf": [
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Displacement6 Scale"
+        },
+        "env": {
+          "$ref": "#/$defs/Envelope"
+        },
+        "er6": {
+          "anyOf": [
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Er6"
+        },
+        "phase": {
+          "title": "Phase",
+          "type": "string"
+        },
+        "previous": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Previous"
+        },
+        "since": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Since"
+        }
+      },
+      "required": [
+        "env",
+        "phase",
+        "direction",
+        "compression_ratio",
+        "er6",
+        "displacement6_scale",
+        "since",
+        "previous"
+      ],
+      "title": "PhaseState",
+      "type": "object"
+    },
+    "Scenario": {
+      "additionalProperties": false,
+      "properties": {
+        "alternative": {
+          "title": "Alternative",
+          "type": "string"
+        },
+        "antecedent": {
+          "title": "Antecedent",
+          "type": "string"
+        },
+        "candidate_domain": {
+          "title": "Candidate Domain",
+          "type": "string"
+        },
+        "conditional_target": {
+          "title": "Conditional Target",
+          "type": "string"
+        },
+        "direction": {
+          "$ref": "#/$defs/Direction"
+        },
+        "expires_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Expires At"
+        },
+        "family": {
+          "$ref": "#/$defs/Family"
+        },
+        "invalidation_level": {
+          "anyOf": [
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Invalidation Level"
+        },
+        "scenario_id": {
+          "title": "Scenario Id",
+          "type": "string"
+        },
+        "trigger_level": {
+          "anyOf": [
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Trigger Level"
+        }
+      },
+      "required": [
+        "scenario_id",
+        "family",
+        "direction",
+        "antecedent",
+        "trigger_level",
+        "invalidation_level",
+        "conditional_target",
+        "alternative",
+        "expires_at",
+        "candidate_domain"
+      ],
+      "title": "Scenario",
+      "type": "object"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "changelog": [
+    {
+      "date": "2026-10-04",
+      "note": "Initial provisional advisory baseline (WP-009): Observation, Landmark, PhaseState, EventContext/EventResponse, MarketView, Scenario, CandidatePlan, Actionability, AdviserCall, CallRevision, MaterialChange with the shared provenance envelope.",
+      "revision": 1
+    }
+  ],
+  "journal_kinds": {
+    "actionability": "#/$defs/Actionability",
+    "call": "#/$defs/AdviserCall",
+    "call_revision": "#/$defs/CallRevision",
+    "candidate": "#/$defs/CandidatePlan",
+    "event_context": "#/$defs/EventContext",
+    "event_response": "#/$defs/EventResponse",
+    "landmark": "#/$defs/Landmark",
+    "market_view": "#/$defs/MarketView",
+    "material_change": "#/$defs/MaterialChange",
+    "observation": "#/$defs/Observation",
+    "phase": "#/$defs/PhaseState"
+  },
+  "public_contracts": {
+    "Actionability": "#/$defs/Actionability",
+    "AdviserCall": "#/$defs/AdviserCall",
+    "CallRevision": "#/$defs/CallRevision",
+    "CandidatePlan": "#/$defs/CandidatePlan",
+    "DependencyRef": "#/$defs/DependencyRef",
+    "Envelope": "#/$defs/Envelope",
+    "EventContext": "#/$defs/EventContext",
+    "EventResponse": "#/$defs/EventResponse",
+    "Landmark": "#/$defs/Landmark",
+    "MarketView": "#/$defs/MarketView",
+    "MaterialChange": "#/$defs/MaterialChange",
+    "MethodRef": "#/$defs/MethodRef",
+    "Observation": "#/$defs/Observation",
+    "PhaseState": "#/$defs/PhaseState",
+    "Scenario": "#/$defs/Scenario"
+  },
+  "revision": 1,
+  "schema_version": "algotrader.semantic.v2",
+  "status": "PROVISIONAL",
+  "title": "Algorithmic Trader advisory semantic contracts (algotrader.semantic.v2, PROVISIONAL)"
+}
