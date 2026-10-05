@@ -1,0 +1,47 @@
+{
+  "status": "DIRECTOR_PROPOSAL_FOR_ASTRA_REVIEW_NOT_RUNTIME_CONFIG",
+  "proposal_version": "MP-002-v0.1",
+  "proposed_method": "btc.context-action.v0.3",
+  "proposed_rules": "mp002.rules.v0.3",
+  "base_register": "MP-001-PARAMETERS.json",
+  "base_method": "btc.context-action.v0.2",
+  "unchanged_numeric_parameters": "All MP-001 numerical trading predicates, costs, ratio, scale/lookbacks, setup lifetimes, family horizon lengths and evaluator delays remain unchanged. No runtime register replacement yet.",
+  "proposed_categorical_changes": {
+    "scenario_ownership": "STRUCTURAL_INDEPENDENT_OF_ENTRY_CALL_AND_EVALUATOR",
+    "scenario_confirmed_deadline_origin": "STRUCTURAL_CONFIRMATION_PUBLICATION",
+    "scenario_progress_reference": "CONFIRMATION_COMPLETE_MINUTE_CLOSE",
+    "a_entry_modes": [
+      "IMMEDIATE_CONFIRMATION_WITH_V02_AREA",
+      "LATER_COMPLETE_MINUTE_RETURN_WITH_FIXED_R_TO_K_CORRIDOR"
+    ],
+    "a_wait_deadline": "ORIGINAL_SETUP_EXPIRY",
+    "a_call_hard_deadline": "CONFIRMATION_PUBLICATION_PLUS_EXISTING_4H",
+    "a_preissue_target": "CONFIRMATION_TARGET_MONOTONE_TIGHTENING_ONLY",
+    "a_postconfirmation_anchor_revision": false,
+    "a_same_confirmation_issue_count_max": 1,
+    "bc_entry_behavior": "UNCHANGED_V02_ONE_SHOT",
+    "cost_and_quote_effect_on_structural_scenarios": "NONE",
+    "historical_warmup_confirmation_return_issue_in_evaluation": false
+  },
+  "development_evaluation": {
+    "order": [
+      "2025-10",
+      "2025-11",
+      "2025-12"
+    ],
+    "pair_order": [
+      "FROZEN_V02",
+      "FROZEN_V03"
+    ],
+    "same_pack_profile": true,
+    "method_change_between_periods": false,
+    "operator": "OWNER_WEB_APP_ONLY_AFTER_ENGINEERING_ACCEPTANCE",
+    "protected": "NOT_AUTHORIZED",
+    "zero_usable_delayed_entries": "No A RETURN-mode entry at primary 60s delay across three assessable months rejects the A entry hypothesis",
+    "majority_confirmations_without_any_corridor": "More than 50% of distinct A confirmation owners: structural-domain review",
+    "minimum_distinct_entered_owners_for_evidence_discussion": 20,
+    "minimum_is": "Reporting convention, not a quota, significance or profitability test",
+    "numeric_profitability_gate": null
+  },
+  "authority": "Prose MP-002 governs ordered transitions; this is an explicit design delta, not implementation authorization."
+}

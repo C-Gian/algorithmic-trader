@@ -1,7 +1,7 @@
 # Foundation v3 — Integrated Adviser Delivery Plan
 
 Status: ACTIVE DIRECTOR PLAN  
-Updated: 2026-10-03 (current-action pointers: September check closed, WP-010 active)
+Updated: 2026-10-05 (current action: MP-002 method proposal review)
 Authority: FOUNDATION.md v3.1, STATE.md, Owner realignment and SR-003 Director disposition
 
 ## 1. Product interpretation
@@ -445,4 +445,4 @@ Preliminary source capability/size checks may inform MP-001 without substantial 
 
 ## 10. Immediate active action
 
-**Owner Backtest A causal dossier** is active after [Astra review and Director disposition](WP-009-OWNER-BACKTEST-A-DIRECTOR-DISPOSITION.md). September runtime completed, zero calls; one-time read-only extraction of38 triggers/109 candidate histories next. No method/product changes or new run. Broader development and frozen/protected evaluation remain planned, Owner-operated; do not select an algorithm from one month or consume protected periods during tuning.
+Owner Backtest A extraction is closed as qualified diagnostic evidence (see STATE). [MP-002 v0.1](MP-002-SCENARIO-CONFIRMATION-ENTRY-PROPOSAL.md) is the Director proposal for Astra review: independent structural scenarios and A post-confirmation return entry, preserving costs/ratio and B/C entry behavior. No executor implementation/new run is active. After method closure a separately specified package may be activated, then Owner-operated frozen comparisons on October, November and December development packs. September remains known diagnosis, protected periods stay unopened; do not select a method by one month's calls.
