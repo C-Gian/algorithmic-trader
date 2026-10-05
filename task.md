@@ -1,9 +1,11 @@
-# Current Task — Director diagnosis of Owner Backtest A
-Status: **ACTIVE — DIRECTOR DIAGNOSIS / TARGETED ASTRA REVIEW; NO EXECUTOR IMPLEMENTATION**
+# Current Task — Owner Backtest A causal dossier
+Status: **ACTIVE — EXECUTOR READ-ONLY EVIDENCE EXTRACTION; NO PRODUCT IMPLEMENTATION**
 Date: 2026-10-05.
 
-Owner September Adviser evaluation completed with runtime PASS 20/20 in 135.2 s, 147,975 events; 43,200/43,200 scored minutes assessable; zero issued calls from 38 evaluated triggers. Original [JSON](delivery/evidence/WP-009-OWNER-BACKTEST-A.json) preserved. Read [diagnosis and targeted Astra brief](delivery/WP-009-OWNER-BACKTEST-A-DIAGNOSIS.md).
+Execute [Director disposition and bounded assignment](delivery/WP-009-OWNER-BACKTEST-A-DIRECTOR-DISPOSITION.md), adopting Astra §6 of [the review](delivery/WP-009-OWNER-BACKTEST-A-ASTRA-REVIEW.md). Target existing evaluation `eval-20261005T120047-e6cc50`, replay `obs-20261005T120047-bc6947` only. Preserve [original report](delivery/evidence/WP-009-OWNER-BACKTEST-A.json).
 
-Director/Astra assess declared method versus possible bugs, local-target/trigger/net-feasibility and coverage. Output one bounded next step, not automatic threshold relaxation or code edits. MP-001 v0.2 remains frozen until a Director revision; no new Claude implementation, economic run, acquisition or protected-period use. If missing case evidence is indispensable, propose only a minimal read-only export from existing committed run records.
+Extract a one-time causal dossier from committed existing records: 38 trigger rows with geometry/zone cutoffs and minimum-confirmation feasibility; 109 candidate histories, bounded upstream coverage and max five outcome-free timelines. Exact facts, derived fields and missing evidence must be distinguished. Read-only local DB/API/cache access authorized within disposition; no writes/services/Owner data changes, replay/Deep/backtest, future-outcome selection, method change or source acquisition.
 
-Owner waits for diagnosis; no retry or Deep validation requested. Standing CI/commit/backtest workflow is in AGENTS.md.
+Deliver full JSON/CSV and SUMMARY.md under delivery/evidence/WP-009-OWNER-BACKTEST-A-DOSSIER/. Verify original counts/provenance/cutoffs and small arithmetic examples; no full product-suite/Compose rerun or product-code changes for this extraction. Stop on inaccessible evidence; report what is missing without constructing a replacement replay. Update STATE with actual evidence; commit/push normally. CI waiting and standing workflow are in AGENTS.md.
+
+Completion: **READY FOR DIRECTOR REVIEW — OWNER BACKTEST A DOSSIER ONLY**. No next method/replay package activated.

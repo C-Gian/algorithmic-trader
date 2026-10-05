@@ -68,6 +68,6 @@ Private Project Instructions still describe a discretionary “when practical”
 
 This Git update does not modify any private chat instructions.
 
-## Current pointer — Owner Backtest A diagnosis, 2026-10-05
+## Current pointer — Owner Backtest A causal dossier, 2026-10-05
 
-WP-009 accepted; Owner completed September Adviser evaluation: runtime PASS20/20 in135.2s, zero calls. [Diagnosis / targeted Astra brief](../delivery/WP-009-OWNER-BACKTEST-A-DIAGNOSIS.md), original report preserved. Director methodological diagnosis next; no executor code assignment or new run. MP-001v0.2 remains frozen; no parameter tournament/protected-period use. App backtests and future CI waiting remain Owner-operated.
+[Astra disposition](../delivery/WP-009-OWNER-BACKTEST-A-DIRECTOR-DISPOSITION.md) activates one scoped read-only existing-run dossier. September first development result: runtime PASS, zero calls. No method/code change, professional replay or new economic run. Existing Owner evidence may be read without altering services/data; broader development/protected tests remain Owner app actions after freeze/handoff. CI waiting remains Owner-operated.

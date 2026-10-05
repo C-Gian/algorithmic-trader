@@ -1,0 +1,38 @@
+# Owner Backtest A — Astra review disposition and causal dossier
+
+Date: 2026-10-05. Status: **ACTIVE — ONE-TIME READ-ONLY DIAGNOSIS; NO METHOD CHANGE**.
+Source review: [Astra](WP-009-OWNER-BACKTEST-A-ASTRA-REVIEW.md), preserved byte-identical to the Owner attachment. [Original report](evidence/WP-009-OWNER-BACKTEST-A.json) and [initial diagnosis](WP-009-OWNER-BACKTEST-A-DIAGNOSIS.md) remain unchanged.
+
+## Director decisions
+
+Accept Astra's single next step: join the already committed records of `obs-20261005T120047-bc6947` into a bounded causal dossier before selecting a revision. Independent static source check confirms F1: `_resolve_target` returns blocking-zone info, `_select_and_issue` drops it when geom is absent, and `_actionability` only reads limiting from geom. This is lost diagnostic attribution, not evidence that the six rejected trades should have been emitted. No product bugfix is activated yet; do not rewrite the original report.
+
+Accept the distinction between 32 geometric failures and six inside-zone failures; ordered no-room/ratio reasons are branches of one predicate. The 27/32 rooms below the 30.8bps zero-risk floor are strong scale evidence, not proof that cheaper costs or narrower stops are justified. Earlier reaction extremes are not causal entries; near-edge B-z alone can explain negative room from B. B/C need their own explanations, not A's anchor-high explanation.
+
+MarketView dependence on ARMED/ongoing calls and first-trigger consumption is declared v0.2 behavior; the sparse prospective coverage is a separate product tension. No new direction arrows or expectation persistence rule is selected before case evidence. Spend/reset attrition is real but cannot be labelled missed profitable opportunity without evidence, and no later outcomes may be used in this dossier.
+
+## Active executor assignment
+
+One-time local read-only extraction for evaluation `eval-20261005T120047-e6cc50`, replay `obs-20261005T120047-bc6947`. See Astra §6 A–C for the joined fields and stop criterion; these sections are adopted with the operational limits below.
+
+- Prefer existing app/API exports. If insufficient, reading the existing local PostgreSQL records is authorized **only with a read-only transaction** and explicit queries for this run and its pinned source/config/pack receipts. This is an exception solely for reading Owner evidence, not permission to migrate, update, repair, start/stop/rebuild containers, change image tags or delete anything. Do not log connection secrets. If access is unavailable, report the precise missing access/field and stop; no infrastructure setup or fallback economic run.
+- Read only committed journal/evaluation/manifest/config and immutable pinned cache/source facts needed for named cases. Hash/source/cursor provenance must accompany facts. Snapshot read consistently so extraction cannot join shifting data. No professional runtime/reducer replay, Deep run, parameter variants, downloads or later-market outcome inspection. Invariant algebra and joins of recorded facts are permitted; deterministic numeric derivations are labelled DERIVED, never ORIGINAL.
+- Reconstruct landmark versions at the requested cutoff from journal changes (created/known/retired state), plus candidate-owned zones. A final state is not an earlier cutoff. For overlapping blocking zones preserve all containing zones; original selected identity is UNKNOWN if lost. Reading a bounded pinned factual bar to verify a terminal 15m condition is allowed only with its original cutoff/provenance; do not regenerate the adviser or scan future performance.
+- Provide all 38 trigger rows and all 109 candidate histories, reconciled with the original family/blocker counts. Distinguish confirmation threshold from Kcost, V/T, evaluated side price, causal stop/target changes, gain/risk/margin, owners and zone sets at latest arm/revise versus trigger. An unavailable field remains explicit MISSING; do not silently turn it into zero or estimate it from rounded report medians.
+- Apply exact Decimal net-bound intersection at trigger for the 32 geometric rows and at arm/revise only if its contemporaneous geometry can be recovered. Preserve inward tick rounding and structural-area intersection; classify incompatible minimum confirmation, overshoot, object/rule divergence, or insufficient data. Nonempty mathematical region is not proof of a fill. Six inside-zone rows retain original refusal and recovered obstacle evidence, not fabricated T/G/Q.
+- Upstream summaries: candidate stage durations/termination, A's 45 pre-reaction spent cases and reset facts **where recorded**, box owner durations/attempt budgets, NO_SUPPORTED_PLAN by observed context/phase and WATCH presence. Count 45 terminated cases without assuming 45 independent economic opportunities. Missing qualification/latch evidence is documented rather than reconstructed by folding new scenarios.
+- Max five timelines selected by Astra's fixed outcome-free criteria. Include the complete tables, provenance and a compact missing-field inventory. A candidate/owner may appear in several summaries; denominators are explicit. Stop after original count reconciliation and classification; do not expand to other periods or calculate would-have-won trades.
+
+## Artifacts and checks
+
+Save under `delivery/evidence/WP-009-OWNER-BACKTEST-A-DOSSIER/`: machine-readable full JSON; trigger and candidate CSVs (remaining full tables may be JSON); concise `SUMMARY.md` with per-family conclusions and missing evidence. Optionally include one small reproducible extraction script if necessary; no src/web/schema/API changes, reusable analytics framework or background job. Old run/artifact/report files are read-only. Preserve original report identity/bytes.
+
+Verification is narrow and data-focused: all original counts reconciled; sample provenance/cutoff joins checked; known LONG/SHORT algebra and rounding boundaries checked, including Astra's incompatible/overshoot examples; originals unchanged. No full 599-test suite, browser rebuild or Compose smoke needed for a read-only evidence/script delivery unless a concrete script dependency justifies a focused test. Commit/push only the dossier/script and actual STATE evidence; final summary gives found facts versus missing fields, not a method recommendation implemented as code. CI waiting follows AGENTS (Owner-operated; no polling shell).
+
+Completion: **READY FOR DIRECTOR REVIEW — OWNER BACKTEST A DOSSIER ONLY**. Director uses the dossier to choose a bugfix, a versioned method revision or one essential missing diagnostic; no changes delegated implicitly to Claude.
+
+## Evaluation horizon: September is the first development check
+
+Current historical target remains Sep2025–Aug2026 UTC. Sep–Dec2025 are development; Jan–Aug2026 are provisionally protected, with contamination inventory required. September was the first operational/economic development run on ready fixed data, not the whole evaluation or a representative proof of every market regime. One failed-to-produce-calls month justifies diagnosing the current translation, not tuning solely to that month.
+
+Before judging usefulness, run a coherent version over additional development months and inspect per-month/condition behavior as well as aggregate results. Freeze behavior/profile/criteria before protected tests; any period whose results guide a change becomes development. Do not consume all available history during iteration and then call the same history independent validation. Protected results and later manageable prospective observations are complementary, not guarantees. Larger runs remain Owner app actions after an explicit handoff; none is requested now.

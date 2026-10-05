@@ -1,8 +1,8 @@
 # Project State
 
-Updated: 2026-10-05 — Owner Backtest A completed: runtime PASS, zero September calls; Director diagnosis / targeted Astra review
+Updated: 2026-10-05 — Astra review received; one-time read-only Owner Backtest A dossier active, no method change
 
-**Current task: [task.md](task.md) — Director diagnosis of Owner Backtest A; no executor implementation** Product authority: [FOUNDATION.md](FOUNDATION.md) v3.1. Executor rules: [AGENTS.md](AGENTS.md). How to run the app: [README.md](README.md). Chronology and earlier package evidence: [delivery/DELIVERY-HISTORY.md](delivery/DELIVERY-HISTORY.md).
+**Current task: [task.md](task.md) — Owner Backtest A causal dossier; read-only extraction, no product implementation** Product authority: [FOUNDATION.md](FOUNDATION.md) v3.1. Executor rules: [AGENTS.md](AGENTS.md). How to run the app: [README.md](README.md). Chronology and earlier package evidence: [delivery/DELIVERY-HISTORY.md](delivery/DELIVERY-HISTORY.md).
 
 Goal (Foundation v3.1): an integrated BTC adviser with persistent actionable LONG/SHORT calls, entry area, targets, stop/exit guidance and holding horizon. Capital, size, leverage and orders stay human. Historical ACCEPTED/READY/HOLD labels in older documents do not authorize work; only task.md does.
 
@@ -206,3 +206,7 @@ ACCEPTED at `6f95273`: all original findings 1–9 closed; [follow-up acceptance
 ## Owner Backtest A result — 2026-10-05
 
 Owner app run `eval-20261005T120047-e6cc50` / `obs-20261005T120047-bc6947`, code6f95273: COMPLETED, 147,975/147,975, runtime reconciliation v5 PASS20/20, elapsed135.2s. Original [report](delivery/evidence/WP-009-OWNER-BACKTEST-A.json), [diagnosis/Astra brief](delivery/WP-009-OWNER-BACKTEST-A-DIAGNOSIS.md). All43,200 scored minutes assessable; births109, arms47, trigger evaluations38, **issued0**. Rejections18 no-room,14 reward/risk,6 opposing-area. Runtime workflow confirmed, method usefulness not accepted on this development month; no entered-path profitability evidence. Director diagnosis next, targeted Astra challenge; no Claude implementation, new Owner run or protected evidence authorized. Historical READY Owner handoff has been exercised and is superseded by this current result.
+
+## Owner Backtest A Astra disposition — 2026-10-05
+
+[Astra review](delivery/WP-009-OWNER-BACKTEST-A-ASTRA-REVIEW.md) preserved unchanged. [Director disposition](delivery/WP-009-OWNER-BACKTEST-A-DIRECTOR-DISPOSITION.md) accepts only one read-only existing-run causal dossier; independent static check confirms blocking-zone attribution loss without proving a missed valid call. Diagnose 38 triggers/109 candidate histories, net feasibility and upstream coverage before method revision. Read-only scoped Owner DB/API/cache access authorized; no product changes, replay, future outcomes or acquisition. Current task activates extraction only. September is the first development check, not the full evidence horizon: additional development months precede frozen/protected validation; no wider Owner run requested now.

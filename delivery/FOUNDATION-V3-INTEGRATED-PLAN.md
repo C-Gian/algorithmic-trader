@@ -445,4 +445,4 @@ Preliminary source capability/size checks may inform MP-001 without substantial 
 
 ## 10. Immediate active action
 
-**Owner Backtest A completed**: 135.2s, runtime PASS20/20, zero calls overSeptember. [Current diagnosis and targeted Astra review](WP-009-OWNER-BACKTEST-A-DIAGNOSIS.md) governs next action; original report preserved. No executor implementation or new Owner run active. Diagnose method target/trigger/net-feasibility and coverage before a versioned change. MP-001v0.2 remains frozen; no protected-period use or economic agent run.
+**Owner Backtest A causal dossier** is active after [Astra review and Director disposition](WP-009-OWNER-BACKTEST-A-DIRECTOR-DISPOSITION.md). September runtime completed, zero calls; one-time read-only extraction of38 triggers/109 candidate histories next. No method/product changes or new run. Broader development and frozen/protected evaluation remain planned, Owner-operated; do not select an algorithm from one month or consume protected periods during tuning.
