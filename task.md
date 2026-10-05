@@ -1,11 +1,9 @@
-# Current Task — WP-009 correction follow-up
-Status: **ACTIVE — EXECUTOR CORRECTION**
-Date: 2026-10-05. Reviewed commit: `d16c9251e9cb8d20ab2f4db78526d8b057423997`.
+# Current Task — Owner Backtest A
+Status: **READY FOR OWNER BACKTEST A — NO EXECUTOR IMPLEMENTATION ACTIVE**
+Date: 2026-10-05. Accepted product code: `6f95273b54674081fe6b3896a84d62a015384fe5`.
 
-Correct only the remaining Deep resume case under original finding 7 in [the correction review](delivery/WP-009-CORRECTION-DIRECTOR-REVIEW.md). Findings 1–6, 8 and 9 are closed for this slice. Preserve MP-001 v0.2, accepted correction behavior, frozen schemas, Owner data and saved outputs; no next package.
+WP-009 and its corrections are accepted for the first September development evaluation: [Director acceptance](delivery/WP-009-CORRECTION-DIRECTOR-REVIEW.md). Owner app handoff: [exact preset, configuration, steps and evidence boundary](delivery/WP-009-OWNER-BACKTEST-A.md).
 
-On every resume, retain newly detected stored record/digest/sequence/chain inconsistencies alongside saved mismatches. No suppression based on a nonzero saved cursor; bound/deduplicate diagnostics as needed. Read the exact-code [probe](delivery/evidence/WP-009-CORRECTION-DIRECTOR-RESUME-PROBE.json).
+Owner launches **Adviser evaluation** on the already prepared `btc-september-development-v1` pack, speed max, then returns Copy report for chat. No agent economic evaluation, acquisition, parameter changes or new package. The Director analyzes the report before any next code assignment. MP-001 v0.2 unchanged; economic usefulness remains unverified.
 
-Acceptance: DB fail-before/fixed-after tests starting from a CLEAN nonzero-cursor pause, then digest-only alterations in both professional record tables and a last-row chain alteration; never MATCH after resume. Clean repeated pause/resume, byte tampering, cancel/fencing and report determinism remain green. Run appropriate focused checks plus final DB-required non-E2E/E2E, web/schema and exact-final-SHA CI including Compose smoke. Record actual evidence, compatibility/diagnostic version decision and limits in README/STATE.
-
-Completion: **READY FOR DIRECTOR REVIEW — WP-009 CORRECTION FOLLOW-UP ONLY**. Owner Backtest A stays inactive until acceptance. Standing workflow is in AGENTS.md: Claude changes code and runs bounded engineering checks; substantial backtests are launched by the Owner through the web app, with Copy report for chat returned to the Director.
+Executor CI waiting is now Owner-operated under AGENTS.md: after local checks/commit/push, provide SHA/link and summary without polling/background wait; Owner returns the exact-SHA CI result. This does not waive local checks or green CI for Director acceptance.

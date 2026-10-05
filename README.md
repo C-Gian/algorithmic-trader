@@ -1,5 +1,7 @@
 # Algorithmic Trader
 
+**Current Owner action (5 October 2026): [September Adviser evaluation — Backtest A](delivery/WP-009-OWNER-BACKTEST-A.md).** WP-009 accepted at `6f95273`; run the existing prepared pack from the app and return Copy report for chat. Earlier pending-adviser descriptions below are historical infrastructure context, not the current handoff. Future CI waits belong to the Owner; executor procedure is in AGENTS.md.
+
 Algorithmic Trader is a clean-room, local BTC trading adviser in development: professional market reading and persistent trade calls for a human who independently chooses capital, size, leverage and orders. [FOUNDATION.md](FOUNDATION.md) v3.1 is the product authority; [STATE.md](STATE.md) has the current status and [task.md](task.md) the single active task.
 
 ## What works today

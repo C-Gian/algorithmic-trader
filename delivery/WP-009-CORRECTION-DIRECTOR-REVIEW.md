@@ -32,3 +32,11 @@ Required DB regressions: clean validation paused at nonzero cursor, then journal
 ## Next boundary
 
 Only the resume assurance fix and directly necessary regressions/docs are active. No new method, optimization, acquisition, live campaign or economic agent run. After review acceptance, the Owner launches September Adviser evaluation through the web app and supplies its copied report; the Director analyzes it and assigns bounded code work to Claude. Full historical backtests remain Owner-operated.
+
+## Follow-up acceptance — 2026-10-05
+
+**ACCEPTED at `6f95273b54674081fe6b3896a84d62a015384fe5`.** `_adv_merge_stored` retains newly discovered storage problems on every launch/resume and deduplicates stored problems within the bounded mismatch list. Source review and the new DB regressions cover clean nonzero-cursor pause followed by digest-only alteration in both tables, last-row chain-only alteration, repeated resumes and clean continuation. Independent exact-method probe (mock diagnostic sink, no DB run): new resume problem retained, three resumes count it once, another new problem retained, full list stays bounded and remains mismatch. Full DB/browser tests were not rerun by the Director.
+
+Independently retrieved [CI 37300338202](https://github.com/C-Gian/algorithmic-trader/actions/runs/37300338202) for that exact SHA: checks and Compose smoke SUCCESS; logs confirm 599 non-E2E and 18 E2E passed. Executor fail-before/fixed-after evidence is [recorded](evidence/WP-009-CORRECTION-FOLLOWUP-EVIDENCE.json). New adviser Deep launches use v6; saved v5 results are unchanged and unfinished v5 validations receive the stricter mismatch merge without changing their recorded version. MP-001 and core/evaluator identities unchanged.
+
+Original findings 1–9 are closed for this implementation slice. Existing resumed comparison recounting and bounded duplicate regenerated-record diagnostics are disclosed and do not turn a mismatch into a match. No economic usefulness is inferred from acceptance. **READY FOR OWNER BACKTEST A — September only**, as specified in [the Owner handoff](WP-009-OWNER-BACKTEST-A.md). No new Claude package; no agent economic run.

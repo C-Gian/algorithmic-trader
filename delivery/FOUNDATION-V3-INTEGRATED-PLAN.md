@@ -445,6 +445,4 @@ Preliminary source capability/size checks may inform MP-001 without substantial 
 
 ## 10. Immediate active action
 
-**WP-009 correction follow-up** is active after [review of d16c925](WP-009-CORRECTION-DIRECTOR-REVIEW.md): original findings 1–6, 8 and 9 closed; only newly detected Deep storage inconsistencies on resume remain (finding 7). Exact-SHA CI37289189340 is green. Integrated MP-001 v0.2, R2/R3 and the prepared September pack are unchanged. Owner Backtest A remains inactive until acceptance.
-
-No agent economic run, parameter tournament or full-year acquisition assigned. Implementation is unverified until delivery/review; only then READY FOR OWNER BACKTEST A on September. Protected contamination inventory/freeze, optional sources, annual gates and operational limitations stay explicit. No claim of professional trading usefulness/edge from software integrity or fixture reachability.
+**WP-009 accepted at 6f95273** after [follow-up review](WP-009-CORRECTION-DIRECTOR-REVIEW.md), exact-SHA CI37300338202 green. Immediate action: [Owner Backtest A](WP-009-OWNER-BACKTEST-A.md), September prepared pack, Adviser evaluation at max, copied report to the Director. No executor implementation active. Method MP-001 v0.2 unchanged; no economic result or edge established. Substantial runs are Owner-operated; future CI waiting is Owner-operated under AGENTS.md. Director diagnosis follows the copied result before any next package.

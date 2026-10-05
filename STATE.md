@@ -1,14 +1,14 @@
 # Project State
 
-Updated: 2026-10-05 — WP-009 correction follow-up (Deep resume storage re-check) executor-delivered; READY FOR DIRECTOR REVIEW, not accepted; Owner Backtest A inactive
+Updated: 2026-10-05 — WP-009 accepted at 6f95273; READY FOR OWNER BACKTEST A (September); no executor implementation active
 
-**Current task: [task.md](task.md) — WP-009 correction follow-up (original finding 7: newly detected resume storage problems).** Product authority: [FOUNDATION.md](FOUNDATION.md) v3.1. Executor rules: [AGENTS.md](AGENTS.md). How to run the app: [README.md](README.md). Chronology and earlier package evidence: [delivery/DELIVERY-HISTORY.md](delivery/DELIVERY-HISTORY.md).
+**Current task: [task.md](task.md) — Owner Backtest A (September Adviser evaluation; no executor implementation active).** Product authority: [FOUNDATION.md](FOUNDATION.md) v3.1. Executor rules: [AGENTS.md](AGENTS.md). How to run the app: [README.md](README.md). Chronology and earlier package evidence: [delivery/DELIVERY-HISTORY.md](delivery/DELIVERY-HISTORY.md).
 
 Goal (Foundation v3.1): an integrated BTC adviser with persistent actionable LONG/SHORT calls, entry area, targets, stop/exit guidance and holding horizon. Capital, size, leverage and orders stay human. Historical ACCEPTED/READY/HOLD labels in older documents do not authorize work; only task.md does.
 
 ## 1. Current implementation
 
-**M3 is complete and reusable:** immutable real evidence → causal feed → observable state → durable Market replay. **WP-009 (executor-delivered, NOT yet Director-accepted)** adds the integrated MP-001 v0.2 adviser: live Home cockpit and historical Adviser evaluation with a separate hypothetical evaluator (details below). No economic usefulness, frequency or profitability is established. Market replay runs stay observation-only; synthetic trader/account output is DEMO.
+**M3 is complete and reusable:** immutable real evidence → causal feed → observable state → durable Market replay. **WP-009 (Director-accepted at 6f95273 for the first development evaluation)** adds the integrated MP-001 v0.2 adviser: live Home cockpit and historical Adviser evaluation with a separate hypothetical evaluator (details below). No economic usefulness, frequency or profitability is established. Market replay runs stay observation-only; synthetic trader/account output is DEMO.
 
 Implemented and in use:
 - OKX BTC-USDT-SWAP public evidence (`marketdata.v1`, frozen), causal feed/observable state (`feed.v1`, provisional), public live recorder with measured local receipt times (`recorder.v1`, provisional).
@@ -196,3 +196,9 @@ Director completed integrated contract/state/live/evaluation/UI/test specificati
 ## WP-009 correction Director disposition — 2026-10-05
 
 Reviewed `d16c925`: findings 1–6, 8 and 9 closed for this slice; one remaining original-finding-7 case in [the correction review](delivery/WP-009-CORRECTION-DIRECTOR-REVIEW.md). A clean paused Deep can discard a newly detected digest/chain inconsistency on resume. Exact-code offline probe reproduced it; 40 focused pure tests passed, one DB version test skipped (not locally verified); full DB/browser evidence is CI37289189340: 594 non-E2E and 18 E2E passed, checks and Compose smoke SUCCESS. Only the narrow resume fix/regressions are active; no method change or agent economic run. Owner launches substantial backtests in the web app after acceptance and returns Copy report for chat for Director analysis.
+
+## WP-009 final acceptance and Owner handoff — 2026-10-05
+
+ACCEPTED at `6f95273`: all original findings 1–9 closed; [follow-up acceptance](delivery/WP-009-CORRECTION-DIRECTOR-REVIEW.md). Independent source/regression review and exact merge-method probe; CI37300338202 exact-SHA SUCCESS (checks: 599 non-E2E, 18 E2E; Compose smoke SUCCESS). Full local suites remain executor evidence, not Director reruns. Deep v6 new launches, stricter resumed v5 verification, saved reports preserved. Economic performance remains unknown.
+
+**Current next action:** [Owner Backtest A](delivery/WP-009-OWNER-BACKTEST-A.md): app Adviser evaluation / prepared btc-september-development-v1 pack / max / Copy report for chat. No new acquisition, agent economic run, method change or mandatory Deep validation. Earlier inactive handoffs are superseded by this acceptance. The Owner also takes over future CI waiting: executor local checks/commit/push, SHA/link and immediate summary; no polling or background CI shell (AGENTS.md).

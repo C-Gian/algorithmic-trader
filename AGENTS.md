@@ -41,6 +41,13 @@ Report:
 
 The Director independently reviews; an executor's PASS is not acceptance.
 
+### CI handoff — Owner-operated (5 October 2026)
+
+After required local checks, commit and push, then hand the CI wait to the Owner. Do not wait for CI, poll GitHub, launch background CI checks, sleep for a rate-limit reset or retain a monitoring shell. Give the exact pushed SHA and the CI run link (if already known; otherwise the repository Actions page), report local checks separately, and mark remote CI PENDING / NOT CHECKED rather than guessing. Stop any owned CI-monitor process before finishing; do not stop unrelated Owner processes.
+
+The Owner watches GitHub and reports green/red for that SHA. Green: give/update the concise Director completion summary. Red: inspect the failed job/log when the Owner supplies the failure or asks you to diagnose; make the bounded correction, run relevant checks, push and hand back the new SHA. If logs are inaccessible, say exactly what evidence is missing; never spend the session waiting for unauthenticated quota reset. No retries just to obtain green without understanding the failure. The Director still requires exact-SHA green CI for acceptance; delegating the wait does not waive CI or local tests. This Owner rule overrides older task text telling executors to await/check final CI.
+
+
 ## SR-003 operational boundary
 
 Read `strategic_reviews/SR-003-DIRECTOR-DISPOSITION.md` for approved execution architecture. The Astra review is evidence; only task.md activates a package. R1A is not a real-month retry release. Preserve pre-upgrade September runs/datasets and legacy readers; no automatic salvage/relabel/redownload. All expensive phases need durable progress and incomplete diagnostic export. Changed provisional operational contracts require explicit revision/changelog and compatibility; frozen evidence/DEMO baselines remain unchanged. No advisory semantic.v2 during performance hardening. Never claim health/progress from CPU activity or heartbeat alone.

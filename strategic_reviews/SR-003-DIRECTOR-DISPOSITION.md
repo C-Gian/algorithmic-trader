@@ -68,6 +68,6 @@ Private Project Instructions still describe a discretionary “when practical”
 
 This Git update does not modify any private chat instructions.
 
-## Current pointer — WP-009 correction follow-up, 2026-10-05
+## Current pointer — Owner Backtest A, 2026-10-05
 
-R2/R3 and MP-001 v0.2 remain accepted; Owner September pack preparation is complete, no economic run. [Correction review](../delivery/WP-009-CORRECTION-DIRECTOR-REVIEW.md) of d16c925 closes findings 1–6, 8 and 9; one original-finding-7 Deep resume case remains. CI37289189340 checks and Compose smoke SUCCESS. task.md activates only that bounded fix/regressions. Owner Backtest A stays inactive; after acceptance, substantial evaluations run in the Owner web app and reports return to the Director for analysis. No method change, agent economic run or new package.
+WP-009 accepted at6f95273: all findings closed, CI37300338202 checks and Compose smoke SUCCESS. [Acceptance](../delivery/WP-009-CORRECTION-DIRECTOR-REVIEW.md), [Owner handoff](../delivery/WP-009-OWNER-BACKTEST-A.md). Owner starts September Adviser evaluation in the app and returns Copy report for chat; Director diagnosis next. No executor implementation, acquisition or agent economic run. MP-001 unchanged; economic usefulness unknown. CI waiting transfers to the Owner under AGENTS.md.
