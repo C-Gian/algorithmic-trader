@@ -1,8 +1,8 @@
 # Project State
 
-Updated: 2026-10-05 — WP-009 correction executor delivery: READY FOR DIRECTOR REVIEW — WP-009 CORRECTION ONLY (not accepted); Owner Backtest A inactive
+Updated: 2026-10-05 — WP-009 correction reviewed at d16c925; one Deep resume case remains; Owner Backtest A inactive
 
-**Current task: [task.md](task.md) — WP-009 correction (Director findings1–9; not accepted).** Product authority: [FOUNDATION.md](FOUNDATION.md) v3.1. Executor rules: [AGENTS.md](AGENTS.md). How to run the app: [README.md](README.md). Chronology and earlier package evidence: [delivery/DELIVERY-HISTORY.md](delivery/DELIVERY-HISTORY.md).
+**Current task: [task.md](task.md) — WP-009 correction follow-up (original finding 7: newly detected resume storage problems).** Product authority: [FOUNDATION.md](FOUNDATION.md) v3.1. Executor rules: [AGENTS.md](AGENTS.md). How to run the app: [README.md](README.md). Chronology and earlier package evidence: [delivery/DELIVERY-HISTORY.md](delivery/DELIVERY-HISTORY.md).
 
 Goal (Foundation v3.1): an integrated BTC adviser with persistent actionable LONG/SHORT calls, entry area, targets, stop/exit guidance and holding horizon. Capital, size, leverage and orders stay human. Historical ACCEPTED/READY/HOLD labels in older documents do not authorize work; only task.md does.
 
@@ -183,3 +183,7 @@ ACCEPTED at09e23fd: verified contributor metadata, byte-checked durable publicat
 ## WP-009 specification and implementation activation — 2026-10-03
 
 Director completed integrated contract/state/live/evaluation/UI/test specification from MP-001 v0.2. Owner prepared September pack without new replay; actual boundary rows and storage recorded, no economic outcome inspected. WP-009 executor implementation active: semantic.v2 and all A/B/C families, call lifecycle, separate evaluator, durable live/current-practicability and Home/Workbench. Current implementation still has no adviser until this work is delivered/reviewed. Owner economic handoff remains pending Director acceptance; no agent backtest or parameter search.
+
+## WP-009 correction Director disposition — 2026-10-05
+
+Reviewed `d16c925`: findings 1–6, 8 and 9 closed for this slice; one remaining original-finding-7 case in [the correction review](delivery/WP-009-CORRECTION-DIRECTOR-REVIEW.md). A clean paused Deep can discard a newly detected digest/chain inconsistency on resume. Exact-code offline probe reproduced it; 40 focused pure tests passed, one DB version test skipped (not locally verified); full DB/browser evidence is CI37289189340: 594 non-E2E and 18 E2E passed, checks and Compose smoke SUCCESS. Only the narrow resume fix/regressions are active; no method change or agent economic run. Owner launches substantial backtests in the web app after acceptance and returns Copy report for chat for Director analysis.

@@ -68,6 +68,6 @@ Private Project Instructions still describe a discretionary “when practical”
 
 This Git update does not modify any private chat instructions.
 
-## Current pointer — WP-009 correction, 2026-10-05
+## Current pointer — WP-009 correction follow-up, 2026-10-05
 
-R2/R3 accepted, MP-001 v0.2 method design closed; Owner September pack preparation [completed](../delivery/evidence/WP-008-R3-OWNER-SEPTEMBER-PREPARATION.md), no replay/economic run. WP-009 was delivered at5d1f2e1. The [Director review](../delivery/WP-009-DIRECTOR-REVIEW.md) requires corrections1–9; task.md activates only that correction under the unchanged [Director specification](../delivery/WP-009-INTEGRATED-ADVISER-SPEC.md). Exact-SHA CI37275582552 failed in E2E; Owner Backtest A stays inactive. No isolated signal, full-year prerequisite or parameter tournament. Economic usefulness remains Owner evidence after implementation/review; no backtest handoff before Director acceptance.
+R2/R3 and MP-001 v0.2 remain accepted; Owner September pack preparation is complete, no economic run. [Correction review](../delivery/WP-009-CORRECTION-DIRECTOR-REVIEW.md) of d16c925 closes findings 1–6, 8 and 9; one original-finding-7 Deep resume case remains. CI37289189340 checks and Compose smoke SUCCESS. task.md activates only that bounded fix/regressions. Owner Backtest A stays inactive; after acceptance, substantial evaluations run in the Owner web app and reports return to the Director for analysis. No method change, agent economic run or new package.

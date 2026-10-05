@@ -1,14 +1,11 @@
-# Current Task — WP-009 correction
+# Current Task — WP-009 correction follow-up
 Status: **ACTIVE — EXECUTOR CORRECTION**
-Date: 2026-10-05
-Reviewed implementation: `5d1f2e169f2894b548015552c187c0eade1dc5a2`.
+Date: 2026-10-05. Reviewed commit: `d16c9251e9cb8d20ab2f4db78526d8b057423997`.
 
-Correct findings1–9 in [WP-009 Director review](delivery/WP-009-DIRECTOR-REVIEW.md), using its counterexamples, required outcomes and interpretation disposition. Governing method remains [MP-001 v0.2](delivery/MP-001-INTEGRATED-METHOD-PROPOSAL.md) / [register](delivery/MP-001-PARAMETERS.json); preserve the integrated [WP-009 specification](delivery/WP-009-INTEGRATED-ADVISER-SPEC.md).
+Correct only the remaining Deep resume case under original finding 7 in [the correction review](delivery/WP-009-CORRECTION-DIRECTOR-REVIEW.md). Findings 1–6, 8 and 9 are closed for this slice. Preserve MP-001 v0.2, accepted correction behavior, frozen schemas, Owner data and saved outputs; no next package.
 
-Scope: protective stop-gap pricing; both-age/residual timers; delayed-receipt C withdrawal; taped live connectivity/current-entry/alerts and non-current API/UI/MD presentation; cooperative startup Stop/fence/task cleanup; committed/cutoff-safe inspection; Deep stored-byte verification; repeated-copy operation/CI race; missing required bounded diagnostics. Director probe evidence: [JSON](delivery/evidence/WP-009-DIRECTOR-PROBES.json) and associated scripts. These are short offline review evidence, not substitutes for integration regressions.
+On every resume, retain newly detected stored record/digest/sequence/chain inconsistencies alongside saved mismatches. No suppression based on a nonzero saved cursor; bound/deduplicate diagnostics as needed. Read the exact-code [probe](delivery/evidence/WP-009-CORRECTION-DIRECTOR-RESUME-PROBE.json).
 
-Version changed implementation/evaluator/diagnostic identities and preserve legacy readers/saved outputs; surface incompatible unfinished state rather than silently reusing changed semantics. No method/rule/threshold or protected-window change. No Owner stack/data alteration, real-pack economic run or new package.
+Acceptance: DB fail-before/fixed-after tests starting from a CLEAN nonzero-cursor pause, then digest-only alterations in both professional record tables and a last-row chain alteration; never MATCH after resume. Clean repeated pause/resume, byte tampering, cancel/fencing and report determinism remain green. Run appropriate focused checks plus final DB-required non-E2E/E2E, web/schema and exact-final-SHA CI including Compose smoke. Record actual evidence, compatibility/diagnostic version decision and limits in README/STATE.
 
-Acceptance: fail-before/fixed-after counterexamples and focused regression matrix in the review; full final DB-required non-E2E, E2E, web/schema checks; green exact-final-SHA CI (including Compose smoke). Address CI37275582552's repeated-copy failure with a causal regression, not only retries. README/STATE report actual final checks and limits. Standing execution/commit/push rules in AGENTS.md.
-
-Completion: **READY FOR DIRECTOR REVIEW — WP-009 CORRECTION ONLY**. September Owner Backtest A remains inactive until Director acceptance.
+Completion: **READY FOR DIRECTOR REVIEW — WP-009 CORRECTION FOLLOW-UP ONLY**. Owner Backtest A stays inactive until acceptance. Standing workflow is in AGENTS.md: Claude changes code and runs bounded engineering checks; substantial backtests are launched by the Owner through the web app, with Copy report for chat returned to the Director.

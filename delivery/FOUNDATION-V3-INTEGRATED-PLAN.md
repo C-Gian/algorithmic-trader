@@ -445,6 +445,6 @@ Preliminary source capability/size checks may inform MP-001 without substantial 
 
 ## 10. Immediate active action
 
-**WP-009 correction** is active in task.md after the [Director review](WP-009-DIRECTOR-REVIEW.md) of5d1f2e1 (findings1–9; CI37275582552 E2E failure). The integrated implementation is delivered but not accepted under the [Director specification](WP-009-INTEGRATED-ADVISER-SPEC.md), unchanged MP-001 v0.2 rules/register and accepted R2/R3. Owner September pack preparation is [CLOSED](evidence/WP-008-R3-OWNER-SEPTEMBER-PREPARATION.md): complete trade/mark/index warmup/evaluation/tail, no economic result. All three families, persistent calls, causal live/catch-up, separate normalized evaluation and beginner-readable surfaces are required; no isolated prototype.
+**WP-009 correction follow-up** is active after [review of d16c925](WP-009-CORRECTION-DIRECTOR-REVIEW.md): original findings 1–6, 8 and 9 closed; only newly detected Deep storage inconsistencies on resume remain (finding 7). Exact-SHA CI37289189340 is green. Integrated MP-001 v0.2, R2/R3 and the prepared September pack are unchanged. Owner Backtest A remains inactive until acceptance.
 
 No agent economic run, parameter tournament or full-year acquisition assigned. Implementation is unverified until delivery/review; only then READY FOR OWNER BACKTEST A on September. Protected contamination inventory/freeze, optional sources, annual gates and operational limitations stay explicit. No claim of professional trading usefulness/edge from software integrity or fixture reachability.

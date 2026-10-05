@@ -1,0 +1,18 @@
+{
+  "scope": "actual Deep methods and actual resume conditional; mocked storage; no DB/full job claim",
+  "mutation": "digest column changed while Deep paused; record and chain unchanged",
+  "loader_detected": [
+    {
+      "cursor": null,
+      "kind": "adviser_journal_stored_bytes",
+      "at": "seq 1",
+      "expected": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      "reference": "f26a002a59d5a4c9c75f76cc29ca51ada64d0348cc209ff3cc3a98d03862a25b"
+    }
+  ],
+  "resumed_comparisons": {
+    "compared": 3,
+    "mismatches": []
+  },
+  "expected": "stored metadata inconsistency must remain a mismatch after resume"
+}
