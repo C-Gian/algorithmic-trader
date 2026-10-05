@@ -1,5 +1,7 @@
 import { useMemo, useState } from "react";
-import { adviserApi, CallView, ENTRY_TEXT, EXPECTED_TEXT, Lens, LiveStatus, LiveView, reasonText, ROW_TEXT, THESIS_TEXT } from "../adviser";
+import {
+  adviserApi, CallView, ENTRY_TEXT, EXPECTED_TEXT, Lens, LiveStatus, LiveView, METHOD_TEXT, reasonText, ROW_TEXT, THESIS_TEXT,
+} from "../adviser";
 import { fmtNum, fmtTime, humanize } from "../lib/format";
 import { usePoll } from "../lib/usePoll";
 import { Icon } from "../ui/Icon";
@@ -152,10 +154,24 @@ function CallPanel({ v }: { v: LiveView | null }) {
         <div className="call-none-why">{top ? `Top reason: ${reasonText(top)}` : "Waiting for the first assessment"}</div>
         {mv?.principal && (
           <div className="call-scenario" data-testid="live-scenario">
-            <Badge tone={mv.principal.direction === "LONG" ? "pos" : "neg"}>{mv.principal.direction} {mv.principal.family} armed</Badge>
+            <Badge tone={mv.principal.direction === "LONG" ? "pos" : "neg"}>{mv.principal.direction} {mv.principal.family}{" "}
+              {(mv.principal.status ?? "ARMED").toLowerCase()}</Badge>
             <span className="small-text">{mv.principal.antecedent}</span>
           </div>
         )}
+        {(v?.scenarios ?? []).filter((s) => s.waiting).map((s) => (
+          <div className="call-waiting" key={s.scenario_id} data-testid="live-waiting">
+            <Badge tone="info">{s.direction} {s.family} confirmed — waiting for a usable price</Badge>
+            <p className="small-text">{s.waiting!.text} This is not a call: do not treat it as “enter now”.</p>
+            <dl className="call-geo">
+              <dt>Usable return corridor</dt><dd className="mono">{s.waiting!.corridor ? `${s.waiting!.corridor[0]} – ${s.waiting!.corridor[1]}` : "none left"}</dd>
+              <dt>Target now</dt><dd className="mono">{s.waiting!.target_now} <span className="muted">(at confirmation {s.waiting!.target_at_confirmation})</span></dd>
+              <dt>Stop guidance if issued</dt><dd className="mono">{s.waiting!.stop_V}</dd>
+              <dt>Waits until</dt><dd className="mono">{fmtTime(s.waiting!.wait_until)} · hard deadline {fmtTime(s.waiting!.hard_deadline)}</dd>
+              <dt>Blockers now</dt><dd>{s.waiting!.blockers.length ? s.waiting!.blockers.map(reasonText).join(", ") : "none (waiting for a fresh minute)"}</dd>
+            </dl>
+          </div>
+        ))}
       </section>
     );
   }
@@ -220,6 +236,8 @@ export function LiveCockpit() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, runCopy] = useCopyFeedback();
+  // WP-011: the method is chosen explicitly before Start; a running session keeps its pinned method
+  const [method, setMethod] = useState<"v0.2" | "v0.3">("v0.2");
   const v = st?.view && st.view.chart ? st.view : null;
   const state = st?.state ?? "STOPPED";
   const running = !!st?.running;
@@ -244,6 +262,7 @@ export function LiveCockpit() {
           <Badge tone={STATE_TONE[state] ?? "neutral"} dot testid="live-state">{STATE_TEXT[state] ?? humanize(state)}</Badge>
           <span className="live-msg" data-testid="live-message">{st?.message ?? "Loading…"}</span>
           {v?.last_receipt && <span className="muted small-text mono">last receipt {fmtTime(v.last_receipt)}</span>}
+          {st?.session && <Badge tone="info" testid="live-session-method">{METHOD_TEXT[st.session.method ?? "v0.2"] ?? st.session.method}</Badge>}
         </div>
         <div className="live-bar-actions">
           {running ? (
@@ -254,8 +273,18 @@ export function LiveCockpit() {
                       data-testid="live-stop-button">{st?.session?.stop_requested ? "Stopping…" : "Stop live adviser"}</Button>
             </>
           ) : (
-            <Button icon="play" onClick={() => act(adviserApi.start)} disabled={busy} data-testid="live-start"
-                    className="btn-lg">Start live adviser</Button>
+            <>
+              <label className="small-text live-method" data-testid="live-method">
+                <span>Method</span>
+                <select className="control" value={method} onChange={(e) => setMethod(e.target.value as "v0.2" | "v0.3")}
+                        data-testid="live-method-select" disabled={busy}>
+                  <option value="v0.2">{METHOD_TEXT["v0.2"]}</option>
+                  <option value="v0.3">{METHOD_TEXT["v0.3"]} (engineering review pending)</option>
+                </select>
+              </label>
+              <Button icon="play" onClick={() => act(() => adviserApi.start(method))} disabled={busy} data-testid="live-start"
+                      className="btn-lg">Start live adviser</Button>
+            </>
           )}
           <Button variant="secondary" icon={copied === "copied" ? "check" : "copy"} onClick={copy} data-testid="copy-analysis">
             {copied === "copied" ? "Copied" : copied === "copying" ? "Copying…" : copied === "error" ? "Copy failed"

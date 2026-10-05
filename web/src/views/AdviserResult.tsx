@@ -53,6 +53,35 @@ function ConditionTime({ a }: { a: AdviserSection }) {
   );
 }
 
+/** MP-002 v0.3 registered funnel: structural confirmations, the D/N denominators, routing, waiting and the RETURN
+ * evidence threshold. A WAIT is never a call; more calls are not improvement by themselves. */
+function V3Funnel({ a }: { a: AdviserSection }) {
+  const f = a.funnel;
+  if (!f.a_denominators || !f.waiting || !f.evidence_threshold) return null;
+  const dn = f.a_denominators;
+  return (
+    <div className="stack" data-testid="adv-v3-funnel">
+      <div className="adv-section-title">Revised v0.3 — confirmation then usable entry</div>
+      <div className="adv-metrics">
+        <Metric label="A confirmations" value={String(f.a_confirmations ?? 0)} testid="adv-v3-confirmations"
+                hint={`D ${dn.D_geometrically_evaluable} evaluable · N ${dn.N_initially_empty_corridor_or_fixed_k_economics} with no usable corridor · N/D ${dn.N_over_D ?? "—"}`} />
+        <Metric label="Waiting for a usable price" value={String(f.waiting.opened)} testid="adv-v3-waits"
+                hint={`usable return seen ${f.waiting.observed_usable_return} · these are not calls`} />
+        <Metric label="Issued by mode" value={Object.entries(f.issued_by_family_mode ?? {}).map(([k, n]) => `${k.replace("_", " ")} ${n}`).join(" · ") || "none"}
+                mono={false} testid="adv-v3-modes" />
+        <Metric label="A RETURN owners entered (60 s)" value={`${f.a_return_owners_entered_primary_60s} / ${f.evidence_threshold.registered_minimum_distinct_owners}`}
+                hint={humanize(f.evidence_threshold.status)} testid="adv-v3-threshold" />
+      </div>
+      <div className="small-text muted">A routing: {Object.entries(f.a_routing ?? {}).map(([k, n]) => `${humanize(k)} ${n}`).join(" · ") || "none"}
+        {Object.keys(dn.excluded).length > 0 && <> · excluded {Object.entries(dn.excluded).map(([k, n]) => `${humanize(k)} ${n}`).join(" · ")}</>}</div>
+      {Object.keys(f.waiting.endings).length > 0 && (
+        <div className="small-text muted">Waiting endings: {Object.entries(f.waiting.endings).map(([k, n]) => `${humanize(k)} ${n}`).join(" · ")}</div>
+      )}
+      <p className="muted small-text">{dn.note} {f.evidence_threshold.note}</p>
+    </div>
+  );
+}
+
 export function AdviserSummary({ a }: { a: AdviserSection }) {
   if (a.pending) return <Notice tone="info" title="Adviser section pending">{a.text}</Notice>;
   const c = a.calls;
@@ -83,7 +112,8 @@ export function AdviserSummary({ a }: { a: AdviserSection }) {
           {a.diagnosis.map((d) => <div key={d}>{d}</div>)}
         </Notice>
       )}
-      <div className="adv-section-title">Candidate funnel</div>
+      {a.report_version === "adviser.report.v3" && <V3Funnel a={a} />}
+      <div className="adv-section-title">{a.report_version === "adviser.report.v3" ? "Scenario funnel" : "Candidate funnel"}</div>
       <div className="funnel" data-testid="adv-funnel">
         <span className="step">births {Object.values(a.funnel.births).reduce((x, y) => x + y, 0)}</span>›
         <span className="step">armed {Object.values(a.funnel.arms).reduce((x, y) => x + y, 0)}</span>›

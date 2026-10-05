@@ -221,7 +221,9 @@ def semantic_v2_baseline() -> dict[str, Any]:
         ac.PUBLIC_CONTRACTS,
         {"schema_version": ac.SEMANTIC_V2_VERSION, "status": ac.SEMANTIC_V2_STATUS, "revision": ac.SEMANTIC_V2_REVISION,
          "changelog": [{"revision": r, "date": d, "note": n} for r, d, n in ac.SEMANTIC_V2_CHANGELOG],
-         "journal_kinds": {k: f"#/$defs/{m.__name__}" for k, m in sorted(ac.KIND_CONTRACTS.items())}})
+         "journal_kinds": {k: f"#/$defs/{m.__name__}" for k, m in sorted(ac.KIND_CONTRACTS.items())},
+         "journal_kinds_v3": {k: f"#/$defs/{m.__name__}" for k, m in sorted(ac.KIND_CONTRACTS_V3.items())},
+         "emitted_revision_by_model": dict(sorted(ac.SEMANTIC_V2_EMITTED_REVISION.items()))})
 
 
 def adviser_evaluation_baseline() -> dict[str, Any]:
@@ -232,7 +234,8 @@ def adviser_evaluation_baseline() -> dict[str, Any]:
         f"Algorithmic Trader adviser evaluation contracts ({ec.EVALUATION_VERSION}, {ec.EVALUATION_STATUS})", ec,
         ec.PUBLIC_CONTRACTS,
         {"schema_version": ec.EVALUATION_VERSION, "status": ec.EVALUATION_STATUS, "revision": ec.EVALUATION_REVISION,
-         "changelog": [{"revision": r, "date": d, "note": n} for r, d, n in ec.EVALUATION_CHANGELOG]})
+         "changelog": [{"revision": r, "date": d, "note": n} for r, d, n in ec.EVALUATION_CHANGELOG],
+         "emitted_revision_by_evaluator": dict(sorted(ec.EVALUATION_EMITTED_REVISION.items()))})
 
 
 def baselines() -> dict[str, Any]:

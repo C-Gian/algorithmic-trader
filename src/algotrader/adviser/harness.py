@@ -146,6 +146,16 @@ class PureResult:
         return [e["record"] for e in self.kinds("candidate") if prefix is None
                 or e["record"]["attempt_id"].startswith(prefix)]
 
+    def scenarios(self, prefix: str | None = None) -> list[dict]:
+        """v0.3 structural scenario records whose scenario id starts with ``prefix``."""
+        return [e["record"] for e in self.kinds("scenario") if prefix is None
+                or e["record"]["scenario_id"].startswith(prefix)]
+
+    def entries(self, prefix: str | None = None) -> list[dict]:
+        """v0.3 child entry-attempt records."""
+        return [e["record"] for e in self.kinds("entry_attempt") if prefix is None
+                or e["record"]["scenario_id"].startswith(prefix)]
+
     def paths(self, variant: str | None = None) -> list[dict]:
         return [r["record"] for r in self.records if r["kind"] == "path"
                 and (variant is None or r["record"]["variant"] == variant)]
@@ -183,17 +193,32 @@ def build_events(start: datetime, minutes: list[Minute], *, with_refs: bool = Tr
 def make_runtime(*, tick=Decimal("0.1"), eval_start=None, eval_end=None, evaluator: bool = True,
                  profile: CapabilityProfile | None = None, origin: str = sc.Origin.HISTORICAL_MODELED.value,
                  clock_policy: str = ClockPolicy.MODELED_COMPLETE_PREFIX.value, sample_views: bool = True,
-                 funding_mode: str | None = None) -> AdviserRuntime:
+                 funding_mode: str | None = None, method: str = "v0.2", params=None) -> AdviserRuntime:
+    """``method`` selects the packaged release (v0.2 baseline / v0.3 MP-002); ``params`` overrides the typed register
+    for engineering fixtures only (e.g. a different cost envelope to test cost invariance)."""
+    from . import methods
+
+    rel = methods.get(method)
     profile = profile or historical_profile()
-    p = load()
-    cfg = AdviserConfig(instrument=INST, tick=D(tick), profile=profile, method=method_ref(profile),
+    p = params or rel.params()
+    cfg = AdviserConfig(instrument=INST, tick=D(tick), profile=profile,
+                        method=method_ref(profile) if rel.key == "v0.2" else rel.method_ref(profile, None),
                         clock_policy=clock_policy, params=p, eval_start=eval_start, eval_end=eval_end, origin=origin,
                         channel_ids={"trade": TRADE.channel_id, "mark": MARK.channel_id, "index": INDEX.channel_id})
     ev = None
+    if rel.key == "v0.2":
+        if evaluator:
+            ev = Evaluator(p, D(tick), eval_start=eval_start, eval_end=eval_end,
+                           funding_mode=funding_mode or profile.funding_outcomes.value, sample_views=sample_views)
+        return AdviserRuntime(AdviserCore(cfg), ev)
+    from .core3 import AdviserCoreV3
+    from .evaluator3 import EvaluatorV3
+    from .runtime3 import AdviserRuntimeV3
+
     if evaluator:
-        ev = Evaluator(p, D(tick), eval_start=eval_start, eval_end=eval_end,
-                       funding_mode=funding_mode or profile.funding_outcomes.value, sample_views=sample_views)
-    return AdviserRuntime(AdviserCore(cfg), ev)
+        ev = EvaluatorV3(p, D(tick), eval_start=eval_start, eval_end=eval_end,
+                         funding_mode=funding_mode or profile.funding_outcomes.value, sample_views=sample_views)
+    return AdviserRuntimeV3(AdviserCoreV3(cfg), ev)
 
 
 def temporal_for(coverage: list[ChannelCoverage], clock_policy=ClockPolicy.MODELED_COMPLETE_PREFIX,
@@ -207,11 +232,11 @@ def run_pure(start: datetime, minutes: list[Minute], *, eval_start: datetime | N
              eval_end: datetime | None = None, evaluator: bool = True, tick=Decimal("0.1"),
              with_refs: bool = True, funding_events=(), funding_mode: str | None = None,
              runtime: AdviserRuntime | None = None, sample_views: bool = True,
-             stop_after: int | None = None) -> PureResult:
+             stop_after: int | None = None, method: str = "v0.2", params=None) -> PureResult:
     events, cov = build_events(start, minutes, with_refs=with_refs, funding_events=funding_events)
     rt = runtime or make_runtime(tick=tick, eval_start=eval_start if eval_start is not None else start,
                                  eval_end=eval_end, evaluator=evaluator, sample_views=sample_views,
-                                 funding_mode=funding_mode)
+                                 funding_mode=funding_mode, method=method, params=params)
     temporal = temporal_for(cov)
     rt.attach(temporal)
     res = PureResult(rt, temporal=temporal)

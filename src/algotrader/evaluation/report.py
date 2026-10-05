@@ -151,7 +151,9 @@ def build_report(ev: dict[str, Any], replay: dict[str, Any], manifest: dict[str,
            for key, label in UNAVAILABLE_METRICS},
     }
     if adviser is not None:
-        caps = {"professional_adviser": {"status": "CONNECTED", "reason": "MP-001 btc.context-action.v0.2 adviser"},
+        model = (adviser.get("identity") or {}).get("model") or "btc.context-action.v0.2"
+        caps = {"professional_adviser": {"status": "CONNECTED", "reason": (
+                    "MP-002 " if model.endswith("v0.3") else "MP-001 ") + f"{model} adviser"},
                 **{key: {"label": label, "status": "REPORTED", "value": None, "reason": "see the adviser section"}
                    for key, label in UNAVAILABLE_METRICS}}
     return {
@@ -406,7 +408,10 @@ def render_markdown(r: dict[str, Any]) -> str:
         if r["adviser"].get("pending"):
             lines += ["", "## Adviser evaluation", f"- PENDING: {r['adviser']['text']}"]
         else:
-            from ..adviser.report import render_markdown as adviser_md
+            if r["adviser"].get("report_version") == "adviser.report.v3":
+                from ..adviser.report3 import render_markdown as adviser_md
+            else:
+                from ..adviser.report import render_markdown as adviser_md
 
             lines += adviser_md(r["adviser"])
     else:

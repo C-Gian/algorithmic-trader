@@ -519,15 +519,24 @@
       "date": "2026-10-05",
       "note": "WP-009 correction (additive, optional): HypotheticalPath.resolved_at - the professional clock time of the dispatch (or clock-end finish) at which the evaluator determined the path, so cutoff-safe inspection never shows an outcome before it was knowable. Revision-1 records remain readable (resolved_at absent = unknown; withheld under a cutoff).",
       "revision": 2
+    },
+    {
+      "date": "2026-10-05",
+      "note": "WP-011 MP-002 v0.3 evaluator adviser.evaluator.v3 (record shapes unchanged; semantics declared per evaluator): profile ids mp002.evaluation.<variant>.v1; the HORIZON_ONLY exit request of an A call uses its frozen hard deadline H = structural confirmation + 4h (B/C: existing frozen deadline), then the existing exit delay/alignment; guidance ended for coverage loss (coverage_loss_from on the terminal call revision) censors open paths from the first missing interval (exit_class GUIDANCE_COVERAGE_LOSS); WAIT_PRICE never creates a path or NO_ENTRY. adviser.evaluator.v2 (v0.2) records keep their revision-2 meaning.",
+      "revision": 3
     }
   ],
+  "emitted_revision_by_evaluator": {
+    "adviser.evaluator.v2": 2,
+    "adviser.evaluator.v3": 3
+  },
   "public_contracts": {
     "EvaluatorProfile": "#/$defs/EvaluatorProfile",
     "Fill": "#/$defs/Fill",
     "HypotheticalPath": "#/$defs/HypotheticalPath",
     "ViewSample": "#/$defs/ViewSample"
   },
-  "revision": 2,
+  "revision": 3,
   "schema_version": "algotrader.adviser-evaluation.v1",
   "status": "PROVISIONAL",
   "title": "Algorithmic Trader adviser evaluation contracts (algotrader.adviser-evaluation.v1, PROVISIONAL)"

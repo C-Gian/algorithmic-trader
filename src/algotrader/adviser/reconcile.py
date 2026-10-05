@@ -25,7 +25,7 @@ from datetime import datetime
 from typing import Any
 
 from ..feed.ordering import canonical
-from .contracts import KIND_CONTRACTS
+from .contracts import KIND_CONTRACTS, KIND_CONTRACTS_V3
 from .core import INITIAL_JOURNAL
 from .evaluator import INITIAL_RECORDS
 
@@ -36,6 +36,12 @@ SCOPE = (" Version 5 (adviser evaluation runs, engine observe.stream.v3) additio
          "professional clock-end finish re-derived from that verified state (tail timers only); and call/attempt "
          "lineage, revision contiguity and immutability. PASS is runtime integrity, not profit, forecast quality or an "
          "independent audit of the original sources; it shares the method implementation.")
+SCOPE_V6 = (" Version 6 (WP-011 MP-002 v0.3 adviser runs, engine observe.stream.v4) additionally binds the pinned "
+            "method release (packaged MP-002 rules/register identity, runtime format and engine format must match the "
+            "engine document; another release fails) and checks v0.3 lineage: every structural scenario born once and "
+            "terminal at most once, contiguous scenario transitions, every child entry attempt linked to a born "
+            "scenario with at most one ISSUE and at most one terminal, and every v0.3 call linked to exactly one "
+            "issuing entry attempt and its scenario. PASS remains runtime integrity, not profit or forecast quality.")
 
 
 def _chain(rows: list[dict], initial: str) -> tuple[list[str], str | None]:
@@ -66,6 +72,23 @@ def checks(check, *, status: str, ranges: list[dict], terminal: dict | None, cur
 
     summary: dict[str, Any] = {"identity": engine["adviser"]["identity"], "journal_records": len(journal),
                                "evaluation_records": len(records)}
+    v3 = engine["adviser"].get("method") == "v0.3"
+    kinds = KIND_CONTRACTS_V3 if v3 else KIND_CONTRACTS
+    if v3:
+        summary["method"] = "v0.3"
+    if v3:
+        from .engine import config_from_engine, release
+
+        try:
+            rel = release(engine)
+            config_from_engine(engine)
+            ok = engine.get("format") == rel.engine_format
+            check("adviser_method_binding", ok,
+                  f"pinned release {rel.key} ({rel.model} / {rel.rules_version}, rules {rel.rules_sha256()[:12]}, "
+                  f"register {rel.register_sha256()[:12]}, runtime {rel.runtime_format}, engine {rel.engine_format})"
+                  if ok else f"engine format {engine.get('format')} differs from the release's {rel.engine_format}")
+        except AdviserStateError as exc:
+            check("adviser_method_binding", False, str(exc))
     # 1. ranges
     problems, prev = [], {"journal_seq": 0, "evaluation_seq": 0, "professional_seq": 0}
     for r in ranges:
@@ -175,7 +198,7 @@ def checks(check, *, status: str, ranges: list[dict], terminal: dict | None, cur
     ends: dict[str, int] = {}
     for e in journal:
         k, rec = e["kind"], e["record"]
-        if k not in KIND_CONTRACTS:
+        if k not in kinds:
             lp.append(f"unknown journal kind {k}")
             continue
         if k == "call":
@@ -207,8 +230,50 @@ def checks(check, *, status: str, ranges: list[dict], terminal: dict | None, cur
     lp += [f"attempt {a} born {n} times" for a, n in births.items() if n > 1]
     lp += [f"attempt {a} ended {n} times" for a, n in ends.items() if n > 1]
     lp += [f"attempt {a} ended without a birth" for a in ends if a not in births]
+    if v3:
+        lp += _v3_lineage(journal, calls)
     check("adviser_lineage_immutability", not lp, "; ".join(lp[:5]) or
           f"{len(calls)} unique call(s), contiguous revisions, one terminal each; {len(births)} attempt(s) born once "
           "and ended at most once; revisions never restate original geometry")
     summary["calls"] = len(calls)
     return summary
+
+
+def _v3_lineage(journal: list[dict], calls: dict[str, dict]) -> list[str]:
+    lp: list[str] = []
+    born: dict[str, int] = {}
+    terminal: dict[str, int] = {}
+    entry_issue: dict[str, int] = {}
+    entry_terminal: dict[str, int] = {}
+    issued_call: dict[str, str] = {}
+    for e in journal:
+        rec = e["record"]
+        if e["kind"] == "scenario":
+            sid = rec["scenario_id"]
+            if rec["transition"] == "BIRTH":
+                born[sid] = born.get(sid, 0) + 1
+            elif sid not in born:
+                lp.append(f"scenario {sid} {rec['transition']} without a birth")
+            if sid in terminal:
+                lp.append(f"scenario {sid} transition {rec['transition']} after its terminal")
+            if rec["transition"] == "TERMINAL":
+                terminal[sid] = terminal.get(sid, 0) + 1
+        elif e["kind"] == "entry_attempt":
+            sid, eid = rec["scenario_id"], rec["entry_attempt_id"]
+            if sid not in born:
+                lp.append(f"entry attempt {eid} without a born scenario")
+            if rec["transition"] == "ISSUE":
+                entry_issue[eid] = entry_issue.get(eid, 0) + 1
+                issued_call[rec["call_id"]] = eid
+            if rec["state"] == "TERMINAL" or rec["transition"] == "CLEARED":
+                entry_terminal[eid] = entry_terminal.get(eid, 0) + 1
+    lp += [f"scenario {s} born {n} times" for s, n in born.items() if n > 1]
+    lp += [f"scenario {s} has {n} terminal records" for s, n in terminal.items() if n > 1]
+    lp += [f"entry attempt {a} issued {n} calls" for a, n in entry_issue.items() if n > 1]
+    lp += [f"entry attempt {a} ended {n} times" for a, n in entry_terminal.items() if n > 1]
+    for cid, rec in calls.items():
+        if issued_call.get(cid) != rec.get("attempt_id"):
+            lp.append(f"call {cid} is not linked to exactly one issuing entry attempt")
+        if rec.get("scenario_id") is None or rec.get("scenario_id") not in born:
+            lp.append(f"call {cid} has no born scenario")
+    return lp

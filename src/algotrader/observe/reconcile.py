@@ -82,12 +82,17 @@ VALIDATOR_SCOPE_PACK = VALIDATOR_SCOPE_TEMPORAL + (
     "separately from per-minute source coverage: a completed pack run can contain explicit source gaps.")
 
 VALIDATOR_VERSION_ADVISER = "5"
+VALIDATOR_VERSION_ADVISER_V3 = "6"  # WP-011: MP-002 v0.3 adviser runs (engine observe.stream.v4)
 
 
-def _adviser_scope() -> str:
-    from ..adviser.reconcile import SCOPE
+def _adviser_scope(v3: bool = False) -> str:
+    from ..adviser.reconcile import SCOPE, SCOPE_V6
 
-    return VALIDATOR_SCOPE_PACK + SCOPE
+    return VALIDATOR_SCOPE_PACK + SCOPE + (SCOPE_V6 if v3 else "")
+
+
+def _adviser_v3(engine: dict[str, Any]) -> bool:
+    return (engine.get("adviser") or {}).get("method") == "v0.3"
 
 
 Hook = Callable[[str, int, int | None, str], None]
@@ -123,7 +128,8 @@ def reconcile(*, status: ReplayStatus, cache: FeedCache, ranges: list[dict[str, 
         checks.append(ValidationCheck(name=name, passed=ok, detail=detail))
 
     temporal_cfg = engine.get("temporal")
-    version, scope = ((VALIDATOR_VERSION_ADVISER, _adviser_scope()) if engine.get("adviser") else
+    version, scope = ((VALIDATOR_VERSION_ADVISER_V3, _adviser_scope(True)) if _adviser_v3(engine) else
+                      (VALIDATOR_VERSION_ADVISER, _adviser_scope()) if engine.get("adviser") else
                       (VALIDATOR_VERSION_PACK, VALIDATOR_SCOPE_PACK) if engine.get("pack") else
                       (VALIDATOR_VERSION_TEMPORAL, VALIDATOR_SCOPE_TEMPORAL) if temporal_cfg
                       else (VALIDATOR_VERSION, VALIDATOR_SCOPE))

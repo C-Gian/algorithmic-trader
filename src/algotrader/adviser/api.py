@@ -70,6 +70,7 @@ def live_status(c) -> dict[str, Any]:
                     "created_at": s["created_at"].isoformat(), "started_at": s["started_at"].isoformat()
                     if s["started_at"] else None, "stopped_at": s["stopped_at"].isoformat() if s["stopped_at"] else None,
                     "stop_requested": s["stop_requested"], "error": s["error"], "identity": s["identity"],
+                    "method": (s.get("config") or {}).get("method") or "v0.2",
                     "heartbeat_age_seconds": hb_age,
                     "progress": s["progress"], "connection": s["connection"], "notes": s["diagnostic_log"][-20:]},
         "state": state, "running": running and state not in ("STOPPED", "FAILED"),
@@ -135,14 +136,22 @@ def build_router(conn: Callable, data_root: Path) -> APIRouter:
         with conn() as c:
             return live_status(c)
 
+    @r.get("/methods")
+    def method_list() -> dict[str, Any]:
+        from . import methods
+
+        return {"default": methods.DEFAULT, "methods": methods.selectable(),
+                "note": "v0.3 is shown as 'engineering review pending' until Director acceptance; stored results "
+                        "always show their pinned method"}
+
     @r.post("/live/start", status_code=201)
-    def live_start() -> dict[str, Any]:
+    def live_start(method: str | None = None) -> dict[str, Any]:
         import os
 
         base = os.environ.get("ALGOTRADER_OKX_REST_BASE_URL", "https://www.okx.com")
         with conn() as c:
             try:
-                lv.start_session(c, base)
+                lv.start_session(c, base, method)
             except lv.LiveControlError as exc:
                 raise HTTPException(409, str(exc)) from None
             return live_status(c)
@@ -258,6 +267,13 @@ def build_router(conn: Callable, data_root: Path) -> APIRouter:
             q, a = _cut("SELECT record FROM adviser_journal WHERE run_id = %s AND kind = 'actionability' AND "
                         "subject IN (%s, %s)", [replay_id, attempt, call_id], cutoff)
             act = c.execute(q + " ORDER BY seq", a).fetchall()
+            # v0.3: the child entry attempt (waiting/routing/caps) and its independent structural scenario
+            q, a = _cut("SELECT record FROM adviser_journal WHERE run_id = %s AND kind = 'entry_attempt' AND "
+                        "subject = %s", [replay_id, attempt], cutoff)
+            entry = c.execute(q + " ORDER BY seq", a).fetchall()
+            q, a = _cut("SELECT record FROM adviser_journal WHERE run_id = %s AND kind = 'scenario' AND subject = %s",
+                        [replay_id, call.get("scenario_id") or ""], cutoff)
+            scen = c.execute(q + " ORDER BY seq", a).fetchall()
             paths = c.execute("SELECT record FROM adviser_evaluation_records WHERE run_id = %s AND kind = 'path' AND "
                               "record->>'call_id' = %s ORDER BY seq", (replay_id, call_id)).fetchall()
             view = c.execute("SELECT record FROM adviser_journal WHERE run_id = %s AND kind = 'market_view' AND "
@@ -265,6 +281,8 @@ def build_router(conn: Callable, data_root: Path) -> APIRouter:
         kept, withheld = _paths(paths, cutoff)
         return {"call": call, "cutoff": cutoff.isoformat() if cutoff else None,
                 "candidate": [x["record"] for x in cand], "actionability": [x["record"] for x in act],
+                **({"entry_attempt": [x["record"] for x in entry], "scenario": [x["record"] for x in scen]}
+                   if call.get("scenario_id") else {}),
                 "revisions": [x["record"] for x in rows if x["kind"] == "call_revision"],
                 "material_changes": [x["record"] for x in rows if x["kind"] == "material_change"],
                 "market_view_at_issue": view["record"] if view else None,

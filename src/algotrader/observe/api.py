@@ -133,9 +133,10 @@ def adviser_view(row: dict[str, Any]) -> dict[str, Any] | None:
         return ({"pending": True, "note": "adviser configuration is pinned by the worker-owned preparation"}
                 if (row.get("launch") or {}).get("run_type") == "adviser_evaluation" else None)
     v = row.get("adviser_view") or {}
-    return {"identity": {k: adv["identity"][k] for k in ("model", "rules_version", "rules_sha256", "register_sha256",
-                                                          "implementation", "capability_profile_sha256",
-                                                          "identity_sha256")},
+    out = {"identity": {k: adv["identity"][k] for k in ("model", "rules_version", "rules_sha256", "register_sha256",
+                                                         "implementation", "capability_profile_sha256",
+                                                         "identity_sha256")},
+           "method": adv.get("method") or "v0.2",
             "profile": adv["profile"], "windows": {"warmup_start": adv["warmup_start"], "evaluation_start":
                                                    adv["eval_start"], "evaluation_end": adv["eval_end"],
                                                    "tail_end": adv["tail_end"], "clock_end": adv["clock_end"]},
@@ -144,6 +145,9 @@ def adviser_view(row: dict[str, Any]) -> dict[str, Any] | None:
                                                 "professional_seq")} if v else None,
             "counters": (v.get("counters") or {}) if v else None,
             "note": "committed adviser state at the latest checkpoint; hypothetical outcomes are separate"}
+    if v and v.get("scenarios") is not None:  # v0.3: structural scenarios and WAIT_PRICE children
+        out["committed"]["scenarios"] = v["scenarios"]
+    return out
 
 
 def temporal_view(row: dict[str, Any]) -> dict[str, Any] | None:

@@ -1,6 +1,6 @@
 import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  barsTail, corpusApi, CorpusChunk, CorpusJob, CorpusStatus, evalApi, Evaluation, EvaluationReport, obsApi, ObsReplay,
+  barsTail, Comparison, corpusApi, CorpusChunk, CorpusJob, CorpusStatus, evalApi, Evaluation, EvaluationReport, obsApi, ObsReplay,
   ObsStateDoc, packApi, PackListItem, PresetsResponse, StorageSummary, TradedBar,
 } from "../api";
 import { PackPrepare } from "./PackPrep";
@@ -18,6 +18,7 @@ import {
 } from "./replay/MarketReplay";
 import { runStory } from "./replay/runStory";
 import { AdviserProgress, AdviserSummary, CallTimeline } from "./AdviserResult";
+import { METHOD_TEXT } from "../adviser";
 
 // Historical Workbench (route #backtest kept): the Owner's evaluation workbench, organised as one guided task
 // (prepare data -> start a check -> follow it and get the report) over the SAME machinery:
@@ -328,6 +329,8 @@ function RunSetup({ corpus, preferred, packs, presets, onStarted }: {
   const [error, setError] = useState<string | null>(null);
   // default: Adviser evaluation when a pack is selected, Market replay otherwise, until the Owner picks explicitly
   const [runChoice, setRunType] = useState<"adviser_evaluation" | "observation_only" | null>(null);
+  // WP-011: the adviser method is chosen explicitly before Start (default: the original v0.2 baseline)
+  const [method, setMethod] = useState<"v0.2" | "v0.3">("v0.2");
   const ids = prepared.map((c) => c.chunk_id).join();
   useEffect(() => {
     // follow the month selected in step 1 when it is prepared; otherwise keep a valid prepared month
@@ -354,7 +357,7 @@ function RunSetup({ corpus, preferred, packs, presets, onStarted }: {
   const start = async () => {
     setBusy(true);
     try {
-      onStarted(pack ? await evalApi.startPack(pack.pack_id, speed, paused, ack, runType)
+      onStarted(pack ? await evalApi.startPack(pack.pack_id, speed, paused, ack, runType, method)
         : await evalApi.start(chunkId, speed, paused));
       setError(null);
     } catch (e) {
@@ -401,6 +404,26 @@ function RunSetup({ corpus, preferred, packs, presets, onStarted }: {
             <Badge tone="info">Implemented · per run</Badge>
           </div>
         </div>
+        {adviser && (
+          <div className="run-types" role="radiogroup" aria-label="Adviser method" data-testid="method-choice">
+            <div className="setup-col-title">Adviser method</div>
+            {(["v0.2", "v0.3"] as const).map((m) => (
+              <label key={m} className={cx("run-type", method === m && "is-on")} data-testid={`method-${m}`}>
+                <input type="radio" name="adviser-method" checked={method === m} onChange={() => setMethod(m)}
+                       data-testid={`method-${m}-input`} />
+                <span>
+                  <b>{METHOD_TEXT[m]}</b>
+                  <span className="muted small-text">{m === "v0.2"
+                    ? "The accepted MP-001 adviser exactly as evaluated so far — the fixed baseline for comparison."
+                    : "MP-002: a confirmed continuation may wait for a later usable price inside its reaction corridor instead of being rejected at once; scenarios persist independently of entry."}</span>
+                </span>
+                <Badge tone={m === "v0.2" ? "pos" : "warn"}>{m === "v0.2" ? "Baseline" : "Engineering review pending"}</Badge>
+              </label>
+            ))}
+            <span className="muted small-text">Same prepared pack and profile for both methods; the run is pinned to the
+              method you choose here. Nothing starts in the background and nothing is downloaded.</span>
+          </div>
+        )}
         {adviser ? (
           <Notice tone="info" icon="compass" title="Hypothetical evaluation" testid="adviser-notice">{ADVISER_NOTICE}</Notice>
         ) : (
@@ -432,7 +455,7 @@ function RunSetup({ corpus, preferred, packs, presets, onStarted }: {
         )}
         {adviser && (
           <div className="setup-facts" data-testid="eval-adviser-pins">
-            <Badge tone="brand" icon="shield">MP-001 v0.2</Badge>
+            <Badge tone="brand" icon="shield" testid="eval-method-pin">{method === "v0.2" ? "MP-001 v0.2" : "MP-002 v0.3"}</Badge>
             <Badge tone="info" title="Historical execution profile: modeled trade-minute closes, never measured quotes">HISTORICAL_BASE</Badge>
             <Badge tone="info" title="Funding completeness unproven: total net is unavailable">Price-net only</Badge>
             <Badge tone="pending" title="No historical as-known event calendar">Calendar unknown</Badge>
@@ -477,7 +500,7 @@ function RunSetup({ corpus, preferred, packs, presets, onStarted }: {
         </label>
         {error && <Notice tone="neg" title="Could not start">{error}</Notice>}
         <Button icon="play" className="btn-block btn-lg" onClick={start} disabled={!canStart || busy} data-testid="start-evaluation">
-          {adviser ? "Start adviser evaluation · prepared pack" : pack ? "Start the check · prepared pack"
+          {adviser ? `Start adviser evaluation · ${METHOD_TEXT[method].split(" — ")[0]} · prepared pack` : pack ? "Start the check · prepared pack"
             : chunk ? `Start the check · ${chunk.label}` : "Start the check"}
         </Button>
         <p className="muted small-text">
@@ -515,7 +538,8 @@ function RunPicker({ items, selected, onSelect }: {
                   <span className="run-chip-title">{e.corpus.chunk_label}</span>
                   <Badge tone={statusTone(e.replay.runtime_state)} dot>{story.title}</Badge>
                 </span>
-                <span className="run-chip-sub mono">{fmtTime(e.created_at).slice(0, 16)} · {fmtInt(committed)}/{p.total_events === null ? "?" : fmtInt(p.total_events)}</span>
+                <span className="run-chip-sub mono">{fmtTime(e.created_at).slice(0, 16)} · {fmtInt(committed)}/{p.total_events === null ? "?" : fmtInt(p.total_events)}
+                  {e.method ? ` · ${METHOD_TEXT[e.method.method] ? e.method.method : e.method.label}` : ""}</span>
                 <span className="mini-progress real" aria-hidden>
                   <span style={{ width: `${(committed / (p.total_events || 1)) * 100}%` }} />
                 </span>
@@ -806,7 +830,7 @@ function ActiveRun({ ev, onReplay }: { ev: Evaluation; onReplay: (r: ObsReplay) 
     <div className="run-stack" data-testid="active-run">
       {error && <Notice tone="neg" title="Something went wrong">{error}</Notice>}
       <ReplayPanel r={r} live={live} onCommand={command} place="report"
-                   eyebrow={`${ev.run_type === "adviser_evaluation" ? "Adviser evaluation" : "Market replay — data and engine check"} · ${ev.corpus.chunk_label}`} />
+                   eyebrow={`${ev.run_type === "adviser_evaluation" ? `Adviser evaluation · ${ev.method ? METHOD_TEXT[ev.method.method] ?? ev.method.label : "Original v0.2"}` : "Market replay — data and engine check"} · ${ev.corpus.chunk_label}`} />
       <ReportCard ev={{ ...ev, replay: r, report_available: true, report_terminal: TERMINAL.has(r.status) }} />
       {ev.run_type === "adviser_evaluation" ? <AdviserProgress r={r} /> : (
         <div className="boundary" data-testid="intelligence-boundary">
@@ -900,6 +924,103 @@ function StepNav({ corpus, ev }: { corpus: CorpusStatus | null; ev: Evaluation |
         </li>
       ))}
     </ol>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Two-run comparison (read-only: selecting or refreshing never launches anything)
+// ---------------------------------------------------------------------------
+
+function ComparePanel({ items }: { items: Evaluation[] | null }) {
+  const advisers = (items ?? []).filter((e) => e.run_type === "adviser_evaluation");
+  const [a, setA] = useState("");
+  const [b, setB] = useState("");
+  const [cmp, setCmp] = useState<Comparison | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [copied, runCopy] = useCopyFeedback();
+  useEffect(() => {
+    // default pair: the latest v0.2 run (A) against the latest v0.3 run (B); the Owner can change both
+    if (!a) setA(advisers.find((e) => e.method?.method === "v0.2")?.evaluation_id ?? "");
+    if (!b) setB(advisers.find((e) => e.method?.method === "v0.3")?.evaluation_id ?? "");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [advisers.map((e) => e.evaluation_id).join()]);
+  if (advisers.length < 2) return null;
+  const label = (e: Evaluation) => `${e.method ? (METHOD_TEXT[e.method.method] ?? e.method.label).split(" — ")[0] : "v0.2"} · `
+    + `${e.corpus.chunk_label} · ${e.replay.status} · ${fmtTime(e.created_at).slice(0, 16)}`;
+  const compare = async () => {
+    setError(null);
+    try {
+      setCmp(await evalApi.compare(a, b));
+    } catch (e) {
+      setError((e as Error).message.replace(/^\d+ /, ""));
+    }
+  };
+  const copy = async () => {
+    if (!(await runCopy(() => evalApi.compareMarkdown(a, b)))) setError("Copy failed — use the Markdown download.");
+  };
+  const tone: Tone = cmp?.comparability.verdict === "COMPARABLE" ? "pos" : "warn";
+  return (
+    <Card title="Compare two adviser runs" icon="compass" testid="compare-card"
+          eyebrow="Same prepared pack and profile · read-only · nothing is launched">
+      <div className="compare-pick">
+        <Field label="A (usually Original v0.2)">
+          <select className="control" value={a} onChange={(e) => { setA(e.target.value); setCmp(null); }} data-testid="compare-a">
+            <option value="">choose a run</option>
+            {advisers.map((e) => <option key={e.evaluation_id} value={e.evaluation_id}>{label(e)}</option>)}
+          </select>
+        </Field>
+        <Field label="B (usually Revised v0.3)">
+          <select className="control" value={b} onChange={(e) => { setB(e.target.value); setCmp(null); }} data-testid="compare-b">
+            <option value="">choose a run</option>
+            {advisers.map((e) => <option key={e.evaluation_id} value={e.evaluation_id}>{label(e)}</option>)}
+          </select>
+        </Field>
+        <Button icon="compass" onClick={compare} disabled={!a || !b || a === b} data-testid="compare-run">Compare</Button>
+      </div>
+      {error && <Notice tone="neg" title="Comparison error">{error}</Notice>}
+      {cmp && (
+        <div className="stack" data-testid="compare-result">
+          <div className={cx("verdict", `tone-${tone}`)}>
+            <div className="verdict-main" data-testid="compare-verdict">{humanize(cmp.comparability.verdict)}</div>
+            <p className="verdict-text">{cmp.conclusion.text}</p>
+            <div className="verdict-kind small-text">{cmp.scope}</div>
+          </div>
+          {cmp.comparability.differences.length > 0 && (
+            <Notice tone="warn" title="Not comparable: these inputs differ" testid="compare-differences">
+              {cmp.comparability.differences.map((d) => <div key={d.field} className="mono small-text">{d.field}</div>)}
+            </Notice>
+          )}
+          <div className="small-table-wrap">
+            <table className="small-table" data-testid="compare-table">
+              <thead><tr><th></th><th>A · {cmp.a.method}</th><th>B · {cmp.b.method}</th></tr></thead>
+              <tbody>
+                <tr><td>Status / assurance</td><td>{cmp.a.status} · {cmp.a.assurance}</td><td>{cmp.b.status} · {cmp.b.assurance}</td></tr>
+                <tr><td>Calls</td><td className="mono">{cmp.a.calls ?? "—"}</td><td className="mono">{cmp.b.calls ?? "—"}</td></tr>
+                <tr><td>Calls per week</td><td className="mono">{cmp.a.calls_per_evaluated_week ?? "—"}</td><td className="mono">{cmp.b.calls_per_evaluated_week ?? "—"}</td></tr>
+                <tr><td>Primary 60 s entries</td>
+                  <td className="mono">{Number(cmp.a.primary.paths ?? 0) - Number(cmp.a.primary.no_entry ?? 0)}</td>
+                  <td className="mono">{Number(cmp.b.primary.paths ?? 0) - Number(cmp.b.primary.no_entry ?? 0)}</td></tr>
+                <tr><td>Target / stop exits</td>
+                  <td className="mono">{String(cmp.a.primary.target_exits ?? "—")} / {String(cmp.a.primary.stop_exits ?? "—")}</td>
+                  <td className="mono">{String(cmp.b.primary.target_exits ?? "—")} / {String(cmp.b.primary.stop_exits ?? "—")}</td></tr>
+                <tr><td>Price-net sum (normalized)</td><td className="mono">{String(cmp.a.primary.sum_price_net ?? "—")}</td>
+                  <td className="mono">{String(cmp.b.primary.sum_price_net ?? "—")}</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div className="report-actions">
+            <Button icon={copied === "copied" ? "check" : "copy"} onClick={copy} data-testid="copy-comparison">
+              {copied === "copied" ? "Copied — paste into chat" : copied === "copying" ? "Copying…"
+                : copied === "error" ? "Copy failed — use Markdown download" : "Copy comparison for chat"}
+            </Button>
+            <a className="btn btn-secondary" href={evalApi.compareDownloadUrl(a, b, "md")} data-testid="compare-download-md">
+              <Icon name="download" size={15} /><span>Markdown</span></a>
+            <a className="btn btn-secondary" href={evalApi.compareDownloadUrl(a, b, "json")} data-testid="compare-download-json">
+              <Icon name="download" size={15} /><span>JSON</span></a>
+          </div>
+        </div>
+      )}
+    </Card>
   );
 }
 
@@ -1039,6 +1160,7 @@ export function Backtest() {
             Prepare a month in step 1, then press Start in step 2. Progress, controls and the copyable report appear here.
           </EmptyState>
         ) : <ActiveRun key={evDetail.evaluation_id} ev={evDetail} onReplay={onReplay} />}
+        <ComparePanel items={listItems} />
       </StepCard>
     </div>
   );

@@ -307,14 +307,18 @@ def adviser_reference(engine: dict, summary: dict | None) -> dict | None:
     if not adv:
         return None
     s = summary or {}
-    return {"artifact": "adviser.json" if summary is not None else None, "runtime_format": adv["format"],
-            "semantic_contract": "algotrader.semantic.v2", "evaluation_contract": "algotrader.adviser-evaluation.v1",
+    ref = {"artifact": "adviser.json" if summary is not None else None, "runtime_format": adv["format"],
+           "semantic_contract": "algotrader.semantic.v2", "evaluation_contract": "algotrader.adviser-evaluation.v1",
             "identity_sha256": adv["identity"]["identity_sha256"], "rules_sha256": adv["identity"]["rules_sha256"],
             "register_sha256": adv["identity"]["register_sha256"],
             "capability_profile_sha256": adv["identity"]["capability_profile_sha256"],
             "evaluator_sha256": adv["evaluator"]["sha256"], "journal_records": s.get("journal_records"),
             "journal_chain": s.get("journal_chain"), "evaluation_records": s.get("evaluation_records"),
             "evaluation_chain": s.get("evaluation_chain"), "calls": s.get("calls"), "labels": adv["labels"]}
+    if adv.get("method") == "v0.3":  # observe.v1 r6: the pinned method (v0.2 references stay byte-unchanged)
+        ref.update(method="v0.3", model=adv["identity"]["model"], rules_version=adv["identity"]["rules_version"],
+                   implementation=adv["identity"]["implementation"])
+    return ref
 
 
 def temporal_reference(engine: dict, summary: dict | None) -> dict | None:

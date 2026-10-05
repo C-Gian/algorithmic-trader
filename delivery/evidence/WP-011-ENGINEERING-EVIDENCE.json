@@ -1,0 +1,62 @@
+{
+  "package": "WP-011 MP-002 v0.3 implementation",
+  "status": "READY_FOR_DIRECTOR_REVIEW_WP011_ONLY_NOT_ACCEPTED",
+  "base": "7bf0f3c",
+  "branch": "main",
+  "owner_economic_run": "NONE (handoff prepared, inactive)",
+  "identities": {
+    "v0.2": {"model": "btc.context-action.v0.2", "rules_version": "mp001.rules.v0.2", "implementation": "adviser.core.v2",
+             "evaluator": "adviser.evaluator.v2", "core_state": "algotrader.adviser-state.v2",
+             "runtime": "algotrader.adviser-runtime.v2", "evaluator_state": "algotrader.adviser-evaluation-state.v1",
+             "engine": "observe.stream.v3", "report": "adviser.report.v2", "reconciliation": "5", "deep": "6",
+             "code": "core.py / evaluator.py / runtime.py unchanged (byte-identical to base)"},
+    "v0.3": {"model": "btc.context-action.v0.3", "rules_version": "mp002.rules.v0.3", "implementation": "adviser.core.v3",
+             "evaluator": "adviser.evaluator.v3", "core_state": "algotrader.adviser-state.v3",
+             "runtime": "algotrader.adviser-runtime.v3", "evaluator_state": "algotrader.adviser-evaluation-state.v2",
+             "engine": "observe.stream.v4", "report": "adviser.report.v3", "reconciliation": "6", "deep": "7",
+             "status": "ENGINEERING_REVIEW_PENDING"}
+  },
+  "contracts": {"algotrader.semantic.v2": "revision 2 (new kinds scenario/entry_attempt; v0.3-only variants; v0.2 emits revision 1 unchanged)",
+                "algotrader.adviser-evaluation.v1": "revision 3 (declared evaluator v3 semantics; shapes unchanged)",
+                "algotrader.observe.v1": "revision 6 (optional launch adviser_method; manifest adviser reference names v0.3)",
+                "frozen_baselines": "semantic.v1, marketdata.v1, feed.v1, recorder.v1, temporal.v1, corpus-pack.v1 unchanged",
+                "migration": "none (live method pinned in existing session config / state meta JSON)"},
+  "fixtures": [
+    {"fixture": "A LONG RETURN (MP-002 §9 rows 1-2)", "expected": "WAIT at 04:01 (corridor 99900..100049.9, econ ..100014.5); RETURN issue 04:02 at 100000; H 08:01; call progress 06:01:30; TARGET 04:38; scenario DESTINATION 04:47; PRIMARY entry 04:03 @100010; HORIZON_ONLY exit 08:02", "actual": "as expected", "test": "test_mp002_paths::test_a_long_return_full_path_is_hand_expected"},
+    {"fixture": "A SHORT reflected, separate economics", "expected": "bound 99985.434.. -> 99985.5; RETURN issue 04:02", "actual": "as expected", "test": "test_mp002_paths::test_a_short_return_..."},
+    {"fixture": "row 3 close outside corridor", "expected": "no issue; ORIGINAL_SETUP_DEADLINE", "actual": "as expected"},
+    {"fixture": "row 4 V contact during wait", "expected": "scenario INVALIDATED, entry terminal, no path", "actual": "as expected"},
+    {"fixture": "row 5 cap contact", "expected": "PRE_ENTRY_TARGET_CONTACT, no path", "actual": "as expected"},
+    {"fixture": "T 100400 initially empty fixed-K economics", "expected": "NO_ECONOMIC_RETURN_REGION, D=1 N=1", "actual": "as expected"},
+    {"fixture": "expiry exactly at return", "expected": "expiry before issue", "actual": "as expected"},
+    {"fixture": "scenario progress 06:01 retires a 05:01 call", "expected": "RETIRED SCENARIO_TERMINAL:STALLED at 06:01; call progress 06:31; exit 06:02", "actual": "as expected"},
+    {"fixture": "new obstacle cap 100700 -> 100495 then return", "expected": "CAP_REVISION 05:00; RETURN 05:01 with T 100495", "actual": "as expected"},
+    {"fixture": "cap activation-bar contact", "expected": "CAP_ACTIVATION_CONTACT_AMBIGUOUS", "actual": "as expected"},
+    {"fixture": "cap not ahead of price", "expected": "CAP_NOT_AHEAD_NOW", "actual": "as expected"},
+    {"fixture": "zone across V / retired cap never widens (white-box)", "expected": "no fabricated cap; BLOCKED_BY_ZONE; cap stays 100500", "actual": "as expected"},
+    {"fixture": "cost K 2/14/40", "expected": "IMMEDIATE / RETURN / no region; normalized scenario+landmark+view identical; same owner/latch", "actual": "as expected"},
+    {"fixture": "dislocation veto + economic failure at confirmation", "expected": "terminal NONSELECTION, no RETURN", "actual": "as expected"},
+    {"fixture": "slot occupied at return (white-box)", "expected": "REJECT SLOT_OCCUPIED, no retry", "actual": "as expected"},
+    {"fixture": "straddling confirmation (receipt 04:01:30)", "expected": "PRE_ENTRY_CONTACT_TIME_AMBIGUOUS", "actual": "as expected"},
+    {"fixture": "live K 14 -> 26 -> 14", "expected": "WAIT, TEMPORARY_COST_BLOCKED, issue at ask 04:03", "actual": "as expected"},
+    {"fixture": "protective contact + scenario terminal same dispatch", "expected": "call INVALIDATED (certified), not SCENARIO_TERMINAL", "actual": "as expected"},
+    {"fixture": "monitoring gap after issue", "expected": "UNASSESSABLE; PRIMARY CENSORED from gap minute", "actual": "as expected"},
+    {"fixture": "B economic rejection", "expected": "entry consumed, scenario persists, no call", "actual": "as expected"},
+    {"fixture": "capacity 19th A scenario", "expected": "invariant error", "actual": "as expected"},
+    {"fixture": "v0.2 baseline, 11 fixtures", "expected": "journal/evaluation sequence+chain equal to base commit 7bf0f3c", "actual": "identical"},
+    {"fixture": "collision K = B (WP-009 A fixture)", "expected": "literal MP-002: DESTINATION_REACHED before confirmation (reported)", "actual": "as expected"}
+  ],
+  "checks": {
+    "full_non_e2e": "657 passed, 2 failed (observe revision pins 5->6, deliberately updated; tests/test_observe.py rerun 21 passed); disposable PostgreSQL 18.6 port 55439, ALGOTRADER_REQUIRE_DB=1, 26 min",
+    "full_e2e": "19 passed (Playwright, incl. test_mp002_e2e)",
+    "web": "typecheck + build pass",
+    "schema": "algotrader schema: all baselines match (3 provisional rewritten with revision bumps)",
+    "compose_smoke": "not run locally (no Docker/packaging change); CI compose-smoke PENDING (Owner-operated)"
+  },
+  "measurement": "WP-011-bench-mp002.json",
+  "findings_for_director": [
+    "Collision: A anchor K >= frozen B -> destination reached before confirmation (MP-002 §3 literal).",
+    "Pre-existing v0.2 defect: dislocation baseline never reaches 60 slots (veto never applies); v0.2 unchanged, v0.3 correct.",
+    "Interpretations 2,4-12 in WP-011-ENGINEERING-EVIDENCE.md."
+  ]
+}

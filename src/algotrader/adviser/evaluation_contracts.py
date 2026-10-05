@@ -18,7 +18,7 @@ from pydantic import BaseModel, ConfigDict
 
 EVALUATION_VERSION = "algotrader.adviser-evaluation.v1"
 EVALUATION_STATUS = "PROVISIONAL"
-EVALUATION_REVISION = 2
+EVALUATION_REVISION = 3
 EVALUATION_CHANGELOG: tuple[tuple[int, str, str], ...] = (
     (1, "2026-10-04", "Initial provisional baseline (WP-009): evaluator profile, hypothetical path (primary, "
                       "entry-delay sensitivities, horizon-only baseline), normalized one-unit accounting, view "
@@ -27,7 +27,15 @@ EVALUATION_CHANGELOG: tuple[tuple[int, str, str], ...] = (
                       "time of the dispatch (or clock-end finish) at which the evaluator determined the path, so "
                       "cutoff-safe inspection never shows an outcome before it was knowable. Revision-1 records "
                       "remain readable (resolved_at absent = unknown; withheld under a cutoff)."),
+    (3, "2026-10-05", "WP-011 MP-002 v0.3 evaluator adviser.evaluator.v3 (record shapes unchanged; semantics declared "
+                      "per evaluator): profile ids mp002.evaluation.<variant>.v1; the HORIZON_ONLY exit request of an "
+                      "A call uses its frozen hard deadline H = structural confirmation + 4h (B/C: existing frozen "
+                      "deadline), then the existing exit delay/alignment; guidance ended for coverage loss "
+                      "(coverage_loss_from on the terminal call revision) censors open paths from the first missing "
+                      "interval (exit_class GUIDANCE_COVERAGE_LOSS); WAIT_PRICE never creates a path or NO_ENTRY. "
+                      "adviser.evaluator.v2 (v0.2) records keep their revision-2 meaning."),
 )
+EVALUATION_EMITTED_REVISION = {"adviser.evaluator.v2": 2, "adviser.evaluator.v3": 3}
 
 
 class Record(BaseModel):

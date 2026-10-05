@@ -14,6 +14,23 @@ export interface ScenarioView {
   alternative: string;
   expires_at: string | null;
   candidate_domain: string;
+  /** v0.3 (MP-002) structural fields. */
+  status?: "WATCH" | "ARMED" | "CONFIRMED";
+  destination?: string | null;
+  destination_type?: string;
+  confirmed_at?: string | null;
+}
+
+/** v0.3 structural scenario with its child entry state (inspection; WAIT_PRICE is never a call). */
+export interface ScenarioState {
+  scenario_id: string; family: "A" | "B" | "C"; family_text: string; direction: "LONG" | "SHORT";
+  status: "WATCH" | "ARMED" | "CONFIRMED"; antecedent: string; trigger_level: string | null;
+  invalidation_level: string | null; destination: string | null; destination_type: string; original_expiry: string;
+  confirmed_at: string | null; confirmed_deadline: string | null; progress_check_at: string | null;
+  owner: string | null; discovery_owner: string | null; entry_state: string; call_id: string | null;
+  waiting?: { text: string; corridor: [string, string] | null; stop_V: string; target_now: string;
+              target_at_confirmation: string; wait_until: string; hard_deadline: string; remaining_wait_minutes: number | null;
+              blockers: string[]; caps: { cap: string; since: string; zone_id: string }[] };
 }
 
 export interface MarketViewDoc {
@@ -95,6 +112,8 @@ export interface LiveView {
   counters: Record<string, number | null>;
   stale_session?: boolean;
   current?: boolean;
+  method?: string;
+  scenarios?: ScenarioState[];
 }
 
 export interface LiveAlert {
@@ -112,6 +131,7 @@ export interface LiveStatus {
     stopped_at: string | null; stop_requested: boolean; error: string | null; identity: Record<string, unknown> | null;
     heartbeat_age_seconds: number | null; progress: Record<string, unknown>; connection: Record<string, unknown>;
     notes: { at: string; event: string; [k: string]: unknown }[];
+    method?: string;
   };
   state: string;
   running: boolean;
@@ -189,7 +209,10 @@ async function json<T>(r: Response): Promise<T> {
 
 export const adviserApi = {
   live: () => fetch("/api/adviser/live").then((r) => json<LiveStatus>(r)),
-  start: () => fetch("/api/adviser/live/start", { method: "POST" }).then((r) => json<LiveStatus>(r)),
+  start: (method?: "v0.2" | "v0.3") =>
+    fetch(`/api/adviser/live/start${method ? `?method=${method}` : ""}`, { method: "POST" }).then((r) => json<LiveStatus>(r)),
+  methods: () => fetch("/api/adviser/methods").then((r) => json<{ default: string; note: string;
+    methods: { method: string; label: string; purpose: string; status: string; model: string }[] }>(r)),
   stop: () => fetch("/api/adviser/live/stop", { method: "POST" }).then((r) => json<LiveStatus>(r)),
   reassess: () => fetch("/api/adviser/live/reassess", { method: "POST" }).then((r) => json<LiveStatus>(r)),
   ack: (key: string) => fetch(`/api/adviser/live/alerts/${encodeURIComponent(key)}/ack`, { method: "POST" })
@@ -215,6 +238,14 @@ export const ROW_TEXT: Record<string, string> = {
   ARMED_SCENARIO: "Conditional: a call only if the trigger happens",
   BALANCED_RANGE: "Balanced range",
   NO_SUPPORTED_PLAN: "No supported plan in the current conditions",
+  CONDITIONAL_SCENARIO: "Conditional: a supported scenario (armed or confirmed) in one direction",
+  WATCH_ONLY: "Only conditional watch hypotheses (not a forecast, not a call)",
+  NO_QUALIFIED_STRUCTURE: "No qualified structure in the current conditions",
+};
+
+export const METHOD_TEXT: Record<string, string> = {
+  "v0.2": "Original v0.2",
+  "v0.3": "Revised v0.3 — confirmation then usable entry",
 };
 
 export const THESIS_TEXT: Record<string, string> = {

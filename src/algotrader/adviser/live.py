@@ -150,12 +150,31 @@ def new_epoch(start: datetime, compat: dict) -> Epoch:
                  cov_from=floor_minute(start), compat=compat)
 
 
-def live_config(compat: dict, build: str | None) -> AdviserConfig:
+def live_config(compat: dict, build: str | None, method: str = "v0.2") -> AdviserConfig:
+    from . import methods
+
+    rel = methods.get(method)
     profile = live_profile()
     return AdviserConfig(instrument=INST, tick=Decimal(compat["tick_sz"]), profile=profile,
-                         method=method_ref(profile, build), clock_policy=ClockPolicy.RECORDED_DISPATCH_TAPE.value,
-                         params=load(), eval_start=None, eval_end=None, origin=sc.Origin.RECONSTRUCTED.value,
-                         channel_ids={k: v.channel_id for k, v in CHANNELS.items()})
+                         method=method_ref(profile, build) if rel.key == "v0.2" else rel.method_ref(profile, build),
+                         clock_policy=ClockPolicy.RECORDED_DISPATCH_TAPE.value,
+                         params=load() if rel.key == "v0.2" else rel.params(), eval_start=None, eval_end=None,
+                         origin=sc.Origin.RECONSTRUCTED.value, channel_ids={k: v.channel_id for k, v in CHANNELS.items()})
+
+
+def _rt_classes(cfg: AdviserConfig):
+    """(runtime class, core class) of the method pinned in a live configuration."""
+    if cfg.method.model == "btc.context-action.v0.3":
+        from .core3 import AdviserCoreV3
+        from .runtime3 import AdviserRuntimeV3
+
+        return AdviserRuntimeV3, AdviserCoreV3
+    return AdviserRuntime, AdviserCore
+
+
+def new_live_runtime(cfg: AdviserConfig) -> AdviserRuntime:
+    rt_cls, core_cls = _rt_classes(cfg)
+    return rt_cls(core_cls(cfg), None)
 
 
 def new_temporal(cov_from: datetime) -> te.TemporalEngine:
@@ -251,7 +270,7 @@ class LiveDriver:
             raise ValueError("live adviser state SHA-256 mismatch")
         doc = json.loads(araw)
         drv_doc = doc.pop("driver")
-        rt = AdviserRuntime.decode(doc, cfg, None)
+        rt = _rt_classes(cfg)[0].decode(doc, cfg, None)
         d = cls(temporal, rt, drv_doc["tape_seq"])
         d.slots = {k: datetime.fromisoformat(v) for k, v in drv_doc["slots"].items()}
         return d
@@ -259,7 +278,7 @@ class LiveDriver:
 
 def replay_tape(commands: list[dict], cfg: AdviserConfig, cov_from: datetime) -> LiveDriver:
     """Reproduce a live/recorded session from its input tape (same commands -> same semantic outputs)."""
-    d = LiveDriver(new_temporal(cov_from), AdviserRuntime(AdviserCore(cfg), None))
+    d = LiveDriver(new_temporal(cov_from), new_live_runtime(cfg))
     for c in commands:
         k = c["cmd"]
         if k == "admit":
@@ -310,6 +329,7 @@ class LiveSession:
     activation_pending: bool = True
     progress: dict = field(default_factory=dict)
     cancel_requested: bool = False
+    method: str = "v0.2"  # selected at Start; a session never converts an existing lineage to another method
 
     def note(self, event: str, **kw: Any) -> None:
         self.notes.append({"at": _iso(self.clock()), "event": event, **kw})
@@ -318,11 +338,13 @@ class LiveSession:
 
     def start(self, persisted: dict | None, fetch_history: HistoryFetcher) -> None:
         now = self.clock()
-        cfg = live_config(self.compat, self.build)
+        cfg = live_config(self.compat, self.build, self.method)
         reset_reason = None
         if persisted is not None:
             if persisted["compat"] != self.compat:
                 reset_reason = "INSTRUMENT_METADATA_CHANGED"
+            elif persisted.get("method", "v0.2") != self.method:
+                reset_reason = f"METHOD_CHANGED:{persisted.get('method', 'v0.2')}->{self.method}"
             else:
                 try:
                     drv = LiveDriver.decode(bytes(persisted["temporal_blob"]), persisted["temporal_sha256"],
@@ -350,7 +372,7 @@ class LiveSession:
             if reset_reason:
                 self.note("continuity_reset", reason=reset_reason)
             self.epoch = new_epoch(now - MAX_RECONSTRUCTION, self.compat)
-            self.driver = LiveDriver(new_temporal(self.epoch.cov_from), AdviserRuntime(AdviserCore(cfg), None))
+            self.driver = LiveDriver(new_temporal(self.epoch.cov_from), new_live_runtime(cfg))
         at = self.driver.temporal.clock or self.epoch.cov_from
         self.driver.origin(sc.Origin.RECONSTRUCTED.value, at)  # nothing during catch-up is alertable
         # no candle subscription is confirmed yet: entry cannot be verified until a (re)connection AND a fresh bar
@@ -479,6 +501,8 @@ class LiveSession:
         t = core.clock
         insp = core.inspect()
         return {"status": self.status, "connected": self.connected, "live_since": _iso(self.live_since),
+                "method": self.method,
+                **({"scenarios": insp.get("scenarios", [])} if self.method != "v0.2" else {}),
                 "last_receipt": _iso(self.last_receipt), "run_id": self.epoch.run_id if self.epoch else None,
                 "clock": _iso(t), "origin": core.origin, "market_view": insp["view"], "call": insp["call"],
                 "lenses": insp["lenses"], "recent_calls": insp["recent_calls"], "attempts": insp["attempts"],
@@ -524,7 +548,7 @@ class LiveStore:
         if row is None:
             return None
         meta = row["compat"]
-        return {**row, "compat": meta["compat"], "run_id": meta["run_id"],
+        return {**row, "compat": meta["compat"], "run_id": meta["run_id"], "method": meta.get("method", "v0.2"),
                 "epoch_started": datetime.fromisoformat(meta["epoch_started"]),
                 "cov_from": datetime.fromisoformat(meta["cov_from"])}
 
@@ -544,6 +568,8 @@ class LiveStore:
             self._outputs(sess.epoch.run_id, journal, tape)
             meta = {"compat": sess.compat, "run_id": sess.epoch.run_id, "epoch_started": _iso(sess.epoch.started),
                     "cov_from": _iso(sess.epoch.cov_from)}
+            if sess.method != "v0.2":  # v0.2 state meta stays byte-identical to WP-009
+                meta["method"] = sess.method
             self.conn.execute(
                 """INSERT INTO adviser_live_state (state_key, session_id, generation, compat, clock, temporal_blob,
                        temporal_sha256, adviser_blob, adviser_sha256, tape_seq, journal_seq, updated_at)
@@ -569,8 +595,7 @@ class LiveStore:
                         identity = coalesce(identity, %s), diagnostic_log = %s, heartbeat_at = now()
                     WHERE {cond}""",
                 (Jsonb(json.loads(json.dumps(sess.view(), default=str))), sess.status,
-                 Jsonb(composite_identity(live_profile(), {"state_key": STATE_KEY, "run_id": sess.epoch.run_id},
-                                          sess.build)), Jsonb(sess.notes[-50:]), *args))
+                 Jsonb(_session_identity(sess)), Jsonb(sess.notes[-50:]), *args))
         return new_alerts
 
     def _outputs(self, run_id: str, journal: list[dict], tape: list[dict]) -> None:
@@ -600,12 +625,33 @@ class LiveControlError(Exception):
     pass
 
 
-def start_session(conn: psycopg.Connection, rest_base_url: str = "https://www.okx.com") -> str:
+def _session_identity(sess) -> dict:
+    pins = {"state_key": STATE_KEY, "run_id": sess.epoch.run_id}
+    if sess.method == "v0.2":
+        return composite_identity(live_profile(), pins, sess.build)
+    from . import methods
+
+    return {**methods.get(sess.method).composite_identity(live_profile(), pins, sess.build), "method": sess.method}
+
+
+def start_session(conn: psycopg.Connection, rest_base_url: str = "https://www.okx.com",
+                  method: str | None = None) -> str:
+    """Queue a live session. The method is selected explicitly before Start (absent = the v0.2 default) and pinned in
+    the session configuration; it never changes for a running session."""
+    from . import methods
+
+    try:
+        rel = methods.get(method)
+    except methods.UnknownMethod as exc:
+        raise LiveControlError(str(exc)) from None
     sid = f"live-session-{datetime.now(UTC):%Y%m%dT%H%M%S}-{uuid.uuid4().hex[:6]}"
+    cfg = {"rest_base_url": rest_base_url, "inst_id": INST}
+    if method is not None:
+        cfg["method"] = rel.key
     try:
         with conn.transaction():
             conn.execute("INSERT INTO adviser_live_sessions (session_id, status, config, phase) VALUES (%s, 'queued', "
-                         "%s, 'QUEUED')", (sid, Jsonb({"rest_base_url": rest_base_url, "inst_id": INST})))
+                         "%s, 'QUEUED')", (sid, Jsonb(cfg)))
     except psycopg.errors.UniqueViolation:
         raise LiveControlError("a live adviser session is already queued or running") from None
     return sid
@@ -810,7 +856,8 @@ class LiveAdviserWorker:
 
         validate_okx_ws_url(self.ws_url, ("/ws/v5/business",))
         rest, quotes = self._clients(row)
-        sess = LiveSession(compat={}, build=self.build, clock=self.clock)
+        sess = LiveSession(compat={}, build=self.build, clock=self.clock,
+                           method=(row["config"] or {}).get("method") or "v0.2")
         queue: asyncio.Queue = asyncio.Queue()
         stop = asyncio.Event()
         owned: list[asyncio.Task] = []

@@ -852,6 +852,12 @@ export interface Evaluation {
   replay: ObsReplay;
   report_available: boolean;
   report_terminal: boolean;
+  /** WP-011: the adviser method selected at launch and pinned at preparation (null for a market replay). */
+  method?: AdviserMethodPin | null;
+}
+
+export interface AdviserMethodPin {
+  method: "v0.2" | "v0.3" | string; label: string; status: string; model: string; pinned_at_preparation: boolean;
 }
 
 export interface CapabilityRow {
@@ -919,6 +925,11 @@ export interface AdviserCallRow {
 }
 export interface AdviserSection {
   section: string; pending?: boolean; text?: string;
+  /** adviser.report.v2 (v0.2) or adviser.report.v3 (MP-002 v0.3: registered funnel/denominators). */
+  report_version?: string;
+  method?: { method: string; model: string; status: string };
+  by_family_mode?: Record<string, { calls: number; entered: number; target: number; stop: number; other_closed: number;
+                                    no_entry: number; sum_price_net: string }>;
   identity: Record<string, unknown>;
   windows: { warmup_start: string; evaluation: [string, string]; tail_end: string; clock_end: string; clock_end_reached: boolean };
   coverage: { evaluation_minutes: number; covered_minutes: number; assessable_minutes: number; unavailable_minutes: number;
@@ -929,7 +940,7 @@ export interface AdviserSection {
   funnel: { births: Record<string, number>; arms: Record<string, number>; trigger_evaluations: number; issued: number;
             ends: Record<string, number>; end_reasons: Record<string, number>; rejection_blockers: Record<string, number>;
             slot_occupied: number; priority: number; conflicted: number;
-            slot_priority_minutes?: Record<string, string> | null };
+            slot_priority_minutes?: Record<string, string> | null } & Partial<AdviserFunnelV3>;
   /** WP-009 correction (report v2): overlapping named-condition durations from the durable accumulator. */
   condition_durations?: { available: boolean; covered_minutes?: string; note: string;
                           conditions?: Record<string, { minutes: string; fraction_of_covered: string | null; onsets: number }> };
@@ -942,6 +953,38 @@ export interface AdviserSection {
   view_samples: Record<string, unknown>;
   diagnosis: string[];
   conclusion: { verdict: string; text: string };
+}
+
+/** MP-002 v0.3 registered funnel (adviser.report.v3). */
+export interface AdviserFunnelV3 {
+  scenario_transitions: Record<string, number>; scenario_terminals: Record<string, number>;
+  warmup_context_scenarios: number; a_confirmations: number;
+  a_denominators: { D_geometrically_evaluable: number; N_initially_empty_corridor_or_fixed_k_economics: number;
+                    N_over_D: string | null; N_over_D_above_half: boolean | null; excluded: Record<string, number>; note: string };
+  a_routing: Record<string, number>;
+  waiting: { opened: number; observed_usable_return: number; endings: Record<string, number>;
+             blocker_observations: Record<string, number>; CAP_REVISIONS?: number };
+  issued_by_family_mode: Record<string, number>; a_return_calls: number; a_return_owners_entered_primary_60s: number;
+  evidence_threshold: { registered_minimum_distinct_owners: number; observed: number; status: string; note: string };
+  guidance_retired_by_scenario_terminal: number;
+}
+
+export interface ComparisonRun {
+  evaluation_id: string; method: string; model: string; implementation: string; status: string; assurance: string;
+  report_version: string | null;
+  coverage: { evaluation_minutes: number | null; assessable_minutes: number | null; unavailable_minutes: number | null };
+  calls: number | null; calls_per_evaluated_week: string | null; calls_by_family: Record<string, number> | null;
+  calls_by_family_mode?: Record<string, number> | null; entry_available_minutes_median: string | null;
+  longest_no_call_interval_hours: string | null; thesis_terminals: Record<string, number> | null;
+  primary: Record<string, number | string | null>; registered: Record<string, unknown>;
+}
+export interface Comparison {
+  comparison_version: string; a: ComparisonRun; b: ComparisonRun;
+  comparability: { verdict: string; differences: { field: string; a: unknown; b: unknown }[]; incomplete: string[];
+                   not_adviser_runs: string[]; expected_differences: string[]; same_method: boolean };
+  pins: { a: Record<string, unknown>; b: Record<string, unknown> };
+  identities: { a: Record<string, string | null>; b: Record<string, string | null> };
+  deltas_b_minus_a: Record<string, string | null> | null; conclusion: { verdict: string; text: string }; scope: string;
 }
 
 // ---- Evaluation packs (algotrader.corpus-pack.v1; data preparation only, no adviser) ----
@@ -1026,9 +1069,15 @@ export const evalApi = {
   start: (chunkId: string, speed: number, paused: boolean) =>
     req<Evaluation>(E, { method: "POST", body: JSON.stringify({ chunk_id: chunkId, speed, paused }) }),
   startPack: (packId: string, speed: number, paused: boolean, acknowledge: boolean,
-              runType: "observation_only" | "adviser_evaluation" = "observation_only") =>
+              runType: "observation_only" | "adviser_evaluation" = "observation_only", method?: "v0.2" | "v0.3") =>
     req<Evaluation>(E, { method: "POST", body: JSON.stringify({ pack_id: packId, speed, paused, acknowledge_limitations: acknowledge,
-                                                              run_type: runType }) }),
+                                                              run_type: runType,
+                                                              ...(runType === "adviser_evaluation" && method ? { method } : {}) }) }),
+  /** Read-only comparison of two existing adviser evaluations (never launches anything). */
+  compare: (a: string, b: string) => req<Comparison>(`${E}/compare/report.json?a=${encodeURIComponent(a)}&b=${encodeURIComponent(b)}`),
+  compareMarkdown: (a: string, b: string) => text(`${E}/compare/report.md?a=${encodeURIComponent(a)}&b=${encodeURIComponent(b)}`),
+  compareDownloadUrl: (a: string, b: string, fmt: "md" | "json") =>
+    `${E}/compare/report.${fmt}?a=${encodeURIComponent(a)}&b=${encodeURIComponent(b)}&download=true`,
   report: (id: string) => req<EvaluationReport>(`${E}/${id}/report.json`),
   reportMarkdown: (id: string) => text(`${E}/${id}/report.md`),
   downloadUrl: (id: string, fmt: "md" | "json") => `${E}/${id}/report.${fmt}?download=true`,

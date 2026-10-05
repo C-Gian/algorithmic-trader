@@ -431,7 +431,8 @@ class ReplayJob:
         if run_type == "adviser_evaluation":
             if kind != SourceKind.PACK:
                 raise SourceRejected("an adviser evaluation needs a receipt-pinned evaluation pack")
-            from ..adviser.engine import ENGINE_FORMAT_V3, engine_config
+            from ..adviser import methods
+            from ..adviser.engine import engine_config
             from ..adviser.harness import mp001_dependencies
             from ..corpus.pack import packs_root
 
@@ -440,9 +441,13 @@ class ReplayJob:
 
             if hashlib.sha256(raw).hexdigest() != prepared.source_manifest_sha256:
                 raise SourceRejected("pack manifest bytes differ from the verified pack pin")
-            fmt = ENGINE_FORMAT_V3
+            try:
+                rel = methods.get(launch.adviser_method)
+            except methods.UnknownMethod as exc:
+                raise SourceRejected(str(exc)) from None
+            fmt = rel.engine_format  # v0.2 -> observe.stream.v3, v0.3 -> observe.stream.v4
             tconf = temporal_config(cache.feed_manifest, dependencies=mp001_dependencies())
-            adviser = engine_config(cache.feed_manifest, json.loads(raw), config.code_version)
+            adviser = engine_config(cache.feed_manifest, json.loads(raw), config.code_version, rel.key)
         engine = {
             "format": fmt, "state_format": STATE_FORMAT, "cache_format": CACHE_FORMAT,
             "commitment_format": COMMITMENT_FORMAT, "cache_id": cache.cache_id,

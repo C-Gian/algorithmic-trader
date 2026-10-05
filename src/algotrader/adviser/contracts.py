@@ -28,12 +28,20 @@ from pydantic import BaseModel, ConfigDict
 
 SEMANTIC_V2_VERSION = "algotrader.semantic.v2"
 SEMANTIC_V2_STATUS = "PROVISIONAL"
-SEMANTIC_V2_REVISION = 1
+SEMANTIC_V2_REVISION = 2
 SEMANTIC_V2_CHANGELOG: tuple[tuple[int, str, str], ...] = (
     (1, "2026-10-04", "Initial provisional advisory baseline (WP-009): Observation, Landmark, PhaseState, "
                       "EventContext/EventResponse, MarketView, Scenario, CandidatePlan, Actionability, AdviserCall, "
                       "CallRevision, MaterialChange with the shared provenance envelope."),
+    (2, "2026-10-05", "WP-011 MP-002 btc.context-action.v0.3 (additive): new discriminated kinds ScenarioState "
+                      "('scenario': structural scenario lifecycle independent of entry/call/evaluator) and "
+                      "EntryAttempt ('entry_attempt': the child entry attempt - confirmation routing, IMMEDIATE/RETURN "
+                      "mode, WAIT_PRICE, caps, blockers, zone provenance, registered diagnostic geometry); v0.3 "
+                      "variants ScenarioV3/MarketViewV3/AdviserCallV3/CallRevisionV3 extend the revision-1 records "
+                      "with fields. Revision-1 records, their bytes and readers are unchanged; v0.2 runs never emit "
+                      "the new kinds, variants or fields (per-method emitted revision: v0.2 -> 1, v0.3 -> 2)."),
 )
+SEMANTIC_V2_EMITTED_REVISION = {"btc.context-action.v0.2": 1, "btc.context-action.v0.3": 2}
 
 
 class Record(BaseModel):
@@ -289,15 +297,113 @@ class MaterialChange(Record):
     alertable: bool  # only LIVE committed publications of call changes are alert candidates
 
 
+# -- revision 2: MP-002 v0.3 records (never emitted by v0.2 runs) -------------------------------------------------
+
+
+class ScenarioV3(Scenario):
+    status: str  # WATCH / ARMED / CONFIRMED
+    destination: Decimal | None  # frozen narrative destination (A: B, B: box projection, C: midpoint M)
+    destination_type: str
+    confirmed_at: datetime | None
+
+
+class MarketViewV3(MarketView):
+    """v0.3 total table (MP-002 §4): structural scenarios only; call existence never creates a direction, so
+    ``ongoing_call_id`` is always None here (guidance is in call records)."""
+
+    principal: ScenarioV3 | None
+    alternatives: tuple[ScenarioV3, ...]
+    watch: tuple[ScenarioV3, ...]  # conditional WATCH hypotheses (never a forecast hit or a call)
+
+
+class AdviserCallV3(AdviserCall):
+    scenario_id: str
+    entry_mode: str  # IMMEDIATE / RETURN (A); IMMEDIATE (B/C one-shot)
+    confirmed_at: datetime  # structural confirmation publication (A hard-deadline origin)
+    target_at_confirmation: Decimal  # T_confirm; ``target`` is the current monotone cap frozen at issue
+    hard_deadline_origin: str  # STRUCTURAL_CONFIRMATION_PUBLICATION (A) / ISSUE (B/C: confirmation = issue)
+    issue_scale: Decimal  # S15 at issue (call progress scale)
+    cap_history: tuple[dict[str, str | None], ...]
+
+
+class CallRevisionV3(CallRevision):
+    coverage_loss_from: datetime | None  # first missing interval when guidance ended for coverage loss
+    scenario_terminal: str | None  # underlying scenario terminal reason when retired as SCENARIO_TERMINAL
+
+
+class ScenarioState(Record):
+    """One structural scenario transition. Structural only: no cost, admissible interval, call or evaluator field,
+    so identical structural input under different execution-cost assumptions yields identical normalized scenario
+    records (MP-002 §3/§4)."""
+
+    env: Envelope
+    scenario_id: str
+    owner_id: str | None  # A: its own discovery owner (= scenario id); B/C: the box
+    entry_attempt_id: str  # deterministic child id (scenario id + '#entry'); its records are separate
+    family: Family
+    direction: Direction
+    status: str  # WATCH / ARMED / CONFIRMED / TERMINAL
+    transition: str  # BIRTH / ARM / REVISE / CONFIRM / OWNER_RELEASE / TERMINAL
+    reason: str | None
+    terminal_state: str | None  # INVALIDATED / DESTINATION_REACHED / EXPIRED / WITHDRAWN / STALLED / ...
+    antecedent: str
+    trigger_level: Decimal | None  # K_trigger
+    invalidation_level: Decimal | None  # V
+    reaction_level: Decimal | None  # A: R
+    destination: Decimal | None  # frozen narrative destination
+    destination_type: str
+    premise: str | None
+    setup: dict[str, str | None]
+    activated_at: datetime | None  # actual arm (or latest pre-confirmation revision) publication
+    original_expiry: datetime | None  # original setup deadline (A: also the discovery-owner and WAIT bound)
+    confirmed_at: datetime | None
+    confirmation_close: Decimal | None
+    confirmation_scale: Decimal | None
+    confirmed_deadline: datetime | None  # confirmation + family hard horizon
+    progress_check_at: datetime | None  # confirmation + half the family hard horizon
+    discovery_owner: str | None  # A: OCCUPIED / RELEASED
+    warmup_origin: bool
+
+
+class EntryAttempt(Record):
+    """The child entry attempt of one structural scenario (economic: may differ under other cost assumptions)."""
+
+    env: Envelope
+    entry_attempt_id: str
+    scenario_id: str
+    family: Family
+    direction: Direction
+    state: str  # WAIT_PRICE / ISSUED / TERMINAL
+    mode: str | None  # IMMEDIATE / RETURN
+    transition: str  # ROUTED / WAIT_OPEN / CAP_REVISION / BLOCKERS / RETURN_USABLE / ISSUE / REJECT / TERMINAL
+    reason: str | None
+    blockers: tuple[str, ...]  # every applicable reason, not a score
+    call_id: str | None
+    geometry: dict[str, str | None]  # R, K_trigger, V, T_confirm, T_current, S15, corridor, I0, economics, K_cost
+    containing_zones: tuple[dict[str, str | None], ...]  # every eligible opposing zone containing the price
+    selected_zone: dict[str, str | None] | None  # deterministic resolver attribution among them
+    limiting_landmark: dict[str, str | None] | None
+    cap_history: tuple[dict[str, str | None], ...]  # each cap with its effective publication/cursor
+    clocks: dict[str, str | None]
+    diagnostic: dict[str, str | None]  # registered D/N denominators (computed for every evaluable confirmation)
+
+
 PUBLIC_CONTRACTS: tuple[type[Record], ...] = (
     MethodRef, DependencyRef, Envelope, Observation, Landmark, PhaseState, EventContext, EventResponse, Scenario,
-    MarketView, CandidatePlan, Actionability, AdviserCall, CallRevision, MaterialChange,
+    MarketView, CandidatePlan, Actionability, AdviserCall, CallRevision, MaterialChange, ScenarioV3, MarketViewV3,
+    AdviserCallV3, CallRevisionV3, ScenarioState, EntryAttempt,
 )
-KIND_CONTRACTS: dict[str, type[Record]] = {
+KIND_CONTRACTS: dict[str, type[Record]] = {  # revision-1 kinds emitted by v0.2 (unchanged)
     "observation": Observation, "landmark": Landmark, "phase": PhaseState, "event_context": EventContext,
     "event_response": EventResponse, "market_view": MarketView, "candidate": CandidatePlan,
     "actionability": Actionability, "call": AdviserCall, "call_revision": CallRevision,
     "material_change": MaterialChange,
+}
+KIND_CONTRACTS_V3: dict[str, type[Record]] = {  # kinds emitted by v0.3 (no 'candidate': scenarios + entry attempts)
+    "observation": Observation, "landmark": Landmark, "phase": PhaseState, "event_context": EventContext,
+    "event_response": EventResponse, "market_view": MarketViewV3, "actionability": Actionability,
+    "call": AdviserCallV3, "call_revision": CallRevisionV3, "material_change": MaterialChange,
+    "scenario": ScenarioState, "entry_attempt": EntryAttempt,
 }
 
 __all__ = ["SEMANTIC_V2_VERSION", "SEMANTIC_V2_REVISION", "PUBLIC_CONTRACTS", "KIND_CONTRACTS", "Origin", "Direction",

@@ -1,6 +1,6 @@
 # Project State
 
-Updated: 2026-10-05 — MP-002 design closed after Astra CHIUDIBILE; WP-011 implementation active, product unchanged
+Updated: 2026-10-05 — WP-011 executor delivery (MP-002 v0.3 selectable beside unchanged v0.2); READY FOR DIRECTOR REVIEW, not accepted
 
 **Current task: [task.md](task.md) — WP-011 implement closed MP-002; no Owner economic run yet** Product authority: [FOUNDATION.md](FOUNDATION.md) v3.1. Executor rules: [AGENTS.md](AGENTS.md). How to run the app: [README.md](README.md). Chronology and earlier package evidence: [delivery/DELIVERY-HISTORY.md](delivery/DELIVERY-HISTORY.md).
 
@@ -238,3 +238,12 @@ The initial v0.1 proposal status above is historical. [Astra review](delivery/MP
 [Astra CHIUDIBILE](delivery/MP-002-ASTRA-CLOSURE.md) on4b5ef95 closes B1–B7 without new market evidence. [Director disposition](delivery/MP-002-DIRECTOR-DISPOSITION.md) adopts method-design closure; [complete register](delivery/MP-002-PARAMETERS.json) consolidates reviewed categories while preserving trading numerical predicates. Earlier pending-review entries above are historical. Running product is still MP-001 v0.2 at6f95273; MP-002 profitability/practicality unvalidated.
 
 [WP-011 specification](delivery/WP-011-MP-002-IMPLEMENTATION-SPEC.md) is the only active executor package: implement v0.3 plus selectable unchanged v0.2 baseline, durable/live/Workbench/paired reports and bounded engineering closure. No actual product code changed by this Director activation. Owner launches fixed October/November/December paired development evaluations only after Director engineering acceptance; no protected or current economic run authorized. CI waiting remains Owner-operated.
+
+
+## WP-011 executor evidence (base `7bf0f3c`; READY FOR DIRECTOR REVIEW — WP-011 ONLY; not accepted)
+
+- **Scope**: closed MP-002 v0.3 implemented beside the unchanged v0.2 baseline; method selected explicitly at launch (Workbench) and at live Start; stored results show their pinned method. v0.2 reducer/evaluator/runtime files are untouched and v0.2 outputs on 11 fixed fixtures reproduce the base commit byte for byte. Details: [evidence](delivery/evidence/WP-011-ENGINEERING-EVIDENCE.md) / [JSON](delivery/evidence/WP-011-ENGINEERING-EVIDENCE.json), [measurement](delivery/evidence/WP-011-bench-mp002.json).
+- **Identities / contracts**: v0.3 `adviser.core.v3`, `adviser.evaluator.v3`, state v3, runtime v3, evaluation state v2, report v3, engine `observe.stream.v4`, reconciliation v6, Deep v7; semantic.v2 r2, adviser-evaluation.v1 r3, observe.v1 r6. No migration.
+- **Checks** (disposable PostgreSQL 18.6, port 55439, Owner stack untouched): full non-E2E 657 passed + 2 failed on the deliberate observe revision pin (updated; `tests/test_observe.py` 21 passed); new suites mp002 paths/rules/db/versions/live green; full E2E 19 passed (incl. the new method/comparison journey); web typecheck/build; `algotrader schema` matches. Compose smoke and exact-SHA CI: Owner-operated, PENDING.
+- **For Director decision**: (1) A anchor K ≥ frozen B ends the scenario at destination contact before confirmation (MP-002 §3 literal; reproducible test); (2) pre-existing v0.2 dislocation-baseline defect (veto never active), v0.2 kept unchanged, v0.3 applies the rule; (3) listed interpretations in the evidence file.
+- **Owner handoff**: October→November→December paired v0.2/v0.3 development comparison prepared but INACTIVE until Director engineering acceptance. No economic run, acquisition or protected evaluation.

@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 from decimal import Decimal
 from functools import lru_cache
+from pathlib import Path
 
 from .identity import REGISTER_FILE
 
@@ -116,7 +117,16 @@ class Params:
 
 @lru_cache(maxsize=1)
 def load() -> Params:
-    r = json.loads(REGISTER_FILE.read_text(encoding="utf-8"), parse_float=Decimal)
+    return _build(json.loads(REGISTER_FILE.read_text(encoding="utf-8"), parse_float=Decimal))
+
+
+@lru_cache(maxsize=4)
+def load_register(path: Path) -> Params:
+    """Typed view of another packaged register (WP-011: the MP-002 register keeps every MP-001 key and value)."""
+    return _build(json.loads(path.read_text(encoding="utf-8"), parse_float=Decimal))
+
+
+def _build(r: dict) -> Params:
     sc, tac, ph, lv = r["scale"], r["tactical"], r["phase"], r["levels"]
     co, cr, fe, en, fr = r["continuation"], r["compression_retest"], r["failed_exit"], r["entry"], r["freshness"]
     ev, ex, pr, eva, rd = r["events"], r["execution"], r["progress"], r["evaluation"], r["readiness"]

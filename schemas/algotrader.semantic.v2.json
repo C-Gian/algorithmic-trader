@@ -376,6 +376,237 @@
       "title": "AdviserCall",
       "type": "object"
     },
+    "AdviserCallV3": {
+      "additionalProperties": false,
+      "properties": {
+        "actionability": {
+          "$ref": "#/$defs/Actionability"
+        },
+        "attempt_id": {
+          "title": "Attempt Id",
+          "type": "string"
+        },
+        "call_id": {
+          "title": "Call Id",
+          "type": "string"
+        },
+        "cap_history": {
+          "items": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object"
+          },
+          "title": "Cap History",
+          "type": "array"
+        },
+        "confirmed_at": {
+          "format": "date-time",
+          "title": "Confirmed At",
+          "type": "string"
+        },
+        "cost_assumptions": {
+          "title": "Cost Assumptions",
+          "type": "string"
+        },
+        "direction": {
+          "$ref": "#/$defs/Direction"
+        },
+        "entry_mode": {
+          "title": "Entry Mode",
+          "type": "string"
+        },
+        "entry_status": {
+          "title": "Entry Status",
+          "type": "string"
+        },
+        "env": {
+          "$ref": "#/$defs/Envelope"
+        },
+        "expected_minutes": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "integer"
+            }
+          ],
+          "title": "Expected Minutes",
+          "type": "array"
+        },
+        "family": {
+          "$ref": "#/$defs/Family"
+        },
+        "frozen_scale": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Frozen Scale",
+          "type": "string"
+        },
+        "hard_deadline": {
+          "format": "date-time",
+          "title": "Hard Deadline",
+          "type": "string"
+        },
+        "hard_deadline_origin": {
+          "title": "Hard Deadline Origin",
+          "type": "string"
+        },
+        "invalidation": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Invalidation",
+          "type": "string"
+        },
+        "issue_reference": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Issue Reference",
+          "type": "string"
+        },
+        "issue_scale": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Issue Scale",
+          "type": "string"
+        },
+        "issued_at": {
+          "format": "date-time",
+          "title": "Issued At",
+          "type": "string"
+        },
+        "limiting_landmark": {
+          "anyOf": [
+            {
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Limiting Landmark"
+        },
+        "minimum_residual_minutes": {
+          "title": "Minimum Residual Minutes",
+          "type": "integer"
+        },
+        "premise": {
+          "title": "Premise",
+          "type": "string"
+        },
+        "progress_check_at": {
+          "format": "date-time",
+          "title": "Progress Check At",
+          "type": "string"
+        },
+        "scenario_id": {
+          "title": "Scenario Id",
+          "type": "string"
+        },
+        "structural_area": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            }
+          ],
+          "title": "Structural Area",
+          "type": "array"
+        },
+        "target": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Target",
+          "type": "string"
+        },
+        "target_at_confirmation": {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "title": "Target At Confirmation",
+          "type": "string"
+        },
+        "target_type": {
+          "title": "Target Type",
+          "type": "string"
+        },
+        "thesis": {
+          "title": "Thesis",
+          "type": "string"
+        },
+        "thesis_status": {
+          "title": "Thesis Status",
+          "type": "string"
+        },
+        "trigger_minute_start": {
+          "format": "date-time",
+          "title": "Trigger Minute Start",
+          "type": "string"
+        },
+        "uncertainties": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Uncertainties",
+          "type": "array"
+        }
+      },
+      "required": [
+        "env",
+        "call_id",
+        "attempt_id",
+        "family",
+        "direction",
+        "thesis",
+        "trigger_minute_start",
+        "issue_reference",
+        "issued_at",
+        "invalidation",
+        "target",
+        "target_type",
+        "limiting_landmark",
+        "frozen_scale",
+        "structural_area",
+        "expected_minutes",
+        "minimum_residual_minutes",
+        "hard_deadline",
+        "progress_check_at",
+        "premise",
+        "entry_status",
+        "thesis_status",
+        "actionability",
+        "cost_assumptions",
+        "uncertainties",
+        "scenario_id",
+        "entry_mode",
+        "confirmed_at",
+        "target_at_confirmation",
+        "hard_deadline_origin",
+        "issue_scale",
+        "cap_history"
+      ],
+      "title": "AdviserCallV3",
+      "type": "object"
+    },
     "CallRevision": {
       "additionalProperties": false,
       "properties": {
@@ -519,6 +750,176 @@
         "progress_max_favorable_scale"
       ],
       "title": "CallRevision",
+      "type": "object"
+    },
+    "CallRevisionV3": {
+      "additionalProperties": false,
+      "properties": {
+        "call_id": {
+          "title": "Call Id",
+          "type": "string"
+        },
+        "changed": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Changed",
+          "type": "array"
+        },
+        "coverage_loss_from": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Coverage Loss From"
+        },
+        "current_admissible_bounds": {
+          "anyOf": [
+            {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                  "type": "string"
+                },
+                {
+                  "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                  "type": "string"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Current Admissible Bounds"
+        },
+        "duration_window_minutes": {
+          "anyOf": [
+            {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                  "type": "string"
+                },
+                {
+                  "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                  "type": "string"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Duration Window Minutes"
+        },
+        "entry_conditions_enabled": {
+          "title": "Entry Conditions Enabled",
+          "type": "boolean"
+        },
+        "entry_reasons": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Entry Reasons",
+          "type": "array"
+        },
+        "entry_status": {
+          "title": "Entry Status",
+          "type": "string"
+        },
+        "env": {
+          "$ref": "#/$defs/Envelope"
+        },
+        "guidance": {
+          "title": "Guidance",
+          "type": "string"
+        },
+        "progress_max_favorable_scale": {
+          "anyOf": [
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Progress Max Favorable Scale"
+        },
+        "remaining_minutes": {
+          "anyOf": [
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Remaining Minutes"
+        },
+        "revision": {
+          "title": "Revision",
+          "type": "integer"
+        },
+        "scenario_terminal": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Scenario Terminal"
+        },
+        "terminal_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Terminal Reason"
+        },
+        "thesis_status": {
+          "title": "Thesis Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "env",
+        "call_id",
+        "revision",
+        "entry_status",
+        "entry_reasons",
+        "entry_conditions_enabled",
+        "thesis_status",
+        "terminal_reason",
+        "current_admissible_bounds",
+        "remaining_minutes",
+        "duration_window_minutes",
+        "guidance",
+        "changed",
+        "progress_max_favorable_scale",
+        "coverage_loss_from",
+        "scenario_terminal"
+      ],
+      "title": "CallRevisionV3",
       "type": "object"
     },
     "CandidatePlan": {
@@ -724,6 +1125,217 @@
       ],
       "title": "Direction",
       "type": "string"
+    },
+    "EntryAttempt": {
+      "additionalProperties": false,
+      "description": "The child entry attempt of one structural scenario (economic: may differ under other cost assumptions).",
+      "properties": {
+        "blockers": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Blockers",
+          "type": "array"
+        },
+        "call_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Call Id"
+        },
+        "cap_history": {
+          "items": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object"
+          },
+          "title": "Cap History",
+          "type": "array"
+        },
+        "clocks": {
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "title": "Clocks",
+          "type": "object"
+        },
+        "containing_zones": {
+          "items": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object"
+          },
+          "title": "Containing Zones",
+          "type": "array"
+        },
+        "diagnostic": {
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "title": "Diagnostic",
+          "type": "object"
+        },
+        "direction": {
+          "$ref": "#/$defs/Direction"
+        },
+        "entry_attempt_id": {
+          "title": "Entry Attempt Id",
+          "type": "string"
+        },
+        "env": {
+          "$ref": "#/$defs/Envelope"
+        },
+        "family": {
+          "$ref": "#/$defs/Family"
+        },
+        "geometry": {
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "title": "Geometry",
+          "type": "object"
+        },
+        "limiting_landmark": {
+          "anyOf": [
+            {
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Limiting Landmark"
+        },
+        "mode": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Mode"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Reason"
+        },
+        "scenario_id": {
+          "title": "Scenario Id",
+          "type": "string"
+        },
+        "selected_zone": {
+          "anyOf": [
+            {
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Selected Zone"
+        },
+        "state": {
+          "title": "State",
+          "type": "string"
+        },
+        "transition": {
+          "title": "Transition",
+          "type": "string"
+        }
+      },
+      "required": [
+        "env",
+        "entry_attempt_id",
+        "scenario_id",
+        "family",
+        "direction",
+        "state",
+        "mode",
+        "transition",
+        "reason",
+        "blockers",
+        "call_id",
+        "geometry",
+        "containing_zones",
+        "selected_zone",
+        "limiting_landmark",
+        "cap_history",
+        "clocks",
+        "diagnostic"
+      ],
+      "title": "EntryAttempt",
+      "type": "object"
     },
     "Envelope": {
       "additionalProperties": false,
@@ -1368,6 +1980,150 @@
       "title": "MarketView",
       "type": "object"
     },
+    "MarketViewV3": {
+      "additionalProperties": false,
+      "description": "v0.3 total table (MP-002 \u00a74): structural scenarios only; call existence never creates a direction, so\n``ongoing_call_id`` is always None here (guidance is in call records).",
+      "properties": {
+        "alternatives": {
+          "items": {
+            "$ref": "#/$defs/ScenarioV3"
+          },
+          "title": "Alternatives",
+          "type": "array"
+        },
+        "blockers": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Blockers",
+          "type": "array"
+        },
+        "conditional": {
+          "title": "Conditional",
+          "type": "boolean"
+        },
+        "counterevidence": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Counterevidence",
+          "type": "array"
+        },
+        "env": {
+          "$ref": "#/$defs/Envelope"
+        },
+        "expected_direction": {
+          "title": "Expected Direction",
+          "type": "string"
+        },
+        "horizon_minutes": {
+          "anyOf": [
+            {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "integer"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Horizon Minutes"
+        },
+        "levels": {
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "title": "Levels",
+          "type": "object"
+        },
+        "observed_context": {
+          "title": "Observed Context",
+          "type": "string"
+        },
+        "ongoing_call_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Ongoing Call Id"
+        },
+        "phase": {
+          "title": "Phase",
+          "type": "string"
+        },
+        "principal": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ScenarioV3"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reasons": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Reasons",
+          "type": "array"
+        },
+        "table_row": {
+          "title": "Table Row",
+          "type": "string"
+        },
+        "uncertainty": {
+          "default": "QUALITATIVE_ONLY_NOT_CALIBRATED",
+          "title": "Uncertainty",
+          "type": "string"
+        },
+        "watch": {
+          "items": {
+            "$ref": "#/$defs/ScenarioV3"
+          },
+          "title": "Watch",
+          "type": "array"
+        }
+      },
+      "required": [
+        "env",
+        "observed_context",
+        "phase",
+        "expected_direction",
+        "conditional",
+        "table_row",
+        "principal",
+        "alternatives",
+        "ongoing_call_id",
+        "horizon_minutes",
+        "levels",
+        "reasons",
+        "counterevidence",
+        "blockers",
+        "watch"
+      ],
+      "title": "MarketViewV3",
+      "type": "object"
+    },
     "MaterialChange": {
       "additionalProperties": false,
       "properties": {
@@ -1698,6 +2454,398 @@
       ],
       "title": "Scenario",
       "type": "object"
+    },
+    "ScenarioState": {
+      "additionalProperties": false,
+      "description": "One structural scenario transition. Structural only: no cost, admissible interval, call or evaluator field,\nso identical structural input under different execution-cost assumptions yields identical normalized scenario\nrecords (MP-002 \u00a73/\u00a74).",
+      "properties": {
+        "activated_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Activated At"
+        },
+        "antecedent": {
+          "title": "Antecedent",
+          "type": "string"
+        },
+        "confirmation_close": {
+          "anyOf": [
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Confirmation Close"
+        },
+        "confirmation_scale": {
+          "anyOf": [
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Confirmation Scale"
+        },
+        "confirmed_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Confirmed At"
+        },
+        "confirmed_deadline": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Confirmed Deadline"
+        },
+        "destination": {
+          "anyOf": [
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Destination"
+        },
+        "destination_type": {
+          "title": "Destination Type",
+          "type": "string"
+        },
+        "direction": {
+          "$ref": "#/$defs/Direction"
+        },
+        "discovery_owner": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Discovery Owner"
+        },
+        "entry_attempt_id": {
+          "title": "Entry Attempt Id",
+          "type": "string"
+        },
+        "env": {
+          "$ref": "#/$defs/Envelope"
+        },
+        "family": {
+          "$ref": "#/$defs/Family"
+        },
+        "invalidation_level": {
+          "anyOf": [
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Invalidation Level"
+        },
+        "original_expiry": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Original Expiry"
+        },
+        "owner_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Owner Id"
+        },
+        "premise": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Premise"
+        },
+        "progress_check_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Progress Check At"
+        },
+        "reaction_level": {
+          "anyOf": [
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Reaction Level"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Reason"
+        },
+        "scenario_id": {
+          "title": "Scenario Id",
+          "type": "string"
+        },
+        "setup": {
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "title": "Setup",
+          "type": "object"
+        },
+        "status": {
+          "title": "Status",
+          "type": "string"
+        },
+        "terminal_state": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Terminal State"
+        },
+        "transition": {
+          "title": "Transition",
+          "type": "string"
+        },
+        "trigger_level": {
+          "anyOf": [
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Trigger Level"
+        },
+        "warmup_origin": {
+          "title": "Warmup Origin",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "env",
+        "scenario_id",
+        "owner_id",
+        "entry_attempt_id",
+        "family",
+        "direction",
+        "status",
+        "transition",
+        "reason",
+        "terminal_state",
+        "antecedent",
+        "trigger_level",
+        "invalidation_level",
+        "reaction_level",
+        "destination",
+        "destination_type",
+        "premise",
+        "setup",
+        "activated_at",
+        "original_expiry",
+        "confirmed_at",
+        "confirmation_close",
+        "confirmation_scale",
+        "confirmed_deadline",
+        "progress_check_at",
+        "discovery_owner",
+        "warmup_origin"
+      ],
+      "title": "ScenarioState",
+      "type": "object"
+    },
+    "ScenarioV3": {
+      "additionalProperties": false,
+      "properties": {
+        "alternative": {
+          "title": "Alternative",
+          "type": "string"
+        },
+        "antecedent": {
+          "title": "Antecedent",
+          "type": "string"
+        },
+        "candidate_domain": {
+          "title": "Candidate Domain",
+          "type": "string"
+        },
+        "conditional_target": {
+          "title": "Conditional Target",
+          "type": "string"
+        },
+        "confirmed_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Confirmed At"
+        },
+        "destination": {
+          "anyOf": [
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Destination"
+        },
+        "destination_type": {
+          "title": "Destination Type",
+          "type": "string"
+        },
+        "direction": {
+          "$ref": "#/$defs/Direction"
+        },
+        "expires_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Expires At"
+        },
+        "family": {
+          "$ref": "#/$defs/Family"
+        },
+        "invalidation_level": {
+          "anyOf": [
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Invalidation Level"
+        },
+        "scenario_id": {
+          "title": "Scenario Id",
+          "type": "string"
+        },
+        "status": {
+          "title": "Status",
+          "type": "string"
+        },
+        "trigger_level": {
+          "anyOf": [
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Trigger Level"
+        }
+      },
+      "required": [
+        "scenario_id",
+        "family",
+        "direction",
+        "antecedent",
+        "trigger_level",
+        "invalidation_level",
+        "conditional_target",
+        "alternative",
+        "expires_at",
+        "candidate_domain",
+        "status",
+        "destination",
+        "destination_type",
+        "confirmed_at"
+      ],
+      "title": "ScenarioV3",
+      "type": "object"
     }
   },
   "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -1706,8 +2854,17 @@
       "date": "2026-10-04",
       "note": "Initial provisional advisory baseline (WP-009): Observation, Landmark, PhaseState, EventContext/EventResponse, MarketView, Scenario, CandidatePlan, Actionability, AdviserCall, CallRevision, MaterialChange with the shared provenance envelope.",
       "revision": 1
+    },
+    {
+      "date": "2026-10-05",
+      "note": "WP-011 MP-002 btc.context-action.v0.3 (additive): new discriminated kinds ScenarioState ('scenario': structural scenario lifecycle independent of entry/call/evaluator) and EntryAttempt ('entry_attempt': the child entry attempt - confirmation routing, IMMEDIATE/RETURN mode, WAIT_PRICE, caps, blockers, zone provenance, registered diagnostic geometry); v0.3 variants ScenarioV3/MarketViewV3/AdviserCallV3/CallRevisionV3 extend the revision-1 records with fields. Revision-1 records, their bytes and readers are unchanged; v0.2 runs never emit the new kinds, variants or fields (per-method emitted revision: v0.2 -> 1, v0.3 -> 2).",
+      "revision": 2
     }
   ],
+  "emitted_revision_by_model": {
+    "btc.context-action.v0.2": 1,
+    "btc.context-action.v0.3": 2
+  },
   "journal_kinds": {
     "actionability": "#/$defs/Actionability",
     "call": "#/$defs/AdviserCall",
@@ -1721,24 +2878,44 @@
     "observation": "#/$defs/Observation",
     "phase": "#/$defs/PhaseState"
   },
+  "journal_kinds_v3": {
+    "actionability": "#/$defs/Actionability",
+    "call": "#/$defs/AdviserCallV3",
+    "call_revision": "#/$defs/CallRevisionV3",
+    "entry_attempt": "#/$defs/EntryAttempt",
+    "event_context": "#/$defs/EventContext",
+    "event_response": "#/$defs/EventResponse",
+    "landmark": "#/$defs/Landmark",
+    "market_view": "#/$defs/MarketViewV3",
+    "material_change": "#/$defs/MaterialChange",
+    "observation": "#/$defs/Observation",
+    "phase": "#/$defs/PhaseState",
+    "scenario": "#/$defs/ScenarioState"
+  },
   "public_contracts": {
     "Actionability": "#/$defs/Actionability",
     "AdviserCall": "#/$defs/AdviserCall",
+    "AdviserCallV3": "#/$defs/AdviserCallV3",
     "CallRevision": "#/$defs/CallRevision",
+    "CallRevisionV3": "#/$defs/CallRevisionV3",
     "CandidatePlan": "#/$defs/CandidatePlan",
     "DependencyRef": "#/$defs/DependencyRef",
+    "EntryAttempt": "#/$defs/EntryAttempt",
     "Envelope": "#/$defs/Envelope",
     "EventContext": "#/$defs/EventContext",
     "EventResponse": "#/$defs/EventResponse",
     "Landmark": "#/$defs/Landmark",
     "MarketView": "#/$defs/MarketView",
+    "MarketViewV3": "#/$defs/MarketViewV3",
     "MaterialChange": "#/$defs/MaterialChange",
     "MethodRef": "#/$defs/MethodRef",
     "Observation": "#/$defs/Observation",
     "PhaseState": "#/$defs/PhaseState",
-    "Scenario": "#/$defs/Scenario"
+    "Scenario": "#/$defs/Scenario",
+    "ScenarioState": "#/$defs/ScenarioState",
+    "ScenarioV3": "#/$defs/ScenarioV3"
   },
-  "revision": 1,
+  "revision": 2,
   "schema_version": "algotrader.semantic.v2",
   "status": "PROVISIONAL",
   "title": "Algorithmic Trader advisory semantic contracts (algotrader.semantic.v2, PROVISIONAL)"

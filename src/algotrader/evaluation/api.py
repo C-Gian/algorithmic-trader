@@ -40,6 +40,7 @@ class StartEvaluation(BaseModel):
     pack_id: str | None = Field(default=None, min_length=1, max_length=100)  # prepared evaluation pack (R3)
     acknowledge_limitations: bool = False  # explicit Owner acknowledgement for a READY_WITH_LIMITATIONS pack
     run_type: str = Field(default="observation_only", pattern="^(observation_only|adviser_evaluation)$")
+    method: str | None = Field(default=None, pattern="^v0\\.[23]$")  # adviser release; absent = v0.2 default
     speed: float = Field(default=0.0, ge=0, le=control.MAX_SPEED)
     paused: bool = False
 
@@ -122,6 +123,7 @@ def adviser_section(c, ev: dict[str, Any], replay: dict[str, Any]) -> dict[str, 
         return {"section": "ADVISER_EVALUATION", "pending": True,
                 "text": "adviser configuration is pinned by the worker-owned preparation (not yet prepared)"}
     from ..adviser import report as ar
+    from ..adviser import report3 as ar3
 
     rid = replay["replay_id"]
     journal = c.execute("SELECT seq, kind, clock_time, record FROM adviser_journal WHERE run_id = %s ORDER BY seq",
@@ -132,7 +134,8 @@ def adviser_section(c, ev: dict[str, Any], replay: dict[str, Any]) -> dict[str, 
                         (rid,)).fetchall()
     view = c.execute("SELECT adviser_view FROM observation_checkpoints WHERE replay_id = %s", (rid,)).fetchone()
     fin = c.execute("SELECT 1 FROM adviser_finish WHERE run_id = %s", (rid,)).fetchone()
-    return ar.build(engine=eng, journal=journal, records=records, view=(view or {}).get("adviser_view"),
+    builder = ar3 if eng["adviser"].get("method") == "v0.3" else ar
+    return builder.build(engine=eng, journal=journal, records=records, view=(view or {}).get("adviser_view"),
                     status=replay["status"], clock_end_reached=fin is not None)
 
 
@@ -153,7 +156,17 @@ def build_router(conn: Callable, data_root: Path, art_root: Path) -> APIRouter:
                                                         rv["status"])
         terminal = rv["status"] in control.TERMINAL
         adviser = ev["run_type"] == "adviser_evaluation"
+        method = None
+        if adviser:
+            from ..adviser import methods
+
+            pinned = ((replay.get("engine") or {}).get("adviser") or {})
+            key = pinned.get("method") or (replay.get("launch") or {}).get("adviser_method") or "v0.2"
+            rel = methods.get(key)
+            method = {"method": key, "label": rel.label, "status": rel.status, "model": rel.model,
+                      "pinned_at_preparation": bool(pinned)}
         return {
+            "method": method,
             "evaluation_id": ev["evaluation_id"],
             "run_type": ev["run_type"],
             "run_type_label": ADVISER_LABEL if adviser else PRESET_LABEL,
@@ -180,6 +193,8 @@ def build_router(conn: Callable, data_root: Path, art_root: Path) -> APIRouter:
                 raise HTTPException(409, "this pack is READY WITH LIMITATIONS (source gaps); acknowledge the listed "
                                          "limitations to start an inspection run: " + "; ".join(p["limitations"]))
             adviser = body.run_type == "adviser_evaluation"
+            if body.method is not None and not adviser:
+                raise HTTPException(422, "a method is selected only for an adviser evaluation")
             if adviser and any(x["class"] != "DEVELOPMENT" for x in p["evidence_classes"].get("portions", [])):
                 raise HTTPException(409, "protected (Jan-Aug 2026) evaluation is not enabled before the Director's "
                                          "contamination inventory and model freeze; choose a development pack")
@@ -190,7 +205,8 @@ def build_router(conn: Callable, data_root: Path, art_root: Path) -> APIRouter:
                     replay_id = control.create_replay(c, data_root, SourceKind.PACK, body.pack_id, body.speed,
                                                       body.paused, evaluation_id=evaluation_id,
                                                       expected_manifest_sha256=snapshot["manifest_sha256"],
-                                                      run_type="adviser_evaluation" if adviser else "observation")
+                                                      run_type="adviser_evaluation" if adviser else "observation",
+                                                      adviser_method=(body.method or "v0.2") if adviser else None)
                     c.execute(
                         """INSERT INTO evaluations (evaluation_id, replay_id, run_type, preset, plan_id, chunk_id,
                                dataset_id, corpus, pack_id, preset_id)
@@ -249,6 +265,32 @@ def build_router(conn: Callable, data_root: Path, art_root: Path) -> APIRouter:
             evs = c.execute("SELECT * FROM evaluations ORDER BY created_at DESC LIMIT %s", (limit,)).fetchall()
             return [view(ev, c.execute(REPLAY_SELECT + " WHERE r.replay_id = %s", (ev["replay_id"],)).fetchone())
                     for ev in evs]
+
+    def compare_doc(a: str, b: str) -> dict[str, Any]:
+        """Read-only comparison of two existing adviser evaluations (never launches, resumes or replays)."""
+        from ..adviser import compare as cmp
+
+        facts = []
+        for eid in (a, b):
+            doc = report_doc(eid)
+            with conn() as c:
+                ev, replay = get(c, eid)
+            facts.append(cmp.run_facts(ev, replay, doc))
+        return cmp.build(facts[0], facts[1])
+
+    @r.get("/compare/report.json")
+    def compare_json(a: str, b: str, download: bool = False) -> PlainTextResponse:
+        doc = compare_doc(a, b)
+        headers = {"Content-Disposition": f'attachment; filename="compare-{a}-{b}.json"'} if download else {}
+        return PlainTextResponse(rp.render_json(doc), media_type="application/json", headers=headers)
+
+    @r.get("/compare/report.md")
+    def compare_md(a: str, b: str, download: bool = False) -> PlainTextResponse:
+        from ..adviser import compare as cmp
+
+        doc = compare_doc(a, b)
+        headers = {"Content-Disposition": f'attachment; filename="compare-{a}-{b}.md"'} if download else {}
+        return PlainTextResponse(cmp.render_markdown(doc), media_type="text/markdown; charset=utf-8", headers=headers)
 
     @r.get("/{evaluation_id}")
     def detail(evaluation_id: str) -> dict[str, Any]:
