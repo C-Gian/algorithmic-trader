@@ -1,11 +1,11 @@
-# Current Task — MP-002 corrected design closure review
-Status: **DIRECTOR/ASTRA REVIEW CHECKPOINT — NO EXECUTOR IMPLEMENTATION**
+# Current Task — WP-011: implement closed MP-002
+Status: **ACTIVE EXECUTOR IMPLEMENTATION — DIRECTOR REVIEW REQUIRED**
 Date: 2026-10-05.
 
-The Owner Backtest A extraction is complete at 87948057. Its [dossier](delivery/evidence/WP-009-OWNER-BACKTEST-A-DOSSIER/SUMMARY.md) is accepted as diagnostic evidence with the qualifications in [MP-002](delivery/MP-002-SCENARIO-CONFIRMATION-ENTRY-PROPOSAL.md); this is not economic acceptance or an independent re-export.
+Implement [WP-011 specification](delivery/WP-011-MP-002-IMPLEMENTATION-SPEC.md), using closed [MP-002 v0.2 rules](delivery/MP-002-SCENARIO-CONFIRMATION-ENTRY-PROPOSAL.md) and [complete register](delivery/MP-002-PARAMETERS.json). [Director closure](delivery/MP-002-DIRECTOR-DISPOSITION.md) follows [Astra CHIUDIBILE](delivery/MP-002-ASTRA-CLOSURE.md) on4b5ef95.
 
-B1–B7 in [original review](delivery/MP-002-ASTRA-REVIEW.md) have explicit [Director dispositions](delivery/MP-002-DIRECTOR-DISPOSITION.md). Current assignment: Astra performs targeted closure review of the Director's [MP-002 v0.2 corrected proposal](delivery/MP-002-SCENARIO-CONFIRMATION-ENTRY-PROPOSAL.md) and [explicit parameter delta](delivery/MP-002-PARAMETER-DELTA.json), following the preserved [Astra dossier review](delivery/WP-009-OWNER-BACKTEST-A-DOSSIER-ASTRA-REVIEW.md). Close lifecycle, causal entry/contacts, cost-independent scenarios, deadline origins, ownership/selection and registered development verification using bounded synthetic counterexamples only.
+Deliver btc.context-action.v0.3: independent structural discovery/scenarios, A immediate or post-confirmation usable return entry, causal monotone caps/contacts, exact clocks/evaluator and registered diagnostic denominators. Integrate sparse durable state/validation, live/Workbench/plain results, method selection and same-pack two-run comparison. Preserve selectable frozen MP-001 v0.2 behavior/old outputs; no numerical loosening or new source scope.
 
-Claude has no active product or extraction task. No new market replay, Deep validation, backtest, acquisition, product/schema/migration or method-package modification is authorized. MP-001 v0.2 remains the running method. Original evidence is preserved; no further extraction needed. No Owner run requested.
+Execute required synthetic causal/independent expected-transition, DB restore/fence/corruption/Deep-resume, schema/old-reader, full suites and bounded E2E/size checks from the spec. Evidence: delivery/evidence/WP-011-ENGINEERING-EVIDENCE.{json,md}. No real economic run or acquisition; October paired Owner handoff prepared but inactive.
 
-Next authority: Director disposition after Astra review, then a separately activated implementation package. Standing workflow/CI handoff: AGENTS.md.
+Completion: **READY FOR DIRECTOR REVIEW — WP-011 ONLY**. No next package or Owner backtest activated. Permanent workflow and Owner-operated CI handoff are in AGENTS.md.

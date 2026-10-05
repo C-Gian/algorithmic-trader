@@ -68,6 +68,6 @@ Private Project Instructions still describe a discretionary “when practical”
 
 This Git update does not modify any private chat instructions.
 
-## Current pointer — MP-002 proposal review, 2026-10-05
+## Current pointer — WP-011 implementation, 2026-10-05
 
-Existing-run dossier is complete and accepted as qualified diagnostic evidence, not economics. [MP-002](../delivery/MP-002-SCENARIO-CONFIRMATION-ENTRY-PROPOSAL.md) proposes independent structural scenarios and A post-confirmation return entry for focused Astra closure review (v0.2, B1–B7 corrected). task.md activates no executor implementation or new run. Subsequent substantial development comparisons remain Owner web-app actions after distinct method/engineering acceptance. CI waiting remains Owner-operated.
+[MP-002 design](../delivery/MP-002-SCENARIO-CONFIRMATION-ENTRY-PROPOSAL.md) closed after Astra CHIUDIBILE, with no economic validation. task.md activates only [WP-011](../delivery/WP-011-MP-002-IMPLEMENTATION-SPEC.md), preserving sparse/fenced causal architecture, old results and fixed baseline. Later development pairs remain Owner web-app actions after engineering acceptance; CI wait stays Owner-operated. No current backtest/protected acquisition or legacy revival.

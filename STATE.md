@@ -1,8 +1,8 @@
 # Project State
 
-Updated: 2026-10-05 — MP-002 v0.2 B1–B7 corrections for focused closure review; no implementation or new run
+Updated: 2026-10-05 — MP-002 design closed after Astra CHIUDIBILE; WP-011 implementation active, product unchanged
 
-**Current task: [task.md](task.md) — MP-002 method review; no executor implementation** Product authority: [FOUNDATION.md](FOUNDATION.md) v3.1. Executor rules: [AGENTS.md](AGENTS.md). How to run the app: [README.md](README.md). Chronology and earlier package evidence: [delivery/DELIVERY-HISTORY.md](delivery/DELIVERY-HISTORY.md).
+**Current task: [task.md](task.md) — WP-011 implement closed MP-002; no Owner economic run yet** Product authority: [FOUNDATION.md](FOUNDATION.md) v3.1. Executor rules: [AGENTS.md](AGENTS.md). How to run the app: [README.md](README.md). Chronology and earlier package evidence: [delivery/DELIVERY-HISTORY.md](delivery/DELIVERY-HISTORY.md).
 
 Goal (Foundation v3.1): an integrated BTC adviser with persistent actionable LONG/SHORT calls, entry area, targets, stop/exit guidance and holding horizon. Capital, size, leverage and orders stay human. Historical ACCEPTED/READY/HOLD labels in older documents do not authorize work; only task.md does.
 
@@ -231,3 +231,10 @@ Dossier at 87948057 is sufficient diagnostic evidence for the observed 14 global
 ## Current Director action — MP-002 B1–B7 correction, 2026-10-05
 
 The initial v0.1 proposal status above is historical. [Astra review](delivery/MP-002-ASTRA-REVIEW.md) required seven design corrections, adopted in [Director disposition](delivery/MP-002-DIRECTOR-DISPOSITION.md) and the same [proposal](delivery/MP-002-SCENARIO-CONFIRMATION-ENTRY-PROPOSAL.md)/[delta](delivery/MP-002-PARAMETER-DELTA.json), now v0.2. Separate structural discovery release/reset/zones from economic children; exhaustive mode routing; transient live-cost versus permanent geometric emptiness; causal cap activation; distinct contact/censorship domains; exact progress/hard/horizon-only clocks; primary RETURN-owner and corridor denominators. Bounded Decimal/tick/clock checks are specification checks, not product tests. Focused closure review pending; method design not closed, no executor implementation or Owner run. Product remains MP-001 v0.2.
+
+
+## Current authority — MP-002 design closure; WP-011 active, 2026-10-05
+
+[Astra CHIUDIBILE](delivery/MP-002-ASTRA-CLOSURE.md) on4b5ef95 closes B1–B7 without new market evidence. [Director disposition](delivery/MP-002-DIRECTOR-DISPOSITION.md) adopts method-design closure; [complete register](delivery/MP-002-PARAMETERS.json) consolidates reviewed categories while preserving trading numerical predicates. Earlier pending-review entries above are historical. Running product is still MP-001 v0.2 at6f95273; MP-002 profitability/practicality unvalidated.
+
+[WP-011 specification](delivery/WP-011-MP-002-IMPLEMENTATION-SPEC.md) is the only active executor package: implement v0.3 plus selectable unchanged v0.2 baseline, durable/live/Workbench/paired reports and bounded engineering closure. No actual product code changed by this Director activation. Owner launches fixed October/November/December paired development evaluations only after Director engineering acceptance; no protected or current economic run authorized. CI waiting remains Owner-operated.

@@ -1,7 +1,7 @@
 # MP-002 — Scenario, confirmation and usable entry
 Version: 0.2 · 2026-10-05
-Status: **DIRECTOR-CORRECTED PROPOSAL — TARGETED ASTRA CLOSURE REVIEW; NO IMPLEMENTATION OR OWNER RUN AUTHORIZED**
-Baseline product: WP-009 at 6f95273; evidence dossier at 87948057. Proposed method identity, only after design closure: btc.context-action.v0.3 / mp002.rules.v0.3. MP-001 v0.2 and its register remain immutable and authoritative for the running application.
+Status: **DIRECTOR-CLOSED METHOD DESIGN AFTER ASTRA CLOSURE — NOT IMPLEMENTATION OR ECONOMIC ACCEPTANCE**
+Baseline product: WP-009 at 6f95273; evidence dossier at 87948057. Closed method identity: btc.context-action.v0.3 / mp002.rules.v0.3. MP-001 v0.2 and its register remain immutable and authoritative for the running application.
 
 ## 1. Decision, evidence and limits
 Adopt one testable hypothesis: A continuation confirmation and its usable entry need not occur at the same price. A can wait for a subsequent observed return to a bounded reaction corridor after the existing confirmation. Structural interpretation persists independently of economic entry eligibility for A/B/C. B/C entry rules are unchanged.
@@ -22,7 +22,7 @@ The professional move/reaction/continuation concept is already grounded by MP-00
 ## 2. Preserved policy and explicit delta
 Preserve MP-001 measurements and numerical horizon lengths (A's deadline origin changes explicitly below), completed-bar/availability rules, input profiles, Decimal/ticks, context/phase gates, landmark birth/retirement/break rules, A qualification measurements (structural release/reset changes explicitly below), box structural ownership, B/C one-shot entry attempts, calendar/dislocation policy, one recommendation slot, issued-call reassessment, hypothetical accounting, 60s primary entry delay and 0/120 sensitivities.
 
-Preserve historical K_cost=14bps, net ratio r=1.2, fee/allowance and stress assumptions. Preserve live quoted cost formula. No tighter stop, farther target, lowered confirmation threshold, longer setup lifetime or new scale parameter. The register must later be explicitly versioned for the new categorical entry policy, even if numerical values stay the same; no identity reuse.
+Preserve historical K_cost=14bps, net ratio r=1.2, fee/allowance and stress assumptions. Preserve live quoted cost formula. No tighter stop, farther target, lowered confirmation threshold, longer setup lifetime or new scale parameter. The new [complete register](MP-002-PARAMETERS.json) versions the reviewed categorical entry policy, with unchanged numerical trading values and no identity reuse.
 
 Changed:
 1. Structural Scenario is an independently owned object; an economic/selection rejection ends an entry attempt, not its structurally supported scenario.
@@ -170,7 +170,7 @@ scenario birth/arm/confirm/terminal with reason; confirmation identity/cursor/fr
 Include R,K,V,T_confirm,T_current, container mode/bounds, economic intersection, S15/tick/params/profile, target/obstacle refs (original vs current), every containing zone, deterministic attribution when known, before/after phase and readiness, publication/knowledge/admission boundaries. Costs use K_cost name distinct from K_trigger.
 Selected inside-zone attribution follows the actual deterministic resolver order and is recorded together with the complete containing set, never NONE. New attribution correctness does not rewrite the six old rejections.
 
-Persistent scenarios and entry attempts need separately bounded checkpoint state, timers, format and implementation identities; compatible old run/results remain immutable. A v0.2 unfinished run cannot silently resume into this method. Future implementation specification must version rules/register, adviser core/state/runtime/report, provisional semantic/evaluation schemas and reconciliation/Deep semantics where outputs change. Frozen evidence/DEMO contracts remain untouched. No migration/schema/product change is authorized now.
+Persistent scenarios and entry attempts need separately bounded checkpoint state, timers, format and implementation identities; compatible old run/results remain immutable. A v0.2 unfinished run cannot silently resume into this method. Future implementation specification must version rules/register, adviser core/state/runtime/report, provisional semantic/evaluation schemas and reconciliation/Deep semantics where outputs change. Frozen evidence/DEMO contracts remain untouched. This method document alone authorizes no migration/schema/product change; current task.md activates only the separately bounded WP-011 scope.
 
 ## 9. Hand-expected synthetic fixtures for review
 These are made-up specification examples, not market runs or numerical optimization. Tick 0.1, r=1.2, historical K_cost=14 unless stated.
@@ -210,12 +210,12 @@ Decision after all three:
 - Owner opportunity expectation: roughly a few usable calls/week over varied supported periods, no per-week quota; report departures and entry availability at 60s alongside 0/120s. Neither higher call counts nor arbitrary window thresholds establish usefulness.
 - Report outcomes/cost stress, losses, ambiguity, NO_ENTRY/censoring, distribution per distinct owner and regime/concentration (nearby owners may be correlated) and whole coverage. A positive sum or win rate alone is insufficient; no promised numeric profitability gate.
 - MarketView coverage and +1h/+4h conditions remain independent of trade economics. Label comparison/model change; neither more labels nor fewer abstentions is proof of forecast improvement.
-- If evidence supports further evaluation, freeze unchanged identity before protected inventory/use. This proposal grants no protected run authority. Used-to-redesign data become development.
+- If evidence supports further evaluation, freeze unchanged identity before protected inventory/use. This method closure grants no protected run authority. Used-to-redesign data become development.
 This plan is falsifiable without forcing call counts or requiring all-year acquisition before learning anything.
 
 ## 11. Review and next authority
 Astra should challenge lifecycle contradictions, waiting versus original renewal/slot policy, dynamic obstacles and frozen criteria, trade/scenario independence, confirmation/return chronology, stop/target contacts, live missing quotes, cost selection and evaluator leakage, and the preregistered stop rules. Require exact counterexamples/closures rather than another broad review or new data extraction.
-B1–B7 are disposed in [Director correction disposition](MP-002-DIRECTOR-DISPOSITION.md), with [original Astra review](MP-002-ASTRA-REVIEW.md) unchanged. This v0.2 is submitted for focused closure review, not yet Director-closed method design. Only the Director's subsequent closure disposition can activate a separate implementation package. Until then task.md is a Director/Astra documentation review checkpoint; Claude has no active product task, Owner has no new backtest handoff.
+B1–B7 are disposed in [Director correction disposition](MP-002-DIRECTOR-DISPOSITION.md), with [original Astra review](MP-002-ASTRA-REVIEW.md) unchanged. Astra returned [CHIUDIBILE](MP-002-ASTRA-CLOSURE.md) on the corrected semantic content at4b5ef95; the Director closes this v0.2 design without further methodological change. The separate [WP-011 implementation specification](WP-011-MP-002-IMPLEMENTATION-SPEC.md) is activated by current task.md. This rule file does not certify its implementation or authorize an Owner economic run.
 
 
 ## 12. Additional fixed collision fixtures after B1–B7

@@ -1,6 +1,6 @@
 # MP-002 — Director correction disposition
 Date: 2026-10-05. Reviewed proposal: b46c292, MP-002 v0.1.
-Status: **B1–B7 ACCEPTED AND SPECIFIED IN v0.2; TARGETED CLOSURE REVIEW PENDING. NO IMPLEMENTATION/OWNER RUN AUTHORIZATION.**
+Status: **DIRECTOR-CLOSED METHOD DESIGN AFTER ASTRA CHIUDIBILE; IMPLEMENTATION SEPARATELY ACTIVATED AS WP-011. NO OWNER ECONOMIC RUN AUTHORIZATION.**
 
 Authority: FOUNDATION v3.1 and current Owner instruction. Evidence: [original Astra review](MP-002-ASTRA-REVIEW.md), [corrected proposal](MP-002-SCENARIO-CONFIRMATION-ENTRY-PROPOSAL.md), [corrected delta](MP-002-PARAMETER-DELTA.json). The review is retained byte-identical; v0.1 remains historical in Git. Running MP-001 v0.2, product code, schemas, data, source dossiers and original results remain unchanged.
 
@@ -23,6 +23,15 @@ Astra's SHORT criticism is accepted: reflecting prices about a constant does NOT
 
 No database, market data, replay/Deep, backtest, product test suite or Compose work performed; this is document design correction. JSON parses; Astra attachment retained byte-identical; changed relative links checked against local files plus known base-tree dossier paths. Validation: 74 relative links checked, zero missing against local files plus the actual base-tree dossier paths; parameter delta parses; preserved review bytes match the uploaded original. No engineering PASS is inferred.
 
-## Review/release boundary
+## Historical correction review boundary (superseded by closure below)
 
 The Director has chosen the B1–B7 rules; focused Astra closure review should test these specific decisions and their interactions. It must not request another market dossier or variant search without a newly decisive missing fact. This disposition is not final method-design acceptance and does not activate implementation. task.md remains a Director/Astra checkpoint. Following closure, an explicitly versioned separate package must specify persistence/contract compatibility, old-v0.2 baseline selection in the app, paired-copy reports, causal fixtures and bounded checks. Only subsequent engineering acceptance can authorize Owner app development runs. CI monitoring stays with the Owner. No automatic protected access.
+
+
+## Final Director closure and implementation activation — 2026-10-05
+
+[Astra closure](MP-002-ASTRA-CLOSURE.md), relayed by Owner, reports CHIUDIBILE on4b5ef95 with B1–B7 resolved and no remaining/new blocker. Director adopts this bounded conclusion and closes MP-002 v0.2 method design. Semantic content is unchanged from the reviewed correction; status/cross-references and a [complete configuration register](MP-002-PARAMETERS.json) make the accepted prose/delta explicit. Original MP-001 register and running product stay unchanged. This is neither independent product verification nor economic acceptance.
+
+The Owner's standing progression instruction and this Director disposition activate only [WP-011](WP-011-MP-002-IMPLEMENTATION-SPEC.md) via task.md: implement the closed v0.3 with durable/live/report/UI integration and selectable unchanged v0.2 baseline. Normal bounded engineering checks, then Director review and Owner CI notification. No new real-month run/acquisition/protected evaluation before engineering acceptance. The executor prepares but does not activate the October paired app handoff.
+
+Closure checks: all numerical trading values from the original MP-001 register retained exactly at their existing paths; complete new register policy matches the closed delta. Relative-link verification covers 88 links, with known dossier paths checked in the remote base tree; no missing target. Only documentation/registration files change in this activation.

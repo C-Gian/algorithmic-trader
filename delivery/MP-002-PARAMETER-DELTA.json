@@ -1,5 +1,5 @@
 {
-  "status": "DIRECTOR_PROPOSAL_FOR_ASTRA_REVIEW_NOT_RUNTIME_CONFIG",
+  "status": "DIRECTOR_CLOSED_METHOD_DESIGN_DELTA_NOT_RUNTIME_CONFIG",
   "proposal_version": "MP-002-v0.2",
   "proposed_method": "btc.context-action.v0.3",
   "proposed_rules": "mp002.rules.v0.3",
@@ -88,5 +88,5 @@
     "comparison_scope": "Integrated VERSION comparison, not identification of RETURN causal effect alone",
     "owner_independence": "Distinct lineage not statistical independence; report regime/concentration"
   },
-  "authority": "Prose MP-002 governs ordered transitions; this is an explicit design delta, not implementation authorization."
+  "authority": "Closed MP-002 prose defines ordered semantics; complete register MP-002-PARAMETERS.json is authoritative numerical/categorical configuration. Delta is historical design explanation; implementation only via active WP-011 task."
 }
