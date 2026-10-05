@@ -39,6 +39,8 @@ from .measures import PRECISION, Bar, div
 from .params import Params
 
 STATE_FORMAT = "algotrader.adviser-evaluation-state.v1"
+# v2: WP-009 correction — ordinary protective stop gaps fill at the adverse open (MP-001 §11)
+EVALUATOR_IMPLEMENTATION = "adviser.evaluator.v2"
 MINUTE = timedelta(minutes=1)
 INITIAL_RECORDS = hashlib.sha256(b"algotrader.adviser-evaluation.records.v1\x00").hexdigest()
 BPS = Decimal(10000)
@@ -111,6 +113,7 @@ class Evaluator:
         self.last_trade: Bar | None = None
         self.last_trade_end: datetime | None = None
         self.aggregates = {"paths": {}, "samples": {"taken": 0}}
+        self.now: datetime | None = None  # transient: clock of the dispatch/finish being processed (resolved_at)
 
     # ---------------------------------------------------------------------------------------------------------
     # profiles
@@ -125,7 +128,7 @@ class Evaluator:
                                 exit_mode="HORIZON_ONLY" if variant == "HORIZON_ONLY" else "GUIDANCE")
 
     def identity(self) -> dict:
-        body = {"format": EVALUATION_VERSION, "profiles": {v: json.loads(self.profile(v).model_dump_json())
+        body = {"format": EVALUATION_VERSION, "implementation": EVALUATOR_IMPLEMENTATION, "profiles": {v: json.loads(self.profile(v).model_dump_json())
                                                            for v in ("PRIMARY", "ENTRY_DELAY_0", "ENTRY_DELAY_120",
                                                                      "HORIZON_ONLY")},
                 "stress_allowance_per_leg": str(self.a_stress), "exit_delay_sensitivities": "NOT_IMPLEMENTED_SECONDARY",
@@ -196,6 +199,7 @@ class Evaluator:
             self.next_sample = self.next_sample + timedelta(hours=1)
 
     def finish(self, t: datetime) -> None:
+        self.now = t
         for cid in sorted(self.calls):
             c = self.calls[cid]
             for v in sorted(c["paths"]):
@@ -346,6 +350,11 @@ class Evaluator:
         ps.lo_t = str(min(Decimal(ps.lo_t), l_t)) if ps.lo_t else str(l_t)
         if ps.exit_mode == "HORIZON_ONLY":
             return
+        if o_t <= v_t:
+            # MP-001 §11: a protective stop gap fills at the adverse open (known model opening boundary), never at V;
+            # the open is the minute's first known price, so later intrabar levels cannot change it.
+            self._fill_exit(c, ps, m.o, "STOP_GAP_ADVERSE_OPEN", m.start, m.start, "STOP_GAP")
+            return
         hit_t, hit_v = h_t >= t_t, l_t <= v_t
         if hit_t and hit_v:
             self._close(c, ps, "AMBIGUOUS", "BOTH_T_AND_V_IN_ONE_MINUTE", None, None, interval=(m.start, m.end))
@@ -439,7 +448,8 @@ class Evaluator:
             gross=gross, fees=fees, allowances=allow, price_net=net,
             stress_price_net=stress if ps.variant == "PRIMARY" else None, funding=funding, total_net=total,
             funding_status=fstatus, bounds=bounds, mfe=mfe, mae=mae, held_minutes=held, censored_from=censored_from,
-            notes=tuple(ps.notes + ([f"ambiguous minute {interval[0].isoformat()}"] if interval else [])))
+            notes=tuple(ps.notes + ([f"ambiguous minute {interval[0].isoformat()}"] if interval else [])),
+            resolved_at=self.now)
         ps.status = "DONE"
         self._emit("path", json.loads(path.model_dump_json()))
         if ps.variant == "PRIMARY" and status == "NO_ENTRY":

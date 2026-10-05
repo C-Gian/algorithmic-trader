@@ -4,6 +4,7 @@ import { fmtNum, fmtTime, humanize } from "../lib/format";
 import { usePoll } from "../lib/usePoll";
 import { Icon } from "../ui/Icon";
 import { Badge, Button, Card, cx, Mono, Notice, Tone } from "../ui/primitives";
+import { useCopyFeedback } from "./replay/MarketReplay";
 
 // Home live cockpit (WP-009): the Owner starts/stops the local live adviser here. Every value comes from the committed
 // live session view (/api/adviser/live); nothing is computed in the browser. Stopped means nothing is monitored and no
@@ -164,7 +165,9 @@ function CallPanel({ v }: { v: LiveView | null }) {
       <div className="call-head">
         <span className="call-dir" data-testid="live-call-direction">{c.direction}</span>
         <span className="call-family">{c.family} · {c.family_text}</span>
-        <Badge tone={c.origin === "LIVE" ? "pos" : "pending"}>{c.origin === "LIVE" ? "Live call" : "Reconstructed — not actionable"}</Badge>
+        {c.presentation === "NOT_CURRENT"
+          ? <Badge tone="warn" testid="live-call-not-current">Not current — entry not verifiable</Badge>
+          : <Badge tone={c.origin === "LIVE" ? "pos" : "pending"}>{c.origin === "LIVE" ? "Live call" : "Reconstructed — not actionable"}</Badge>}
       </div>
       <div className={cx("call-entry", `tone-${entryTone}`)} data-testid="live-entry">
         <b>{ENTRY_TEXT[c.entry_status]}</b>
@@ -216,7 +219,7 @@ export function LiveCockpit() {
   const st = poll.data;
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [copied, setCopied] = useState<"copied" | "error" | null>(null);
+  const [copied, runCopy] = useCopyFeedback();
   const v = st?.view && st.view.chart ? st.view : null;
   const state = st?.state ?? "STOPPED";
   const running = !!st?.running;
@@ -232,14 +235,7 @@ export function LiveCockpit() {
       setBusy(false);
     }
   };
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(await adviserApi.analysis());
-      setCopied("copied");
-    } catch {
-      setCopied("error");
-    }
-  };
+  const copy = () => void runCopy(() => adviserApi.analysis());
   const newAlerts = (st?.alerts ?? []).filter((a) => !a.acknowledged);
   return (
     <section className="live-cockpit" data-testid="live-cockpit">
@@ -262,7 +258,8 @@ export function LiveCockpit() {
                     className="btn-lg">Start live adviser</Button>
           )}
           <Button variant="secondary" icon={copied === "copied" ? "check" : "copy"} onClick={copy} data-testid="copy-analysis">
-            {copied === "copied" ? "Copied" : copied === "error" ? "Copy failed" : "Copy analysis for chat"}</Button>
+            {copied === "copied" ? "Copied" : copied === "copying" ? "Copying…" : copied === "error" ? "Copy failed"
+              : "Copy analysis for chat"}</Button>
         </div>
       </div>
       {error && <Notice tone="neg" title="Could not change the live adviser">{error}</Notice>}
@@ -271,8 +268,12 @@ export function LiveCockpit() {
           {newAlerts.slice(0, 3).map((a) => <div key={a.alert_key}>{humanize(a.change_type)} — {a.summary}</div>)}
         </Notice>
       )}
-      {v?.stale_session && <Notice tone="warn" title="Stopped">The last view below is from the stopped session and is not
-        current advice.</Notice>}
+      {v?.stale_session && (
+        <Notice tone="warn" title={state === "STOPPED" ? "Stopped" : "Not current advice"} testid="live-not-current">
+          {state === "STOPPED" ? "The last view below is from the stopped session and is not current advice."
+            : `The session is ${humanize(state).toLowerCase()}: the view below is not current and no entry is presented as usable now.`}
+        </Notice>
+      )}
       <div className="live-grid">
         <aside className="live-side">
           <DirectionPanel v={v} />

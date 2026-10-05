@@ -1,4 +1,4 @@
-"""Hypothetical evaluation contracts ``algotrader.adviser-evaluation.v1`` (revision 1, PROVISIONAL).
+"""Hypothetical evaluation contracts ``algotrader.adviser-evaluation.v1`` (revision 2, PROVISIONAL).
 
 A separate namespace from ``semantic.v2``: immutable call-linked hypothetical entry/exit paths, their declared
 profiles, censored/ambiguous bounds, hourly MarketView/persistence samples and report aggregates (MP-001 §11).
@@ -18,11 +18,15 @@ from pydantic import BaseModel, ConfigDict
 
 EVALUATION_VERSION = "algotrader.adviser-evaluation.v1"
 EVALUATION_STATUS = "PROVISIONAL"
-EVALUATION_REVISION = 1
+EVALUATION_REVISION = 2
 EVALUATION_CHANGELOG: tuple[tuple[int, str, str], ...] = (
     (1, "2026-10-04", "Initial provisional baseline (WP-009): evaluator profile, hypothetical path (primary, "
                       "entry-delay sensitivities, horizon-only baseline), normalized one-unit accounting, view "
                       "samples and report aggregates."),
+    (2, "2026-10-05", "WP-009 correction (additive, optional): HypotheticalPath.resolved_at - the professional clock "
+                      "time of the dispatch (or clock-end finish) at which the evaluator determined the path, so "
+                      "cutoff-safe inspection never shows an outcome before it was knowable. Revision-1 records "
+                      "remain readable (resolved_at absent = unknown; withheld under a cutoff)."),
 )
 
 
@@ -78,6 +82,7 @@ class HypotheticalPath(Record):
     held_minutes: Decimal | None
     censored_from: datetime | None
     notes: tuple[str, ...]
+    resolved_at: datetime | None = None  # r2: dispatch/finish time at which this path was determined
 
 
 class ViewSample(Record):

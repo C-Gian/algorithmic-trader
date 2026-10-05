@@ -135,7 +135,7 @@ def live_run():
     sess = lv.LiveSession(compat=COMPAT, build="test", clock=clock)
     sess.start(None, fetcher())
     assert sess.status == "WARMING_UP" and sess.driver.rt.core.origin == "RECONSTRUCTED"
-    sess.connected = True
+    sess.on_connection("CONNECTED", clock.t)  # taped candle-subscription adequacy
     feed_live(sess, clock, DAY2 + timedelta(hours=4), DAY2 + timedelta(hours=5, minutes=21))
     journal, _, tape = sess.driver.take()
     return sess, clock, journal, tape
@@ -171,7 +171,8 @@ def test_quote_expiry_after_five_seconds_without_new_input_marks_entry_unverifie
     journal, _, _ = sess.driver.take()
     mc = [e["record"] for e in journal if e["kind"] == "material_change"]
     assert [m["change_type"] for m in mc] == ["ENTRY_UNVERIFIED"]
-    assert lv.alerts_from(journal, "run") == []  # display/actionability change, not an alert
+    # Director decision (WP-009 review, finding 4): AVAILABLE -> UNVERIFIED withdraws usable entry: one alert
+    assert [x["change_type"] for x in lv.alerts_from(journal, "run")] == ["ENTRY_UNVERIFIED"]
 
 
 def test_input_tape_reproduces_the_same_semantic_outputs(live_run):
@@ -193,7 +194,7 @@ def _ongoing():
     clock = Clock(DAY2 + timedelta(hours=4, seconds=30))
     sess = lv.LiveSession(compat=COMPAT, build="test", clock=clock)
     sess.start(None, fetcher())
-    sess.connected = True
+    sess.on_connection("CONNECTED", clock.t)  # taped candle-subscription adequacy
     feed_live(sess, clock, DAY2 + timedelta(hours=4), DAY2 + timedelta(hours=5, minutes=25))
     assert sess.driver.rt.core.call is not None
     return sess, clock

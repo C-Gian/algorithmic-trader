@@ -35,7 +35,7 @@ REGISTER_FILE = METHOD_DIR / "MP-001-PARAMETERS.json"
 MODEL_ID = "btc.context-action.v0.2"
 RULES_VERSION = "mp001.rules.v0.2"
 # Implementation identity of this translation of the rules into code (bumped with any behavioural code change).
-IMPLEMENTATION_ID = "adviser.core.v1"
+IMPLEMENTATION_ID = "adviser.core.v2"  # v2: WP-009 correction (timers, C withdrawal, live connection adequacy)
 
 
 def _lf(raw: bytes) -> bytes:

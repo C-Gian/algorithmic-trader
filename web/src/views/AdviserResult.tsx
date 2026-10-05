@@ -15,6 +15,44 @@ function frac(x: string | null | undefined): string {
   return x === null || x === undefined ? "—" : `${fmtNum(Number(x) * 10000, 1)} bps`;
 }
 
+function ConditionTime({ a }: { a: AdviserSection }) {
+  const cd = a.condition_durations;
+  const st = a.room_erosion_staged;
+  if (!cd?.available && !st) return null;
+  return (
+    <details className="more inset" data-testid="adv-condition-time">
+      <summary>Why the adviser could not call: condition time, slot/priority exposure and room by stage</summary>
+      <div className="more-body">
+        {cd?.available ? (
+          <div className="small-table-wrap">
+            <table className="small-table" data-testid="adv-condition-table">
+              <thead><tr><th>Condition (overlapping)</th><th>Minutes</th><th>Share of {cd.covered_minutes} covered min</th><th>Episodes</th></tr></thead>
+              <tbody>{Object.entries(cd.conditions ?? {}).map(([k, v]) => (
+                <tr key={k}><td>{humanize(k)}</td><td className="mono">{v.minutes}</td>
+                  <td className="mono">{v.fraction_of_covered === null ? "—" : `${(Number(v.fraction_of_covered) * 100).toFixed(1)}%`}</td>
+                  <td className="mono">{v.onsets}</td></tr>))}</tbody>
+            </table>
+          </div>
+        ) : <p className="muted small-text">{cd?.note}</p>}
+        {cd?.available && <p className="muted small-text">{cd.note}</p>}
+        {st && (
+          <div className="small-table-wrap">
+            <table className="small-table" data-testid="adv-room-stages">
+              <thead><tr><th>Family</th><th>Impulse</th><th>Reaction</th><th>Trigger</th><th>Primary open</th><th>n triggers</th></tr></thead>
+              <tbody>{Object.entries(st.by_family).map(([f, x]) => (
+                <tr key={f}><td>{f}</td>
+                  {["impulse", "reaction", "trigger", "primary_open"].map((k) => (
+                    <td key={k} className="mono">{x[k]?.median ?? (f !== "A" && (k === "impulse" || k === "reaction") ? "n/a" : "—")}</td>))}
+                  <td className="mono">{x.trigger?.n ?? "0"}</td></tr>))}</tbody>
+            </table>
+            <p className="muted small-text">Median room to the target in bps at each stage. {st.note}</p>
+          </div>
+        )}
+      </div>
+    </details>
+  );
+}
+
 export function AdviserSummary({ a }: { a: AdviserSection }) {
   if (a.pending) return <Notice tone="info" title="Adviser section pending">{a.text}</Notice>;
   const c = a.calls;
@@ -56,6 +94,7 @@ export function AdviserSummary({ a }: { a: AdviserSection }) {
       {Object.keys(a.funnel.rejection_blockers).length > 0 && (
         <div className="small-text muted">Trigger rejections: {Object.entries(a.funnel.rejection_blockers).map(([k, n]) => `${humanize(k)} ${n}`).join(" · ")}</div>
       )}
+      <ConditionTime a={a} />
       <details className="more inset">
         <summary>Funnel, gates, sensitivities and view samples (all details)</summary>
         <div className="more-body">

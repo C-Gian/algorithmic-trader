@@ -81,13 +81,17 @@ SCOPE_TEMPORAL = SCOPE + (
     "or corrupt terminal evidence fails the validation instead of matching. Paused, cancelled, failed or partial "
     "targets keep exact committed-prefix scope (no finish applied or implied). Dispatch readiness/deadline "
     "callbacks are covered by the shadow fold only.")
-VALIDATOR_VERSION_ADVISER = "4"
+VALIDATOR_VERSION_ADVISER = "5"
 SCOPE_ADVISER = SCOPE_TEMPORAL + (
-    " Version 4 (adviser evaluation runs, engine observe.stream.v3) additionally runs a shadow fold of the shared "
+    " Version 5 (adviser evaluation runs, engine observe.stream.v3) additionally runs a shadow fold of the shared "
     "professional method implementation (adviser core + evaluator, pinned identity/profile) over the same input and "
     "compares, at every committed range boundary, the adviser state SHA-256 and commitments (professional sequence, "
-    "journal and evaluation sequence/chain), every regenerated semantic.v2 journal record and adviser-evaluation.v1 "
-    "record digest with the committed records, and for completed runs the professional clock-end finish commitment. "
+    "journal and evaluation sequence/chain). The STORED semantic.v2 journal and adviser-evaluation.v1 record bytes are "
+    "re-hashed (canonical digest, contiguous sequence, chained hash) and every regenerated record digest and chain is "
+    "compared with that recomputation, never with a stored digest column alone; stored records the shadow fold did "
+    "not regenerate (extra) or regenerated records absent from storage (missing) are mismatches; for completed runs "
+    "the professional clock-end finish commitment is compared as well. A run pinned to a different method "
+    "implementation identity fails explicitly (no comparison under changed semantics). "
     "It shares the method/reducer implementation and the canonical cache: it is NOT an independent method validation, "
     "an economic check or a source audit; the independent hand-expected reference fixtures live in the test suite.")
 TERMINAL_KEYS = ("aggregate_chain", "sealed_commitment", "dispatch_commitment", "dispatch_seq", "clock_time")
@@ -370,18 +374,70 @@ class DeepJob(ReplayJob):
                 "artifact_sha256": pin["artifact"]["sha256"], "reference_sealed_records_final": len(ref.sealed),
                 "shadow_sealed_records_final": shadow.counters["sealed"], "shadow_dispatches_final": shadow.dispatch_seq}
 
+    def _adv_load_stored(self, replay_id: str, out: dict[str, dict[int, tuple[str, str]]]) -> list[dict[str, Any]]:
+        """Re-hash the STORED professional record bytes: seq -> (recomputed digest, recomputed chain). A stored
+        digest/chain/sequence that disagrees with the stored bytes is a mismatch of its own."""
+        import hashlib
+
+        from ..adviser.core import INITIAL_JOURNAL
+        from ..adviser.evaluator import INITIAL_RECORDS
+        from ..feed.ordering import canonical
+
+        problems: list[dict[str, Any]] = []
+        for table, initial in (("adviser_journal", INITIAL_JOURNAL), ("adviser_evaluation_records", INITIAL_RECORDS)):
+            rows = self.conn.execute(f"SELECT seq, digest, chain, record FROM {table} WHERE run_id = %s ORDER BY seq",
+                                     (replay_id,)).fetchall()
+            h, expect, m = initial, 1, {}
+            for r in rows:
+                if r["seq"] != expect:
+                    problems.append({"cursor": None, "kind": f"{table}_stored_sequence", "at": f"seq {r['seq']}",
+                                     "expected": expect, "reference": r["seq"]})
+                digest = hashlib.sha256(canonical(r["record"])).hexdigest()
+                if digest != r["digest"]:
+                    problems.append({"cursor": None, "kind": f"{table}_stored_bytes", "at": f"seq {r['seq']}",
+                                     "expected": r["digest"], "reference": digest})
+                # each link is verified locally from the STORED predecessor, so one altered row is localized
+                link = hashlib.sha256(bytes.fromhex(h) + bytes.fromhex(digest)).hexdigest()
+                if link != r["chain"]:
+                    problems.append({"cursor": None, "kind": f"{table}_stored_chain", "at": f"seq {r['seq']}",
+                                     "expected": r["chain"], "reference": link})
+                m[r["seq"]] = (digest, link)
+                h = r["chain"]
+                expect = r["seq"] + 1
+            out[table] = m
+            self.counters_deep[f"{table}_stored_rehashed"] = len(rows)
+        return problems
+
     def _adv_compare(self, comparisons: dict[str, Any], cursor: int) -> None:
-        """Every regenerated professional record must equal the committed record with the same sequence."""
+        """Every regenerated professional record (digest AND chain) must equal the recomputation of the stored bytes
+        with the same sequence."""
         journal, records = self._adv.take()
+        seen_all = getattr(self, "_adv_seen", None)
+        if seen_all is None:
+            seen_all = self._adv_seen = {}
         for table, rows in (("adviser_journal", journal), ("adviser_evaluation_records", records)):
+            seen = seen_all.setdefault(table, set())
             for r in rows:
                 comparisons["compared"] += 1
+                seen.add(r["seq"])
                 want = self._adv_digests.get(table, {}).get(r["seq"])
-                if want != r["digest"] and len(comparisons["mismatches"]) < MAX_MISMATCHES:
+                got = (r["digest"], r["chain"])
+                if (want is None or tuple(want) != got) and len(comparisons["mismatches"]) < MAX_MISMATCHES:
                     comparisons["mismatches"].append({"cursor": cursor, "kind": f"{table}_record",
-                                                      "at": f"seq {r['seq']}", "expected": want,
-                                                      "reference": r["digest"]})
+                                                      "at": f"seq {r['seq']}",
+                                                      "expected": None if want is None else list(want),
+                                                      "reference": list(got)})
             self.counters_deep[f"{table}_compared"] = self.counters_deep.get(f"{table}_compared", 0) + len(rows)
+
+    def _adv_extra(self, comparisons: dict[str, Any], target: int) -> None:
+        """At full coverage every stored professional record must have been regenerated (no extra stored rows)."""
+        for table, stored in self._adv_digests.items():
+            extra = sorted(set(stored) - self._adv_seen.get(table, set()))
+            comparisons["compared"] += 1
+            if extra and len(comparisons["mismatches"]) < MAX_MISMATCHES:
+                comparisons["mismatches"].append({"cursor": target, "kind": f"{table}_extra_stored",
+                                                  "at": f"seq {extra[0]}..{extra[-1]} ({len(extra)} rows)",
+                                                  "expected": None, "reference": "not regenerated by the shadow fold"})
 
     def _adv_terminal(self, plan: dict[str, Any], adv, comparisons: dict[str, Any], target: int) -> dict[str, Any]:
         """The shadow temporal fold was finished by the temporal terminal comparison; finish the shadow professional
@@ -481,14 +537,23 @@ class DeepJob(ReplayJob):
             ref = ReferenceAggregator(tuple(cache.feed_manifest.coverage), tuple(Horizon(h) for h in prof.horizons),
                                       prof.closure_allowance, ClockPolicy(prof.clock_policy))
         if plan.get("adviser") and shadow is not None:
-            from ..adviser.engine import new_runtime
+            from ..adviser.engine import AdviserStateError, new_runtime
 
-            adv = new_runtime(replay["engine"])
+            try:
+                adv = new_runtime(replay["engine"])
+            except AdviserStateError as exc:
+                self._finish("failed", f"cannot run the professional shadow fold: {exc} (the run is pinned to a "
+                                       "different method implementation identity; no comparison is possible)")
+                return
             adv.attach(shadow)
-            for table in ("adviser_journal", "adviser_evaluation_records"):
-                adv_digests[table] = {r["seq"]: r["digest"] for r in self.conn.execute(
-                    f"SELECT seq, digest FROM {table} WHERE run_id = %s", (plan["replay_id"],)).fetchall()}
+            stored_problems = self._adv_load_stored(plan["replay_id"], adv_digests)
+            if not start:  # a resumed validation already recorded these with its saved comparisons
+                for m in stored_problems:
+                    comparisons["compared"] += 1
+                    if len(comparisons["mismatches"]) < MAX_MISMATCHES:
+                        comparisons["mismatches"].append(m)
         self._adv, self._adv_digests = adv, adv_digests
+        self._adv_seen = {"adviser_journal": set(), "adviser_evaluation_records": set()}
         if temporal and start:  # temporal folds are not persisted: re-fold them over the already covered prefix
             self.enter_phase("VALIDATING", detail="re-folding the temporal reference over the covered prefix",
                              total=start, done=0, unit="events")
@@ -592,6 +657,9 @@ class DeepJob(ReplayJob):
                 terminal = {"compared": False, "scope": (
                     "committed prefix only: the target is not a completed run with a published clock-end finish "
                     "(paused, cancelled, failed or partial); no finish was applied or implied")}
+        if adv is not None and covered and (plan.get("run_status_at_launch") != "completed"
+                                            or (terminal or {}).get("adviser") is not None):
+            self._adv_extra(comparisons, target)
         self.enter_phase("GENERATING_REPORT")
         mism = comparisons["mismatches"]
         result = {

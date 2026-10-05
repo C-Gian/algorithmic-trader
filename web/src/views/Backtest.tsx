@@ -558,7 +558,8 @@ function ReportCard({ ev }: { ev: Evaluation }) {
     <div className="report-actions">
       <Button icon={copied === "copied" ? "check" : "copy"} onClick={copy} data-testid="copy-report"
               variant={terminal ? "primary" : "secondary"} className={terminal ? "btn-lg" : undefined}>
-        {copied === "copied" ? "Copied — paste into chat" : copied === "error" ? "Copy failed — use Markdown download"
+        {copied === "copied" ? "Copied — paste into chat" : copied === "copying" ? "Copying…"
+          : copied === "error" ? "Copy failed — use Markdown download"
           : terminal ? "Copy report for chat" : "Copy diagnostic snapshot for chat"}
       </Button>
       <a className="btn btn-secondary" href={evalApi.downloadUrl(ev.evaluation_id, "md")} data-testid="download-md"

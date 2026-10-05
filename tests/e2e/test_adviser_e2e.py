@@ -96,6 +96,10 @@ def test_owner_runs_an_adviser_evaluation_and_inspects_its_call(advbench, browse
     expect(page.get_by_test_id("adv-calls")).to_have_text("1")
     expect(page.get_by_test_id("adv-hypo-note")).to_contain_text("total net is unavailable")
     expect(page.get_by_test_id("adv-funnel")).to_contain_text("calls 1")
+    # WP-009 correction: overlapping condition time, slot/priority exposure and staged room are labelled details
+    page.get_by_test_id("adv-condition-time").locator("summary").click()
+    expect(page.get_by_test_id("adv-condition-table")).to_contain_text("SLOT OCCUPIED")
+    expect(page.get_by_test_id("adv-room-stages")).to_contain_text("A")
     page.get_by_test_id("adv-call-row").first.click()
     detail = page.get_by_test_id("call-detail")
     expect(detail).to_contain_text("LONG")
@@ -153,9 +157,10 @@ def test_owner_starts_the_live_adviser_sees_a_call_and_restart_repeats_no_alert(
         expect(page.get_by_test_id("live-lenses")).to_contain_text("Structure & levels")
         expect(page.get_by_test_id("live-chart")).to_be_visible()
         page.screenshot(path=str(evidence_dir / "50-live-call.png"), full_page=True)
-        # price leaves the admissible area: the entry is withdrawn while the thesis continues; later the target is hit
-        wait_for(lambda: any(a["change_type"] == "ENTRY_WITHDRAWN" for a in stack.get("/api/adviser/live")["alerts"]),
-                 timeout=120)
+        # usable entry is withdrawn (price leaves the area, or the scripted once-a-minute quote ages past 5 s: one
+        # ENTRY_UNVERIFIED alert per Director decision) while the thesis continues; later the target is hit
+        wait_for(lambda: any(a["change_type"] in ("ENTRY_WITHDRAWN", "ENTRY_UNVERIFIED")
+                             for a in stack.get("/api/adviser/live")["alerts"]), timeout=120)
         expect(page.get_by_test_id("live-no-trade")).to_be_visible(timeout=180_000)
         st = stack.get("/api/adviser/live")
         assert any(c["terminal"] == "TARGET_REACHED" for c in st["view"]["recent_calls"])
@@ -170,6 +175,7 @@ def test_owner_starts_the_live_adviser_sees_a_call_and_restart_repeats_no_alert(
         # restart later: reconstruction only; nothing is re-alerted
         clock.set(DAY2 + timedelta(hours=9))
         page.get_by_test_id("live-start").click()
+        expect(page.get_by_test_id("live-stop-button")).to_be_visible(timeout=15_000)  # queued before the one-shot worker
         th2, ws2 = live_fakes._run_worker(database_url, clock, [])
         ws2.gate.set()
         expect(page.get_by_test_id("live-state")).to_contain_text("Warming up", timeout=120_000)

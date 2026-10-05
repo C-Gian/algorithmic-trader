@@ -294,6 +294,19 @@
           "title": "Rejected Opens",
           "type": "integer"
         },
+        "resolved_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Resolved At"
+        },
         "status": {
           "title": "Status",
           "type": "string"
@@ -501,6 +514,11 @@
       "date": "2026-10-04",
       "note": "Initial provisional baseline (WP-009): evaluator profile, hypothetical path (primary, entry-delay sensitivities, horizon-only baseline), normalized one-unit accounting, view samples and report aggregates.",
       "revision": 1
+    },
+    {
+      "date": "2026-10-05",
+      "note": "WP-009 correction (additive, optional): HypotheticalPath.resolved_at - the professional clock time of the dispatch (or clock-end finish) at which the evaluator determined the path, so cutoff-safe inspection never shows an outcome before it was knowable. Revision-1 records remain readable (resolved_at absent = unknown; withheld under a cutoff).",
+      "revision": 2
     }
   ],
   "public_contracts": {
@@ -509,7 +527,7 @@
     "HypotheticalPath": "#/$defs/HypotheticalPath",
     "ViewSample": "#/$defs/ViewSample"
   },
-  "revision": 1,
+  "revision": 2,
   "schema_version": "algotrader.adviser-evaluation.v1",
   "status": "PROVISIONAL",
   "title": "Algorithmic Trader adviser evaluation contracts (algotrader.adviser-evaluation.v1, PROVISIONAL)"

@@ -57,6 +57,9 @@ export interface CallView {
   limiting_landmark: Record<string, string | null> | null;
   revision: number;
   guidance: string;
+  /** Presentation boundary (API): a non-current session never presents a usable entry; the saved status is kept. */
+  presentation?: "NOT_CURRENT";
+  entry_status_saved?: string;
 }
 
 export interface Lens {
@@ -91,6 +94,7 @@ export interface LiveView {
   notes: { at: string; event: string; [k: string]: unknown }[];
   counters: Record<string, number | null>;
   stale_session?: boolean;
+  current?: boolean;
 }
 
 export interface LiveAlert {
@@ -111,6 +115,7 @@ export interface LiveStatus {
   };
   state: string;
   running: boolean;
+  current?: boolean;
   message: string;
   view: LiveView | null;
   alerts: LiveAlert[];

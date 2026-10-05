@@ -1,0 +1,345 @@
+{
+  "label": "WP-009 correction executor evidence - offline/synthetic engineering checks only; no market or economic run",
+  "reviewed_commit": "5d1f2e169f2894b548015552c187c0eade1dc5a2",
+  "correction_base": "03f2dda7ae84cbd2c54c66abdc910dbb5cc4e050",
+  "method": "the new correction regressions (pure, DB and E2E) were copied unchanged into a disposable worktree of the reviewed commit and run there (UI rebuilt from that commit), then run on the final code",
+  "summary": {
+    "reviewed_failed": 46,
+    "reviewed_passed": 9,
+    "final_passed": 55,
+    "final_failed": 0,
+    "note": "tests that already passed on the reviewed commit are deliberate preservation guards (equality boundaries, no re-application of old closes, both-level ambiguity, HORIZON_ONLY scope, the current session presentation) that the corrections must not break"
+  },
+  "tests": [
+    {
+      "test": "tests/e2e/test_copy_race_e2e.py::test_repeated_copies_confirm_only_their_own_completed_write",
+      "reviewed_5d1f2e1": "FAILED",
+      "final": "PASSED"
+    },
+    {
+      "test": "tests/e2e/test_live_presentation_e2e.py::test_cockpit_never_presents_a_usable_entry_for_a_non_current_session[current]",
+      "reviewed_5d1f2e1": "PASSED",
+      "final": "PASSED"
+    },
+    {
+      "test": "tests/e2e/test_live_presentation_e2e.py::test_cockpit_never_presents_a_usable_entry_for_a_non_current_session[disconnected]",
+      "reviewed_5d1f2e1": "FAILED",
+      "final": "PASSED"
+    },
+    {
+      "test": "tests/e2e/test_live_presentation_e2e.py::test_cockpit_never_presents_a_usable_entry_for_a_non_current_session[stopped]",
+      "reviewed_5d1f2e1": "FAILED",
+      "final": "PASSED"
+    },
+    {
+      "test": "tests/e2e/test_live_presentation_e2e.py::test_cockpit_never_presents_a_usable_entry_for_a_non_current_session[unresponsive]",
+      "reviewed_5d1f2e1": "FAILED",
+      "final": "PASSED"
+    },
+    {
+      "test": "tests/test_adviser_correction_core.py::test_an_old_close_already_in_the_window_is_never_reapplied",
+      "reviewed_5d1f2e1": "PASSED",
+      "final": "PASSED"
+    },
+    {
+      "test": "tests/test_adviser_correction_core.py::test_c_close_at_the_far_edge_does_not_withdraw",
+      "reviewed_5d1f2e1": "PASSED",
+      "final": "PASSED"
+    },
+    {
+      "test": "tests/test_adviser_correction_core.py::test_c_close_beyond_far_edge_withdraws_whatever_the_receipt_delay[delay0--1]",
+      "reviewed_5d1f2e1": "PASSED",
+      "final": "PASSED"
+    },
+    {
+      "test": "tests/test_adviser_correction_core.py::test_c_close_beyond_far_edge_withdraws_whatever_the_receipt_delay[delay0-1]",
+      "reviewed_5d1f2e1": "PASSED",
+      "final": "PASSED"
+    },
+    {
+      "test": "tests/test_adviser_correction_core.py::test_c_close_beyond_far_edge_withdraws_whatever_the_receipt_delay[delay1--1]",
+      "reviewed_5d1f2e1": "FAILED",
+      "final": "PASSED"
+    },
+    {
+      "test": "tests/test_adviser_correction_core.py::test_c_close_beyond_far_edge_withdraws_whatever_the_receipt_delay[delay1-1]",
+      "reviewed_5d1f2e1": "FAILED",
+      "final": "PASSED"
+    },
+    {
+      "test": "tests/test_adviser_correction_core.py::test_c_close_beyond_far_edge_withdraws_whatever_the_receipt_delay[delay2--1]",
+      "reviewed_5d1f2e1": "FAILED",
+      "final": "PASSED"
+    },
+    {
+      "test": "tests/test_adviser_correction_core.py::test_c_close_beyond_far_edge_withdraws_whatever_the_receipt_delay[delay2-1]",
+      "reviewed_5d1f2e1": "FAILED",
+      "final": "PASSED"
+    },
+    {
+      "test": "tests/test_adviser_correction_core.py::test_c_withdrawal_after_restore_matches_the_uninterrupted_fold",
+      "reviewed_5d1f2e1": "FAILED",
+      "final": "PASSED"
+    },
+    {
+      "test": "tests/test_adviser_correction_core.py::test_c_withdrawal_precedes_a_coincident_trigger_in_the_same_delayed_dispatch",
+      "reviewed_5d1f2e1": "FAILED",
+      "final": "PASSED"
+    },
+    {
+      "test": "tests/test_adviser_correction_core.py::test_freshness_equality_keeps_the_thesis_until_the_first_failing_microsecond",
+      "reviewed_5d1f2e1": "PASSED",
+      "final": "PASSED"
+    },
+    {
+      "test": "tests/test_adviser_correction_core.py::test_recently_received_old_bar_is_stale_at_event_end_plus_allowance_without_new_input",
+      "reviewed_5d1f2e1": "FAILED",
+      "final": "PASSED"
+    },
+    {
+      "test": "tests/test_adviser_correction_core.py::test_residual_disable_is_published_before_the_next_opening_boundary",
+      "reviewed_5d1f2e1": "PASSED",
+      "final": "PASSED"
+    },
+    {
+      "test": "tests/test_adviser_correction_core.py::test_residual_equality_keeps_entry_and_the_first_too_late_instant_closes_it_without_input",
+      "reviewed_5d1f2e1": "FAILED",
+      "final": "PASSED"
+    },
+    {
+      "test": "tests/test_adviser_correction_core.py::test_restored_core_schedules_the_same_first_failing_boundary",
+      "reviewed_5d1f2e1": "FAILED",
+      "final": "PASSED"
+    },
+    {
+      "test": "tests/test_adviser_correction_db.py::test_call_journal_and_outcome_inspection_honour_a_requested_cutoff",
+      "reviewed_5d1f2e1": "FAILED",
+      "final": "PASSED"
+    },
+    {
+      "test": "tests/test_adviser_correction_db.py::test_deep_refuses_a_run_pinned_to_a_different_implementation_identity",
+      "reviewed_5d1f2e1": "FAILED",
+      "final": "PASSED"
+    },
+    {
+      "test": "tests/test_adviser_correction_db.py::test_deep_v5_keeps_stored_byte_mismatches_across_a_paused_and_resumed_validation",
+      "reviewed_5d1f2e1": "FAILED",
+      "final": "PASSED"
+    },
+    {
+      "test": "tests/test_adviser_correction_db.py::test_deep_v5_rehashes_stored_bytes_and_detects_every_alteration",
+      "reviewed_5d1f2e1": "FAILED",
+      "final": "PASSED"
+    },
+    {
+      "test": "tests/test_adviser_correction_db.py::test_failed_run_window_stays_within_its_committed_prefix",
+      "reviewed_5d1f2e1": "FAILED",
+      "final": "PASSED"
+    },
+    {
+      "test": "tests/test_adviser_correction_db.py::test_window_is_clamped_to_the_committed_frontier_while_running_paused_and_completed",
+      "reviewed_5d1f2e1": "FAILED",
+      "final": "PASSED"
+    },
+    {
+      "test": "tests/test_adviser_correction_diagnostics.py::test_accumulator_is_identical_after_an_interrupted_restore",
+      "reviewed_5d1f2e1": "FAILED",
+      "final": "PASSED"
+    },
+    {
+      "test": "tests/test_adviser_correction_diagnostics.py::test_b_and_c_impulse_and_reaction_stages_are_explicitly_not_applicable",
+      "reviewed_5d1f2e1": "FAILED",
+      "final": "PASSED"
+    },
+    {
+      "test": "tests/test_adviser_correction_diagnostics.py::test_legacy_view_without_accumulator_is_labelled_not_invented",
+      "reviewed_5d1f2e1": "FAILED",
+      "final": "PASSED"
+    },
+    {
+      "test": "tests/test_adviser_correction_diagnostics.py::test_overlapping_named_blockers_are_timed_separately_from_attempt_counts",
+      "reviewed_5d1f2e1": "FAILED",
+      "final": "PASSED"
+    },
+    {
+      "test": "tests/test_adviser_correction_diagnostics.py::test_slot_occupied_time_and_staged_room_erosion_for_an_issued_a_call",
+      "reviewed_5d1f2e1": "FAILED",
+      "final": "PASSED"
+    },
+    {
+      "test": "tests/test_adviser_correction_diagnostics.py::test_zero_call_report_carries_durations_diagnosis_and_markdown",
+      "reviewed_5d1f2e1": "FAILED",
+      "final": "PASSED"
+    },
+    {
+      "test": "tests/test_adviser_correction_evaluator.py::test_both_levels_with_an_inside_open_remain_ambiguous_never_target_first",
+      "reviewed_5d1f2e1": "PASSED",
+      "final": "PASSED"
+    },
+    {
+      "test": "tests/test_adviser_correction_evaluator.py::test_gap_fill_funding_ownership_uses_the_open_boundary_not_the_minute_interval",
+      "reviewed_5d1f2e1": "FAILED",
+      "final": "PASSED"
+    },
+    {
+      "test": "tests/test_adviser_correction_evaluator.py::test_horizon_only_keeps_its_declared_no_protection_scope",
+      "reviewed_5d1f2e1": "PASSED",
+      "final": "PASSED"
+    },
+    {
+      "test": "tests/test_adviser_correction_evaluator.py::test_open_exactly_at_v_is_inclusive_and_beats_a_later_target_print",
+      "reviewed_5d1f2e1": "FAILED",
+      "final": "PASSED"
+    },
+    {
+      "test": "tests/test_adviser_correction_evaluator.py::test_ordinary_long_stop_gap_fills_at_the_adverse_open_boundary",
+      "reviewed_5d1f2e1": "FAILED",
+      "final": "PASSED"
+    },
+    {
+      "test": "tests/test_adviser_correction_evaluator.py::test_ordinary_short_stop_gap_is_the_exact_reflection",
+      "reviewed_5d1f2e1": "FAILED",
+      "final": "PASSED"
+    },
+    {
+      "test": "tests/test_adviser_correction_evaluator.py::test_pending_exit_gap_and_ordinary_gap_agree",
+      "reviewed_5d1f2e1": "FAILED",
+      "final": "PASSED"
+    },
+    {
+      "test": "tests/test_adviser_correction_live.py::test_current_live_session_presents_the_saved_entry_unchanged",
+      "reviewed_5d1f2e1": "FAILED",
+      "final": "PASSED"
+    },
+    {
+      "test": "tests/test_adviser_correction_live.py::test_disconnect_with_fresh_quotes_makes_entry_unverified_and_alerts_once",
+      "reviewed_5d1f2e1": "FAILED",
+      "final": "PASSED"
+    },
+    {
+      "test": "tests/test_adviser_correction_live.py::test_history_fetcher_checks_stop_between_pages",
+      "reviewed_5d1f2e1": "FAILED",
+      "final": "PASSED"
+    },
+    {
+      "test": "tests/test_adviser_correction_live.py::test_non_current_sessions_never_present_a_usable_entry",
+      "reviewed_5d1f2e1": "FAILED",
+      "final": "PASSED"
+    },
+    {
+      "test": "tests/test_adviser_correction_live.py::test_owner_stop_is_taped_unverified_but_never_alerted",
+      "reviewed_5d1f2e1": "FAILED",
+      "final": "PASSED"
+    },
+    {
+      "test": "tests/test_adviser_correction_live.py::test_reconnection_alone_is_not_adequate_until_a_fresh_bar_then_one_reopening",
+      "reviewed_5d1f2e1": "FAILED",
+      "final": "PASSED"
+    },
+    {
+      "test": "tests/test_adviser_correction_live.py::test_restored_state_keeps_connection_adequacy",
+      "reviewed_5d1f2e1": "FAILED",
+      "final": "PASSED"
+    },
+    {
+      "test": "tests/test_adviser_correction_live.py::test_silent_stale_socket_follows_the_registered_staleness_terminal_rule",
+      "reviewed_5d1f2e1": "FAILED",
+      "final": "PASSED"
+    },
+    {
+      "test": "tests/test_adviser_correction_live.py::test_start_with_stop_already_observed_never_activates_live",
+      "reviewed_5d1f2e1": "FAILED",
+      "final": "PASSED"
+    },
+    {
+      "test": "tests/test_adviser_correction_live.py::test_stop_after_the_last_acquisition_performs_no_replay_work",
+      "reviewed_5d1f2e1": "FAILED",
+      "final": "PASSED"
+    },
+    {
+      "test": "tests/test_adviser_correction_live.py::test_stop_during_replay_stops_at_the_next_minute",
+      "reviewed_5d1f2e1": "FAILED",
+      "final": "PASSED"
+    },
+    {
+      "test": "tests/test_adviser_correction_live.py::test_the_tape_reproduces_disconnect_reconnect_and_stop",
+      "reviewed_5d1f2e1": "FAILED",
+      "final": "PASSED"
+    },
+    {
+      "test": "tests/test_adviser_correction_live_db.py::test_fence_loss_during_startup_joins_the_startup_thread_and_closes_the_socket",
+      "reviewed_5d1f2e1": "FAILED",
+      "final": "PASSED"
+    },
+    {
+      "test": "tests/test_adviser_correction_live_db.py::test_startup_failure_is_visible_and_releases_owned_work",
+      "reviewed_5d1f2e1": "FAILED",
+      "final": "PASSED"
+    },
+    {
+      "test": "tests/test_adviser_correction_live_db.py::test_stop_during_a_slow_catch_up_is_cooperative_and_never_enters_live",
+      "reviewed_5d1f2e1": "FAILED",
+      "final": "PASSED"
+    },
+    {
+      "test": "tests/test_adviser_correction_versions.py::test_unfinished_run_with_the_old_implementation_identity_fails_explicitly",
+      "reviewed_5d1f2e1": "FAILED",
+      "final": "PASSED"
+    }
+  ],
+  "director_probes_rerun_on_final_code": {
+    "probe_director": {
+      "ordinary_stop_gap": {
+        "expected_price": "99900",
+        "actual_price": "99900",
+        "actual_reason": "STOP_GAP_ADVERSE_OPEN",
+        "actual_interval": [
+          "2025-09-01T10:02:00Z",
+          "2025-09-01T10:02:00Z"
+        ]
+      },
+      "late_receipt_freshness": {
+        "expected_first_stale": "2025-09-02T12:02:00.000001+00:00",
+        "actual_next_deadline": "2025-09-02T12:02:00.000001+00:00",
+        "fresh_at_requested_time": false,
+        "actual_core_clock": "2025-09-02T12:02:00.000001+00:00",
+        "actual_thesis": null
+      },
+      "residual_timer": {
+        "actual_entry": "CLOSED",
+        "remaining_is_less_than_minimum": true,
+        "next_deadline": "2025-09-02T12:02:00.000001+00:00"
+      },
+      "c_late_close_withdrawal": {
+        "closed_below_L_minus_z": true,
+        "expected_attempt_present": false,
+        "actual_attempt_present": false,
+        "context": "BALANCED",
+        "phase": "TRANSITION"
+      },
+      "disconnected_entry": {
+        "session_status": "DISCONNECTED",
+        "connected": false,
+        "actual_entry": "UNVERIFIED",
+        "expected_entry": "UNVERIFIED",
+        "actual_reasons": [
+          "CANDLE_CONNECTION_LOST"
+        ]
+      }
+    },
+    "probe_cancel": {
+      "cancel_seen_before_replay": true,
+      "actual_replayed_minutes": null,
+      "actual_factual_cursor": 0,
+      "expected_new_replay_work_after_cancel": 0
+    },
+    "probe_cutoff": {
+      "committed_cursor": 1,
+      "requested_cursor": 1,
+      "actual_returned_slots": [],
+      "all_returned_slots_are_uncommitted": true,
+      "expected_returned_slots": []
+    }
+  },
+  "deep_probe": "delivery/evidence/WP-009-deep-probe.py extracts the old _adv_compare and feeds a digest-only map; Deep v5 replaced that map with a re-hash of the stored record bytes (seq -> digest, chain), so the AST probe no longer applies. Its scenario (record bytes changed, stored seq/digest unchanged) is the DB regression test_adviser_correction_db.py::test_deep_v5_rehashes_stored_bytes_and_detects_every_alteration (journal and evaluation tables): mismatch kinds *_stored_bytes and *_record."
+}

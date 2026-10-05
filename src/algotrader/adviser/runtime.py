@@ -28,7 +28,7 @@ from .core import AdviserConfig, AdviserCore, EventInput, Quote, STATE_FORMAT as
 from .evaluator import Evaluator
 from .measures import Bar
 
-RUNTIME_FORMAT = "algotrader.adviser-runtime.v1"
+RUNTIME_FORMAT = "algotrader.adviser-runtime.v2"  # v2: taped connection inputs; core state v2
 
 
 def _iso(t: datetime | None) -> str | None:
@@ -81,6 +81,10 @@ class AdviserRuntime:
 
     def origin(self, origin: str, at: datetime) -> None:
         self._push(at, "origin", origin)
+
+    def connection(self, state: str, at: datetime) -> None:
+        """Live candle-session connection change (CONNECTED / DISCONNECTED / STOPPED), dispatched at ``at``."""
+        self._push(at, "connection", state)
 
     def capability_restart(self, at: datetime, reason: str) -> None:
         """Live restart after downtime: a gap overlapping an ongoing thesis makes it UNASSESSABLE (MP-001 §9)."""
@@ -146,7 +150,10 @@ class AdviserRuntime:
                 core.set_origin(payload, t)
             elif kind == "restart":
                 core.admit_restart(payload)
+            elif kind == "connection":
+                core.admit_connection(payload)
         if self.ev is not None:
+            self.ev.now = t
             self.ev.on_minutes(_trade_items(trade_items, self.ev.last_trade_end), marks)
         entries = core.dispatch(t)
         self.dispatches += 1

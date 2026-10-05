@@ -175,7 +175,8 @@ def test_live_start_call_alert_stop_and_restart_without_repeated_alerts(database
     assert call["record"]["env"]["origin"] == "LIVE" and call["origin"] == "LIVE"
     assert alerts[0]["change_type"] == "NEW_CALL"  # later entry withdrawals/reopenings are their own transitions
     assert len({a["alert_key"] for a in alerts}) == len(alerts)
-    assert {a["change_type"] for a in alerts} <= {"NEW_CALL", "ENTRY_WITHDRAWN", "ENTRY_REOPENED", "TERMINAL"}
+    assert {a["change_type"] for a in alerts} <= {"NEW_CALL", "ENTRY_WITHDRAWN", "ENTRY_UNVERIFIED", "ENTRY_REOPENED",
+                                                 "TERMINAL"}  # UNVERIFIED alerts once (Director, finding 4)
     assert tape > 0 and state is not None
     first_run = call["run_id"]
     # restart 30 minutes later: the old thesis overlapping the gap becomes UNASSESSABLE, never a new alert

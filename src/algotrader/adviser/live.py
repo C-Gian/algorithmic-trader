@@ -76,6 +76,7 @@ EPS = timedelta(microseconds=1)
 MAX_RECONSTRUCTION = timedelta(hours=96)
 FAR_FUTURE = timedelta(days=3650)
 RECORDED_ALLOWANCE = timedelta(seconds=120)
+OWNED_TASK_GRACE_SECONDS = 15.0  # socket receive wait (5 s) + one paced quote request (bounded timeout)
 LIVE_POLICY = AvailabilityPolicy(
     policy_id="feed.live-admitted.v1(first-completed-local-receipt)", basis=AvailabilityBasis.RECORDED,
     base_policy_id="live adviser local receipt of the first completed (confirm=1) public push",
@@ -83,7 +84,7 @@ LIVE_POLICY = AvailabilityPolicy(
     note=("RECORDED live availability: the local receipt time of the first completed push, admitted in receipt order; "
           "the receipt time is kept in SourceRef.retrieved_at. Not the exchange publication time."))
 RECON_POLICY = modeled_availability()  # reconstructed catch-up: modeled close availability, NEVER measured receipt
-ALERT_TYPES = frozenset({"NEW_CALL", "ENTRY_WITHDRAWN", "ENTRY_REOPENED", "TERMINAL"})
+ALERT_TYPES = frozenset({"NEW_CALL", "ENTRY_WITHDRAWN", "ENTRY_UNVERIFIED", "ENTRY_REOPENED", "TERMINAL"})
 INST, IDX = "BTC-USDT-SWAP", "BTC-USDT"
 TRADE = ChannelRef(source="okx", family=Family.TRADE_BAR_1M, series_id=INST)
 MARK = ChannelRef(source="okx", family=Family.MARK_BAR_1M, series_id=INST)
@@ -222,6 +223,10 @@ class LiveDriver:
         self.rt.origin(origin, at)
         self._cmd({"cmd": "origin", "at": _iso(at), "origin": origin})
 
+    def connection(self, state: str, at: datetime) -> None:
+        self.rt.connection(state, at)
+        self._cmd({"cmd": "connection", "at": _iso(at), "state": state})
+
     def restart(self, at: datetime, reason: str) -> None:
         self.rt.capability_restart(at, reason)
         self._cmd({"cmd": "restart", "at": _iso(at), "reason": reason})
@@ -259,7 +264,6 @@ def replay_tape(commands: list[dict], cfg: AdviserConfig, cov_from: datetime) ->
         k = c["cmd"]
         if k == "admit":
             e = FeedEvent.model_validate(c["event"])
-            d.slots.pop(e.channel.family.value, None) if False else None
             d.admit(e)
         elif k == "advance":
             d.advance(datetime.fromisoformat(c["time"]))
@@ -269,12 +273,18 @@ def replay_tape(commands: list[dict], cfg: AdviserConfig, cov_from: datetime) ->
             d.origin(c["origin"], datetime.fromisoformat(c["at"]))
         elif k == "restart":
             d.restart(datetime.fromisoformat(c["at"]), c["reason"])
+        elif k == "connection":
+            d.connection(c["state"], datetime.fromisoformat(c["at"]))
     return d
 
 
 # ---------------------------------------------------------------------------------------------------------------
 # session (epochs, catch-up, activation, alerts)
 # ---------------------------------------------------------------------------------------------------------------
+
+
+class CatchUpCancelled(Exception):
+    """Stop observed between bounded catch-up units (history pages / replayed minutes)."""
 
 
 HistoryFetcher = Callable[[Family, datetime, datetime], list[tuple[datetime, Decimal, Decimal, Decimal, Decimal, tuple]]]
@@ -343,6 +353,8 @@ class LiveSession:
             self.driver = LiveDriver(new_temporal(self.epoch.cov_from), AdviserRuntime(AdviserCore(cfg), None))
         at = self.driver.temporal.clock or self.epoch.cov_from
         self.driver.origin(sc.Origin.RECONSTRUCTED.value, at)  # nothing during catch-up is alertable
+        # no candle subscription is confirmed yet: entry cannot be verified until a (re)connection AND a fresh bar
+        self.driver.connection("DISCONNECTED", at)
         if persisted is not None and not reset_reason:
             # a restart gap overlapping an ongoing thesis makes it UNASSESSABLE; old alerts never replay as new
             self.driver.restart(at, "RESTART_GAP_OVERLAPS_THESIS")
@@ -365,12 +377,13 @@ class LiveSession:
         self.progress = {"phase": "CATCH_UP_ACQUIRE", "start": _iso(start), "end": _iso(end),
                          "minutes": int((end - start) / MIN), "families_done": 0}
         for fam in (Family.TRADE_BAR_1M, Family.MARK_BAR_1M, Family.INDEX_BAR_1M):
-            if self.cancel_requested:
-                self.note("catch_up_cancelled")
-                self.status = "WARMING_UP"
+            if self._cancelled("CATCH_UP_ACQUIRE"):
                 return
             try:
                 bars[fam] = {b[0]: b for b in fetch_history(fam, start, end)}
+            except CatchUpCancelled:
+                self._cancelled("CATCH_UP_ACQUIRE")
+                return
             except Exception as exc:  # noqa: BLE001 - no fabricated history; the gap stays visible
                 self.note("catch_up_failed", family=fam.value, detail=str(exc))
                 bars[fam] = {}
@@ -379,6 +392,8 @@ class LiveSession:
         t = start
         n = 0
         while t < end:
+            if self._cancelled("CATCH_UP_REPLAY"):  # one bounded unit (one minute) at a time
+                return
             close = t + MIN
             # modeled close availability, never before the already processed clock (a restart can resume a little
             # after the close of a minute that had not been received yet)
@@ -399,6 +414,14 @@ class LiveSession:
         self.progress["phase"] = "DONE"
         self.note("reconstructed", minutes=n, start=_iso(start), end=_iso(end))
         self.status = "WARMING_UP"
+
+    def _cancelled(self, phase: str) -> bool:
+        if not self.cancel_requested:
+            return False
+        self.progress = {**self.progress, "phase": "CANCELLED", "cancelled_in": phase}
+        self.note("catch_up_cancelled", phase=phase, replayed_minutes=self.progress.get("replayed_minutes", 0))
+        self.status = "STOPPING"
+        return True
 
     # -- live inputs ---------------------------------------------------------------------------------------------
 
@@ -423,11 +446,23 @@ class LiveSession:
                 self.note("live_activated", at=_iso(avail))
         return True
 
-    def on_quote(self, q: Quote, at: datetime) -> None:
-        # inputs from the WebSocket and the quote poller can be queued slightly out of timestamp order: a quote is
+    def _at(self, at: datetime) -> datetime:
+        # inputs from the WebSocket and the quote poller can be queued slightly out of timestamp order: a command is
         # dispatched no earlier than the processed clock (its own source/receipt times still govern freshness)
-        clock = max(x for x in (self.driver.temporal.clock, self.driver.rt.core.clock) if x is not None)             if (self.driver.temporal.clock or self.driver.rt.core.clock) else at
-        self.driver.quote(q, max(at, clock))
+        known = [x for x in (self.driver.temporal.clock, self.driver.rt.core.clock) if x is not None]
+        return max([at, *known])
+
+    def on_quote(self, q: Quote, at: datetime) -> None:
+        self.driver.quote(q, self._at(at))
+
+    def on_connection(self, state: str, at: datetime) -> None:
+        """Taped candle-session adequacy (CONNECTED / DISCONNECTED / STOPPED). Reconnection alone is not proof of
+        fresh usable input: the core waits for a fresh complete trade bar received after it."""
+        self.driver.connection(state, self._at(at))
+        self.connected = state == "CONNECTED"
+        self.note({"CONNECTED": "ws_connected", "DISCONNECTED": "ws_disconnected", "STOPPED": "stopped"}[state])
+        if not self.connected and self.status == "LIVE":
+            self.status = "DISCONNECTED"
 
     def tick(self, now: datetime) -> None:
         self.driver.advance(now)
@@ -437,9 +472,7 @@ class LiveSession:
             self.status = "LIVE"
 
     def disconnected(self) -> None:
-        self.connected = False
-        if self.status == "LIVE":
-            self.status = "DISCONNECTED"
+        self.on_connection("DISCONNECTED", self.clock())
 
     def view(self) -> dict:
         core = self.driver.rt.core
@@ -611,8 +644,9 @@ def instrument_compat(client) -> dict:
             "settle_ccy": inst.settle_ccy}
 
 
-def history_fetcher(client) -> HistoryFetcher:
-    """Complete minutes for [start, end) through the accepted read-only history endpoints (paged, newest first)."""
+def history_fetcher(client, cancelled: Callable[[], bool] = lambda: False) -> HistoryFetcher:
+    """Complete minutes for [start, end) through the accepted read-only history endpoints (paged, newest first).
+    ``cancelled`` is checked before every page request (bounded unit): an observed Stop raises CatchUpCancelled."""
     from ..marketdata.contracts import Family as MdFamily
     from ..marketdata.okx import dt_to_ms, ms_to_dt
 
@@ -625,6 +659,8 @@ def history_fetcher(client) -> HistoryFetcher:
         after = dt_to_ms(end)
         before = dt_to_ms(start) - 1
         while True:
+            if cancelled():
+                raise CatchUpCancelled(fam.value)
             page = client.history_page(md[fam], src[fam], after, before, 100)
             rows = page.data
             if not rows:
@@ -764,67 +800,102 @@ class LiveAdviserWorker:
         return rest, quotes
 
     async def _session(self, conn, row, store: LiveStore) -> None:
-        """All database access happens on this event-loop thread; only network fetches / the bounded catch-up run in
-        worker threads (they never touch the connection). A heartbeat renews the lease and publishes catch-up progress
-        while a long reconstruction runs; Stop during catch-up cancels it between acquisition steps."""
+        """All database access happens on this event-loop thread; network fetches and the bounded startup (instrument
+        metadata, catch-up) run in ONE owned worker thread that never touches the connection. The session owns every
+        task it starts: on any exit (Stop, startup failure, lease/fence loss) the startup thread is signalled and
+        joined (it checks cancellation between history pages and replayed minutes) and the socket/quote tasks are
+        cancelled and awaited. A heartbeat renews the lease and publishes progress while startup work runs. After an
+        observed Stop the session never enters LIVE nor publishes new alerts."""
         from ..marketdata.okx_authority import validate_okx_ws_url
 
-        rest, quotes = self._clients(row)
         validate_okx_ws_url(self.ws_url, ("/ws/v5/business",))
-        compat = await asyncio.to_thread(instrument_compat, rest)
-        sess = LiveSession(compat=compat, build=self.build, clock=self.clock)
-        persisted = store.load_state()
+        rest, quotes = self._clients(row)
+        sess = LiveSession(compat={}, build=self.build, clock=self.clock)
         queue: asyncio.Queue = asyncio.Queue()
         stop = asyncio.Event()
-        ws_task = asyncio.create_task(self._ws_loop(queue, sess, stop))
-        start_task = asyncio.create_task(asyncio.to_thread(sess.start, persisted, history_fetcher(rest)))
-        while not start_task.done():
-            await asyncio.wait({start_task}, timeout=self.save_seconds)
-            ctl = self._heartbeat(conn, store, sess, quotes)
-            if ctl["stop_requested"]:
-                sess.cancel_requested = True
-        start_task.result()
-        store.save(sess)
-        quote_task = asyncio.create_task(self._quote_loop(quotes, queue, stop))
-        ticks, last_save, reassess_seen = 0, time.monotonic(), row["reassess_requested"]
+        owned: list[asyncio.Task] = []
+        start_task: asyncio.Task | None = None
+        stopped_by_owner = False
+        persisted: dict | None = None
+
+        def startup() -> None:
+            sess.compat = instrument_compat(rest)  # metadata acquisition belongs to the owned startup
+            if sess.cancel_requested:
+                sess.note("start_cancelled", phase="METADATA")
+                return
+            sess.start(persisted, history_fetcher(rest, lambda: sess.cancel_requested))
+
         try:
-            while not stop.is_set():
-                await asyncio.sleep(self.tick_seconds)
-                now = self.clock()
-                batch = []
-                while not queue.empty():
-                    batch.append(queue.get_nowait())
-                batch.sort(key=lambda x: x[2])  # receipt order across the WebSocket and quote loops (stable)
-                for kind, payload, received in batch:
-                    if kind == "bar":
-                        sess.on_live_bar(payload[0], payload[1], payload[2], payload[3], received)
-                    elif kind == "quote":
-                        sess.on_quote(payload, received)
-                sess.tick(now)
-                ticks += 1
-                ctl = conn.execute("SELECT stop_requested, reassess_requested FROM adviser_live_sessions "
-                                   "WHERE session_id = %s", (store.sid,)).fetchone()
-                if ctl["reassess_requested"] != reassess_seen:
-                    reassess_seen = ctl["reassess_requested"]
-                    sess.driver.advance(now, record_noop=True)  # current assessment only; never rewrites history
-                    sess.note("manual_reassess")
-                if time.monotonic() - last_save >= self.save_seconds or ctl["stop_requested"]:
-                    store.save(sess)
-                    self._heartbeat(conn, store, sess, quotes)
-                    last_save = time.monotonic()
-                if ctl["stop_requested"] or (self.max_ticks is not None and ticks >= self.max_ticks):
-                    stop.set()
+            persisted = store.load_state()
+            owned.append(asyncio.create_task(self._ws_loop(queue, stop)))
+            start_task = asyncio.create_task(asyncio.to_thread(startup))
+            while not start_task.done():
+                await asyncio.wait({start_task}, timeout=self.save_seconds)
+                ctl = self._heartbeat(conn, store, sess, quotes)  # fence loss raises PermissionError
+                if ctl["stop_requested"]:
+                    sess.cancel_requested = True
+            start_task.result()
+            if sess.cancel_requested:
+                stopped_by_owner = True  # Stop observed during startup: never enter LIVE
+            else:
+                store.save(sess)
+                owned.append(asyncio.create_task(self._quote_loop(quotes, queue, stop)))
+                stopped_by_owner = await self._live_loop(conn, row, store, sess, queue, quotes)
         finally:
             stop.set()
-            for tk in (ws_task, quote_task):
-                tk.cancel()
-            await asyncio.gather(ws_task, quote_task, return_exceptions=True)
+            if start_task is not None and not start_task.done():
+                sess.cancel_requested = True  # cooperative: the thread returns at its next bounded unit
+                await asyncio.wait({start_task})
+            if owned:  # owned loops observe ``stop`` at their next bounded unit (one poll / a 5 s receive wait)
+                _, late = await asyncio.wait(owned, timeout=OWNED_TASK_GRACE_SECONDS)
+                for tk in late:
+                    tk.cancel()
+                await asyncio.gather(*owned, return_exceptions=True)
+        if sess.driver is not None:
+            sess.on_connection("STOPPED", self.clock())  # entry not verifiable while stopped; never alerted
         sess.status = "STOPPED"
-        sess.connected = False
-        store.save(sess)
+        if sess.driver is not None and sess.epoch is not None:
+            store.save(sess)
         conn.execute("UPDATE adviser_live_sessions SET status = 'stopped', stopped_at = now(), phase = 'STOPPED', "
-                     "lease_owner = NULL, lease_expires_at = NULL WHERE session_id = %s AND lease_generation = %s",
-                     (store.sid, store.gen))
+                     "lease_owner = NULL, lease_expires_at = NULL, progress = %s WHERE session_id = %s "
+                     "AND lease_generation = %s", (Jsonb(sess.progress), store.sid, store.gen))
+        if stopped_by_owner:
+            log.info("%s: stopped by the Owner", store.sid)
+
+    async def _live_loop(self, conn, row, store: LiveStore, sess: LiveSession, queue: asyncio.Queue, quotes) -> bool:
+        """Live ticks until Stop (True) or the bounded test tick budget (False). Stop is read BEFORE a batch is
+        processed, so nothing received after an observed Stop becomes advice or an alert."""
+        ticks, last_save, reassess_seen = 0, time.monotonic(), row["reassess_requested"]
+        while True:
+            await asyncio.sleep(self.tick_seconds)
+            ctl = conn.execute("SELECT stop_requested, reassess_requested FROM adviser_live_sessions "
+                               "WHERE session_id = %s", (store.sid,)).fetchone()
+            if ctl["stop_requested"]:
+                return True
+            now = self.clock()
+            batch = []
+            while not queue.empty():
+                batch.append(queue.get_nowait())
+            batch.sort(key=lambda x: x[2])  # receipt order across the WebSocket and quote loops (stable)
+            for kind, payload, received in batch:
+                if kind == "bar":
+                    sess.on_live_bar(payload[0], payload[1], payload[2], payload[3], received)
+                elif kind == "quote":
+                    sess.on_quote(payload, received)
+                elif kind == "conn":
+                    sess.on_connection(payload, received)
+            sess.tick(now)
+            ticks += 1
+            if ctl["reassess_requested"] != reassess_seen:
+                reassess_seen = ctl["reassess_requested"]
+                sess.driver.advance(now, record_noop=True)  # current assessment only; never rewrites history
+                sess.note("manual_reassess")
+            if time.monotonic() - last_save >= self.save_seconds:
+                store.save(sess)
+                self._heartbeat(conn, store, sess, quotes)
+                last_save = time.monotonic()
+            if self.max_ticks is not None and ticks >= self.max_ticks:
+                return False
 
     def _heartbeat(self, conn, store: LiveStore, sess: LiveSession, quotes) -> dict:
         stats = getattr(quotes, "stats", None)
@@ -850,17 +921,21 @@ class LiveAdviserWorker:
             if q is not None:
                 queue.put_nowait(("quote", q, q.received_at))
 
-    async def _ws_loop(self, queue: asyncio.Queue, sess: LiveSession, stop: asyncio.Event) -> None:
+    async def _ws_loop(self, queue: asyncio.Queue, stop: asyncio.Event) -> None:
+        """Owned candle subscription. Connection changes are queued with their local receipt time and taped by the
+        session loop in receipt order (never mutated from here)."""
         from ..recorder.okx_live import websockets_connect
 
         connect = self.ws_connect or websockets_connect
         backoff = 1.0
+        up = False
         while not stop.is_set():
             try:
                 ws = await connect(self.ws_url)
-            except Exception as exc:  # noqa: BLE001 - visible disconnection, retried with bounded backoff
-                sess.disconnected()
-                sess.note("ws_connect_failed", detail=str(exc))
+            except Exception:  # noqa: BLE001 - visible disconnection, retried with bounded backoff
+                if up:
+                    queue.put_nowait(("conn", "DISCONNECTED", self.clock()))
+                    up = False
                 await asyncio.sleep(backoff)
                 backoff = min(backoff * 2, 30.0)
                 continue
@@ -868,8 +943,8 @@ class LiveAdviserWorker:
             try:
                 await ws.send(json.dumps({"op": "subscribe", "args": [{"channel": ch, "instId": inst}
                                                                       for ch, inst, _ in WS_CHANNELS]}))
-                sess.connected = True
-                sess.note("ws_connected")
+                queue.put_nowait(("conn", "CONNECTED", self.clock()))
+                up = True
                 last_ping = time.monotonic()
                 while not stop.is_set():
                     try:
@@ -882,10 +957,12 @@ class LiveAdviserWorker:
                     received = self.clock()  # local receipt immediately after the read returns
                     for fam, t, ohlc, vol in parse_ws_candle(text):
                         queue.put_nowait(("bar", (fam, t, ohlc, vol), received))
-            except Exception as exc:  # noqa: BLE001
-                sess.note("ws_disconnected", detail=str(exc))
+            except Exception:  # noqa: BLE001 - visible as a taped disconnection
+                pass
             finally:
-                sess.disconnected()
+                if up:
+                    queue.put_nowait(("conn", "DISCONNECTED", self.clock()))
+                    up = False
                 try:
                     await ws.close()
                 except Exception:  # noqa: BLE001

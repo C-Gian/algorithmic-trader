@@ -172,20 +172,31 @@ export function OperationPanel({ op, testid = "op-panel", what = "operation", fa
 
 /** Copy with visible feedback. One reset timer at a time: a previous copy's timer can never clear a newer
  *  confirmation, and nothing fires after unmount. */
-export function useCopyFeedback(): ["idle" | "copied" | "error", (text: () => Promise<string>) => Promise<boolean>] {
-  const [state, setState] = useState<"idle" | "copied" | "error">("idle");
+export type CopyState = "idle" | "copying" | "copied" | "error";
+
+/** Copy feedback with a fresh state per operation: every click starts a new operation (state "copying"), only the
+ *  LATEST operation may write the clipboard and confirm it, and "copied" is shown only after that operation's own write
+ *  succeeded. A superseded (older, slower) operation never writes stale text nor confirms. */
+export function useCopyFeedback(): [CopyState, (text: () => Promise<string>) => Promise<boolean>] {
+  const [state, setState] = useState<CopyState>("idle");
   const timer = useRef<number | null>(null);
+  const op = useRef(0);
   useEffect(() => () => { if (timer.current !== null) window.clearTimeout(timer.current); }, []);
   const run = useCallback(async (text: () => Promise<string>) => {
+    const id = ++op.current;
     if (timer.current !== null) window.clearTimeout(timer.current);
     timer.current = null;
+    setState("copying");
     try {
-      await copyText(await text());
+      const value = await text();
+      if (id !== op.current) return false;  // superseded while fetching: never write older content
+      await copyText(value);
+      if (id !== op.current) return false;
       setState("copied");
       timer.current = window.setTimeout(() => { timer.current = null; setState("idle"); }, 4000);
       return true;
     } catch {
-      setState("error");
+      if (id === op.current) setState("error");
       return false;
     }
   }, []);
@@ -200,7 +211,7 @@ export function CopyDiagnostics({ markdown, mdUrl, jsonUrl, label = "Copy report
   return (
     <div className="report-actions">
       <Button icon={state === "copied" ? "check" : "copy"} variant="secondary" onClick={copy} data-testid={testid}>
-        {state === "copied" ? "Copied — paste into chat" : state === "error" ? "Copy failed" : label}
+        {state === "copied" ? "Copied — paste into chat" : state === "copying" ? "Copying…" : state === "error" ? "Copy failed" : label}
       </Button>
       <a className="btn btn-secondary" href={mdUrl} data-testid={`${testid}-md`}><Icon name="download" size={15} /><span>Markdown</span></a>
       <a className="btn btn-secondary" href={jsonUrl} data-testid={`${testid}-json`}><Icon name="download" size={15} /><span>JSON</span></a>

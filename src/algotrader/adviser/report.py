@@ -39,6 +39,89 @@ def _bps(x: Any) -> Decimal | None:
     return None if x is None else Decimal(str(x)) * 10000
 
 
+REPORT_VERSION = "adviser.report.v2"  # v2 (WP-009 correction): condition durations, slot/priority time, staged room
+SLOT_KEYS = ("SLOT_OCCUPIED", "SLOT_OCCUPIED_WITH_ARMED", "PRIORITY_COMPETITION", "CONFLICTED_ARMED")
+STAGES = ("impulse", "reaction", "trigger", "primary_open")
+
+
+def condition_durations(diag: dict | None) -> dict[str, Any]:
+    """Overlapping named-condition durations from the durable accumulator (defined denominator: covered evaluation
+    time). A minute can count toward several conditions; ANY_COMMON_BLOCKER is their union."""
+    if not diag:
+        return {"available": False, "note": "no committed diagnosis accumulator (run started before it existed)"}
+    cov = Decimal(diag["covered_us"]) / Decimal(60_000_000)
+    rows = {}
+    for k in sorted(set(diag["us"]) | set(diag["onsets"])):
+        m = Decimal(diag["us"].get(k, 0)) / Decimal(60_000_000)
+        rows[k] = {"minutes": str(m.quantize(Decimal("0.01"))),
+                   "fraction_of_covered": str((m / cov).quantize(Decimal("0.0001"))) if cov > 0 else None,
+                   "onsets": diag["onsets"].get(k, 0)}
+    return {"available": True, "covered_minutes": str(cov.quantize(Decimal("0.01"))), "conditions": rows,
+            "active_at_last_commit": list(diag.get("active") or []),
+            "note": ("overlapping durations (a minute counts toward every condition holding then; ANY_COMMON_BLOCKER = "
+                     "union of the common blockers); onsets count separate episodes, not elapsed time; "
+                     "ISSUABLE_IF_TRIGGERED = no common blocker and slot free")}
+
+
+def staged_room(journal: list[dict], paths: list[dict], tick: Decimal, in_eval) -> dict[str, Any]:
+    """Room to the target frozen at trigger, per stage: impulse end and reaction anchor (A only), trigger side price,
+    hypothetical primary open (issued calls with an entry). B/C impulse/reaction stages are NOT_APPLICABLE."""
+    setup: dict[str, dict] = {}
+    for e in journal:
+        if e["kind"] == "candidate":
+            r = e["record"]
+            if r["family"] == "A" and (r.get("setup") or {}).get("reaction") is not None:
+                setup[r["attempt_id"]] = r["setup"]
+    issued = {e["record"]["attempt_id"]: e["record"]["call_id"] for e in journal if e["kind"] == "call"}
+    attempt_of = {c: a for a, c in issued.items()}  # an issued call's trigger actionability is keyed by its call id
+    primary = {p["call_id"]: p for p in paths if p["variant"] == "PRIMARY" and p.get("entry")}
+    rows, dist = [], defaultdict(lambda: defaultdict(list))
+    for e in journal:
+        if e["kind"] != "actionability":
+            continue
+        a = e["record"]
+        sid = attempt_of.get(a["subject_id"], a["subject_id"])
+        if sid.startswith("call-") or a.get("gain_bps") is None or a.get("side_price") is None:
+            continue
+        if not in_eval(_dt(a["env"]["published_at"])):
+            continue
+        fam = sid[0]
+        d = -1 if sid[1:2] == "S" else 1
+        p, g = Decimal(str(a["side_price"])), Decimal(str(a["gain_bps"]))
+        target = ((p + d * g * p / 10000) / tick).quantize(Decimal(1)) * tick
+        st: dict[str, Any] = {"trigger": g}
+        if fam == "A" and sid in setup:
+            for name, key in (("impulse", "impulse_B"), ("reaction", "reaction")):
+                x = setup[sid].get(key)
+                st[name] = (10000 * d * (target - Decimal(x)) / Decimal(x)) if x is not None else None
+        else:
+            st["impulse"] = st["reaction"] = "NOT_APPLICABLE" if fam in "BC" else None
+        cid = issued.get(sid)
+        if cid and cid in primary:
+            ep = Decimal(primary[cid]["entry"]["price"])
+            st["primary_open"] = 10000 * d * (target - ep) / ep
+        else:
+            st["primary_open"] = None if cid else "NOT_ISSUED"
+        row = {"attempt_id": sid, "family": fam, "direction": "LONG" if d > 0 else "SHORT", "actionable": a["actionable"],
+               "issued_call": cid}
+        for k in STAGES:
+            v = st.get(k)
+            row[f"room_{k}_bps"] = str(v.quantize(Decimal("0.01"))) if isinstance(v, Decimal) else v
+            if isinstance(v, Decimal):
+                dist[fam][k].append(v)
+        for a0, b0 in zip(STAGES, STAGES[1:]):
+            va, vb = st.get(a0), st.get(b0)
+            if isinstance(va, Decimal) and isinstance(vb, Decimal):
+                dist[fam][f"erosion_{a0}_to_{b0}"].append(va - vb)
+        rows.append(row)
+    return {"note": ("room = 10000*d*(T - P_stage)/P_stage to the target frozen at trigger (derived from the "
+                     "trigger side price and G, tick-rounded); positive erosion = room lost between stages; B/C have no "
+                     "impulse/reaction stage (NOT_APPLICABLE); primary_open only for issued calls with an entry"),
+            "triggered_attempts": len(rows),
+            "by_family": {f: {k: _q(v) for k, v in sorted(x.items())} for f, x in sorted(dist.items())},
+            "list": rows[:200], "truncated": max(0, len(rows) - 200)}
+
+
 def build(*, engine: dict, journal: list[dict], records: list[dict], view: dict | None, status: str,
           clock_end_reached: bool) -> dict[str, Any]:
     adv = engine["adviser"]
@@ -203,6 +286,9 @@ def build(*, engine: dict, journal: list[dict], records: list[dict], view: dict 
             "conditional_samples": len(cond), "antecedent_activated": act,
             "note": "conditional labels; not calibrated probabilities; abstentions are not hits"}
 
+    durations = condition_durations((view or {}).get("diagnostics"))
+    staged = staged_room(journal, paths, Decimal(adv["tick"]), in_eval)
+
     # -- diagnosis ------------------------------------------------------------------------------------------------
     total_births = sum(births.values())
     diag = []
@@ -219,9 +305,15 @@ def build(*, engine: dict, journal: list[dict], records: list[dict], view: dict 
             diag.append("NO_TRIGGERS: armed scenarios expired/withdrew before an eligible trigger minute")
         if blockers:
             diag.append("TRIGGERS_REJECTED: " + ", ".join(f"{k} {n}" for k, n in blockers.most_common(6)))
+        if durations.get("available"):
+            cs = durations["conditions"]
+            top = sorted(((k, Decimal(v["minutes"])) for k, v in cs.items() if k not in ("ANY_COMMON_BLOCKER",)),
+                         key=lambda x: -x[1])[:4]
+            diag.append("CONDITION_TIME: " + ", ".join(f"{k} {m} min" for k, m in top)
+                        + f" of {durations['covered_minutes']} covered min")
     conclusion = ("INSUFFICIENT_EVIDENCE" if status == "completed" else "INCOMPLETE")
     return {
-        "section": "ADVISER_EVALUATION", "identity": {k: adv["identity"][k] for k in (
+        "section": "ADVISER_EVALUATION", "report_version": REPORT_VERSION, "identity": {k: adv["identity"][k] for k in (
             "model", "rules_version", "rules_sha256", "register_sha256", "implementation", "capability_profile_sha256",
             "identity_sha256")} | {"capability_profile": adv["profile"], "evaluator_sha256": adv["evaluator"]["sha256"]},
         "windows": {"warmup_start": adv["warmup_start"], "evaluation": [adv["eval_start"], adv["eval_end"]],
@@ -251,7 +343,10 @@ def build(*, engine: dict, journal: list[dict], records: list[dict], view: dict 
                    "ends": {f"{k[0]}:{k[1]}": n for k, n in sorted(ends.items())},
                    "end_reasons": dict(reasons.most_common()), "rejection_blockers": dict(blockers.most_common()),
                    "slot_occupied": blockers.get("SLOT_OCCUPIED", 0), "priority": blockers.get("PRIORITY", 0),
-                   "conflicted": blockers.get("CONFLICTED", 0)},
+                   "conflicted": blockers.get("CONFLICTED", 0),
+                   "slot_priority_minutes": {k: (durations.get("conditions") or {}).get(k, {}).get("minutes", "0.00")
+                                             for k in SLOT_KEYS} if durations.get("available") else None},
+        "condition_durations": durations, "room_erosion_staged": staged,
         "gates": {f: {k: _q(v) for k, v in g.items()} for f, g in sorted(gstats.items())},
         "limiting_landmarks": dict(sorted(limiting.items())), "room_erosion": room,
         "outcomes": {"note": "normalized one-unit hypothetical paths (N0=1, q=1/E); not a fill, account or size; "
@@ -292,6 +387,17 @@ def render_markdown(a: dict[str, Any]) -> list[str]:
         lines.append("- Trigger rejections: " + ", ".join(f"{k} {n}" for k, n in f["rejection_blockers"].items()))
     if f["end_reasons"]:
         lines.append("- Attempt endings: " + ", ".join(f"{k} {n}" for k, n in list(f["end_reasons"].items())[:12]))
+    cd = a.get("condition_durations") or {}
+    if cd.get("available"):
+        lines.append(f"- Condition time (overlapping; of {cd['covered_minutes']} covered min): " + ", ".join(
+            f"{k} {v['minutes']} min ({v['onsets']}×)" for k, v in cd["conditions"].items()))
+        sp = f.get("slot_priority_minutes") or {}
+        lines.append("- Slot/priority exposure (min): " + ", ".join(f"{k} {v}" for k, v in sp.items()))
+    st = a.get("room_erosion_staged") or {}
+    for fam, x in (st.get("by_family") or {}).items():
+        parts = [f"{k} {v['median']}" for k, v in x.items() if v.get("median") is not None]
+        lines.append(f"- Room by stage {fam} (median bps; n triggers {x.get('trigger', {}).get('n', '0')}): "
+                     + ", ".join(parts) + (" · impulse/reaction NOT_APPLICABLE" if fam in "BC" else ""))
     for fam, g in a["gates"].items():
         lines.append(f"- Gates {fam}: G median {g['G']['median']} bps · Q median {g['Q']['median']} · K "
                      f"{g['K']['median']} · margin G-1.2Q-2.2K median {g['margin']['median']} (n {g['G']['n']})")

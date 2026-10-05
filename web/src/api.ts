@@ -928,7 +928,14 @@ export interface AdviserSection {
            longest_no_call_interval_hours: string; terminal: Record<string, number>; list: AdviserCallRow[] };
   funnel: { births: Record<string, number>; arms: Record<string, number>; trigger_evaluations: number; issued: number;
             ends: Record<string, number>; end_reasons: Record<string, number>; rejection_blockers: Record<string, number>;
-            slot_occupied: number; priority: number; conflicted: number };
+            slot_occupied: number; priority: number; conflicted: number;
+            slot_priority_minutes?: Record<string, string> | null };
+  /** WP-009 correction (report v2): overlapping named-condition durations from the durable accumulator. */
+  condition_durations?: { available: boolean; covered_minutes?: string; note: string;
+                          conditions?: Record<string, { minutes: string; fraction_of_covered: string | null; onsets: number }> };
+  /** Room to the target frozen at trigger by stage (A impulse/reaction; B/C NOT_APPLICABLE). */
+  room_erosion_staged?: { note: string; triggered_attempts: number; by_family: Record<string, Record<string, Dist>>;
+                          list: Record<string, string | boolean | null>[]; truncated: number };
   gates: Record<string, Record<string, Dist>>;
   limiting_landmarks: Record<string, number>;
   outcomes: { note: string; variants: Record<string, VariantOutcome> };

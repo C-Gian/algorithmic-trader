@@ -487,6 +487,16 @@ class ReplayJob:
     def _restore(self, cache: FeedCache, reader: CacheReader, freshness, reclaimed: bool) -> Kernel:
         """Direct restore from the newest verified restore point; only the bounded suffix is reprocessed."""
         engine = self._engine()
+        if engine.get("adviser"):
+            from ..adviser.engine import AdviserStateError, config_from_engine, new_evaluator
+
+            try:  # a run pinned to another method/implementation identity never continues under changed semantics
+                config_from_engine(engine)
+                new_evaluator(engine)
+            except AdviserStateError as exc:
+                raise _UnsafeRecovery(f"INCOMPATIBLE_ADVISER_IDENTITY: {exc} (pinned implementation "
+                                      f"{engine['adviser']['identity'].get('implementation')}); committed outputs are "
+                                      "preserved read-only and nothing was resumed or replayed") from None
         ck = self.checkpoint()
         if ck is None:
             self._restoring = False

@@ -1,4 +1,4 @@
-"""Sequential causal professional fold — MP-001 ``btc.context-action.v0.2`` (implementation ``adviser.core.v1``).
+"""Sequential causal professional fold — MP-001 ``btc.context-action.v0.2`` (implementation ``adviser.core.v2``).
 
 The core consumes only admitted factual inputs (complete trade/mark/index 1m bars and slot-quality events, settled
 funding), already sealed R2 temporal records, typed capability inputs (quotes, event/incident records, origin
@@ -20,7 +20,7 @@ SHORT rules are the exact price-axis reflection of LONG (P -> -P, high -> -low, 
 machine below runs in "transformed" coordinates x' = d*x and converts back, so mirrored inequalities need no ad hoc
 choices. All arithmetic is Decimal.
 
-State is explicit, bounded and restorable (``encode``/``decode``; format ``algotrader.adviser-state.v1``). Complete
+State is explicit, bounded and restorable (``encode``/``decode``; format ``algotrader.adviser-state.v2``). Complete
 call history lives in the journal, never in unbounded hot memory.
 """
 
@@ -42,7 +42,7 @@ from .identity import CapabilityProfile, Execution
 from .measures import Bar, ZERO, div, displacement, efficiency, median, round_down, round_up, scale, trs, zone_halfwidth
 from .params import Params
 
-STATE_FORMAT = "algotrader.adviser-state.v1"
+STATE_FORMAT = "algotrader.adviser-state.v2"  # v2: taped live candle-connection adequacy
 MINUTE = timedelta(minutes=1)
 EPS = timedelta(microseconds=1)
 INITIAL_JOURNAL = hashlib.sha256(b"algotrader.adviser.journal.v1\x00").hexdigest()
@@ -50,6 +50,12 @@ FAM_RANK = {"A": 0, "B": 1, "C": 2}
 PRICE_REASONS = frozenset({"PRICE_OUTSIDE_STRUCTURAL_AREA", "NO_ROOM_AFTER_COSTS", "AT_OR_BEYOND_INVALIDATION",
                            "REWARD_RISK_BELOW_MINIMUM"})
 QUOTE_REASONS = frozenset({"QUOTE_UNAVAILABLE", "QUOTE_STALE", "QUOTE_CLOCK_UNCERTAIN"})
+# live candle-session adequacy (taped connection commands): entry cannot be verified, the thesis is not judged by it
+CONNECTION_REASONS = frozenset({"CANDLE_CONNECTION_LOST", "CANDLE_CONNECTION_AWAITING_FRESH_BAR",
+                                "LIVE_SESSION_STOPPED"})
+UNVERIFIED_REASONS = QUOTE_REASONS | CONNECTION_REASONS
+CONNECTION_STATES = {"CONNECTED": None, "DISCONNECTED": "CANDLE_CONNECTION_LOST",
+                     "AWAITING_FRESH_BAR": "CANDLE_CONNECTION_AWAITING_FRESH_BAR", "STOPPED": "LIVE_SESSION_STOPPED"}
 TERMINAL_THESIS = frozenset({"TARGET_REACHED", "INVALIDATED", "TIME_EXPIRED", "UNASSESSABLE", "RETIRED"})
 
 
@@ -417,6 +423,9 @@ class AdviserCore:
         self.events: dict[str, dict] = {}
         self.quote: Quote | None = None
         self.quote_status = "NOT_COVERED" if config.profile.execution == Execution.HISTORICAL_BASE else "UNAVAILABLE"
+        # live candle-session connection (taped input; None = not a live session input, e.g. historical)
+        self.connection: dict | None = None
+        self._entry_prev: str | None = None  # transient: entry status before the revision being emitted
         # clock / frontier / identity
         self.clock: datetime | None = None
         self.seq = 0  # professional input sequence
@@ -433,6 +442,8 @@ class AdviserCore:
         self.view: dict | None = None
         self.obs_last: dict[str, str] = {}
         self.counters: dict[str, Any] = _new_counters()
+        # bounded durable diagnosis accumulator (MP-001 §11 / WP-009 §4): elapsed time per named condition
+        self.diag: dict[str, Any] = _new_diag()
         # pending inputs of the current barrier (bounded: one tie group)
         self._bars: list[FeedEvent] = []
         self._sealed: list[dict] = []
@@ -472,6 +483,14 @@ class AdviserCore:
         self.seq += 1
         self._inputs.append(("origin", {"origin": origin, "at": _iso(at)}))
 
+    def admit_connection(self, state: str) -> None:
+        """Live candle-session connection change (taped): CONNECTED (subscription confirmed), DISCONNECTED,
+        STOPPED. A (re)connection only becomes adequate after a fresh complete trade bar received after it."""
+        if state not in ("CONNECTED", "DISCONNECTED", "STOPPED"):
+            raise AdviserError(f"unknown connection state {state!r}")
+        self.seq += 1
+        self._inputs.append(("connection", {"state": state}))
+
     def admit_restart(self, reason: str) -> None:
         self.seq += 1
         self._inputs.append(("restart", reason))
@@ -493,14 +512,16 @@ class AdviserCore:
             c.append(self.box.expires_at)
         call = self.call
         if call is not None:
-            c += [call.hard_deadline, call.progress_at, call.hard_deadline - timedelta(minutes=call.min_residual)]
-        # freshness holds while age <= allowance: staleness starts strictly after it (one microsecond later)
+            # residual time holds while remaining >= minimum: the first too-late instant is one microsecond after
+            c += [call.hard_deadline, call.progress_at, call.hard_deadline - timedelta(minutes=call.min_residual) + EPS]
+        # freshness requires BOTH ages <= allowance: the first stale instant is min(end, known_at) + allowance + 1 us
+        # (a recently received old bar never gets an extended life)
         if self.last_1m is not None:
-            c.append(max(self.last_1m.end, self.last_1m.known_at) + self.p.fresh_1m + EPS)
+            c.append(min(self.last_1m.end, self.last_1m.known_at) + self.p.fresh_1m + EPS)
         if self.m15:
-            c.append(max(self.m15[-1].end, self.m15[-1].known_at) + self.p.fresh_15m + EPS)
+            c.append(min(self.m15[-1].end, self.m15[-1].known_at) + self.p.fresh_15m + EPS)
         if self.h1:
-            c.append(max(self.h1[-1].end, self.h1[-1].known_at) + self.p.fresh_1h + EPS)
+            c.append(min(self.h1[-1].end, self.h1[-1].known_at) + self.p.fresh_1h + EPS)
         c += [lm.retire_at for lm in self.landmarks.values() if lm.retire_at is not None and lm.status == "ACTIVE"]
         for e in self.events.values():
             for k in ("restrict_start", "schedule_time", "post_min_end"):
@@ -530,6 +551,7 @@ class AdviserCore:
         for e in self._bars:
             if e.available_time > t:
                 raise AdviserError(f"{e.event_id} available {e.available_time.isoformat()} after barrier {t.isoformat()}")
+        self._diag_credit(t)  # the conditions published at the previous dispatch held over [previous, t)
         self.clock = t
         self.seq += 1  # the dispatch command itself is part of the professional input sequence
         self._touch()
@@ -545,6 +567,9 @@ class AdviserCore:
             self._capability(kind, x, t)
         items = self._ingest_minutes(bars, t)
         new_trade = [x for x in items if isinstance(x, Bar)]
+        if (self.connection is not None and self.connection["state"] == "AWAITING_FRESH_BAR"
+                and any(b.known_at >= _dt(self.connection["since"]) for b in new_trade)):
+            self.connection = {"state": "CONNECTED", "since": _iso(t)}  # fresh usable input after reconnection
         # 2. sealed records and derived updates
         closes15 = self._ingest_sealed(sealed, t)
         self._deps = self._dependencies(t)
@@ -559,7 +584,7 @@ class AdviserCore:
             self._box_close_flags(closes15[-1], t)
             for b in closes15:
                 self._a_close(b, t)
-        self._context_withdrawals(t)
+        self._context_withdrawals(t, closes15)
         # 4. revise / create / arm
         if closes15:
             b = closes15[-1]
@@ -574,7 +599,63 @@ class AdviserCore:
         self._reassess_call(t)
         self._publish_view(t)
         self._publish_observations(t)
+        self._diag_update(t)
         return self.journal[start:]
+
+    # -- diagnosis accumulator ---------------------------------------------------------------------------------
+
+    def _diag_conditions(self, t: datetime) -> list[str]:
+        """Named conditions holding after this dispatch (several may overlap). Common blockers prevent any new call;
+        slot/priority/conflict exposures say why a coincident trigger would be suppressed; NO_ARMED_SCENARIO says
+        nothing could trigger."""
+        out = {b.split(":")[0] for b in self._common_blockers(t)}
+        out.update(self.connection_blockers())
+        if self.origin == sc.Origin.RECONSTRUCTED.value:
+            out.add("RECONSTRUCTED_CATCH_UP")
+        if out:
+            out.add("ANY_COMMON_BLOCKER")
+        armed = [a for a in self.attempts.values() if a.status == "ARMED"]
+        slot = self.call is not None and self.call.thesis == "ONGOING"
+        if slot:
+            out.add("SLOT_OCCUPIED")
+            if armed:
+                out.add("SLOT_OCCUPIED_WITH_ARMED")
+        elif len({a.d for a in armed}) > 1:
+            out.add("CONFLICTED_ARMED")
+        elif len(armed) > 1:
+            out.add("PRIORITY_COMPETITION")
+        if not armed and not slot:
+            out.add("NO_ARMED_SCENARIO")
+        return sorted(out)
+
+    def _diag_update(self, t: datetime) -> None:
+        d = self.diag
+        new = self._diag_conditions(t)
+        for c in set(new) - set(d["active"]):
+            if self._diag_in_window(t):
+                d["onsets"][c] = d["onsets"].get(c, 0) + 1
+        d["active"], d["last"] = new, _iso(t)
+
+    def _diag_in_window(self, t: datetime) -> bool:
+        es, ee = self.cfg.eval_start, self.cfg.eval_end
+        return (es is None or t >= es) and (ee is None or t < ee)
+
+    def _diag_credit(self, t: datetime) -> None:
+        d = self.diag
+        last = _dt(d["last"]) if d["last"] else None
+        if last is None or t <= last:
+            return
+        es, ee = self.cfg.eval_start, self.cfg.eval_end
+        a, b = max(last, es) if es else last, min(t, ee) if ee else t
+        if b <= a:
+            return
+        us = (b - a) // timedelta(microseconds=1)
+        d["covered_us"] += us
+        for c in d["active"]:
+            d["us"][c] = d["us"].get(c, 0) + us
+        if "ANY_COMMON_BLOCKER" not in d["active"] and "SLOT_OCCUPIED" not in d["active"]:
+            # a qualifying trigger at this time could have issued a call (no common blocker, slot free)
+            d["us"]["ISSUABLE_IF_TRIGGERED"] = d["us"].get("ISSUABLE_IF_TRIGGERED", 0) + us
 
     # ----------------------------------------------------------------------------------------------------------
     # windows / capability inputs
@@ -618,6 +699,14 @@ class AdviserCore:
             self.counters["quotes_admitted"] += 1
         elif kind == "event":
             self._event_input(x, t)
+        elif kind == "connection":
+            prev = self.connection["state"] if self.connection else None
+            state = "AWAITING_FRESH_BAR" if x["state"] == "CONNECTED" else x["state"]
+            if state == "AWAITING_FRESH_BAR" and prev in ("CONNECTED", "AWAITING_FRESH_BAR"):
+                state = prev  # a repeated confirmation of the same subscription is not a reconnection
+            if state != prev:
+                self.connection = {"state": state, "since": _iso(t)}
+                self.counters["connection_changes"] = self.counters.get("connection_changes", 0) + 1
         elif kind == "restart":
             if self.call is not None and self.call.thesis == "ONGOING":
                 self._terminate(self.call, "UNASSESSABLE", x, t)
@@ -1356,19 +1445,21 @@ class AdviserCore:
     def _context_ok(self, a: Attempt, t: datetime) -> bool:
         return {"A": self._a_context_ok, "B": self._b_context_ok, "C": self._c_context_ok}[a.family](a, t)
 
-    def _context_withdrawals(self, t: datetime) -> None:
+    def _context_withdrawals(self, t: datetime, closes15: list[Bar]) -> None:
         """At every dispatch a forbidden context / adverse expansion withdraws an unissued attempt (before any
-        coincident trigger). C additionally withdraws on a 15m close below L-z (handled with the close)."""
+        coincident trigger). C additionally withdraws on a 15m close below L-z: every close NEWLY admitted at this
+        dispatch is examined exactly once, whatever its market end versus the dispatch (receipt) time."""
         for a in sorted(list(self.attempts.values()), key=lambda x: x.aid):
             if not self._context_ok(a, t):
                 self._end_attempt(a, "WITHDRAWN", f"CONTEXT_OR_ADVERSE_EXPANSION:{self.context(t)}/"
                                                   f"{self.phase_now(t)}:{self.phase['dir']}", t)
         # C: a 15m close beyond L-z before trigger withdraws
         bx = self.box
-        if bx is not None and self.m15 and self.m15[-1].end == t:
-            b = self.m15[-1]
+        if bx is None:
+            return
+        for b in closes15:  # attempts present here were all born at an earlier dispatch (births follow this step)
             for a in sorted(list(self.attempts.values()), key=lambda x: x.aid):
-                if a.family == "C" and a.owner == bx.bid and a.born_at < t:
+                if a.family == "C" and a.owner == bx.bid:
                     l_t, _, _ = bx.edges_t(a.d)
                     if tbar(b, a.d)[3] < l_t - bx.z:
                         self._end_attempt(a, "WITHDRAWN", "CLOSE_BEYOND_LOWER_FAR_EDGE_BEFORE_TRIGGER", t)
@@ -1465,6 +1556,10 @@ class AdviserCore:
         k = 2 * p.live_fee_bps + 2 * p.live_slip_bps + half
         return (q.ask if d > 0 else q.bid), ("MEASURED_ASK" if d > 0 else "MEASURED_BID"), k, []
 
+    def connection_blockers(self) -> list[str]:
+        r = CONNECTION_STATES[self.connection["state"]] if self.connection is not None else None
+        return [r] if r else []
+
     def _common_blockers(self, t: datetime) -> list[str]:
         out = []
         if not self.ready_15m(t):
@@ -1489,6 +1584,7 @@ class AdviserCore:
                 blockers.append("ARMED_BEFORE_LIVE_ACTIVATION")
             if self.origin == sc.Origin.RECONSTRUCTED.value:
                 blockers.append("RECONSTRUCTED_CATCH_UP_NO_NEW_CALL")
+            blockers += self.connection_blockers()
             t_t, ttype, limiting, tb = self._resolve_target(a, tc, t)
             s15 = self.s15
             geom = None
@@ -1709,6 +1805,7 @@ class AdviserCore:
             reasons.append("RECONSTRUCTED_CATCH_UP")
         price, source, k, qb = self._side_price(call.d, t)
         reasons += qb
+        reasons += self.connection_blockers()
         conditions_ok = not reasons
         chk = None
         if price is not None:
@@ -1717,11 +1814,12 @@ class AdviserCore:
             chk = geo.predicate(call.d, price, call.v, call.t, k, self.p.rr_min)
             if not chk.ok:
                 reasons.append(chk.reason)
-        non_quote = [r for r in reasons if r not in QUOTE_REASONS]
+        non_quote = [r for r in reasons if r not in UNVERIFIED_REASONS]
         status = "AVAILABLE" if not reasons else ("UNVERIFIED" if not non_quote else "CLOSED")
         reasons = sorted(set(reasons))
         key_changed = (status != call.entry or reasons != call.entry_reasons or conditions_ok != call.conditions_ok)
         if key_changed:
+            self._entry_prev = call.entry
             if status == "AVAILABLE" and call.entry != "AVAILABLE":
                 call.entry_reopens += 1
             changed = ["entry"] if status != call.entry else ["entry_reasons"]
@@ -2133,10 +2231,14 @@ class AdviserCore:
                                                                  else "") + f": {guidance}", t)
         elif "entry" in changed:
             ct = {"AVAILABLE": "ENTRY_REOPENED", "CLOSED": "ENTRY_WITHDRAWN", "UNVERIFIED": "ENTRY_UNVERIFIED"}[call.entry]
-            self._material(call, ct, guidance, t)
+            # withdrawal of USABLE entry (AVAILABLE -> CLOSED/UNVERIFIED) alerts once; a further change between two
+            # unusable states (CLOSED <-> UNVERIFIED) is recorded but never re-alerted; recovery alerts as reopened
+            usable_change = call.entry == "AVAILABLE" or self._entry_prev == "AVAILABLE"
+            owner_stop = "LIVE_SESSION_STOPPED" in call.entry_reasons  # the Owner's own Stop is not an alert
+            self._material(call, ct, guidance, t, alert=usable_change and not owner_stop)
 
-    def _material(self, call: Call, ctype: str, summary: str, t: datetime) -> None:
-        alertable = call.origin == sc.Origin.LIVE.value and self.origin == sc.Origin.LIVE.value
+    def _material(self, call: Call, ctype: str, summary: str, t: datetime, alert: bool = True) -> None:
+        alertable = alert and call.origin == sc.Origin.LIVE.value and self.origin == sc.Origin.LIVE.value
         self._emit("material_change", t, {"change_id": f"{call.cid}#{ctype.lower()}#{call.revision}",
                                           "subject_id": call.cid, "change_type": ctype, "summary": summary,
                                           "alertable": alertable},
@@ -2182,7 +2284,7 @@ class AdviserCore:
         return {
             "format": STATE_FORMAT, "clock": _iso(t), "professional_seq": self.seq, "factual_cursor": self.cursor,
             "origin": self.origin, "window": self.window, "live_since": _iso(self.live_since),
-            "view": _jsonable(self.view), "call": self.call_view(t) if t else None,
+            "connection": self.connection, "view": _jsonable(self.view), "diagnostics": self.diag, "call": self.call_view(t) if t else None,
             "recent_calls": list(self.recent_calls), "lenses": _jsonable(self.lenses(t)) if t else [],
             "attempts": [{"attempt_id": a.aid, "family": a.family, "direction": dname(a.d), "status": a.status,
                           "trigger_level": _s(a.k_t * a.d if a.k_t is not None else None),
@@ -2218,11 +2320,12 @@ class AdviserCore:
             "call": self.call.encode() if self.call else None, "recent_calls": list(self.recent_calls),
             "call_count": self.call_count, "slot_px": self.slot_px, "disl": self.disl, "funding_last": self.funding_last,
             "events": self.events, "quote": self.quote.encode() if self.quote else None,
-            "quote_status": self.quote_status, "clock": _iso(self.clock), "seq": self.seq, "cursor": self.cursor,
+            "quote_status": self.quote_status, "connection": self.connection,
+            "clock": _iso(self.clock), "seq": self.seq, "cursor": self.cursor,
             "origin": self.origin, "live_since": _iso(self.live_since), "window": self.window, "boundary": self.boundary,
             "journal_seq": self.journal_seq, "journal_chain": self.journal_chain,
             "view_key": _jsonable(list(self.view_key)) if self.view_key else None, "view": _jsonable(self.view),
-            "obs_last": self.obs_last, "counters": _jsonable(self.counters),
+            "obs_last": self.obs_last, "counters": _jsonable(self.counters), "diag": self.diag,
             "recent_1m": [b.encode() for b in self.recent_1m], "s15_hist": [list(x) for x in self.s15_hist],
             "pending_periods": self.pending_periods,
             "pending": {"bars": [e.model_dump(mode="json") for e in self._bars], "sealed": self._sealed,
@@ -2261,6 +2364,7 @@ class AdviserCore:
         c.events = doc["events"]
         c.quote = Quote.decode(doc["quote"]) if doc["quote"] else None
         c.quote_status = doc["quote_status"]
+        c.connection = doc["connection"]
         c.clock, c.seq, c.cursor = _dt(doc["clock"]), doc["seq"], doc["cursor"]
         c.origin, c.live_since, c.window = doc["origin"], _dt(doc["live_since"]), doc["window"]
         c.boundary = doc["boundary"]
@@ -2269,6 +2373,7 @@ class AdviserCore:
         c.view = _view_decode(doc["view"])
         c.obs_last = dict(doc["obs_last"])
         c.counters = doc["counters"]
+        c.diag = doc["diag"]
         c.recent_1m = deque((Bar.decode(x) for x in doc["recent_1m"]), maxlen=4)
         c.s15_hist = deque((tuple(x) for x in doc["s15_hist"]), maxlen=4)
         c.pending_periods = list(doc["pending_periods"])
@@ -2313,6 +2418,12 @@ def _terminal_guidance(call: Call) -> str:
         "RETIRED": ("Thesis retired (" + str(call.terminal_reason).split(":")[0] + "): exit guidance if following this "
                     "call. This is guidance withdrawal, not a statement about any position."),
     }.get(call.thesis, "")
+
+
+def _new_diag() -> dict:
+    """Fixed-size accumulator: microseconds per named condition (overlapping), onsets per condition, the covered
+    evaluation-window time (denominator), the conditions currently holding and the time they were published."""
+    return {"covered_us": 0, "us": {}, "onsets": {}, "active": [], "last": None}
 
 
 def _new_counters() -> dict:

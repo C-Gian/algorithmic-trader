@@ -166,7 +166,7 @@ def test_cancel_during_replay_is_incomplete_and_the_report_is_copyable(database_
         assert c.execute("SELECT 1 FROM adviser_finish WHERE run_id = %s", (rid,)).fetchone() is None
 
 
-def test_deep_v4_matches_a_completed_adviser_run_and_detects_journal_tamper(database_url, tmp_path, monkeypatch):
+def test_deep_v5_matches_a_completed_adviser_run_and_detects_journal_tamper(database_url, tmp_path, monkeypatch):
     from algotrader.observe import deep
 
     root, art, pack = _prepared(database_url, tmp_path, monkeypatch)
@@ -180,7 +180,7 @@ def test_deep_v4_matches_a_completed_adviser_run_and_detects_journal_tamper(data
         v = c.execute("SELECT * FROM observation_deep_validations WHERE validation_id = %s", (vid,)).fetchone()
     assert v["status"] == "completed", v["error"]
     res = v["result"]
-    assert res["outcome"] == "match" and res["validator_version"] == "4", res["mismatches"]
+    assert res["outcome"] == "match" and res["validator_version"] == "5", res["mismatches"]
     assert res["temporal"]["terminal"]["adviser"]["compared"] is True
     with connect(database_url) as c:
         c.execute("UPDATE adviser_journal SET digest = repeat('0', 64) WHERE run_id = %s AND seq = 3", (rid,))
@@ -189,4 +189,5 @@ def test_deep_v4_matches_a_completed_adviser_run_and_detects_journal_tamper(data
     with connect(database_url) as c:
         v2 = c.execute("SELECT result FROM observation_deep_validations WHERE validation_id = %s", (vid2,)).fetchone()
     assert v2["result"]["outcome"] == "mismatch"
-    assert any(m["kind"] == "adviser_journal_record" for m in v2["result"]["mismatches"])
+    # a stored digest column that disagrees with its record bytes is itself a mismatch (v5 re-hashes stored bytes)
+    assert any(m["kind"] == "adviser_journal_stored_bytes" for m in v2["result"]["mismatches"])

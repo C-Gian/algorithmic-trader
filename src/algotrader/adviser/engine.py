@@ -34,7 +34,7 @@ from .identity import (
 from .params import load
 from .runtime import RUNTIME_FORMAT, AdviserRuntime
 
-ENGINE_FORMAT_V3 = "observe.stream.v3"  # factual + temporal + algotrader.adviser-runtime.v1
+ENGINE_FORMAT_V3 = "observe.stream.v3"  # factual + temporal + algotrader.adviser-runtime.v2
 
 
 class AdviserStateError(Exception):
