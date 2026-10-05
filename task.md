@@ -1,11 +1,11 @@
-# Current Task — WP-011: implement closed MP-002
-Status: **ACTIVE EXECUTOR IMPLEMENTATION — DIRECTOR REVIEW REQUIRED**
+# Current Task — WP-011 correction
+Status: **ACTIVE EXECUTOR CORRECTION — DIRECTOR REVIEW REQUIRED**
 Date: 2026-10-05.
 
-Implement [WP-011 specification](delivery/WP-011-MP-002-IMPLEMENTATION-SPEC.md), using closed [MP-002 v0.2 rules](delivery/MP-002-SCENARIO-CONFIRMATION-ENTRY-PROPOSAL.md) and [complete register](delivery/MP-002-PARAMETERS.json). [Director closure](delivery/MP-002-DIRECTOR-DISPOSITION.md) follows [Astra CHIUDIBILE](delivery/MP-002-ASTRA-CLOSURE.md) on4b5ef95.
+Correct F1–F2 in [Director review](delivery/WP-011-DIRECTOR-REVIEW.md) of product f1a8023763e820e41cbd6085be14b4ebabbcb0d3, under the original [WP-011 specification](delivery/WP-011-MP-002-IMPLEMENTATION-SPEC.md).
 
-Deliver btc.context-action.v0.3: independent structural discovery/scenarios, A immediate or post-confirmation usable return entry, causal monotone caps/contacts, exact clocks/evaluator and registered diagnostic denominators. Integrate sparse durable state/validation, live/Workbench/plain results, method selection and same-pack two-run comparison. Preserve selectable frozen MP-001 v0.2 behavior/old outputs; no numerical loosening or new source scope.
+F1: derive same-dispatch B opposite-edge box retirement from pre-dispatch structural episode ownership while retaining protective-contact precedence. F2: causally count already-confirmed antecedents in later hourly view samples, including direct restore. Add the explicit integrated-comparison dislocation correction limitation and A destination-before-confirmation diagnostic.
 
-Execute required synthetic causal/independent expected-transition, DB restore/fence/corruption/Deep-resume, schema/old-reader, full suites and bounded E2E/size checks from the spec. Evidence: delivery/evidence/WP-011-ENGINEERING-EVIDENCE.{json,md}. No real economic run or acquisition; October paired Owner handoff prepared but inactive.
+Preserve v0.2 and saved outputs; no numerical loosening, method rewrite, new sources or economic run. Use the review's bounded checks and fail-before/fixed-after evidence. Full exact-SHA CI remains required and Owner-operated; permanent workflow is in AGENTS.md.
 
-Completion: **READY FOR DIRECTOR REVIEW — WP-011 ONLY**. No next package or Owner backtest activated. Permanent workflow and Owner-operated CI handoff are in AGENTS.md.
+Completion: **READY FOR DIRECTOR REVIEW — WP-011 CORRECTION ONLY**. Owner October/November/December comparison remains inactive.

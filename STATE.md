@@ -1,8 +1,8 @@
 # Project State
 
-Updated: 2026-10-05 — WP-011 executor delivery (MP-002 v0.3 selectable beside unchanged v0.2); READY FOR DIRECTOR REVIEW, not accepted
+Updated: 2026-10-05 — WP-011 Director review: correction required (F1 box collision, F2 antecedent samples); no Owner economic run
 
-**Current task: [task.md](task.md) — WP-011 implement closed MP-002; no Owner economic run yet** Product authority: [FOUNDATION.md](FOUNDATION.md) v3.1. Executor rules: [AGENTS.md](AGENTS.md). How to run the app: [README.md](README.md). Chronology and earlier package evidence: [delivery/DELIVERY-HISTORY.md](delivery/DELIVERY-HISTORY.md).
+**Current task: [task.md](task.md) — WP-011 bounded correction per [Director review](delivery/WP-011-DIRECTOR-REVIEW.md); no Owner economic run yet** Product authority: [FOUNDATION.md](FOUNDATION.md) v3.1. Executor rules: [AGENTS.md](AGENTS.md). How to run the app: [README.md](README.md). Chronology and earlier package evidence: [delivery/DELIVERY-HISTORY.md](delivery/DELIVERY-HISTORY.md).
 
 Goal (Foundation v3.1): an integrated BTC adviser with persistent actionable LONG/SHORT calls, entry area, targets, stop/exit guidance and holding horizon. Capital, size, leverage and orders stay human. Historical ACCEPTED/READY/HOLD labels in older documents do not authorize work; only task.md does.
 
@@ -247,3 +247,12 @@ The initial v0.1 proposal status above is historical. [Astra review](delivery/MP
 - **Checks** (disposable PostgreSQL 18.6, port 55439, Owner stack untouched): full non-E2E 657 passed + 2 failed on the deliberate observe revision pin (updated; `tests/test_observe.py` 21 passed); new suites mp002 paths/rules/db/versions/live green; full E2E 19 passed (incl. the new method/comparison journey); web typecheck/build; `algotrader schema` matches. Compose smoke and exact-SHA CI: Owner-operated, PENDING.
 - **For Director decision**: (1) A anchor K ≥ frozen B ends the scenario at destination contact before confirmation (MP-002 §3 literal; reproducible test); (2) pre-existing v0.2 dislocation-baseline defect (veto never active), v0.2 kept unchanged, v0.3 applies the rule; (3) listed interpretations in the evidence file.
 - **Owner handoff**: October→November→December paired v0.2/v0.3 development comparison prepared but INACTIVE until Director engineering acceptance. No economic run, acquisition or protected evaluation.
+
+
+## WP-011 Director engineering review — 5 October 2026
+
+Product reviewed: f1a8023763e820e41cbd6085be14b4ebabbcb0d3. **CORRECTION REQUIRED; no Owner development comparison activated.** [Review](delivery/WP-011-DIRECTOR-REVIEW.md), [offline synthetic probes](delivery/evidence/WP-011-DIRECTOR-PROBES.json).
+
+F1: a B scenario alive at dispatch entry loses box-retirement ownership when the simultaneous V contact removes it before the opposite-edge 15m close is handled; the old box incorrectly births another episode. F2: hourly samples taken after a scenario's confirmation falsely record an unactivated antecedent. Both reproduced on full pure paths. The review records bounded correction checks, exact-SHA CI requirement, and no economic/research run.
+
+A K>=B destination-before-confirmation is consistent with closed rules; no relaxation authorized. The acknowledged v0.2 dislocation bug remains frozen; v0.3 corrects it, so comparison must disclose this additional integrated difference. Remote CI is PENDING / NOT CHECKED by Director and Owner-operated. Earlier WP-011 delivery is evidence, not acceptance.

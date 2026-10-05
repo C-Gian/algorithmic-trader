@@ -1,0 +1,42 @@
+{
+  "reviewed_commit": "f1a8023763e820e41cbd6085be14b4ebabbcb0d3",
+  "scope": "synthetic offline pure paths, no economic/Owner run",
+  "probes": [
+    {
+      "id": "F1",
+      "pre_dispatch_B": [
+        "BL-2025-09-01T04:15:00+00:00-0ad3a0658181"
+      ],
+      "old_box": "box-2025-09-01T03:45:00+00:00-4384cdcada07",
+      "post_dispatch_box": "box-2025-09-01T03:45:00+00:00-4384cdcada07",
+      "box_retire_records": 0,
+      "new_episodes_on_old_box": [
+        "BS-2025-09-01T04:45:00+00:00-bb1d390e7399"
+      ],
+      "expected_property": false,
+      "B_terminals": [
+        [
+          "2025-09-01T05:00:00Z",
+          "V_CONTACT:okx/BTC-USDT-SWAP/trade_bar_1m#obs@2025-09-01T04:59:00Z"
+        ]
+      ]
+    },
+    {
+      "id": "F2",
+      "confirmation": "2025-09-01T04:01:00Z",
+      "samples": [
+        {
+          "at": "2025-09-01T05:00:00Z",
+          "activated_1h": false,
+          "activated_4h": false
+        },
+        {
+          "at": "2025-09-01T06:00:00Z",
+          "activated_1h": false,
+          "activated_4h": false
+        }
+      ],
+      "expected_property": false
+    }
+  ]
+}
