@@ -445,4 +445,4 @@ Preliminary source capability/size checks may inform MP-001 without substantial 
 
 ## 10. Immediate active action
 
-**WP-009 accepted at 6f95273** after [follow-up review](WP-009-CORRECTION-DIRECTOR-REVIEW.md), exact-SHA CI37300338202 green. Immediate action: [Owner Backtest A](WP-009-OWNER-BACKTEST-A.md), September prepared pack, Adviser evaluation at max, copied report to the Director. No executor implementation active. Method MP-001 v0.2 unchanged; no economic result or edge established. Substantial runs are Owner-operated; future CI waiting is Owner-operated under AGENTS.md. Director diagnosis follows the copied result before any next package.
+**Owner Backtest A completed**: 135.2s, runtime PASS20/20, zero calls overSeptember. [Current diagnosis and targeted Astra review](WP-009-OWNER-BACKTEST-A-DIAGNOSIS.md) governs next action; original report preserved. No executor implementation or new Owner run active. Diagnose method target/trigger/net-feasibility and coverage before a versioned change. MP-001v0.2 remains frozen; no protected-period use or economic agent run.

@@ -1,8 +1,8 @@
 # Project State
 
-Updated: 2026-10-05 — WP-009 accepted at 6f95273; READY FOR OWNER BACKTEST A (September); no executor implementation active
+Updated: 2026-10-05 — Owner Backtest A completed: runtime PASS, zero September calls; Director diagnosis / targeted Astra review
 
-**Current task: [task.md](task.md) — Owner Backtest A (September Adviser evaluation; no executor implementation active).** Product authority: [FOUNDATION.md](FOUNDATION.md) v3.1. Executor rules: [AGENTS.md](AGENTS.md). How to run the app: [README.md](README.md). Chronology and earlier package evidence: [delivery/DELIVERY-HISTORY.md](delivery/DELIVERY-HISTORY.md).
+**Current task: [task.md](task.md) — Director diagnosis of Owner Backtest A; no executor implementation** Product authority: [FOUNDATION.md](FOUNDATION.md) v3.1. Executor rules: [AGENTS.md](AGENTS.md). How to run the app: [README.md](README.md). Chronology and earlier package evidence: [delivery/DELIVERY-HISTORY.md](delivery/DELIVERY-HISTORY.md).
 
 Goal (Foundation v3.1): an integrated BTC adviser with persistent actionable LONG/SHORT calls, entry area, targets, stop/exit guidance and holding horizon. Capital, size, leverage and orders stay human. Historical ACCEPTED/READY/HOLD labels in older documents do not authorize work; only task.md does.
 
@@ -202,3 +202,7 @@ Reviewed `d16c925`: findings 1–6, 8 and 9 closed for this slice; one remaining
 ACCEPTED at `6f95273`: all original findings 1–9 closed; [follow-up acceptance](delivery/WP-009-CORRECTION-DIRECTOR-REVIEW.md). Independent source/regression review and exact merge-method probe; CI37300338202 exact-SHA SUCCESS (checks: 599 non-E2E, 18 E2E; Compose smoke SUCCESS). Full local suites remain executor evidence, not Director reruns. Deep v6 new launches, stricter resumed v5 verification, saved reports preserved. Economic performance remains unknown.
 
 **Current next action:** [Owner Backtest A](delivery/WP-009-OWNER-BACKTEST-A.md): app Adviser evaluation / prepared btc-september-development-v1 pack / max / Copy report for chat. No new acquisition, agent economic run, method change or mandatory Deep validation. Earlier inactive handoffs are superseded by this acceptance. The Owner also takes over future CI waiting: executor local checks/commit/push, SHA/link and immediate summary; no polling or background CI shell (AGENTS.md).
+
+## Owner Backtest A result — 2026-10-05
+
+Owner app run `eval-20261005T120047-e6cc50` / `obs-20261005T120047-bc6947`, code6f95273: COMPLETED, 147,975/147,975, runtime reconciliation v5 PASS20/20, elapsed135.2s. Original [report](delivery/evidence/WP-009-OWNER-BACKTEST-A.json), [diagnosis/Astra brief](delivery/WP-009-OWNER-BACKTEST-A-DIAGNOSIS.md). All43,200 scored minutes assessable; births109, arms47, trigger evaluations38, **issued0**. Rejections18 no-room,14 reward/risk,6 opposing-area. Runtime workflow confirmed, method usefulness not accepted on this development month; no entered-path profitability evidence. Director diagnosis next, targeted Astra challenge; no Claude implementation, new Owner run or protected evidence authorized. Historical READY Owner handoff has been exercised and is superseded by this current result.

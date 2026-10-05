@@ -1,0 +1,2431 @@
+{
+  "adviser": {
+    "boundary_effect": {
+      "evaluation_end": {
+        "at": "2025-10-01T00:00:00+00:00",
+        "open_call": null,
+        "pending_attempts": []
+      },
+      "evaluation_start": {
+        "at": "2025-09-01T00:00:00+00:00",
+        "cleared": {
+          "attempts": [],
+          "box": null,
+          "box_token": "READY",
+          "call": null,
+          "latch": {
+            "-1": "READY",
+            "1": "READY"
+          }
+        },
+        "warmup_calls": 1
+      }
+    },
+    "calls": {
+      "by_family": {},
+      "count": 0,
+      "entry_available_minutes": {
+        "max": null,
+        "median": null,
+        "min": null,
+        "n": "0",
+        "p25": null,
+        "p75": null
+      },
+      "entry_reopens": 0,
+      "list": [],
+      "longest_no_call_interval_hours": "720",
+      "per_assessable_week": "0.00",
+      "per_evaluated_week": "0.00",
+      "terminal": {},
+      "warmup_calls_not_scored": 1
+    },
+    "conclusion": {
+      "text": "First adviser evaluation on these data: no prior adviser baseline exists on the same pack, so improvement cannot be judged. Calls, entry windows, funnel and hypothetical outcomes are reported for Director diagnosis.",
+      "verdict": "INSUFFICIENT_EVIDENCE"
+    },
+    "condition_durations": {
+      "active_at_last_commit": [
+        "ANY_COMMON_BLOCKER",
+        "NO_ARMED_SCENARIO",
+        "TRADE_15M_NOT_READY",
+        "TRADE_1H_NOT_READY"
+      ],
+      "available": true,
+      "conditions": {
+        "ISSUABLE_IF_TRIGGERED": {
+          "fraction_of_covered": "1.0000",
+          "minutes": "43200.00",
+          "onsets": 0
+        },
+        "NO_ARMED_SCENARIO": {
+          "fraction_of_covered": "0.9742",
+          "minutes": "42087.00",
+          "onsets": 46
+        },
+        "PRIORITY_COMPETITION": {
+          "fraction_of_covered": "0.0003",
+          "minutes": "15.00",
+          "onsets": 1
+        }
+      },
+      "covered_minutes": "43200.00",
+      "note": "overlapping durations (a minute counts toward every condition holding then; ANY_COMMON_BLOCKER = union of the common blockers); onsets count separate episodes, not elapsed time; ISSUABLE_IF_TRIGGERED = no common blocker and slot free"
+    },
+    "coverage": {
+      "assessable_minutes": 43200,
+      "assessable_weeks": "4.286",
+      "capabilities": {
+        "calendar": "NONE_UNKNOWN",
+        "dislocation": "ENABLE_WHERE_SUPPORTED",
+        "execution": "HISTORICAL_BASE",
+        "funding_outcomes": "PRICE_NET_ONLY",
+        "incidents": "NOT_COVERED",
+        "oi_liquidations_depth_flow": "NOT_COVERED",
+        "predictive_cycles": "NOT_COVERED (observed phase only)",
+        "quotes": "NOT_COVERED (historical)"
+      },
+      "covered_minutes": 43200,
+      "evaluation_minutes": 43200,
+      "unavailable_minutes": 0,
+      "view_row_minutes": {
+        "ARMED_SCENARIO": 1113,
+        "BALANCED_RANGE": 9086,
+        "NO_SUPPORTED_PLAN": 33001
+      }
+    },
+    "diagnosis": [
+      "TRIGGERS_REJECTED: NO_ROOM_AFTER_COSTS 18, REWARD_RISK_BELOW_MINIMUM 14, AT_OPPOSING_AREA 6",
+      "CONDITION_TIME: ISSUABLE_IF_TRIGGERED 43200.00 min, NO_ARMED_SCENARIO 42087.00 min, PRIORITY_COMPETITION 15.00 min of 43200.00 covered min"
+    ],
+    "funnel": {
+      "arms": {
+        "A_LONG": 24,
+        "A_SHORT": 14,
+        "B_LONG": 3,
+        "C_LONG": 2,
+        "C_SHORT": 4
+      },
+      "births": {
+        "A_LONG": 47,
+        "A_SHORT": 38,
+        "B_LONG": 9,
+        "B_SHORT": 3,
+        "C_LONG": 4,
+        "C_SHORT": 8
+      },
+      "conflicted": 0,
+      "end_reasons": {
+        "EXPIRE:ATTEMPT_DEADLINE": 4,
+        "EXPIRE:BOX_RETIRED": 2,
+        "EXPIRE:SPENT_HIGH_BEYOND_B_BEFORE_REACTION": 45,
+        "REJECT:AT_OPPOSING_AREA": 6,
+        "REJECT:NO_ROOM_AFTER_COSTS": 18,
+        "REJECT:REWARD_RISK_BELOW_MINIMUM": 14,
+        "WITHDRAW:CLOSE_AT_OR_BEYOND_A_PLUS_ZONE": 2,
+        "WITHDRAW:CONTEXT_FORBIDDEN_AT_BIRTH": 1,
+        "WITHDRAW:CONTEXT_NOT_BALANCED_AT_BIRTH": 5,
+        "WITHDRAW:CONTEXT_OR_ADVERSE_EXPANSION": 6,
+        "WITHDRAW:DIRECTIONAL_EXPANSION_AT_BIRTH": 1,
+        "WITHDRAW:RETURNED_INSIDE_BEFORE_RETEST": 5
+      },
+      "ends": {
+        "A_LONG:EXPIRE": 21,
+        "A_LONG:REJECT": 21,
+        "A_LONG:WITHDRAW": 5,
+        "A_SHORT:EXPIRE": 24,
+        "A_SHORT:REJECT": 11,
+        "A_SHORT:WITHDRAW": 3,
+        "B_LONG:EXPIRE": 3,
+        "B_LONG:REJECT": 1,
+        "B_LONG:WITHDRAW": 5,
+        "B_SHORT:EXPIRE": 2,
+        "B_SHORT:WITHDRAW": 1,
+        "C_LONG:REJECT": 2,
+        "C_LONG:WITHDRAW": 2,
+        "C_SHORT:EXPIRE": 1,
+        "C_SHORT:REJECT": 3,
+        "C_SHORT:WITHDRAW": 4
+      },
+      "issued": 0,
+      "priority": 0,
+      "rejection_blockers": {
+        "AT_OPPOSING_AREA": 6,
+        "NO_ROOM_AFTER_COSTS": 18,
+        "REWARD_RISK_BELOW_MINIMUM": 14
+      },
+      "slot_occupied": 0,
+      "slot_priority_minutes": {
+        "CONFLICTED_ARMED": "0.00",
+        "PRIORITY_COMPETITION": "15.00",
+        "SLOT_OCCUPIED": "0.00",
+        "SLOT_OCCUPIED_WITH_ARMED": "0.00"
+      },
+      "trigger_evaluations": 38
+    },
+    "gates": {
+      "A": {
+        "G": {
+          "max": "43.0226",
+          "median": "11.2616",
+          "min": "0.6283",
+          "n": "26",
+          "p25": "5.6396",
+          "p75": "22.6241"
+        },
+        "K": {
+          "max": "14.0000",
+          "median": "14.0000",
+          "min": "14.0000",
+          "n": "26",
+          "p25": "14.0000",
+          "p75": "14.0000"
+        },
+        "Q": {
+          "max": "53.5279",
+          "median": "16.5951",
+          "min": "5.1898",
+          "n": "26",
+          "p25": "12.9292",
+          "p75": "28.9772"
+        },
+        "margin": {
+          "max": "-7.6915",
+          "median": "-37.4817",
+          "min": "-92.6863",
+          "n": "26",
+          "p25": "-51.9779",
+          "p75": "-27.1389"
+        }
+      },
+      "B": {
+        "G": {
+          "max": "17.6195",
+          "median": "17.6195",
+          "min": "17.6195",
+          "n": "1",
+          "p25": "17.6195",
+          "p75": "17.6195"
+        },
+        "K": {
+          "max": "14.0000",
+          "median": "14.0000",
+          "min": "14.0000",
+          "n": "1",
+          "p25": "14.0000",
+          "p75": "14.0000"
+        },
+        "Q": {
+          "max": "1.2241",
+          "median": "1.2241",
+          "min": "1.2241",
+          "n": "1",
+          "p25": "1.2241",
+          "p75": "1.2241"
+        },
+        "margin": {
+          "max": "-14.6493",
+          "median": "-14.6493",
+          "min": "-14.6493",
+          "n": "1",
+          "p25": "-14.6493",
+          "p75": "-14.6493"
+        }
+      },
+      "C": {
+        "G": {
+          "max": "32.7020",
+          "median": "12.3666",
+          "min": "3.5570",
+          "n": "5",
+          "p25": "4.2984",
+          "p75": "20.4297"
+        },
+        "K": {
+          "max": "14.0000",
+          "median": "14.0000",
+          "min": "14.0000",
+          "n": "5",
+          "p25": "14.0000",
+          "p75": "14.0000"
+        },
+        "Q": {
+          "max": "29.4455",
+          "median": "16.8057",
+          "min": "9.9693",
+          "n": "5",
+          "p25": "12.2423",
+          "p75": "28.4537"
+        },
+        "margin": {
+          "max": "-32.2424",
+          "median": "-38.6002",
+          "min": "-45.7049",
+          "n": "5",
+          "p25": "-41.9338",
+          "p75": "-38.4648"
+        }
+      }
+    },
+    "identity": {
+      "capability_profile": {
+        "calendar": "NONE_UNKNOWN",
+        "dislocation": "ENABLE_WHERE_SUPPORTED",
+        "execution": "HISTORICAL_BASE",
+        "funding_outcomes": "PRICE_NET_ONLY",
+        "horizon_inputs": "R2_COMPLETE_MINUTE_DERIVED_UTC_HORIZONS",
+        "incident_tape": "NOT_COVERED",
+        "late_policy": "temporal.seal-no-revision.v1",
+        "origin": "HISTORICAL_MODELED"
+      },
+      "capability_profile_sha256": "7c86833734da7258f62f8f7569b2a74253867e4b82e5b537907749f910220296",
+      "evaluator_sha256": "2ee4d3c306354efc8307739c930c329e3ee07ad994fb37cc3669b2e83a501784",
+      "identity_sha256": "a59d0cb632ca6b2780f5ff98b5e6a006dabe58c1581bfb703d5201e8f3361ed8",
+      "implementation": "adviser.core.v2",
+      "model": "btc.context-action.v0.2",
+      "register_sha256": "e2e2dd8ef0501e239c3e4f07dc17732e72fdbbaab3a10471a521bfd2a2d60bae",
+      "rules_sha256": "1ca01b416b9ec3562a74bab4687cdc71a6ebf30036596dba48780e32e4f1471d",
+      "rules_version": "mp001.rules.v0.2"
+    },
+    "limiting_landmarks": {
+      "IMPULSE_B": 9,
+      "NONE": 7,
+      "PIVOT_HIGH_15M": 10,
+      "PIVOT_HIGH_1H": 2,
+      "PIVOT_LOW_15M": 8,
+      "PIVOT_LOW_1H": 2
+    },
+    "outcomes": {
+      "note": "normalized one-unit hypothetical paths (N0=1, q=1/E); not a fill, account or size; PRICE_NET_ONLY - total net with funding unavailable unless coverage is proven",
+      "variants": {
+        "ENTRY_DELAY_0": {
+          "ambiguous": 0,
+          "ambiguous_bounds": [],
+          "censored": 0,
+          "exit_class": {},
+          "guidance_exits": 0,
+          "held_minutes_distribution": {
+            "max": null,
+            "median": null,
+            "min": null,
+            "n": "0",
+            "p25": null,
+            "p75": null
+          },
+          "mean_price_net": null,
+          "no_entry": 0,
+          "nonpositive_price_net": 0,
+          "paths": 0,
+          "positive_price_net": 0,
+          "price_net_bps_distribution": {
+            "max": null,
+            "median": null,
+            "min": null,
+            "n": "0",
+            "p25": null,
+            "p75": null
+          },
+          "status": {},
+          "stop_exits": 0,
+          "sum_gross": "0",
+          "sum_price_net": "0",
+          "sum_stress_price_net": null,
+          "target_exits": 0,
+          "total_net": "UNAVAILABLE (PRICE_NET_ONLY: funding completeness unproven)",
+          "unresolved": 0
+        },
+        "ENTRY_DELAY_120": {
+          "ambiguous": 0,
+          "ambiguous_bounds": [],
+          "censored": 0,
+          "exit_class": {},
+          "guidance_exits": 0,
+          "held_minutes_distribution": {
+            "max": null,
+            "median": null,
+            "min": null,
+            "n": "0",
+            "p25": null,
+            "p75": null
+          },
+          "mean_price_net": null,
+          "no_entry": 0,
+          "nonpositive_price_net": 0,
+          "paths": 0,
+          "positive_price_net": 0,
+          "price_net_bps_distribution": {
+            "max": null,
+            "median": null,
+            "min": null,
+            "n": "0",
+            "p25": null,
+            "p75": null
+          },
+          "status": {},
+          "stop_exits": 0,
+          "sum_gross": "0",
+          "sum_price_net": "0",
+          "sum_stress_price_net": null,
+          "target_exits": 0,
+          "total_net": "UNAVAILABLE (PRICE_NET_ONLY: funding completeness unproven)",
+          "unresolved": 0
+        },
+        "HORIZON_ONLY": {
+          "ambiguous": 0,
+          "ambiguous_bounds": [],
+          "censored": 0,
+          "exit_class": {},
+          "guidance_exits": 0,
+          "held_minutes_distribution": {
+            "max": null,
+            "median": null,
+            "min": null,
+            "n": "0",
+            "p25": null,
+            "p75": null
+          },
+          "mean_price_net": null,
+          "no_entry": 0,
+          "nonpositive_price_net": 0,
+          "paths": 0,
+          "positive_price_net": 0,
+          "price_net_bps_distribution": {
+            "max": null,
+            "median": null,
+            "min": null,
+            "n": "0",
+            "p25": null,
+            "p75": null
+          },
+          "status": {},
+          "stop_exits": 0,
+          "sum_gross": "0",
+          "sum_price_net": "0",
+          "sum_stress_price_net": null,
+          "target_exits": 0,
+          "total_net": "UNAVAILABLE (PRICE_NET_ONLY: funding completeness unproven)",
+          "unresolved": 0
+        },
+        "PRIMARY": {
+          "ambiguous": 0,
+          "ambiguous_bounds": [],
+          "censored": 0,
+          "exit_class": {},
+          "guidance_exits": 0,
+          "held_minutes_distribution": {
+            "max": null,
+            "median": null,
+            "min": null,
+            "n": "0",
+            "p25": null,
+            "p75": null
+          },
+          "mean_price_net": null,
+          "no_entry": 0,
+          "nonpositive_price_net": 0,
+          "paths": 0,
+          "positive_price_net": 0,
+          "price_net_bps_distribution": {
+            "max": null,
+            "median": null,
+            "min": null,
+            "n": "0",
+            "p25": null,
+            "p75": null
+          },
+          "status": {},
+          "stop_exits": 0,
+          "sum_gross": "0",
+          "sum_price_net": "0",
+          "sum_stress_price_net": "0",
+          "target_exits": 0,
+          "total_net": "UNAVAILABLE (PRICE_NET_ONLY: funding completeness unproven)",
+          "unresolved": 0
+        }
+      }
+    },
+    "report_version": "adviser.report.v2",
+    "room_erosion": [],
+    "room_erosion_staged": {
+      "by_family": {
+        "A": {
+          "erosion_impulse_to_reaction": {
+            "max": "-10.8422",
+            "median": "-37.4210",
+            "min": "-68.0832",
+            "n": "26",
+            "p25": "-44.3893",
+            "p75": "-26.3635"
+          },
+          "erosion_reaction_to_trigger": {
+            "max": "50.0279",
+            "median": "14.7489",
+            "min": "4.6919",
+            "n": "26",
+            "p25": "10.6375",
+            "p75": "27.5660"
+          },
+          "impulse": {
+            "max": "26.6423",
+            "median": "-1.7396",
+            "min": "-11.2601",
+            "n": "26",
+            "p25": "-2.5762",
+            "p75": "-1.1460"
+          },
+          "reaction": {
+            "max": "66.5812",
+            "median": "30.9616",
+            "min": "10.3316",
+            "n": "26",
+            "p25": "23.8321",
+            "p75": "52.3751"
+          },
+          "trigger": {
+            "max": "43.0226",
+            "median": "11.2616",
+            "min": "0.6283",
+            "n": "26",
+            "p25": "5.6396",
+            "p75": "22.6241"
+          }
+        },
+        "B": {
+          "trigger": {
+            "max": "17.6195",
+            "median": "17.6195",
+            "min": "17.6195",
+            "n": "1",
+            "p25": "17.6195",
+            "p75": "17.6195"
+          }
+        },
+        "C": {
+          "trigger": {
+            "max": "32.7020",
+            "median": "12.3666",
+            "min": "3.5570",
+            "n": "5",
+            "p25": "4.2984",
+            "p75": "20.4297"
+          }
+        }
+      },
+      "list": [
+        {
+          "actionable": false,
+          "attempt_id": "CS-2025-09-03T00:30:00+00:00-bb9cc4a9db6b",
+          "direction": "SHORT",
+          "family": "C",
+          "issued_call": null,
+          "room_impulse_bps": "NOT_APPLICABLE",
+          "room_primary_open_bps": "NOT_ISSUED",
+          "room_reaction_bps": "NOT_APPLICABLE",
+          "room_trigger_bps": "32.70"
+        },
+        {
+          "actionable": false,
+          "attempt_id": "AL-2025-09-03T14:30:00+00:00-402afe18571e",
+          "direction": "LONG",
+          "family": "A",
+          "issued_call": null,
+          "room_impulse_bps": "-2.45",
+          "room_primary_open_bps": "NOT_ISSUED",
+          "room_reaction_bps": "52.52",
+          "room_trigger_bps": "23.57"
+        },
+        {
+          "actionable": false,
+          "attempt_id": "AL-2025-09-05T02:15:00+00:00-7ff644c1dfaa",
+          "direction": "LONG",
+          "family": "A",
+          "issued_call": null,
+          "room_impulse_bps": "-2.57",
+          "room_primary_open_bps": "NOT_ISSUED",
+          "room_reaction_bps": "30.11",
+          "room_trigger_bps": "19.48"
+        },
+        {
+          "actionable": false,
+          "attempt_id": "CL-2025-09-06T10:00:00+00:00-2766b97b07a3",
+          "direction": "LONG",
+          "family": "C",
+          "issued_call": null,
+          "room_impulse_bps": "NOT_APPLICABLE",
+          "room_primary_open_bps": "NOT_ISSUED",
+          "room_reaction_bps": "NOT_APPLICABLE",
+          "room_trigger_bps": "4.30"
+        },
+        {
+          "actionable": false,
+          "attempt_id": "AL-2025-09-07T01:45:00+00:00-ae317a871b6f",
+          "direction": "LONG",
+          "family": "A",
+          "issued_call": null,
+          "room_impulse_bps": "-0.74",
+          "room_primary_open_bps": "NOT_ISSUED",
+          "room_reaction_bps": "13.96",
+          "room_trigger_bps": "4.33"
+        },
+        {
+          "actionable": false,
+          "attempt_id": "AL-2025-09-07T11:45:00+00:00-b26a349e77e3",
+          "direction": "LONG",
+          "family": "A",
+          "issued_call": null,
+          "room_impulse_bps": "-1.35",
+          "room_primary_open_bps": "NOT_ISSUED",
+          "room_reaction_bps": "20.31",
+          "room_trigger_bps": "11.03"
+        },
+        {
+          "actionable": false,
+          "attempt_id": "AL-2025-09-08T15:15:00+00:00-1718137de4ca",
+          "direction": "LONG",
+          "family": "A",
+          "issued_call": null,
+          "room_impulse_bps": "-1.92",
+          "room_primary_open_bps": "NOT_ISSUED",
+          "room_reaction_bps": "57.77",
+          "room_trigger_bps": "43.02"
+        },
+        {
+          "actionable": false,
+          "attempt_id": "AS-2025-09-09T16:15:00+00:00-306fbda65243",
+          "direction": "SHORT",
+          "family": "A",
+          "issued_call": null,
+          "room_impulse_bps": "-2.70",
+          "room_primary_open_bps": "NOT_ISSUED",
+          "room_reaction_bps": "23.66",
+          "room_trigger_bps": "11.17"
+        },
+        {
+          "actionable": false,
+          "attempt_id": "CS-2025-09-10T05:45:00+00:00-c559c65982b9",
+          "direction": "SHORT",
+          "family": "C",
+          "issued_call": null,
+          "room_impulse_bps": "NOT_APPLICABLE",
+          "room_primary_open_bps": "NOT_ISSUED",
+          "room_reaction_bps": "NOT_APPLICABLE",
+          "room_trigger_bps": "12.37"
+        },
+        {
+          "actionable": false,
+          "attempt_id": "AL-2025-09-11T03:45:00+00:00-919947d0cc1a",
+          "direction": "LONG",
+          "family": "A",
+          "issued_call": null,
+          "room_impulse_bps": "-1.74",
+          "room_primary_open_bps": "NOT_ISSUED",
+          "room_reaction_bps": "30.79",
+          "room_trigger_bps": "17.82"
+        },
+        {
+          "actionable": false,
+          "attempt_id": "BL-2025-09-13T09:45:00+00:00-3df01fe3650a",
+          "direction": "LONG",
+          "family": "B",
+          "issued_call": null,
+          "room_impulse_bps": "NOT_APPLICABLE",
+          "room_primary_open_bps": "NOT_ISSUED",
+          "room_reaction_bps": "NOT_APPLICABLE",
+          "room_trigger_bps": "17.62"
+        },
+        {
+          "actionable": false,
+          "attempt_id": "AS-2025-09-13T16:45:00+00:00-ef6166424e01",
+          "direction": "SHORT",
+          "family": "A",
+          "issued_call": null,
+          "room_impulse_bps": "-1.46",
+          "room_primary_open_bps": "NOT_ISSUED",
+          "room_reaction_bps": "40.36",
+          "room_trigger_bps": "31.60"
+        },
+        {
+          "actionable": false,
+          "attempt_id": "CS-2025-09-13T23:15:00+00:00-fcd3880c2d81",
+          "direction": "SHORT",
+          "family": "C",
+          "issued_call": null,
+          "room_impulse_bps": "NOT_APPLICABLE",
+          "room_primary_open_bps": "NOT_ISSUED",
+          "room_reaction_bps": "NOT_APPLICABLE",
+          "room_trigger_bps": "3.56"
+        },
+        {
+          "actionable": false,
+          "attempt_id": "AS-2025-09-14T13:45:00+00:00-def8f6f9dd2d",
+          "direction": "SHORT",
+          "family": "A",
+          "issued_call": null,
+          "room_impulse_bps": "-1.15",
+          "room_primary_open_bps": "NOT_ISSUED",
+          "room_reaction_bps": "43.24",
+          "room_trigger_bps": "3.56"
+        },
+        {
+          "actionable": false,
+          "attempt_id": "AL-2025-09-14T21:45:00+00:00-9cf96f90a504",
+          "direction": "LONG",
+          "family": "A",
+          "issued_call": null,
+          "room_impulse_bps": "-0.96",
+          "room_primary_open_bps": "NOT_ISSUED",
+          "room_reaction_bps": "23.83",
+          "room_trigger_bps": "7.11"
+        },
+        {
+          "actionable": false,
+          "attempt_id": "AS-2025-09-17T14:45:00+00:00-326bed067544",
+          "direction": "SHORT",
+          "family": "A",
+          "issued_call": null,
+          "room_impulse_bps": "-1.59",
+          "room_primary_open_bps": "NOT_ISSUED",
+          "room_reaction_bps": "35.98",
+          "room_trigger_bps": "22.62"
+        },
+        {
+          "actionable": false,
+          "attempt_id": "AL-2025-09-18T01:30:00+00:00-6320ad231827",
+          "direction": "LONG",
+          "family": "A",
+          "issued_call": null,
+          "room_impulse_bps": "-2.35",
+          "room_primary_open_bps": "NOT_ISSUED",
+          "room_reaction_bps": "26.30",
+          "room_trigger_bps": "12.58"
+        },
+        {
+          "actionable": false,
+          "attempt_id": "AL-2025-09-20T07:45:00+00:00-5e8c81fa48ff",
+          "direction": "LONG",
+          "family": "A",
+          "issued_call": null,
+          "room_impulse_bps": "-0.50",
+          "room_primary_open_bps": "NOT_ISSUED",
+          "room_reaction_bps": "13.88",
+          "room_trigger_bps": "7.53"
+        },
+        {
+          "actionable": false,
+          "attempt_id": "AS-2025-09-20T23:30:00+00:00-a0ed2f52c00f",
+          "direction": "SHORT",
+          "family": "A",
+          "issued_call": null,
+          "room_impulse_bps": "-0.51",
+          "room_primary_open_bps": "NOT_ISSUED",
+          "room_reaction_bps": "10.33",
+          "room_trigger_bps": "5.64"
+        },
+        {
+          "actionable": false,
+          "attempt_id": "AS-2025-09-22T00:45:00+00:00-2ed275027d1d",
+          "direction": "SHORT",
+          "family": "A",
+          "issued_call": null,
+          "room_impulse_bps": "-11.26",
+          "room_primary_open_bps": "NOT_ISSUED",
+          "room_reaction_bps": "33.03",
+          "room_trigger_bps": "5.46"
+        },
+        {
+          "actionable": false,
+          "attempt_id": "AL-2025-09-24T11:45:00+00:00-af561cf95173",
+          "direction": "LONG",
+          "family": "A",
+          "issued_call": null,
+          "room_impulse_bps": "-9.15",
+          "room_primary_open_bps": "NOT_ISSUED",
+          "room_reaction_bps": "12.16",
+          "room_trigger_bps": "0.63"
+        },
+        {
+          "actionable": false,
+          "attempt_id": "AL-2025-09-24T15:15:00+00:00-a44272dd4656",
+          "direction": "LONG",
+          "family": "A",
+          "issued_call": null,
+          "room_impulse_bps": "-1.50",
+          "room_primary_open_bps": "NOT_ISSUED",
+          "room_reaction_bps": "66.58",
+          "room_trigger_bps": "38.91"
+        },
+        {
+          "actionable": false,
+          "attempt_id": "AL-2025-09-24T17:30:00+00:00-80c7ddec66be",
+          "direction": "LONG",
+          "family": "A",
+          "issued_call": null,
+          "room_impulse_bps": "-5.23",
+          "room_primary_open_bps": "NOT_ISSUED",
+          "room_reaction_bps": "34.12",
+          "room_trigger_bps": "17.72"
+        },
+        {
+          "actionable": false,
+          "attempt_id": "AS-2025-09-25T11:45:00+00:00-514d411f83e5",
+          "direction": "SHORT",
+          "family": "A",
+          "issued_call": null,
+          "room_impulse_bps": "26.64",
+          "room_primary_open_bps": "NOT_ISSUED",
+          "room_reaction_bps": "61.13",
+          "room_trigger_bps": "13.19"
+        },
+        {
+          "actionable": false,
+          "attempt_id": "AS-2025-09-25T20:45:00+00:00-872710567fa6",
+          "direction": "SHORT",
+          "family": "A",
+          "issued_call": null,
+          "room_impulse_bps": "-3.24",
+          "room_primary_open_bps": "NOT_ISSUED",
+          "room_reaction_bps": "52.38",
+          "room_trigger_bps": "2.35"
+        },
+        {
+          "actionable": false,
+          "attempt_id": "AS-2025-09-25T23:30:00+00:00-eed105e99c64",
+          "direction": "SHORT",
+          "family": "A",
+          "issued_call": null,
+          "room_impulse_bps": "-2.58",
+          "room_primary_open_bps": "NOT_ISSUED",
+          "room_reaction_bps": "58.45",
+          "room_trigger_bps": "41.41"
+        },
+        {
+          "actionable": false,
+          "attempt_id": "CL-2025-09-26T06:00:00+00:00-bb5703ca8e87",
+          "direction": "LONG",
+          "family": "C",
+          "issued_call": null,
+          "room_impulse_bps": "NOT_APPLICABLE",
+          "room_primary_open_bps": "NOT_ISSUED",
+          "room_reaction_bps": "NOT_APPLICABLE",
+          "room_trigger_bps": "20.43"
+        },
+        {
+          "actionable": false,
+          "attempt_id": "AL-2025-09-28T16:30:00+00:00-b5323c111e3f",
+          "direction": "LONG",
+          "family": "A",
+          "issued_call": null,
+          "room_impulse_bps": "-1.29",
+          "room_primary_open_bps": "NOT_ISSUED",
+          "room_reaction_bps": "25.79",
+          "room_trigger_bps": "2.58"
+        },
+        {
+          "actionable": false,
+          "attempt_id": "AL-2025-09-28T20:30:00+00:00-6b9f449ad07a",
+          "direction": "LONG",
+          "family": "A",
+          "issued_call": null,
+          "room_impulse_bps": "-1.74",
+          "room_primary_open_bps": "NOT_ISSUED",
+          "room_reaction_bps": "25.48",
+          "room_trigger_bps": "18.01"
+        },
+        {
+          "actionable": false,
+          "attempt_id": "AL-2025-09-30T00:00:00+00:00-ade4e2b0e4d7",
+          "direction": "LONG",
+          "family": "A",
+          "issued_call": null,
+          "room_impulse_bps": "-6.46",
+          "room_primary_open_bps": "NOT_ISSUED",
+          "room_reaction_bps": "30.96",
+          "room_trigger_bps": "7.99"
+        },
+        {
+          "actionable": false,
+          "attempt_id": "AL-2025-09-30T01:00:00+00:00-324ed8b6b1da",
+          "direction": "LONG",
+          "family": "A",
+          "issued_call": null,
+          "room_impulse_bps": "-1.42",
+          "room_primary_open_bps": "NOT_ISSUED",
+          "room_reaction_bps": "48.49",
+          "room_trigger_bps": "25.70"
+        },
+        {
+          "actionable": false,
+          "attempt_id": "AL-2025-09-30T19:45:00+00:00-bdb4faa96175",
+          "direction": "LONG",
+          "family": "A",
+          "issued_call": null,
+          "room_impulse_bps": "22.01",
+          "room_primary_open_bps": "NOT_ISSUED",
+          "room_reaction_bps": "61.05",
+          "room_trigger_bps": "11.26"
+        }
+      ],
+      "note": "room = 10000*d*(T - P_stage)/P_stage to the target frozen at trigger (derived from the trigger side price and G, tick-rounded); positive erosion = room lost between stages; B/C have no impulse/reaction stage (NOT_APPLICABLE); primary_open only for issued calls with an entry",
+      "triggered_attempts": 32,
+      "truncated": 0
+    },
+    "section": "ADVISER_EVALUATION",
+    "view_samples": {
+      "1h": {
+        "abstentions_balanced_uncertain": 702,
+        "antecedent_activated": 14,
+        "conditional_samples": 18,
+        "directional_matching_sign": 8,
+        "directional_scored": 18,
+        "endpoint_unavailable": 0,
+        "note": "conditional labels; not calibrated probabilities; abstentions are not hits",
+        "persistence_matching_sign": 359,
+        "persistence_scored": 720,
+        "unavailable_view": 0
+      },
+      "4h": {
+        "abstentions_balanced_uncertain": 702,
+        "antecedent_activated": 15,
+        "conditional_samples": 18,
+        "directional_matching_sign": 9,
+        "directional_scored": 18,
+        "endpoint_unavailable": 0,
+        "note": "conditional labels; not calibrated probabilities; abstentions are not hits",
+        "persistence_matching_sign": 337,
+        "persistence_scored": 720,
+        "unavailable_view": 0
+      },
+      "by_view": {
+        "BALANCED": 161,
+        "DOWN": 5,
+        "UNCERTAIN": 541,
+        "UP": 13
+      },
+      "samples": 720
+    },
+    "windows": {
+      "clock_end": "2025-10-01T06:05:00Z",
+      "clock_end_reached": true,
+      "evaluation": [
+        "2025-09-01T00:00:00+00:00",
+        "2025-10-01T00:00:00+00:00"
+      ],
+      "tail_end": "2025-10-01T06:05:00+00:00",
+      "warmup_start": "2025-08-28T00:00:00+00:00"
+    }
+  },
+  "availability": {
+    "basis": "MODELED",
+    "label": "MODELED availability - not measured publication timing: each completed bar is known at its bar close and each settled funding event at its funding time (zero-extra-delay lower-bound convention). No live receipt measurement is applied to historical data.",
+    "measured": false,
+    "policy_id": "feed.modeled.v1(bar+PT0S,funding+PT0S)"
+  },
+  "capabilities": {
+    "baseline_comparison": {
+      "label": "Baseline comparison",
+      "reason": "see the adviser section",
+      "status": "REPORTED",
+      "value": null
+    },
+    "call_count": {
+      "label": "Call count",
+      "reason": "see the adviser section",
+      "status": "REPORTED",
+      "value": null
+    },
+    "calls_per_week": {
+      "label": "Calls per evaluated week",
+      "reason": "see the adviser section",
+      "status": "REPORTED",
+      "value": null
+    },
+    "candidate_funnel": {
+      "label": "Candidate funnel / rejection reasons",
+      "reason": "see the adviser section",
+      "status": "REPORTED",
+      "value": null
+    },
+    "entry_window_durations": {
+      "label": "Entry-window durations",
+      "reason": "see the adviser section",
+      "status": "REPORTED",
+      "value": null
+    },
+    "longest_no_call_interval": {
+      "label": "Longest no-call interval",
+      "reason": "see the adviser section",
+      "status": "REPORTED",
+      "value": null
+    },
+    "market_view_metrics": {
+      "label": "MarketView metrics",
+      "reason": "see the adviser section",
+      "status": "REPORTED",
+      "value": null
+    },
+    "normalized_gross_net_results": {
+      "label": "Normalized gross/net results",
+      "reason": "see the adviser section",
+      "status": "REPORTED",
+      "value": null
+    },
+    "outcomes": {
+      "label": "Win/loss/expired/unresolved outcomes",
+      "reason": "see the adviser section",
+      "status": "REPORTED",
+      "value": null
+    },
+    "professional_adviser": {
+      "reason": "MP-001 btc.context-action.v0.2 adviser",
+      "status": "CONNECTED"
+    }
+  },
+  "captured_at": null,
+  "code_version": "6f95273b54674081fe6b3896a84d62a015384fe5+image",
+  "completion": "COMPLETE",
+  "conclusion": {
+    "text": "The adviser evaluation ran end to end over the whole prepared pack and its runtime integrity checks (bounded terminal reconciliation incl. adviser journal/evaluation commitments) passed. Integrity is not profitability or forecast quality: the adviser section reports calls, entry windows, the candidate funnel and hypothetical outcomes for Director diagnosis.",
+    "verdict": "ADVISER_EVALUATION_COMPLETED"
+  },
+  "corpus": {
+    "acquisition": {
+      "bytes_fetched": 3193906,
+      "downloaded_children": 2,
+      "elapsed_seconds": 85.519412,
+      "job_id": "pack-job-20261003T212006-fe74a7",
+      "outcome": "prepared"
+    },
+    "base_url": "https://www.okx.com",
+    "binding_outcome": "prepared",
+    "bytes_on_disk": 36004449,
+    "chunk_id": "btc-september-development-v1",
+    "chunk_label": "September 2025 — development",
+    "dataset_id": "pack-427d5f5d0e26d595ff0c131c70a9435b26692dbe",
+    "end": "2025-10-01T06:05:00Z",
+    "manifest_sha256": "c187ad0e8dc40a54f43f4d339dbee3a3f6100048ce2952c5502aa68b2e0a3710",
+    "pack": {
+      "acknowledged_limitations": false,
+      "boundaries": {
+        "clock_end": "FULL_COVERAGE_END_PLUS_DECLARED_CLOSURE_ALLOWANCE",
+        "evaluation_end": "NO_NEW_CALLS_MONITOR_EXISTING_IN_WP009",
+        "evaluation_start": "RESET_CANDIDATES_CALLS_KEEP_FACTUAL_DERIVED_CONTEXT_IN_WP009",
+        "internal_month": "CONTINUE_NO_FINISH_NO_RESET",
+        "tail_end": "CENSOR_UNRESOLVED_IN_WP009",
+        "warmup": "UNSCORED_FACTUAL_DERIVED_INITIALIZATION"
+      },
+      "capabilities": [
+        {
+          "capability": "trade_1m",
+          "detail": "49325 valid minutes; 0 missing/rejected slots kept as explicit quality events (never filled)",
+          "status": "OBSERVED_COMPLETE"
+        },
+        {
+          "capability": "mark_1m",
+          "detail": "49325 valid minutes; 0 missing/rejected; optional reference context, never a veto of the price core",
+          "status": "ENABLE_WHERE_SUPPORTED: OBSERVED_COMPLETE"
+        },
+        {
+          "capability": "index_1m",
+          "detail": "49325 valid minutes; 0 missing/rejected; optional reference context, never a veto of the price core",
+          "status": "ENABLE_WHERE_SUPPORTED: OBSERVED_COMPLETE"
+        },
+        {
+          "capability": "funding_settlements",
+          "detail": "0 settlement row(s) observed; returned rows never certify that no other settlement occurred (no eight-hour schedule is assumed); outcome funding therefore PRICE_NET_ONLY / TOTAL_NET_UNAVAILABLE until completeness is proven",
+          "status": "EMPTY_UNKNOWN"
+        },
+        {
+          "capability": "event_calendar",
+          "detail": "no historical as-known event schedule exists; a present-day calendar is not historical known-at evidence; unknown is not 'no event'",
+          "status": "NONE_UNKNOWN"
+        },
+        {
+          "capability": "incident_tape",
+          "detail": "no incident collector in R3",
+          "status": "NOT_COVERED"
+        },
+        {
+          "capability": "quotes_oi_liquidations_depth_flow",
+          "detail": "no obtainable historical input assigned; execution stays a declared bar/delay/cost model, never live quote parity",
+          "status": "NOT_COVERED"
+        },
+        {
+          "capability": "instrument_metadata",
+          "detail": "pinned retrieval-time snapshot assumed for the window; not historical effective-date proof",
+          "status": "PINNED_RETRIEVAL_SNAPSHOT_ASSUMED_FOR_WINDOW"
+        },
+        {
+          "capability": "source_capability_probes",
+          "detail": "no live capability probe was executed for this pack; coverage facts come only from the verified source packages",
+          "status": "NOT_PROBED"
+        }
+      ],
+      "capability_profile": {
+        "calendar": "NONE_UNKNOWN",
+        "dislocation": "ENABLE_WHERE_SUPPORTED",
+        "execution": "HISTORICAL_BASE",
+        "funding_outcomes": "AUTHORITATIVE_IF_COVERED_ELSE_PRICE_NET_ONLY",
+        "incident_tape": "NOT_COVERED",
+        "metadata": "PINNED_RETRIEVAL_SNAPSHOT_ASSUMED_FOR_WINDOW"
+      },
+      "capability_profile_sha256": "b343c88c95c59137faa5c8b5ea2cac99ed38a5d672719b03af15b4c7645d1eab",
+      "clock_end": "2025-10-01T06:05:00Z",
+      "coverage": [
+        {
+          "expected_slots": 5760,
+          "family": "trade_bar_1m",
+          "missing": 0,
+          "reasons": {},
+          "rejected": 0,
+          "valid": 5760,
+          "window": "warmup"
+        },
+        {
+          "expected_slots": 43200,
+          "family": "trade_bar_1m",
+          "missing": 0,
+          "reasons": {},
+          "rejected": 0,
+          "valid": 43200,
+          "window": "evaluation"
+        },
+        {
+          "expected_slots": 365,
+          "family": "trade_bar_1m",
+          "missing": 0,
+          "reasons": {},
+          "rejected": 0,
+          "valid": 365,
+          "window": "tail"
+        },
+        {
+          "expected_slots": 5760,
+          "family": "mark_bar_1m",
+          "missing": 0,
+          "reasons": {},
+          "rejected": 0,
+          "valid": 5760,
+          "window": "warmup"
+        },
+        {
+          "expected_slots": 43200,
+          "family": "mark_bar_1m",
+          "missing": 0,
+          "reasons": {},
+          "rejected": 0,
+          "valid": 43200,
+          "window": "evaluation"
+        },
+        {
+          "expected_slots": 365,
+          "family": "mark_bar_1m",
+          "missing": 0,
+          "reasons": {},
+          "rejected": 0,
+          "valid": 365,
+          "window": "tail"
+        },
+        {
+          "expected_slots": 5760,
+          "family": "index_bar_1m",
+          "missing": 0,
+          "reasons": {},
+          "rejected": 0,
+          "valid": 5760,
+          "window": "warmup"
+        },
+        {
+          "expected_slots": 43200,
+          "family": "index_bar_1m",
+          "missing": 0,
+          "reasons": {},
+          "rejected": 0,
+          "valid": 43200,
+          "window": "evaluation"
+        },
+        {
+          "expected_slots": 365,
+          "family": "index_bar_1m",
+          "missing": 0,
+          "reasons": {},
+          "rejected": 0,
+          "valid": 365,
+          "window": "tail"
+        },
+        {
+          "expected_slots": null,
+          "family": "funding_settlement",
+          "missing": 0,
+          "reasons": {},
+          "rejected": 0,
+          "valid": 0,
+          "window": "warmup"
+        },
+        {
+          "expected_slots": null,
+          "family": "funding_settlement",
+          "missing": 0,
+          "reasons": {},
+          "rejected": 0,
+          "valid": 0,
+          "window": "evaluation"
+        },
+        {
+          "expected_slots": null,
+          "family": "funding_settlement",
+          "missing": 0,
+          "reasons": {},
+          "rejected": 0,
+          "valid": 0,
+          "window": "tail"
+        }
+      ],
+      "evidence_classes": {
+        "certified_uncontaminated": false,
+        "label": "DEVELOPMENT",
+        "note": "Development evidence only.",
+        "portions": [
+          {
+            "class": "DEVELOPMENT",
+            "contamination": "DEVELOPMENT_EVIDENCE_ONLY",
+            "end": "2025-10-01T00:00:00+00:00",
+            "start": "2025-09-01T00:00:00+00:00"
+          }
+        ]
+      },
+      "feed": {
+        "availability_policy_id": "feed.modeled.v1(bar+PT0S,funding+PT0S)",
+        "cache_id": "fc-fa8313524f7276c75c8deb43ac9cd27f78dd9b34",
+        "cache_manifest_sha256": "d4bd9a0473d9c20b487c534ee615f98fd8abbc6c068ac184e7d5ac3181512a9f",
+        "content_identity": "feedcontent.v1:2cc523c7adf542898ed7ce924906c01d0f926f1658f2790491bbb25f2fc61ef6",
+        "event_count": 147975,
+        "event_counts": {
+          "index_bar_1m/bar_observation": 49325,
+          "mark_bar_1m/bar_observation": 49325,
+          "trade_bar_1m/bar_observation": 49325
+        },
+        "ordered_event_hash": "f9b8b0b5eb6200857d4aa5bf0f370fa02ec20d96bda50b95940bb18d6b2de7bb",
+        "ordering_policy_id": "feed.order.availability-family-series-time-kind.v1"
+      },
+      "input_readiness_preview": {
+        "at": "2025-09-01T00:00:00Z",
+        "label": "input readiness preview — no adviser",
+        "matched_mark_index_minutes_before_evaluation": 61,
+        "matched_reference_desired_by_mp001": 60,
+        "note": "counts of complete input bars available before the evaluation start; no adviser predicate is implemented or evaluated, and R2 demonstration readiness is not relabelled as the method",
+        "trade_15m_contiguous_complete": 384,
+        "trade_15m_required_by_mp001": 25,
+        "trade_1h_contiguous_complete": 96,
+        "trade_1h_required_by_mp001": 21
+      },
+      "instrument": {
+        "definition": {
+          "base_ccy": "BTC",
+          "ct_mult": "1",
+          "ct_type": "linear",
+          "ct_val": "0.01",
+          "ct_val_ccy": "BTC",
+          "index_id": "BTC-USDT",
+          "inst_family": "BTC-USDT",
+          "inst_id": "BTC-USDT-SWAP",
+          "inst_type": "SWAP",
+          "lot_sz": "0.01",
+          "min_sz": "0.01",
+          "quote_ccy": "USDT",
+          "settle_ccy": "USDT",
+          "tick_sz": "0.1",
+          "underlying": "BTC-USDT"
+        },
+        "definition_sha256": "b56c9f376a3b325cc0c5fc3393deab91715d7d878a0b86c564b9ee80e30a24ac",
+        "note": "retrieval-time snapshot assumed for the window; not historical effective-date proof; all contributors share this definition",
+        "policy": "PINNED_RETRIEVAL_SNAPSHOT_ASSUMED_FOR_WINDOW",
+        "snapshot_dataset_id": "okx-btc-usdt-swap-1m-20250901T0000-20251001T0000-0f98c897bf0f",
+        "snapshot_raw_sha256": "1a6eeb4c4cc625067010d0110718feaee4a6f03becc60f661b800acb4f5ac4e2",
+        "snapshot_retrieved_at": "2026-10-01T15:04:02.756985Z"
+      },
+      "limitations": [
+        "funding completeness unproven: future outcome reporting is PRICE_NET_ONLY (TOTAL_NET_UNAVAILABLE)",
+        "instrument definition is a retrieval-time snapshot assumed for the whole window (approximation)"
+      ],
+      "manifest_sha256": "c187ad0e8dc40a54f43f4d339dbee3a3f6100048ce2952c5502aa68b2e0a3710",
+      "method": "btc.context-action.v0.2",
+      "overlap": {
+        "conflicts": 0,
+        "gap_replaced_by_valid": 0,
+        "identical_collapsed": 0,
+        "overlapping_slots": 0,
+        "provenance_file": null,
+        "provenance_sha256": null
+      },
+      "pack_id": "pack-427d5f5d0e26d595ff0c131c70a9435b26692dbe",
+      "preset": {
+        "adviser_implemented": false,
+        "automatic_prepare": false,
+        "default": true,
+        "evaluation": {
+          "end": "2025-10-01T00:00:00Z",
+          "start": "2025-09-01T00:00:00Z"
+        },
+        "evidence_class": "DEVELOPMENT",
+        "label": "September 2025 — development",
+        "preset_id": "btc-september-development-v1",
+        "tail": {
+          "end": "2025-10-01T06:05:00Z",
+          "start": "2025-10-01T00:00:00Z"
+        },
+        "warmup": {
+          "end": "2025-09-01T00:00:00Z",
+          "start": "2025-08-28T00:00:00Z"
+        }
+      },
+      "preset_sha256": "4b56ad2f472aaee32b868a11f3e96892e20d27f3e2ebd9002e3a899c7fb7adc8",
+      "register_sha256": "e2e2dd8ef0501e239c3e4f07dc17732e72fdbbaab3a10471a521bfd2a2d60bae",
+      "requested_end": "2025-10-01T06:05:00Z",
+      "requested_start": "2025-08-28T00:00:00Z",
+      "rules_version": "mp001.rules.v0.2",
+      "sources": [
+        {
+          "cache_id": "fc-ebcd74f4e527146c6dc03e97cd7224a2104978f6",
+          "cache_manifest_sha256": "6abd54215646534ac6767d32fb2e8841f67276d183c3cacfe7dcb14e8eecfbc1",
+          "dataset_id": "okx-btc-usdt-swap-1m-20250828T0000-20250901T0000-6bcd709fcf05",
+          "end": "2025-09-01T00:00:00Z",
+          "request_end": "2025-09-01T00:00:00Z",
+          "request_start": "2025-08-28T00:00:00Z",
+          "source_manifest_sha256": "518119a4c89e3fc9d0adf0930748e7264711e968a0085c23f2a69166f9c8a81b",
+          "start": "2025-08-28T00:00:00Z"
+        },
+        {
+          "cache_id": "fc-198b761586f30026d88b1c566856f4a2087368ba",
+          "cache_manifest_sha256": "17d86ddc78e9b0e97777b93fb80e61100a06197e3d249624ad7b892fddc8cb58",
+          "dataset_id": "okx-btc-usdt-swap-1m-20250901T0000-20251001T0000-0f98c897bf0f",
+          "end": "2025-10-01T00:00:00Z",
+          "request_end": "2025-10-01T00:00:00Z",
+          "request_start": "2025-09-01T00:00:00Z",
+          "source_manifest_sha256": "44f9c38888095e1b32047dffa4454a86c4975919a0925104ea816ffb80292beb",
+          "start": "2025-09-01T00:00:00Z"
+        },
+        {
+          "cache_id": "fc-795db493dc8fb919a0266f779c1dafdb3ee3903a",
+          "cache_manifest_sha256": "6261e5012066ebef1b46140206664cfc36519358519ea54ebd11ab92acd14c64",
+          "dataset_id": "okx-btc-usdt-swap-1m-20251001T0000-20251001T0605-8fcaee4b43d2",
+          "end": "2025-10-01T06:05:00Z",
+          "request_end": "2025-10-01T06:05:00Z",
+          "request_start": "2025-10-01T00:00:00Z",
+          "source_manifest_sha256": "b58f28af8e0b92e47f7e2fd131d56eee3dc15f59efa9af60a4c8a273ba9ddc08",
+          "start": "2025-10-01T00:00:00Z"
+        }
+      ],
+      "status": "READY",
+      "storage": {
+        "note": "the pack adds its own composed feed cache; source packages are referenced, never copied",
+        "pack_cache_bytes": 10544979,
+        "pack_cache_partitions": 30,
+        "source_package_bytes": 25459470
+      },
+      "tail_end": "2025-10-01T06:05:00Z",
+      "windows": {
+        "convention": "UTC half-open [start, end), whole minutes; only the evaluation window is ever scored",
+        "evaluation": {
+          "end": "2025-10-01T00:00:00+00:00",
+          "minutes": 43200,
+          "scored": true,
+          "start": "2025-09-01T00:00:00+00:00"
+        },
+        "requested": {
+          "end": "2025-10-01T06:05:00+00:00",
+          "start": "2025-08-28T00:00:00+00:00"
+        },
+        "tail": {
+          "end": "2025-10-01T06:05:00+00:00",
+          "minutes": 365,
+          "scored": false,
+          "start": "2025-10-01T00:00:00+00:00"
+        },
+        "warmup": {
+          "end": "2025-09-01T00:00:00+00:00",
+          "minutes": 5760,
+          "scored": false,
+          "start": "2025-08-28T00:00:00+00:00"
+        }
+      }
+    },
+    "plan_id": "algotrader.corpus-presets.v1",
+    "plan_version": 1,
+    "quality_status": "clean",
+    "retrieved_at": null,
+    "start": "2025-08-28T00:00:00Z",
+    "storage": {
+      "pack_cache_bytes": 10544979,
+      "source_package_bytes": 25459470,
+      "total_bytes": 36004449
+    },
+    "verified_at": "2026-10-03T21:21:32.773971+00:00"
+  },
+  "coverage": {
+    "applied_events": 147975,
+    "channels": [
+      {
+        "covered_from": "2025-08-28T00:00:00Z",
+        "covered_until": "2025-10-01T06:05:00Z",
+        "family": "trade_bar_1m"
+      },
+      {
+        "covered_from": "2025-08-28T00:00:00Z",
+        "covered_until": "2025-10-01T06:05:00Z",
+        "family": "mark_bar_1m"
+      },
+      {
+        "covered_from": "2025-08-28T00:00:00Z",
+        "covered_until": "2025-10-01T06:05:00Z",
+        "family": "index_bar_1m"
+      },
+      {
+        "covered_from": "2025-08-28T00:00:00Z",
+        "covered_until": "2025-10-01T06:05:00Z",
+        "family": "funding_settlement"
+      }
+    ],
+    "committed_information_time": "2025-10-01T06:05:00+00:00",
+    "final_information_time": "2025-10-01T06:05:00Z",
+    "fraction": 1.0,
+    "requested": {
+      "end": "2025-10-01T06:05:00Z",
+      "start": "2025-08-28T00:00:00Z"
+    },
+    "total_events": 147975
+  },
+  "evaluation_id": "eval-20261005T120047-e6cc50",
+  "feed": {
+    "applied_events": 147975,
+    "content_identity": "feedcontent.v1:2cc523c7adf542898ed7ce924906c01d0f926f1658f2790491bbb25f2fc61ef6",
+    "event_count": 147975,
+    "event_counts": {
+      "index_bar_1m/bar_observation": 49325,
+      "mark_bar_1m/bar_observation": 49325,
+      "trade_bar_1m/bar_observation": 49325
+    },
+    "ordered_event_hash": "f9b8b0b5eb6200857d4aa5bf0f370fa02ec20d96bda50b95940bb18d6b2de7bb"
+  },
+  "manifest_check": {
+    "artifact_dir": "g1",
+    "artifacts": [
+      {
+        "name": "adviser.json",
+        "present": true,
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "name": "config.json",
+        "present": true,
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "name": "engine.json",
+        "present": true,
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "name": "final_snapshot.json",
+        "present": true,
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "name": "ranges.jsonl",
+        "present": true,
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "name": "temporal.json",
+        "present": true,
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "name": "validation.json",
+        "present": true,
+        "sha256_matches": true,
+        "size_matches": true
+      }
+    ],
+    "claimed": true,
+    "manifest_file_matches_database": true,
+    "manifest_file_present": true,
+    "manifest_file_sha256": "844d1e1bef862dd6f937bdfa2ac20bc52f25828c816e15dfa5898a438ff5e882",
+    "note": "file presence and sizes checked; artifacts up to 64 MiB re-hashed against the manifest (larger legacy traces: size only)"
+  },
+  "next_diagnostic": "Copy this report to the Director: diagnose calls/coverage/funnel before any change; no parameter search.",
+  "notice": "Adviser evaluation: the integrated MP-001 adviser replayed causally over the prepared pack, with a SEPARATE normalized hypothetical evaluator (one abstract unit, declared delay/costs). It never places orders or chooses size/leverage; outcomes are hypothetical, not fills or account results.",
+  "operation": {
+    "active_seconds_total": 134.523,
+    "assurance": {
+      "checks_passed": 20,
+      "checks_total": 20,
+      "scope": "Runtime integrity verified, engine reference-tested: bounded terminal reconciliation of a streaming run - committed range continuity and order bounds, exact re-hash of every consumed input line against the receipt-pinned feed cache with the rolling input commitment recomputed at every range boundary, verified terminal restorable state and snapshot digest, cache/receipt/partition integrity and (completed runs) exactly-once consumption of the whole canonical stream. No independent reference replay was performed in this run: kernel/reference equivalence is covered by protected differential fixtures and by the optional Deep validation job. Version 3 (temporal-enabled observe.stream.v2 runs) additionally verifies the committed temporal substrate: temporal state SHA-256, output/aggregate commitments and dispatch sequence recorded at every committed range; the terminal temporal restore state (pinned profile fingerprint, exact round-trip, cursor) equal to the last range's records; and, for completed runs, the clock-end finish derived from that verified state. No independent temporal re-execution was performed in this run (optional Deep validation v2). Version 4 (evaluation-pack runs, source kind pack) additionally verifies the pack pins: the pack manifest file SHA-256 equals the run pin and the trusted publication receipt, its body re-hashes to the pack id, and its feed cache id/manifest SHA-256 equal the run's pinned cache. Consuming the whole canonical feed is reported separately from per-minute source coverage: a completed pack run can contain explicit source gaps. Version 5 (adviser evaluation runs, engine observe.stream.v3) additionally verifies the professional outputs' runtime integrity: adviser state SHA-256 and commitments at every committed range; the semantic.v2 journal and adviser-evaluation.v1 records recomputed from their stored bytes (digest, contiguous sequence, chain) against every range and the finish; the terminal adviser restore state; for completed runs the professional clock-end finish re-derived from that verified state (tail timers only); and call/attempt lineage, revision contiguity and immutability. PASS is runtime integrity, not profit, forecast quality or an independent audit of the original sources; it shares the method implementation.",
+      "state": "passed",
+      "validator": "observe.stream-reconciliation",
+      "validator_version": "5"
+    },
+    "counters": {
+      "1": {
+        "adviser_records_verified": 0,
+        "cache_build_events": null,
+        "cache_bytes_read": 10544979,
+        "cache_partitions_read": 30,
+        "cache_reused": true,
+        "checkpoint_adviser_bytes": 27861,
+        "checkpoint_state_bytes": 35187,
+        "checkpoint_temporal_bytes": 87723,
+        "checkpoints_committed": 62,
+        "cpu_seconds": 132.589,
+        "deliveries_loaded_for_finalize": 0,
+        "delivery_rows_written": 0,
+        "evaluation_records_committed": 720,
+        "events_applied": 147975,
+        "events_decoded": 147975,
+        "feed_builds": 0,
+        "feed_events": 147975,
+        "journal_entries_committed": 6972,
+        "max_checkpoint_gap_events": 3161,
+        "max_control_gap_seconds": 0.274,
+        "max_rss_bytes": 208318464,
+        "max_rss_source": "getrusage ru_maxrss (process lifetime peak)",
+        "output_bytes": 1317747,
+        "pacing_sleep_seconds": 0.0,
+        "pid": 10,
+        "prefix_restore_events": 0,
+        "preparation": {},
+        "professional_dispatches": 49325,
+        "ranges_committed": 62,
+        "recorded_at": "2026-10-05T12:03:03.456142+00:00",
+        "restore_fallbacks": 0,
+        "restore_suffix_events": 0,
+        "snapshots_built": 63,
+        "sort_spill_runs": null,
+        "source_records_read": 147975,
+        "source_verifications": 0,
+        "state_encodes": 63,
+        "transactions_committed": 64,
+        "validation_deliveries_rederived": 0
+      }
+    },
+    "environment": {
+      "cgroup_cpu_max": "max 100000",
+      "cgroup_memory_max": "max",
+      "code_version": null,
+      "cpu_model": "Intel(R) Core(TM) i7-7700K CPU @ 4.20GHz",
+      "implementation": "CPython",
+      "logical_cpus": 8,
+      "machine": "x86_64",
+      "platform": "Linux-6.18.40.1-microsoft-standard-WSL2-x86_64-with-glibc2.41",
+      "python": "3.14.7",
+      "ram_bytes": 16750333952
+    },
+    "generation": 1,
+    "health": "finished",
+    "health_detail": null,
+    "phase": "GENERATING_REPORT",
+    "phases": [
+      {
+        "active_seconds": 0.0,
+        "interrupted_spans": 0,
+        "label": "Queued",
+        "phase": "QUEUED",
+        "spans": 1,
+        "state": "done",
+        "unmeasured_spans": 0,
+        "waiting_seconds": 0.318587,
+        "wall_seconds": 0.318587
+      },
+      {
+        "active_seconds": 0.237,
+        "interrupted_spans": 0,
+        "label": "Preparing source",
+        "phase": "PREPARING_SOURCE",
+        "spans": 1,
+        "state": "done",
+        "unmeasured_spans": 0,
+        "waiting_seconds": 0.0,
+        "wall_seconds": 0.240987
+      },
+      {
+        "active_seconds": 0.038,
+        "interrupted_spans": 0,
+        "label": "Initializing",
+        "phase": "INITIALIZING",
+        "spans": 1,
+        "state": "done",
+        "unmeasured_spans": 0,
+        "waiting_seconds": 0.0,
+        "wall_seconds": 0.049006
+      },
+      {
+        "active_seconds": 132.216,
+        "interrupted_spans": 0,
+        "label": "Replaying",
+        "phase": "REPLAYING",
+        "spans": 1,
+        "state": "done",
+        "unmeasured_spans": 0,
+        "waiting_seconds": 0.0,
+        "wall_seconds": 132.217914
+      },
+      {
+        "active_seconds": 0.046,
+        "interrupted_spans": 0,
+        "label": "Finalizing",
+        "phase": "FINALIZING",
+        "spans": 2,
+        "state": "done",
+        "unmeasured_spans": 0,
+        "waiting_seconds": 0.0,
+        "wall_seconds": 0.051997
+      },
+      {
+        "active_seconds": 1.946,
+        "interrupted_spans": 0,
+        "label": "Validating",
+        "phase": "VALIDATING",
+        "spans": 1,
+        "state": "done",
+        "unmeasured_spans": 0,
+        "waiting_seconds": 0.0,
+        "wall_seconds": 1.948878
+      },
+      {
+        "active_seconds": 0.04,
+        "interrupted_spans": 0,
+        "label": "Generating report",
+        "phase": "GENERATING_REPORT",
+        "spans": 1,
+        "state": "done",
+        "unmeasured_spans": 0,
+        "waiting_seconds": 0.0,
+        "wall_seconds": 0.043138
+      }
+    ],
+    "unmeasured_spans": 0,
+    "waiting_seconds_total": 0.318587
+  },
+  "pack": {
+    "acknowledged_limitations": false,
+    "adviser_run": true,
+    "boundaries": {
+      "clock_end": "FULL_COVERAGE_END_PLUS_DECLARED_CLOSURE_ALLOWANCE",
+      "evaluation_end": "NO_NEW_CALLS_MONITOR_EXISTING_IN_WP009",
+      "evaluation_start": "RESET_CANDIDATES_CALLS_KEEP_FACTUAL_DERIVED_CONTEXT_IN_WP009",
+      "internal_month": "CONTINUE_NO_FINISH_NO_RESET",
+      "tail_end": "CENSOR_UNRESOLVED_IN_WP009",
+      "warmup": "UNSCORED_FACTUAL_DERIVED_INITIALIZATION"
+    },
+    "capabilities": [
+      {
+        "capability": "trade_1m",
+        "detail": "49325 valid minutes; 0 missing/rejected slots kept as explicit quality events (never filled)",
+        "status": "OBSERVED_COMPLETE"
+      },
+      {
+        "capability": "mark_1m",
+        "detail": "49325 valid minutes; 0 missing/rejected; optional reference context, never a veto of the price core",
+        "status": "ENABLE_WHERE_SUPPORTED: OBSERVED_COMPLETE"
+      },
+      {
+        "capability": "index_1m",
+        "detail": "49325 valid minutes; 0 missing/rejected; optional reference context, never a veto of the price core",
+        "status": "ENABLE_WHERE_SUPPORTED: OBSERVED_COMPLETE"
+      },
+      {
+        "capability": "funding_settlements",
+        "detail": "0 settlement row(s) observed; returned rows never certify that no other settlement occurred (no eight-hour schedule is assumed); outcome funding therefore PRICE_NET_ONLY / TOTAL_NET_UNAVAILABLE until completeness is proven",
+        "status": "EMPTY_UNKNOWN"
+      },
+      {
+        "capability": "event_calendar",
+        "detail": "no historical as-known event schedule exists; a present-day calendar is not historical known-at evidence; unknown is not 'no event'",
+        "status": "NONE_UNKNOWN"
+      },
+      {
+        "capability": "incident_tape",
+        "detail": "no incident collector in R3",
+        "status": "NOT_COVERED"
+      },
+      {
+        "capability": "quotes_oi_liquidations_depth_flow",
+        "detail": "no obtainable historical input assigned; execution stays a declared bar/delay/cost model, never live quote parity",
+        "status": "NOT_COVERED"
+      },
+      {
+        "capability": "instrument_metadata",
+        "detail": "pinned retrieval-time snapshot assumed for the window; not historical effective-date proof",
+        "status": "PINNED_RETRIEVAL_SNAPSHOT_ASSUMED_FOR_WINDOW"
+      },
+      {
+        "capability": "source_capability_probes",
+        "detail": "no live capability probe was executed for this pack; coverage facts come only from the verified source packages",
+        "status": "NOT_PROBED"
+      }
+    ],
+    "capability_profile": {
+      "calendar": "NONE_UNKNOWN",
+      "dislocation": "ENABLE_WHERE_SUPPORTED",
+      "execution": "HISTORICAL_BASE",
+      "funding_outcomes": "AUTHORITATIVE_IF_COVERED_ELSE_PRICE_NET_ONLY",
+      "incident_tape": "NOT_COVERED",
+      "metadata": "PINNED_RETRIEVAL_SNAPSHOT_ASSUMED_FOR_WINDOW"
+    },
+    "capability_profile_sha256": "b343c88c95c59137faa5c8b5ea2cac99ed38a5d672719b03af15b4c7645d1eab",
+    "clock_end": "2025-10-01T06:05:00Z",
+    "coverage": [
+      {
+        "expected_slots": 5760,
+        "family": "trade_bar_1m",
+        "missing": 0,
+        "reasons": {},
+        "rejected": 0,
+        "valid": 5760,
+        "window": "warmup"
+      },
+      {
+        "expected_slots": 43200,
+        "family": "trade_bar_1m",
+        "missing": 0,
+        "reasons": {},
+        "rejected": 0,
+        "valid": 43200,
+        "window": "evaluation"
+      },
+      {
+        "expected_slots": 365,
+        "family": "trade_bar_1m",
+        "missing": 0,
+        "reasons": {},
+        "rejected": 0,
+        "valid": 365,
+        "window": "tail"
+      },
+      {
+        "expected_slots": 5760,
+        "family": "mark_bar_1m",
+        "missing": 0,
+        "reasons": {},
+        "rejected": 0,
+        "valid": 5760,
+        "window": "warmup"
+      },
+      {
+        "expected_slots": 43200,
+        "family": "mark_bar_1m",
+        "missing": 0,
+        "reasons": {},
+        "rejected": 0,
+        "valid": 43200,
+        "window": "evaluation"
+      },
+      {
+        "expected_slots": 365,
+        "family": "mark_bar_1m",
+        "missing": 0,
+        "reasons": {},
+        "rejected": 0,
+        "valid": 365,
+        "window": "tail"
+      },
+      {
+        "expected_slots": 5760,
+        "family": "index_bar_1m",
+        "missing": 0,
+        "reasons": {},
+        "rejected": 0,
+        "valid": 5760,
+        "window": "warmup"
+      },
+      {
+        "expected_slots": 43200,
+        "family": "index_bar_1m",
+        "missing": 0,
+        "reasons": {},
+        "rejected": 0,
+        "valid": 43200,
+        "window": "evaluation"
+      },
+      {
+        "expected_slots": 365,
+        "family": "index_bar_1m",
+        "missing": 0,
+        "reasons": {},
+        "rejected": 0,
+        "valid": 365,
+        "window": "tail"
+      },
+      {
+        "expected_slots": null,
+        "family": "funding_settlement",
+        "missing": 0,
+        "reasons": {},
+        "rejected": 0,
+        "valid": 0,
+        "window": "warmup"
+      },
+      {
+        "expected_slots": null,
+        "family": "funding_settlement",
+        "missing": 0,
+        "reasons": {},
+        "rejected": 0,
+        "valid": 0,
+        "window": "evaluation"
+      },
+      {
+        "expected_slots": null,
+        "family": "funding_settlement",
+        "missing": 0,
+        "reasons": {},
+        "rejected": 0,
+        "valid": 0,
+        "window": "tail"
+      }
+    ],
+    "evidence_classes": {
+      "certified_uncontaminated": false,
+      "label": "DEVELOPMENT",
+      "note": "Development evidence only.",
+      "portions": [
+        {
+          "class": "DEVELOPMENT",
+          "contamination": "DEVELOPMENT_EVIDENCE_ONLY",
+          "end": "2025-10-01T00:00:00+00:00",
+          "start": "2025-09-01T00:00:00+00:00"
+        }
+      ]
+    },
+    "feed_consumed": "entirely",
+    "input_readiness_preview": {
+      "at": "2025-09-01T00:00:00Z",
+      "label": "input readiness preview — no adviser",
+      "matched_mark_index_minutes_before_evaluation": 61,
+      "matched_reference_desired_by_mp001": 60,
+      "note": "counts of complete input bars available before the evaluation start; no adviser predicate is implemented or evaluated, and R2 demonstration readiness is not relabelled as the method",
+      "trade_15m_contiguous_complete": 384,
+      "trade_15m_required_by_mp001": 25,
+      "trade_1h_contiguous_complete": 96,
+      "trade_1h_required_by_mp001": 21
+    },
+    "instrument": {
+      "definition": {
+        "base_ccy": "BTC",
+        "ct_mult": "1",
+        "ct_type": "linear",
+        "ct_val": "0.01",
+        "ct_val_ccy": "BTC",
+        "index_id": "BTC-USDT",
+        "inst_family": "BTC-USDT",
+        "inst_id": "BTC-USDT-SWAP",
+        "inst_type": "SWAP",
+        "lot_sz": "0.01",
+        "min_sz": "0.01",
+        "quote_ccy": "USDT",
+        "settle_ccy": "USDT",
+        "tick_sz": "0.1",
+        "underlying": "BTC-USDT"
+      },
+      "definition_sha256": "b56c9f376a3b325cc0c5fc3393deab91715d7d878a0b86c564b9ee80e30a24ac",
+      "note": "retrieval-time snapshot assumed for the window; not historical effective-date proof; all contributors share this definition",
+      "policy": "PINNED_RETRIEVAL_SNAPSHOT_ASSUMED_FOR_WINDOW",
+      "snapshot_dataset_id": "okx-btc-usdt-swap-1m-20250901T0000-20251001T0000-0f98c897bf0f",
+      "snapshot_raw_sha256": "1a6eeb4c4cc625067010d0110718feaee4a6f03becc60f661b800acb4f5ac4e2",
+      "snapshot_retrieved_at": "2026-10-01T15:04:02.756985Z"
+    },
+    "limitations": [
+      "funding completeness unproven: future outcome reporting is PRICE_NET_ONLY (TOTAL_NET_UNAVAILABLE)",
+      "instrument definition is a retrieval-time snapshot assumed for the whole window (approximation)"
+    ],
+    "method": "btc.context-action.v0.2",
+    "overlap": {
+      "conflicts": 0,
+      "gap_replaced_by_valid": 0,
+      "identical_collapsed": 0,
+      "overlapping_slots": 0,
+      "provenance_file": null,
+      "provenance_sha256": null
+    },
+    "pack_id": "pack-427d5f5d0e26d595ff0c131c70a9435b26692dbe",
+    "preset_id": "btc-september-development-v1",
+    "preset_sha256": "4b56ad2f472aaee32b868a11f3e96892e20d27f3e2ebd9002e3a899c7fb7adc8",
+    "register_sha256": "e2e2dd8ef0501e239c3e4f07dc17732e72fdbbaab3a10471a521bfd2a2d60bae",
+    "rules_version": "mp001.rules.v0.2",
+    "scoring_note": "warmup and tail are never scored; only calls issued inside the evaluation window are scored (hypothetical evaluator)",
+    "source_coverage": {
+      "expected_bar_slots": 147975,
+      "missing_or_rejected": 0
+    },
+    "sources": [
+      {
+        "cache_id": "fc-ebcd74f4e527146c6dc03e97cd7224a2104978f6",
+        "cache_manifest_sha256": "6abd54215646534ac6767d32fb2e8841f67276d183c3cacfe7dcb14e8eecfbc1",
+        "dataset_id": "okx-btc-usdt-swap-1m-20250828T0000-20250901T0000-6bcd709fcf05",
+        "end": "2025-09-01T00:00:00Z",
+        "request_end": "2025-09-01T00:00:00Z",
+        "request_start": "2025-08-28T00:00:00Z",
+        "source_manifest_sha256": "518119a4c89e3fc9d0adf0930748e7264711e968a0085c23f2a69166f9c8a81b",
+        "start": "2025-08-28T00:00:00Z"
+      },
+      {
+        "cache_id": "fc-198b761586f30026d88b1c566856f4a2087368ba",
+        "cache_manifest_sha256": "17d86ddc78e9b0e97777b93fb80e61100a06197e3d249624ad7b892fddc8cb58",
+        "dataset_id": "okx-btc-usdt-swap-1m-20250901T0000-20251001T0000-0f98c897bf0f",
+        "end": "2025-10-01T00:00:00Z",
+        "request_end": "2025-10-01T00:00:00Z",
+        "request_start": "2025-09-01T00:00:00Z",
+        "source_manifest_sha256": "44f9c38888095e1b32047dffa4454a86c4975919a0925104ea816ffb80292beb",
+        "start": "2025-09-01T00:00:00Z"
+      },
+      {
+        "cache_id": "fc-795db493dc8fb919a0266f779c1dafdb3ee3903a",
+        "cache_manifest_sha256": "6261e5012066ebef1b46140206664cfc36519358519ea54ebd11ab92acd14c64",
+        "dataset_id": "okx-btc-usdt-swap-1m-20251001T0000-20251001T0605-8fcaee4b43d2",
+        "end": "2025-10-01T06:05:00Z",
+        "request_end": "2025-10-01T06:05:00Z",
+        "request_start": "2025-10-01T00:00:00Z",
+        "source_manifest_sha256": "b58f28af8e0b92e47f7e2fd131d56eee3dc15f59efa9af60a4c8a273ba9ddc08",
+        "start": "2025-10-01T00:00:00Z"
+      }
+    ],
+    "status": "READY",
+    "storage": {
+      "note": "the pack adds its own composed feed cache; source packages are referenced, never copied",
+      "pack_cache_bytes": 10544979,
+      "pack_cache_partitions": 30,
+      "source_package_bytes": 25459470
+    },
+    "tail_end": "2025-10-01T06:05:00Z",
+    "windows": {
+      "convention": "UTC half-open [start, end), whole minutes; only the evaluation window is ever scored",
+      "evaluation": {
+        "end": "2025-10-01T00:00:00+00:00",
+        "minutes": 43200,
+        "scored": true,
+        "start": "2025-09-01T00:00:00+00:00"
+      },
+      "requested": {
+        "end": "2025-10-01T06:05:00+00:00",
+        "start": "2025-08-28T00:00:00+00:00"
+      },
+      "tail": {
+        "end": "2025-10-01T06:05:00+00:00",
+        "minutes": 365,
+        "scored": false,
+        "start": "2025-10-01T00:00:00+00:00"
+      },
+      "warmup": {
+        "end": "2025-09-01T00:00:00+00:00",
+        "minutes": 5760,
+        "scored": false,
+        "start": "2025-08-28T00:00:00+00:00"
+      }
+    }
+  },
+  "preset": "adviser-evaluation",
+  "quality_status": "clean",
+  "replay_id": "obs-20261005T120047-bc6947",
+  "report_format": "algotrader.evaluation-report.v0",
+  "report_kind": "ADVISER_EVALUATION",
+  "run_type": "Adviser evaluation (hypothetical outcomes, no orders)",
+  "runtime": {
+    "attempts": 1,
+    "control_commands": [
+      "start"
+    ],
+    "created_at": "2026-10-05T12:00:47.845120+00:00",
+    "elapsed_seconds": 135.205452,
+    "final_pacing_events_per_second": 0.0,
+    "finished_at": "2026-10-05T12:03:03.368546+00:00",
+    "max_attempts": 3,
+    "pacing_note": "0 = max pacing; pacing is operational only and never changes state",
+    "recoveries": 0,
+    "recovery_log": [],
+    "started_at": "2026-10-05T12:00:48.163094+00:00",
+    "throughput_events_per_second": 1094.4455109694836
+  },
+  "snapshot": false,
+  "source": {
+    "base_url": "https://www.okx.com",
+    "dataset_id": "pack-427d5f5d0e26d595ff0c131c70a9435b26692dbe",
+    "index_id": "BTC-USDT",
+    "inst_id": "BTC-USDT-SWAP",
+    "schema": "algotrader.corpus-pack.v1",
+    "source": "okx",
+    "verification": {
+      "checked_at": "2026-10-05T12:00:48.882873Z",
+      "method": "pack pack-427d5f5d0e26d595ff0c131c70a9435b26692dbe: manifest SHA-256 equals its publication receipt and re-hashes to its id; feed cache fc-fa8313524f7276c75c8deb43ac9cd27f78dd9b34 reused under its trusted receipt; partitions SHA-256-verified when read",
+      "problems": [],
+      "verified": true
+    }
+  },
+  "status": "completed",
+  "stopped_at": null,
+  "temporal": {
+    "clock_end": "2025-10-01T06:05:00+00:00",
+    "clock_policy": "temporal.clock.modeled-complete-prefix.v1",
+    "closure_allowance": "PT0S",
+    "committed": {
+      "admitted_cursor": 147975,
+      "clock_time": "2025-10-01T06:00:00+00:00",
+      "counters": {
+        "admitted": 147975,
+        "barriers": 3288,
+        "deadline_callbacks": 0,
+        "dispatches": 3288,
+        "late_excluded": 0,
+        "misaligned_excluded": 0,
+        "outside_coverage_excluded": 0,
+        "sealed": 13068
+      },
+      "dispatch_seq": 3288,
+      "next_deadline": "2025-10-01T06:05:00+00:00",
+      "pending_tie_time": "2025-10-01T06:05:00+00:00"
+    },
+    "contract": "algotrader.temporal.v1 r1",
+    "engine": "temporal.engine.v1",
+    "invariants": [
+      "UTC half-open intervals: 15m/1h/4h/day anchored at UTC midnight, Monday-00:00-UTC weeks, calendar months",
+      "trade/mark/index aggregated separately; funding stays sparse settlement context (no candle, no schedule)",
+      "COMPLETE only when every expected minute was admitted valid by the closure barrier; values only when COMPLETE",
+      "seal-no-revision: a sealed interval is never reopened; later evidence is counted late-excluded",
+      "a barrier admits the prefix it declares (modeled: whole <=t tie group; recorded: logged receipts) and never reads past it; clock and cursor are monotone; dispatch ids are sequence-unique",
+      "restore uses the explicit temporal state committed with the factual checkpoint (no prefix replay)"
+    ],
+    "label": "temporal substrate only; no adviser",
+    "newest_sealed": [
+      {
+        "expected": 15,
+        "interval_end": "2025-10-01T06:00:00Z",
+        "interval_start": "2025-10-01T05:45:00Z",
+        "known_at": "2025-10-01T06:00:00Z",
+        "late_excluded": 0,
+        "record_id": "okx/BTC-USDT-SWAP/mark_bar_1m/15m/2025-10-01T05:45:00+00:00",
+        "role": "setup",
+        "sealed_by_status": {
+          "COMPLETE": 3288
+        },
+        "status": "COMPLETE",
+        "track": "okx/BTC-USDT-SWAP/mark_bar_1m/15m",
+        "valid": 15
+      },
+      {
+        "expected": 1440,
+        "interval_end": "2025-10-01T00:00:00Z",
+        "interval_start": "2025-09-30T00:00:00Z",
+        "known_at": "2025-10-01T00:00:00Z",
+        "late_excluded": 0,
+        "record_id": "okx/BTC-USDT-SWAP/mark_bar_1m/1d/2025-09-30T00:00:00+00:00",
+        "role": "broad",
+        "sealed_by_status": {
+          "COMPLETE": 34
+        },
+        "status": "COMPLETE",
+        "track": "okx/BTC-USDT-SWAP/mark_bar_1m/1d",
+        "valid": 1440
+      },
+      {
+        "expected": 60,
+        "interval_end": "2025-10-01T06:00:00Z",
+        "interval_start": "2025-10-01T05:00:00Z",
+        "known_at": "2025-10-01T06:00:00Z",
+        "late_excluded": 0,
+        "record_id": "okx/BTC-USDT-SWAP/mark_bar_1m/1h/2025-10-01T05:00:00+00:00",
+        "role": "tactical",
+        "sealed_by_status": {
+          "COMPLETE": 822
+        },
+        "status": "COMPLETE",
+        "track": "okx/BTC-USDT-SWAP/mark_bar_1m/1h",
+        "valid": 60
+      },
+      {
+        "expected": 43200,
+        "interval_end": "2025-10-01T00:00:00Z",
+        "interval_start": "2025-09-01T00:00:00Z",
+        "known_at": "2025-10-01T00:00:00Z",
+        "late_excluded": 0,
+        "record_id": "okx/BTC-USDT-SWAP/mark_bar_1m/1mo/2025-09-01T00:00:00+00:00",
+        "role": "context",
+        "sealed_by_status": {
+          "COMPLETE": 1,
+          "OUTSIDE_COVERAGE": 1
+        },
+        "status": "COMPLETE",
+        "track": "okx/BTC-USDT-SWAP/mark_bar_1m/1mo",
+        "valid": 43200
+      },
+      {
+        "expected": 10080,
+        "interval_end": "2025-09-29T00:00:00Z",
+        "interval_start": "2025-09-22T00:00:00Z",
+        "known_at": "2025-09-29T00:00:00Z",
+        "late_excluded": 0,
+        "record_id": "okx/BTC-USDT-SWAP/mark_bar_1m/1w/2025-09-22T00:00:00+00:00",
+        "role": "context",
+        "sealed_by_status": {
+          "COMPLETE": 4,
+          "OUTSIDE_COVERAGE": 1
+        },
+        "status": "COMPLETE",
+        "track": "okx/BTC-USDT-SWAP/mark_bar_1m/1w",
+        "valid": 10080
+      },
+      {
+        "expected": 240,
+        "interval_end": "2025-10-01T04:00:00Z",
+        "interval_start": "2025-10-01T00:00:00Z",
+        "known_at": "2025-10-01T04:00:00Z",
+        "late_excluded": 0,
+        "record_id": "okx/BTC-USDT-SWAP/mark_bar_1m/4h/2025-10-01T00:00:00+00:00",
+        "role": "broad",
+        "sealed_by_status": {
+          "COMPLETE": 205
+        },
+        "status": "COMPLETE",
+        "track": "okx/BTC-USDT-SWAP/mark_bar_1m/4h",
+        "valid": 240
+      },
+      {
+        "expected": 15,
+        "interval_end": "2025-10-01T06:00:00Z",
+        "interval_start": "2025-10-01T05:45:00Z",
+        "known_at": "2025-10-01T06:00:00Z",
+        "late_excluded": 0,
+        "record_id": "okx/BTC-USDT-SWAP/trade_bar_1m/15m/2025-10-01T05:45:00+00:00",
+        "role": "setup",
+        "sealed_by_status": {
+          "COMPLETE": 3288
+        },
+        "status": "COMPLETE",
+        "track": "okx/BTC-USDT-SWAP/trade_bar_1m/15m",
+        "valid": 15
+      },
+      {
+        "expected": 1440,
+        "interval_end": "2025-10-01T00:00:00Z",
+        "interval_start": "2025-09-30T00:00:00Z",
+        "known_at": "2025-10-01T00:00:00Z",
+        "late_excluded": 0,
+        "record_id": "okx/BTC-USDT-SWAP/trade_bar_1m/1d/2025-09-30T00:00:00+00:00",
+        "role": "broad",
+        "sealed_by_status": {
+          "COMPLETE": 34
+        },
+        "status": "COMPLETE",
+        "track": "okx/BTC-USDT-SWAP/trade_bar_1m/1d",
+        "valid": 1440
+      },
+      {
+        "expected": 60,
+        "interval_end": "2025-10-01T06:00:00Z",
+        "interval_start": "2025-10-01T05:00:00Z",
+        "known_at": "2025-10-01T06:00:00Z",
+        "late_excluded": 0,
+        "record_id": "okx/BTC-USDT-SWAP/trade_bar_1m/1h/2025-10-01T05:00:00+00:00",
+        "role": "tactical",
+        "sealed_by_status": {
+          "COMPLETE": 822
+        },
+        "status": "COMPLETE",
+        "track": "okx/BTC-USDT-SWAP/trade_bar_1m/1h",
+        "valid": 60
+      },
+      {
+        "expected": 43200,
+        "interval_end": "2025-10-01T00:00:00Z",
+        "interval_start": "2025-09-01T00:00:00Z",
+        "known_at": "2025-10-01T00:00:00Z",
+        "late_excluded": 0,
+        "record_id": "okx/BTC-USDT-SWAP/trade_bar_1m/1mo/2025-09-01T00:00:00+00:00",
+        "role": "context",
+        "sealed_by_status": {
+          "COMPLETE": 1,
+          "OUTSIDE_COVERAGE": 1
+        },
+        "status": "COMPLETE",
+        "track": "okx/BTC-USDT-SWAP/trade_bar_1m/1mo",
+        "valid": 43200
+      },
+      {
+        "expected": 10080,
+        "interval_end": "2025-09-29T00:00:00Z",
+        "interval_start": "2025-09-22T00:00:00Z",
+        "known_at": "2025-09-29T00:00:00Z",
+        "late_excluded": 0,
+        "record_id": "okx/BTC-USDT-SWAP/trade_bar_1m/1w/2025-09-22T00:00:00+00:00",
+        "role": "context",
+        "sealed_by_status": {
+          "COMPLETE": 4,
+          "OUTSIDE_COVERAGE": 1
+        },
+        "status": "COMPLETE",
+        "track": "okx/BTC-USDT-SWAP/trade_bar_1m/1w",
+        "valid": 10080
+      },
+      {
+        "expected": 240,
+        "interval_end": "2025-10-01T04:00:00Z",
+        "interval_start": "2025-10-01T00:00:00Z",
+        "known_at": "2025-10-01T04:00:00Z",
+        "late_excluded": 0,
+        "record_id": "okx/BTC-USDT-SWAP/trade_bar_1m/4h/2025-10-01T00:00:00+00:00",
+        "role": "broad",
+        "sealed_by_status": {
+          "COMPLETE": 205
+        },
+        "status": "COMPLETE",
+        "track": "okx/BTC-USDT-SWAP/trade_bar_1m/4h",
+        "valid": 240
+      },
+      {
+        "expected": 15,
+        "interval_end": "2025-10-01T06:00:00Z",
+        "interval_start": "2025-10-01T05:45:00Z",
+        "known_at": "2025-10-01T06:00:00Z",
+        "late_excluded": 0,
+        "record_id": "okx/BTC-USDT/index_bar_1m/15m/2025-10-01T05:45:00+00:00",
+        "role": "setup",
+        "sealed_by_status": {
+          "COMPLETE": 3288
+        },
+        "status": "COMPLETE",
+        "track": "okx/BTC-USDT/index_bar_1m/15m",
+        "valid": 15
+      },
+      {
+        "expected": 1440,
+        "interval_end": "2025-10-01T00:00:00Z",
+        "interval_start": "2025-09-30T00:00:00Z",
+        "known_at": "2025-10-01T00:00:00Z",
+        "late_excluded": 0,
+        "record_id": "okx/BTC-USDT/index_bar_1m/1d/2025-09-30T00:00:00+00:00",
+        "role": "broad",
+        "sealed_by_status": {
+          "COMPLETE": 34
+        },
+        "status": "COMPLETE",
+        "track": "okx/BTC-USDT/index_bar_1m/1d",
+        "valid": 1440
+      },
+      {
+        "expected": 60,
+        "interval_end": "2025-10-01T06:00:00Z",
+        "interval_start": "2025-10-01T05:00:00Z",
+        "known_at": "2025-10-01T06:00:00Z",
+        "late_excluded": 0,
+        "record_id": "okx/BTC-USDT/index_bar_1m/1h/2025-10-01T05:00:00+00:00",
+        "role": "tactical",
+        "sealed_by_status": {
+          "COMPLETE": 822
+        },
+        "status": "COMPLETE",
+        "track": "okx/BTC-USDT/index_bar_1m/1h",
+        "valid": 60
+      },
+      {
+        "expected": 43200,
+        "interval_end": "2025-10-01T00:00:00Z",
+        "interval_start": "2025-09-01T00:00:00Z",
+        "known_at": "2025-10-01T00:00:00Z",
+        "late_excluded": 0,
+        "record_id": "okx/BTC-USDT/index_bar_1m/1mo/2025-09-01T00:00:00+00:00",
+        "role": "context",
+        "sealed_by_status": {
+          "COMPLETE": 1,
+          "OUTSIDE_COVERAGE": 1
+        },
+        "status": "COMPLETE",
+        "track": "okx/BTC-USDT/index_bar_1m/1mo",
+        "valid": 43200
+      },
+      {
+        "expected": 10080,
+        "interval_end": "2025-09-29T00:00:00Z",
+        "interval_start": "2025-09-22T00:00:00Z",
+        "known_at": "2025-09-29T00:00:00Z",
+        "late_excluded": 0,
+        "record_id": "okx/BTC-USDT/index_bar_1m/1w/2025-09-22T00:00:00+00:00",
+        "role": "context",
+        "sealed_by_status": {
+          "COMPLETE": 4,
+          "OUTSIDE_COVERAGE": 1
+        },
+        "status": "COMPLETE",
+        "track": "okx/BTC-USDT/index_bar_1m/1w",
+        "valid": 10080
+      },
+      {
+        "expected": 240,
+        "interval_end": "2025-10-01T04:00:00Z",
+        "interval_start": "2025-10-01T00:00:00Z",
+        "known_at": "2025-10-01T04:00:00Z",
+        "late_excluded": 0,
+        "record_id": "okx/BTC-USDT/index_bar_1m/4h/2025-10-01T00:00:00+00:00",
+        "role": "broad",
+        "sealed_by_status": {
+          "COMPLETE": 205
+        },
+        "status": "COMPLETE",
+        "track": "okx/BTC-USDT/index_bar_1m/4h",
+        "valid": 240
+      }
+    ],
+    "profile_fingerprint": "f01fd9924f17ccc2f01a86391510b903b84ac10ce84b1eb784b4883be996caf9",
+    "profile_id": "temporal.utc-horizons.v1",
+    "readiness": [
+      {
+        "blockers": [],
+        "dependency": "mp001.trade.15m",
+        "status": "READY"
+      },
+      {
+        "blockers": [],
+        "dependency": "mp001.trade.1h",
+        "status": "READY"
+      },
+      {
+        "blockers": [],
+        "dependency": "mp001.trade.4h",
+        "status": "READY"
+      },
+      {
+        "blockers": [],
+        "dependency": "mp001.trade.1d",
+        "status": "READY"
+      },
+      {
+        "blockers": [],
+        "dependency": "mp001.trade.1w",
+        "status": "READY"
+      },
+      {
+        "blockers": [],
+        "dependency": "mp001.trade.1mo",
+        "status": "READY"
+      }
+    ],
+    "readiness_note": "engineering demonstration dependencies only; production lookbacks and decision authority are MP-001 choices; an unavailable optional horizon is not a universal gate",
+    "seal_policy": "temporal.seal-no-revision.v1"
+  },
+  "validation": {
+    "checks": [
+      {
+        "detail": "62 positive committed ranges cover [0, 147975) exactly once, order bounds strictly increasing",
+        "name": "committed_ranges_contiguous",
+        "passed": true
+      },
+      {
+        "detail": "recorded input commitments chain through all ranges to f1f5ca94e6a27dd6 (terminal checkpoint)",
+        "name": "input_commitment_chain",
+        "passed": true
+      },
+      {
+        "detail": "cache manifest d4bd9a0473d9c20b, run pin d4bd9a0473d9c20b, trusted receipt d4bd9a0473d9c20b",
+        "name": "cache_receipt_and_pin",
+        "passed": true
+      },
+      {
+        "detail": "30 partitions match their pinned SHA-256",
+        "name": "feed_cache_integrity",
+        "passed": true
+      },
+      {
+        "detail": "147975 consumed lines re-hashed; recomputed input commitment f1f5ca94e6a27dd6 equals every range boundary and the terminal checkpoint",
+        "name": "consumed_input_exact",
+        "passed": true
+      },
+      {
+        "detail": "terminal state (cursor 147975) verified; snapshot digest fd98d92b243f0018 equals the committed digest",
+        "name": "terminal_state_verified",
+        "passed": true
+      },
+      {
+        "detail": "cursor 147975/147975; final commitment equals the cache's full-stream commitment",
+        "name": "completed_consumed_entire_feed",
+        "passed": true
+      },
+      {
+        "detail": "62 ranges record temporal state SHA-256, output/aggregate commitments and a non-decreasing dispatch sequence (last 3288)",
+        "name": "temporal_ranges_recorded",
+        "passed": true
+      },
+      {
+        "detail": "terminal temporal state (cursor 147975, profile temporal.utc-horizons.v1, temporal.clock.modeled-complete-prefix.v1) verified; 13068 sealed records, 3288 dispatches, late-excluded 0",
+        "name": "temporal_state_verified",
+        "passed": true
+      },
+      {
+        "detail": "finite clock end 2025-10-01T06:05:00+00:00 derived from the verified terminal state without further input: 1 final dispatch(es); 0 interval(s) still unsealed at clock end",
+        "name": "temporal_clock_end_finish",
+        "passed": true
+      },
+      {
+        "detail": "pack pack-427d5f5d0e26d595ff0c131c70a9435b26692dbe manifest c187ad0e8dc40a54 == run pin == publication receipt; feed cache fc-fa8313524f7276c75c8deb43ac9cd27f78dd9b34 pinned",
+        "name": "pack_receipt_and_pins",
+        "passed": true
+      },
+      {
+        "detail": "feed consumed entirely; source coverage (separate fact): 0 missing/rejected of 147975 expected bar slots, trade 0 missing/rejected of 49325 (pack status READY)",
+        "name": "pack_coverage_reported",
+        "passed": true
+      },
+      {
+        "detail": "62 ranges record adviser state + commitments (journal 6968, evaluation 720, professional sequence 201652)",
+        "name": "adviser_ranges_recorded",
+        "passed": true
+      },
+      {
+        "detail": "6972 semantic.v2 records recomputed from stored bytes; chain 6f868b100398cdb8 equals every range and the final commitment",
+        "name": "adviser_journal_chain",
+        "passed": true
+      },
+      {
+        "detail": "720 adviser-evaluation.v1 records recomputed; chain da97d6a809239cd8 equals the commitments",
+        "name": "adviser_evaluation_chain",
+        "passed": true
+      },
+      {
+        "detail": "terminal adviser state (cursor 147975, professional sequence 201652, journal 6968) verified and equal to the last committed range",
+        "name": "adviser_terminal_state_verified",
+        "passed": true
+      },
+      {
+        "detail": "clock-end finish re-derived from the verified terminal state: 4 journal and 0 evaluation record(s), commitment equal",
+        "name": "adviser_finish_rederived",
+        "passed": true
+      },
+      {
+        "detail": "1 unique call(s), contiguous revisions, one terminal each; 119 attempt(s) born once and ended at most once; revisions never restate original geometry",
+        "name": "adviser_lineage_immutability",
+        "passed": true
+      },
+      {
+        "detail": "professional outputs are advisory semantic.v2 records and separate hypothetical evaluation records; no order/account/sizing records exist",
+        "name": "adviser_labels",
+        "passed": true
+      },
+      {
+        "detail": "input f1f5ca94e6a27dd6 · state 7cc0e24c628b233f · output 89783e124efa3f46 (three distinct commitments; none substitutes for another)",
+        "name": "commitments_reported",
+        "passed": true
+      }
+    ],
+    "outcome": "passed",
+    "passed": true,
+    "ran": true,
+    "scope": "Runtime integrity verified, engine reference-tested: bounded terminal reconciliation of a streaming run - committed range continuity and order bounds, exact re-hash of every consumed input line against the receipt-pinned feed cache with the rolling input commitment recomputed at every range boundary, verified terminal restorable state and snapshot digest, cache/receipt/partition integrity and (completed runs) exactly-once consumption of the whole canonical stream. No independent reference replay was performed in this run: kernel/reference equivalence is covered by protected differential fixtures and by the optional Deep validation job. Version 3 (temporal-enabled observe.stream.v2 runs) additionally verifies the committed temporal substrate: temporal state SHA-256, output/aggregate commitments and dispatch sequence recorded at every committed range; the terminal temporal restore state (pinned profile fingerprint, exact round-trip, cursor) equal to the last range's records; and, for completed runs, the clock-end finish derived from that verified state. No independent temporal re-execution was performed in this run (optional Deep validation v2). Version 4 (evaluation-pack runs, source kind pack) additionally verifies the pack pins: the pack manifest file SHA-256 equals the run pin and the trusted publication receipt, its body re-hashes to the pack id, and its feed cache id/manifest SHA-256 equal the run's pinned cache. Consuming the whole canonical feed is reported separately from per-minute source coverage: a completed pack run can contain explicit source gaps. Version 5 (adviser evaluation runs, engine observe.stream.v3) additionally verifies the professional outputs' runtime integrity: adviser state SHA-256 and commitments at every committed range; the semantic.v2 journal and adviser-evaluation.v1 records recomputed from their stored bytes (digest, contiguous sequence, chain) against every range and the finish; the terminal adviser restore state; for completed runs the professional clock-end finish re-derived from that verified state (tail timers only); and call/attempt lineage, revision contiguity and immutability. PASS is runtime integrity, not profit, forecast quality or an independent audit of the original sources; it shares the method implementation.",
+    "validator": "observe.stream-reconciliation"
+  },
+  "warnings": [
+    "funding completeness unproven: future outcome reporting is PRICE_NET_ONLY (TOTAL_NET_UNAVAILABLE)",
+    "instrument definition is a retrieval-time snapshot assumed for the whole window (approximation)",
+    "MODELED availability: historical bar/funding knowledge times follow the zero-extra-delay convention; they are not measured publication or receipt times"
+  ]
+}

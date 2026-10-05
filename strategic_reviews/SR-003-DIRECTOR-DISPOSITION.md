@@ -68,6 +68,6 @@ Private Project Instructions still describe a discretionary “when practical”
 
 This Git update does not modify any private chat instructions.
 
-## Current pointer — Owner Backtest A, 2026-10-05
+## Current pointer — Owner Backtest A diagnosis, 2026-10-05
 
-WP-009 accepted at6f95273: all findings closed, CI37300338202 checks and Compose smoke SUCCESS. [Acceptance](../delivery/WP-009-CORRECTION-DIRECTOR-REVIEW.md), [Owner handoff](../delivery/WP-009-OWNER-BACKTEST-A.md). Owner starts September Adviser evaluation in the app and returns Copy report for chat; Director diagnosis next. No executor implementation, acquisition or agent economic run. MP-001 unchanged; economic usefulness unknown. CI waiting transfers to the Owner under AGENTS.md.
+WP-009 accepted; Owner completed September Adviser evaluation: runtime PASS20/20 in135.2s, zero calls. [Diagnosis / targeted Astra brief](../delivery/WP-009-OWNER-BACKTEST-A-DIAGNOSIS.md), original report preserved. Director methodological diagnosis next; no executor code assignment or new run. MP-001v0.2 remains frozen; no parameter tournament/protected-period use. App backtests and future CI waiting remain Owner-operated.

@@ -1,9 +1,9 @@
-# Current Task — Owner Backtest A
-Status: **READY FOR OWNER BACKTEST A — NO EXECUTOR IMPLEMENTATION ACTIVE**
-Date: 2026-10-05. Accepted product code: `6f95273b54674081fe6b3896a84d62a015384fe5`.
+# Current Task — Director diagnosis of Owner Backtest A
+Status: **ACTIVE — DIRECTOR DIAGNOSIS / TARGETED ASTRA REVIEW; NO EXECUTOR IMPLEMENTATION**
+Date: 2026-10-05.
 
-WP-009 and its corrections are accepted for the first September development evaluation: [Director acceptance](delivery/WP-009-CORRECTION-DIRECTOR-REVIEW.md). Owner app handoff: [exact preset, configuration, steps and evidence boundary](delivery/WP-009-OWNER-BACKTEST-A.md).
+Owner September Adviser evaluation completed with runtime PASS 20/20 in 135.2 s, 147,975 events; 43,200/43,200 scored minutes assessable; zero issued calls from 38 evaluated triggers. Original [JSON](delivery/evidence/WP-009-OWNER-BACKTEST-A.json) preserved. Read [diagnosis and targeted Astra brief](delivery/WP-009-OWNER-BACKTEST-A-DIAGNOSIS.md).
 
-Owner launches **Adviser evaluation** on the already prepared `btc-september-development-v1` pack, speed max, then returns Copy report for chat. No agent economic evaluation, acquisition, parameter changes or new package. The Director analyzes the report before any next code assignment. MP-001 v0.2 unchanged; economic usefulness remains unverified.
+Director/Astra assess declared method versus possible bugs, local-target/trigger/net-feasibility and coverage. Output one bounded next step, not automatic threshold relaxation or code edits. MP-001 v0.2 remains frozen until a Director revision; no new Claude implementation, economic run, acquisition or protected-period use. If missing case evidence is indispensable, propose only a minimal read-only export from existing committed run records.
 
-Executor CI waiting is now Owner-operated under AGENTS.md: after local checks/commit/push, provide SHA/link and summary without polling/background wait; Owner returns the exact-SHA CI result. This does not waive local checks or green CI for Director acceptance.
+Owner waits for diagnosis; no retry or Deep validation requested. Standing CI/commit/backtest workflow is in AGENTS.md.
