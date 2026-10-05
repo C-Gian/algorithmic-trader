@@ -205,7 +205,7 @@ def test_deep_v5_rehashes_stored_bytes_and_detects_every_alteration(database_url
     root, art, rid, w = _completed(database_url, tmp_path, monkeypatch, "observe:d")
     v = _deep(database_url, w, rid)
     assert v["status"] == "completed" and v["result"]["outcome"] == "match", v["result"]["mismatches"]
-    assert v["result"]["validator_version"] == "5"
+    assert v["result"]["validator_version"] == "6"
     j = journal(database_url, rid)
     ev = records(database_url, rid)
     # (a) record-only alteration, stored digest/chain unchanged (Director probe) - journal and evaluation tables
@@ -260,6 +260,105 @@ def test_deep_v5_keeps_stored_byte_mismatches_across_a_paused_and_resumed_valida
     v = _deep(database_url, w, rid, pause_first=True)
     assert v["status"] == "completed" and v["result"]["outcome"] == "mismatch"
     assert "adviser_journal_stored_bytes" in _kinds(v)
+
+
+# -- finding 7 follow-up: storage changed while a CLEAN validation is paused ------------------------------------------
+
+def _paused_clean(database_url, w, rid):
+    """Launch, park at the first save boundary (nonzero cursor) with no mismatch saved, return the validation id."""
+    with connect(database_url) as c:
+        vid = deep.create_deep_validation(c, rid)
+        deep.control(c, vid, "pause")
+    run_all(w)
+    with connect(database_url) as c:
+        v = c.execute("SELECT * FROM observation_deep_validations WHERE validation_id = %s", (vid,)).fetchone()
+    assert v["status"] == "paused" and 0 < v["resume_cursor"] < v["plan"]["committed_cursor"], v["resume_cursor"]
+    assert v["comparisons"]["mismatches"] == [] and v["comparisons"]["compared"] > 0
+    return vid
+
+
+def _resume(database_url, w, vid):
+    with connect(database_url) as c:
+        deep.control(c, vid, "resume")
+    run_all(w)
+    with connect(database_url) as c:
+        return c.execute("SELECT * FROM observation_deep_validations WHERE validation_id = %s", (vid,)).fetchone()
+
+
+def _set_meta(database_url, table, rid, seq, **cols):
+    with connect(database_url) as c:
+        c.execute(f"UPDATE {table} SET " + ", ".join(f"{k} = %s" for k in cols) + " WHERE run_id = %s AND seq = %s",
+                  (*cols.values(), rid, seq))
+        c.commit()
+
+
+@pytest.mark.parametrize("table", ["adviser_journal", "adviser_evaluation_records"])
+def test_resumed_deep_keeps_a_digest_only_alteration_made_while_a_clean_validation_was_paused(
+        database_url, tmp_path, monkeypatch, table):
+    monkeypatch.setattr(deep, "SAVE_EVENTS", 400)
+    root, art, rid, w = _completed(database_url, tmp_path, monkeypatch, "observe:g")
+    rows = journal(database_url, rid) if table == "adviser_journal" else records(database_url, rid)
+    orig = rows[1]
+    vid = _paused_clean(database_url, w, rid)
+    # digest column only: record bytes and chain unchanged, so the regenerated record still equals the recomputation
+    _set_meta(database_url, table, rid, orig["seq"], digest="f" * 64)
+    v = _resume(database_url, w, vid)
+    assert v["status"] == "completed" and v["result"]["outcome"] == "mismatch", v["result"]
+    bad = [m for m in v["result"]["mismatches"] if m["kind"] == f"{table}_stored_bytes"]
+    assert len(bad) == 1 and bad[0]["at"] == f"seq {orig['seq']}" and bad[0]["expected"] == "f" * 64
+    notes = [n for n in v["diagnostic_log"] if n.get("event") == "deep_resume_stored_recheck"]
+    assert notes and notes[-1]["new_problems"] == 1, v["diagnostic_log"]
+
+
+def test_resumed_deep_keeps_a_last_row_chain_only_alteration_made_while_paused(database_url, tmp_path, monkeypatch):
+    monkeypatch.setattr(deep, "SAVE_EVENTS", 400)
+    root, art, rid, w = _completed(database_url, tmp_path, monkeypatch, "observe:h")
+    for table, rows in (("adviser_journal", journal(database_url, rid)),
+                        ("adviser_evaluation_records", records(database_url, rid))):
+        last = rows[-1]
+        vid = _paused_clean(database_url, w, rid)
+        _set_meta(database_url, table, rid, last["seq"], chain="e" * 64)
+        v = _resume(database_url, w, vid)
+        assert v["status"] == "completed" and v["result"]["outcome"] == "mismatch", (table, v["result"])
+        assert [m["at"] for m in v["result"]["mismatches"] if m["kind"] == f"{table}_stored_chain"] ==             [f"seq {last['seq']}"]
+        _set_meta(database_url, table, rid, last["seq"], chain=last["chain"])
+    v = _deep(database_url, w, rid)
+    assert v["result"]["outcome"] == "match", v["result"]["mismatches"]  # restored storage matches again
+
+
+def test_repeated_resumes_over_altered_storage_record_each_problem_once(database_url, tmp_path, monkeypatch):
+    monkeypatch.setattr(deep, "SAVE_EVENTS", 300)
+    root, art, rid, w = _completed(database_url, tmp_path, monkeypatch, "observe:i")
+    orig = journal(database_url, rid)[1]
+    vid = _paused_clean(database_url, w, rid)
+    _set_meta(database_url, "adviser_journal", rid, orig["seq"], digest="f" * 64)
+    parks = 0
+    for _ in range(3):  # resume and immediately park again at the next save boundary
+        with connect(database_url) as c:
+            deep.control(c, vid, "resume")
+            deep.control(c, vid, "pause")
+        run_all(w)
+        with connect(database_url) as c:
+            v = c.execute("SELECT * FROM observation_deep_validations WHERE validation_id = %s", (vid,)).fetchone()
+        if v["status"] != "paused":
+            break
+        parks += 1
+        assert [m["kind"] for m in v["comparisons"]["mismatches"]] == ["adviser_journal_stored_bytes"]
+    assert parks >= 2
+    v = _resume(database_url, w, vid) if v["status"] == "paused" else v
+    assert v["result"]["outcome"] == "mismatch"
+    assert [m["kind"] for m in v["result"]["mismatches"]] == ["adviser_journal_stored_bytes"]
+
+
+def test_clean_paused_and_resumed_deep_reports_the_uninterrupted_result(database_url, tmp_path, monkeypatch):
+    monkeypatch.setattr(deep, "SAVE_EVENTS", 300)
+    root, art, rid, w = _completed(database_url, tmp_path, monkeypatch, "observe:j")
+    straight = _deep(database_url, w, rid)["result"]
+    vid = _paused_clean(database_url, w, rid)
+    v = _resume(database_url, w, vid)
+    assert straight["outcome"] == v["result"]["outcome"] == "match", v["result"]["mismatches"]
+    keys = ("validator_version", "scope", "covered_events", "target_events", "comparison_cursors", "mismatches")
+    assert {k: straight[k] for k in keys} == {k: v["result"][k] for k in keys}
 
 
 def test_deep_refuses_a_run_pinned_to_a_different_implementation_identity(database_url, tmp_path, monkeypatch):

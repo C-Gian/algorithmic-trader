@@ -180,7 +180,7 @@ def test_deep_v5_matches_a_completed_adviser_run_and_detects_journal_tamper(data
         v = c.execute("SELECT * FROM observation_deep_validations WHERE validation_id = %s", (vid,)).fetchone()
     assert v["status"] == "completed", v["error"]
     res = v["result"]
-    assert res["outcome"] == "match" and res["validator_version"] == "5", res["mismatches"]
+    assert res["outcome"] == "match" and res["validator_version"] == "6", res["mismatches"]
     assert res["temporal"]["terminal"]["adviser"]["compared"] is True
     with connect(database_url) as c:
         c.execute("UPDATE adviser_journal SET digest = repeat('0', 64) WHERE run_id = %s AND seq = 3", (rid,))

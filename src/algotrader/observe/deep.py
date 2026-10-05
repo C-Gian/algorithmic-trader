@@ -36,6 +36,12 @@ generation (SHA-256/size from the manifest, values cross-checked with the manife
 corrupt required terminal evidence fails the validation (no MATCH); inconsistent evidence is a mismatch. Paused,
 cancelled, failed or partial targets keep the exact committed-prefix scope: no finish is applied or implied. Results
 saved under version 2 keep their recorded boundary-only claim.
+
+Version 6 (WP-009 correction follow-up; launches after it) keeps every version-5 comparison and closes a resume gap:
+the stored professional record bytes are re-hashed on EVERY launch, and storage inconsistencies found when resuming
+from a saved cursor are merged into the saved comparisons (each distinct problem recorded once, within the bounded
+mismatch list) instead of being assumed already saved. Saved results keep their recorded version; an unfinished
+version-5 validation resumed by this code gets the same merge (it can only add mismatches).
 """
 
 from __future__ import annotations
@@ -81,13 +87,14 @@ SCOPE_TEMPORAL = SCOPE + (
     "or corrupt terminal evidence fails the validation instead of matching. Paused, cancelled, failed or partial "
     "targets keep exact committed-prefix scope (no finish applied or implied). Dispatch readiness/deadline "
     "callbacks are covered by the shadow fold only.")
-VALIDATOR_VERSION_ADVISER = "5"
+VALIDATOR_VERSION_ADVISER = "6"
 SCOPE_ADVISER = SCOPE_TEMPORAL + (
-    " Version 5 (adviser evaluation runs, engine observe.stream.v3) additionally runs a shadow fold of the shared "
+    " Version 6 (adviser evaluation runs, engine observe.stream.v3) additionally runs a shadow fold of the shared "
     "professional method implementation (adviser core + evaluator, pinned identity/profile) over the same input and "
     "compares, at every committed range boundary, the adviser state SHA-256 and commitments (professional sequence, "
     "journal and evaluation sequence/chain). The STORED semantic.v2 journal and adviser-evaluation.v1 record bytes are "
-    "re-hashed (canonical digest, contiguous sequence, chained hash) and every regenerated record digest and chain is "
+    "re-hashed on every launch and resume (canonical digest, contiguous sequence, chained hash; a storage "
+    "inconsistency found on resume is added to the saved comparisons) and every regenerated record digest and chain is "
     "compared with that recomputation, never with a stored digest column alone; stored records the shadow fold did "
     "not regenerate (extra) or regenerated records absent from storage (missing) are mismatches; for completed runs "
     "the professional clock-end finish commitment is compared as well. A run pinned to a different method "
@@ -408,6 +415,30 @@ class DeepJob(ReplayJob):
             self.counters_deep[f"{table}_stored_rehashed"] = len(rows)
         return problems
 
+    def _adv_merge_stored(self, comparisons: dict[str, Any], problems: list[dict[str, Any]], start: int) -> None:
+        """Merge this launch's stored-storage problems into the (possibly saved) comparisons. A fresh launch records
+        and counts each one; a resume records and counts only problems not already saved, so storage altered while
+        the validation was paused is never dropped and repeated resumes never duplicate a diagnostic. When the
+        bounded mismatch list is full the outcome is already a mismatch; such problems are disclosed in the note."""
+        new = unrecorded = 0
+        for m in problems:
+            if start and m in comparisons["mismatches"]:
+                continue
+            if len(comparisons["mismatches"]) < MAX_MISMATCHES:
+                comparisons["mismatches"].append(m)
+            elif start:
+                unrecorded += 1
+                continue
+            comparisons["compared"] += 1
+            new += 1
+        self.counters_deep["stored_problems_detected"] = len(problems)
+        if start:
+            self.counters_deep["stored_problems_new_on_resume"] = new
+            self._note({"event": "deep_resume_stored_recheck", "cursor": start, "problems_detected": len(problems),
+                        "new_problems": new, "unrecorded_list_full": unrecorded,
+                        "detail": f"re-hashed the stored professional records on resume at cursor {start}: "
+                                  f"{len(problems)} storage inconsistencies, {new} newly recorded"})
+
     def _adv_compare(self, comparisons: dict[str, Any], cursor: int) -> None:
         """Every regenerated professional record (digest AND chain) must equal the recomputation of the stored bytes
         with the same sequence."""
@@ -546,12 +577,7 @@ class DeepJob(ReplayJob):
                                        "different method implementation identity; no comparison is possible)")
                 return
             adv.attach(shadow)
-            stored_problems = self._adv_load_stored(plan["replay_id"], adv_digests)
-            if not start:  # a resumed validation already recorded these with its saved comparisons
-                for m in stored_problems:
-                    comparisons["compared"] += 1
-                    if len(comparisons["mismatches"]) < MAX_MISMATCHES:
-                        comparisons["mismatches"].append(m)
+            self._adv_merge_stored(comparisons, self._adv_load_stored(plan["replay_id"], adv_digests), start)
         self._adv, self._adv_digests = adv, adv_digests
         self._adv_seen = {"adviser_journal": set(), "adviser_evaluation_records": set()}
         if temporal and start:  # temporal folds are not persisted: re-fold them over the already covered prefix

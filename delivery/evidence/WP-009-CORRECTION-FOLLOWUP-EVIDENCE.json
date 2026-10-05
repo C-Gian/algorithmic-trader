@@ -1,0 +1,29 @@
+{
+  "package": "WP-009 correction follow-up (original finding 7 residual: Deep resume storage re-check)",
+  "base": "9dbb19c (src/tests/web byte-identical to reviewed d16c9251e9cb8d20ab2f4db78526d8b057423997)",
+  "environment": "Windows 10, project uv Python runtime, disposable PostgreSQL 18.6 container on port 55439 (Owner stack untouched), ALGOTRADER_REQUIRE_DB=1",
+  "change": "observe/deep.py: _adv_merge_stored merges stored-record re-hash problems on every launch; resume records/counts only problems absent from the saved mismatch list; diagnostic-log note deep_resume_stored_recheck; adviser Deep launches now observe.deep-reference v6",
+  "version_decision": "new adviser launches v6; saved v5 results untouched; unfinished v5 validations resumed by this code get the same merge and keep their pinned v5 label",
+  "fail_before_on_reviewed_source": {
+    "FAILED": [
+      "test_resumed_deep_keeps_a_digest_only_alteration_made_while_a_clean_validation_was_paused[adviser_journal] (resumed outcome match)",
+      "test_resumed_deep_keeps_a_digest_only_alteration_made_while_a_clean_validation_was_paused[adviser_evaluation_records] (resumed outcome match)",
+      "test_resumed_deep_keeps_a_last_row_chain_only_alteration_made_while_paused (adviser_journal: resumed outcome match)",
+      "test_repeated_resumes_over_altered_storage_record_each_problem_once (saved mismatch list empty after resume)"
+    ],
+    "PASSED_preservation_guards": [
+      "test_clean_paused_and_resumed_deep_reports_the_uninterrupted_result",
+      "test_deep_v5_keeps_stored_byte_mismatches_across_a_paused_and_resumed_validation",
+      "test_window_is_clamped_to_the_committed_frontier_while_running_paused_and_completed"
+    ]
+  },
+  "fixed_after": {
+    "focused": "56 passed (test_adviser_correction_db, test_adviser_integration, test_assurance, test_temporal_integration, test_ux_wording, test_adviser_correction_versions)",
+    "full_non_e2e": "599 passed, 0 failed (30 min)",
+    "full_e2e": "18 passed",
+    "web": "typecheck + build pass",
+    "schema": "algotrader schema: all baselines match (no contract change)"
+  },
+  "director_probe_note": "The Director probe extracts the removed `if not start` guard by AST and cannot run unchanged on the fixed code; the same counterexample (digest-only change while paused after a clean nonzero-cursor pause) is covered end-to-end by the DB regressions above.",
+  "ci": "see executor report for the exact final SHA run"
+}
