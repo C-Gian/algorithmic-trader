@@ -1,6 +1,6 @@
 # Project State
 
-Updated: 2026-10-05 — MP-002 v0.1 Director proposal for Astra review; no implementation or new run
+Updated: 2026-10-05 — MP-002 v0.2 B1–B7 corrections for focused closure review; no implementation or new run
 
 **Current task: [task.md](task.md) — MP-002 method review; no executor implementation** Product authority: [FOUNDATION.md](FOUNDATION.md) v3.1. Executor rules: [AGENTS.md](AGENTS.md). How to run the app: [README.md](README.md). Chronology and earlier package evidence: [delivery/DELIVERY-HISTORY.md](delivery/DELIVERY-HISTORY.md).
 
@@ -226,3 +226,8 @@ Read-only extraction for `eval-20261005T120047-e6cc50` / `obs-20261005T120047-bc
 Dossier at 87948057 is sufficient diagnostic evidence for the observed 14 globally empty supplied geometries, 18 confirmation-incompatible geometries and six inside-zone refusals. [Astra independent arithmetic/cutoff review](delivery/WP-009-OWNER-BACKTEST-A-DOSSIER-ASTRA-REVIEW.md) supports that limited conclusion: it is not an independent journal/cache export, all-mode causal certification or proof of profitability. Earlier executor “38/38 zone identity” wording is qualified: 32 targets, six membership blocks, three uniquely attributed original blocking zones. CI for the dossier remains Owner-operated / not checked by this Director; no product release is inferred.
 
 [MP-002 v0.1](delivery/MP-002-SCENARIO-CONFIRMATION-ENTRY-PROPOSAL.md) and its [parameter delta](delivery/MP-002-PARAMETER-DELTA.json) are FOR ASTRA REVIEW only. Proposed A immediate-versus-post-confirmation return entry, fixed reaction corridor and monotone pre-issue target cap; separate structural scenarios for A/B/C from economic eligibility. Preserve costs/ratio, B/C entry behavior and frozen v0.2 baseline. A's proposed hard deadline is anchored at confirmation (not delayed return issue) to avoid buying time; this is an explicit review decision. No code, schemas, numerical register, source data or saved results changed. Extraction closed; no further Owner run now. Planned Oct/Nov/Dec frozen baseline comparisons are future Owner app actions after engineering acceptance, never agent CLI work or protected tuning.
+
+
+## Current Director action — MP-002 B1–B7 correction, 2026-10-05
+
+The initial v0.1 proposal status above is historical. [Astra review](delivery/MP-002-ASTRA-REVIEW.md) required seven design corrections, adopted in [Director disposition](delivery/MP-002-DIRECTOR-DISPOSITION.md) and the same [proposal](delivery/MP-002-SCENARIO-CONFIRMATION-ENTRY-PROPOSAL.md)/[delta](delivery/MP-002-PARAMETER-DELTA.json), now v0.2. Separate structural discovery release/reset/zones from economic children; exhaustive mode routing; transient live-cost versus permanent geometric emptiness; causal cap activation; distinct contact/censorship domains; exact progress/hard/horizon-only clocks; primary RETURN-owner and corridor denominators. Bounded Decimal/tick/clock checks are specification checks, not product tests. Focused closure review pending; method design not closed, no executor implementation or Owner run. Product remains MP-001 v0.2.

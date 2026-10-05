@@ -1,11 +1,11 @@
 {
   "status": "DIRECTOR_PROPOSAL_FOR_ASTRA_REVIEW_NOT_RUNTIME_CONFIG",
-  "proposal_version": "MP-002-v0.1",
+  "proposal_version": "MP-002-v0.2",
   "proposed_method": "btc.context-action.v0.3",
   "proposed_rules": "mp002.rules.v0.3",
   "base_register": "MP-001-PARAMETERS.json",
   "base_method": "btc.context-action.v0.2",
-  "unchanged_numeric_parameters": "All MP-001 numerical trading predicates, costs, ratio, scale/lookbacks, setup lifetimes, family horizon lengths and evaluator delays remain unchanged. No runtime register replacement yet.",
+  "unchanged_numeric_parameters": "MP-001 trading thresholds, cost/ratio, scale/lookbacks, setup lifetimes and family horizon lengths preserved. Categorical discovery release, clocks and evaluator horizon-only changes are explicit below; no runtime register replacement.",
   "proposed_categorical_changes": {
     "scenario_ownership": "STRUCTURAL_INDEPENDENT_OF_ENTRY_CALL_AND_EVALUATOR",
     "scenario_confirmed_deadline_origin": "STRUCTURAL_CONFIRMATION_PUBLICATION",
@@ -21,7 +21,48 @@
     "a_same_confirmation_issue_count_max": 1,
     "bc_entry_behavior": "UNCHANGED_V02_ONE_SHOT",
     "cost_and_quote_effect_on_structural_scenarios": "NONE",
-    "historical_warmup_confirmation_return_issue_in_evaluation": false
+    "historical_warmup_confirmation_return_issue_in_evaluation": false,
+    "a_discovery_owner_release": "Original setup expiry OR named structural invalidation/destination/gap/preconfirmation withdrawal; NEVER entry/call/economic terminal",
+    "a_renewal_after_structural_release": "New assessable FALSE at/after release, then newly observed FALSE_TO_TRUE; no pre-release banked reset",
+    "a_owner_zone_lifetime": "Structural owner release OR named 15m far-edge break; retained narrative ref is not renewed eligibility",
+    "bc_box_retirement_basis": "Structural B episode lifetime independent of child economic terminal",
+    "scenario_active_capacity": {
+      "A_per_direction": 18,
+      "BC_total": 128,
+      "overflow": "INVARIANT_ERROR_NOT_ECONOMIC_EVICTION"
+    },
+    "structural_identity_cost_invariance": "Normalized structural lineage/content; economic envelope/global record hashes may differ",
+    "confirmation_routing_precedence": [
+      "STRUCTURAL_CONTACT_TARGET",
+      "VALID_PREREQUISITES",
+      "NONSELECTION_EXECUTION_DATA_TIME_GATES",
+      "IMMEDIATE_GEOMETRY_THEN_SELECTION",
+      "RETURN_INTERSECTION_THEN_WAIT",
+      "DISTINCT_EMPTY_REASONS"
+    ],
+    "confirmation_nonselection_veto_with_economic_fail": "TERMINAL_NO_RETURN",
+    "slot_at_return_route_start": "NOT_CHECKED_UNTIL_FIRST_FULLY_ACTIONABLE_RETURN",
+    "initial_immediate_area_incompatibilities_routeable": [
+      "NO_ROOM_AFTER_COSTS",
+      "REWARD_RISK_BELOW_MINIMUM",
+      "EMPTY_STRUCTURAL_AREA",
+      "PRICE_OUTSIDE_STRUCTURAL_AREA"
+    ],
+    "wait_live_economic_emptiness": "TEMPORARY_CURRENT_COST_BLOCKER_ALREADY_ADMITTED_WAIT_ONLY",
+    "wait_fixed_historical_economic_emptiness": "TERMINAL_NO_ECONOMIC_RETURN_REGION",
+    "wait_geometric_emptiness": "TERMINAL_EMPTY_RETURN_CORRIDOR",
+    "cap_effective_origin": "ACTUAL_PUBLICATION_AND_ADMITTED_CURSOR",
+    "new_cap_contact_activation_interval": "TERMINAL_CAP_ACTIVATION_CONTACT_AMBIGUOUS_NOT_TARGET_HIT",
+    "new_cap_not_ahead_current_price": "TERMINAL_CAP_NOT_AHEAD_NOW",
+    "confirmation_target_contact": "BOTH_A_MODES_REJECT_PRE_ENTRY_TARGET_CONTACT",
+    "scenario_progress_timer": "CONFIRMATION_PLUS_HALF_FAMILY_HORIZON",
+    "call_progress_timer": "ISSUE_PLUS_HALF_OF_FROZEN_HARD_DEADLINE_MINUS_ISSUE",
+    "call_progress_reference": "ISSUE_REFERENCE_CLOSE_AND_S15_ISSUE",
+    "a_horizon_only_exit_request": "FROZEN_CONFIRMATION_PLUS_4H_THEN_EXISTING_EXIT_DELAY",
+    "scenario_coverage_loss_propagation": "UNASSESSABLE_GUIDANCE_AND_CENSOR_FROM_FIRST_MISSING_INTERVAL_NOT_DELAYED_EXIT",
+    "short_economic_symmetry": "REAL_POSITIVE_PRICE_DENOMINATOR_SEPARATE_FORMULA_NO_AFFINE_BOUND_SYMMETRY",
+    "scenario_level_revision_effective_time": "ACTUAL_PUBLICATION_CURSOR_NO_RETROACTIVE_CONTACT_ERASURE",
+    "confirmation_live_side_inside_zone": "NONSELECTION_EXECUTION_VETO_NO_RETURN"
   },
   "development_evaluation": {
     "order": [
@@ -37,11 +78,15 @@
     "method_change_between_periods": false,
     "operator": "OWNER_WEB_APP_ONLY_AFTER_ENGINEERING_ACCEPTANCE",
     "protected": "NOT_AUTHORIZED",
-    "zero_usable_delayed_entries": "No A RETURN-mode entry at primary 60s delay across three assessable months rejects the A entry hypothesis",
-    "majority_confirmations_without_any_corridor": "More than 50% of distinct A confirmation owners: structural-domain review",
+    "zero_usable_delayed_entries": "Product variant not validated; separate never-routable upstream failure from activated return mechanism; Director decision, no automatic extension",
+    "majority_confirmations_without_any_corridor": "N/D>0.5: D all geometrically evaluable structural A confirmations, including IMMEDIATE; N empty initial geometric OR fixed-K economic return corridor; exclusions explicitly separate",
     "minimum_distinct_entered_owners_for_evidence_discussion": 20,
     "minimum_is": "Reporting convention, not a quota, significance or profitability test",
-    "numeric_profitability_gate": null
+    "numeric_profitability_gate": null,
+    "minimum_denominator": "A RETURN owner/confirmation with path ENTERED at PRIMARY_60_SECONDS only; no B/C, IMMEDIATE, sensitivities or hourly samples",
+    "one_to_nineteen": "INSUFFICIENT_EVIDENCE_AND_PRACTICALITY_NOT_VALIDATED_NO_AUTOMATIC_EXTENSION",
+    "comparison_scope": "Integrated VERSION comparison, not identification of RETURN causal effect alone",
+    "owner_independence": "Distinct lineage not statistical independence; report regime/concentration"
   },
   "authority": "Prose MP-002 governs ordered transitions; this is an explicit design delta, not implementation authorization."
 }
