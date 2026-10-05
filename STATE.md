@@ -1,8 +1,8 @@
 # Project State
 
-Updated: 2026-10-05 — WP-009 executor implementation delivered; READY FOR DIRECTOR REVIEW — WP-009 ONLY (not accepted)
+Updated: 2026-10-05 — WP-009 Director review: CHANGES REQUIRED; correction active, Owner Backtest A inactive
 
-**Current task: [task.md](task.md) — WP-009 first integrated adviser implementation (executor delivered; Director review pending).** Product authority: [FOUNDATION.md](FOUNDATION.md) v3.1. Executor rules: [AGENTS.md](AGENTS.md). How to run the app: [README.md](README.md). Chronology and earlier package evidence: [delivery/DELIVERY-HISTORY.md](delivery/DELIVERY-HISTORY.md).
+**Current task: [task.md](task.md) — WP-009 correction (Director findings1–9; not accepted).** Product authority: [FOUNDATION.md](FOUNDATION.md) v3.1. Executor rules: [AGENTS.md](AGENTS.md). How to run the app: [README.md](README.md). Chronology and earlier package evidence: [delivery/DELIVERY-HISTORY.md](delivery/DELIVERY-HISTORY.md).
 
 Goal (Foundation v3.1): an integrated BTC adviser with persistent actionable LONG/SHORT calls, entry area, targets, stop/exit guidance and holding horizon. Capital, size, leverage and orders stay human. Historical ACCEPTED/READY/HOLD labels in older documents do not authorize work; only task.md does.
 
@@ -49,14 +49,20 @@ These remain open after the September closure; they are not contradicted by it:
 - Windows directory fsync (power-loss durability of publication) remains unproven.
 - Data, Recorder and mobile UX are not closed by the UX pass.
 - The old CI Copy-feedback failure (job `111166819975`) has a plausible, not proven, cause; downloading the Markdown report is the fallback.
-- WP-009 executor delivery covers the live cockpit, persistent calls/entry validity, in-app alerts, startup catch-up, advisory report sections and `semantic.v2`; it is **pending Director review**. Still not built: historical calendar/news tape (calendar UNKNOWN), predictive cycle methodology, OI/liquidations/depth, DST-aware schedule ingestion, incident tape, optional exit-delay sensitivity export, OS/mobile notifications; fixed reusable pack storage beyond September undecided.
+- WP-009 executor delivery covers the live cockpit, persistent calls/entry validity, in-app alerts, startup catch-up, advisory report sections and `semantic.v2`; it is **not accepted; correction required** under the [Director review](delivery/WP-009-DIRECTOR-REVIEW.md). Still not built: historical calendar/news tape (calendar UNKNOWN), predictive cycle methodology, OI/liquidations/depth, DST-aware schedule ingestion, incident tape, optional exit-delay sensitivity export, OS/mobile notifications; fixed reusable pack storage beyond September undecided.
 - Always-NO_TRADE is not product success: integrated evaluations must report coverage, frequency, entry windows and the candidate/rejection funnel.
 
 ## 4. Next step
 
 1. **Now:** MP-001 v0.2 is closed as method design after the [Astra review](delivery/MP-001-ASTRA-REVIEW.md) and [Director disposition](delivery/MP-001-DIRECTOR-DISPOSITION.md). The [rules](delivery/MP-001-INTEGRATED-METHOD-PROPOSAL.md) and [parameter register](delivery/MP-001-PARAMETERS.json) are current; this is not economic validation or implemented adviser capability.
-2. **Now:** Owner September pack preparation is [CLOSED](delivery/evidence/WP-008-R3-OWNER-SEPTEMBER-PREPARATION.md): COMPLETED/READY,147975 events, complete trade/mark/index warmup/evaluation/tail, no gaps. No replay/economic result. Executor implements [WP-009 specification](delivery/WP-009-INTEGRATED-ADVISER-SPEC.md) under task.md; adviser remains unavailable until delivered and accepted.
+2. **Now:** Owner September pack preparation is [CLOSED](delivery/evidence/WP-008-R3-OWNER-SEPTEMBER-PREPARATION.md): COMPLETED/READY,147975 events, complete trade/mark/index warmup/evaluation/tail, no gaps. No replay/economic result. WP-009 delivered at5d1f2e1, but [review](delivery/WP-009-DIRECTOR-REVIEW.md) requires corrections1–9 under task.md. The adviser is exposed in code but not released for Owner evaluation/live reliance. The prepared pack remains reusable.
 3. Remaining sequence: WP-009 implementation/review → Owner Backtest A → diagnosed bounded improvement/protected/prospective checks under separate tasks. No new general infrastructure pass or isolated signal prototype. [Delivery plan](delivery/FOUNDATION-V3-INTEGRATED-PLAN.md) §9–10.
+
+### WP-009 Director review — changes required (2026-10-05)
+
+Reviewed `5d1f2e1`; [review and interpretation disposition](delivery/WP-009-DIRECTOR-REVIEW.md), [independent probes](delivery/evidence/WP-009-DIRECTOR-PROBES.json). Nine findings: ordinary protective gap pricing; both-age/residual timer scheduling; delayed-receipt C withdrawal; live connection/session readiness and material entry alerts; startup Stop/fence/task cleanup; committed/cutoff-safe inspection; Deep actual stored-byte verification; repeated-copy acknowledgement race; required blocker-duration/staged-room diagnostics. Preserve architecture and unchanged MP-001; correction only active.
+
+Director pure/offline suites:69 passed in37.24s (Python3.12.14, not a full project-runtime/DB/browser rerun). Exact-SHA CI37275582552 **failed**:544 non-E2E passed,12 E2E passed/1 failed (Copy MD still previous in-progress clipboard snapshot); web checks and Compose smoke passed. The executor's “all checks pass” is local reported evidence, not CI success. Owner Backtest A remains **inactive**; no economic run or new acquisition requested.
 
 ### WP-009 executor evidence (base `a840131`; READY FOR DIRECTOR REVIEW — WP-009 ONLY; not accepted)
 

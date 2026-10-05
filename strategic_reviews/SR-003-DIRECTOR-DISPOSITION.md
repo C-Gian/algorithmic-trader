@@ -68,6 +68,6 @@ Private Project Instructions still describe a discretionary “when practical”
 
 This Git update does not modify any private chat instructions.
 
-## Current pointer — WP-009 implementation, 2026-10-03
+## Current pointer — WP-009 correction, 2026-10-05
 
-R2/R3 accepted, MP-001 v0.2 method design closed; Owner September pack preparation [completed](../delivery/evidence/WP-008-R3-OWNER-SEPTEMBER-PREPARATION.md), no replay/economic run. task.md activates WP-009 first integrated adviser under the [Director specification](../delivery/WP-009-INTEGRATED-ADVISER-SPEC.md). No isolated signal, full-year prerequisite or parameter tournament. Economic usefulness remains Owner evidence after implementation/review; no backtest handoff before Director acceptance.
+R2/R3 accepted, MP-001 v0.2 method design closed; Owner September pack preparation [completed](../delivery/evidence/WP-008-R3-OWNER-SEPTEMBER-PREPARATION.md), no replay/economic run. WP-009 was delivered at5d1f2e1. The [Director review](../delivery/WP-009-DIRECTOR-REVIEW.md) requires corrections1–9; task.md activates only that correction under the unchanged [Director specification](../delivery/WP-009-INTEGRATED-ADVISER-SPEC.md). Exact-SHA CI37275582552 failed in E2E; Owner Backtest A stays inactive. No isolated signal, full-year prerequisite or parameter tournament. Economic usefulness remains Owner evidence after implementation/review; no backtest handoff before Director acceptance.

@@ -1,0 +1,78 @@
+{
+  "reviewed_commit": "5d1f2e169f2894b548015552c187c0eade1dc5a2",
+  "director_environment": "Python 3.12.14, Pydantic 2.13.5; pure/offline probes, not full Python 3.14/DB/browser rerun",
+  "existing_pure_suite": "69 passed in 37.24s",
+  "probes": {
+    "director-probes": {
+      "ordinary_stop_gap": {
+        "expected_price": "99900",
+        "actual_price": "99950",
+        "actual_reason": "STOP_TOUCH",
+        "actual_interval": [
+          "2025-09-01T10:02:00Z",
+          "2025-09-01T10:03:00Z"
+        ]
+      },
+      "late_receipt_freshness": {
+        "expected_first_stale": "2025-09-02T12:02:00.000001+00:00",
+        "actual_next_deadline": "2025-09-02T12:03:00.000001+00:00",
+        "fresh_at_requested_time": false,
+        "actual_core_clock": "2025-09-02T12:01:00+00:00",
+        "actual_thesis": "ONGOING"
+      },
+      "residual_timer": {
+        "actual_entry": "AVAILABLE",
+        "remaining_is_less_than_minimum": true,
+        "next_deadline": "2025-09-02T12:02:00.000001+00:00"
+      },
+      "c_late_close_withdrawal": {
+        "closed_below_L_minus_z": true,
+        "expected_attempt_present": false,
+        "actual_attempt_present": true,
+        "context": "BALANCED",
+        "phase": "TRANSITION"
+      },
+      "disconnected_entry": {
+        "session_status": "DISCONNECTED",
+        "connected": false,
+        "actual_entry": "AVAILABLE",
+        "expected_entry": "UNVERIFIED",
+        "actual_reasons": []
+      }
+    },
+    "cancel-probe": {
+      "cancel_seen_before_replay": true,
+      "actual_replayed_minutes": 10,
+      "actual_factual_cursor": 30,
+      "expected_new_replay_work_after_cancel": 0
+    },
+    "cutoff-probe": {
+      "committed_cursor": 1,
+      "requested_cursor": 1,
+      "actual_returned_slots": [
+        "2025-09-01T00:01:00+00:00",
+        "2025-09-01T00:02:00+00:00",
+        "2025-09-01T00:03:00+00:00"
+      ],
+      "all_returned_slots_are_uncommitted": true,
+      "expected_returned_slots": []
+    },
+    "deep-probe": {
+      "alteration": "stored record bytes changed; stored seq/digest unchanged",
+      "actual_comparisons": 1,
+      "actual_mismatches": [],
+      "load_query": "SELECT seq, digest FROM adviser_journal WHERE run_id = %s",
+      "expected": "stored-byte hash failure or mismatch, never accepted as matching output"
+    }
+  },
+  "ci": {
+    "run_id": 37275582552,
+    "conclusion": "failure",
+    "checks_job": 111651760472,
+    "non_e2e_passed": 544,
+    "e2e_passed": 12,
+    "e2e_failed": 1,
+    "compose_smoke_job": 111651760765,
+    "compose_smoke": "success"
+  }
+}
