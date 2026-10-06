@@ -1,8 +1,8 @@
 # Project State
 
-Updated: 2026-10-06 — WP-011 correction (F1/F2) delivered by executor: READY FOR DIRECTOR REVIEW — WP-011 CORRECTION ONLY; no Owner economic run
+Updated: 2026-10-06 — WP-011 F1/F2 technically closed; F3 state-codec compatibility follow-up active; no Owner economic run
 
-**Current task: [task.md](task.md) — WP-011 bounded correction per [Director review](delivery/WP-011-DIRECTOR-REVIEW.md); no Owner economic run yet** Product authority: [FOUNDATION.md](FOUNDATION.md) v3.1. Executor rules: [AGENTS.md](AGENTS.md). How to run the app: [README.md](README.md). Chronology and earlier package evidence: [delivery/DELIVERY-HISTORY.md](delivery/DELIVERY-HISTORY.md).
+**Current task: [task.md](task.md) — WP-011 F3 compatibility follow-up per [correction review](delivery/WP-011-CORRECTION-DIRECTOR-REVIEW.md); no Owner economic run yet** Product authority: [FOUNDATION.md](FOUNDATION.md) v3.1. Executor rules: [AGENTS.md](AGENTS.md). How to run the app: [README.md](README.md). Chronology and earlier package evidence: [delivery/DELIVERY-HISTORY.md](delivery/DELIVERY-HISTORY.md).
 
 Goal (Foundation v3.1): an integrated BTC adviser with persistent actionable LONG/SHORT calls, entry area, targets, stop/exit guidance and holding horizon. Capital, size, leverage and orders stay human. Historical ACCEPTED/READY/HOLD labels in older documents do not authorize work; only task.md does.
 
@@ -265,3 +265,8 @@ A K>=B destination-before-confirmation is consistent with closed rules; no relax
 - **Fail-before → fixed-after:** Director probes F1/F2 false → true; `tests/test_mp002_correction.py` 13 failed/12 passed → 25 passed; new durable tests + paired comparison 3 failed → `test_mp002_db.py` 7/7.
 - **Checks** (disposable PostgreSQL 18.3, port 55439; Owner stack untouched): pure MP-002 + adviser suites 189 passed (22 DB-skipped there, then run with a DB); DB suites 7 + 49 passed; E2E 19 passed; web typecheck/build; schema baselines match. Full local suite and compose smoke not rerun; exact-SHA CI Owner-operated, PENDING. Details: [evidence](delivery/evidence/WP-011-CORRECTION-EVIDENCE.md) / [JSON](delivery/evidence/WP-011-CORRECTION-EVIDENCE.json), [probe output](delivery/evidence/WP-011-CORRECTION-PROBES.json).
 - Owner October/November/December comparison remains INACTIVE.
+
+
+## WP-011 correction Director review — 6 October 2026
+
+Reviewed product 9b05a3e4bd3767ea627fa821ceaea3a32da34460: F1/F2 closed (independent 25 pure tests and original probes pass). Dependency snapshot fix is within direct-restore scope, but F3 remains: optional deps decodes yet new encode adds a key absent in legacy bytes, so production unpack_runtime rejects exact old v3 blobs. [Review](delivery/WP-011-CORRECTION-DIRECTOR-REVIEW.md), [production-codec evidence](delivery/evidence/WP-011-CORRECTION-DIRECTOR-PROBE.json). Only bounded compatibility follow-up is active. No Owner economic comparison; exact-SHA CI remains PENDING / NOT CHECKED by Director and Owner-operated.

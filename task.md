@@ -1,11 +1,9 @@
-# Current Task — WP-011 correction
+# Current Task — WP-011 compatibility follow-up
 Status: **ACTIVE EXECUTOR CORRECTION — DIRECTOR REVIEW REQUIRED**
-Date: 2026-10-05.
+Date: 2026-10-06.
 
-Correct F1–F2 in [Director review](delivery/WP-011-DIRECTOR-REVIEW.md) of product f1a8023763e820e41cbd6085be14b4ebabbcb0d3, under the original [WP-011 specification](delivery/WP-011-MP-002-IMPLEMENTATION-SPEC.md).
+F1/F2 are technically closed at 9b05a3e. Correct only F3 in [correction Director review](delivery/WP-011-CORRECTION-DIRECTOR-REVIEW.md): legacy v3 state without the optional dependency snapshot must round-trip through production unpack_runtime without disabling integrity guards. Retain the snapshot fix for new states and precise legacy limitations.
 
-F1: derive same-dispatch B opposite-edge box retirement from pre-dispatch structural episode ownership while retaining protective-contact precedence. F2: causally count already-confirmed antecedents in later hourly view samples, including direct restore. Add the explicit integrated-comparison dislocation correction limitation and A destination-before-confirmation diagnostic.
+Follow the review's bounded codec/restore checks and evidence requirements under the original [WP-011 spec](delivery/WP-011-MP-002-IMPLEMENTATION-SPEC.md). Preserve v0.2, closed rules, old outputs and Owner data. No economic run or download. CI is Owner-operated per AGENTS.md.
 
-Preserve v0.2 and saved outputs; no numerical loosening, method rewrite, new sources or economic run. Use the review's bounded checks and fail-before/fixed-after evidence. Full exact-SHA CI remains required and Owner-operated; permanent workflow is in AGENTS.md.
-
-Completion: **READY FOR DIRECTOR REVIEW — WP-011 CORRECTION ONLY**. Owner October/November/December comparison remains inactive.
+Completion: **READY FOR DIRECTOR REVIEW — WP-011 COMPATIBILITY FOLLOW-UP ONLY**. Owner October/November/December comparison remains inactive.
