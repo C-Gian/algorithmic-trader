@@ -280,3 +280,71 @@ def test_correction_fixtures_durable_with_restore_at_the_boundary_equal_the_pure
         assert vs["2025-09-01T05:00:00Z"]["antecedent_activated_1h"] is True
         assert vs["2025-09-01T05:00:00Z"]["antecedent_activated_4h"] is True
         assert vs["2025-09-01T04:00:00Z"]["antecedent_activated_1h"] is True
+
+
+# -- WP-011 compatibility follow-up (correction review F3): a restore point written by the reviewed codec -------------
+
+
+def _to_legacy_shape(database_url, rid):
+    """Rewrite the newest restore point's adviser state (and the matching range SHA) into the exact shape the reviewed
+    f1a8023/ed64d05 codec wrote: the same state without ``core.v3.deps`` (equality of that shape with the reviewed
+    codec's own bytes is proven on fixtures in ``test_mp002_state_compat``). Returns its cursor."""
+    import hashlib
+    import json
+    import zlib
+
+    from algotrader.feed.ordering import canonical
+
+    with connect(database_url) as c:
+        rp = c.execute("SELECT cursor, adviser_blob FROM observation_restore_points WHERE replay_id = %s "
+                       "ORDER BY cursor DESC LIMIT 1", (rid,)).fetchone()
+        doc = json.loads(zlib.decompress(bytes(rp["adviser_blob"])))
+        assert "deps" in doc["core"]["v3"]
+        del doc["core"]["v3"]["deps"]
+        raw = canonical(doc)
+        sha = hashlib.sha256(raw).hexdigest()
+        c.execute("UPDATE observation_restore_points SET adviser_blob = %s, adviser_sha256 = %s WHERE replay_id = %s "
+                  "AND cursor = %s", (zlib.compress(raw, 6), sha, rid, rp["cursor"]))
+        c.execute("UPDATE observation_ranges SET adviser_sha256 = %s WHERE replay_id = %s AND to_cursor = %s",
+                  (sha, rid, rp["cursor"]))
+        c.execute("UPDATE observation_replays SET lease_expires_at = now() - interval '1 second' WHERE replay_id = %s",
+                  (rid,))
+    return rp["cursor"]
+
+
+@pytest.mark.parametrize("where", ["mid_run_0500", "final_commit"])
+def test_legacy_restore_point_is_restored_and_verified_without_fallback(database_url, tmp_path, monkeypatch, where):
+    import adviser3_fixtures as fx
+
+    n = int((EV_END - DAY1).total_seconds() // 60) + 365
+    mins = fx.a3_stall_after_return()
+    mins = mins + fx.flat(max(0, n - len(mins)), mins[-1].c)
+    write_presets(tmp_path, monkeypatch)
+    root, art = tmp_path / "data", tmp_path / "art"
+    pack = prepare_pack(database_url, root, fake_from(mins))
+    ref = _launch(database_url, root, pack)
+    run_all(worker(database_url, root, art, "observe:r", checkpoint_events=7))
+    total = replay(database_url, ref)["total_events"]
+    rid = _launch(database_url, root, pack)
+    with pytest.raises(SimulatedCrash):
+        run_all(worker(database_url, root, art, "observe:s", checkpoint_events=7,
+                       after_commit=crash_once_after(rid, 3 * 1740 if where == "mid_run_0500" else total)))
+    at = _to_legacy_shape(database_url, rid)
+    run_all(worker(database_url, root, art, "observe:t", checkpoint_events=7))
+    row = replay(database_url, rid)
+    assert row["status"] == "completed" and row["assurance"]["state"] == "passed", row["error"]
+    log = row["diagnostic_log"]
+    assert not [e for e in log if e["event"] in ("restore_point_rejected", "restore_fallback")], log
+    checks = {c["name"]: c["passed"] for c in row["manifest"]["validation"]["checks"]}
+    assert checks["adviser_terminal_state_verified"] and checks["adviser_finish_rederived"], checks
+    # professional content equals the uninterrupted run; only envelope dependencies of records emitted before the
+    # first post-restore dependency computation may be empty (the unknowable legacy snapshot is never invented)
+    a, b = journal(database_url, rid), journal(database_url, ref)
+    assert len(a) == len(b)
+    differ = [(x, y) for x, y in zip(a, b) if x["digest"] != y["digest"]]
+    for x, y in differ:
+        assert x["record"]["env"]["dependencies"] == [] and y["record"]["env"]["dependencies"]
+        assert {**x["record"], "env": None} == {**y["record"], "env": None}
+    assert len({x["record"]["env"]["clock_time"] for x, _ in differ}) <= 1
+    assert [r["digest"] for r in records(database_url, rid)] == [r["digest"] for r in records(database_url, ref)]
+    _ = at

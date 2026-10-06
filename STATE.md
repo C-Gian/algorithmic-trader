@@ -1,6 +1,6 @@
 # Project State
 
-Updated: 2026-10-06 — WP-011 F1/F2 technically closed; F3 state-codec compatibility follow-up active; no Owner economic run
+Updated: 2026-10-06 — WP-011 compatibility follow-up (F3) delivered by executor: READY FOR DIRECTOR REVIEW — WP-011 COMPATIBILITY FOLLOW-UP ONLY; no Owner economic run
 
 **Current task: [task.md](task.md) — WP-011 F3 compatibility follow-up per [correction review](delivery/WP-011-CORRECTION-DIRECTOR-REVIEW.md); no Owner economic run yet** Product authority: [FOUNDATION.md](FOUNDATION.md) v3.1. Executor rules: [AGENTS.md](AGENTS.md). How to run the app: [README.md](README.md). Chronology and earlier package evidence: [delivery/DELIVERY-HISTORY.md](delivery/DELIVERY-HISTORY.md).
 
@@ -270,3 +270,12 @@ A K>=B destination-before-confirmation is consistent with closed rules; no relax
 ## WP-011 correction Director review — 6 October 2026
 
 Reviewed product 9b05a3e4bd3767ea627fa821ceaea3a32da34460: F1/F2 closed (independent 25 pure tests and original probes pass). Dependency snapshot fix is within direct-restore scope, but F3 remains: optional deps decodes yet new encode adds a key absent in legacy bytes, so production unpack_runtime rejects exact old v3 blobs. [Review](delivery/WP-011-CORRECTION-DIRECTOR-REVIEW.md), [production-codec evidence](delivery/evidence/WP-011-CORRECTION-DIRECTOR-PROBE.json). Only bounded compatibility follow-up is active. No Owner economic comparison; exact-SHA CI remains PENDING / NOT CHECKED by Director and Owner-operated.
+
+
+## WP-011 compatibility follow-up executor evidence (base `32233ec`; READY FOR DIRECTOR REVIEW — WP-011 COMPATIBILITY FOLLOW-UP ONLY; not accepted)
+
+- **F3 fix** (`core3.py`): the v3 dependency snapshot is written only when known; a legacy state without it re-encodes to its exact verified bytes through the unchanged production `unpack_runtime` guard until a genuine dispatch recomputes it; absent and present-empty are distinct. New states keep the snapshot. No method/numerical/contract/v0.2/stored-output change.
+- **Evidence**: legacy fixture encoded by the reviewed codec (worktree of ed64d05) at three cuts; Director probe legacy rejected → exact; `tests/test_mp002_state_compat.py` 7 failed/13 passed → 20 passed; DB legacy restore point (mid-run and after final commit) FAILED (`_UnsafeRecovery`) → completed with assurance passed and no fallback. Integrity failures (SHA, corrupt bytes, unknown key, malformed/non-canonical snapshot, incompatible state) still fail.
+- **Legacy limitation**: records emitted during the first post-restore dispatch's sealed ingestion carry empty envelope dependencies (not invented). **For Director decision (not changed)**: Deep v7 on runs whose ranges were written by the pre-9b05a3e codec would report adviser state-hash mismatches (code reading).
+- **Checks** (disposable PostgreSQL 18.3; Owner stack untouched): MP-002 pure 100 passed; DB 17 passed (`test_mp002_db`, live DB suites); schema baselines match. Full suite, E2E, compose smoke not rerun; exact-SHA CI Owner-operated, PENDING. [Evidence](delivery/evidence/WP-011-COMPAT-EVIDENCE.md) / [JSON](delivery/evidence/WP-011-COMPAT-EVIDENCE.json).
+- Owner October/November/December comparison remains INACTIVE.

@@ -1,0 +1,74 @@
+{
+  "package": "WP-011 compatibility follow-up (F3)",
+  "date": "2026-10-06",
+  "base": "32233ec",
+  "reviewed_product": "9b05a3e4bd3767ea627fa821ceaea3a32da34460",
+  "status": "READY FOR DIRECTOR REVIEW — WP-011 COMPATIBILITY FOLLOW-UP ONLY (not accepted)",
+  "fix": {
+    "file": "src/algotrader/adviser/core3.py",
+    "summary": "deps written only when known; absent legacy shape re-encodes exactly until a genuine dispatch recomputes the snapshot; present-empty distinct from absent; unpack_runtime guards unchanged"
+  },
+  "legacy_fixture": {
+    "path": "tests/fixtures/mp002_legacy_v3_states.json.gz",
+    "produced_by": "reviewed codec (src identical f1a8023/ed64d05) via git worktree",
+    "generator": "delivery/evidence/WP-011-COMPAT-LEGACY-FIXTURE-GEN.py",
+    "cuts": {
+      "before_0400": 5037,
+      "inside_0400": 5038,
+      "before_0500": 5217
+    }
+  },
+  "fail_before_fixed_after": {
+    "director_probe": {
+      "before": {
+        "legacy_without_deps": "rejected: does not round-trip exactly",
+        "new_with_deps": "exact"
+      },
+      "after": {
+        "legacy_without_deps": "exact",
+        "new_with_deps": "exact"
+      },
+      "output": "delivery/evidence/WP-011-COMPAT-PROBE.json"
+    },
+    "tests/test_mp002_state_compat.py": {
+      "before": {
+        "failed": 7,
+        "passed": 13
+      },
+      "after": {
+        "passed": 20
+      }
+    },
+    "test_mp002_db.py::test_legacy_restore_point_is_restored_and_verified_without_fallback": {
+      "before": "both variants FAILED (_UnsafeRecovery after rejected legacy point)",
+      "after": "both completed, assurance passed, no rejection/fallback"
+    }
+  },
+  "legacy_limitation": "records emitted during the first post-restore dispatch's sealed ingestion (before snapshot recomputation) carry empty env.dependencies; content, evaluator records and later snapshots identical",
+  "not_covered_for_director": "Deep v7 on runs whose ranges were written by the pre-9b05a3e codec would report adviser_state hash mismatches (code reading, not executed); no change made",
+  "checks_run": {
+    "pure": {
+      "suites": "test_mp002_state_compat/correction/paths/rules/versions/live",
+      "passed": 100,
+      "skipped_db": 1
+    },
+    "db": {
+      "database": "disposable PostgreSQL 18.3 port 55439",
+      "files": [
+        "test_mp002_db.py",
+        "test_adviser_correction_live_db.py",
+        "test_adviser_live_db.py",
+        "test_mp002_live.py"
+      ],
+      "passed": 17
+    },
+    "schema": "baselines match"
+  },
+  "not_run": [
+    "full ~26-minute suite",
+    "E2E",
+    "benchmark",
+    "compose-smoke"
+  ],
+  "remote_ci": "PENDING / NOT CHECKED (Owner-operated)"
+}

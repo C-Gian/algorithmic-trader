@@ -1,0 +1,17 @@
+{
+  "note": "Output of the unchanged Director script delivery/evidence/WP-011-CORRECTION-DIRECTOR-PROBE.py on the compatibility follow-up working tree (base 32233ec); 'reviewed_commit' is the script's own constant.",
+  "reviewed_commit": "9b05a3e4bd3767ea627fa821ceaea3a32da34460",
+  "scope": "production codec, synthetic config, no DB/network/economic run",
+  "results": [
+    {
+      "fixture": "legacy_without_deps",
+      "restored": true,
+      "exact_round_trip": true
+    },
+    {
+      "fixture": "new_with_deps",
+      "restored": true,
+      "exact_round_trip": true
+    }
+  ]
+}

@@ -44,3 +44,5 @@ Resulting box token after the corrected retirement: retirement sets `NEED_FALSE`
 - The F2 activation is a sample-time fact; samples with no anchor (emitted immediately) cannot later be credited by a CONFIRM after the cutoff — unchanged MP-001 behavior.
 - Report/comparison additions are additive without a version bump; readers tolerate their absence.
 - Owner October/November/December comparison remains INACTIVE until Director engineering acceptance.
+
+> Erratum (2026-10-06, compatibility follow-up): the claim above that earlier v3 states "decode as before" held only for direct `decode`; the production `unpack_runtime` round-trip guard rejected them (Director F3). Corrected and evidenced in [WP-011-COMPAT-EVIDENCE.md](WP-011-COMPAT-EVIDENCE.md).

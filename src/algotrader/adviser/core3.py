@@ -267,6 +267,9 @@ class AdviserCoreV3(AdviserCore):
         self.a_owner: dict[str, dict | None] = {"1": None, "-1": None}  # A discovery owner per direction
         self.waits: dict[str, Wait] = {}  # child entry id -> WAIT_PRICE state
         self.counters.update(_new_counters3())
+        # False only for a restored legacy v3 state that had no dependency snapshot: it is re-encoded in that exact
+        # verified shape (no invented snapshot) until a genuine dispatch recomputes the snapshot
+        self._deps_known = True
 
     # ----------------------------------------------------------------------------------------------------------
     # timers
@@ -344,6 +347,7 @@ class AdviserCoreV3(AdviserCore):
             self.connection = {"state": "CONNECTED", "since": _iso(t)}
         closes15 = self._ingest_sealed(sealed, t)  # required gaps terminate scenarios/children/guidance here
         self._deps = self._dependencies(t)
+        self._deps_known = True
         self._landmark_timers(t)
         self._events_tick(t)
         for b in closes15:
@@ -1797,10 +1801,11 @@ class AdviserCoreV3(AdviserCore):
         doc["format"] = STATE_FORMAT
         doc["v3"] = {"scen": [s.encode() for _, s in sorted(self.scen.items())],
                      "a_owner": {k: v for k, v in sorted(self.a_owner.items())},
-                     "waits": [w.encode() for _, w in sorted(self.waits.items())],
-                     # dependency snapshot of the last dispatch: records emitted during the next dispatch's sealed
-                     # ingestion carry it in their envelope, so a direct restore must reproduce it
-                     "deps": [x.model_dump(mode="json") for x in self._deps]}
+                     "waits": [w.encode() for _, w in sorted(self.waits.items())]}
+        if self._deps_known:
+            # dependency snapshot of the last dispatch: records emitted during the next dispatch's sealed ingestion
+            # carry it in their envelope, so a direct restore must reproduce it (absent = legacy v3 shape, kept exact)
+            doc["v3"]["deps"] = [x.model_dump(mode="json") for x in self._deps]
         return doc
 
     @classmethod
@@ -1818,7 +1823,10 @@ class AdviserCoreV3(AdviserCore):
         c.scen = {d["sid"]: Scen.decode(d) for d in v3["scen"]}
         c.a_owner = dict(v3["a_owner"])
         c.waits = {f"{d['sid']}#entry": Wait.decode(d) for d in v3["waits"]}
-        c._deps = tuple(sc.DependencyRef.model_validate(d) for d in v3.get("deps", ()))  # absent: earlier v3 states
+        # absent (states written before the snapshot existed): unknown, not an empty snapshot; it cannot be invented,
+        # so records emitted before the first post-restore dependency computation carry no dependencies (disclosed)
+        c._deps_known = "deps" in v3
+        c._deps = tuple(sc.DependencyRef.model_validate(d) for d in v3["deps"]) if c._deps_known else ()
         return c
 
 
