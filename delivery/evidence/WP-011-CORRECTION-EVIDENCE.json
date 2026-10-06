@@ -1,0 +1,129 @@
+{
+  "package": "WP-011 correction (Director review F1/F2)",
+  "date": "2026-10-06",
+  "base": "ed64d05",
+  "reviewed_product": "f1a8023763e820e41cbd6085be14b4ebabbcb0d3",
+  "status": "READY FOR DIRECTOR REVIEW — WP-011 CORRECTION ONLY (not accepted)",
+  "changes": {
+    "F1": {
+      "file": "src/algotrader/adviser/core3.py",
+      "summary": "opposite far-edge box retirement derived from the B episodes alive at dispatch entry; contact precedence kept; no birth from the retired box; no resurrection of episodes dead before the dispatch"
+    },
+    "F2": {
+      "file": "src/algotrader/adviser/evaluator3.py",
+      "summary": "hourly sample records the principal's confirmation when that scenario is CONFIRMED in the core state at the cutoff; ARMED principal credited only by its own later CONFIRM"
+    },
+    "restore_dependency_snapshot": {
+      "file": "src/algotrader/adviser/core3.py",
+      "summary": "v3 state carries the last dispatch's dependency snapshot (optional on decode); fixes landmark envelope dependencies after a direct restore; pre-existing at f1a8023; v0.2 has the same metadata-only defect and stays frozen"
+    },
+    "comparison_limitation": {
+      "files": [
+        "src/algotrader/adviser/compare.py",
+        "web/src/api.ts",
+        "web/src/views/Backtest.tsx"
+      ],
+      "id": "V02_DISLOCATION_BASELINE_DEFECT_CORRECTED_IN_V03",
+      "surfaces": [
+        "comparison JSON limitations",
+        "comparison Markdown",
+        "Workbench compare card",
+        "inactive Owner handoff text"
+      ]
+    },
+    "a_destination_before_confirmation": {
+      "file": "src/algotrader/adviser/report3.py",
+      "fields": [
+        "count",
+        "by_direction",
+        "examples",
+        "note"
+      ],
+      "also": [
+        "diagnosis line when non-zero",
+        "Markdown line"
+      ]
+    }
+  },
+  "unchanged": [
+    "v0.2 code/outputs",
+    "numerical predicates and method rules",
+    "contract schemas (algotrader schema baselines match)",
+    "saved results"
+  ],
+  "fail_before_fixed_after": {
+    "director_probes": {
+      "before": {
+        "F1": false,
+        "F2": false
+      },
+      "after": {
+        "F1": true,
+        "F2": true
+      },
+      "after_output": "delivery/evidence/WP-011-CORRECTION-PROBES.json"
+    },
+    "tests/test_mp002_correction.py": {
+      "before": {
+        "failed": 13,
+        "passed": 12
+      },
+      "after": {
+        "passed": 25
+      }
+    },
+    "tests/test_mp002_db.py (new durable F1/F2 + paired comparison)": {
+      "before": {
+        "failed": 3
+      },
+      "after": {
+        "file_passed": 7
+      }
+    }
+  },
+  "checks_run": {
+    "pure": {
+      "suites": "test_mp002_correction/paths/rules/versions/live + test_adviser_*",
+      "passed": 189,
+      "skipped_db_not_configured": 22
+    },
+    "db": {
+      "database": "disposable PostgreSQL 18.3, port 55439, session scratchpad",
+      "ALGOTRADER_REQUIRE_DB": "1",
+      "test_mp002_db.py": {
+        "passed": 7
+      },
+      "adviser/evaluation/observe/ux DB suites": {
+        "files": [
+          "test_adviser_correction_db",
+          "test_adviser_integration",
+          "test_adviser_live_db",
+          "test_adviser_correction_live_db",
+          "test_adviser_correction_versions",
+          "test_evaluation",
+          "test_observe",
+          "test_ux_wording"
+        ],
+        "passed": 49
+      }
+    },
+    "e2e": {
+      "passed": 19
+    },
+    "web": [
+      "typecheck",
+      "build"
+    ],
+    "schema": "baselines match"
+  },
+  "not_run_locally": [
+    "full ~26-minute suite",
+    "compose-smoke"
+  ],
+  "remote_ci": "PENDING / NOT CHECKED (Owner-operated)",
+  "limits": [
+    "v0.2 restore envelope-dependency defect remains in the frozen baseline",
+    "report/comparison additions are additive without a version bump",
+    "Owner October/November/December comparison INACTIVE"
+  ]
+}

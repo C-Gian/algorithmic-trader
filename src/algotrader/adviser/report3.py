@@ -53,6 +53,10 @@ def build(*, engine: dict, journal: list[dict], records: list[dict], view: dict 
         if s["transition"] == "TERMINAL":
             terminal[f"{s['family']}:{s['terminal_state']}:{str(s['reason']).split(':')[0]}"] += 1
     warmup_context = sorted({s["scenario_id"] for s in scen if s.get("warmup_origin")})
+    # A narrative destination contacted while still ARMED (MP-002 §3 literal after-arm precedence, e.g. K >= frozen B):
+    # the scenario ends, no confirmation and no call; reported so the domain loss is visible, never relaxed
+    a_dest_first = [s for s in scen if in_eval(s) and s["family"] == "A" and s["transition"] == "TERMINAL"
+                    and s["terminal_state"] == "DESTINATION_REACHED" and s.get("confirmed_at") is None]
 
     # -- A confirmations: registered denominators (first routing record per child) ----------------------------
     routed: dict[str, dict] = {}
@@ -175,6 +179,17 @@ def build(*, engine: dict, journal: list[dict], records: list[dict], view: dict 
                      "(IMMEDIATE included); N = D rows with an empty R-K corridor or empty fixed-K (historical 14 bps) "
                      "economics at that cutoff. Exclusions are separate, never assumed empty. N/D>0.5 is a "
                      "preregistered selected-domain diagnostic for Director review, not proof about timeframes.")},
+        "a_destination_before_confirmation": {
+            "count": len(a_dest_first),
+            "by_direction": dict(sorted(Counter(s["direction"] for s in a_dest_first).items())),
+            "examples": [{"scenario_id": s["scenario_id"], "direction": s["direction"],
+                          "at": s["env"]["clock_time"], "armed_at": s.get("activated_at"),
+                          "trigger_level": s.get("trigger_level"), "destination": s.get("destination"),
+                          "reason": s["reason"]} for s in a_dest_first[:3]],
+            "note": ("A scenarios whose narrative destination was contacted after arm and before any confirmation "
+                     "(MP-002 §3 literal after-arm destination precedence; reachable when K >= the frozen impulse B): "
+                     "ended DESTINATION_REACHED with no confirmation or call. Diagnostic only; K and destination rules "
+                     "are unchanged.")},
         "a_routing": dict(sorted(route.items())),
         "waiting": {"opened": len(wait_ids), "observed_usable_return": len(usable),
                     "endings": dict(sorted(wait_end.items())), "blocker_observations": dict(blockers_seen.most_common()),
@@ -199,6 +214,9 @@ def build(*, engine: dict, journal: list[dict], records: list[dict], view: dict 
             diag.append("A_CONFIRMATIONS_NOT_ROUTABLE: " + ", ".join(f"{k} {n}" for k, n in route.most_common(5)))
         if terminal:
             diag.append("SCENARIO_TERMINALS: " + ", ".join(f"{k} {n}" for k, n in terminal.most_common(5)))
+    if a_dest_first:
+        diag.append(f"A_DESTINATION_BEFORE_CONFIRMATION: {len(a_dest_first)} armed A scenario(s) ended at the "
+                    "narrative destination before confirmation (no call; closed rule, not relaxed)")
     if nd is not None and nd > Decimal("0.5"):
         diag.append(f"SELECTED_DOMAIN_INCOMPATIBILITY_FOR_DIRECTOR_REVIEW: N/D = {len(n_rows)}/{len(d_rows)}")
     out = {k: v for k, v in base.items() if k not in ("funnel", "room_erosion_staged", "diagnosis", "conclusion")}
@@ -232,6 +250,7 @@ def render_markdown(a: dict[str, Any]) -> list[str]:
         f"{dn['N_initially_empty_corridor_or_fixed_k_economics']} · N/D {dn['N_over_D'] or '—'} · excluded "
         f"{dn['excluded'] or '{}'}",
         f"- A routing: {f['a_routing'] or '{}'}",
+        _dest_first_line(f.get("a_destination_before_confirmation")),
         f"- Waiting for a usable price: opened {w['opened']} · usable return observed {w['observed_usable_return']} · "
         f"endings {w['endings'] or '{}'} · cap revisions {w.get('CAP_REVISIONS', 0)}",
         f"- Issued by family/mode: {f['issued_by_family_mode'] or '{}'} · guidance retired by scenario terminal "
@@ -244,3 +263,12 @@ def render_markdown(a: dict[str, Any]) -> list[str]:
         extra.append(f"  - {k}: calls {v['calls']} · entered {v['entered']} · target {v['target']} · stop {v['stop']} "
                      f"· other exits {v['other_closed']} · no entry {v['no_entry']} · price-net sum {v['sum_price_net']}")
     return lines[:3] + extra + lines[3:]
+
+
+def _dest_first_line(x: dict | None) -> str:
+    if x is None:  # report built before this diagnostic existed
+        return "- A destination before confirmation: not reported by this report build"
+    ex = "; ".join(f"{e['direction']} {e['scenario_id']} at {e['at']} (K {e['trigger_level']} · destination "
+                   f"{e['destination']})" for e in x["examples"])
+    return (f"- A destination contacted before confirmation (no call, rules unchanged): {x['count']}"
+            + (f" — e.g. {ex}" if ex else ""))

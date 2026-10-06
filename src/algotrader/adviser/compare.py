@@ -7,7 +7,9 @@ and clock policy, instrument tick and channels, evaluation window and clock end,
 evaluator's declared delays/costs/funding treatment. Method rules/register/implementation identities are EXPECTED to
 differ. Any other difference is listed by field and the pair is labelled NONCOMPARABLE; an incomplete or failed run
 or failed runtime assurance makes the pair INCOMPLETE. No winner is chosen: the total change mixes every MP-002 policy
-change (structural lifecycle, clocks, RETURN), so it does not identify the RETURN effect alone.
+change (structural lifecycle, clocks, RETURN) and, for a v0.2/v0.3 pair, the dislocation correction (the frozen v0.2
+baseline keeps its acknowledged never-active dislocation veto; v0.3 applies the retained once-per-slot rule), so it does
+not identify the RETURN effect alone.
 """
 
 from __future__ import annotations
@@ -16,6 +18,12 @@ from decimal import Decimal
 from typing import Any
 
 COMPARISON_VERSION = "adviser.comparison.v1"
+DISLOCATION_LIMITATION = {
+    "id": "V02_DISLOCATION_BASELINE_DEFECT_CORRECTED_IN_V03",
+    "text": ("Additional version difference: the frozen v0.2 baseline keeps its acknowledged dislocation-baseline defect "
+             "(the trade/mark dislocation veto is never active), unchanged by design; v0.3 applies the retained "
+             "once-per-slot dislocation rule. The integrated comparison therefore also includes this correction and "
+             "cannot attribute any difference to RETURN alone.")}
 PIN_FIELDS = ("pack_id", "instrument", "feed_content_identity", "availability_policy_id", "clock_policy", "tick",
               "channels", "evaluation", "clock_end")
 EVALUATOR_FIELDS = ("entry_delay_seconds", "exit_delay_seconds", "boundary_alignment", "opening_condition",
@@ -105,7 +113,9 @@ def _summary(x: dict) -> dict[str, Any]:
                              "a_routing": f.get("a_routing"), "waiting": f.get("waiting"),
                              "issued_by_family_mode": f.get("issued_by_family_mode"),
                              "a_return_owners_entered_primary_60s": f.get("a_return_owners_entered_primary_60s"),
-                             "evidence_threshold": f.get("evidence_threshold")}
+                             "evidence_threshold": f.get("evidence_threshold"),
+                             "a_destination_before_confirmation":
+                                 (f.get("a_destination_before_confirmation") or {}).get("count")}
     else:
         out["registered"] = {"births": f.get("births"), "arms": f.get("arms"),
                              "trigger_evaluations": f.get("trigger_evaluations"),
@@ -146,7 +156,10 @@ def build(a: dict, b: dict) -> dict[str, Any]:
                       "text": "Integrated version comparison on identical inputs, below the registered minimum of "
                               "distinct A RETURN owners entered at 60 s (or none): frequency/practicality not "
                               "validated. More calls are not improvement by themselves."}
+    methods = {a["method"], b["method"]}
+    limitations = [DISLOCATION_LIMITATION] if methods == {"v0.2", "v0.3"} else []
     return {"comparison_version": COMPARISON_VERSION, "a": sa, "b": sb, "comparability": comp,
+            "limitations": limitations,
             "pins": {"a": {**a["pins"], "pack_manifest_sha256": a["pack_manifest_sha256"],
                            "capability_profile_sha256": a["capability_profile_sha256"]},
                      "b": {**b["pins"], "pack_manifest_sha256": b["pack_manifest_sha256"],
@@ -157,8 +170,9 @@ def build(a: dict, b: dict) -> dict[str, Any]:
                                                    "implementation", "identity_sha256", "evaluator_sha256")}},
             "deltas_b_minus_a": deltas, "conclusion": conclusion,
             "scope": ("Integrated VERSION comparison on the same prepared pack and profile: structural lifecycle, "
-                      "clocks and the RETURN entry all changed together, so the difference does not identify the "
-                      "RETURN effect alone. Hypothetical normalized one-unit paths; no orders, sizing or account.")}
+                      "clocks, the RETURN entry and (v0.2 vs v0.3) the dislocation-veto correction all changed "
+                      "together, so the difference does not identify the RETURN effect alone. Hypothetical "
+                      "normalized one-unit paths; no orders, sizing or account.")}
 
 
 def render_markdown(c: dict[str, Any]) -> str:
@@ -170,6 +184,8 @@ def render_markdown(c: dict[str, Any]) -> str:
         lines.append(f"- differs: `{d['field']}` — A `{d['a']}` · B `{d['b']}`")
     for x in comp["incomplete"]:
         lines.append(f"- incomplete: {x}")
+    if c.get("limitations"):
+        lines += ["", "## Comparison limitations", *(f"- **{x['id']}** — {x['text']}" for x in c["limitations"])]
     p = c["pins"]["a"]
     lines += ["", "## Same inputs (pins)",
               f"- Pack `{p.get('pack_id')}` · manifest `{str(p.get('pack_manifest_sha256'))[:16]}` · feed "

@@ -221,7 +221,62 @@ def test_paired_v02_v03_evaluations_and_read_only_comparison(database_url, tmp_p
     assert cmp["conclusion"]["verdict"] == "INSUFFICIENT_EVIDENCE"
     md = api.get("/api/evaluations/compare/report.md", params={"a": ids["v0.2"], "b": ids["v0.3"]}).text
     assert "Comparability: COMPARABLE" in md and "not causal for RETURN alone" in md
+    assert [x["id"] for x in cmp["limitations"]] == ["V02_DISLOCATION_BASELINE_DEFECT_CORRECTED_IN_V03"]
+    assert "## Comparison limitations" in md and "cannot attribute any difference to RETURN alone" in md
+    assert a3["funnel"]["a_destination_before_confirmation"]["count"] == 0
     with connect(database_url) as c:
         assert c.execute("SELECT count(*) AS n FROM evaluations").fetchone()["n"] == 2  # nothing launched
     md3 = api.get(f"/api/evaluations/{ids['v0.3']}/report.md").text
     assert "Revised v0.3" in md3 and "A RETURN owners entered at PRIMARY 60 s: 1" in md3
+
+
+# -- WP-011 correction (Director review F1/F2): durable orchestration with a crash/reclaim at the boundary ----------
+
+
+def _correction_minutes(kind):
+    import adviser3_fixtures as fx
+    from test_mp002_correction import collision
+
+    mins = collision() if kind == "F1_box_collision" else fx.a3_stall_after_return()
+    n = int((EV_END - DAY1).total_seconds() // 60) + 365
+    return mins + fx.flat(max(0, n - len(mins)), mins[-1].c)
+
+
+@pytest.mark.parametrize("kind", ["F1_box_collision", "F2_confirmed_samples"])
+def test_correction_fixtures_durable_with_restore_at_the_boundary_equal_the_pure_fold(database_url, tmp_path,
+                                                                                       monkeypatch, kind):
+    mins = _correction_minutes(kind)
+    write_presets(tmp_path, monkeypatch)
+    root, art = tmp_path / "data", tmp_path / "art"
+    pack = prepare_pack(database_url, root, fake_from(mins))
+    rid = _launch(database_url, root, pack)
+    with pytest.raises(SimulatedCrash):  # hard crash just after a commit at the 05:00 boundary, reclaim elsewhere
+        run_all(worker(database_url, root, art, "observe:k", checkpoint_events=7,
+                       after_commit=crash_once_after(rid, 3 * 1740)))
+    with connect(database_url) as c:
+        c.execute("UPDATE observation_replays SET lease_expires_at = now() - interval '1 second' WHERE replay_id = %s",
+                  (rid,))
+    run_all(worker(database_url, root, art, "observe:l", checkpoint_events=7))
+    row = replay(database_url, rid)
+    assert row["status"] == "completed" and row["assurance"]["state"] == "passed", row["error"]
+    n = int((EV_END - DAY1).total_seconds() // 60) + 365
+    pure = run_pure(DAY1, mins[:n], eval_start=EV_START, eval_end=EV_END, method="v0.3")
+
+    def strip(x):
+        if isinstance(x, dict):
+            return {k: strip(v) for k, v in x.items() if k not in ("env", "cursor")}
+        return [strip(v) for v in x] if isinstance(x, list) else x
+
+    dj = journal(database_url, rid)
+    assert [(e["kind"], strip(e["record"])) for e in dj] == [(e["kind"], strip(e["record"])) for e in pure.journal]
+    dr = [r["record"] for r in records(database_url, rid)]
+    assert [strip(r) for r in dr] == [strip(r["record"]) for r in pure.records]
+    if kind == "F1_box_collision":
+        ret = [e["record"] for e in dj if e["kind"] == "observation" and e["record"]["category"] == "BOX_RETIRED"]
+        assert len(ret) == 1 and ret[0]["env"]["clock_time"] == "2025-09-01T05:00:00Z"
+        assert ret[0]["values"]["reason"].startswith("OPPOSITE_FAR_EDGE_CLOSE_DURING_B_LONG:")
+    else:
+        vs = {r["sample_time"]: r for r in dr if r.get("sample_time")}
+        assert vs["2025-09-01T05:00:00Z"]["antecedent_activated_1h"] is True
+        assert vs["2025-09-01T05:00:00Z"]["antecedent_activated_4h"] is True
+        assert vs["2025-09-01T04:00:00Z"]["antecedent_activated_1h"] is True

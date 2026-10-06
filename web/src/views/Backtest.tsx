@@ -985,6 +985,11 @@ function ComparePanel({ items }: { items: Evaluation[] | null }) {
             <p className="verdict-text">{cmp.conclusion.text}</p>
             <div className="verdict-kind small-text">{cmp.scope}</div>
           </div>
+          {(cmp.limitations ?? []).length > 0 && (
+            <Notice tone="warn" title="Comparison limitations" testid="compare-limitations">
+              {(cmp.limitations ?? []).map((x) => <div key={x.id} className="small-text">{x.text}</div>)}
+            </Notice>
+          )}
           {cmp.comparability.differences.length > 0 && (
             <Notice tone="warn" title="Not comparable: these inputs differ" testid="compare-differences">
               {cmp.comparability.differences.map((d) => <div key={d.field} className="mono small-text">{d.field}</div>)}

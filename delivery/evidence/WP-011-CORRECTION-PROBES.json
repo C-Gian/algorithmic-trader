@@ -1,0 +1,42 @@
+{
+  "note": "Output of the unchanged Director script delivery/evidence/WP-011-DIRECTOR-PROBES.py executed on the corrected working tree (base ed64d05); 'reviewed_commit' is the script's own constant.",
+  "run_on": "WP-011 correction working tree, 2026-10-06",
+  "reviewed_commit": "f1a8023763e820e41cbd6085be14b4ebabbcb0d3",
+  "scope": "synthetic offline pure paths, no economic/Owner run",
+  "probes": [
+    {
+      "id": "F1",
+      "pre_dispatch_B": [
+        "BL-2025-09-01T04:15:00+00:00-0ad3a0658181"
+      ],
+      "old_box": "box-2025-09-01T03:45:00+00:00-4384cdcada07",
+      "post_dispatch_box": null,
+      "box_retire_records": 1,
+      "new_episodes_on_old_box": [],
+      "expected_property": true,
+      "B_terminals": [
+        [
+          "2025-09-01T05:00:00Z",
+          "V_CONTACT:okx/BTC-USDT-SWAP/trade_bar_1m#obs@2025-09-01T04:59:00Z"
+        ]
+      ]
+    },
+    {
+      "id": "F2",
+      "confirmation": "2025-09-01T04:01:00Z",
+      "samples": [
+        {
+          "at": "2025-09-01T05:00:00Z",
+          "activated_1h": true,
+          "activated_4h": true
+        },
+        {
+          "at": "2025-09-01T06:00:00Z",
+          "activated_1h": true,
+          "activated_4h": true
+        }
+      ],
+      "expected_property": true
+    }
+  ]
+}

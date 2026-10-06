@@ -116,11 +116,12 @@ def test_owner_compares_original_and_revised_methods_on_the_same_pack(bench3, br
     page.get_by_test_id("compare-run").click()
     expect(page.get_by_test_id("compare-verdict")).to_have_text(re.compile("^comparable$", re.I), timeout=30_000)
     expect(page.get_by_test_id("compare-table")).to_contain_text("v0.3")
+    expect(page.get_by_test_id("compare-limitations")).to_contain_text("cannot attribute any difference to RETURN alone")
     md = httpx.get(f"{stack.base}/api/evaluations/compare/report.md", params={"a": e2, "b": e3}, timeout=30).text
     page.get_by_test_id("copy-comparison").click()
     expect(page.get_by_test_id("copy-comparison")).to_contain_text("Copied")
     copied = page.evaluate("() => navigator.clipboard.readText()").replace("\r\n", "\n")
-    assert copied == md and "Comparability: COMPARABLE" in copied
+    assert copied == md and "Comparability: COMPARABLE" in copied and "## Comparison limitations" in copied
     assert len(stack.get("/api/evaluations")) == evaluations_before  # comparing launched nothing
     page.screenshot(path=str(evidence_dir / "51-mp002-comparison.png"), full_page=True)
 

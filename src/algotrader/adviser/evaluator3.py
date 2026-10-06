@@ -8,7 +8,9 @@ The MP-001 evaluator (``evaluator.Evaluator``, unchanged for v0.2 runs) with the
   frozen ``hard_deadline``, which is H for v0.3 A calls);
 * guidance ended for coverage loss (``coverage_loss_from`` on the terminal revision, including a scenario-terminal
   coverage loss) CENSORS open paths from the first missing interval - never a repaired delayed exit;
-* hourly view samples count a conditional scenario's antecedent as activated at its structural CONFIRM.
+* hourly view samples count a conditional scenario's antecedent as activated at its structural CONFIRM: a sample
+  whose principal is already CONFIRMED at the sample cutoff records that confirmation (from the core state at the
+  cutoff); an ARMED principal is credited only by its own causally later CONFIRM.
 
 Primary entry delay 60 s with 0/120 s sensitivities on the same calls; opening-price admissibility, protection, gap /
 ambiguity / funding / censoring and one-unit accounting are the MP-001 rules. Disabling the evaluator leaves every
@@ -20,10 +22,11 @@ from __future__ import annotations
 import hashlib
 import json
 from datetime import datetime
+from typing import Any
 
 from ..feed.ordering import canonical
 from .evaluation_contracts import EVALUATION_VERSION, EvaluatorProfile
-from .evaluator import Evaluator, _dt
+from .evaluator import Evaluator, _dt, _iso, _sign
 
 STATE_FORMAT = "algotrader.adviser-evaluation-state.v2"
 EVALUATOR_IMPLEMENTATION = "adviser.evaluator.v3"
@@ -57,6 +60,36 @@ class EvaluatorV3(Evaluator):
                 for s in self.samples:
                     if s.get("scenario_id") == sid and s.get("activated_at") is None:
                         s["activated_at"] = e["record"]["env"]["published_at"]
+
+    def _sample(self, h: datetime, core) -> None:
+        """The MP-001 hourly sample, plus the principal's already-published structural confirmation known at the
+        sample cutoff: the principal's own scenario in the core state after every dispatch update at ``h`` (its
+        CONFIRM ``published_at`` equals its clock time ``conf_at``). An ARMED principal stays unactivated until its own
+        causally later CONFIRM (``on_journal``); no other scenario's activation is borrowed and nothing is replayed."""
+        s: dict[str, Any] = {"sample_time": _iso(h), "anchor_price": None, "view": "UNAVAILABLE", "conditional": False,
+                             "scenario_id": None, "persistence": None, "activated_at": None}
+        if core is not None:
+            lb = core.last_1m
+            if lb is not None and lb.known_at <= h and core.ready_1m(h):
+                s["anchor_price"] = str(lb.c)
+            v = core.view or {}
+            if v:
+                s["view"] = v["expected_direction"]
+                s["conditional"] = bool(v.get("conditional"))
+                s["scenario_id"] = (v.get("principal") or {}).get("scenario_id")
+                sc = core.scen.get(s["scenario_id"]) if s["scenario_id"] else None
+                if sc is not None and sc.status == "CONFIRMED" and sc.conf_at is not None and sc.conf_at <= h:
+                    s["activated_at"] = _iso(sc.conf_at)
+            h1 = list(core.h1)
+            if len(h1) >= 2 and core.ready_1h(h) and h1[-1].start == h1[-2].end:
+                s["persistence"] = _sign(h1[-1].c - h1[-2].c)
+        self.aggregates["samples"]["taken"] += 1
+        if s["anchor_price"] is None:
+            s["outcome_1h"] = s["outcome_4h"] = None
+            s["return_1h"] = s["return_4h"] = None
+            self._emit_sample(s)
+            return
+        self.samples.append(s)
 
     def _revision(self, r: dict) -> None:
         c = self.calls.get(r["call_id"])

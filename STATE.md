@@ -1,6 +1,6 @@
 # Project State
 
-Updated: 2026-10-05 — WP-011 Director review: correction required (F1 box collision, F2 antecedent samples); no Owner economic run
+Updated: 2026-10-06 — WP-011 correction (F1/F2) delivered by executor: READY FOR DIRECTOR REVIEW — WP-011 CORRECTION ONLY; no Owner economic run
 
 **Current task: [task.md](task.md) — WP-011 bounded correction per [Director review](delivery/WP-011-DIRECTOR-REVIEW.md); no Owner economic run yet** Product authority: [FOUNDATION.md](FOUNDATION.md) v3.1. Executor rules: [AGENTS.md](AGENTS.md). How to run the app: [README.md](README.md). Chronology and earlier package evidence: [delivery/DELIVERY-HISTORY.md](delivery/DELIVERY-HISTORY.md).
 
@@ -256,3 +256,12 @@ Product reviewed: f1a8023763e820e41cbd6085be14b4ebabbcb0d3. **CORRECTION REQUIRE
 F1: a B scenario alive at dispatch entry loses box-retirement ownership when the simultaneous V contact removes it before the opposite-edge 15m close is handled; the old box incorrectly births another episode. F2: hourly samples taken after a scenario's confirmation falsely record an unactivated antecedent. Both reproduced on full pure paths. The review records bounded correction checks, exact-SHA CI requirement, and no economic/research run.
 
 A K>=B destination-before-confirmation is consistent with closed rules; no relaxation authorized. The acknowledged v0.2 dislocation bug remains frozen; v0.3 corrects it, so comparison must disclose this additional integrated difference. Remote CI is PENDING / NOT CHECKED by Director and Owner-operated. Earlier WP-011 delivery is evidence, not acceptance.
+
+
+## WP-011 correction executor evidence (base `ed64d05`; READY FOR DIRECTOR REVIEW — WP-011 CORRECTION ONLY; not accepted)
+
+- **F1** (`core3.py`): the opposite far-edge box retirement is derived from the B episodes alive at dispatch entry; protective call / V contact still runs first and keeps precedence; the old box retires once in that dispatch and births nothing; episodes dead before the dispatch are not resurrected. **F2** (`evaluator3.py`): an hourly sample whose principal is CONFIRMED in the core state at the cutoff records that activation; an ARMED principal is credited only by its own later CONFIRM. Comparison JSON/Markdown/Workbench card and the inactive Owner handoff text disclose the v0.2→v0.3 dislocation correction; report v3 adds the A destination-before-confirmation count/examples. No numerical/method/v0.2 change.
+- **Found during the required restore checks:** records emitted during sealed ingestion (1h landmarks) carried the previous dispatch's dependency snapshot, absent from restorable state (pre-existing at f1a8023). v0.3 state now carries it (optional on decode); v0.2 has the same metadata-only defect and stays frozen (disclosed). For Director decision.
+- **Fail-before → fixed-after:** Director probes F1/F2 false → true; `tests/test_mp002_correction.py` 13 failed/12 passed → 25 passed; new durable tests + paired comparison 3 failed → `test_mp002_db.py` 7/7.
+- **Checks** (disposable PostgreSQL 18.3, port 55439; Owner stack untouched): pure MP-002 + adviser suites 189 passed (22 DB-skipped there, then run with a DB); DB suites 7 + 49 passed; E2E 19 passed; web typecheck/build; schema baselines match. Full local suite and compose smoke not rerun; exact-SHA CI Owner-operated, PENDING. Details: [evidence](delivery/evidence/WP-011-CORRECTION-EVIDENCE.md) / [JSON](delivery/evidence/WP-011-CORRECTION-EVIDENCE.json), [probe output](delivery/evidence/WP-011-CORRECTION-PROBES.json).
+- Owner October/November/December comparison remains INACTIVE.

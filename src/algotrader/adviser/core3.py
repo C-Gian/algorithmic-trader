@@ -330,6 +330,9 @@ class AdviserCoreV3(AdviserCore):
         start = len(self.journal)
         bars, sealed, inputs = self._bars, self._sealed, self._inputs
         self._bars, self._sealed, self._inputs = [], [], []
+        # structural B episodes alive at dispatch entry: they own this dispatch's opposite-edge box retirement even
+        # when an earlier step of the same dispatch (protective / V contact, timers) terminates them
+        pre_b = [(s.sid, s.d, s.owner) for s in self.scen.values() if s.family == "B"]
 
         self._windows(t)
         for kind, x in inputs:
@@ -352,7 +355,7 @@ class AdviserCoreV3(AdviserCore):
         self._scen_intervals(items, t)
         # newly complete derived revisions are applied only after that contact processing
         if closes15:
-            self._box_close_flags(closes15[-1], t)
+            self._box_close_flags(closes15[-1], t, pre_b)
             for b in closes15:
                 self._a_close(b, t)
                 self._premise_close(b, t)
@@ -659,24 +662,30 @@ class AdviserCoreV3(AdviserCore):
         """Eligible opposing zones (near', far', info, created, id), deterministically ordered by (near, created, id)."""
         return sorted(self._opposing(d, t, self._owner_zones(d, t)), key=lambda z: (z[0], z[3], z[4]))
 
-    def _box_close_flags(self, b: Bar, t: datetime) -> None:
+    def _box_close_flags(self, b: Bar, t: datetime, pre_b: list[tuple[str, int, str | None]] | None = None) -> None:
         """B cancellations / premise failures and the opposite-edge retirement, derived together from the
-        PRE-dispatch structural B episodes (any status: rejected child entries never change box retirement)."""
+        PRE-dispatch structural B episodes ``pre_b`` (sid, direction, owner) captured at dispatch entry (any status:
+        rejected child entries never change box retirement). An episode terminated earlier in this dispatch (e.g. by
+        a protective V contact, which keeps precedence) still owns the retirement predicate of this close; its own
+        cancellation is moot. Episodes already dead before the dispatch are not in ``pre_b``."""
         bx = self.box
         if bx is None:
             return
+        if pre_b is None:
+            pre_b = [(s.sid, s.d, s.owner) for s in self.scen.values() if s.family == "B"]
         ends: list[tuple[Scen, str, str]] = []
         retire = None
-        for s in sorted(self.scen.values(), key=lambda x: x.sid):
-            if s.family != "B" or s.owner != bx.bid:
+        for sid, d, owner in sorted(pre_b):
+            if owner != bx.bid:
                 continue
-            l_t, u_t, _ = bx.edges_t(s.d)
-            c_t = tbar(b, s.d)[3]
-            if c_t < u_t - bx.z:
+            l_t, u_t, _ = bx.edges_t(d)
+            c_t = tbar(b, d)[3]
+            s = self.scen.get(sid)
+            if s is not None and c_t < u_t - bx.z:
                 ends.append((s, "WITHDRAWN", "RETURNED_INSIDE_BEFORE_RETEST") if s.status != "CONFIRMED" else
                             (s, "PRICE_PREMISE_FAILED", f"15M_CLOSE_BEYOND_U_MINUS_Z:{b.rid}"))
             if c_t < l_t - bx.z:
-                retire = f"OPPOSITE_FAR_EDGE_CLOSE_DURING_B_{dname(s.d)}:{b.rid}"
+                retire = f"OPPOSITE_FAR_EDGE_CLOSE_DURING_B_{dname(d)}:{b.rid}"
         for s, state, reason in ends:
             self._scen_end(s, state, reason, t)
         if retire is not None:
@@ -1788,7 +1797,10 @@ class AdviserCoreV3(AdviserCore):
         doc["format"] = STATE_FORMAT
         doc["v3"] = {"scen": [s.encode() for _, s in sorted(self.scen.items())],
                      "a_owner": {k: v for k, v in sorted(self.a_owner.items())},
-                     "waits": [w.encode() for _, w in sorted(self.waits.items())]}
+                     "waits": [w.encode() for _, w in sorted(self.waits.items())],
+                     # dependency snapshot of the last dispatch: records emitted during the next dispatch's sealed
+                     # ingestion carry it in their envelope, so a direct restore must reproduce it
+                     "deps": [x.model_dump(mode="json") for x in self._deps]}
         return doc
 
     @classmethod
@@ -1806,6 +1818,7 @@ class AdviserCoreV3(AdviserCore):
         c.scen = {d["sid"]: Scen.decode(d) for d in v3["scen"]}
         c.a_owner = dict(v3["a_owner"])
         c.waits = {f"{d['sid']}#entry": Wait.decode(d) for d in v3["waits"]}
+        c._deps = tuple(sc.DependencyRef.model_validate(d) for d in v3.get("deps", ()))  # absent: earlier v3 states
         return c
 
 

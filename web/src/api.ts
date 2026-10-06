@@ -985,6 +985,7 @@ export interface Comparison {
   pins: { a: Record<string, unknown>; b: Record<string, unknown> };
   identities: { a: Record<string, string | null>; b: Record<string, string | null> };
   deltas_b_minus_a: Record<string, string | null> | null; conclusion: { verdict: string; text: string }; scope: string;
+  limitations?: { id: string; text: string }[];
 }
 
 // ---- Evaluation packs (algotrader.corpus-pack.v1; data preparation only, no adviser) ----
