@@ -1,6 +1,6 @@
 # MP-003 — A reaction anchor before confirmation
 
-Version: 0.1, 2026-10-06. Proposed method: btc.context-action.v0.4 / mp003.rules.v0.4. Status: DIRECTOR DESIGN DECISION — ASTRA CLOSURE REVIEW REQUIRED. No implementation or Owner backtest activated.
+Version: 0.2, 2026-10-06. Proposed method: btc.context-action.v0.4 / mp003.rules.v0.4. Status: DIRECTOR DESIGN DECISION — ASTRA CLOSURE REVIEW REQUIRED. No implementation or Owner backtest activated.
 
 ## 1. Authority, reason and exact scope
 
@@ -38,7 +38,11 @@ Before the first arm, retain MP-001 spent-before-reaction precedence: a high > B
 
 At every pre-confirmation dispatch terminate for original setup expiry, required evidence gap/staleness/restart gap, forbidden 1h context or opposite EXPANSION. Preserve the named complete-15m price boundary: LONG close <= frozen A+z withdraws; SHORT reflected close >= frozen A-z withdraws. This is a CLOSE predicate, not a new 1m low/high stop at A+z. The reaction eligibility condition R > A+z is separate: a bar failing reaction recognition does not automatically constitute that close withdrawal, nor authorize a wider anchor.
 
-Preserve MP-002 narrative B contact after scenario publication and its certification/straddling rules. A certified destination terminal dominates any new anchor. A narrative destination contact simultaneous with local-anchor contact is conservatively scenario UNASSESSABLE, not certified success. Existing ambiguous-contact/data policy remains explicit; do not infer intrabar chronology.
+Narrative destination B monitoring starts ONLY at the first arm actually published, not at scenario birth. Before that first arm, the inherited spend and withdrawal predicates above apply; simple LONG high >= B (SHORT low <= B) adds no terminal. Fix an immutable first_arm_publication time and admitted cursor when the first anchor is published, and retain ever_armed=true thereafter. Anchor loss, WATCH, replacement and supersession never reset or postpone this destination-monitoring origin.
+
+A certified B contact requires a complete pertinent trade minute wholly starting at/after that actual first-arm publication and admitted strictly after its publication cursor: LONG high >= frozen B; SHORT low <= frozen B. Check every newly admitted eligible interval, not only the latest close. The first-arm source bar and intervals already admitted at publication cannot supply a retroactive destination contact, including delayed publication/backlog. Intervals wholly before the origin are excluded. A newly admitted interval straddling the origin whose extrema can contact B cannot certify chronology: apply the inherited MP-002 destination-ambiguity policy (scenario UNASSESSABLE, never certified success); do not infer that a pre-publication contact happened afterwards. Required coverage gaps remain separate structural terminals.
+
+From that origin a certified destination terminal dominates any new anchor, including while WATCH after local-anchor loss. A narrative destination contact simultaneous with local-anchor contact is conservatively scenario UNASSESSABLE, not certified success. Existing ambiguous-contact/data policy remains explicit; do not infer intrabar chronology. This domain clarification preserves pre-first-arm MP-001 spend behaviour; it is not an additional birth-time destination terminal.
 
 Impulse A/B, birth S15/z, source identity, original deadline and qualification latch never move to sustain a reaction. No replacement after structural terminal; no new two-hour budget at anchor loss/replacement. Anchor loss does not release the discovery owner or retire its B zone. The structural release/reset rules from MP-002 remain, except that pre-confirmation LOCAL V loss alone is no longer structural release. After genuine structural release require the original post-release false then fresh false-to-true qualification; no banked pre-release false or same-dispatch true rebirth.
 
@@ -56,6 +60,9 @@ These are reachability requirements for later engineering, not economic fixtures
 
 | Case | Required result |
 |---|---|
+| Never armed LONG: B=120, z=1, later high=120.5, valid close/context/deadline | No destination terminal: 120.5 <= B+z=121. Inherited withdrawal still applies; high > 121 spends before the first qualifying reaction. Mirror SHORT and test equality. |
+| First arm published at actual dispatch t/cursor c; source bar has touched B; delayed/backlog evidence is already admitted | No retroactive B terminal from that source bar or admitted prefix. A later newly admitted complete minute starting >= t and cursor > c with high >= B terminates; straddling evidence is explicitly ambiguous, not certified success. |
+| First arm lost locally; same owner WATCH, ever_armed=true; later eligible minute reaches B | Destination control remains active from the original first-arm publication. Terminal (or declared simultaneous-contact ambiguity); no return to pre-first-arm spend and no reset at replacement. |
 | A=100, B=120, z=1; R=112, K=116, V=111; before confirmation a wholly eligible minute has low=110.5, with no structural terminal | Old anchor invalidated and journalled; same scenario WATCH and owner retained. No automatic new anchor or call. |
 | Subsequently/newly complete clean 15m reaction has R=110.5, high K=114, so V=109.5; close respects A+z and context; no B contact | New anchor epoch may publish at actual dispatch. Original A/B/z/deadline and owner are unchanged. A later clean minute can confirm; no claim it must pass economics. |
 | Contact and new reaction complete together; earlier within that bar price recovers above the K knowable only at completion | Old contact is recorded first; prospective replacement possible; zero retroactive confirmations/calls. A fresh later minute is required. |

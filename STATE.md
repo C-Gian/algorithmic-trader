@@ -1,6 +1,6 @@
 # Project State
 
-Updated: 2026-10-06 — October diagnosis reviewed; MP-003 v0.4 anchor/scenario design proposed for Astra closure; no implementation or backtest active.
+Updated: 2026-10-06 — MP-003 design v0.2 corrects first-arm destination activation; focused Astra closure pending; no implementation or backtest active.
 
 **Current task: [task.md](task.md) — MP-003 design closure review only.** [Proposed decision](delivery/MP-003-A-REACTION-ANCHOR-DISPOSITION.md), [Astra October review](delivery/WP-011-OWNER-OCTOBER-ASTRA-REVIEW.md). FOUNDATION and AGENTS remain authoritative; earlier active handoffs below are superseded.
 
@@ -323,3 +323,8 @@ Director-authorized diagnosis: [summary](delivery/evidence/WP-011-OWNER-OCTOBER-
   - The counterfactual (what v0.3 would have issued without the rule) is NOT DEMONSTRABLE without an unauthorized replay.
 - **Checks.** Documentation-only delivery: no product suite or Compose smoke rerun (per Director instruction). Counts, provenance and links were checked. CI on the pushed SHA is Owner-operated: PENDING / NOT CHECKED.
 - November/December remain SUSPENDED. No implementation is activated.
+
+
+## MP-003 focused closure correction — 6 October 2026
+
+Astra identified one remaining contradiction in design v0.1: a birth-time B-contact terminal would override inherited pre-first-arm spend at B+z. Director adopts the requested preservation. MP-003 v0.2 §4 activates destination monitoring only at the first actually published arm, with immutable publication time/cursor and explicit prospective/straddling rules; ever_armed keeps it active in WATCH after anchor loss. §6 adds the three counterexamples. This corrects the design text, not product code. Closure remains pending; no implementation or economic run is active.
