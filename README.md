@@ -1,6 +1,6 @@
 # Algorithmic Trader
 
-**Current status (6 October 2026): WP-011 F1/F2 closed; legacy v3 state compatibility follow-up (F3) delivered for Director review — the MP-002 v0.3 adviser ("Revised v0.3 — confirmation then usable entry") is selectable next to the unchanged v0.2 baseline; engineering review pending, no Owner economic run requested yet.** Future CI waits belong to the Owner; executor procedure is in AGENTS.md.
+**Current status (6 October 2026): WP-011 technically accepted at `3fcbfc5`; exact-SHA CI checks and compose-smoke passed. Owner October development comparison is active: two fresh Adviser evaluation runs, Original v0.2 then Revised v0.3 on the same October pack and settings, followed by Copy comparison for chat. Economic usefulness remains unknown.** [Final acceptance and legacy limitations](delivery/WP-011-FINAL-DIRECTOR-REVIEW.md). Older pending-review/handoff text below is superseded by this decision; the existing UI may still display its engineering-review-pending label.
 
 Algorithmic Trader is a clean-room, local BTC trading adviser in development: professional market reading and persistent trade calls for a human who independently chooses capital, size, leverage and orders. [FOUNDATION.md](FOUNDATION.md) v3.1 is the product authority; [STATE.md](STATE.md) has the current status and [task.md](task.md) the single active task.
 

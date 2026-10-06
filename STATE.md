@@ -1,10 +1,14 @@
 # Project State
 
-Updated: 2026-10-06 — WP-011 compatibility follow-up (F3) delivered by executor: READY FOR DIRECTOR REVIEW — WP-011 COMPATIBILITY FOLLOW-UP ONLY; no Owner economic run
+Updated: 2026-10-06 — WP-011 technically accepted at 3fcbfc5; exact-SHA CI green; Owner October development comparison active.
 
-**Current task: [task.md](task.md) — WP-011 F3 compatibility follow-up per [correction review](delivery/WP-011-CORRECTION-DIRECTOR-REVIEW.md); no Owner economic run yet** Product authority: [FOUNDATION.md](FOUNDATION.md) v3.1. Executor rules: [AGENTS.md](AGENTS.md). How to run the app: [README.md](README.md). Chronology and earlier package evidence: [delivery/DELIVERY-HISTORY.md](delivery/DELIVERY-HISTORY.md).
+**Current task: [task.md](task.md) — Owner-operated October development comparison; no active executor implementation.** Current acceptance: [WP-011 final review](delivery/WP-011-FINAL-DIRECTOR-REVIEW.md). Product authority: [FOUNDATION.md](FOUNDATION.md); executor rules: [AGENTS.md](AGENTS.md). Earlier executor evidence below is historical and does not override this acceptance.
 
 Goal (Foundation v3.1): an integrated BTC adviser with persistent actionable LONG/SHORT calls, entry area, targets, stop/exit guidance and holding horizon. Capital, size, leverage and orders stay human. Historical ACCEPTED/READY/HOLD labels in older documents do not authorize work; only task.md does.
+
+## Current WP-011 release decision
+
+WP-011 accepted technically at `3fcbfc5`, CI `37494574273` checks and compose-smoke SUCCESS. Start two fresh October 2025 development evaluations, v0.2 then v0.3 on one identical prepared pack; Copy comparison for chat. Economic usefulness remains unknown. Pre-snapshot v0.3 engineering runs are excluded from this comparison; their Deep state-hash limitation is accepted and documented in the final review. November/December follow after October diagnosis. No protected evaluation or executor economic run is authorized.
 
 ## 1. Current implementation
 
