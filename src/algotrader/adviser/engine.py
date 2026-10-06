@@ -2,8 +2,9 @@
 checkpoints, restore points and the professional finish.
 
 The engine document pins ONE packaged method release (``methods``): v0.2 (MP-001, engine ``observe.stream.v3``,
-runtime ``algotrader.adviser-runtime.v2``) or v0.3 (MP-002, engine ``observe.stream.v4``, runtime
-``algotrader.adviser-runtime.v3``). An absent ``method`` key is v0.2 (every WP-009 run). A run never continues under
+runtime ``algotrader.adviser-runtime.v2``), v0.3 (MP-002, engine ``observe.stream.v4``, runtime
+``algotrader.adviser-runtime.v3``) or v0.4 (MP-003, engine ``observe.stream.v5``, runtime
+``algotrader.adviser-runtime.v4``). An absent ``method`` key is v0.2 (every WP-009 run). A run never continues under
 another release; existing ``observe.stream.v1/v2`` runs keep their engines, validators and claims unchanged.
 """
 
@@ -39,6 +40,7 @@ from .runtime import RUNTIME_FORMAT, AdviserRuntime
 
 ENGINE_FORMAT_V3 = "observe.stream.v3"  # factual + temporal + algotrader.adviser-runtime.v2 (v0.2)
 ENGINE_FORMAT_V4 = "observe.stream.v4"  # factual + temporal + algotrader.adviser-runtime.v3 (MP-002 v0.3)
+ENGINE_FORMAT_V5 = "observe.stream.v5"  # factual + temporal + algotrader.adviser-runtime.v4 (MP-003 v0.4)
 
 
 class AdviserStateError(Exception):
@@ -139,6 +141,10 @@ def new_evaluator(engine: dict[str, Any]) -> Evaluator:
 def _runtime_cls(rel: methods.Release):
     if rel.key == "v0.2":
         return AdviserRuntime, AdviserCore
+    if rel.key == "v0.4":
+        from .runtime4 import AdviserRuntimeV4
+
+        return AdviserRuntimeV4, AdviserRuntimeV4.CORE_CLS
     from .core3 import AdviserCoreV3
     from .runtime3 import AdviserRuntimeV3
 

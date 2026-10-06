@@ -191,14 +191,15 @@ class Stepper:
     at a chosen time, so a dispatch-level fixture can inspect or (explicitly, white-box) alter state."""
 
     def __init__(self, minutes: list[Minute], *, method="v0.3", params=None, profile=None, events=None,
-                 eval_start=DAY2, evaluator=True, start=DAY1) -> None:
+                 eval_start=DAY2, evaluator=True, start=DAY1, allowance=timedelta(0)) -> None:
         from algotrader.adviser.harness import build_events, make_runtime, temporal_for
 
         evs, cov = build_events(start, minutes)
         self.events = events if events is not None else evs
         self.rt = make_runtime(eval_start=eval_start, method=method, params=params, profile=profile,
                                evaluator=evaluator)
-        self.temporal = temporal_for(cov)
+        # ``allowance``: temporal closure allowance (recorded-receipt style tapes whose late constituents still seal)
+        self.temporal = temporal_for(cov, allowance=allowance)
         self.rt.attach(self.temporal)
         self.i = 0
         self.end = start + len(minutes) * MIN

@@ -222,8 +222,12 @@ def build(*, engine: dict, journal: list[dict], records: list[dict], view: dict 
     out = {k: v for k, v in base.items() if k not in ("funnel", "room_erosion_staged", "diagnosis", "conclusion")}
     out.update(gates={}, limiting_landmarks={},
                gates_note="v0.3 gate statistics are in the entry_attempt records (G/Q/K per routing and return sample)")
+    from . import methods
+
+    rel = methods.get("v0.3")  # the release's CURRENT status (presentation only; behaviour identity unchanged)
     out.update(report_version=REPORT_VERSION, method={"method": "v0.3", "model": adv["identity"]["model"],
-                                                      "status": "ENGINEERING_REVIEW_PENDING"},
+                                                      "status": rel.status, "status_label": rel.status_label,
+                                                      "economic_usefulness": "UNVALIDATED"},
                funnel=funnel, by_family_mode=by_family_mode, diagnosis=diag,
                conclusion={"verdict": "INCOMPLETE" if status != "completed" else "INSUFFICIENT_EVIDENCE"
                            if threshold != "MINIMUM_REPORTING_COUNT_REACHED" else "REPORTED_FOR_DIRECTOR_REVIEW",
@@ -239,7 +243,8 @@ def build(*, engine: dict, journal: list[dict], records: list[dict], view: dict 
 def render_markdown(a: dict[str, Any]) -> list[str]:
     lines = r2.render_markdown({**a, "room_erosion_staged": {}, "diagnosis": a.get("diagnosis") or [],
                                 "conclusion": a["conclusion"]})
-    lines[1] = "## Adviser evaluation — Revised v0.3 (MP-002; engineering review pending; hypothetical, no orders)"
+    status_label = (a.get("method") or {}).get("status_label") or "technically accepted"
+    lines[1] = f"## Adviser evaluation — Revised v0.3 (MP-002; {status_label}; hypothetical, no orders)"
     f = a["funnel"]
     dn = f["a_denominators"]
     w = f["waiting"]

@@ -31,7 +31,7 @@ from ..feed.contracts import AvailabilityPolicy, ChannelChange, ChannelCoverage,
 
 OBSERVE_SCHEMA_VERSION = "algotrader.observe.v1"
 OBSERVE_CONTRACT_STATUS = "PROVISIONAL"
-OBSERVE_SCHEMA_REVISION = 6
+OBSERVE_SCHEMA_REVISION = 7
 OBSERVE_CHANGELOG: tuple[tuple[int, str, str], ...] = (
     (1, "2026-09-30", "Initial provisional baseline (WP-007): observation-replay config, source verification, "
                       "feed identity, committed delivery records, manifest and validation."),
@@ -64,6 +64,11 @@ OBSERVE_CHANGELOG: tuple[tuple[int, str, str], ...] = (
                       "use engine observe.stream.v4 (algotrader.adviser-runtime.v3 state) and the manifest ``adviser`` "
                       "reference also names the pinned method. v0.2 (observe.stream.v3) runs, earlier manifests, "
                       "launches and readers are unchanged."),
+    (7, "2026-10-06", "WP-012 MP-003 v0.4 (additive values only; no field, type or shape change): ObservationLaunch "
+                      "adviser_method also accepts 'v0.4'; v0.4 adviser runs use engine observe.stream.v5 "
+                      "(algotrader.adviser-runtime.v4 state in the same fenced checkpoints) and the manifest "
+                      "``adviser`` reference names method 'v0.4' with its model/rules version/implementation. v0.2/v0.3 "
+                      "runs, earlier manifests, launches and readers are unchanged."),
 )
 VALIDATOR_ID = "observe.terminal-revalidation"
 VALIDATOR_VERSION = "1"
@@ -225,7 +230,7 @@ class ObservationLaunch(Record):
     # revision 5 (optional; absent in earlier launches = observation)
     run_type: str = "observation"  # observation | adviser_evaluation
     # revision 6 (optional; absent/None = the v0.2 default for adviser evaluations)
-    adviser_method: str | None = None  # v0.2 | v0.3
+    adviser_method: str | None = None  # v0.2 | v0.3 | v0.4
 
 
 class ArtifactFile(Record):

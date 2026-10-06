@@ -28,7 +28,7 @@ from pydantic import BaseModel, ConfigDict
 
 SEMANTIC_V2_VERSION = "algotrader.semantic.v2"
 SEMANTIC_V2_STATUS = "PROVISIONAL"
-SEMANTIC_V2_REVISION = 2
+SEMANTIC_V2_REVISION = 3
 SEMANTIC_V2_CHANGELOG: tuple[tuple[int, str, str], ...] = (
     (1, "2026-10-04", "Initial provisional advisory baseline (WP-009): Observation, Landmark, PhaseState, "
                       "EventContext/EventResponse, MarketView, Scenario, CandidatePlan, Actionability, AdviserCall, "
@@ -40,8 +40,17 @@ SEMANTIC_V2_CHANGELOG: tuple[tuple[int, str, str], ...] = (
                       "variants ScenarioV3/MarketViewV3/AdviserCallV3/CallRevisionV3 extend the revision-1 records "
                       "with fields. Revision-1 records, their bytes and readers are unchanged; v0.2 runs never emit "
                       "the new kinds, variants or fields (per-method emitted revision: v0.2 -> 1, v0.3 -> 2)."),
+    (3, "2026-10-06", "WP-012 MP-003 btc.context-action.v0.4 (additive): variant ScenarioStateV4 of the 'scenario' kind "
+                      "adds the pre-confirmation A local anchor provenance - anchor epoch/status/source bar, actual "
+                      "anchor publication time and admitted cursor, the lost or superseded anchor (geometry, reason, "
+                      "contact interval and its end), ever_armed and the immutable first-arm destination-monitoring "
+                      "origin (time and cursor) - and the transitions ANCHOR_LOST and REARM (prospective replacement). "
+                      "Every other v0.4 kind uses the revision-2 contracts unchanged. Revision-1/2 records, their bytes "
+                      "and readers are unchanged; v0.2/v0.3 runs never emit the variant (per-method emitted revision: "
+                      "v0.2 -> 1, v0.3 -> 2, v0.4 -> 3)."),
 )
-SEMANTIC_V2_EMITTED_REVISION = {"btc.context-action.v0.2": 1, "btc.context-action.v0.3": 2}
+SEMANTIC_V2_EMITTED_REVISION = {"btc.context-action.v0.2": 1, "btc.context-action.v0.3": 2,
+                                "btc.context-action.v0.4": 3}
 
 
 class Record(BaseModel):
@@ -388,10 +397,30 @@ class EntryAttempt(Record):
     diagnostic: dict[str, str | None]  # registered D/N denominators (computed for every evaluable confirmation)
 
 
+class ScenarioStateV4(ScenarioState):
+    """Revision 3 (MP-003 v0.4): the structural scenario record plus the pre-confirmation A LOCAL anchor provenance.
+
+    Transitions add ANCHOR_LOST (the active anchor's V was contacted in an eligible complete interval, or its contact
+    time is ambiguous: the same unconfirmed scenario returns to WATCH, owner/latch/zones/deadline unchanged) and REARM
+    (a prospective replacement anchor from a newly published, strictly deeper complete 15m reaction). REVISE is a
+    supersession without contact. Every field is structural (cost-invariant). B/C and confirmed scenarios carry the
+    anchor fields as null / their last values."""
+
+    anchor_epoch: int | None  # local epoch of the current (or last) anchor under this scenario; None before first arm
+    anchor_status: str | None  # NONE / ACTIVE / INVALIDATED / UNASSESSABLE / SUPERSEDED / FROZEN_AT_CONFIRMATION
+    anchor_source: str | None  # the complete 15m reaction bar defining R/K of the current anchor
+    anchor_published_at: datetime | None  # actual dispatch publication (never backdated to the source bar close)
+    anchor_published_cursor: int | None  # admitted factual cursor at publication
+    previous_anchor: dict[str, str | None] | None  # lost/superseded epoch: R/K/V, status, reason, interval and its end
+    ever_armed: bool | None  # A: destination monitoring is active from the first published arm onward
+    destination_monitoring_from: datetime | None  # immutable first actual arm publication (A); None before
+    destination_monitoring_cursor: int | None
+
+
 PUBLIC_CONTRACTS: tuple[type[Record], ...] = (
     MethodRef, DependencyRef, Envelope, Observation, Landmark, PhaseState, EventContext, EventResponse, Scenario,
     MarketView, CandidatePlan, Actionability, AdviserCall, CallRevision, MaterialChange, ScenarioV3, MarketViewV3,
-    AdviserCallV3, CallRevisionV3, ScenarioState, EntryAttempt,
+    AdviserCallV3, CallRevisionV3, ScenarioState, EntryAttempt, ScenarioStateV4,
 )
 KIND_CONTRACTS: dict[str, type[Record]] = {  # revision-1 kinds emitted by v0.2 (unchanged)
     "observation": Observation, "landmark": Landmark, "phase": PhaseState, "event_context": EventContext,
@@ -405,7 +434,8 @@ KIND_CONTRACTS_V3: dict[str, type[Record]] = {  # kinds emitted by v0.3 (no 'can
     "call": AdviserCallV3, "call_revision": CallRevisionV3, "material_change": MaterialChange,
     "scenario": ScenarioState, "entry_attempt": EntryAttempt,
 }
+KIND_CONTRACTS_V4: dict[str, type[Record]] = {**KIND_CONTRACTS_V3, "scenario": ScenarioStateV4}  # v0.4 (revision 3)
 
 __all__ = ["SEMANTIC_V2_VERSION", "SEMANTIC_V2_REVISION", "PUBLIC_CONTRACTS", "KIND_CONTRACTS", "Origin", "Direction",
-           "Family"]
+           "Family", "KIND_CONTRACTS_V3", "KIND_CONTRACTS_V4"]
 _ = Decimal  # exact decimal strings in JSON mode

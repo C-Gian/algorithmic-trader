@@ -1,4 +1,5 @@
-"""Explicit adviser method selection (WP-011): the fixed MP-001 v0.2 baseline and the closed MP-002 v0.3 revision.
+"""Explicit adviser method selection (WP-011/WP-012): the fixed MP-001 v0.2 baseline, the accepted MP-002 v0.3 revision
+and the MP-003 v0.4 candidate (pre-confirmation A anchor epochs).
 
 A small dispatch table, not a trading DSL. Each release names its immutable packaged rules document and complete
 parameter register (byte-identical copies of the Director documents in ``delivery/``) and every implementation,
@@ -9,6 +10,11 @@ never handed v0.3 scenarios or clocks.
 Behaviour identity = rules_version + LF-normalized rules-document SHA-256 + register canonical SHA-256 + capability
 profile SHA-256 + input/clock/config pins + implementation + build (MP-001 §12). Stored results always show their
 pinned release, never the current default.
+
+A release that inherits other authoritative rule texts (v0.4: the MP-003 delta over MP-002 rules/disposition and the
+MP-001 rules) pins a rules MANIFEST: ``rules_sha256`` is the SHA-256 of the canonical list of every authoritative
+document's role, file name and LF-normalized SHA-256, so a changed inherited text changes the behaviour identity even
+though the delta file is unchanged (WP-012 §3). Single-document releases keep their existing single-file hash.
 """
 
 from __future__ import annotations
@@ -47,13 +53,22 @@ class Release:
     report_version: str
     reconciliation_version: str
     deep_version: str
+    inherited: tuple[tuple[str, Path], ...] = ()  # (role, file) authoritative inherited rule texts (rules manifest)
+    status_label: str = ""
 
     # -- immutable method documents --------------------------------------------------------------------------------
 
     def rules_sha256(self) -> str:
         if self.key == "v0.2":
             return idn.rules_sha256()
-        return _sha_lf(self.rules_file)
+        if not self.inherited:
+            return _sha_lf(self.rules_file)
+        return hashlib.sha256(canonical(self.rules_manifest())).hexdigest()
+
+    def rules_manifest(self) -> list[dict[str, str]]:
+        """Every authoritative rule text of this release: the delta first, then the inherited texts in their order."""
+        docs = [("DELTA", self.rules_file)] + list(self.inherited)
+        return [{"role": role, "file": f.name, "sha256_lf": _sha_lf(f)} for role, f in docs]
 
     def register(self) -> dict[str, Any]:
         if self.key == "v0.2":
@@ -88,10 +103,11 @@ class Release:
 
     def summary(self) -> dict[str, Any]:
         return {"method": self.key, "label": self.label, "purpose": self.purpose, "status": self.status,
-                "model": self.model, "rules_version": self.rules_version, "rules_sha256": self.rules_sha256(),
+                "status_label": self.status_label, "economic_usefulness": "UNVALIDATED", "model": self.model, "rules_version": self.rules_version, "rules_sha256": self.rules_sha256(),
                 "register_sha256": self.register_sha256(), "implementation": self.implementation,
                 "evaluator_implementation": self.evaluator_implementation, "engine_format": self.engine_format,
-                "report_version": self.report_version}
+                "report_version": self.report_version,
+                "rules_manifest": self.rules_manifest() if self.inherited else None}
 
 
 def _sha_lf(path: Path) -> str:
@@ -108,7 +124,7 @@ def _register(path: Path, model: str, rules_version: str) -> dict[str, Any]:
 
 
 V02 = Release(
-    key="v0.2", label="Original v0.2", status="ACCEPTED_BASELINE",
+    key="v0.2", label="Original v0.2", status="ACCEPTED_BASELINE", status_label="accepted baseline",
     purpose="The accepted MP-001 adviser exactly as evaluated so far (fixed comparison baseline).",
     model=idn.MODEL_ID, rules_version=idn.RULES_VERSION, rules_file=idn.RULES_FILE, register_file=idn.REGISTER_FILE,
     implementation=idn.IMPLEMENTATION_ID, evaluator_implementation="adviser.evaluator.v2",
@@ -118,7 +134,7 @@ V02 = Release(
 
 V03 = Release(
     key="v0.3", label="Revised v0.3 — confirmation then usable entry",
-    status="ENGINEERING_REVIEW_PENDING",
+    status="TECHNICALLY_ACCEPTED", status_label="technically accepted (WP-011, 3fcbfc5)",
     purpose=("MP-002: scenarios persist independently of entry; after an A confirmation the adviser may wait for a "
              "later usable price inside the reaction corridor instead of rejecting at once."),
     model="btc.context-action.v0.3", rules_version="mp002.rules.v0.3",
@@ -129,7 +145,25 @@ V03 = Release(
     evaluator_state_format="algotrader.adviser-evaluation-state.v2", engine_format="observe.stream.v4",
     report_version="adviser.report.v3", reconciliation_version="6", deep_version="7")
 
-RELEASES: dict[str, Release] = {r.key: r for r in (V02, V03)}
+V04 = Release(
+    key="v0.4", label="Candidate v0.4 — reaction anchor may be replaced before confirmation",
+    status="ENGINEERING_REVIEW_PENDING", status_label="engineering review pending",
+    purpose=("MP-003: before confirmation a touch of the A reaction stop V invalidates only that local anchor; the "
+             "same scenario waits for a new, deeper completed 15m reaction. Confirmation, waiting entry, costs, "
+             "targets and stops after confirmation are unchanged from v0.3."),
+    model="btc.context-action.v0.4", rules_version="mp003.rules.v0.4",
+    rules_file=idn.METHOD_DIR / "MP-003-A-REACTION-ANCHOR-DISPOSITION.md",
+    register_file=idn.METHOD_DIR / "MP-003-PARAMETERS.json",
+    implementation="adviser.core.v4", evaluator_implementation="adviser.evaluator.v3",
+    core_state_format="algotrader.adviser-state.v4", runtime_format="algotrader.adviser-runtime.v4",
+    evaluator_state_format="algotrader.adviser-evaluation-state.v2", engine_format="observe.stream.v5",
+    report_version="adviser.report.v4", reconciliation_version="7", deep_version="8",
+    inherited=(("INHERITED_MP002_RULES", idn.METHOD_DIR / "MP-002-SCENARIO-CONFIRMATION-ENTRY-PROPOSAL.md"),
+               ("INHERITED_MP002_DISPOSITION", idn.METHOD_DIR / "MP-002-DIRECTOR-DISPOSITION.md"),
+               ("INHERITED_MP001_RULES", idn.METHOD_DIR / "MP-001-INTEGRATED-METHOD-PROPOSAL.md")))
+
+RELEASES: dict[str, Release] = {r.key: r for r in (V02, V03, V04)}
+SCENARIO_METHODS = frozenset({"v0.3", "v0.4"})  # MP-002 structural-scenario lineage (scenario/entry_attempt kinds)
 BY_MODEL: dict[str, Release] = {r.model: r for r in RELEASES.values()}
 
 
@@ -153,6 +187,11 @@ def for_model(model: str) -> Release:
 def for_engine(adviser: dict[str, Any]) -> Release:
     """Release pinned by an engine/state document (absent ``method`` = v0.2: every WP-009 run)."""
     return get(adviser.get("method") or "v0.2")
+
+
+def is_scenario_method(key: str | None) -> bool:
+    """True for releases emitting MP-002 structural scenarios and child entry attempts (v0.3, v0.4)."""
+    return (key or DEFAULT) in SCENARIO_METHODS
 
 
 def selectable() -> list[dict[str, Any]]:

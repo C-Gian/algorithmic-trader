@@ -54,7 +54,7 @@ def bench3(database_url, artifact_root, tmp_path, monkeypatch):
 def _start(page, method: str, speed: str = "0") -> str:
     page.get_by_test_id("run-type-adviser-input").check()
     page.get_by_test_id(f"method-{method}-input").check()
-    expect(page.get_by_test_id("eval-method-pin")).to_have_text("MP-001 v0.2" if method == "v0.2" else "MP-002 v0.3")
+    expect(page.get_by_test_id("eval-method-pin")).to_have_text({"v0.2": "MP-001 v0.2", "v0.3": "MP-002 v0.3"}[method])
     page.get_by_test_id("eval-speed").select_option(speed)
     before = page.evaluate("() => window.location.hash")
     page.get_by_test_id("start-evaluation").click()
@@ -71,7 +71,7 @@ def test_owner_compares_original_and_revised_methods_on_the_same_pack(bench3, br
     card.get_by_test_id("pack-prepare").click()
     expect(card.get_by_test_id("pack-state")).to_have_text("Ready", timeout=120_000)
     expect(page.get_by_test_id("method-choice")).to_contain_text("Original v0.2")
-    expect(page.get_by_test_id("method-v0.3")).to_contain_text("Engineering review pending")
+    expect(page.get_by_test_id("method-v0.3")).to_contain_text("Technically accepted")  # WP-012 status correction
     expect(page.get_by_test_id("method-v0.2-input")).to_be_checked()  # explicit default: the baseline
 
     e2 = _start(page, "v0.2")

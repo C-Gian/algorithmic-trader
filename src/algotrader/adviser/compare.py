@@ -1,6 +1,9 @@
-"""Two-run adviser comparison (WP-011 §6): an honest, copyable side-by-side of two ALREADY EXISTING adviser evaluation
-reports (typically Original v0.2 then Revised v0.3 on the same prepared pack). It never launches, resumes or replays
-anything; selecting or refreshing a comparison only reads committed reports.
+"""Two-run adviser comparison (WP-011 §6, generalized by WP-012 §5): an honest, copyable side-by-side of two ALREADY
+EXISTING adviser evaluation reports with explicit roles - A is the BASELINE (e.g. accepted v0.3, or Original v0.2) and
+B the CANDIDATE (e.g. v0.4) on the same prepared pack. It never launches, resumes or replays anything; selecting or
+refreshing a comparison only reads committed reports. An earlier completed baseline run is reused when its pins match:
+a different build commit alone is not a different input profile (the build is not a comparability pin), and the
+method label stored with a prepared pack describes its input requirements, not the adviser chosen for a run.
 
 Comparable only when the material inputs are identical: pack id and pack manifest, feed content identity, availability
 and clock policy, instrument tick and channels, evaluation window and clock end, capability profile and the
@@ -17,7 +20,15 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import Any
 
-COMPARISON_VERSION = "adviser.comparison.v1"
+COMPARISON_VERSION = "adviser.comparison.v1"  # shape unchanged; roles/limitations/anchors are additive keys
+SCENARIO_METHODS = ("v0.3", "v0.4")
+MP003_LIMITATION = {
+    "id": "V04_MP003_PRECONFIRMATION_ANCHOR_DELTA",
+    "text": ("v0.4 differs from v0.3 only in the A pre-confirmation anchor domain (a local V touch invalidates the anchor, "
+             "not the scenario; a newer strictly deeper complete reaction may re-arm prospectively; destination "
+             "monitoring starts at the first published arm). Costs, targets, confirmation clocks, the RETURN entry and "
+             "the evaluator are unchanged, but structural scenarios can survive longer, so later births, confirmations "
+             "and slot use can differ downstream: the integrated difference is not a per-call attribution.")}
 DISLOCATION_LIMITATION = {
     "id": "V02_DISLOCATION_BASELINE_DEFECT_CORRECTED_IN_V03",
     "text": ("Additional version difference: the frozen v0.2 baseline keeps its acknowledged dislocation-baseline defect "
@@ -79,8 +90,9 @@ def comparability(a: dict, b: dict) -> dict[str, Any]:
     verdict = ("NOT_ADVISER_RUNS" if not_adviser else "NONCOMPARABLE" if diffs else
                "INCOMPLETE" if incomplete else "COMPARABLE")
     return {"verdict": verdict, "differences": diffs, "incomplete": incomplete, "not_adviser_runs": not_adviser,
-            "expected_differences": ["method model/rules/register/implementation identity",
-                                     "evaluator implementation/profile ids (v2 vs v3)"],
+            "expected_differences": ["method model/rules/register/implementation identity", "build commit"]
+            + (["evaluator implementation/profile ids (v2 vs v3)"] if "v0.2" in {a["method"], b["method"]}
+               and a["method"] != b["method"] else []),
             "same_method": a["method"] == b["method"]}
 
 
@@ -108,7 +120,7 @@ def _summary(x: dict) -> dict[str, Any]:
                                              "sum_stress_price_net", "total_net")},
         "view_1h": vs.get("1h"), "view_4h": vs.get("4h"),
     }
-    if x["method"] == "v0.3":
+    if x["method"] in SCENARIO_METHODS:
         out["registered"] = {"a_confirmations": f.get("a_confirmations"), "a_denominators": f.get("a_denominators"),
                              "a_routing": f.get("a_routing"), "waiting": f.get("waiting"),
                              "issued_by_family_mode": f.get("issued_by_family_mode"),
@@ -116,6 +128,8 @@ def _summary(x: dict) -> dict[str, Any]:
                              "evidence_threshold": f.get("evidence_threshold"),
                              "a_destination_before_confirmation":
                                  (f.get("a_destination_before_confirmation") or {}).get("count")}
+        if x["method"] == "v0.4":
+            out["anchors"] = a.get("anchors")
     else:
         out["registered"] = {"births": f.get("births"), "arms": f.get("arms"),
                              "trigger_evaluations": f.get("trigger_evaluations"),
@@ -141,7 +155,7 @@ def build(a: dict, b: dict) -> dict[str, Any]:
                   "primary_sum_price_net": _delta(sa["primary"]["sum_price_net"], sb["primary"]["sum_price_net"]),
                   "primary_sum_stress_price_net": _delta(sa["primary"]["sum_stress_price_net"],
                                                          sb["primary"]["sum_stress_price_net"])}
-    ev = (sb.get("registered") or {}).get("evidence_threshold") if b["method"] == "v0.3" else \
+    ev = (sb.get("registered") or {}).get("evidence_threshold") if b["method"] in SCENARIO_METHODS else \
         (sa.get("registered") or {}).get("evidence_threshold")
     if comp["verdict"] != "COMPARABLE":
         conclusion = {"verdict": comp["verdict"],
@@ -157,8 +171,12 @@ def build(a: dict, b: dict) -> dict[str, Any]:
                               "distinct A RETURN owners entered at 60 s (or none): frequency/practicality not "
                               "validated. More calls are not improvement by themselves."}
     methods = {a["method"], b["method"]}
-    limitations = [DISLOCATION_LIMITATION] if methods == {"v0.2", "v0.3"} else []
+    limitations = [DISLOCATION_LIMITATION] if "v0.2" in methods and methods & set(SCENARIO_METHODS) else []
+    if "v0.4" in methods and len(methods) > 1:
+        limitations.append(MP003_LIMITATION)
     return {"comparison_version": COMPARISON_VERSION, "a": sa, "b": sb, "comparability": comp,
+            "roles": {"baseline": {"slot": "A", "method": a["method"], "evaluation_id": a["evaluation_id"]},
+                      "candidate": {"slot": "B", "method": b["method"], "evaluation_id": b["evaluation_id"]}},
             "limitations": limitations,
             "pins": {"a": {**a["pins"], "pack_manifest_sha256": a["pack_manifest_sha256"],
                            "capability_profile_sha256": a["capability_profile_sha256"]},
@@ -169,15 +187,16 @@ def build(a: dict, b: dict) -> dict[str, Any]:
                            "b": {k: b[k] for k in ("model", "rules_version", "rules_sha256", "register_sha256",
                                                    "implementation", "identity_sha256", "evaluator_sha256")}},
             "deltas_b_minus_a": deltas, "conclusion": conclusion,
-            "scope": ("Integrated VERSION comparison on the same prepared pack and profile: structural lifecycle, "
-                      "clocks, the RETURN entry and (v0.2 vs v0.3) the dislocation-veto correction all changed "
-                      "together, so the difference does not identify the RETURN effect alone. Hypothetical "
-                      "normalized one-unit paths; no orders, sizing or account.")}
+            "scope": ("Integrated VERSION comparison on the same prepared pack and profile (A = baseline, B = "
+                      "candidate): every rule difference between the two pinned releases acts together (v0.2 -> v0.3: "
+                      "structural lifecycle, clocks, the RETURN entry and the dislocation-veto correction; v0.3 -> "
+                      "v0.4: the pre-confirmation A anchor domain), so the difference is not a per-rule or per-call "
+                      "attribution. Hypothetical normalized one-unit paths; no orders, sizing or account.")}
 
 
 def render_markdown(c: dict[str, Any]) -> str:
     a, b, comp = c["a"], c["b"], c["comparability"]
-    lines = ["# Adviser comparison — " + f"{a['method']} vs {b['method']}", "",
+    lines = ["# Adviser comparison — " + f"baseline {a['method']} (A) vs candidate {b['method']} (B)", "",
              f"> {c['scope']}", "",
              f"**Comparability: {comp['verdict']}**"]
     for d in comp["differences"]:
@@ -207,8 +226,16 @@ def render_markdown(c: dict[str, Any]) -> str:
                   f"censored {pr['censored']} · unresolved {pr['unresolved']} · price-net sum {pr['sum_price_net']} · "
                   f"stress {pr['sum_stress_price_net']} · total net {pr['total_net']}",
                   f"- Registered funnel: {s['registered']}"]
+        if s.get("anchors"):
+            o, ev = s["anchors"].get("owners") or {}, s["anchors"].get("events") or {}
+            lines.append(f"- Pre-confirmation anchors: owners lost {o.get('lost_anchor')} · re-armed "
+                         f"{o.get('rearmed_by_replacement')} · confirmed after replacement "
+                         f"{o.get('confirmed_after_replacement')} · structural end without replacement "
+                         f"{o.get('structural_terminal_without_replacement')}; events: certified contacts "
+                         f"{ev.get('certified_contacts')} · ambiguous {ev.get('ambiguous_anchors')} · replacements "
+                         f"{ev.get('replacements')}")
     if c["deltas_b_minus_a"]:
-        lines += ["", "## B − A (integrated, not causal for RETURN alone)",
+        lines += ["", "## B − A (candidate minus baseline; integrated, not a per-rule attribution)",
                   *(f"- {k}: {v}" for k, v in c["deltas_b_minus_a"].items())]
     lines += ["", f"**Conclusion: {c['conclusion']['verdict']}** — {c['conclusion']['text']}"]
     return "\n".join(lines) + "\n"

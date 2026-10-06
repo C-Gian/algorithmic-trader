@@ -25,7 +25,7 @@ from datetime import datetime
 from typing import Any
 
 from ..feed.ordering import canonical
-from .contracts import KIND_CONTRACTS, KIND_CONTRACTS_V3
+from .contracts import KIND_CONTRACTS, KIND_CONTRACTS_V3, KIND_CONTRACTS_V4
 from .core import INITIAL_JOURNAL
 from .evaluator import INITIAL_RECORDS
 
@@ -42,6 +42,14 @@ SCOPE_V6 = (" Version 6 (WP-011 MP-002 v0.3 adviser runs, engine observe.stream.
             "terminal at most once, contiguous scenario transitions, every child entry attempt linked to a born "
             "scenario with at most one ISSUE and at most one terminal, and every v0.3 call linked to exactly one "
             "issuing entry attempt and its scenario. PASS remains runtime integrity, not profit or forecast quality.")
+SCOPE_V7 = (" Version 7 (WP-012 MP-003 v0.4 adviser runs, engine observe.stream.v5) applies the version-6 binding and "
+            "lineage checks to the pinned v0.4 release (MP-003 rules manifest: delta plus inherited MP-002 rules/"
+            "disposition and MP-001 rules, register, runtime and engine format) and additionally checks the "
+            "pre-confirmation A anchor lineage: anchor epochs contiguous from 1, first ARM once, REVISE only from an "
+            "active anchor, ANCHOR_LOST only from ARMED, REARM only after a loss, every anchor publication equal to "
+            "its own dispatch time, an immutable destination-monitoring origin equal to the first arm publication, "
+            "no anchor transition after the first confirmation and a confirmation strictly after its anchor's "
+            "publication. PASS remains runtime integrity, not profit or forecast quality.")
 
 
 def _chain(rows: list[dict], initial: str) -> tuple[list[str], str | None]:
@@ -72,10 +80,11 @@ def checks(check, *, status: str, ranges: list[dict], terminal: dict | None, cur
 
     summary: dict[str, Any] = {"identity": engine["adviser"]["identity"], "journal_records": len(journal),
                                "evaluation_records": len(records)}
-    v3 = engine["adviser"].get("method") == "v0.3"
-    kinds = KIND_CONTRACTS_V3 if v3 else KIND_CONTRACTS
+    method = engine["adviser"].get("method")
+    v3 = method in ("v0.3", "v0.4")  # MP-002 scenario lineage (v0.4 inherits it)
+    kinds = KIND_CONTRACTS_V4 if method == "v0.4" else KIND_CONTRACTS_V3 if v3 else KIND_CONTRACTS
     if v3:
-        summary["method"] = "v0.3"
+        summary["method"] = method
     if v3:
         from .engine import config_from_engine, release
 
@@ -232,11 +241,58 @@ def checks(check, *, status: str, ranges: list[dict], terminal: dict | None, cur
     lp += [f"attempt {a} ended without a birth" for a in ends if a not in births]
     if v3:
         lp += _v3_lineage(journal, calls)
+    if method == "v0.4":
+        lp += _v4_anchor_lineage(journal)
     check("adviser_lineage_immutability", not lp, "; ".join(lp[:5]) or
           f"{len(calls)} unique call(s), contiguous revisions, one terminal each; {len(births)} attempt(s) born once "
           "and ended at most once; revisions never restate original geometry")
     summary["calls"] = len(calls)
     return summary
+
+
+def _v4_anchor_lineage(journal: list[dict]) -> list[str]:
+    """MP-003 pre-confirmation A anchor lineage from the stored scenario records (WP-012 §4/§5)."""
+    lp: list[str] = []
+    state: dict[str, dict] = {}
+    anchor_moves = ("ARM", "REVISE", "REARM", "ANCHOR_LOST")
+    for e in journal:
+        if e["kind"] != "scenario" or e["record"]["family"] != "A":
+            continue
+        rec = e["record"]
+        sid, tr, at = rec["scenario_id"], rec["transition"], rec["env"]["clock_time"]
+        st = state.setdefault(sid, {"epoch": 0, "status": "WATCH", "origin": None, "confirmed": False, "pub": None})
+        if tr in anchor_moves and st["confirmed"]:
+            lp.append(f"scenario {sid} anchor transition {tr} after its first confirmation")
+        if tr in ("ARM", "REVISE", "REARM"):
+            want = {"ARM": ("WATCH", 0), "REVISE": ("ARMED", None), "REARM": ("WATCH", None)}[tr]
+            if st["status"] != want[0] or (want[1] is not None and st["epoch"] != want[1])                     or (tr == "REARM" and st["epoch"] == 0):
+                lp.append(f"scenario {sid} {tr} from status {st['status']} epoch {st['epoch']}")
+            if rec["anchor_epoch"] != st["epoch"] + 1:
+                lp.append(f"scenario {sid} {tr} epoch {rec['anchor_epoch']} is not {st['epoch'] + 1}")
+            if _iso_z(rec["anchor_published_at"]) != at:
+                lp.append(f"scenario {sid} {tr} published at {rec['anchor_published_at']} not its dispatch {at}")
+            if tr == "ARM":
+                st["origin"] = (rec["destination_monitoring_from"], rec["destination_monitoring_cursor"])
+                if _iso_z(rec["destination_monitoring_from"]) != at:
+                    lp.append(f"scenario {sid} destination monitoring origin differs from its first arm")
+            st.update(epoch=rec["anchor_epoch"] or 0, status="ARMED", pub=at)
+        elif tr == "ANCHOR_LOST":
+            if st["status"] != "ARMED" or rec["anchor_epoch"] != st["epoch"]:
+                lp.append(f"scenario {sid} ANCHOR_LOST without an active anchor epoch {st['epoch']}")
+            st["status"] = "WATCH"
+        elif tr == "CONFIRM":
+            if st["status"] != "ARMED" or not st["pub"] or not at > st["pub"]:
+                lp.append(f"scenario {sid} CONFIRM not strictly after its active anchor publication")
+            if rec["anchor_status"] != "FROZEN_AT_CONFIRMATION":
+                lp.append(f"scenario {sid} CONFIRM does not freeze its anchor")
+            st.update(status="CONFIRMED", confirmed=True)
+        if st["origin"] is not None and tr != "ARM" and                 (rec["destination_monitoring_from"], rec["destination_monitoring_cursor"]) != st["origin"]:
+            lp.append(f"scenario {sid} destination monitoring origin changed at {tr}")
+    return lp
+
+
+def _iso_z(x) -> str | None:
+    return None if x is None else str(x).replace("+00:00", "Z")
 
 
 def _v3_lineage(journal: list[dict], calls: dict[str, dict]) -> list[str]:

@@ -857,7 +857,8 @@ export interface Evaluation {
 }
 
 export interface AdviserMethodPin {
-  method: "v0.2" | "v0.3" | string; label: string; status: string; model: string; pinned_at_preparation: boolean;
+  method: "v0.2" | "v0.3" | "v0.4" | string; label: string; status: string; model: string; pinned_at_preparation: boolean;
+  status_label?: string; economic_usefulness?: string;
 }
 
 export interface CapabilityRow {
@@ -927,7 +928,9 @@ export interface AdviserSection {
   section: string; pending?: boolean; text?: string;
   /** adviser.report.v2 (v0.2) or adviser.report.v3 (MP-002 v0.3: registered funnel/denominators). */
   report_version?: string;
-  method?: { method: string; model: string; status: string };
+  method?: { method: string; model: string; status: string; status_label?: string; economic_usefulness?: string };
+  /** adviser.report.v4 (MP-003 v0.4): pre-confirmation anchor diagnostics (owner level vs event level). */
+  anchors?: AnchorDiagnostics;
   by_family_mode?: Record<string, { calls: number; entered: number; target: number; stop: number; other_closed: number;
                                     no_entry: number; sum_price_net: string }>;
   identity: Record<string, unknown>;
@@ -969,6 +972,14 @@ export interface AdviserFunnelV3 {
   guidance_retired_by_scenario_terminal: number;
 }
 
+export interface AnchorDiagnostics {
+  owners: { lost_anchor: number; lost_anchor_warmup_origin: number; rearmed_by_replacement: number;
+            confirmed_after_replacement: number; structural_terminal_without_replacement: number };
+  events: { anchor_losses: number; certified_contacts: number; ambiguous_anchors: number; loss_reasons: Record<string, number>;
+            replacements: number; supersessions_without_contact: number };
+  terminals_without_replacement: Record<string, number>; calls_after_replacement: number; note: string;
+}
+
 export interface ComparisonRun {
   evaluation_id: string; method: string; model: string; implementation: string; status: string; assurance: string;
   report_version: string | null;
@@ -977,6 +988,7 @@ export interface ComparisonRun {
   calls_by_family_mode?: Record<string, number> | null; entry_available_minutes_median: string | null;
   longest_no_call_interval_hours: string | null; thesis_terminals: Record<string, number> | null;
   primary: Record<string, number | string | null>; registered: Record<string, unknown>;
+  anchors?: AnchorDiagnostics | null;
 }
 export interface Comparison {
   comparison_version: string; a: ComparisonRun; b: ComparisonRun;
@@ -986,6 +998,8 @@ export interface Comparison {
   identities: { a: Record<string, string | null>; b: Record<string, string | null> };
   deltas_b_minus_a: Record<string, string | null> | null; conclusion: { verdict: string; text: string }; scope: string;
   limitations?: { id: string; text: string }[];
+  roles?: { baseline: { slot: string; method: string; evaluation_id: string };
+            candidate: { slot: string; method: string; evaluation_id: string } };
 }
 
 // ---- Evaluation packs (algotrader.corpus-pack.v1; data preparation only, no adviser) ----
@@ -1070,7 +1084,7 @@ export const evalApi = {
   start: (chunkId: string, speed: number, paused: boolean) =>
     req<Evaluation>(E, { method: "POST", body: JSON.stringify({ chunk_id: chunkId, speed, paused }) }),
   startPack: (packId: string, speed: number, paused: boolean, acknowledge: boolean,
-              runType: "observation_only" | "adviser_evaluation" = "observation_only", method?: "v0.2" | "v0.3") =>
+              runType: "observation_only" | "adviser_evaluation" = "observation_only", method?: "v0.2" | "v0.3" | "v0.4") =>
     req<Evaluation>(E, { method: "POST", body: JSON.stringify({ pack_id: packId, speed, paused, acknowledge_limitations: acknowledge,
                                                               run_type: runType,
                                                               ...(runType === "adviser_evaluation" && method ? { method } : {}) }) }),

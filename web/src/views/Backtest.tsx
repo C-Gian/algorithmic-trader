@@ -18,7 +18,7 @@ import {
 } from "./replay/MarketReplay";
 import { runStory } from "./replay/runStory";
 import { AdviserProgress, AdviserSummary, CallTimeline } from "./AdviserResult";
-import { METHOD_TEXT } from "../adviser";
+import { METHOD_PURPOSE, METHOD_STATUS, METHOD_TEXT } from "../adviser";
 
 // Historical Workbench (route #backtest kept): the Owner's evaluation workbench, organised as one guided task
 // (prepare data -> start a check -> follow it and get the report) over the SAME machinery:
@@ -330,7 +330,7 @@ function RunSetup({ corpus, preferred, packs, presets, onStarted }: {
   // default: Adviser evaluation when a pack is selected, Market replay otherwise, until the Owner picks explicitly
   const [runChoice, setRunType] = useState<"adviser_evaluation" | "observation_only" | null>(null);
   // WP-011: the adviser method is chosen explicitly before Start (default: the original v0.2 baseline)
-  const [method, setMethod] = useState<"v0.2" | "v0.3">("v0.2");
+  const [method, setMethod] = useState<"v0.2" | "v0.3" | "v0.4">("v0.2");
   const ids = prepared.map((c) => c.chunk_id).join();
   useEffect(() => {
     // follow the month selected in step 1 when it is prepared; otherwise keep a valid prepared month
@@ -407,21 +407,20 @@ function RunSetup({ corpus, preferred, packs, presets, onStarted }: {
         {adviser && (
           <div className="run-types" role="radiogroup" aria-label="Adviser method" data-testid="method-choice">
             <div className="setup-col-title">Adviser method</div>
-            {(["v0.2", "v0.3"] as const).map((m) => (
+            {(["v0.2", "v0.3", "v0.4"] as const).map((m) => (
               <label key={m} className={cx("run-type", method === m && "is-on")} data-testid={`method-${m}`}>
                 <input type="radio" name="adviser-method" checked={method === m} onChange={() => setMethod(m)}
                        data-testid={`method-${m}-input`} />
                 <span>
                   <b>{METHOD_TEXT[m]}</b>
-                  <span className="muted small-text">{m === "v0.2"
-                    ? "The accepted MP-001 adviser exactly as evaluated so far — the fixed baseline for comparison."
-                    : "MP-002: a confirmed continuation may wait for a later usable price inside its reaction corridor instead of being rejected at once; scenarios persist independently of entry."}</span>
+                  <span className="muted small-text" data-testid={`method-${m}-purpose`}>{METHOD_PURPOSE[m]}</span>
                 </span>
-                <Badge tone={m === "v0.2" ? "pos" : "warn"}>{m === "v0.2" ? "Baseline" : "Engineering review pending"}</Badge>
+                <Badge tone={METHOD_STATUS[m].tone}>{METHOD_STATUS[m].text}</Badge>
               </label>
             ))}
-            <span className="muted small-text">Same prepared pack and profile for both methods; the run is pinned to the
-              method you choose here. Nothing starts in the background and nothing is downloaded.</span>
+            <span className="muted small-text">Same prepared pack and profile for every method; the run is pinned to the
+              method you choose here. Economic usefulness is unvalidated for every version. Nothing starts in the
+              background and nothing is downloaded.</span>
           </div>
         )}
         {adviser ? (
@@ -455,7 +454,7 @@ function RunSetup({ corpus, preferred, packs, presets, onStarted }: {
         )}
         {adviser && (
           <div className="setup-facts" data-testid="eval-adviser-pins">
-            <Badge tone="brand" icon="shield" testid="eval-method-pin">{method === "v0.2" ? "MP-001 v0.2" : "MP-002 v0.3"}</Badge>
+            <Badge tone="brand" icon="shield" testid="eval-method-pin">{method === "v0.2" ? "MP-001 v0.2" : method === "v0.3" ? "MP-002 v0.3" : "MP-003 v0.4"}</Badge>
             <Badge tone="info" title="Historical execution profile: modeled trade-minute closes, never measured quotes">HISTORICAL_BASE</Badge>
             <Badge tone="info" title="Funding completeness unproven: total net is unavailable">Price-net only</Badge>
             <Badge tone="pending" title="No historical as-known event calendar">Calendar unknown</Badge>
@@ -935,13 +934,18 @@ function ComparePanel({ items }: { items: Evaluation[] | null }) {
   const advisers = (items ?? []).filter((e) => e.run_type === "adviser_evaluation");
   const [a, setA] = useState("");
   const [b, setB] = useState("");
+  const [picked, setPicked] = useState(false); // defaults follow the run list until the Owner chooses a pair
   const [cmp, setCmp] = useState<Comparison | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [copied, runCopy] = useCopyFeedback();
   useEffect(() => {
-    // default pair: the latest v0.2 run (A) against the latest v0.3 run (B); the Owner can change both
-    if (!a) setA(advisers.find((e) => e.method?.method === "v0.2")?.evaluation_id ?? "");
-    if (!b) setB(advisers.find((e) => e.method?.method === "v0.3")?.evaluation_id ?? "");
+    // default pair: baseline A = the latest v0.3 run (else v0.2), candidate B = the latest v0.4 run (else v0.3); the
+    // Owner can change both. Only completed reports are read; nothing is launched or rebuilt.
+    const latest = (m: string) => advisers.find((e) => e.method?.method === m)?.evaluation_id;
+    if (picked) return;
+    const hasV4 = !!latest("v0.4");
+    setA((hasV4 ? latest("v0.3") ?? latest("v0.2") : latest("v0.2")) ?? "");
+    setB((hasV4 ? latest("v0.4") : latest("v0.3")) ?? "");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [advisers.map((e) => e.evaluation_id).join()]);
   if (advisers.length < 2) return null;
@@ -963,14 +967,14 @@ function ComparePanel({ items }: { items: Evaluation[] | null }) {
     <Card title="Compare two adviser runs" icon="compass" testid="compare-card"
           eyebrow="Same prepared pack and profile · read-only · nothing is launched">
       <div className="compare-pick">
-        <Field label="A (usually Original v0.2)">
-          <select className="control" value={a} onChange={(e) => { setA(e.target.value); setCmp(null); }} data-testid="compare-a">
+        <Field label="A · baseline (e.g. accepted v0.3)">
+          <select className="control" value={a} onChange={(e) => { setA(e.target.value); setPicked(true); setCmp(null); }} data-testid="compare-a">
             <option value="">choose a run</option>
             {advisers.map((e) => <option key={e.evaluation_id} value={e.evaluation_id}>{label(e)}</option>)}
           </select>
         </Field>
-        <Field label="B (usually Revised v0.3)">
-          <select className="control" value={b} onChange={(e) => { setB(e.target.value); setCmp(null); }} data-testid="compare-b">
+        <Field label="B · candidate (e.g. v0.4)">
+          <select className="control" value={b} onChange={(e) => { setB(e.target.value); setPicked(true); setCmp(null); }} data-testid="compare-b">
             <option value="">choose a run</option>
             {advisers.map((e) => <option key={e.evaluation_id} value={e.evaluation_id}>{label(e)}</option>)}
           </select>
@@ -997,7 +1001,7 @@ function ComparePanel({ items }: { items: Evaluation[] | null }) {
           )}
           <div className="small-table-wrap">
             <table className="small-table" data-testid="compare-table">
-              <thead><tr><th></th><th>A · {cmp.a.method}</th><th>B · {cmp.b.method}</th></tr></thead>
+              <thead><tr><th></th><th>A · baseline {cmp.a.method}</th><th>B · candidate {cmp.b.method}</th></tr></thead>
               <tbody>
                 <tr><td>Status / assurance</td><td>{cmp.a.status} · {cmp.a.assurance}</td><td>{cmp.b.status} · {cmp.b.assurance}</td></tr>
                 <tr><td>Calls</td><td className="mono">{cmp.a.calls ?? "—"}</td><td className="mono">{cmp.b.calls ?? "—"}</td></tr>
@@ -1010,6 +1014,11 @@ function ComparePanel({ items }: { items: Evaluation[] | null }) {
                   <td className="mono">{String(cmp.b.primary.target_exits ?? "—")} / {String(cmp.b.primary.stop_exits ?? "—")}</td></tr>
                 <tr><td>Price-net sum (normalized)</td><td className="mono">{String(cmp.a.primary.sum_price_net ?? "—")}</td>
                   <td className="mono">{String(cmp.b.primary.sum_price_net ?? "—")}</td></tr>
+                {(cmp.a.anchors || cmp.b.anchors) && (
+                  <tr data-testid="compare-anchors"><td>Anchors lost / re-armed / confirmed after (owners)</td>
+                    {[cmp.a, cmp.b].map((s, i) => (
+                      <td key={i} className="mono">{s.anchors ? `${s.anchors.owners.lost_anchor} / ${s.anchors.owners.rearmed_by_replacement} / ${s.anchors.owners.confirmed_after_replacement}` : "—"}</td>))}
+                  </tr>)}
               </tbody>
             </table>
           </div>

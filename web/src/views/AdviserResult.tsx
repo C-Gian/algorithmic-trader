@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { adviserApi, CallDetail, ENTRY_TEXT, EXPECTED_TEXT, reasonText, ROW_TEXT, THESIS_TEXT } from "../adviser";
+import { adviserApi, CallDetail, ENTRY_TEXT, EXPECTED_TEXT, reasonText, ROW_TEXT, scenarioPhrase, ScenarioState,
+  THESIS_TEXT } from "../adviser";
 import { AdviserSection, ObsReplay } from "../api";
 import { fmtNum, fmtTime, humanize } from "../lib/format";
 import { Badge, Card, cx, Metric, Notice, Skeleton } from "../ui/primitives";
@@ -61,7 +62,7 @@ function V3Funnel({ a }: { a: AdviserSection }) {
   const dn = f.a_denominators;
   return (
     <div className="stack" data-testid="adv-v3-funnel">
-      <div className="adv-section-title">Revised v0.3 — confirmation then usable entry</div>
+      <div className="adv-section-title">Confirmation then usable entry (MP-002 registered funnel)</div>
       <div className="adv-metrics">
         <Metric label="A confirmations" value={String(f.a_confirmations ?? 0)} testid="adv-v3-confirmations"
                 hint={`D ${dn.D_geometrically_evaluable} evaluable · N ${dn.N_initially_empty_corridor_or_fixed_k_economics} with no usable corridor · N/D ${dn.N_over_D ?? "—"}`} />
@@ -78,6 +79,28 @@ function V3Funnel({ a }: { a: AdviserSection }) {
         <div className="small-text muted">Waiting endings: {Object.entries(f.waiting.endings).map(([k, n]) => `${humanize(k)} ${n}`).join(" · ")}</div>
       )}
       <p className="muted small-text">{dn.note} {f.evidence_threshold.note}</p>
+    </div>
+  );
+}
+
+/** MP-003 v0.4 pre-confirmation anchor diagnostics: owner level (distinct scenarios) versus event level. */
+function V4Anchors({ a }: { a: AdviserSection }) {
+  const x = a.anchors;
+  if (!x) return null;
+  return (
+    <div className="stack" data-testid="adv-v4-anchors">
+      <div className="adv-section-title">Candidate v0.4 — reaction anchors before confirmation</div>
+      <div className="adv-metrics">
+        <Metric label="Scenarios that lost an anchor" value={String(x.owners.lost_anchor)} testid="adv-v4-lost"
+                hint={`events: ${x.events.certified_contacts} certified V touches · ${x.events.ambiguous_anchors} ambiguous`} />
+        <Metric label="Re-armed by a deeper completed reaction" value={String(x.owners.rearmed_by_replacement)}
+                testid="adv-v4-rearmed" hint={`${x.events.replacements} replacement events`} />
+        <Metric label="Confirmed after a replacement" value={String(x.owners.confirmed_after_replacement)}
+                testid="adv-v4-confirmed-after" hint={`calls after a replacement ${x.calls_after_replacement}`} />
+        <Metric label="Ended while waiting (no replacement)" value={String(x.owners.structural_terminal_without_replacement)}
+                testid="adv-v4-ended" hint={Object.entries(x.terminals_without_replacement).map(([k, n]) => `${humanize(k)} ${n}`).join(" · ") || "none"} />
+      </div>
+      <p className="muted small-text">{x.note}</p>
     </div>
   );
 }
@@ -112,8 +135,9 @@ export function AdviserSummary({ a }: { a: AdviserSection }) {
           {a.diagnosis.map((d) => <div key={d}>{d}</div>)}
         </Notice>
       )}
-      {a.report_version === "adviser.report.v3" && <V3Funnel a={a} />}
-      <div className="adv-section-title">{a.report_version === "adviser.report.v3" ? "Scenario funnel" : "Candidate funnel"}</div>
+      {(a.report_version === "adviser.report.v3" || a.report_version === "adviser.report.v4") && <V3Funnel a={a} />}
+      {a.report_version === "adviser.report.v4" && <V4Anchors a={a} />}
+      <div className="adv-section-title">{a.report_version === "adviser.report.v2" || !a.report_version ? "Candidate funnel" : "Scenario funnel"}</div>
       <div className="funnel" data-testid="adv-funnel">
         <span className="step">births {Object.values(a.funnel.births).reduce((x, y) => x + y, 0)}</span>›
         <span className="step">armed {Object.values(a.funnel.arms).reduce((x, y) => x + y, 0)}</span>›
@@ -291,7 +315,8 @@ export function AdviserProgress({ r }: { r: ObsReplay }) {
   const adv = (r as unknown as { adviser?: { committed?: Record<string, unknown> | null; pending?: boolean } }).adviser;
   const v = adv?.committed as { clock?: string; window?: string; view?: { expected_direction: string; table_row: string;
                                 observed_context: string; phase: string } | null; call?: { direction: string; family: string;
-                                entry_status: string; target: string; stop: string } | null; journal_seq?: number } | null | undefined;
+                                entry_status: string; target: string; stop: string } | null; journal_seq?: number;
+                                scenarios?: ScenarioState[] } | null | undefined;
   return (
     <Card title="Adviser during the replay" icon="compass" testid="adviser-progress"
           eyebrow="Historical simulated time — not current advice" actions={<Badge tone="brand">HISTORICAL</Badge>}>
@@ -303,6 +328,12 @@ export function AdviserProgress({ r }: { r: ObsReplay }) {
           <span>Observed context / phase</span><span>{v.view ? `${v.view.observed_context} / ${humanize(v.view.phase)}` : "—"}</span>
           <span>Call</span><span>{v.call ? `${v.call.direction} ${v.call.family} · ${ENTRY_TEXT[v.call.entry_status] ?? v.call.entry_status} · target ${v.call.target} · stop ${v.call.stop}` : "none"}</span>
           <span>Journal records</span><span className="mono">{v.journal_seq ?? 0}</span>
+          {(v.scenarios ?? []).map((s) => {
+            const ph = scenarioPhrase(s);
+            return [<span key={`${s.scenario_id}-k`}>{s.direction} {s.family} scenario</span>,
+              <span key={`${s.scenario_id}-v`} data-testid="adviser-progress-scenario">
+                <Badge tone={ph.tone}>{ph.text}</Badge></span>];
+          })}
         </div>
       )}
     </Card>

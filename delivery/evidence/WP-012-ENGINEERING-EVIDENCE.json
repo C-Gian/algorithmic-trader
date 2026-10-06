@@ -1,0 +1,557 @@
+{
+ "package": "WP-012 MP-003 v0.4",
+ "status": "READY FOR DIRECTOR REVIEW - WP-012 ONLY (executor evidence, not acceptance)",
+ "base": "68f26da52bc2045f2473d85aae41566a17764bc1",
+ "branch": "main",
+ "identity_matrix": {
+  "v0.2": {
+   "method": "v0.2",
+   "label": "Original v0.2",
+   "purpose": "The accepted MP-001 adviser exactly as evaluated so far (fixed comparison baseline).",
+   "status": "ACCEPTED_BASELINE",
+   "status_label": "accepted baseline",
+   "economic_usefulness": "UNVALIDATED",
+   "model": "btc.context-action.v0.2",
+   "rules_version": "mp001.rules.v0.2",
+   "rules_sha256": "1ca01b416b9ec3562a74bab4687cdc71a6ebf30036596dba48780e32e4f1471d",
+   "register_sha256": "e2e2dd8ef0501e239c3e4f07dc17732e72fdbbaab3a10471a521bfd2a2d60bae",
+   "implementation": "adviser.core.v2",
+   "evaluator_implementation": "adviser.evaluator.v2",
+   "engine_format": "observe.stream.v3",
+   "report_version": "adviser.report.v2",
+   "rules_manifest": null,
+   "core_state_format": "algotrader.adviser-state.v2",
+   "runtime_format": "algotrader.adviser-runtime.v2",
+   "evaluator_state_format": "algotrader.adviser-evaluation-state.v1",
+   "reconciliation_version": "5",
+   "deep_version": "6"
+  },
+  "v0.3": {
+   "method": "v0.3",
+   "label": "Revised v0.3 \u2014 confirmation then usable entry",
+   "purpose": "MP-002: scenarios persist independently of entry; after an A confirmation the adviser may wait for a later usable price inside the reaction corridor instead of rejecting at once.",
+   "status": "TECHNICALLY_ACCEPTED",
+   "status_label": "technically accepted (WP-011, 3fcbfc5)",
+   "economic_usefulness": "UNVALIDATED",
+   "model": "btc.context-action.v0.3",
+   "rules_version": "mp002.rules.v0.3",
+   "rules_sha256": "558afdb9c80e07f98f352effb899587e18d01fb9577a10ef812471772027fdca",
+   "register_sha256": "b768314ee81bbb28a30e4eadbcceafd0261d846b3719c892c63afe1084dec4d2",
+   "implementation": "adviser.core.v3",
+   "evaluator_implementation": "adviser.evaluator.v3",
+   "engine_format": "observe.stream.v4",
+   "report_version": "adviser.report.v3",
+   "rules_manifest": null,
+   "core_state_format": "algotrader.adviser-state.v3",
+   "runtime_format": "algotrader.adviser-runtime.v3",
+   "evaluator_state_format": "algotrader.adviser-evaluation-state.v2",
+   "reconciliation_version": "6",
+   "deep_version": "7"
+  },
+  "v0.4": {
+   "method": "v0.4",
+   "label": "Candidate v0.4 \u2014 reaction anchor may be replaced before confirmation",
+   "purpose": "MP-003: before confirmation a touch of the A reaction stop V invalidates only that local anchor; the same scenario waits for a new, deeper completed 15m reaction. Confirmation, waiting entry, costs, targets and stops after confirmation are unchanged from v0.3.",
+   "status": "ENGINEERING_REVIEW_PENDING",
+   "status_label": "engineering review pending",
+   "economic_usefulness": "UNVALIDATED",
+   "model": "btc.context-action.v0.4",
+   "rules_version": "mp003.rules.v0.4",
+   "rules_sha256": "316629a4914e170bce3be384507b0777b6770d87c91a503514c3ec21b25bf2ba",
+   "register_sha256": "5873cb106bea807df6b71ba2bfb4a23afe0822f9a715253e20dd9f3b09b0a40d",
+   "implementation": "adviser.core.v4",
+   "evaluator_implementation": "adviser.evaluator.v3",
+   "engine_format": "observe.stream.v5",
+   "report_version": "adviser.report.v4",
+   "rules_manifest": [
+    {
+     "role": "DELTA",
+     "file": "MP-003-A-REACTION-ANCHOR-DISPOSITION.md",
+     "sha256_lf": "11ef1dedc8d8b850e85f69d0a3b852099b14cabdfad4a6c080758ece26e467e7"
+    },
+    {
+     "role": "INHERITED_MP002_RULES",
+     "file": "MP-002-SCENARIO-CONFIRMATION-ENTRY-PROPOSAL.md",
+     "sha256_lf": "558afdb9c80e07f98f352effb899587e18d01fb9577a10ef812471772027fdca"
+    },
+    {
+     "role": "INHERITED_MP002_DISPOSITION",
+     "file": "MP-002-DIRECTOR-DISPOSITION.md",
+     "sha256_lf": "e4c7ff2389b85ec75797d6eb41e9673bc232a2581376f873d12e95743b08b5b5"
+    },
+    {
+     "role": "INHERITED_MP001_RULES",
+     "file": "MP-001-INTEGRATED-METHOD-PROPOSAL.md",
+     "sha256_lf": "1ca01b416b9ec3562a74bab4687cdc71a6ebf30036596dba48780e32e4f1471d"
+    }
+   ],
+   "core_state_format": "algotrader.adviser-state.v4",
+   "runtime_format": "algotrader.adviser-runtime.v4",
+   "evaluator_state_format": "algotrader.adviser-evaluation-state.v2",
+   "reconciliation_version": "7",
+   "deep_version": "8"
+  }
+ },
+ "default_method": "v0.2",
+ "contract_revisions": {
+  "semantic.v2": 3,
+  "adviser-evaluation.v1": 3,
+  "observe.v1": 7,
+  "semantic_v2_emitted_revision": {
+   "btc.context-action.v0.2": 1,
+   "btc.context-action.v0.3": 2,
+   "btc.context-action.v0.4": 3
+  }
+ },
+ "fixtures": [
+  {
+   "row": "1 never armed: B contact no terminal; spend only > B+z (equality kept)",
+   "tape": "never_armed",
+   "options": {},
+   "expected": "BIRTH 03:30; no terminal at 03:45 (high 100950 >= B) or 04:00 (high = B+z); SPENT at 04:15 (101100.1)",
+   "actual_long": {
+    "transitions": [
+     "03:30:00 BIRTH FALSE_AT_OR_AFTER_RELEASE_TO_TRUE NONE",
+     "04:15:00 TERMINAL SPENT_HIGH_BEYOND_B_BEFORE_REACTION NONE"
+    ],
+    "calls": 0
+   },
+   "actual_short_same_sequence": true,
+   "test": "tests/test_mp003_paths.py"
+  },
+  {
+   "row": "2 first arm source bar touched B: no retroactive destination",
+   "tape": "arm_source_touches_b",
+   "options": {},
+   "expected": "ARM 03:45 (K 100950); DESTINATION_REACHED 03:51 from the later minute [03:50,03:51) high = B",
+   "actual_long": {
+    "transitions": [
+     "03:30:00 BIRTH FALSE_AT_OR_AFTER_RELEASE_TO_TRUE NONE",
+     "03:45:00 ARM e1 ACTIVE",
+     "03:51:00 TERMINAL DESTINATION_CONTACT e1 ACTIVE"
+    ],
+    "calls": 0
+   },
+   "actual_short_same_sequence": true,
+   "test": "tests/test_mp003_paths.py"
+  },
+  {
+   "row": "2 delayed publication: B contact admitted before the arm is ignored",
+   "tape": "_delayed_b",
+   "options": {
+    "allowance": 300
+   },
+   "expected": "BIRTH 03:35, ARM published 03:50 (actual dispatch); destination from [03:50,03:51) at 03:51",
+   "actual_long": {
+    "transitions": [
+     "03:35:00 BIRTH FALSE_AT_OR_AFTER_RELEASE_TO_TRUE NONE",
+     "03:50:00 ARM e1 ACTIVE",
+     "03:51:00 TERMINAL DESTINATION_CONTACT e1 ACTIVE"
+    ],
+    "calls": 0
+   },
+   "actual_short_same_sequence": true,
+   "test": "tests/test_mp003_paths.py"
+  },
+  {
+   "row": "2/12 straddling first-arm origin with B contact",
+   "tape": "_straddle_b",
+   "options": {
+    "allowance": 30,
+    "delay": 30
+   },
+   "expected": "ARM 03:45:30; [03:45,03:46) reaches B -> UNASSESSABLE FIRST_ARM_DESTINATION_CONTACT_TIME_AMBIGUOUS",
+   "actual_long": {
+    "transitions": [
+     "03:30:30 BIRTH FALSE_AT_OR_AFTER_RELEASE_TO_TRUE NONE",
+     "03:45:30 ARM e1 ACTIVE",
+     "03:46:00 TERMINAL FIRST_ARM_DESTINATION_CONTACT_TIME_AMBIGUOUS e1 ACTIVE"
+    ],
+    "calls": 0
+   },
+   "actual_short_same_sequence": true,
+   "test": "tests/test_mp003_paths.py"
+  },
+  {
+   "row": "3 anchor lost, destination still monitored in WATCH",
+   "tape": "arm_then_lost_then_b",
+   "options": {},
+   "expected": "ANCHOR_LOST 03:51; DESTINATION_REACHED 04:21 (origin stays 03:45)",
+   "actual_long": {
+    "transitions": [
+     "03:30:00 BIRTH FALSE_AT_OR_AFTER_RELEASE_TO_TRUE NONE",
+     "03:45:00 ARM e1 ACTIVE",
+     "03:51:00 ANCHOR_LOST V_CONTACT e1 INVALIDATED",
+     "04:21:00 TERMINAL DESTINATION_CONTACT e1 INVALIDATED"
+    ],
+    "calls": 0
+   },
+   "actual_short_same_sequence": true,
+   "test": "tests/test_mp003_paths.py"
+  },
+  {
+   "row": "4-5 contact -> same owner WATCH -> deeper complete reaction re-arms -> fresh confirmation",
+   "tape": "contact_then_rearm",
+   "options": {},
+   "expected": "ARM 03:45 e1; ANCHOR_LOST 03:51 e1; REARM 04:00 e2 (R 99790 K 100300 V 99590); CONFIRM 04:09 e2",
+   "actual_long": {
+    "transitions": [
+     "03:30:00 BIRTH FALSE_AT_OR_AFTER_RELEASE_TO_TRUE NONE",
+     "03:45:00 ARM e1 ACTIVE",
+     "03:51:00 ANCHOR_LOST V_CONTACT e1 INVALIDATED",
+     "04:00:00 REARM NEW_COMPLETE_STRICTLY_DEEPER_CLEAN_REACTION e2 ACTIVE",
+     "04:09:00 CONFIRM okx/BTC-USDT-SWAP/trade_bar_1m#obs@2025-09-01T04 e2 FROZEN_AT_CONFIRMATION",
+     "05:30:00 OWNER_RELEASE ORIGINAL_SETUP_EXPIRY e2 FROZEN_AT_CONFIRMATION",
+     "06:09:00 TERMINAL SCENARIO_PROGRESS_BELOW_HALF_SCALE e2 FROZEN_AT_CONFIRMATION"
+    ],
+    "calls": 0
+   },
+   "actual_short_same_sequence": true,
+   "test": "tests/test_mp003_paths.py"
+  },
+  {
+   "row": "4 equality: low exactly V is contact",
+   "tape": "contact_at_equality",
+   "options": {},
+   "expected": "ANCHOR_LOST 03:51; REARM 04:00 (R 99800)",
+   "actual_long": {
+    "transitions": [
+     "03:30:00 BIRTH FALSE_AT_OR_AFTER_RELEASE_TO_TRUE NONE",
+     "03:45:00 ARM e1 ACTIVE",
+     "03:51:00 ANCHOR_LOST V_CONTACT e1 INVALIDATED",
+     "04:00:00 REARM NEW_COMPLETE_STRICTLY_DEEPER_CLEAN_REACTION e2 ACTIVE",
+     "05:30:00 OWNER_RELEASE ORIGINAL_SETUP_EXPIRY e2 ACTIVE",
+     "05:30:00 TERMINAL ORIGINAL_SETUP_DEADLINE e2 ACTIVE"
+    ],
+    "calls": 0
+   },
+   "actual_short_same_sequence": true,
+   "test": "tests/test_mp003_paths.py"
+  },
+  {
+   "row": "tie: replacement needs a strictly deeper R",
+   "tape": "replacement_tie",
+   "options": {},
+   "expected": "no REARM at 04:15 (low = lost R); REARM 04:30 (R 99999.9)",
+   "actual_long": {
+    "transitions": [
+     "03:30:00 BIRTH FALSE_AT_OR_AFTER_RELEASE_TO_TRUE NONE",
+     "03:45:00 ARM e1 ACTIVE",
+     "03:51:00 ANCHOR_LOST V_CONTACT e1 INVALIDATED",
+     "04:30:00 REARM NEW_COMPLETE_STRICTLY_DEEPER_CLEAN_REACTION e2 ACTIVE",
+     "05:30:00 OWNER_RELEASE ORIGINAL_SETUP_EXPIRY e2 ACTIVE",
+     "05:30:00 TERMINAL ORIGINAL_SETUP_DEADLINE e2 ACTIVE"
+    ],
+    "calls": 0
+   },
+   "actual_short_same_sequence": true,
+   "test": "tests/test_mp003_paths.py"
+  },
+  {
+   "row": "tie: supersession keeps the inherited inclusive tie",
+   "tape": "supersede_tie",
+   "options": {},
+   "expected": "REVISE 04:00 e2 (R 100000)",
+   "actual_long": {
+    "transitions": [
+     "03:30:00 BIRTH FALSE_AT_OR_AFTER_RELEASE_TO_TRUE NONE",
+     "03:45:00 ARM e1 ACTIVE",
+     "04:00:00 REVISE LOWER_CLEAN_REACTION_REANCHOR e2 ACTIVE",
+     "05:30:00 OWNER_RELEASE ORIGINAL_SETUP_EXPIRY e2 ACTIVE",
+     "05:30:00 TERMINAL ORIGINAL_SETUP_DEADLINE e2 ACTIVE"
+    ],
+    "calls": 0
+   },
+   "actual_short_same_sequence": true,
+   "test": "tests/test_mp003_paths.py"
+  },
+  {
+   "row": "6 contact + seal in one dispatch; no retroactive confirmation",
+   "tape": "_one_dispatch",
+   "options": {
+    "delay58": 60
+   },
+   "expected": "ANCHOR_LOST and REARM both at 04:00 (same cursor, loss first); CONFIRM 04:01 from [04:00,04:01)",
+   "actual_long": {
+    "transitions": [
+     "03:30:00 BIRTH FALSE_AT_OR_AFTER_RELEASE_TO_TRUE NONE",
+     "03:45:00 ARM e1 ACTIVE",
+     "04:00:00 ANCHOR_LOST V_CONTACT e1 INVALIDATED",
+     "04:00:00 REARM NEW_COMPLETE_STRICTLY_DEEPER_CLEAN_REACTION e2 ACTIVE",
+     "04:01:00 CONFIRM okx/BTC-USDT-SWAP/trade_bar_1m#obs@2025-09-01T04 e2 FROZEN_AT_CONFIRMATION",
+     "05:30:00 OWNER_RELEASE ORIGINAL_SETUP_EXPIRY e2 FROZEN_AT_CONFIRMATION",
+     "06:01:00 TERMINAL SCENARIO_PROGRESS_BELOW_HALF_SCALE e2 FROZEN_AT_CONFIRMATION"
+    ],
+    "calls": 0
+   },
+   "actual_short_same_sequence": true,
+   "test": "tests/test_mp003_paths.py"
+  },
+  {
+   "row": "6 delayed publication: admitted recoveries never confirm",
+   "tape": "contact_same_bar_backlog",
+   "options": {
+    "allowance": 300
+   },
+   "expected": "ANCHOR_LOST 03:59; REARM 04:05; CONFIRM 04:06 from [04:05,04:06) (04:00-04:04 closes >= K+tick ignored)",
+   "actual_long": {
+    "transitions": [
+     "03:35:00 BIRTH FALSE_AT_OR_AFTER_RELEASE_TO_TRUE NONE",
+     "03:50:00 ARM e1 ACTIVE",
+     "03:59:00 ANCHOR_LOST V_CONTACT e1 INVALIDATED",
+     "04:05:00 REARM NEW_COMPLETE_STRICTLY_DEEPER_CLEAN_REACTION e2 ACTIVE",
+     "04:06:00 CONFIRM okx/BTC-USDT-SWAP/trade_bar_1m#obs@2025-09-01T04 e2 FROZEN_AT_CONFIRMATION",
+     "05:35:00 OWNER_RELEASE ORIGINAL_SETUP_EXPIRY e2 FROZEN_AT_CONFIRMATION",
+     "06:06:00 TERMINAL SCENARIO_PROGRESS_BELOW_HALF_SCALE e2 FROZEN_AT_CONFIRMATION"
+    ],
+    "calls": 0
+   },
+   "actual_short_same_sequence": true,
+   "test": "tests/test_mp003_paths.py"
+  },
+  {
+   "row": "old bar rejection",
+   "tape": "_old_bar",
+   "options": {
+    "allowance": 300
+   },
+   "expected": "ANCHOR_LOST 04:03; bar [03:45,04:00) sealed 04:05 not used; REARM 04:20 from [04:00,04:15)",
+   "actual_long": {
+    "transitions": [
+     "03:35:00 BIRTH FALSE_AT_OR_AFTER_RELEASE_TO_TRUE NONE",
+     "03:50:00 ARM e1 ACTIVE",
+     "04:03:00 ANCHOR_LOST V_CONTACT e1 INVALIDATED",
+     "04:20:00 REARM NEW_COMPLETE_STRICTLY_DEEPER_CLEAN_REACTION e2 ACTIVE",
+     "04:22:00 CONFIRM okx/BTC-USDT-SWAP/trade_bar_1m#obs@2025-09-01T04 e2 FROZEN_AT_CONFIRMATION",
+     "05:35:00 OWNER_RELEASE ORIGINAL_SETUP_EXPIRY e2 FROZEN_AT_CONFIRMATION",
+     "06:22:00 TERMINAL SCENARIO_PROGRESS_BELOW_HALF_SCALE e2 FROZEN_AT_CONFIRMATION"
+    ],
+    "calls": 0
+   },
+   "actual_short_same_sequence": true,
+   "test": "tests/test_mp003_paths.py"
+  },
+  {
+   "row": "late interval in an earlier epoch domain",
+   "tape": "_late_epoch",
+   "options": {
+    "allowance": 300,
+    "delay404": 30
+   },
+   "expected": "REVISE 04:05 e2; ANCHOR_LOST 04:05:30 e2 UNASSESSABLE (LATE_CONTACT_WITH_EARLIER_ANCHOR_EPOCH_1)",
+   "actual_long": {
+    "transitions": [
+     "03:35:00 BIRTH FALSE_AT_OR_AFTER_RELEASE_TO_TRUE NONE",
+     "03:50:00 ARM e1 ACTIVE",
+     "04:05:00 REVISE LOWER_CLEAN_REACTION_REANCHOR e2 ACTIVE",
+     "04:05:30 ANCHOR_LOST LATE_CONTACT_WITH_EARLIER_ANCHOR_EPOCH_1 e2 UNASSESSABLE",
+     "04:20:00 REARM NEW_COMPLETE_STRICTLY_DEEPER_CLEAN_REACTION e3 ACTIVE",
+     "04:21:00 CONFIRM okx/BTC-USDT-SWAP/trade_bar_1m#obs@2025-09-01T04 e3 FROZEN_AT_CONFIRMATION",
+     "05:35:00 OWNER_RELEASE ORIGINAL_SETUP_EXPIRY e3 FROZEN_AT_CONFIRMATION",
+     "06:21:00 TERMINAL SCENARIO_PROGRESS_BELOW_HALF_SCALE e3 FROZEN_AT_CONFIRMATION"
+    ],
+    "calls": 0
+   },
+   "actual_short_same_sequence": true,
+   "test": "tests/test_mp003_paths.py"
+  },
+  {
+   "row": "12 straddling local contact",
+   "tape": "_straddle_local",
+   "options": {
+    "allowance": 30,
+    "delay": 30
+   },
+   "expected": "ANCHOR_LOST 03:46 UNASSESSABLE (scenario WATCH, not terminal); REARM 04:00:30; CONFIRM 04:08",
+   "actual_long": {
+    "transitions": [
+     "03:30:30 BIRTH FALSE_AT_OR_AFTER_RELEASE_TO_TRUE NONE",
+     "03:45:30 ARM e1 ACTIVE",
+     "03:46:00 ANCHOR_LOST ANCHOR_CONTACT_TIME_AMBIGUOUS e1 UNASSESSABLE",
+     "04:00:30 REARM NEW_COMPLETE_STRICTLY_DEEPER_CLEAN_REACTION e2 ACTIVE",
+     "04:08:00 CONFIRM okx/BTC-USDT-SWAP/trade_bar_1m#obs@2025-09-01T04 e2 FROZEN_AT_CONFIRMATION",
+     "05:30:30 OWNER_RELEASE ORIGINAL_SETUP_EXPIRY e2 FROZEN_AT_CONFIRMATION",
+     "06:08:00 TERMINAL SCENARIO_PROGRESS_BELOW_HALF_SCALE e2 FROZEN_AT_CONFIRMATION"
+    ],
+    "calls": 0
+   },
+   "actual_short_same_sequence": true,
+   "test": "tests/test_mp003_paths.py"
+  },
+  {
+   "row": "7 complete 15m close <= A+z withdraws, no replacement",
+   "tape": "close_at_a_plus_z",
+   "options": {},
+   "expected": "ANCHOR_LOST 03:51; WITHDRAWN CLOSE_AT_OR_BEYOND_A_PLUS_ZONE 04:00",
+   "actual_long": {
+    "transitions": [
+     "03:30:00 BIRTH FALSE_AT_OR_AFTER_RELEASE_TO_TRUE NONE",
+     "03:45:00 ARM e1 ACTIVE",
+     "03:51:00 ANCHOR_LOST V_CONTACT e1 INVALIDATED",
+     "04:00:00 TERMINAL CLOSE_AT_OR_BEYOND_A_PLUS_ZONE e1 INVALIDATED"
+    ],
+    "calls": 0
+   },
+   "actual_short_same_sequence": true,
+   "test": "tests/test_mp003_paths.py"
+  },
+  {
+   "row": "11/7 wick through A+z is not the close predicate; no eligible reaction",
+   "tape": "wick_through_a_plus_z_then_rebound",
+   "options": {},
+   "expected": "ANCHOR_LOST 03:51; WATCH until EXPIRED ORIGINAL_SETUP_DEADLINE 05:30; no call",
+   "actual_long": {
+    "transitions": [
+     "03:30:00 BIRTH FALSE_AT_OR_AFTER_RELEASE_TO_TRUE NONE",
+     "03:45:00 ARM e1 ACTIVE",
+     "03:51:00 ANCHOR_LOST V_CONTACT e1 INVALIDATED",
+     "05:30:00 OWNER_RELEASE ORIGINAL_SETUP_EXPIRY e1 INVALIDATED",
+     "05:30:00 TERMINAL ORIGINAL_SETUP_DEADLINE e1 INVALIDATED"
+    ],
+    "calls": 0
+   },
+   "actual_short_same_sequence": true,
+   "test": "tests/test_mp003_paths.py"
+  },
+  {
+   "row": "8 original deadline before a candidate replacement",
+   "tape": "deadline_with_candidate_replacement",
+   "options": {},
+   "expected": "ANCHOR_LOST 03:51; EXPIRED 05:30 (the [05:15,05:30) deeper bar never re-arms)",
+   "actual_long": {
+    "transitions": [
+     "03:30:00 BIRTH FALSE_AT_OR_AFTER_RELEASE_TO_TRUE NONE",
+     "03:45:00 ARM e1 ACTIVE",
+     "03:51:00 ANCHOR_LOST V_CONTACT e1 INVALIDATED",
+     "05:30:00 OWNER_RELEASE ORIGINAL_SETUP_EXPIRY e1 INVALIDATED",
+     "05:30:00 TERMINAL ORIGINAL_SETUP_DEADLINE e1 INVALIDATED"
+    ],
+    "calls": 0
+   },
+   "actual_short_same_sequence": true,
+   "test": "tests/test_mp003_paths.py"
+  },
+  {
+   "row": "9 confirmed WAIT, V contact then rebound",
+   "tape": "a3_wait_v_contact_then_rebound",
+   "options": {},
+   "expected": "CONFIRM 04:01; scenario INVALIDATED V_CONTACT 04:02; no ANCHOR_LOST/REARM; no call",
+   "actual_long": {
+    "transitions": [
+     "03:30:00 BIRTH FALSE_AT_OR_AFTER_RELEASE_TO_TRUE NONE",
+     "03:45:00 ARM e1 ACTIVE",
+     "04:00:00 REVISE LOWER_CLEAN_REACTION_REANCHOR e2 ACTIVE",
+     "04:01:00 CONFIRM okx/BTC-USDT-SWAP/trade_bar_1m#obs@2025-09-01T04 e2 FROZEN_AT_CONFIRMATION",
+     "04:02:00 TERMINAL V_CONTACT e2 FROZEN_AT_CONFIRMATION"
+    ],
+    "calls": 0
+   },
+   "actual_short_same_sequence": true,
+   "test": "tests/test_mp003_paths.py"
+  },
+  {
+   "row": "10 issued call, V contact",
+   "tape": "a3_issued_then_v_contact",
+   "options": {},
+   "expected": "RETURN call 04:02; call INVALIDATED; revisions/paths equal v0.3",
+   "actual_long": {
+    "transitions": [
+     "03:30:00 BIRTH FALSE_AT_OR_AFTER_RELEASE_TO_TRUE NONE",
+     "03:45:00 ARM e1 ACTIVE",
+     "04:00:00 REVISE LOWER_CLEAN_REACTION_REANCHOR e2 ACTIVE",
+     "04:01:00 CONFIRM okx/BTC-USDT-SWAP/trade_bar_1m#obs@2025-09-01T04 e2 FROZEN_AT_CONFIRMATION",
+     "04:04:00 TERMINAL V_CONTACT e2 FROZEN_AT_CONFIRMATION"
+    ],
+    "calls": 1
+   },
+   "actual_short_same_sequence": true,
+   "test": "tests/test_mp003_paths.py"
+  },
+  {
+   "row": "12 local + destination same minute",
+   "tape": "local_and_destination_same_minute",
+   "options": {},
+   "expected": "UNASSESSABLE DESTINATION_AND_LOCAL_ANCHOR_CONTACT_SAME_INTERVAL 03:51",
+   "actual_long": {
+    "transitions": [
+     "03:30:00 BIRTH FALSE_AT_OR_AFTER_RELEASE_TO_TRUE NONE",
+     "03:45:00 ARM e1 ACTIVE",
+     "03:51:00 TERMINAL DESTINATION_AND_LOCAL_ANCHOR_CONTACT_SAME_INTERVAL e1 ACTIVE"
+    ],
+    "calls": 0
+   },
+   "actual_short_same_sequence": true,
+   "test": "tests/test_mp003_paths.py"
+  },
+  {
+   "row": "12 required gap after loss",
+   "tape": "monitoring_gap_after_loss",
+   "options": {},
+   "expected": "ANCHOR_LOST 03:51; UNASSESSABLE gap 03:56",
+   "actual_long": {
+    "transitions": [
+     "03:30:00 BIRTH FALSE_AT_OR_AFTER_RELEASE_TO_TRUE NONE",
+     "03:45:00 ARM e1 ACTIVE",
+     "03:51:00 ANCHOR_LOST V_CONTACT e1 INVALIDATED",
+     "03:56:00 TERMINAL REQUIRED_MONITORING_GAP e1 INVALIDATED"
+    ],
+    "calls": 0
+   },
+   "actual_short_same_sequence": true,
+   "test": "tests/test_mp003_paths.py"
+  }
+ ],
+ "checks": {
+  "tests/test_mp003_paths.py": "46 passed",
+  "tests/test_mp003_versions.py": "55 passed",
+  "tests/test_mp003_db.py": "11 passed (disposable PostgreSQL 18.6, port 55439)",
+  "tests/test_mp003_live.py": "5 passed",
+  "tests/e2e/test_mp003_e2e.py": "1 passed",
+  "full_non_e2e_final": "824 passed, 2 failed (both the deliberate observe.v1 revision pin 6->7 in tests/test_observe.py; pins updated, tests/test_observe.py rerun 21 passed); 42m43s, ALGOTRADER_REQUIRE_DB=1",
+  "full_e2e": "20 passed (6m13s)",
+  "web": "typecheck + build pass",
+  "schema": "only semantic.v2 r3 and observe.v1 r7 baselines rewritten; frozen baselines match"
+ },
+ "preservation": {
+  "v02_v03_fixed_fixture_pins": "38/38 byte-identical to the unchanged base (tests/fixtures/wp012_v02_v03_base_pins.json)",
+  "bc_and_post_confirmation_parity_v03": "9 tapes equal after identifier normalization",
+  "numerical_register": "MP-003 numeric leaves and typed params equal MP-002",
+  "codecs": "v0.2/v0.3 codecs unchanged; no cross-method decode/resume; legacy v3 fixture states still exact"
+ },
+ "measurement": "delivery/evidence/WP-012-bench-mp003.json (synthetic; not a month/year/performance-gate result)",
+ "interpretations_for_director": [
+  "ever-armed WATCH after an anchor loss needs complete fresh 1m/15m monitoring evidence (gap/staleness -> UNASSESSABLE)",
+  "a late-admitted interval in an earlier anchor epoch's domain reaching that epoch's V makes the current anchor UNASSESSABLE",
+  "the 15m bar containing the contact minute is an eligible replacement source (end >= contact interval end)",
+  "replacement requires a strictly deeper R; supersession without contact keeps the inherited inclusive tie",
+  "live anchor publication = actual dispatch tick after receipt (e.g. 04:00:01.5), never the bar close",
+  "presentation: v0.3 report status text, comparison A baseline/B candidate wording, pack method label meaning, comparison defaults"
+ ],
+ "owner_handoff": {
+  "state": "PREPARED_INACTIVE",
+  "activation": "only after Director acceptance and exact-SHA green CI",
+  "sequence": [
+   "2025-10",
+   "2025-11",
+   "2025-12"
+  ],
+  "baseline": "v0.3",
+  "candidate": "v0.4",
+  "october_baseline_reuse": "eval-20261006T175135-9ddf6d (pins match; build difference is not an input difference)",
+  "pacing": "max",
+  "estimate": "about 2-3 min per month on the Owner machine (October v0.3 took ~2 min for 152,295 events; v0.4 per-event cost within ~10% on synthetic input) - estimate, not a real-month claim",
+  "classes": {
+   "October": "REDESIGN_EXPOSED_DEVELOPMENT",
+   "November": "DEVELOPMENT_FOLLOWUP",
+   "December": "DEVELOPMENT_FOLLOWUP"
+  },
+  "not_authorized": [
+   "parameter changes",
+   "protected period",
+   "mandatory Deep",
+   "download",
+   "executor economic run"
+  ]
+ },
+ "ci": "Owner-operated: PENDING / NOT CHECKED by the executor"
+}

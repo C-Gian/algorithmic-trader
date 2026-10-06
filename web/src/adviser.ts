@@ -21,7 +21,14 @@ export interface ScenarioView {
   confirmed_at?: string | null;
 }
 
-/** v0.3 structural scenario with its child entry state (inspection; WAIT_PRICE is never a call). */
+/** v0.4 (MP-003) pre-confirmation local reaction anchor of an A scenario (inspection only). */
+export interface AnchorState {
+  epoch: number | null; status: string; published_at: string | null; ever_armed: boolean;
+  destination_monitoring_from: string | null; previous: Record<string, string | null> | null;
+  replacements: number; losses: number;
+}
+
+/** v0.3/v0.4 structural scenario with its child entry state (inspection; WAIT_PRICE is never a call). */
 export interface ScenarioState {
   scenario_id: string; family: "A" | "B" | "C"; family_text: string; direction: "LONG" | "SHORT";
   status: "WATCH" | "ARMED" | "CONFIRMED"; antecedent: string; trigger_level: string | null;
@@ -31,6 +38,21 @@ export interface ScenarioState {
   waiting?: { text: string; corridor: [string, string] | null; stop_V: string; target_now: string;
               target_at_confirmation: string; wait_until: string; hard_deadline: string; remaining_wait_minutes: number | null;
               blockers: string[]; caps: { cap: string; since: string; zone_id: string }[] };
+  /** v0.4: the local reaction anchor and, after an anchor loss, the observation state (never an entry). */
+  anchor?: AnchorState;
+  observing?: { text: string; lost_anchor: Record<string, string | null> | null; original_expiry: string };
+}
+
+/** One plain phrase per structural scenario state: observation, active anchor, confirmed wait - never "enter now". */
+export function scenarioPhrase(s: ScenarioState): { tone: "info" | "warn" | "neutral" | "brand"; text: string } {
+  if (s.observing) return { tone: "neutral", text: "Scenario under observation; waiting for a new completed reaction" };
+  if (s.waiting) return { tone: "info", text: "Confirmed — waiting for a usable price (not a call)" };
+  if (s.status === "CONFIRMED") return { tone: "brand", text: "Confirmed scenario" };
+  if (s.status === "ARMED") {
+    const ep = s.anchor?.epoch ? ` (anchor ${s.anchor.epoch})` : "";
+    return { tone: "warn", text: `Active reaction anchor${ep}: needs a later close beyond ${s.trigger_level ?? "K"}, invalid at ${s.invalidation_level ?? "V"}` };
+  }
+  return { tone: "neutral", text: "Watching for a clean reaction (no anchor yet)" };
 }
 
 export interface MarketViewDoc {
@@ -209,7 +231,7 @@ async function json<T>(r: Response): Promise<T> {
 
 export const adviserApi = {
   live: () => fetch("/api/adviser/live").then((r) => json<LiveStatus>(r)),
-  start: (method?: "v0.2" | "v0.3") =>
+  start: (method?: "v0.2" | "v0.3" | "v0.4") =>
     fetch(`/api/adviser/live/start${method ? `?method=${method}` : ""}`, { method: "POST" }).then((r) => json<LiveStatus>(r)),
   methods: () => fetch("/api/adviser/methods").then((r) => json<{ default: string; note: string;
     methods: { method: string; label: string; purpose: string; status: string; model: string }[] }>(r)),
@@ -246,6 +268,20 @@ export const ROW_TEXT: Record<string, string> = {
 export const METHOD_TEXT: Record<string, string> = {
   "v0.2": "Original v0.2",
   "v0.3": "Revised v0.3 — confirmation then usable entry",
+  "v0.4": "Candidate v0.4 — reaction anchor may be replaced before confirmation",
+};
+
+/** Release status shown beside a method choice (economic usefulness is unvalidated for every version). */
+export const METHOD_STATUS: Record<string, { tone: "pos" | "info" | "warn"; text: string }> = {
+  "v0.2": { tone: "pos", text: "Baseline" },
+  "v0.3": { tone: "info", text: "Technically accepted" },
+  "v0.4": { tone: "warn", text: "Engineering review pending" },
+};
+
+export const METHOD_PURPOSE: Record<string, string> = {
+  "v0.2": "The accepted MP-001 adviser exactly as evaluated so far — the fixed historical baseline.",
+  "v0.3": "MP-002: a confirmed continuation may wait for a later usable price inside its reaction corridor instead of being rejected at once; scenarios persist independently of entry.",
+  "v0.4": "MP-003: before confirmation, a touch of the reaction stop invalidates only that reaction anchor; the same scenario waits for a newer, deeper completed reaction. Everything after confirmation is unchanged from v0.3.",
 };
 
 export const THESIS_TEXT: Record<string, string> = {

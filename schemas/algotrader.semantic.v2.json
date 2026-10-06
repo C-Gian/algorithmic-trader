@@ -2730,6 +2730,401 @@
       "title": "ScenarioState",
       "type": "object"
     },
+    "ScenarioStateV4": {
+      "additionalProperties": false,
+      "description": "Revision 3 (MP-003 v0.4): the structural scenario record plus the pre-confirmation A LOCAL anchor provenance.\n\nTransitions add ANCHOR_LOST (the active anchor's V was contacted in an eligible complete interval, or its contact\ntime is ambiguous: the same unconfirmed scenario returns to WATCH, owner/latch/zones/deadline unchanged) and REARM\n(a prospective replacement anchor from a newly published, strictly deeper complete 15m reaction). REVISE is a\nsupersession without contact. Every field is structural (cost-invariant). B/C and confirmed scenarios carry the\nanchor fields as null / their last values.",
+      "properties": {
+        "activated_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Activated At"
+        },
+        "anchor_epoch": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Anchor Epoch"
+        },
+        "anchor_published_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Anchor Published At"
+        },
+        "anchor_published_cursor": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Anchor Published Cursor"
+        },
+        "anchor_source": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Anchor Source"
+        },
+        "anchor_status": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Anchor Status"
+        },
+        "antecedent": {
+          "title": "Antecedent",
+          "type": "string"
+        },
+        "confirmation_close": {
+          "anyOf": [
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Confirmation Close"
+        },
+        "confirmation_scale": {
+          "anyOf": [
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Confirmation Scale"
+        },
+        "confirmed_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Confirmed At"
+        },
+        "confirmed_deadline": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Confirmed Deadline"
+        },
+        "destination": {
+          "anyOf": [
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Destination"
+        },
+        "destination_monitoring_cursor": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Destination Monitoring Cursor"
+        },
+        "destination_monitoring_from": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Destination Monitoring From"
+        },
+        "destination_type": {
+          "title": "Destination Type",
+          "type": "string"
+        },
+        "direction": {
+          "$ref": "#/$defs/Direction"
+        },
+        "discovery_owner": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Discovery Owner"
+        },
+        "entry_attempt_id": {
+          "title": "Entry Attempt Id",
+          "type": "string"
+        },
+        "env": {
+          "$ref": "#/$defs/Envelope"
+        },
+        "ever_armed": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Ever Armed"
+        },
+        "family": {
+          "$ref": "#/$defs/Family"
+        },
+        "invalidation_level": {
+          "anyOf": [
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Invalidation Level"
+        },
+        "original_expiry": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Original Expiry"
+        },
+        "owner_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Owner Id"
+        },
+        "premise": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Premise"
+        },
+        "previous_anchor": {
+          "anyOf": [
+            {
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Previous Anchor"
+        },
+        "progress_check_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Progress Check At"
+        },
+        "reaction_level": {
+          "anyOf": [
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Reaction Level"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Reason"
+        },
+        "scenario_id": {
+          "title": "Scenario Id",
+          "type": "string"
+        },
+        "setup": {
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "title": "Setup",
+          "type": "object"
+        },
+        "status": {
+          "title": "Status",
+          "type": "string"
+        },
+        "terminal_state": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Terminal State"
+        },
+        "transition": {
+          "title": "Transition",
+          "type": "string"
+        },
+        "trigger_level": {
+          "anyOf": [
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Trigger Level"
+        },
+        "warmup_origin": {
+          "title": "Warmup Origin",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "env",
+        "scenario_id",
+        "owner_id",
+        "entry_attempt_id",
+        "family",
+        "direction",
+        "status",
+        "transition",
+        "reason",
+        "terminal_state",
+        "antecedent",
+        "trigger_level",
+        "invalidation_level",
+        "reaction_level",
+        "destination",
+        "destination_type",
+        "premise",
+        "setup",
+        "activated_at",
+        "original_expiry",
+        "confirmed_at",
+        "confirmation_close",
+        "confirmation_scale",
+        "confirmed_deadline",
+        "progress_check_at",
+        "discovery_owner",
+        "warmup_origin",
+        "anchor_epoch",
+        "anchor_status",
+        "anchor_source",
+        "anchor_published_at",
+        "anchor_published_cursor",
+        "previous_anchor",
+        "ever_armed",
+        "destination_monitoring_from",
+        "destination_monitoring_cursor"
+      ],
+      "title": "ScenarioStateV4",
+      "type": "object"
+    },
     "ScenarioV3": {
       "additionalProperties": false,
       "properties": {
@@ -2859,11 +3254,17 @@
       "date": "2026-10-05",
       "note": "WP-011 MP-002 btc.context-action.v0.3 (additive): new discriminated kinds ScenarioState ('scenario': structural scenario lifecycle independent of entry/call/evaluator) and EntryAttempt ('entry_attempt': the child entry attempt - confirmation routing, IMMEDIATE/RETURN mode, WAIT_PRICE, caps, blockers, zone provenance, registered diagnostic geometry); v0.3 variants ScenarioV3/MarketViewV3/AdviserCallV3/CallRevisionV3 extend the revision-1 records with fields. Revision-1 records, their bytes and readers are unchanged; v0.2 runs never emit the new kinds, variants or fields (per-method emitted revision: v0.2 -> 1, v0.3 -> 2).",
       "revision": 2
+    },
+    {
+      "date": "2026-10-06",
+      "note": "WP-012 MP-003 btc.context-action.v0.4 (additive): variant ScenarioStateV4 of the 'scenario' kind adds the pre-confirmation A local anchor provenance - anchor epoch/status/source bar, actual anchor publication time and admitted cursor, the lost or superseded anchor (geometry, reason, contact interval and its end), ever_armed and the immutable first-arm destination-monitoring origin (time and cursor) - and the transitions ANCHOR_LOST and REARM (prospective replacement). Every other v0.4 kind uses the revision-2 contracts unchanged. Revision-1/2 records, their bytes and readers are unchanged; v0.2/v0.3 runs never emit the variant (per-method emitted revision: v0.2 -> 1, v0.3 -> 2, v0.4 -> 3).",
+      "revision": 3
     }
   ],
   "emitted_revision_by_model": {
     "btc.context-action.v0.2": 1,
-    "btc.context-action.v0.3": 2
+    "btc.context-action.v0.3": 2,
+    "btc.context-action.v0.4": 3
   },
   "journal_kinds": {
     "actionability": "#/$defs/Actionability",
@@ -2892,6 +3293,20 @@
     "phase": "#/$defs/PhaseState",
     "scenario": "#/$defs/ScenarioState"
   },
+  "journal_kinds_v4": {
+    "actionability": "#/$defs/Actionability",
+    "call": "#/$defs/AdviserCallV3",
+    "call_revision": "#/$defs/CallRevisionV3",
+    "entry_attempt": "#/$defs/EntryAttempt",
+    "event_context": "#/$defs/EventContext",
+    "event_response": "#/$defs/EventResponse",
+    "landmark": "#/$defs/Landmark",
+    "market_view": "#/$defs/MarketViewV3",
+    "material_change": "#/$defs/MaterialChange",
+    "observation": "#/$defs/Observation",
+    "phase": "#/$defs/PhaseState",
+    "scenario": "#/$defs/ScenarioStateV4"
+  },
   "public_contracts": {
     "Actionability": "#/$defs/Actionability",
     "AdviserCall": "#/$defs/AdviserCall",
@@ -2913,9 +3328,10 @@
     "PhaseState": "#/$defs/PhaseState",
     "Scenario": "#/$defs/Scenario",
     "ScenarioState": "#/$defs/ScenarioState",
+    "ScenarioStateV4": "#/$defs/ScenarioStateV4",
     "ScenarioV3": "#/$defs/ScenarioV3"
   },
-  "revision": 2,
+  "revision": 3,
   "schema_version": "algotrader.semantic.v2",
   "status": "PROVISIONAL",
   "title": "Algorithmic Trader advisory semantic contracts (algotrader.semantic.v2, PROVISIONAL)"

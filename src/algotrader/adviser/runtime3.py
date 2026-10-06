@@ -16,16 +16,18 @@ RUNTIME_FORMAT = "algotrader.adviser-runtime.v3"
 
 
 class AdviserRuntimeV3(AdviserRuntime):
+    RUNTIME_FMT, CORE_FMT, CORE_CLS = RUNTIME_FORMAT, CORE_FORMAT, AdviserCoreV3  # per-release hooks (WP-012)
+
     def encode(self) -> dict:
         doc = super().encode()
-        doc["format"], doc["core_format"] = RUNTIME_FORMAT, CORE_FORMAT
+        doc["format"], doc["core_format"] = self.RUNTIME_FMT, self.CORE_FMT
         return doc
 
     @classmethod
     def decode(cls, doc: dict, cfg: AdviserConfig, evaluator: EvaluatorV3 | None) -> AdviserRuntimeV3:
-        if doc.get("format") != RUNTIME_FORMAT:
-            raise ValueError(f"adviser runtime format {doc.get('format')!r} is not {RUNTIME_FORMAT}")
-        core = AdviserCoreV3.decode(doc["core"], cfg)
+        if doc.get("format") != cls.RUNTIME_FMT:
+            raise ValueError(f"adviser runtime format {doc.get('format')!r} is not {cls.RUNTIME_FMT}")
+        core = cls.CORE_CLS.decode(doc["core"], cfg)
         if (doc["evaluator"] is None) != (evaluator is None):
             raise ValueError("evaluator presence differs from the pinned configuration")
         if evaluator is not None:

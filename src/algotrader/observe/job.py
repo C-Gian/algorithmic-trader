@@ -445,7 +445,7 @@ class ReplayJob:
                 rel = methods.get(launch.adviser_method)
             except methods.UnknownMethod as exc:
                 raise SourceRejected(str(exc)) from None
-            fmt = rel.engine_format  # v0.2 -> observe.stream.v3, v0.3 -> observe.stream.v4
+            fmt = rel.engine_format  # v0.2 -> observe.stream.v3, v0.3 -> observe.stream.v4, v0.4 -> observe.stream.v5
             tconf = temporal_config(cache.feed_manifest, dependencies=mp001_dependencies())
             adviser = engine_config(cache.feed_manifest, json.loads(raw), config.code_version, rel.key)
         engine = {

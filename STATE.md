@@ -1,6 +1,6 @@
 # Project State
 
-Updated: 2026-10-06 — MP-003 v0.2 design CLOSED; WP-012 bounded implementation ACTIVE; Owner economic plan INACTIVE.
+Updated: 2026-10-06 — MP-003 v0.2 design CLOSED; WP-012 implementation delivered: READY FOR DIRECTOR REVIEW — WP-012 ONLY (not accepted); Owner economic plan INACTIVE.
 
 **Current task: [task.md](task.md) — implement [WP-012](delivery/WP-012-MP-003-IMPLEMENTATION-SPEC.md) only.** [Closed design](delivery/MP-003-A-REACTION-ANCHOR-DISPOSITION.md), [Astra closure](delivery/MP-003-ASTRA-CLOSURE.md). Earlier pending/design-only task labels are historical; no Owner economic run is authorized.
 
@@ -335,3 +335,44 @@ Astra identified one remaining contradiction in design v0.1: a birth-time B-cont
 ## MP-003 Director closure / WP-012 activation — 6 October 2026
 
 [Astra closure](delivery/MP-003-ASTRA-CLOSURE.md) reports no remaining/new blocker on eb091648. Director accepts this method-design conclusion, preserves the reviewed MP-003 prose, and activates only [WP-012](delivery/WP-012-MP-003-IMPLEMENTATION-SPEC.md). [Full register](delivery/MP-003-PARAMETERS.json) inherits MP-002 with all 108 numerical values preserved; changed categorical policies name the closed delta. No product/schema/data/test/economic run occurred in this activation. CI waiting remains Owner-operated. No general UX cleanup, parameter search, protected access or next package.
+
+
+## WP-012 executor evidence (base `68f26da`; READY FOR DIRECTOR REVIEW — WP-012 ONLY; not accepted)
+
+[Evidence](delivery/evidence/WP-012-ENGINEERING-EVIDENCE.md) / [JSON](delivery/evidence/WP-012-ENGINEERING-EVIDENCE.json), [fixture table generator](delivery/evidence/WP-012-FIXTURE-TABLE.py), [bounded measurement](delivery/evidence/WP-012-bench-mp003.json).
+
+- **Implemented.**
+  - `btc.context-action.v0.4` / `mp003.rules.v0.4` is selectable in the Workbench (step 2, with its purpose) and at live Start. Absent selection is still v0.2.
+  - `adviser/core4.py` subclasses the v0.3 fold and replaces only the A pre-confirmation domains:
+    - local V contact → `ANCHOR_LOST` (same scenario, WATCH);
+    - strictly deeper newly completed 15m reaction → prospective `REARM` at the actual dispatch time/cursor;
+    - destination monitored from the immutable first-arm publication, also in WATCH;
+    - straddling/simultaneous contacts are unassessable;
+    - frozen after the first confirmation.
+  - Everything after confirmation and the evaluator are v0.3; no numerical value changed.
+- **Identities.**
+  - `adviser.core.v4`, state/runtime v4, engine `observe.stream.v5`, report v4, reconciliation v7 (anchor-lineage checks), Deep v8; evaluator v3 reused.
+  - The rules identity is a manifest of the MP-003 delta and the inherited MP-002 rules/disposition and MP-001 rules.
+  - semantic.v2 r3 (`ScenarioStateV4`); observe.v1 r7 (method value only); adviser-evaluation.v1 unchanged (r3). No migration.
+  - v0.3 status corrected to TECHNICALLY_ACCEPTED (identity and outputs unchanged).
+- **Preservation.**
+  - All 38 v0.2/v0.3 fixed-fixture outputs equal pins from the unchanged base.
+  - B/C and post-confirmation A outputs equal v0.3 on 9 tapes (identifiers normalized).
+  - Strict codecs: no cross-method decode or resume.
+- **Checks** (disposable PostgreSQL 18.6, port 55439; Owner stack untouched):
+  - MP-003 fixtures 46 (all 13 §6 rows, LONG and SHORT, equality/ties, delayed publication/backlog, straddling, old bar, late epoch);
+  - versions/codec/parity 55; durable DB 11; live 5; browser journey 1;
+  - final full non-E2E 824 passed + 2 failed on the deliberate observe.v1 revision pin (updated; `test_observe.py` 21 passed);
+  - full E2E 20 passed;
+  - web typecheck/build; schema baselines.
+- **Reports and UI.**
+  - Anchor diagnostics: owner level vs event level, evaluation window only.
+  - Baseline/candidate comparison with the MP-003 limitation; v0.2/v0.3 comparison still readable.
+  - Follow and live views distinguish observation, active anchor, confirmed WAIT and call.
+- **For Director decision** (interpretations, evidence §6):
+  - ever-armed WATCH needs fresh monitoring evidence;
+  - late earlier-epoch contact → current anchor UNASSESSABLE;
+  - the contact-containing 15m bar is an eligible replacement source;
+  - live publication = dispatch tick after receipt.
+- **Owner plan.** October/November/December v0.3 baseline vs v0.4 is prepared but INACTIVE until Director acceptance and exact-SHA green CI. October may reuse `eval-20261006T175135-9ddf6d`. No economic run by the executor.
+- **CI.** Exact-SHA CI is Owner-operated: PENDING / NOT CHECKED.

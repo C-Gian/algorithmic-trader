@@ -40,7 +40,7 @@ class StartEvaluation(BaseModel):
     pack_id: str | None = Field(default=None, min_length=1, max_length=100)  # prepared evaluation pack (R3)
     acknowledge_limitations: bool = False  # explicit Owner acknowledgement for a READY_WITH_LIMITATIONS pack
     run_type: str = Field(default="observation_only", pattern="^(observation_only|adviser_evaluation)$")
-    method: str | None = Field(default=None, pattern="^v0\\.[23]$")  # adviser release; absent = v0.2 default
+    method: str | None = Field(default=None, pattern="^v0\\.[234]$")  # adviser release; absent = v0.2 default
     speed: float = Field(default=0.0, ge=0, le=control.MAX_SPEED)
     paused: bool = False
 
@@ -134,7 +134,10 @@ def adviser_section(c, ev: dict[str, Any], replay: dict[str, Any]) -> dict[str, 
                         (rid,)).fetchall()
     view = c.execute("SELECT adviser_view FROM observation_checkpoints WHERE replay_id = %s", (rid,)).fetchone()
     fin = c.execute("SELECT 1 FROM adviser_finish WHERE run_id = %s", (rid,)).fetchone()
-    builder = ar3 if eng["adviser"].get("method") == "v0.3" else ar
+    from ..adviser import report4 as ar4
+
+    key = eng["adviser"].get("method")
+    builder = ar4 if key == "v0.4" else ar3 if key == "v0.3" else ar
     return builder.build(engine=eng, journal=journal, records=records, view=(view or {}).get("adviser_view"),
                     status=replay["status"], clock_end_reached=fin is not None)
 
@@ -163,8 +166,9 @@ def build_router(conn: Callable, data_root: Path, art_root: Path) -> APIRouter:
             pinned = ((replay.get("engine") or {}).get("adviser") or {})
             key = pinned.get("method") or (replay.get("launch") or {}).get("adviser_method") or "v0.2"
             rel = methods.get(key)
-            method = {"method": key, "label": rel.label, "status": rel.status, "model": rel.model,
-                      "pinned_at_preparation": bool(pinned)}
+            method = {"method": key, "label": rel.label, "status": rel.status, "status_label": rel.status_label,
+                      "model": rel.model, "pinned_at_preparation": bool(pinned),
+                      "economic_usefulness": "UNVALIDATED"}
         return {
             "method": method,
             "evaluation_id": ev["evaluation_id"],

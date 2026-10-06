@@ -185,7 +185,7 @@ def test_deep_v7_matches_a_completed_v03_run_and_detects_stored_tamper(database_
 def test_paired_v02_v03_evaluations_and_read_only_comparison(database_url, tmp_path, monkeypatch):
     root, art, pack = _prepared(database_url, tmp_path, monkeypatch)
     api = TestClient(create_app(database_url, art, web_dist=tmp_path / "no-ui", data_root=root))
-    assert [m["method"] for m in api.get("/api/adviser/methods").json()["methods"]] == ["v0.2", "v0.3"]
+    assert [m["method"] for m in api.get("/api/adviser/methods").json()["methods"]] == ["v0.2", "v0.3", "v0.4"]
     ids = {}
     for m in ("v0.2", "v0.3"):
         r = api.post("/api/evaluations", json={"pack_id": pack["pack_id"], "run_type": "adviser_evaluation",
@@ -194,7 +194,7 @@ def test_paired_v02_v03_evaluations_and_read_only_comparison(database_url, tmp_p
         assert r.json()["method"]["method"] == m and r.json()["method"]["pinned_at_preparation"] is False
         ids[m] = r.json()["evaluation_id"]
     assert api.post("/api/evaluations", json={"pack_id": pack["pack_id"], "run_type": "adviser_evaluation",
-                                              "method": "v0.4"}).status_code == 422
+                                              "method": "v0.9"}).status_code == 422  # WP-012: v0.4 now packaged
     # comparing before completion launches nothing and is labelled incomplete
     c0 = api.get("/api/evaluations/compare/report.json", params={"a": ids["v0.2"], "b": ids["v0.3"]}).json()
     assert c0["comparability"]["verdict"] in ("INCOMPLETE", "NOT_ADVISER_RUNS")
@@ -203,7 +203,7 @@ def test_paired_v02_v03_evaluations_and_read_only_comparison(database_url, tmp_p
     run_all(worker(database_url, root, art, "observe:x", checkpoint_events=2000))
     det = {m: api.get(f"/api/evaluations/{ids[m]}").json() for m in ids}
     assert det["v0.2"]["method"]["pinned_at_preparation"] and det["v0.2"]["method"]["label"] == "Original v0.2"
-    assert det["v0.3"]["method"]["status"] == "ENGINEERING_REVIEW_PENDING"
+    assert det["v0.3"]["method"]["status"] == "TECHNICALLY_ACCEPTED"  # WP-012 status correction
     rep3 = api.get(f"/api/evaluations/{ids['v0.3']}/report.json").json()
     a3 = rep3["adviser"]
     assert a3["report_version"] == "adviser.report.v3" and a3["funnel"]["a_return_calls"] == 1
@@ -220,7 +220,7 @@ def test_paired_v02_v03_evaluations_and_read_only_comparison(database_url, tmp_p
     assert cmp["pins"]["a"]["pack_id"] == cmp["pins"]["b"]["pack_id"] == pack["pack_id"]
     assert cmp["conclusion"]["verdict"] == "INSUFFICIENT_EVIDENCE"
     md = api.get("/api/evaluations/compare/report.md", params={"a": ids["v0.2"], "b": ids["v0.3"]}).text
-    assert "Comparability: COMPARABLE" in md and "not causal for RETURN alone" in md
+    assert "Comparability: COMPARABLE" in md and "baseline v0.2 (A) vs candidate v0.3 (B)" in md
     assert [x["id"] for x in cmp["limitations"]] == ["V02_DISLOCATION_BASELINE_DEFECT_CORRECTED_IN_V03"]
     assert "## Comparison limitations" in md and "cannot attribute any difference to RETURN alone" in md
     assert a3["funnel"]["a_destination_before_confirmation"]["count"] == 0

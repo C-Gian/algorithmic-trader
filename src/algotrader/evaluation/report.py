@@ -153,7 +153,8 @@ def build_report(ev: dict[str, Any], replay: dict[str, Any], manifest: dict[str,
     if adviser is not None:
         model = (adviser.get("identity") or {}).get("model") or "btc.context-action.v0.2"
         caps = {"professional_adviser": {"status": "CONNECTED", "reason": (
-                    "MP-002 " if model.endswith("v0.3") else "MP-001 ") + f"{model} adviser"},
+                    "MP-003 " if model.endswith("v0.4") else "MP-002 " if model.endswith("v0.3") else "MP-001 ")
+                    + f"{model} adviser"},
                 **{key: {"label": label, "status": "REPORTED", "value": None, "reason": "see the adviser section"}
                    for key, label in UNAVAILABLE_METRICS}}
     return {
@@ -238,6 +239,8 @@ def pack_section(p: dict[str, Any] | None, applied: int, total: int | None, stat
     return {
         "pack_id": p["pack_id"], "status": p["status"], "acknowledged_limitations": p.get("acknowledged_limitations"),
         "preset_id": p["preset"]["preset_id"], "preset_sha256": p["preset_sha256"], "method": p["method"],
+        "method_label_meaning": ("input requirements of the prepared pack (preset file label); NOT the adviser "
+                                 "method chosen for this run, which is pinned in the adviser section"),
         "rules_version": p["rules_version"], "register_sha256": p["register_sha256"],
         "capability_profile_sha256": p["capability_profile_sha256"], "capability_profile": p["capability_profile"],
         "windows": p["windows"], "evidence_classes": p["evidence_classes"], "boundaries": p["boundaries"],
@@ -363,8 +366,9 @@ def render_markdown(r: dict[str, Any]) -> str:
                   f"- Pack `{pk['pack_id']}` · status **{pk['status']}**"
                   + (" · limitations acknowledged for this inspection run" if pk.get("acknowledged_limitations")
                      else ""),
-                  f"- Preset `{pk['preset_id']}` ({pk['evidence_classes']['label']}) · method {pk['method']} / "
-                  f"{pk['rules_version']} (register `{pk['register_sha256'][:12]}`, input requirements only) · "
+                  f"- Preset `{pk['preset_id']}` ({pk['evidence_classes']['label']}) · pack input-requirement label "
+                  f"{pk['method']} / {pk['rules_version']} (register `{pk['register_sha256'][:12]}`; not the adviser "
+                  "chosen for this run) · "
                   f"profile `{pk['capability_profile_sha256'][:12]}`",
                   f"- Warmup {w['warmup']['start']} → {w['warmup']['end']} (unscored) · evaluation "
                   f"{w['evaluation']['start']} → {w['evaluation']['end']} · tail {w['tail']['start']} → "
@@ -408,7 +412,9 @@ def render_markdown(r: dict[str, Any]) -> str:
         if r["adviser"].get("pending"):
             lines += ["", "## Adviser evaluation", f"- PENDING: {r['adviser']['text']}"]
         else:
-            if r["adviser"].get("report_version") == "adviser.report.v3":
+            if r["adviser"].get("report_version") == "adviser.report.v4":
+                from ..adviser.report4 import render_markdown as adviser_md
+            elif r["adviser"].get("report_version") == "adviser.report.v3":
                 from ..adviser.report3 import render_markdown as adviser_md
             else:
                 from ..adviser.report import render_markdown as adviser_md

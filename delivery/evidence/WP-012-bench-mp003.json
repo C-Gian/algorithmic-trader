@@ -1,0 +1,155 @@
+{
+  "label": "WP-012 bounded engineering measurement - synthetic fixtures on the executor machine; not a month/year, performance-gate or economic result",
+  "python": "3.14.7",
+  "pure": [
+    {
+      "method": "v0.3",
+      "synthetic_days": 1,
+      "events": 4320,
+      "wall_seconds": 0.676,
+      "events_per_second": 6393.3,
+      "professional_dispatches": 1441,
+      "journal_records": 96,
+      "journal_records_by_kind": {
+        "entry_attempt": 1,
+        "landmark": 36,
+        "market_view": 24,
+        "observation": 33,
+        "scenario": 2
+      },
+      "evaluation_records": 25,
+      "calls": 0,
+      "restore_state_compressed_bytes": 10380,
+      "direct_restore_encode_decode_seconds": 0.0031,
+      "anchor_transitions": {
+        "BIRTH": 1,
+        "TERMINAL": 1
+      },
+      "max_active_anchor_history": 0,
+      "process": {
+        "cpu_seconds": 1.078,
+        "max_rss_bytes": 70979584,
+        "max_rss_source": "Windows PeakWorkingSetSize (process lifetime peak)"
+      }
+    },
+    {
+      "method": "v0.3",
+      "synthetic_days": 2,
+      "events": 8640,
+      "wall_seconds": 1.255,
+      "events_per_second": 6883.1,
+      "professional_dispatches": 2881,
+      "journal_records": 254,
+      "journal_records_by_kind": {
+        "entry_attempt": 5,
+        "landmark": 100,
+        "market_view": 64,
+        "observation": 74,
+        "scenario": 11
+      },
+      "evaluation_records": 49,
+      "calls": 0,
+      "restore_state_compressed_bytes": 12868,
+      "direct_restore_encode_decode_seconds": 0.004,
+      "anchor_transitions": {
+        "ARM": 1,
+        "BIRTH": 5,
+        "TERMINAL": 5
+      },
+      "max_active_anchor_history": 0,
+      "process": {
+        "cpu_seconds": 2.344,
+        "max_rss_bytes": 90873856,
+        "max_rss_source": "Windows PeakWorkingSetSize (process lifetime peak)"
+      }
+    },
+    {
+      "method": "v0.4",
+      "synthetic_days": 1,
+      "events": 4320,
+      "wall_seconds": 0.643,
+      "events_per_second": 6716.8,
+      "professional_dispatches": 1441,
+      "journal_records": 96,
+      "journal_records_by_kind": {
+        "entry_attempt": 1,
+        "landmark": 36,
+        "market_view": 24,
+        "observation": 33,
+        "scenario": 2
+      },
+      "evaluation_records": 25,
+      "calls": 0,
+      "restore_state_compressed_bytes": 10439,
+      "direct_restore_encode_decode_seconds": 0.0036,
+      "anchor_transitions": {
+        "BIRTH": 1,
+        "TERMINAL": 1
+      },
+      "max_active_anchor_history": 0,
+      "process": {
+        "cpu_seconds": 3.0,
+        "max_rss_bytes": 90873856,
+        "max_rss_source": "Windows PeakWorkingSetSize (process lifetime peak)"
+      }
+    },
+    {
+      "method": "v0.4",
+      "synthetic_days": 2,
+      "events": 8640,
+      "wall_seconds": 1.278,
+      "events_per_second": 6761.4,
+      "professional_dispatches": 2881,
+      "journal_records": 254,
+      "journal_records_by_kind": {
+        "entry_attempt": 5,
+        "landmark": 100,
+        "market_view": 64,
+        "observation": 74,
+        "scenario": 11
+      },
+      "evaluation_records": 49,
+      "calls": 0,
+      "restore_state_compressed_bytes": 12950,
+      "direct_restore_encode_decode_seconds": 0.0043,
+      "anchor_transitions": {
+        "ARM": 1,
+        "BIRTH": 5,
+        "TERMINAL": 5
+      },
+      "max_active_anchor_history": 0,
+      "process": {
+        "cpu_seconds": 4.266,
+        "max_rss_bytes": 90980352,
+        "max_rss_source": "Windows PeakWorkingSetSize (process lifetime peak)"
+      }
+    }
+  ],
+  "scaling_v0.3": {
+    "wall_ratio_2d_over_1d": 1.86,
+    "state_ratio_2d_over_1d": 1.24
+  },
+  "scaling_v0.4": {
+    "wall_ratio_2d_over_1d": 1.99,
+    "state_ratio_2d_over_1d": 1.24
+  },
+  "durable": {
+    "fixture": "contact_then_rearm (v0.4 anchor loss, REARM, confirmation, WAIT), pack events 6495",
+    "status": "completed",
+    "assurance": "passed",
+    "wall_seconds": 4.089,
+    "transactions_committed": 15,
+    "checkpoint_adviser_bytes": 5866,
+    "journal_rows_by_kind": {
+      "entry_attempt": 3,
+      "landmark": 6,
+      "market_view": 31,
+      "observation": 39,
+      "scenario": 7
+    },
+    "crash_reclaim_status": "completed",
+    "restore_prefix_or_suffix_events_after_reclaim": 0,
+    "pause_request_to_parked_seconds": 0.272,
+    "pause_status": "paused"
+  }
+}

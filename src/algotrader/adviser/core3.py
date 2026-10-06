@@ -261,6 +261,12 @@ class CallV3(Call):
 
 
 class AdviserCoreV3(AdviserCore):
+    # method-dependent classes / formats (WP-012: a later release subclasses this fold and overrides only these hooks
+    # and the named semantics; for v0.3 every hook is the identity, so its outputs and state bytes are unchanged)
+    SCEN_CLS: type[Scen] = Scen
+    STATE_FMT = STATE_FORMAT
+    KINDS = sc.KIND_CONTRACTS_V3
+
     def __init__(self, config: AdviserConfig) -> None:
         super().__init__(config)
         self.scen: dict[str, Scen] = {}
@@ -569,10 +575,14 @@ class AdviserCoreV3(AdviserCore):
             elif t >= s.conf_deadline:
                 self._scen_end(s, "TIME_EXPIRED", "CONFIRMED_HARD_DEADLINE", t)
                 continue
-            if s.status in ("ARMED", "CONFIRMED") and m1_stale:
+            if self._monitored(s) and m1_stale:
                 self._scen_end(s, "UNASSESSABLE", "REQUIRED_TRADE_1M_STALE", t, coverage_from=self.last_1m_end)
-            elif s.status in ("ARMED", "CONFIRMED") and m15_stale:
+            elif self._monitored(s) and m15_stale:
                 self._scen_end(s, "UNASSESSABLE", "REQUIRED_INPUT_STALE:TRADE_15M", t, coverage_from=self.last_1m_end)
+
+    def _monitored(self, s: Scen) -> bool:
+        """Scenarios whose V/destination monitoring needs fresh 1m and 15m trade evidence."""
+        return s.status in ("ARMED", "CONFIRMED")
 
     def _scen_progress(self, s: Scen, t: datetime) -> bool:
         """Confirmed-scenario stalled test: max favorable complete-minute close displacement from the confirmation
@@ -592,52 +602,57 @@ class AdviserCoreV3(AdviserCore):
         loss. Confirmed scenarios also accumulate progress extrema on wholly post-confirmation closes."""
         for m in items:
             for s in sorted(list(self.scen.values()), key=lambda s: s.sid):
-                if s.status not in ("ARMED", "CONFIRMED") or not s.v_hist:
-                    continue
-                first = _dt(s.v_hist[0][0])
-                if isinstance(m, tuple):
-                    if m[1] + MINUTE > first:
-                        self._scen_end(s, "UNASSESSABLE", f"REQUIRED_MONITORING_GAP:{m[2]}", t, coverage_from=m[1])
-                    continue
-                if m.end <= first:
-                    continue  # wholly before the arm publication
-                _, h_t, l_t, c_t = tbar(m, s.d)
-                hit_d = s.dest_t is not None and h_t >= s.dest_t
-                if m.start < first:  # straddles the arm publication
-                    if l_t <= Decimal(s.v_hist[0][1]) or hit_d:
-                        self._scen_end(s, "UNASSESSABLE", "ARM_CONTACT_TIME_AMBIGUOUS", t)
-                    continue
-                inside = [Decimal(v) for since, v in s.v_hist if m.start < _dt(since) < m.end]
-                v_start = Decimal(next(v for since, v in reversed(s.v_hist) if _dt(since) <= m.start))
-                if inside and (l_t <= max([v_start] + inside) or hit_d):
-                    self._scen_end(s, "UNASSESSABLE", "LEVEL_REVISION_CONTACT_TIME_AMBIGUOUS", t)
-                    continue
-                hit_v = l_t <= v_start
-                if s.status == "CONFIRMED" and not s.progress_done and m.end > s.progress_at:
-                    if self._scen_progress(s, t):  # every minute ending <= progress_at was already processed
-                        continue
-                if hit_v and hit_d:
-                    self._scen_end(s, "UNASSESSABLE", f"DESTINATION_AND_INVALIDATION_SAME_INTERVAL:{m.rid}", t)
-                    continue
-                if hit_v:
-                    self._scen_end(s, "INVALIDATED", f"V_CONTACT:{m.rid}", t)
-                    continue
-                if hit_d:
-                    self._scen_end(s, "DESTINATION_REACHED", f"DESTINATION_CONTACT:{m.rid}", t)
-                    continue
-                if s.status == "CONFIRMED" and m.start >= s.conf_at:
-                    s.last_end = m.end
-                    if m.end <= s.progress_at:
-                        fav = c_t - s.conf_close_t
-                        s.max_fav_t = fav if s.max_fav_t is None else max(s.max_fav_t, fav)
-                elif s.status == "CONFIRMED":
-                    s.last_end = max(s.last_end or m.end, m.end)  # straddling confirmation: freshness only
+                if s.sid in self.scen:
+                    self._scen_interval(s, m, t)
         # timer-based progress check once the minute ending at the check time was processed in this dispatch (a
         # check minute that never arrives is caught by the stale/gap rules, never guessed)
         for s in sorted([x for x in self.scen.values() if x.status == "CONFIRMED"], key=lambda x: x.sid):
             if (not s.progress_done and t >= s.progress_at and s.last_end is not None
                     and s.last_end >= s.progress_at.replace(second=0, microsecond=0)):
                 self._scen_progress(s, t)
+
+    def _scen_interval(self, s: Scen, m: Any, t: datetime) -> None:
+        """One newly admitted interval (a complete Bar, or a missing-minute tuple) against one scenario (MP-002)."""
+        if s.status not in ("ARMED", "CONFIRMED") or not s.v_hist:
+            return
+        first = _dt(s.v_hist[0][0])
+        if isinstance(m, tuple):
+            if m[1] + MINUTE > first:
+                self._scen_end(s, "UNASSESSABLE", f"REQUIRED_MONITORING_GAP:{m[2]}", t, coverage_from=m[1])
+            return
+        if m.end <= first:
+            return  # wholly before the arm publication
+        _, h_t, l_t, c_t = tbar(m, s.d)
+        hit_d = s.dest_t is not None and h_t >= s.dest_t
+        if m.start < first:  # straddles the arm publication
+            if l_t <= Decimal(s.v_hist[0][1]) or hit_d:
+                self._scen_end(s, "UNASSESSABLE", "ARM_CONTACT_TIME_AMBIGUOUS", t)
+            return
+        inside = [Decimal(v[1]) for v in s.v_hist if m.start < _dt(v[0]) < m.end]
+        v_start = Decimal(next(v[1] for v in reversed(s.v_hist) if _dt(v[0]) <= m.start))
+        if inside and (l_t <= max([v_start] + inside) or hit_d):
+            self._scen_end(s, "UNASSESSABLE", "LEVEL_REVISION_CONTACT_TIME_AMBIGUOUS", t)
+            return
+        hit_v = l_t <= v_start
+        if s.status == "CONFIRMED" and not s.progress_done and m.end > s.progress_at:
+            if self._scen_progress(s, t):  # every minute ending <= progress_at was already processed
+                return
+        if hit_v and hit_d:
+            self._scen_end(s, "UNASSESSABLE", f"DESTINATION_AND_INVALIDATION_SAME_INTERVAL:{m.rid}", t)
+            return
+        if hit_v:
+            self._scen_end(s, "INVALIDATED", f"V_CONTACT:{m.rid}", t)
+            return
+        if hit_d:
+            self._scen_end(s, "DESTINATION_REACHED", f"DESTINATION_CONTACT:{m.rid}", t)
+            return
+        if s.status == "CONFIRMED" and m.start >= s.conf_at:
+            s.last_end = m.end
+            if m.end <= s.progress_at:
+                fav = c_t - s.conf_close_t
+                s.max_fav_t = fav if s.max_fav_t is None else max(s.max_fav_t, fav)
+        elif s.status == "CONFIRMED":
+            s.last_end = max(s.last_end or m.end, m.end)  # straddling confirmation: freshness only
 
     # ----------------------------------------------------------------------------------------------------------
     # 15m close processing (preserved MP-001 setup rules on structural scenarios)
@@ -793,9 +808,10 @@ class AdviserCoreV3(AdviserCore):
         lows = [tbar(x, d)[2] for x in src]
         highs = [tbar(x, d)[1] for x in src]
         sid = f"A{dname(d)[0]}-{_iso(b.start)}-{_h(self.cfg.method.rules_sha256, self.cfg.instrument, 'A', d, b.rid)}"
-        s = Scen(sid=sid, family="A", d=d, owner=sid, born_at=t, born_seq=self.seq, sources=[x.rid for x in src],
-                 setup_deadline=t + p.a_lifetime, s15=self.s15, z=z, a_t=min(lows), b_t=max(highs),
-                 prev_close_t=tbar(b, d)[3], renewal=renewal, dest_t=max(highs), dest_type="IMPULSE_B")
+        s = self.SCEN_CLS(sid=sid, family="A", d=d, owner=sid, born_at=t, born_seq=self.seq,
+                          sources=[x.rid for x in src], setup_deadline=t + p.a_lifetime, s15=self.s15, z=z,
+                          a_t=min(lows), b_t=max(highs), prev_close_t=tbar(b, d)[3], renewal=renewal,
+                          dest_t=max(highs), dest_type="IMPULSE_B")
         self.scen[sid] = s
         self.a_owner[str(d)] = {"sid": sid, "expires": _iso(s.setup_deadline)}
         self.counters["episodes"]["A"][dname(d)] += 1
@@ -879,8 +895,8 @@ class AdviserCoreV3(AdviserCore):
     def _new_bc(self, fam: str, d: int, bx, b: Bar, t: datetime, life_end: datetime) -> Scen:
         sid = (f"{fam}{dname(d)[0]}-{_iso(b.start)}-"
                f"{_h(self.cfg.method.rules_sha256, self.cfg.instrument, fam, d, bx.bid, b.rid)}")
-        s = Scen(sid=sid, family=fam, d=d, owner=bx.bid, born_at=t, born_seq=self.seq, sources=[b.rid],
-                 setup_deadline=min(bx.expires_at, life_end), s15=bx.s15, z=bx.z)
+        s = self.SCEN_CLS(sid=sid, family=fam, d=d, owner=bx.bid, born_at=t, born_seq=self.seq, sources=[b.rid],
+                          setup_deadline=min(bx.expires_at, life_end), s15=bx.s15, z=bx.z)
         self.scen[sid] = s
         self.counters["episodes"][fam][dname(d)] += 1
         self._touch()
@@ -1529,7 +1545,7 @@ class AdviserCoreV3(AdviserCore):
         self.journal_seq += 1
         rid = rid or f"{kind}-{self.journal_seq:08d}"
         env = self._envelope(kind, rid, t, revision, lineage, event)
-        model = sc.KIND_CONTRACTS_V3[kind](env=env, **body)
+        model = self.KINDS[kind](env=env, **body)
         doc = json.loads(model.model_dump_json())
         digest = hashlib.sha256(canonical(doc)).hexdigest()
         self.journal_chain = hashlib.sha256(bytes.fromhex(self.journal_chain) + bytes.fromhex(digest)).hexdigest()
@@ -1584,12 +1600,16 @@ class AdviserCoreV3(AdviserCore):
             "setup": setup, "activated_at": s.arm_at, "original_expiry": s.setup_deadline, "confirmed_at": s.conf_at,
             "confirmation_close": s.conf_close_t * s.d if s.conf_close_t is not None else None,
             "confirmation_scale": s.conf_s15, "confirmed_deadline": s.conf_deadline, "progress_check_at": s.progress_at,
-            "discovery_owner": own, "warmup_origin": es is not None and s.born_at < es},
+            "discovery_owner": own, "warmup_origin": es is not None and s.born_at < es, **self._scen_extra(s)},
             rid=f"{s.sid}#{transition.lower()}-{self.journal_seq + 1}",
             lineage=(s.sid,) + ((s.owner,) if s.owner and s.owner != s.sid else ()))
         key = f"{s.family}:{transition}"
         if self.window == "EVALUATION":
             self.counters["v3"]["scenario_transitions"][key] = self.counters["v3"]["scenario_transitions"].get(key, 0) + 1
+
+    def _scen_extra(self, s: Scen) -> dict:
+        """Release-specific scenario record fields (none for v0.3: its record bytes are unchanged)."""
+        return {}
 
     def _emit_entry(self, s: Scen, state: str, mode: str | None, transition: str, reason: str | None, t: datetime, *,
                     blockers=(), call_id: str | None = None, geometry: dict | None = None, containing=(),
@@ -1783,7 +1803,7 @@ class AdviserCoreV3(AdviserCore):
     def inspect(self) -> dict:
         out = super().inspect()
         t = self.clock
-        out["format"] = STATE_FORMAT
+        out["format"] = self.STATE_FMT
         out["method_semantics"] = "MP-002 v0.3: structural scenarios + child entry attempts"
         out["scenarios"] = self.scenarios_view(t)
         out["attempts"] = [{"attempt_id": s.sid, "family": s.family, "direction": dname(s.d), "status": s.status,
@@ -1798,7 +1818,7 @@ class AdviserCoreV3(AdviserCore):
 
     def encode(self) -> dict:
         doc = super().encode()
-        doc["format"] = STATE_FORMAT
+        doc["format"] = self.STATE_FMT
         doc["v3"] = {"scen": [s.encode() for _, s in sorted(self.scen.items())],
                      "a_owner": {k: v for k, v in sorted(self.a_owner.items())},
                      "waits": [w.encode() for _, w in sorted(self.waits.items())]}
@@ -1810,17 +1830,18 @@ class AdviserCoreV3(AdviserCore):
 
     @classmethod
     def decode(cls, doc: dict, cfg: AdviserConfig) -> AdviserCoreV3:
-        if doc.get("format") != STATE_FORMAT:
-            raise AdviserError(f"adviser state format {doc.get('format')!r} is not {STATE_FORMAT}")
+        if doc.get("format") != cls.STATE_FMT:
+            raise AdviserError(f"adviser state format {doc.get('format')!r} is not {cls.STATE_FMT}")
         base = {**doc, "format": BASE_STATE_FORMAT, "call": None, "view_key": None}
         base.pop("v3")
+        base.pop("v4", None)
         c = super().decode(base, cfg)
         c.call = CallV3.decode(doc["call"]) if doc["call"] else None
         c.view_key = _tuples(doc["view_key"]) if doc["view_key"] is not None else None
         if c.view is not None and "watch" in c.view:
             c.view["watch"] = tuple(c.view["watch"])
         v3 = doc["v3"]
-        c.scen = {d["sid"]: Scen.decode(d) for d in v3["scen"]}
+        c.scen = {d["sid"]: cls.SCEN_CLS.decode(d) for d in v3["scen"]}
         c.a_owner = dict(v3["a_owner"])
         c.waits = {f"{d['sid']}#entry": Wait.decode(d) for d in v3["waits"]}
         # absent (states written before the snapshot existed): unknown, not an empty snapshot; it cannot be invented,

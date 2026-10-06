@@ -1091,6 +1091,11 @@
       "date": "2026-10-05",
       "note": "WP-011 method selection (additive, optional): ObservationLaunch adds optional adviser_method ('v0.2' | 'v0.3'; absent/None = the existing v0.2 default) persisted before preparation; the worker-owned preparation pins the selected release in the engine document. v0.3 adviser runs use engine observe.stream.v4 (algotrader.adviser-runtime.v3 state) and the manifest ``adviser`` reference also names the pinned method. v0.2 (observe.stream.v3) runs, earlier manifests, launches and readers are unchanged.",
       "revision": 6
+    },
+    {
+      "date": "2026-10-06",
+      "note": "WP-012 MP-003 v0.4 (additive values only; no field, type or shape change): ObservationLaunch adviser_method also accepts 'v0.4'; v0.4 adviser runs use engine observe.stream.v5 (algotrader.adviser-runtime.v4 state in the same fenced checkpoints) and the manifest ``adviser`` reference names method 'v0.4' with its model/rules version/implementation. v0.2/v0.3 runs, earlier manifests, launches and readers are unchanged.",
+      "revision": 7
     }
   ],
   "clock_policy": "Event-driven replay clock: one step applies exactly one causal feed delivery, in the accepted feed.v1 total order; replay/information time becomes that delivery's available_time. Pacing (events/s) is operational only and never changes order, state or digests.",
@@ -1112,7 +1117,7 @@
     "SourceVerification": "#/$defs/SourceVerification",
     "ValidationCheck": "#/$defs/ValidationCheck"
   },
-  "revision": 6,
+  "revision": 7,
   "schema_version": "algotrader.observe.v1",
   "status": "PROVISIONAL",
   "title": "Algorithmic Trader observation-replay contracts (algotrader.observe.v1, PROVISIONAL)"

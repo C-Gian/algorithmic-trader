@@ -118,20 +118,23 @@ def test_method_dispatch_identities_and_defaults():
             v3.deep_version) == ("adviser.core.v3", "adviser.evaluator.v3", "algotrader.adviser-state.v3",
                                  "algotrader.adviser-runtime.v3", "algotrader.adviser-evaluation-state.v2",
                                  "adviser.report.v3", "observe.stream.v4", "6", "7")
-    assert v3.status == "ENGINEERING_REVIEW_PENDING" and v3.label.startswith("Revised v0.3")
+    assert v3.status == "TECHNICALLY_ACCEPTED" and v3.label.startswith("Revised v0.3")  # WP-012 status correction
     with pytest.raises(methods.UnknownMethod):
-        methods.get("v0.4")
+        methods.get("v0.9")  # WP-012: v0.4 is now a packaged release
     p = idn.historical_profile()
     a, b = v2.composite_identity(p, {"pack": "x"}, "b"), v3.composite_identity(p, {"pack": "x"}, "b")
     assert a == idn.composite_identity(p, {"pack": "x"}, "b") and a["identity_sha256"] != b["identity_sha256"]
 
 
 def test_provisional_contract_revisions_and_per_method_emission():
-    assert (sc.SEMANTIC_V2_REVISION, ec.EVALUATION_REVISION, oc.OBSERVE_SCHEMA_REVISION) == (2, 3, 6)
-    assert [r for r, _, _ in sc.SEMANTIC_V2_CHANGELOG] == [1, 2]
+    # WP-012 bumped semantic.v2 to r3 (ScenarioStateV4) and observe.v1 to r7 (method value v0.4); the evaluation
+    # contract stays r3 (v0.4 reuses the v0.3 evaluator unchanged)
+    assert (sc.SEMANTIC_V2_REVISION, ec.EVALUATION_REVISION, oc.OBSERVE_SCHEMA_REVISION) == (3, 3, 7)
+    assert [r for r, _, _ in sc.SEMANTIC_V2_CHANGELOG] == [1, 2, 3]
     assert [r for r, _, _ in ec.EVALUATION_CHANGELOG] == [1, 2, 3]
-    assert [r for r, _, _ in oc.OBSERVE_CHANGELOG][-1] == 6
-    assert sc.SEMANTIC_V2_EMITTED_REVISION == {"btc.context-action.v0.2": 1, "btc.context-action.v0.3": 2}
+    assert [r for r, _, _ in oc.OBSERVE_CHANGELOG][-1] == 7
+    assert sc.SEMANTIC_V2_EMITTED_REVISION == {"btc.context-action.v0.2": 1, "btc.context-action.v0.3": 2,
+                                               "btc.context-action.v0.4": 3}
     assert "candidate" in sc.KIND_CONTRACTS and "candidate" not in sc.KIND_CONTRACTS_V3
     assert {"scenario", "entry_attempt"} <= set(sc.KIND_CONTRACTS_V3) and "scenario" not in sc.KIND_CONTRACTS
     # a revision-1 (v0.2) record still validates with the revision-1 contract after the revision bump

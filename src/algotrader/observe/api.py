@@ -145,8 +145,10 @@ def adviser_view(row: dict[str, Any]) -> dict[str, Any] | None:
                                                 "professional_seq")} if v else None,
             "counters": (v.get("counters") or {}) if v else None,
             "note": "committed adviser state at the latest checkpoint; hypothetical outcomes are separate"}
-    if v and v.get("scenarios") is not None:  # v0.3: structural scenarios and WAIT_PRICE children
+    if v and v.get("scenarios") is not None:  # v0.3/v0.4: structural scenarios and WAIT_PRICE children
         out["committed"]["scenarios"] = v["scenarios"]
+    if v and v.get("anchors") is not None:  # v0.4: pre-confirmation local reaction anchors
+        out["committed"]["anchors"] = v["anchors"]
     return out
 
 
