@@ -1,8 +1,8 @@
 # Project State
 
-Updated: 2026-10-06 — WP-011 technically accepted at 3fcbfc5; exact-SHA CI green; Owner October development comparison active.
+Updated: 2026-10-06 — WP-011 technically accepted at 3fcbfc5; Owner October comparison completed; bounded read-only October diagnosis delivered for Director review (November/December suspended).
 
-**Current task: [task.md](task.md) — Owner-operated October development comparison; no active executor implementation.** Current acceptance: [WP-011 final review](delivery/WP-011-FINAL-DIRECTOR-REVIEW.md). Product authority: [FOUNDATION.md](FOUNDATION.md); executor rules: [AGENTS.md](AGENTS.md). Earlier executor evidence below is historical and does not override this acceptance.
+**Current task: [task.md](task.md) — October diagnosis READY FOR DIRECTOR REVIEW; no active executor implementation.** Current acceptance: [WP-011 final review](delivery/WP-011-FINAL-DIRECTOR-REVIEW.md). Product authority: [FOUNDATION.md](FOUNDATION.md); executor rules: [AGENTS.md](AGENTS.md). Earlier executor evidence below is historical and does not override this acceptance.
 
 Goal (Foundation v3.1): an integrated BTC adviser with persistent actionable LONG/SHORT calls, entry area, targets, stop/exit guidance and holding horizon. Capital, size, leverage and orders stay human. Historical ACCEPTED/READY/HOLD labels in older documents do not authorize work; only task.md does.
 
@@ -283,3 +283,43 @@ Reviewed product 9b05a3e4bd3767ea627fa821ceaea3a32da34460: F1/F2 closed (indepen
 - **Legacy limitation**: records emitted during the first post-restore dispatch's sealed ingestion carry empty envelope dependencies (not invented). **For Director decision (not changed)**: Deep v7 on runs whose ranges were written by the pre-9b05a3e codec would report adviser state-hash mismatches (code reading).
 - **Checks** (disposable PostgreSQL 18.3; Owner stack untouched): MP-002 pure 100 passed; DB 17 passed (`test_mp002_db`, live DB suites); schema baselines match. Full suite, E2E, compose smoke not rerun; exact-SHA CI Owner-operated, PENDING. [Evidence](delivery/evidence/WP-011-COMPAT-EVIDENCE.md) / [JSON](delivery/evidence/WP-011-COMPAT-EVIDENCE.json).
 - Owner October/November/December comparison remains INACTIVE.
+
+
+## Owner October comparison and read-only diagnosis — executor evidence (base `bd5d81c`; READY FOR DIRECTOR REVIEW — OCTOBER DIAGNOSIS ONLY; not accepted)
+
+Owner runs on build `bd5d81c`, common pack `pack-30c0661f…` / cache `fc-de5aa4a9…`. Both runs COMPLETED; the comparison is COMPARABLE.
+
+| Run | Evaluation / replay | Assurance | Result |
+|---|---|---|---|
+| v0.2 | `eval-20261006T173330-4e7c36` / `obs-20261006T173330-62d684` | reconciliation v5 PASS 20/20 | 1 A LONG call |
+| v0.3 | `eval-20261006T175135-9ddf6d` / `obs-20261006T175135-e8267a` | reconciliation v6 PASS 21/21 | 0 calls; 6 A confirmations: 3 RETURN_WAIT, 2 NO_ECONOMIC_RETURN_REGION, 1 PRE_ENTRY_TARGET_CONTACT; 0 usable returns |
+
+Director-authorized diagnosis: [summary](delivery/evidence/WP-011-OWNER-OCTOBER-DIAGNOSIS/SUMMARY.md), [JSON](delivery/evidence/WP-011-OWNER-OCTOBER-DIAGNOSIS/dossier.json), [confirmations](delivery/evidence/WP-011-OWNER-OCTOBER-DIAGNOSIS/confirmations.csv), [wait minutes](delivery/evidence/WP-011-OWNER-OCTOBER-DIAGNOSIS/wait_minutes.csv), [script](delivery/evidence/WP-011-OWNER-OCTOBER-DIAGNOSIS/extract_diagnosis.py).
+
+- **Access.**
+  - One REPEATABLE READ READ ONLY psql transaction (snapshot `540150:540150:`) and a byte copy of the pinned cache. The export stays outside Git.
+  - No replay, Deep, backtest, download, sweep, product/parameter/schema change, or Owner-stack start/stop.
+- **Verification.**
+  - Both journals and both evaluation-record chains were re-hashed and equal their finish commitments.
+  - The cache manifest equals the pin; 31/31 partitions verified.
+  - The app's own report builders on the stored rows reproduce the Owner's counts exactly.
+  - The extraction is byte-reproducible.
+- **Q1 — the LONG.** Same birth/arm in both runs. At the 23:30 dispatch the 1m interval [23:29,23:30) has low 114329.5 ≤ armed V 114343.28.
+  - v0.3 invalidates the scenario (MP-002 §3/§6: V contact is processed before newly complete revisions; `core3` order matches).
+  - v0.2 checks V only on confirming minutes and re-anchors V lower at the 15m close (MP-001 §98), then issues at 23:34.
+  - Dislocation and other entry gates are not involved.
+  - Scope (STORED): 49/55 October v0.2 A revisions (29 attempts) went at or through the armed V; the only v0.2 call came from one of them.
+- **Q2/Q3.**
+  - In 5/6 confirmations T_confirm is the scenario's own impulse-B near edge, 0.45–20.4 bps from the close; every scenario later reached its destination (1–93 min).
+  - The three waits each needed a 26–29 bps retracement toward R. Price never closed there, and never traded there intrabar.
+  - Endings: setup deadline (1); destination/target-side contact (2).
+  - The DERIVED price blockers equal the STORED blocker set in force in 64/64 sampled minutes.
+- **Findings.**
+  - Behaviour conforms to MP-002 and the build code. No implementation defect or counterexample was found.
+  - For Director decision: the V-contact vs inherited re-anchoring interaction (explicit in the spec, measurable effect).
+  - Code-reading notes:
+    - the return gate samples only the latest minute of a dispatch;
+    - the `corpus.pack.method` preset label reads v0.2 for both runs.
+  - The counterfactual (what v0.3 would have issued without the rule) is NOT DEMONSTRABLE without an unauthorized replay.
+- **Checks.** Documentation-only delivery: no product suite or Compose smoke rerun (per Director instruction). Counts, provenance and links were checked. CI on the pushed SHA is Owner-operated: PENDING / NOT CHECKED.
+- November/December remain SUSPENDED. No implementation is activated.
