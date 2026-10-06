@@ -1,14 +1,14 @@
 # Project State
 
-Updated: 2026-10-06 — WP-011 technically accepted at 3fcbfc5; Owner October comparison completed; bounded read-only October diagnosis delivered for Director review (November/December suspended).
+Updated: 2026-10-06 — October diagnosis reviewed; MP-003 v0.4 anchor/scenario design proposed for Astra closure; no implementation or backtest active.
 
-**Current task: [task.md](task.md) — October diagnosis READY FOR DIRECTOR REVIEW; no active executor implementation.** Current acceptance: [WP-011 final review](delivery/WP-011-FINAL-DIRECTOR-REVIEW.md). Product authority: [FOUNDATION.md](FOUNDATION.md); executor rules: [AGENTS.md](AGENTS.md). Earlier executor evidence below is historical and does not override this acceptance.
+**Current task: [task.md](task.md) — MP-003 design closure review only.** [Proposed decision](delivery/MP-003-A-REACTION-ANCHOR-DISPOSITION.md), [Astra October review](delivery/WP-011-OWNER-OCTOBER-ASTRA-REVIEW.md). FOUNDATION and AGENTS remain authoritative; earlier active handoffs below are superseded.
 
 Goal (Foundation v3.1): an integrated BTC adviser with persistent actionable LONG/SHORT calls, entry area, targets, stop/exit guidance and holding horizon. Capital, size, leverage and orders stay human. Historical ACCEPTED/READY/HOLD labels in older documents do not authorize work; only task.md does.
 
-## Current WP-011 release decision
+## Current method decision
 
-WP-011 accepted technically at `3fcbfc5`, CI `37494574273` checks and compose-smoke SUCCESS. Start two fresh October 2025 development evaluations, v0.2 then v0.3 on one identical prepared pack; Copy comparison for chat. Economic usefulness remains unknown. Pre-snapshot v0.3 engineering runs are excluded from this comparison; their Deep state-hash limitation is accepted and documented in the final review. November/December follow after October diagnosis. No protected evaluation or executor economic run is authorized.
+WP-011 remains technically accepted at 3fcbfc5, CI 37494574273. October paired evaluation is complete: v0.2 one call, v0.3 zero, both full coverage/PASS. The read-only diagnosis identifies a conformant but materially restrictive pre-confirmation V rule. Director adopts the proposed local-anchor/structural-scenario separation in MP-003 for a NEW v0.4 method, pending Astra closure. Costs, targets, confirmed WAIT/call protection and original deadlines remain unchanged. v0.4 is not implemented. Old v0.3 series is partial/suspended; no November/December outcome or protected run is authorized. Proposed new plan and contamination labels are in MP-003 §8. The dossier's SHORT target-distance scalar 29.64 bps is an acknowledged derived-display imprecision (explicit T/close yield about 29.55); original evidence is preserved, not rewritten.
 
 ## 1. Current implementation
 
