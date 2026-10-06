@@ -1,8 +1,11 @@
-# Current task — WP-012 MP-003 v0.4 implementation
-Date: 2026-10-06. Status: ACTIVE EXECUTOR IMPLEMENTATION; DIRECTOR REVIEW REQUIRED.
+# Current task — WP-012 correction F1
+Date: 2026-10-07 Europe/Rome.
+Status: ACTIVE BOUNDED CORRECTION; DIRECTOR REVIEW REQUIRED; NO OWNER ECONOMIC RUN.
 
-Implement [WP-012](delivery/WP-012-MP-003-IMPLEMENTATION-SPEC.md) from [closed MP-003 v0.2](delivery/MP-003-A-REACTION-ANCHOR-DISPOSITION.md), [Astra closure](delivery/MP-003-ASTRA-CLOSURE.md) and [complete register](delivery/MP-003-PARAMETERS.json). The closure supersedes the design document's historical pending-review status; reviewed rule bytes stay immutable.
+Fix F1 from [Director review](delivery/WP-012-DIRECTOR-REVIEW.md) on product e434d4311a947f65f2fccf035d61e79d9108add2. Use [complete synthetic probe](delivery/evidence/WP-012-DIRECTOR-PROBE.py) and [observed output](delivery/evidence/WP-012-DIRECTOR-PROBES.json). Closed MP-003 method remains unchanged.
 
-Only A pre-confirmation anchor/scenario/destination domains change. Preserve v0.2/v0.3, numerical predicates and confirmed WAIT/call/evaluator policy. Implement historical/live selection, bounded durable/causal evidence, anchor diagnostics and v0.3/v0.4 comparison. Required fixtures, versioning, compatibility, checks and delivery boundary are in WP-012.
+An interval straddling supersession that reaches the old active V but not the new V cannot certify clean continuation: evaluate the overlapping anchor domains, record ambiguity and preserve the replacement cutoff. Do not turn arbitrary inactive old levels into new contacts. Preserve v0.2/v0.3, original deadlines, prospective replacement and frozen confirmed WAIT/call/evaluator policy.
 
-Prepare an INACTIVE Owner app handoff; do not launch economic evaluations, acquire/inspect Owner data or activate protected periods. Follow AGENTS for isolated checks, commit/push and Owner-operated CI. Deliver READY FOR DIRECTOR REVIEW — WP-012 ONLY.
+Follow the review's regression/control/production-restore checks and evidence requirements. Full local suite/browser/benchmark are not required unless additional touched paths justify them; exact final CI remains Owner-operated under AGENTS. Update STATE/evidence, commit/push and deliver READY FOR DIRECTOR REVIEW — WP-012 CORRECTION ONLY.
+
+No economic run, Owner data inspection, acquisition, protected access or next package. App handoff remains INACTIVE.

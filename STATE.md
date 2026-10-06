@@ -1,8 +1,8 @@
 # Project State
 
-Updated: 2026-10-06 — MP-003 v0.2 design CLOSED; WP-012 implementation delivered: READY FOR DIRECTOR REVIEW — WP-012 ONLY (not accepted); Owner economic plan INACTIVE.
+Updated: 2026-10-07 — WP-012 Director review: CORRECTION REQUIRED (F1 straddling supersession contact); Owner comparison INACTIVE.
 
-**Current task: [task.md](task.md) — implement [WP-012](delivery/WP-012-MP-003-IMPLEMENTATION-SPEC.md) only.** [Closed design](delivery/MP-003-A-REACTION-ANCHOR-DISPOSITION.md), [Astra closure](delivery/MP-003-ASTRA-CLOSURE.md). Earlier pending/design-only task labels are historical; no Owner economic run is authorized.
+**Current task: [task.md](task.md) — WP-012 bounded correction only.** [Director review](delivery/WP-012-DIRECTOR-REVIEW.md). Earlier active implementation/hand-off labels are superseded; no Owner economic run is authorized.
 
 Goal (Foundation v3.1): an integrated BTC adviser with persistent actionable LONG/SHORT calls, entry area, targets, stop/exit guidance and holding horizon. Capital, size, leverage and orders stay human. Historical ACCEPTED/READY/HOLD labels in older documents do not authorize work; only task.md does.
 
@@ -376,3 +376,8 @@ Astra identified one remaining contradiction in design v0.1: a birth-time B-cont
   - live publication = dispatch tick after receipt.
 - **Owner plan.** October/November/December v0.3 baseline vs v0.4 is prepared but INACTIVE until Director acceptance and exact-SHA green CI. October may reuse `eval-20261006T175135-9ddf6d`. No economic run by the executor.
 - **CI.** Exact-SHA CI is Owner-operated: PENDING / NOT CHECKED.
+
+
+## WP-012 Director review — 7 October 2026
+
+Reviewed e434d4311a947f65f2fccf035d61e79d9108add2: CORRECTION REQUIRED. [Review](delivery/WP-012-DIRECTOR-REVIEW.md), [synthetic proof](delivery/evidence/WP-012-DIRECTOR-PROBES.json). F1: a minute straddling actual anchor supersession touches the old V but not the new V; core4 ignores the older overlapping domain, then confirms that new anchor. Reproduced on complete LONG/SHORT tapes (publication 04:00:30, contact interval [04:00,04:01), unexpected confirmation 04:14). Required anchor ambiguity/WATCH, not a new whole-scenario terminal. Director pure paths/versions: 101 selected tests pass after repairing missing docs in temporary snapshot; no DB/browser/Compose rerun. CI PENDING / NOT CHECKED, Owner-operated. Only bounded correction active; v0.4 and Owner economic plan not accepted/activated. No Owner data/stack touched.
