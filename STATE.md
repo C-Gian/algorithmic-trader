@@ -1,8 +1,8 @@
 # Project State
 
-Updated: 2026-10-07 — Q4 dossier CLOSED at 2d6fe9e (descriptive evidence); WP-013 continuous v0.4 reference support delivered, READY FOR DIRECTOR TECHNICAL REVIEW; Owner launch INACTIVE.
+Updated: 2026-10-07 — Q4 dossier CLOSED at 2d6fe9e (descriptive evidence); WP-013 continuous v0.4 reference support delivered at 41790dd; Astra findings F1–F2 corrected (report only), READY FOR DIRECTOR REVIEW — WP-013 CORRECTION ONLY; Owner launch INACTIVE.
 
-**Current task: [task.md](task.md) — WP-013 delivered; awaiting Director technical review and green exact-SHA CI.** [Protocol](delivery/WP-013-CONTINUOUS-REFERENCE-PROTOCOL.md) · [evidence](delivery/evidence/WP-013-ENGINEERING-EVIDENCE.md). Owner launch of the continuous v0.4 September–December reference is INACTIVE until then. No further package is active. Oct/Nov/Dec 2025 single-month runs are exposed development.
+**Current task: [task.md](task.md) — WP-013 delivered; awaiting Director technical review and green exact-SHA CI.** [Protocol](delivery/WP-013-CONTINUOUS-REFERENCE-PROTOCOL.md) · [evidence](delivery/evidence/WP-013-ENGINEERING-EVIDENCE.md) · [F1–F2 correction evidence](delivery/evidence/WP-013-CORRECTION-EVIDENCE.md). Owner launch of the continuous v0.4 September–December reference is INACTIVE until then. No further package is active. Oct/Nov/Dec 2025 single-month runs are exposed development.
 
 Goal (Foundation v3.1): an integrated BTC adviser with persistent actionable LONG/SHORT calls, entry area, targets, stop/exit guidance and holding horizon. Capital, size, leverage and orders stay human. Historical ACCEPTED/READY/HOLD labels in older documents do not authorize work; only task.md does.
 
@@ -509,3 +509,20 @@ A non-blocking typo is corrected: `dossier.json → erratum_vs_091df18` and the 
   - pack/schema/corpus 55 passed; schema baselines match; web typecheck and build pass;
   - full non-E2E suite 860 passed (46 min, `ALGOTRADER_REQUIRE_DB=1`, no skips).
 - **Owner handoff.** INACTIVE until the Director's technical review and green exact-SHA CI. The instructions and the reading criteria (registered before launch) are in the protocol. No real acquisition or Owner-DB extraction was performed. CI PENDING / NOT CHECKED, Owner-operated.
+
+## WP-013 correction executor evidence (base `41790dd`; Astra review F1–F2 only; READY FOR DIRECTOR REVIEW — WP-013 CORRECTION ONLY; not accepted)
+
+[Evidence](delivery/evidence/WP-013-CORRECTION-EVIDENCE.md). The method, kernel, evaluator, parameters, temporal protocol, stored records, schemas, registered protocol and UI are unchanged. The Owner launch stays INACTIVE.
+- **F1.** The continuous-run Markdown (Copy report for chat = `.md` export) now shows, for TOTAL and each month, one row per variant (PRIMARY, ENTRY_DELAY_0, ENTRY_DELAY_120, HORIZON_ONLY):
+  - expected pairs, available records and pairs without a terminal record;
+  - CLOSED, CLOSED with price-net, NO_ENTRY, CENSORED, UNRESOLVED and AMBIGUOUS;
+  - exits after the period end;
+  - the sum with its population (`+x% over n closed`), or `none observed (0 closed)` instead of a bare 0.000%.
+  - Monthly MarketView, samples, scenario transitions and D/N lines are added.
+  - The JSON additions are additive (`by_status`, `sum_population`, `economic_result_observed`, …); earlier keys and values are kept.
+- **F2.** Expected pairs = evaluable calls (issued in the window, HISTORICAL_MODELED) × the variants pinned in the run's evaluator identity. Missing terminal records are counted per variant and month of issue, and nothing is inferred for them.
+  - `reconciliation` is declared as arithmetic of the available records, with checks for attribution and repeated records.
+  - `outcome_completeness` is separate and uses the run's actual status: pending "outcome not yet recorded at checkpoint" for an unfinished run, explicit **REPORT INCOMPLETE** for a run declared completed. The run's saved status and assurance are unchanged; feed coverage is not finalization.
+- **Fail-before / pass-after.** New pure regressions `tests/test_wp013_correction.py`: 7/7 fail on `41790dd`, 7/7 pass after. The extended DB test (API JSON/Markdown/export; deleting a HORIZON_ONLY terminal record from a completed run in the disposable DB) fails before and passes after.
+- **Checks.** Disposable PostgreSQL 18.6 only, never the Owner stack. WP-013 pure + DB suites: 22 passed; related report/evaluation suites (`test_mp003_db`, `test_mp003_versions`, `test_mp002_db`, `test_evaluation`): 79 passed; WP-013 browser E2E (Copy = Markdown export): 1 passed. The full suite was not rerun.
+- CI PENDING / NOT CHECKED, Owner-operated.

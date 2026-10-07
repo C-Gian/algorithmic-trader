@@ -8,7 +8,13 @@
 * ``launch_pins`` — method, parameters, build, profile, costs, clock and evaluator identities of the run.
 * ``periods`` — whole-run totals and calendar-month sections of ONE continuous run. Calls belong to their month of
   issue and are followed to their outcome even after that month ends (never counted twice); confirmations, WAITs,
-  coverage and view samples use their own times and denominators.
+  coverage and view samples use their own times and denominators. Per variant, each section states the expected
+  call-variant pairs (evaluable calls x pinned evaluator variants), the terminal records available and the pairs
+  without a terminal record yet. ``reconciliation`` is the arithmetic of the AVAILABLE records only;
+  ``outcome_completeness`` is separate and uses the run's actual status (feed coverage is not finalization): a pair
+  without a record is "not yet recorded at checkpoint" for an unfinished run and makes the report explicitly
+  INCOMPLETE for a run declared completed. Nothing is inferred for a missing pair (no entry, outcome, result or
+  censoring) and the run's saved status/assurance are never changed.
 
 Nothing here changes the method, its kernel, the evaluator or any stored record. Hypothetical sums are normalized
 one-unit price-net sums (funding not covered), never an account return.
@@ -25,6 +31,9 @@ from . import report as r2
 
 MIN = timedelta(minutes=1)
 VARIANTS = ("PRIMARY", "ENTRY_DELAY_0", "ENTRY_DELAY_120", "HORIZON_ONLY")
+STATUSES = ("CLOSED", "NO_ENTRY", "CENSORED", "UNRESOLVED", "AMBIGUOUS")
+PENDING = "OUTCOMES_NOT_YET_RECORDED_AT_CHECKPOINT"
+INCOMPLETE = "REPORT_INCOMPLETE_EXPECTED_TERMINAL_RECORD_MISSING"
 PERIOD_LANDMARKS = (("PREV_1D", "previous_day"), ("PREV_1W", "previous_week"), ("PREV_1MO", "previous_month"))
 PIVOTS = (("PIVOT_HIGH_15M", "PIVOT_LOW_15M", "15m"), ("PIVOT_HIGH_1H", "PIVOT_LOW_1H", "1h"))
 SUM_MEANING = ("sum of normalized one-unit hypothetical price-net outcomes (N0=1, q=1/E): not an account return, not "
@@ -59,6 +68,19 @@ def month_bounds(es: datetime, ee: datetime) -> list[tuple[str, datetime, dateti
         out.append((f"{t:%Y-%m}", max(t, es), min(n, ee)))
         t = n
     return out
+
+
+def pinned_variants(engine: dict) -> tuple[str, ...] | None:
+    """Variants actually configured and pinned by the run's evaluator identity (None when no evaluator is pinned)."""
+    prof = (engine["adviser"].get("evaluator") or {}).get("profiles")
+    if not prof:
+        return None
+    return tuple(v for v in VARIANTS if v in prof) + tuple(sorted(v for v in prof if v not in VARIANTS))
+
+
+def _evaluable(c: dict) -> bool:
+    """The evaluator consumes historical-modeled calls issued inside the evaluation window (window checked apart)."""
+    return (c.get("env") or {}).get("origin", "HISTORICAL_MODELED") == "HISTORICAL_MODELED"
 
 
 def is_multi_month(engine: dict) -> bool:
@@ -243,7 +265,8 @@ def _samples(samples: list[dict]) -> dict[str, Any]:
     return out
 
 
-def _section(lo, hi, covered_to, journal, scen, ents, calls, revs, paths, samples, in_eval) -> dict[str, Any]:
+def _section(lo, hi, covered_to, journal, scen, ents, calls, revs, paths, samples, in_eval, variants, pending_label
+             ) -> dict[str, Any]:
     def inside(rec):
         t = r2._dt(rec["env"]["published_at"])
         return lo <= t < hi and in_eval(t)
@@ -291,19 +314,32 @@ def _section(lo, hi, covered_to, journal, scen, ents, calls, revs, paths, sample
             if r2._dt(term["env"]["published_at"]) >= hi:
                 resolved_later += 1
     hyp = {}
-    for v in VARIANTS:
+    evaluable = [c for c in mine_calls if _evaluable(c)]
+    for v in VARIANTS + tuple(x for x in (variants or ()) if x not in VARIANTS):
         ps = [paths[(c["call_id"], v)] for c in mine_calls if (c["call_id"], v) in paths]
         nets = [p["price_net"] for p in ps if p.get("status") == "CLOSED" and p.get("price_net") is not None]
         exits_later = sum(1 for p in ps if (p.get("exit") or {}).get("time_end")
                           and r2._dt(p["exit"]["time_end"]) >= hi)
         tot = exact_sum(nets) if nets else Decimal(0)
-        hyp[v] = {"paths": len(ps), "status": dict(sorted(Counter(p.get("status") for p in ps).items())),
+        st = Counter(p.get("status") for p in ps)
+        # expected pairs: evaluable calls x pinned variants; a pair without a terminal record is only counted
+        expected = None if variants is None else (len(evaluable) if v in variants else 0)
+        awaiting = None if variants is None else sum(1 for c in evaluable if v in variants
+                                                     and (c["call_id"], v) not in paths)
+        hyp[v] = {"paths": len(ps), "status": dict(sorted(st.items())),
                   "exit_class": dict(sorted(Counter(p.get("exit_class") for p in ps if p.get("status") == "CLOSED")
                                             .items())),
                   "closed_with_price_net": len(nets), "exits_after_period_end": exits_later,
                   "sum_price_net_normalized": format(tot, "f"), "sum_price_net_pct_presentation": _pct(tot),
                   "censored_or_unresolved": sum(1 for p in ps if p.get("status") in ("CENSORED", "UNRESOLVED",
-                                                                                     "AMBIGUOUS"))}
+                                                                                     "AMBIGUOUS")),
+                  "expected_pairs": expected, "records_available": len(ps),
+                  "awaiting_terminal_record": awaiting, "awaiting_meaning": pending_label if awaiting else None,
+                  "by_status": {k: st.get(k, 0) for k in STATUSES},
+                  "other_status": dict(sorted((str(k), n) for k, n in st.items() if k not in STATUSES)),
+                  "sum_population": {"closed_with_price_net": len(nets), "records_available": len(ps),
+                                     "expected_pairs": expected},
+                  "economic_result_observed": bool(nets)}
     return {
         "start": _iso(lo), "end": _iso(hi),
         "coverage": {"minutes": minutes, "covered_minutes": covered, "assessable_minutes": sum(rows.values()) -
@@ -323,7 +359,8 @@ def _section(lo, hi, covered_to, journal, scen, ents, calls, revs, paths, sample
     }
 
 
-def periods(*, engine: dict, journal: list[dict], records: list[dict], base: dict[str, Any]) -> dict[str, Any] | None:
+def periods(*, engine: dict, journal: list[dict], records: list[dict], base: dict[str, Any],
+            status: str | None = None) -> dict[str, Any] | None:
     adv = engine["adviser"]
     es, ee = r2._dt(adv["eval_start"]), r2._dt(adv["eval_end"])
     months = month_bounds(es, ee)
@@ -339,9 +376,16 @@ def periods(*, engine: dict, journal: list[dict], records: list[dict], base: dic
     for e in journal:
         if e["kind"] == "call_revision":
             revs[e["record"]["call_id"]].append(e["record"])
-    paths = {(r["record"]["call_id"], r["record"]["variant"]): r["record"] for r in records if r["kind"] == "path"}
+    path_recs = [r["record"] for r in records if r["kind"] == "path"]
+    paths: dict[tuple[str, str], dict] = {}
+    for p in path_recs:  # one terminal record per pair; a repeated one is reported, never counted twice
+        paths.setdefault((p["call_id"], p["variant"]), p)
+    duplicates = len(path_recs) - len(paths)
     samples = [r["record"] for r in records if r["kind"] == "view_sample"]
-    args = (covered_to, journal, scen, ents, calls, revs, paths, samples, in_eval)
+    variants = pinned_variants(engine)
+    pending_label = ("expected terminal record missing from a run declared completed" if status == "completed" else
+                     "outcome not yet recorded at checkpoint")
+    args = (covered_to, journal, scen, ents, calls, revs, paths, samples, in_eval, variants, pending_label)
     total = _section(es, ee, *args)
     sections = {m: _section(lo, hi, *args) for m, lo, hi in months}
     ids = [cid for s in sections.values() for cid in s["calls"]["call_ids"]]
@@ -361,12 +405,18 @@ def periods(*, engine: dict, journal: list[dict], records: list[dict], base: dic
         "view_samples_sum": sum(s["market_view_samples"]["samples"] for s in sections.values())
         == total["market_view_samples"]["samples"],
     }
-    for v in VARIANTS:
+    hv = list(total["hypothetical"])
+    for v in hv:
         checks[f"{v}_price_net_sum_exact"] = exact_sum(s["hypothetical"][v]["sum_price_net_normalized"]
                                                        for s in sections.values()) == \
             Decimal(total["hypothetical"][v]["sum_price_net_normalized"])
         checks[f"{v}_paths_sum"] = sum(s["hypothetical"][v]["paths"] for s in sections.values()) == \
             total["hypothetical"][v]["paths"]
+    # every available terminal record of an evaluated call is attributed exactly once; none is repeated
+    eval_ids = {c["call_id"] for c in calls if in_eval(r2._dt(c["issued_at"]))}
+    checks["path_records_attributed_to_evaluated_calls"] = sum(
+        total["hypothetical"][v]["records_available"] for v in hv) == sum(1 for k in paths if k[0] in eval_ids)
+    checks["no_duplicate_terminal_records"] = duplicates == 0
     return {
         "attribution": ("calls -> month of issue, followed to their outcome after the month ends (never counted "
                         "twice); confirmations/scenario transitions -> month of publication; WAITs -> month opened, "
@@ -376,7 +426,39 @@ def periods(*, engine: dict, journal: list[dict], records: list[dict], base: dic
                          "opened WAITs and issued calls are different populations"),
         "sum_meaning": SUM_MEANING, "censoring": "paths still open at the clock end are CENSORED/UNRESOLVED and kept "
                                                  "visible; tail data are never scored",
-        "total": total, "months": sections, "reconciliation": {"checks": checks, "all_passed": all(checks.values())},
+        "total": total, "months": sections,
+        "reconciliation": {"scope": "ARITHMETIC_OF_AVAILABLE_RECORDS", "checks": checks,
+                           "all_passed": all(checks.values())},
+        "outcome_completeness": _completeness(status, variants, total, sections, duplicates, pending_label),
+    }
+
+
+def _completeness(status, variants, total, sections, duplicates, pending_label) -> dict[str, Any]:
+    """Expected call-variant terminal records versus those available, by variant and month of issue. Separate from
+    the arithmetic reconciliation; the run's actual status (not feed coverage) decides pending versus incomplete."""
+    if variants is None:
+        return {"run_status": status or "UNKNOWN", "state": "UNKNOWN_EVALUATOR_NOT_PINNED",
+                "configured_variants": None, "duplicate_terminal_records": duplicates,
+                "note": "no evaluator variants are pinned for this run, so the expected outcomes cannot be determined"}
+    h = total["hypothetical"]
+    by = {v: {"expected": h[v]["expected_pairs"], "available": h[v]["records_available"],
+              "awaiting": h[v]["awaiting_terminal_record"],
+              "awaiting_by_issue_month": {m: s["hypothetical"][v]["awaiting_terminal_record"]
+                                          for m, s in sections.items()}} for v in variants}
+    expected = sum(b["expected"] for b in by.values())
+    awaiting = sum(b["awaiting"] for b in by.values())
+    return {
+        "run_status": status or "UNKNOWN", "configured_variants": list(variants),
+        "evaluable_calls": max((b["expected"] for b in by.values()), default=0),
+        "expected_pairs": expected, "terminal_records_available": expected - awaiting,
+        "awaiting_terminal_record": awaiting, "duplicate_terminal_records": duplicates,
+        "state": "COMPLETE" if awaiting == 0 else INCOMPLETE if status == "completed" else PENDING,
+        "awaiting_meaning": pending_label if awaiting else None, "by_variant": by,
+        "note": ("expected pairs = evaluable calls issued in the evaluation window x pinned evaluator variants. A pair "
+                 "without a terminal record has no inferred entry, outcome, economic result or censoring. This is "
+                 "outcome completeness, separate from the arithmetic reconciliation of the available records; for a "
+                 "run declared completed a missing record makes this report INCOMPLETE, while the run's saved status "
+                 "and assurance are unchanged."),
     }
 
 
@@ -423,20 +505,83 @@ def render_markdown(a: dict[str, Any]) -> list[str]:
         lines += ["", "### Continuous run: total and monthly sections (one run, no monthly reset)",
                   f"- Attribution: {pr['attribution']}", f"- {pr['denominators']}",
                   f"- Hypothetical sums: {pr['sum_meaning']}", f"- {pr['censoring']}",
-                  "| Period | Assessable min | A conf. | WAIT | Calls | Resolved later | PRIMARY closed | PRIMARY price-net % |",
+                  "| Period | Assessable min | A conf. | WAIT | Calls | Resolved later | PRIMARY closed | PRIMARY price-net |",
                   "|---|---:|---:|---:|---:|---:|---:|---:|"]
-        for name, s in [("TOTAL", pr["total"])] + list(pr["months"].items()):
+        rows = [("TOTAL", pr["total"])] + list(pr["months"].items())
+        for name, s in rows:
             h = s["hypothetical"]["PRIMARY"]
             lines.append(f"| {name} | {s['coverage']['assessable_minutes']}/{s['coverage']['minutes']} | "
                          f"{s['a_confirmations']} | {s['waits']['opened']} | {s['calls']['issued']} | "
                          f"{s['calls']['resolved_after_period_end']} | {h['closed_with_price_net']} | "
-                         f"{h['sum_price_net_pct_presentation']} |")
-        for name, s in pr["months"].items():
-            lines.append(f"- {name}: guidance {s['calls']['guidance_outcome'] or '{}'} · routing "
-                         f"{s['a_routing'] or '{}'} · WAIT endings {s['waits']['endings'] or '{}'} · sensitivities "
-                         + ", ".join(f"{v} {s['hypothetical'][v]['sum_price_net_pct_presentation']}%"
-                                     for v in VARIANTS[1:]))
+                         f"{_sum_text(h)} |")
+        oc = pr.get("outcome_completeness")
+        pending = "not yet recorded" if not oc or oc["state"] != INCOMPLETE else "missing (run completed)"
+        lines += ["", "Hypothetical outcomes per variant (calls by month of issue; expected = evaluable calls for a "
+                      f"pinned variant; '{pending}' = expected pair without a terminal record, nothing inferred for it)",
+                  f"| Period | Variant | Expected | Records | {pending.capitalize()} | CLOSED | with price-net | "
+                  "NO_ENTRY | CENSORED | UNRESOLVED | AMBIGUOUS | Exit after period | Price-net sum (population) |",
+                  "|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|"]
+        for name, s in rows:
+            for v, h in s["hypothetical"].items():
+                b = h.get("by_status") or {}
+                exp = h.get("expected_pairs")
+                lines.append(f"| {name} | {v} | {'—' if exp is None else exp} | {h['paths']} | "
+                             f"{'—' if h.get('awaiting_terminal_record') is None else h['awaiting_terminal_record']} | "
+                             + " | ".join(str(b.get(k, 0)) for k in STATUSES[:1]) + f" | {h['closed_with_price_net']} | "
+                             + " | ".join(str(b.get(k, 0)) for k in STATUSES[1:])
+                             + f" | {h['exits_after_period_end']} | {_sum_text(h)}"
+                             + (f"; other states {h['other_status']}" if h.get("other_status") else "") + " |")
+        for name, s in rows:
+            cv, sm = s["coverage"], s["market_view_samples"]
+            lines.append(f"- {name} MarketView: covered {cv['covered_minutes']}/{cv['minutes']} min · assessable "
+                         f"{cv['assessable_minutes']} · unavailable {cv['unavailable_minutes']} · rows "
+                         + (", ".join(f"{k} {n}" for k, n in cv["view_row_minutes"].items()) or "none"))
+            lines.append(f"- {name} samples: {sm['samples']} ("
+                         + (", ".join(f"{k} {n}" for k, n in sm["by_view"].items()) or "none") + ") · "
+                         + " · ".join(f"{h} directional {sm[h]['directional_matching_sign']}/"
+                                      f"{sm[h]['directional_scored']} matching sign, endpoint unavailable "
+                                      f"{sm[h]['endpoint_unavailable']}" for h in ("1h", "4h")))
+            lines.append(f"- {name} scenarios: "
+                         + (", ".join(f"{k} {n}" for k, n in s["scenario_transitions"].items()) or "none")
+                         + f" · A confirmations {s['a_confirmations']} · D {s['a_D']} / N {s['a_N']}")
+            lines.append(f"- {name} calls: guidance {s['calls']['guidance_outcome'] or '{}'} · routing "
+                         f"{s['a_routing'] or '{}'} · WAIT endings {s['waits']['endings'] or '{}'}")
         rc = pr["reconciliation"]
-        lines.append(f"- Reconciliation total vs months: {'PASS' if rc['all_passed'] else 'FAIL'}"
+        lines.append(f"- Reconciliation total vs months: {'PASS' if rc['all_passed'] else 'FAIL'} (arithmetic of the "
+                     "available records only; it is not outcome completeness)"
                      + ("" if rc["all_passed"] else " — " + ", ".join(k for k, ok in rc["checks"].items() if not ok)))
+        if oc:
+            lines.append(_completeness_line(oc))
     return lines
+
+
+def _sum_text(h: dict) -> str:
+    """A sum is shown with its population; without a closed outcome with price-net no economic result is shown."""
+    n = h["closed_with_price_net"]
+    if not n:
+        return "none observed (0 closed)"
+    pct = h["sum_price_net_pct_presentation"]
+    return f"{'' if pct.startswith('-') else '+'}{pct}% over {n} closed"
+
+
+def _completeness_line(oc: dict) -> str:
+    st = oc["state"]
+    if st == "UNKNOWN_EVALUATOR_NOT_PINNED":
+        return f"- Outcome completeness: UNKNOWN (no evaluator pinned) · run status {oc['run_status']}"
+    head = (f"- Outcome completeness: {st.replace('_', ' ')} — {oc['awaiting_terminal_record']} of "
+            f"{oc['expected_pairs']} expected call–variant terminal records "
+            if st != "COMPLETE" else f"- Outcome completeness: COMPLETE — {oc['terminal_records_available']}/"
+            f"{oc['expected_pairs']} expected call–variant terminal records available")
+    if st == "COMPLETE":
+        return head + f" · run status {oc['run_status']}" + (
+            f" · {oc['duplicate_terminal_records']} repeated record(s) not counted" if oc["duplicate_terminal_records"]
+            else "")
+    detail = "; ".join(
+        f"{v} {b['awaiting']} (" + ", ".join(f"{m} {n}" for m, n in b["awaiting_by_issue_month"].items() if n) + ")"
+        for v, b in oc["by_variant"].items() if b["awaiting"])
+    if st == INCOMPLETE:
+        return (f"- **REPORT INCOMPLETE** — the run is declared COMPLETED but {oc['awaiting_terminal_record']} of "
+                f"{oc['expected_pairs']} expected call–variant terminal records are missing: {detail}. Nothing is "
+                "inferred for them; the run's saved status and assurance are unchanged.")
+    return (head + f"have no terminal record yet (run status {oc['run_status']}): outcome not yet recorded at "
+            f"checkpoint — {detail}. No entry, outcome, economic result or censoring is inferred for them.")

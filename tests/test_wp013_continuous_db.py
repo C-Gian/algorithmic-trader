@@ -165,6 +165,30 @@ def test_report_attests_context_pins_the_launch_and_reconciles_monthly_sections(
     assert "context only, not evaluated" in md and "not an account return" in md
     dl = api.get(f"/api/evaluations/{eid}/report.json", params={"download": "true"})
     assert dl.status_code == 200 and dl.json()["adviser"]["periods"]["reconciliation"]["all_passed"]
+    # correction F1/F2: per-variant populations and states, monthly summaries and outcome completeness, consistent
+    # across JSON, Markdown (= Copy report for chat) and the export
+    oc = pr["outcome_completeness"]
+    assert oc["state"] == "COMPLETE" and oc["run_status"] == "completed" and oc["expected_pairs"] == 4
+    assert oc["configured_variants"] == ["PRIMARY", "ENTRY_DELAY_0", "ENTRY_DELAY_120", "HORIZON_ONLY"]
+    assert dl.json()["adviser"]["periods"]["outcome_completeness"] == oc
+    assert "| TOTAL | HORIZON_ONLY | 1 | 1 | 0 |" in md and "Outcome completeness: COMPLETE — 4/4" in md
+    assert "- 2025-08 MarketView: covered" in md and "- 2025-09 samples:" in md and "- 2025-08 scenarios:" in md
+    # a completed run whose expected terminal record is missing: the REPORT is incomplete, the run is unchanged
+    rid = r.json()["replay"]["replay_id"]
+    before = replay(database_url, rid)
+    with connect(database_url) as c:
+        c.execute("DELETE FROM adviser_evaluation_records WHERE run_id = %s AND kind = 'path' "
+                  "AND record->>'variant' = 'HORIZON_ONLY'", (rid,))
+    a2 = api.get(f"/api/evaluations/{eid}/report.json").json()["adviser"]
+    oc2 = a2["periods"]["outcome_completeness"]
+    assert oc2["state"] == "REPORT_INCOMPLETE_EXPECTED_TERMINAL_RECORD_MISSING" and oc2["awaiting_terminal_record"] == 1
+    assert oc2["by_variant"]["HORIZON_ONLY"]["awaiting_by_issue_month"] == {"2025-08": 1, "2025-09": 0}
+    assert a2["periods"]["reconciliation"]["all_passed"]  # the available records still reconcile arithmetically
+    md2 = api.get(f"/api/evaluations/{eid}/report.md").text
+    assert "**REPORT INCOMPLETE**" in md2 and "HORIZON_ONLY 1 (2025-08 1)" in md2
+    after = replay(database_url, rid)
+    assert (after["status"], after["assurance"]) == (before["status"], before["assurance"]) and \
+        after["status"] == "completed"
 
 
 def test_a_fine_warmup_run_keeps_its_engine_document_and_report_shape(database_url, tmp_path, monkeypatch):

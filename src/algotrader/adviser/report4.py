@@ -104,7 +104,7 @@ def build(*, engine: dict, journal: list[dict], records: list[dict], view: dict 
     ic = rp.initial_context(engine, journal)
     if ic is not None:
         out["initial_context"] = ic
-    pr = rp.periods(engine=engine, journal=journal, records=records, base=out)
+    pr = rp.periods(engine=engine, journal=journal, records=records, base=out, status=status)
     if pr is not None:
         out["periods"] = pr
     if ic is not None or pr is not None:
