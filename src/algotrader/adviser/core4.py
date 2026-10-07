@@ -11,7 +11,8 @@ reaction anchor (epoch, source 15m bar, R/K/V, actual publication time and admit
 
 * **Local contact.** Before confirmation, a newly admitted complete interval wholly after the active anchor's actual
   publication with LONG low <= V (SHORT high >= V) INVALIDATES that anchor only; an interval straddling the
-  publication whose extremum can reach V makes it UNASSESSABLE. The same scenario returns to WATCH (``ANCHOR_LOST``)
+  publication whose extremum can reach V - the current V, or a superseded V active in the interval's earlier part
+  (WP-012 F1) - makes it UNASSESSABLE. The same scenario returns to WATCH (``ANCHOR_LOST``)
   with owner, latch, zones, child budget, birth geometry and original deadline unchanged. A late-admitted interval
   lying in an EARLIER epoch's domain that reaches that epoch's V makes the current anchor UNASSESSABLE (the newer
   anchor was published without that evidence). A dead anchor is never tested again (no inflated counts).
@@ -114,21 +115,37 @@ class AdviserCoreV4(AdviserCoreV3):
             self._anchor_lost(s, local[0], local[1], m, t)
 
     def _local_contact(self, s: Scen4, m: Bar, l_t: Decimal) -> tuple[str, str] | None:
-        """The local-anchor verdict of one interval against the anchor ACTIVE FOR ITS TIME DOMAIN."""
+        """The local-anchor verdict of one interval against EVERY anchor domain it overlaps (WP-012 F1).
+
+        A domain is [publication, end) of one epoch: the current one is open; a superseded one ended at the actual
+        publication of its successor. Domains that ended by a loss belong to anchors already dead (their contact was
+        processed then): they are never re-tested. Only domains actually overlapping the interval are tested, so an
+        old V is never applied outside its own active time (no resurrection of an inactive level), and no intrabar
+        order is inferred:
+        * only the current domain, interval wholly after its publication, V reached -> certified contact;
+        * the interval straddles the current publication and reaches the current V or a superseded V active in its
+          earlier part -> the current anchor is UNASSESSABLE (a touch of the old V cannot be certified to have
+          happened after the supersession, and the new anchor's source bar ended before this interval);
+        * the interval ends at/before the current publication (late admission) and reaches a superseded V active
+          during it -> UNASSESSABLE (the newer anchor was published without that evidence)."""
         pub = s.anchor_pub_at
-        if m.end > pub:
-            if l_t > s.v_t:
-                return None
-            if m.start < pub:
-                return "UNASSESSABLE", f"ANCHOR_CONTACT_TIME_AMBIGUOUS:{m.rid}"
+        touched: list[int] = []
+        for since, v, epoch, end, *how in s.v_hist:
+            if epoch != s.epoch and (how and how[0] == "LOST"):
+                continue
+            if not (_dt(since) < m.end and (end is None or _dt(end) > m.start)):
+                continue  # this epoch's active domain does not overlap the interval
+            if l_t <= Decimal(v):
+                touched.append(epoch)
+        if not touched:
+            return None
+        if m.start >= pub:  # wholly inside the current domain (no earlier domain can overlap it)
             return "INVALIDATED", f"V_CONTACT:{m.rid}"
-        # wholly before the active anchor's publication (late admission): the epoch active at its start, if any
-        for since, v, epoch, end in reversed(s.v_hist):
-            if _dt(since) <= m.start and (end is None or m.start < _dt(end)):
-                if epoch != s.epoch and l_t <= Decimal(v):
-                    return "UNASSESSABLE", f"LATE_CONTACT_WITH_EARLIER_ANCHOR_EPOCH_{epoch}:{m.rid}"
-                return None
-        return None
+        if m.end <= pub:
+            return "UNASSESSABLE", f"LATE_CONTACT_WITH_EARLIER_ANCHOR_EPOCH_{min(touched)}:{m.rid}"
+        if s.epoch in touched:
+            return "UNASSESSABLE", f"ANCHOR_CONTACT_TIME_AMBIGUOUS:{m.rid}"
+        return "UNASSESSABLE", f"SUPERSEDED_ANCHOR_CONTACT_TIME_AMBIGUOUS_EPOCH_{min(touched)}:{m.rid}"
 
     # ----------------------------------------------------------------------------------------------------------
     # anchor publication / loss
@@ -143,14 +160,17 @@ class AdviserCoreV4(AdviserCoreV3):
                 "interval": interval.rid if interval is not None else None,
                 "interval_end": _iso(interval.end) if interval is not None else None}
 
-    def _close_domain(self, s: Scen4, t: datetime) -> None:
+    def _close_domain(self, s: Scen4, t: datetime, how: str) -> None:
+        """End the current anchor's active domain at ``t``; ``how`` is SUPERSEDED (a later domain may still have to
+        consider it for overlapping intervals) or LOST (dead anchor: never re-tested)."""
         if s.v_hist and s.v_hist[-1][3] is None:
             s.v_hist[-1][3] = _iso(t)
+            s.v_hist[-1][4:] = [how]
 
     def _anchor_lost(self, s: Scen4, status: str, reason: str, m: Bar, t: datetime) -> None:
         s.prev_anchor = self._anchor_summary(s, status, reason, m)
         s.lost_r_t, s.lost_cutoff = s.r_t, m.end
-        self._close_domain(s, t)
+        self._close_domain(s, t, "LOST")
         s.status, s.anchor_status = "WATCH", status
         s.k_t = s.v_t = s.r_t = s.anchor = s.anchor_h_t = s.arm_at = s.arm_seq = None
         if self.window == "EVALUATION":
@@ -165,7 +185,7 @@ class AdviserCoreV4(AdviserCoreV3):
     def _publish_anchor(self, s: Scen4, transition: str, r_t: Decimal, k_t: Decimal, rid: str, t: datetime) -> None:
         if transition == "REVISE":
             s.prev_anchor = self._anchor_summary(s, "SUPERSEDED", "LOWER_CLEAN_REACTION_REANCHOR", None)
-            self._close_domain(s, t)
+            self._close_domain(s, t, "SUPERSEDED")
         s.epoch += 1
         s.r_t, s.anchor, s.anchor_h_t = r_t, rid, k_t
         s.k_t, s.v_t = k_t, r_t - s.z

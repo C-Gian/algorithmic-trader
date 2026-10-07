@@ -1,6 +1,6 @@
 # Project State
 
-Updated: 2026-10-07 — WP-012 Director review: CORRECTION REQUIRED (F1 straddling supersession contact); Owner comparison INACTIVE.
+Updated: 2026-10-07 — WP-012 correction F1 delivered: READY FOR DIRECTOR REVIEW — WP-012 CORRECTION ONLY (not accepted); Owner comparison INACTIVE.
 
 **Current task: [task.md](task.md) — WP-012 bounded correction only.** [Director review](delivery/WP-012-DIRECTOR-REVIEW.md). Earlier active implementation/hand-off labels are superseded; no Owner economic run is authorized.
 
@@ -381,3 +381,21 @@ Astra identified one remaining contradiction in design v0.1: a birth-time B-cont
 ## WP-012 Director review — 7 October 2026
 
 Reviewed e434d4311a947f65f2fccf035d61e79d9108add2: CORRECTION REQUIRED. [Review](delivery/WP-012-DIRECTOR-REVIEW.md), [synthetic proof](delivery/evidence/WP-012-DIRECTOR-PROBES.json). F1: a minute straddling actual anchor supersession touches the old V but not the new V; core4 ignores the older overlapping domain, then confirms that new anchor. Reproduced on complete LONG/SHORT tapes (publication 04:00:30, contact interval [04:00,04:01), unexpected confirmation 04:14). Required anchor ambiguity/WATCH, not a new whole-scenario terminal. Director pure paths/versions: 101 selected tests pass after repairing missing docs in temporary snapshot; no DB/browser/Compose rerun. CI PENDING / NOT CHECKED, Owner-operated. Only bounded correction active; v0.4 and Owner economic plan not accepted/activated. No Owner data/stack touched.
+
+
+## WP-012 correction F1 executor evidence (base `85ee150`; READY FOR DIRECTOR REVIEW — WP-012 CORRECTION ONLY; not accepted)
+
+[Evidence](delivery/evidence/WP-012-CORRECTION-EVIDENCE.md) / [JSON](delivery/evidence/WP-012-CORRECTION-EVIDENCE.json).
+
+- **Fix** (`core4._local_contact`). Every anchor domain that overlaps an interval is evaluated: superseded epochs only within their active domain; domains ended by a loss never again.
+  - An interval straddling a supersession that reaches only the old V now makes the current anchor UNASSESSABLE (`SUPERSEDED_ANCHOR_CONTACT_TIME_AMBIGUOUS_EPOCH_n`): same owner WATCH, cutoff retained, later genuine replacement allowed.
+  - MP-003, identities, formats and contracts are unchanged; closed domain entries now record SUPERSEDED/LOST.
+- **Director probe.** Before: epoch 2 CONFIRM 04:14 (LONG/SHORT). After: ANCHOR_LOST UNASSESSABLE 04:01, no epoch-2 confirmation.
+- **Tests.** `tests/test_mp003_correction.py`, 19 cases:
+  - F1 regression and controls (neither V touched, new V reached, wholly-after old-V touch not resurrected, dead domain not re-tested), LONG/SHORT;
+  - production pack/unpack around the supersession and the contact;
+  - live restarts from persisted state at 3 points;
+  - a durable LiveStore save/load restore.
+- **Fail-before / fixed-after.** On `e434d43`: 6 failed / 6 passed (controls unchanged). After: all pass.
+- **Relevant suites** with a disposable DB: 208 passed (MP-003 paths/versions/live/DB, MP-002 compatibility/versions/paths/rules incl. the 38 v0.2/v0.3 byte pins). Full suite, browser and Compose were not rerun (kernel-only change).
+- **CI.** Exact-SHA CI is Owner-operated: PENDING / NOT CHECKED. The Owner plan stays INACTIVE.
