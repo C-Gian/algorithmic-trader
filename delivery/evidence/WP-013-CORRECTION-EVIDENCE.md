@@ -107,3 +107,70 @@ The full suite was not rerun; the remote full suite is left to the Owner-operate
 - The registered protocol's reading rule 1 lists examples of technical blockers. It is unchanged here. An explicit mention of `REPORT INCOMPLETE` there would be a Director decision.
 
 CI: PENDING / NOT CHECKED (Owner-operated).
+
+---
+
+# F2-R1 — one expected population for path records (base `6f49ae7`; READY FOR DIRECTOR REVIEW — WP-013 F2-R1 ONLY)
+
+Astra found that the F2 summary counted path records by pair without comparing them with the expected population: a path for a nonexistent call was silently ignored while reconciliation passed, a non-pinned variant was counted, and a LIVE call's paths entered the sums. F1 is not reopened. The method, kernel, evaluator, parameters, stored data and assurance are unchanged.
+
+## What changed (`report_periods.py`)
+
+- **One expected population:** evaluable calls in the window (HISTORICAL_MODELED) × the variants pinned in the run's evaluator.
+- **Admission before deduplication.** `_admit_paths` compares EVERY available path record with that population before any filtering. Each record is exactly one of:
+  - an admitted pair (first record kept);
+  - extraneous, with the first failing reason: `UNKNOWN_CALL`, `CALL_NOT_EVALUABLE`, `VARIANT_NOT_CONFIGURED`, `CALL_OUTSIDE_EVALUATION_WINDOW`;
+  - a duplicate of an admitted pair.
+- **Only admitted pairs** enter available counts, states and sums. Attribution stays the month of issue; duplicates are counted once.
+- **New JSON block `periods.path_records`:** available, admitted, expected_missing, extraneous by reason, duplicates, up to 10 examples each, and the variant-check mode.
+- **Reconciliation checks:**
+  - `path_records_accounted`: available = admitted + extraneous + duplicates;
+  - `admitted_path_records_attributed`;
+  - `no_extraneous_path_records`;
+  - `no_duplicate_terminal_records`.
+  - An extraneous or repeated record fails reconciliation.
+- **Completeness is unchanged in meaning.** All expected pairs present stays COMPLETE, but the Markdown appends "reconciliation FAILED (see the path-record anomalies above)". A missing outcome is never counted as extraneous.
+- **Markdown (Copy report for chat):** one compact line, `- Path records: N available · A admitted · M expected missing · E extraneous (reasons) · D duplicates`, plus an examples line when there are anomalies.
+- **No pinned evaluator:** stays `UNKNOWN_EVALUATOR_NOT_PINNED`; the variant check is reported as not possible and expected-missing as unknown; the call checks still apply.
+
+## Protocol
+
+Rule 1 of [the protocol](../WP-013-CONTINUOUS-REFERENCE-PROTOCOL.md) records the Director decision verbatim: REPORT INCOMPLETE blocks the economic reading even with run COMPLETED and assurance PASSED, does not retroactively change saved status/assurance, and a failed reconciliation remains a distinct block.
+
+## Fail-before / pass-after
+
+**Pure regressions** (`tests/test_wp013_correction.py`, 4 new tests):
+1. All expected outcomes plus a path for the nonexistent call "alien".
+2. Only PRIMARY pinned, with PRIMARY and HORIZON_ONLY records.
+3. A LIVE call in the window with four paths, plus a call outside the window with a path.
+4. Unpinned evaluator stays UNKNOWN, and a missing outcome is not extraneous.
+
+Results:
+- On `6f49ae7`: **4/4 fail** on behaviour, not just new keys:
+  - the alien case gave reconciliation `all_passed = True`;
+  - HORIZON_ONLY was counted `(1, 1, '0.002')` instead of `(0, 0, '0')`;
+  - the LIVE paths changed the admitted sums (`'0.301'` instead of `'0.001'`);
+  - the fourth test failed with `KeyError: 'path_records'`.
+- After the fix: pass. The tests assert that admitted counts, states and sums are identical with and without the extraneous records, and that the anomalies are visible in the copyable Markdown.
+- The earlier duplicate, missing-record, actual-run-status and cross-month attribution tests are kept and pass.
+
+**DB test** (`test_wp013_continuous_db.py`):
+- A path record for an unknown call is inserted into the completed run's records in the disposable DB.
+- The API JSON shows `UNKNOWN_CALL 1` and failed reconciliation, with the admitted totals unchanged.
+- The Markdown shows `1 extraneous (unknown call 1)` and `Reconciliation total vs months: FAIL`.
+- The run's status and assurance are unchanged.
+- It fails on `6f49ae7` and passes after.
+
+## Checks run (disposable PostgreSQL 18.6 container, port 55439; never the Owner stack)
+
+| Check | Result |
+|---|---|
+| `test_wp013_correction.py` + `test_wp013_continuous.py` + `test_wp013_continuous_db.py` (`ALGOTRADER_REQUIRE_DB=1`) | 26 passed |
+| E2E `tests/e2e/test_wp013_e2e.py` (Copy report for chat = Markdown export) | 1 passed |
+
+- The related single-month report suites were not rerun. `periods()` returns None for single-month windows, so their reports do not reach this code.
+- No benchmark or economic run.
+- The disposable container was stopped; no verification process remains running.
+
+CI: PENDING / NOT CHECKED (Owner-operated).
+

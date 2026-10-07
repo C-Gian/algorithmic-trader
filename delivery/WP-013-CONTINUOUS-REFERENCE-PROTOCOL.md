@@ -53,6 +53,8 @@ The report's **Launch pins** section names:
 ## 3. Reading criteria, registered before launch
 
 1. **Technical problems block conclusions.** Technical, causal or coverage problems prevent economic conclusions. Examples: assurance not passed, failed total/monthly reconciliation, initialization coverage gaps, or a context attestation showing insufficient data. The run is then diagnosed, not interpreted.
+   - *Director decision, 7 October 2026 (WP-013 F2-R1, recorded verbatim):* “REPORT INCOMPLETE blocca la lettura economica della prova, anche con run COMPLETED e assurance PASSED. È una valutazione della completezza del report e non modifica retroattivamente lo stato o l’assurance salvati. Una riconciliazione fallita resta un blocco distinto.”
+   - In English: REPORT INCOMPLETE blocks the economic reading of the run, even when the run is COMPLETED and its assurance PASSED. It assesses the completeness of the report and does not retroactively change the saved status or assurance. A failed reconciliation, including extraneous or repeated path records, remains a separate block.
 2. **No changes mid-window.** A negative result does not lead to any change midway through the window. The frozen v0.4 candidate is read over the whole registered window.
 3. **Small samples stay insufficient.** There is no call quota to reach, and more calls are not an improvement by themselves.
 4. **Later revisions need a falsifiable diagnosis.** A diagnosis alone does not justify a revision, nor does the price-net balance alone.

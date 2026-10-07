@@ -1,6 +1,6 @@
 # Project State
 
-Updated: 2026-10-07 — Q4 dossier CLOSED at 2d6fe9e (descriptive evidence); WP-013 continuous v0.4 reference support delivered at 41790dd; Astra findings F1–F2 corrected (report only), READY FOR DIRECTOR REVIEW — WP-013 CORRECTION ONLY; Owner launch INACTIVE.
+Updated: 2026-10-07 — Q4 dossier CLOSED at 2d6fe9e (descriptive evidence); WP-013 continuous v0.4 reference support delivered at 41790dd; Astra findings F1–F2 corrected at 6f49ae7 (report only); F2-R1 path-record admission corrected, READY FOR DIRECTOR REVIEW — WP-013 F2-R1 ONLY; Owner launch INACTIVE.
 
 **Current task: [task.md](task.md) — WP-013 delivered; awaiting Director technical review and green exact-SHA CI.** [Protocol](delivery/WP-013-CONTINUOUS-REFERENCE-PROTOCOL.md) · [evidence](delivery/evidence/WP-013-ENGINEERING-EVIDENCE.md) · [F1–F2 correction evidence](delivery/evidence/WP-013-CORRECTION-EVIDENCE.md). Owner launch of the continuous v0.4 September–December reference is INACTIVE until then. No further package is active. Oct/Nov/Dec 2025 single-month runs are exposed development.
 
@@ -526,3 +526,14 @@ A non-blocking typo is corrected: `dossier.json → erratum_vs_091df18` and the 
 - **Fail-before / pass-after.** New pure regressions `tests/test_wp013_correction.py`: 7/7 fail on `41790dd`, 7/7 pass after. The extended DB test (API JSON/Markdown/export; deleting a HORIZON_ONLY terminal record from a completed run in the disposable DB) fails before and passes after.
 - **Checks.** Disposable PostgreSQL 18.6 only, never the Owner stack. WP-013 pure + DB suites: 22 passed; related report/evaluation suites (`test_mp003_db`, `test_mp003_versions`, `test_mp002_db`, `test_evaluation`): 79 passed; WP-013 browser E2E (Copy = Markdown export): 1 passed. The full suite was not rerun.
 - CI PENDING / NOT CHECKED, Owner-operated.
+
+## WP-013 F2-R1 executor evidence (base `6f49ae7`; READY FOR DIRECTOR REVIEW — WP-013 F2-R1 ONLY; not accepted)
+
+[Evidence](delivery/evidence/WP-013-CORRECTION-EVIDENCE.md#f2-r1--one-expected-population-for-path-records-base-6f49ae7-ready-for-director-review--wp-013-f2-r1-only). F1 is not reopened. The method, kernel, evaluator, parameters, stored data and assurance are unchanged. The Owner launch stays INACTIVE.
+- **Fix.** One expected population (evaluable calls in the window × pinned evaluator variants). EVERY available path record is compared with it before deduplication: admitted, extraneous (`UNKNOWN_CALL`, `CALL_NOT_EVALUABLE`, `VARIANT_NOT_CONFIGURED`, `CALL_OUTSIDE_EVALUATION_WINDOW`) or duplicate.
+  - Only admitted pairs enter counts, states and sums.
+  - Extraneous or repeated records fail explicit reconciliation checks and are summarized in the copyable Markdown (`periods.path_records` in JSON).
+  - COMPLETE can coexist with a failed reconciliation, which is shown next to it. A missing outcome is never extraneous. UNKNOWN is kept without a pinned evaluator.
+- **Protocol.** Rule 1 records the Director decision on REPORT INCOMPLETE (blocks the economic reading; no retroactive status/assurance change; failed reconciliation is a distinct block).
+- **Fail-before / pass-after.** The Astra counterexamples (alien call, PRIMARY-only pin with a HORIZON_ONLY record, LIVE call in the window) plus a call outside the window: 4/4 fail on `6f49ae7` (alien reconciliation passed; HORIZON_ONLY and LIVE records counted in the sums) and pass after. The extended DB test (inserted unknown-call record) also fails before and passes after.
+- **Checks.** Disposable PostgreSQL 18.6, stopped afterwards: WP-013 pure + DB 26 passed; WP-013 E2E 1 passed. The full suite was not rerun. CI PENDING / NOT CHECKED, Owner-operated.

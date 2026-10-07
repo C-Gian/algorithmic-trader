@@ -176,3 +176,78 @@ def test_compatibility_earlier_keys_kept_and_no_evaluator_pin_is_unknown_not_com
     pr2 = rp.periods(engine=no_pin, journal=base_journal(), records=recs, base=BASE, status="completed")
     assert pr2["outcome_completeness"]["state"] == "UNKNOWN_EVALUATOR_NOT_PINNED"
     assert "UNKNOWN (no evaluator pinned)" in md_of(pr2)
+
+
+# F2-R1 (Astra counterexamples): one expected population, every path record compared before any filtering --------
+
+ALL4 = [path("call-1", v, "CLOSED", "0.001", "2025-10-01T01:00:00Z") for v in V4]
+
+
+def _admitted_view(pr):
+    return {v: (h["records_available"], h["by_status"], h["sum_price_net_normalized"], h["closed_with_price_net"])
+            for v, h in pr["total"]["hypothetical"].items()}
+
+
+def test_r1_alien_call_path_is_extraneous_fails_reconciliation_and_leaves_admitted_results_unchanged():
+    clean = rp.periods(engine=ENG, journal=base_journal(), records=ALL4, base=BASE, status="completed")
+    alien = ALL4 + [path("alien", "PRIMARY", "CLOSED", "0.5", "2025-10-01T01:00:00Z")]
+    pr = rp.periods(engine=ENG, journal=base_journal(), records=alien, base=BASE, status="completed")
+    assert not pr["reconciliation"]["all_passed"]
+    assert _admitted_view(pr) == _admitted_view(clean)
+    pa = pr["path_records"]
+    assert (pa["available"], pa["admitted"], pa["expected_missing"], pa["duplicates"]) == (5, 4, 0, 0)
+    assert pa["extraneous"] == {"UNKNOWN_CALL": 1, "CALL_NOT_EVALUABLE": 0, "VARIANT_NOT_CONFIGURED": 0,
+                                "CALL_OUTSIDE_EVALUATION_WINDOW": 0}
+    assert not pr["reconciliation"]["checks"]["no_extraneous_path_records"]
+    # all expected pairs present: completeness stays COMPLETE but does not hide the failed reconciliation
+    assert pr["outcome_completeness"]["state"] == "COMPLETE"
+    md = md_of(pr)
+    assert "Reconciliation total vs months: FAIL" in md and "no_extraneous_path_records" in md
+    assert "- Path records: 5 available · 4 admitted · 0 expected missing · 1 extraneous (unknown call 1) · " \
+           "0 duplicates" in md
+    assert "alien/PRIMARY UNKNOWN_CALL" in md and "reconciliation FAILED" in md
+
+
+def test_r1_variant_not_pinned_is_extraneous_not_counted():
+    eng = {"adviser": {**ENG["adviser"], "evaluator": {"profiles": {"PRIMARY": {}}}}}
+    recs = [path("call-1", "PRIMARY", "CLOSED", "0.001", "2025-10-01T01:00:00Z"),
+            path("call-1", "HORIZON_ONLY", "CLOSED", "0.002", "2025-10-01T01:00:00Z")]
+    pr = rp.periods(engine=eng, journal=base_journal(), records=recs, base=BASE, status="completed")
+    h = pr["total"]["hypothetical"]["HORIZON_ONLY"]
+    assert (h["records_available"], h["closed_with_price_net"], h["sum_price_net_normalized"]) == (0, 0, "0")
+    assert not pr["reconciliation"]["all_passed"]
+    assert pr["path_records"]["extraneous"]["VARIANT_NOT_CONFIGURED"] == 1
+    assert pr["outcome_completeness"]["state"] == "COMPLETE" and pr["outcome_completeness"]["expected_pairs"] == 1
+    assert "1 extraneous (variant not configured 1)" in md_of(pr)
+
+
+def test_r1_live_call_in_window_and_call_outside_window_paths_are_extraneous():
+    jr = base_journal() + [
+        {"kind": "call", "clock_time": "2025-09-10T00:00:00+00:00",
+         "record": {"env": {**env("2025-09-10T00:00:00+00:00"), "origin": "LIVE"}, "call_id": "live-1",
+                    "issued_at": "2025-09-10T00:00:00+00:00", "family": "A", "entry_mode": "IMMEDIATE"}},
+        call("2025-08-31T23:00:00+00:00", "before-1")]
+    jr.sort(key=lambda e: e["clock_time"])
+    base = {"funnel": {**BASE["funnel"], "issued": 2}}
+    recs = ALL4 + [path("live-1", v, "CLOSED", "0.3", "2025-09-10T02:00:00Z") for v in V4] + \
+        [path("before-1", "PRIMARY", "CLOSED", "0.7", "2025-09-01T02:00:00Z")]
+    clean = rp.periods(engine=ENG, journal=jr, records=ALL4, base=base, status="completed")
+    pr = rp.periods(engine=ENG, journal=jr, records=recs, base=base, status="completed")
+    assert _admitted_view(pr) == _admitted_view(clean)
+    assert pr["months"]["2025-09"]["hypothetical"]["PRIMARY"]["sum_price_net_normalized"] == "0.001"
+    assert not pr["reconciliation"]["all_passed"]
+    ex = pr["path_records"]["extraneous"]
+    assert (ex["CALL_NOT_EVALUABLE"], ex["CALL_OUTSIDE_EVALUATION_WINDOW"]) == (4, 1)
+    assert pr["outcome_completeness"]["expected_pairs"] == 4  # the LIVE call is not an expected outcome
+    md = md_of(pr)
+    assert "5 extraneous (call not evaluable 4, call outside evaluation window 1)" in md
+
+
+def test_r1_unpinned_evaluator_stays_unknown_and_missing_is_not_extraneous():
+    no_pin = {"adviser": {k: v for k, v in ENG["adviser"].items() if k != "evaluator"}}
+    pr = rp.periods(engine=no_pin, journal=base_journal(), records=ALL4[:1], base=BASE, status="completed")
+    assert pr["outcome_completeness"]["state"] == "UNKNOWN_EVALUATOR_NOT_PINNED"
+    assert pr["path_records"]["expected_missing"] is None and pr["reconciliation"]["all_passed"]
+    missing = rp.periods(engine=ENG, journal=base_journal(), records=ALL4[:3], base=BASE, status="completed")
+    assert missing["path_records"]["expected_missing"] == 1 and sum(missing["path_records"]["extraneous"].values()) == 0
+    assert missing["reconciliation"]["all_passed"]  # a missing outcome is completeness, not an extraneous record

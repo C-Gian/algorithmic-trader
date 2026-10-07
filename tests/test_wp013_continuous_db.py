@@ -186,6 +186,20 @@ def test_report_attests_context_pins_the_launch_and_reconciles_monthly_sections(
     assert a2["periods"]["reconciliation"]["all_passed"]  # the available records still reconcile arithmetically
     md2 = api.get(f"/api/evaluations/{eid}/report.md").text
     assert "**REPORT INCOMPLETE**" in md2 and "HORIZON_ONLY 1 (2025-08 1)" in md2
+    # F2-R1: an extraneous path record (unknown call) fails reconciliation, is visible and never enters the sums
+    with connect(database_url) as c:
+        row = c.execute("SELECT * FROM adviser_evaluation_records WHERE run_id = %s AND kind = 'path' ORDER BY seq "
+                        "LIMIT 1", (rid,)).fetchone()
+        alien = {**row["record"], "call_id": "alien"}
+        cols = [k for k in row if k not in ("seq", "record")]
+        c.execute(f"INSERT INTO adviser_evaluation_records (seq, record, {', '.join(cols)}) VALUES "
+                  f"(%s, %s, {', '.join(['%s'] * len(cols))})",
+                  [10**9, json.dumps(alien)] + [row[k] for k in cols])
+    a3 = api.get(f"/api/evaluations/{eid}/report.json").json()["adviser"]["periods"]
+    assert a3["path_records"]["extraneous"]["UNKNOWN_CALL"] == 1 and not a3["reconciliation"]["all_passed"]
+    assert a3["total"]["hypothetical"] == a2["periods"]["total"]["hypothetical"]
+    md3 = api.get(f"/api/evaluations/{eid}/report.md").text
+    assert "1 extraneous (unknown call 1)" in md3 and "Reconciliation total vs months: FAIL" in md3
     after = replay(database_url, rid)
     assert (after["status"], after["assurance"]) == (before["status"], before["assurance"]) and \
         after["status"] == "completed"

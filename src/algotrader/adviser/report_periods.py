@@ -34,6 +34,8 @@ VARIANTS = ("PRIMARY", "ENTRY_DELAY_0", "ENTRY_DELAY_120", "HORIZON_ONLY")
 STATUSES = ("CLOSED", "NO_ENTRY", "CENSORED", "UNRESOLVED", "AMBIGUOUS")
 PENDING = "OUTCOMES_NOT_YET_RECORDED_AT_CHECKPOINT"
 INCOMPLETE = "REPORT_INCOMPLETE_EXPECTED_TERMINAL_RECORD_MISSING"
+# path records outside the expected population (evaluable calls in the window x pinned variants), first reason wins
+EXTRANEOUS = ("UNKNOWN_CALL", "CALL_NOT_EVALUABLE", "VARIANT_NOT_CONFIGURED", "CALL_OUTSIDE_EVALUATION_WINDOW")
 PERIOD_LANDMARKS = (("PREV_1D", "previous_day"), ("PREV_1W", "previous_week"), ("PREV_1MO", "previous_month"))
 PIVOTS = (("PIVOT_HIGH_15M", "PIVOT_LOW_15M", "15m"), ("PIVOT_HIGH_1H", "PIVOT_LOW_1H", "1h"))
 SUM_MEANING = ("sum of normalized one-unit hypothetical price-net outcomes (N0=1, q=1/E): not an account return, not "
@@ -316,7 +318,7 @@ def _section(lo, hi, covered_to, journal, scen, ents, calls, revs, paths, sample
     hyp = {}
     evaluable = [c for c in mine_calls if _evaluable(c)]
     for v in VARIANTS + tuple(x for x in (variants or ()) if x not in VARIANTS):
-        ps = [paths[(c["call_id"], v)] for c in mine_calls if (c["call_id"], v) in paths]
+        ps = [paths[(c["call_id"], v)] for c in evaluable if (c["call_id"], v) in paths]  # admitted pairs only
         nets = [p["price_net"] for p in ps if p.get("status") == "CLOSED" and p.get("price_net") is not None]
         exits_later = sum(1 for p in ps if (p.get("exit") or {}).get("time_end")
                           and r2._dt(p["exit"]["time_end"]) >= hi)
@@ -376,13 +378,11 @@ def periods(*, engine: dict, journal: list[dict], records: list[dict], base: dic
     for e in journal:
         if e["kind"] == "call_revision":
             revs[e["record"]["call_id"]].append(e["record"])
-    path_recs = [r["record"] for r in records if r["kind"] == "path"]
-    paths: dict[tuple[str, str], dict] = {}
-    for p in path_recs:  # one terminal record per pair; a repeated one is reported, never counted twice
-        paths.setdefault((p["call_id"], p["variant"]), p)
-    duplicates = len(path_recs) - len(paths)
     samples = [r["record"] for r in records if r["kind"] == "view_sample"]
     variants = pinned_variants(engine)
+    paths, path_records = _admit_paths([r["record"] for r in records if r["kind"] == "path"], calls, variants,
+                                       in_eval)
+    duplicates = path_records["duplicates"]
     pending_label = ("expected terminal record missing from a run declared completed" if status == "completed" else
                      "outcome not yet recorded at checkpoint")
     args = (covered_to, journal, scen, ents, calls, revs, paths, samples, in_eval, variants, pending_label)
@@ -412,11 +412,16 @@ def periods(*, engine: dict, journal: list[dict], records: list[dict], base: dic
             Decimal(total["hypothetical"][v]["sum_price_net_normalized"])
         checks[f"{v}_paths_sum"] = sum(s["hypothetical"][v]["paths"] for s in sections.values()) == \
             total["hypothetical"][v]["paths"]
-    # every available terminal record of an evaluated call is attributed exactly once; none is repeated
-    eval_ids = {c["call_id"] for c in calls if in_eval(r2._dt(c["issued_at"]))}
-    checks["path_records_attributed_to_evaluated_calls"] = sum(
-        total["hypothetical"][v]["records_available"] for v in hv) == sum(1 for k in paths if k[0] in eval_ids)
+    # every available path record is admitted exactly once, extraneous or a duplicate; the admitted ones are all
+    # attributed to a month of issue; extraneous or repeated records fail reconciliation explicitly
+    checks["path_records_accounted"] = path_records["available"] == path_records["admitted"] + sum(
+        path_records["extraneous"].values()) + duplicates
+    checks["admitted_path_records_attributed"] = sum(
+        total["hypothetical"][v]["records_available"] for v in hv) == path_records["admitted"]
+    checks["no_extraneous_path_records"] = not any(path_records["extraneous"].values())
     checks["no_duplicate_terminal_records"] = duplicates == 0
+    oc = _completeness(status, variants, total, sections, duplicates, pending_label)
+    path_records["expected_missing"] = oc.get("awaiting_terminal_record")
     return {
         "attribution": ("calls -> month of issue, followed to their outcome after the month ends (never counted "
                         "twice); confirmations/scenario transitions -> month of publication; WAITs -> month opened, "
@@ -429,7 +434,49 @@ def periods(*, engine: dict, journal: list[dict], records: list[dict], base: dic
         "total": total, "months": sections,
         "reconciliation": {"scope": "ARITHMETIC_OF_AVAILABLE_RECORDS", "checks": checks,
                            "all_passed": all(checks.values())},
-        "outcome_completeness": _completeness(status, variants, total, sections, duplicates, pending_label),
+        "path_records": path_records,
+        "outcome_completeness": oc,
+    }
+
+
+def _admit_paths(recs: list[dict], calls: list[dict], variants, in_eval) -> tuple[dict, dict[str, Any]]:
+    """Compare EVERY available path record with the one expected population before any deduplication: an admitted
+    pair (evaluable call in the window x pinned variant; first record kept), an extraneous record (first failing
+    reason) or a repeated record of an admitted pair. Without a pinned evaluator the variant cannot be judged and
+    expected/missing stay unknown; the call checks still apply."""
+    by_id = {c["call_id"]: c for c in calls}
+    admitted: dict[tuple[str, str], dict] = {}
+    extraneous: Counter = Counter()
+    examples: list[dict] = []
+    dup_examples: list[dict] = []
+    duplicates = 0
+    for p in recs:
+        c = by_id.get(p["call_id"])
+        reason = ("UNKNOWN_CALL" if c is None else
+                  "CALL_NOT_EVALUABLE" if not _evaluable(c) else
+                  "VARIANT_NOT_CONFIGURED" if variants is not None and p["variant"] not in variants else
+                  "CALL_OUTSIDE_EVALUATION_WINDOW" if not in_eval(r2._dt(c["issued_at"])) else None)
+        if reason:
+            extraneous[reason] += 1
+            if len(examples) < 10:
+                examples.append({"call_id": p["call_id"], "variant": p["variant"], "reason": reason})
+            continue
+        key = (p["call_id"], p["variant"])
+        if key in admitted:  # a repeated terminal record is reported, never counted twice
+            duplicates += 1
+            if len(dup_examples) < 10:
+                dup_examples.append({"call_id": p["call_id"], "variant": p["variant"]})
+            continue
+        admitted[key] = p
+    return admitted, {
+        "available": len(recs), "admitted": len(admitted), "expected_missing": None,
+        "extraneous": {k: extraneous.get(k, 0) for k in EXTRANEOUS}, "extraneous_examples": examples,
+        "duplicates": duplicates, "duplicate_examples": dup_examples,
+        "variant_check": "PINNED" if variants is not None else "NOT_CHECKABLE_EVALUATOR_NOT_PINNED",
+        "note": ("every available path record is compared with the expected population (evaluable calls issued in "
+                 "the evaluation window x pinned evaluator variants) before deduplication. Only admitted pairs enter "
+                 "counts, states and sums; extraneous and repeated records fail reconciliation and are never "
+                 "counted as outcomes. A missing expected outcome is completeness, not an extraneous record."),
     }
 
 
@@ -550,9 +597,27 @@ def render_markdown(a: dict[str, Any]) -> list[str]:
         lines.append(f"- Reconciliation total vs months: {'PASS' if rc['all_passed'] else 'FAIL'} (arithmetic of the "
                      "available records only; it is not outcome completeness)"
                      + ("" if rc["all_passed"] else " — " + ", ".join(k for k, ok in rc["checks"].items() if not ok)))
+        pa = pr.get("path_records")
+        if pa:
+            lines.append(_path_records_line(pa))
+            if pa["extraneous_examples"] or pa["duplicate_examples"]:
+                lines.append("  - examples: " + ", ".join(
+                    [f"{x['call_id']}/{x['variant']} {x['reason']}" for x in pa["extraneous_examples"]]
+                    + [f"{x['call_id']}/{x['variant']} DUPLICATE" for x in pa["duplicate_examples"]]))
         if oc:
-            lines.append(_completeness_line(oc))
+            lines.append(_completeness_line(oc) + ("" if rc["all_passed"] else
+                                                   " · reconciliation FAILED (see the path-record anomalies above)"))
     return lines
+
+
+def _path_records_line(pa: dict) -> str:
+    ex = pa["extraneous"]
+    n = sum(ex.values())
+    detail = ", ".join(f"{k.lower().replace('_', ' ')} {v}" for k, v in ex.items() if v)
+    missing = "unknown" if pa["expected_missing"] is None else pa["expected_missing"]
+    return (f"- Path records: {pa['available']} available · {pa['admitted']} admitted · {missing} expected missing · "
+            f"{n} extraneous" + (f" ({detail})" if n else "") + f" · {pa['duplicates']} duplicates"
+            + ("" if pa["variant_check"] == "PINNED" else " · variant check not possible (no evaluator pinned)"))
 
 
 def _sum_text(h: dict) -> str:
