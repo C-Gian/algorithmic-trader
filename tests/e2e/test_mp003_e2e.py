@@ -1,7 +1,7 @@
 """WP-012 bounded browser journey (tiny offline hand fixture ``contact_then_rearm``; mocked OKX only; no month replay).
 
 Historical Workbench: prepare the pack once -> "Revised v0.3" completes (baseline) -> "Candidate v0.4" paced: paused
-while its A scenario is "under observation; waiting for a new completed reaction" (anchor lost at 03:51), STEP past the
+before 03:51 at a committed cursor, then an exact number of STEP grants to a fixed delivery where its A scenario is "under observation; waiting for a new completed reaction" (anchor lost at 03:51), STEP past the
 04:00 replacement until the follow view shows the new active anchor, resumed to completion -> the v0.4 result shows the
 anchor diagnostics -> a third v0.4 run is cancelled (incomplete) -> read-only baseline v0.3 vs candidate v0.4
 comparison (COMPARABLE, MP-003 limitation, anchor row) -> Copy comparison and Copy report equal their Markdown exports
@@ -36,6 +36,11 @@ _M = fx4.contact_then_rearm()
 MINS = (_M + fx4.flat(max(0, N - len(_M)), _M[-1].c))[:N]
 CONTACT_DISPATCH = 3 * (1440 + 3 * 60 + 51)  # first delivery available after the 03:51 dispatch (anchor lost)
 REARM_DISPATCH = 3 * (1440 + 4 * 60)
+# Progress reports the committed checkpoint cursor, which at speed 100 can trail the kernel by up to ~2 s of deliveries
+# (checkpoint_seconds, ~200) plus the pause latency; so the paced run is paused well before the contact (asserted at the
+# parked cursor) and the observed delivery is then fixed by exact STEP grants, never by timing.
+APPROACH = CONTACT_DISPATCH - 450
+OBSERVE_AT = CONTACT_DISPATCH + 2
 
 
 @pytest.fixture
@@ -76,6 +81,10 @@ def _applied(stack, rid) -> int:
     return stack.get(f"/api/observations/{rid}")["progress"]["applied_events"]
 
 
+def _status(stack, rid) -> str:
+    return stack.get(f"/api/observations/{rid}")["status"]
+
+
 def test_owner_runs_v04_sees_anchor_observation_and_compares_with_v03(bench4, browser, evidence_dir):
     stack = bench4
     ctx = browser.new_context(viewport={"width": 1440, "height": 900}, permissions=["clipboard-read", "clipboard-write"])
@@ -94,11 +103,15 @@ def test_owner_runs_v04_sees_anchor_observation_and_compares_with_v03(bench4, br
 
     e4 = _start(page, "v0.4", speed="100")
     rid4 = stack.get(f"/api/evaluations/{e4}")["replay"]["replay_id"]
-    wait_for(lambda: _applied(stack, rid4) >= CONTACT_DISPATCH - 120, timeout=180)
-    httpx.post(f"{stack.base}/api/observations/{rid4}/speed", json={"speed": 1}, timeout=30).raise_for_status()
-    wait_for(lambda: _applied(stack, rid4) >= CONTACT_DISPATCH + 2, timeout=240)
+    wait_for(lambda: _applied(stack, rid4) >= APPROACH, timeout=180)
     page.get_by_test_id("obs-pause").click()
     expect(page.get_by_test_id("obs-status")).to_have_text("PAUSED", timeout=20_000)
+    wait_for(lambda: _status(stack, rid4) == "paused", timeout=30)  # parked: the committed cursor is final
+    parked = _applied(stack, rid4)
+    assert APPROACH <= parked < CONTACT_DISPATCH, (parked, CONTACT_DISPATCH)  # barrier: before the 03:51 loss
+    for _ in range(OBSERVE_AT - parked):  # exact STEP grants: one committed delivery each, no overshoot
+        httpx.post(f"{stack.base}/api/observations/{rid4}/step", timeout=30).raise_for_status()
+    wait_for(lambda: _status(stack, rid4) == "paused" and _applied(stack, rid4) == OBSERVE_AT, timeout=180)
     prog = page.get_by_test_id("adviser-progress")
     expect(prog).to_contain_text("Scenario under observation; waiting for a new completed reaction", timeout=30_000)
     page.screenshot(path=str(evidence_dir / "60-mp003-observation-paused.png"), full_page=True)
