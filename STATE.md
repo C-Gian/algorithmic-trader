@@ -1,8 +1,8 @@
 # Project State
 
-Updated: 2026-10-07 — Owner-assigned read-only Q4 (Oct–Dec 2025) v0.4 diagnosis delivered, READY FOR DIRECTOR REVIEW; Oct/Nov/Dec 2025 now EXPOSED DEVELOPMENT; no next package active.
+Updated: 2026-10-07 — Q4 v0.4 diagnosis CORRECTED per Astra review of 091df18 (erratum), READY FOR DIRECTOR REVIEW; Oct/Nov/Dec 2025 EXPOSED DEVELOPMENT; no next package active.
 
-**Current task: [task.md](task.md) — Owner-assigned read-only Q4 diagnosis delivered; awaiting Director review.** [Dossier](delivery/evidence/WP-012-OWNER-Q4-DIAGNOSIS/SUMMARY.md). No executor implementation, economic run or next package is active. Oct/Nov/Dec 2025 are exposed development, not intact verification for future revisions.
+**Current task: [task.md](task.md) — Q4 diagnosis correction delivered; awaiting Director review.** [Dossier](delivery/evidence/WP-012-OWNER-Q4-DIAGNOSIS/SUMMARY.md). No executor implementation, economic run or next package is active. Oct/Nov/Dec 2025 are exposed development, not intact verification for future revisions. Proposed, NOT activated: an Owner-run continuous v0.4 September–December reference with adequate initial context, launched from the web app.
 
 Goal (Foundation v3.1): an integrated BTC adviser with persistent actionable LONG/SHORT calls, entry area, targets, stop/exit guidance and holding horizon. Capital, size, leverage and orders stay human. Historical ACCEPTED/READY/HOLD labels in older documents do not authorize work; only task.md does.
 
@@ -414,6 +414,8 @@ CI run 37587727298 (job 112681663191) on e3a5afa failed only `test_owner_runs_v0
 
 ## Owner Q4 v0.4 read-only diagnosis — executor evidence (base `c525941`; READY FOR DIRECTOR REVIEW — Q4 DIAGNOSIS ONLY; not accepted)
 
+> Superseded in part by the correction below (091df18 erratum): the "single supported mechanism", the stop/delay/warmup exclusions, the −1.307 % total and the mixed-denominator distances in this entry are withdrawn.
+
 [Summary](delivery/evidence/WP-012-OWNER-Q4-DIAGNOSIS/SUMMARY.md) · [dossier.json](delivery/evidence/WP-012-OWNER-Q4-DIAGNOSIS/dossier.json) · [calls.csv](delivery/evidence/WP-012-OWNER-Q4-DIAGNOSIS/calls.csv) · [confirmations.csv](delivery/evidence/WP-012-OWNER-Q4-DIAGNOSIS/confirmations.csv) · [extraction](delivery/evidence/WP-012-OWNER-Q4-DIAGNOSIS/extract_q4_diagnosis.py) · [export SQL](delivery/evidence/WP-012-OWNER-Q4-DIAGNOSIS/export.sql).
 - **Scope (Owner assignment, 7 Oct).** Read-only cross-month diagnosis of the Owner v0.4 runs at c525941: eval-20261007T094006-67272e (Oct), eval-20261007T102821-ae14be (Nov), eval-20261007T105636-6d9276 (Dec). The v0.3 baselines (eval-20261006T175135-9ddf6d, eval-20261007T101912-087dd1, eval-20261007T105343-eb536a) were used for record comparison. No replay, backtest, Deep validation, counterfactual, download, or product/schema/method/data/Owner-stack change.
 - **Evidence status.** October–December 2025 are now **EXPOSED DEVELOPMENT**. They are not intact verification for any future revision.
@@ -456,3 +458,23 @@ CI run 37587727298 (job 112681663191) on e3a5afa failed only `test_owner_runs_v0
   - Zero decision records in the tail; no December call path or scenario resolved there.
   - Only contribution: 3 Dec-31 view samples have 4 h endpoints in the tail (1 directional). January–August 2026 is otherwise untouched; there is no basis for declaring the protected months contaminated.
 - **Checks.** Count reconciliation, chain/pin/hash provenance, two-run reproducibility and link check. No full suite, E2E or Compose (diagnostic-only delivery). CI PENDING / NOT CHECKED, Owner-operated.
+
+## Owner Q4 diagnosis correction — executor evidence (base `091df18`; READY FOR DIRECTOR REVIEW — Q4 CORRECTION ONLY; not accepted)
+
+Astra reviewed the dossier at 091df18 and this correction applies that review. Only the dossier, diagnostic script and documentation changed. No product, method, parameter, schema or stored-result change; no new DB extraction, acquisition, replay, Deep or economic run.
+- **Inputs.** Artifacts were regenerated from the same session exports (snapshot sha256 `44c5dbc2…e094` and the three verified caches). The extraction stays byte-reproducible over two runs. The previous delivery is preserved in Git history, and an erratum heads the [SUMMARY](delivery/evidence/WP-012-OWNER-Q4-DIAGNOSIS/SUMMARY.md); `dossier.json → erratum_vs_091df18` lists the same corrections.
+- **Corrections.**
+  - **(1) 7/9 vs 3/37.** Now a descriptive association between groups defined by post-confirmation events with competing terminals. It is not a causal RETURN effect or evidence of general scenario quality.
+  - **(2) Corridor vs economic restriction.** Corridor return (32/46 WAITs) is distinguished from the economic restriction (9/46). The economic share of the corridor ranges 0.00–1.00, median ≈ 0.37. The 31 Oct counterexample is kept: economic share 1.00, 9.3 bps of the close, target reached.
+  - **(3) Sensitivities.** Denominators are reported: ENTRY_DELAY_120 covers 9 entered paths + 1 NO_ENTRY. HORIZON_ONLY is labelled a whole-exit-policy change. Both 23 Nov and 5 Dec have positive HORIZON_ONLY endpoints. The delay and stop exclusions are withdrawn.
+  - **(4) Re-anchoring.** Anchor provenance is kept; re-anchoring is not declared harmless. The comparison group "no replacement after contact" may include revisions.
+  - **(5) Warmup.** The exclusion is withdrawn: all 10 calls and all 64 confirmations lack previous-month levels. Price bounds are labelled non-reconstructive, and pivot memory completeness after `warmup_start+168h` is NOT_CERTIFIED. The tail conclusion is unchanged and separate.
+  - **(6) Separate outcomes.** Destination B, call target, scenario, guidance and hypothetical path are kept distinct.
+  - **(7) Totals.** Computed exactly, rounded only for presentation.
+    - Exact sum of the 10 STORED PRIMARY price-net values: −0.0130817434351891232589748454948995…, ≈ −1.308 %. It is a normalized one-unit sum, not an account return.
+    - The earlier −1.307 % summed per-path percentages already rounded to 3 decimals.
+    - **Discrepancy with the supplied Owner total.** The supplied −0.01308174343518912325907484550 agrees with the records to 21 decimal places but differs by 1.0×10⁻²² (…258974… vs …259074…). It is not reproducible from the stored report values; this is reported, not forced.
+  - **(8) Distances "from the close".** All now use the close as denominator, as the product's G/Q use the side price. Fields are renamed `*_bps_of_close`. 169 independent recomputations match.
+- **Conclusion.** Diagnostic hypothesis on RETURN; causal mechanism not identified. The dossier authorizes no new rule or parameter.
+- **Proposed next step (NOT activated).** An Owner-run continuous v0.4 September–December reference with adequate initial context, launched from the web app. January–August 2026 stays protected apart from the documented 1 Jan 00:00–06:05 tail.
+- **Checks.** Exact totals, distance definitions, artifact consistency (no stale field names), two-run reproducibility and links. No full suite, E2E or Compose. CI PENDING / NOT CHECKED, Owner-operated.

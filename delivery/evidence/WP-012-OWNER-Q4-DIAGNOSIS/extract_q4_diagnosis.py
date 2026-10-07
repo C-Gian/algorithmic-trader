@@ -29,7 +29,7 @@ import statistics
 import sys
 from collections import Counter, defaultdict
 from datetime import datetime, timedelta
-from decimal import Decimal
+from decimal import Decimal, localcontext
 from pathlib import Path
 
 from algotrader.adviser import compare as cmp
@@ -63,6 +63,7 @@ EXPECTED = {"2025-10": {"a_confirmations": 19, "waits": 14, "calls": 4, "return_
 TICK, K_HIST, RR = Decimal("0.1"), Decimal(14), Decimal("1.2")
 AGE_1H = timedelta(hours=168)  # MP-001/002/003 register levels.age_1h_hours
 MIN = timedelta(minutes=1)
+OWNER_TOTAL = "-0.01308174343518912325907484550"  # sum of the three Owner v0.4 report PRIMARY price-net sums
 PRICE_BLOCKERS = ("CLOSE_OUTSIDE_RETURN_CORRIDOR", "NO_ROOM_AFTER_COSTS", "AT_OR_BEYOND_INVALIDATION",
                   "REWARD_RISK_BELOW_MINIMUM")
 LANDMARK_HORIZONS = ("PIVOT_HIGH_15M", "PIVOT_LOW_15M", "PIVOT_HIGH_1H", "PIVOT_LOW_1H", "PREV_1D_HIGH", "PREV_1D_LOW",
@@ -98,8 +99,30 @@ def pct(x):
     return None if x is None else format((Decimal(x) * 100).quantize(Decimal("0.001")), "f")
 
 
-def bps(a, b):
-    return fx2(Decimal(10000) * (a - b) / b)
+def toward_bps(d, ref, x):
+    """Signed distance from reference price ``ref`` to ``x`` in the trade direction d, in bps OF ``ref``:
+    10000*d*(x-ref)/ref. The reference is always the denominator, as in the product's G/Q (side price p)."""
+    return fx2(Decimal(10000) * d * (x - ref) / ref)
+
+
+def exact_sum(xs):
+    """Exact Decimal sum (no 28-digit context rounding); round only for presentation."""
+    with localcontext() as ctx:
+        ctx.prec = 400
+        return +sum((Decimal(x) for x in xs), Decimal(0))
+
+
+def agree_places(a, b):
+    """Number of decimal places to which two Decimals agree after rounding both half-even."""
+    n = 0
+    with localcontext() as ctx:
+        ctx.prec = 400
+        for k in range(1, 60):
+            q = Decimal(1).scaleb(-k)
+            if a.quantize(q) != b.quantize(q):
+                break
+            n = k
+    return n
 
 
 def minutes(a, b):
@@ -476,8 +499,11 @@ def wait_minutes(run, first_rec, bars):
             "closes_in_economic_region": sum(1 for x in samp if x["in_econ"]),
             "intrabar_touches_of_economic_region": sum(1 for x in rows if x["touch_econ"]),
             "best_sampled_close_toward_region": s(best), "economic_edge_last": s(edge),
-            "best_close_distance_to_region_bps": ((bps(best, edge) if d > 0 else bps(edge, best))
-                                                  if best is not None and edge is not None else None),
+            # still to retrace from the best sampled close to the economic edge, in bps of that close
+            "best_close_remaining_retrace_bps_of_close": (toward_bps(-d, best, edge)
+                                                          if best is not None and edge is not None else None),
+            "any_close_in_corridor": any(x["in_cor"] for x in samp),
+            "any_close_in_economic_region": any(x["in_econ"] for x in samp),
             "derived_blockers_equal_stored": f"{sum(eq)}/{len(eq)}",
             "sampled_minutes_with_non_price_blockers_STORED": dict(Counter(b for x in rows for b in x["non_price"]))}
 
@@ -560,12 +586,23 @@ def confirmations(run, v3run, month, bars, prev_bars):
         row["classification"] = classify(r["transition"], r["reason"], row["wait_end_transition"],
                                          row["wait_end_reason"], call_id)
         row["DERIVED_wait"] = wait_minutes(run, e, bars) if r["transition"] == "WAIT_OPEN" else None
-        row["DERIVED_target_distance_bps_from_close"] = (
-            (bps(Decimal(g["T_confirm"]), Decimal(g["confirmation_close"])) if r["direction"] == "LONG" else
-             bps(Decimal(g["confirmation_close"]), Decimal(g["T_confirm"]))) if g.get("T_confirm") else None)
-        row["DERIVED_V_distance_bps_from_close"] = (
-            (bps(Decimal(g["confirmation_close"]), Decimal(g["V"])) if r["direction"] == "LONG" else
-             bps(Decimal(g["V"]), Decimal(g["confirmation_close"]))) if g.get("V") else None)
+        dd = 1 if r["direction"] == "LONG" else -1
+        cl = Decimal(g["confirmation_close"]) if g.get("confirmation_close") else None
+        # all three distances are in bps OF the confirmation close (close = denominator), signed so that a positive
+        # value lies on the named side: target ahead, V behind, economic edge behind (retrace still required)
+        row["DERIVED_target_ahead_bps_of_close"] = (toward_bps(dd, cl, Decimal(g["T_confirm"]))
+                                                    if cl and g.get("T_confirm") else None)
+        row["DERIVED_V_behind_bps_of_close"] = toward_bps(-dd, cl, Decimal(g["V"])) if cl and g.get("V") else None
+        econ, cor = g.get("economic_fixed_k"), g.get("corridor")
+        edge = (Decimal(econ.split("..")[1]) if dd > 0 else Decimal(econ.split("..")[0])) if econ else None
+        row["DERIVED_required_retrace_to_economic_edge_bps_of_close"] = (toward_bps(-dd, cl, edge)
+                                                                         if cl and edge else None)
+        row["DERIVED_economic_share_of_corridor"] = None
+        if cor and econ:
+            c_lo, c_hi = (Decimal(x) for x in cor.split(".."))
+            e_lo, e_hi = (Decimal(x) for x in econ.split(".."))
+            if c_hi > c_lo:
+                row["DERIVED_economic_share_of_corridor"] = fx2((e_hi - e_lo) / (c_hi - c_lo))
         row["warmup_limits"] = warmup_flags(run, conf_at)
         rows.append(row)
     return rows
@@ -711,6 +748,7 @@ def call_rows(run, v3run, month, bars):
                 "paths": {k: {"status": x.get("status"), "exit_class": x.get("exit_class"),
                               "entry": (x.get("entry") or {}).get("price"), "entry_at": (x.get("entry") or {}).get("time_end"),
                               "exit": (x.get("exit") or {}).get("price"), "exit_at": (x.get("exit") or {}).get("time_end"),
+                              "price_net": x.get("price_net"),
                               "price_net_pct": pct(x.get("price_net")), "stress_price_net_pct": pct(x.get("stress_price_net")),
                               "gross_pct": pct(x.get("gross")), "mfe_pct": pct(x.get("mfe")), "mae_pct": pct(x.get("mae")),
                               "held_minutes": x.get("held_minutes"), "funding_status": x.get("funding_status"),
@@ -741,9 +779,11 @@ def landmark_first(run):
 
 
 def warmup_flags(run, t):
-    """STORED/DERIVED: which landmark horizons could not yet hold their full registered memory at cutoff t."""
+    """STORED/DERIVED: known absences at cutoff t. ``pivot_1h_lookback_starts_before_warmup`` is a KNOWN truncation of
+    the registered 168 h window; False does NOT certify a complete pivot memory (formation, publication, breaking,
+    retirement and the per-horizon cap are not reconstructed here)."""
     f = landmark_first(run)
-    return {"pivot_1h_memory_truncated": t < run.warmup_start + AGE_1H,
+    return {"pivot_1h_lookback_starts_before_warmup": t < run.warmup_start + AGE_1H,
             "prev_1w_not_yet_published": f.get("PREV_1W_HIGH") is None or t < dt(f["PREV_1W_HIGH"]),
             "prev_1mo_not_yet_published": f.get("PREV_1MO_HIGH") is None or t < dt(f["PREV_1MO_HIGH"])}
 
@@ -751,7 +791,8 @@ def warmup_flags(run, t):
 def pre_warmup_bound(row, run, prev_bars):
     """DERIVED, descriptive: did any complete 1m trade bar in [cutoff-168h, warmup_start) - real history the run never
     admitted, but known before the cutoff - trade inside the call's issue-to-target range? Zero means no 1h pivot from
-    that interval could lie between entry and target. It is NOT a reconstruction of the landmark logic or of a call."""
+    that interval had its extremum strictly inside that range. It does NOT reconstruct zones (half-widths),
+    publication, breaking, retirement or any decision, so it cannot show that a missing level had no effect."""
     if prev_bars is None:
         return "UNAVAILABLE (the earlier pinned source cache was not copied for this month)"
     t = dt(row["sequence_STORED"]["issued_at"])
@@ -806,24 +847,29 @@ def warmup_section(runs, rows_by_month, calls, prev):
             "registered_memory": {"pivot_15m_hours": 24, "pivot_1h_hours": 168,
                                   "prev_1d/1w/1mo": "previous complete UTC period, published at the period close"},
             "DERIVED_truncation_windows": {
-                "pivot_1h_memory_truncated_until": iso(run.warmup_start + AGE_1H),
+                "pivot_1h_lookback_starts_before_warmup_until": iso(run.warmup_start + AGE_1H),
+                "pivot_1h_memory_completeness_after_that": "NOT_CERTIFIED",
                 "prev_1w_absent_until": f.get("PREV_1W_HIGH"),
                 "prev_1mo_absent_until": f.get("PREV_1MO_HIGH"),
                 "prev_1mo_available_inside_evaluation_window": bool(f.get("PREV_1MO_HIGH") and dt(f["PREV_1MO_HIGH"]) < run.ee)},
             "A_confirmations_affected": {
-                "pivot_1h_memory_truncated": sum(1 for r in conf if r["warmup_limits"]["pivot_1h_memory_truncated"]),
+                "pivot_1h_lookback_starts_before_warmup":
+                    sum(1 for r in conf if r["warmup_limits"]["pivot_1h_lookback_starts_before_warmup"]),
                 "prev_1w_not_yet_published": sum(1 for r in conf if r["warmup_limits"]["prev_1w_not_yet_published"]),
                 "prev_1mo_not_yet_published": sum(1 for r in conf if r["warmup_limits"]["prev_1mo_not_yet_published"]),
                 "of": len(conf)},
             "calls_affected": [{"call_id": c["call_id"], **c["warmup_limits"],
                                 "DERIVED_pre_warmup_bars_in_issue_to_target_range":
-                                    pre_warmup_bound(c, run, prev.get(m)) if c["warmup_limits"]["pivot_1h_memory_truncated"] else None,
+                                    pre_warmup_bound(c, run, prev.get(m))
+                                    if c["warmup_limits"]["pivot_1h_lookback_starts_before_warmup"] else None,
                                 "DERIVED_previous_week_extremes":
                                     prev_week_extremes(run, dt(c["sequence_STORED"]["issued_at"]), prev.get(m), run_bars[m])
                                     if c["warmup_limits"]["prev_1w_not_yet_published"] else None,
                                 "issue_reference": c["sequence_STORED"]["issue_reference_price"],
                                 "target": c["geometry_STORED"]["T_at_issue"], "stop": c["geometry_STORED"]["stop_guidance"],
-                                "direction": c["direction"]}
+                                "direction": c["direction"],
+                                "note": "descriptive price-range bounds only; not a reconstruction of zones, "
+                                        "publication, breaking or decisions; no exclusion of a warmup effect"}
                                for c in calls if c["month"] == m and any(c["warmup_limits"].values())],
         }
     return out
@@ -917,8 +963,34 @@ def reconcile(reports, calls, confs):
                   "a_return_owners_entered_primary_60s": f["a_return_owners_entered_primary_60s"]}
     tot = {k: sum(rec[m]["report_builder_STORED"][k] for m in MONTHS) for k in EXPECTED["2025-10"]}
     entered = sum(rec[m]["a_return_owners_entered_primary_60s"] for m in MONTHS)
-    pn = sum(Decimal(v["sum_price_net"]) for m in MONTHS for v in rec[m]["by_family_mode_PRIMARY"].values())
-    rec["total"] = {**tot, "return_owners_entered_primary": entered, "primary_price_net_sum_pct": pct(pn),
+    # the report builder's per-family sums are 28-significant-digit Decimal sums; per-path values are STORED at full
+    # precision. Totals here are exact sums; rounding is applied only for presentation.
+    month_rep = {m: exact_sum(v["sum_price_net"] for v in rec[m]["by_family_mode_PRIMARY"].values()) for m in MONTHS}
+    month_path = {m: exact_sum(c["outcomes_STORED"]["paths"]["PRIMARY"]["price_net"] for c in calls if c["month"] == m)
+                  for m in MONTHS}
+    pn = exact_sum(month_rep.values())
+    path_pn = exact_sum(month_path.values())
+    owner = Decimal(OWNER_TOTAL)
+    for m in MONTHS:
+        rec[m]["primary_price_net_sum_of_report_values"] = s(month_rep[m])
+        rec[m]["primary_price_net_sum_of_path_values_exact"] = s(month_path[m])
+        rec[m]["primary_price_net_sum_pct_presentation"] = pct(month_path[m])
+    with localcontext() as ctx:
+        ctx.prec = 400
+        diff = path_pn - owner
+    rec["total"] = {**tot, "return_owners_entered_primary": entered,
+                    "primary_price_net_sum_of_report_values_exact": s(pn),
+                    "primary_price_net_sum_of_path_values_exact": s(path_pn),
+                    "owner_reports_total_as_given": OWNER_TOTAL,
+                    "difference_path_exact_minus_owner_given": s(diff),
+                    "agrees_with_owner_given_to_decimal_places": agree_places(path_pn, owner),
+                    "primary_price_net_sum_pct_presentation": pct(path_pn),
+                    "meaning": "sum of normalized one-unit hypothetical PRIMARY price-net outcomes (N0=1); not an "
+                               "account return, not compounded, funding excluded",
+                    "erratum_previous_minus_1_307": "the 091df18 SUMMARY quoted -1.307 %: the sum of per-path "
+                                                    "percentages each first rounded to 3 decimals "
+                                                    "(tabulations.path_variant_sums_pct); full precision gives "
+                                                    "-1.308174... %",
                     "expected": {"a_confirmations": 64, "waits": 46, "calls": 10, "return_entered": 9},
                     "matches": tot["a_confirmations"] == 64 and tot["waits"] == 46 and tot["calls"] == 10 and entered == 9,
                     "funding": "PRICE_NET_ONLY_TOTAL_NET_UNAVAILABLE on every path (funding not covered)"}
@@ -948,31 +1020,45 @@ def tabulations(confs, calls):
         if r["routing"] == "WAIT_OPEN":
             usable["usable_return" if r["usable_return_at"] else "no_usable_return"][r["scenario_terminal"]] += 1
     t["waits_scenario_terminal_by_usable_return"] = {k: dict(v.most_common()) for k, v in sorted(usable.items())}
+    t["waits_scenario_terminal_by_usable_return_note"] = (
+        "DESCRIPTIVE ASSOCIATION, not a causal effect: both groups are defined by events AFTER confirmation and the "
+        "outcomes are competing terminals. A WAIT ends at the first of usable return, target-side cap/destination "
+        "contact, V contact, context restriction or deadline, so paths reaching the target side first cannot enter "
+        "the usable-return group by construction. Scenario terminals are structural (destination B / V), distinct "
+        "from the call target, the guidance outcome and the hypothetical path.")
     epoch = defaultdict(Counter)
     for r in confs:
-        epoch["confirmed_after_replacement" if r["confirmed_after_replacement"] else "confirmed_on_first_anchor_or_revision"][
+        epoch["confirmed_after_replacement" if r["confirmed_after_replacement"] else "no_replacement_after_contact_may_include_revisions"][
             r["classification"].split(":")[0]] += 1
     t["classification_by_anchor_history"] = {k: dict(v) for k, v in sorted(epoch.items())}
     epoch_fate = defaultdict(Counter)
     for r in confs:
         epoch_fate["confirmed_after_replacement" if r["confirmed_after_replacement"] else
-                   "confirmed_on_first_anchor_or_revision"][r["scenario_terminal"]] += 1
+                   "no_replacement_after_contact_may_include_revisions"][r["scenario_terminal"]] += 1
     t["scenario_terminal_by_anchor_history"] = {k: dict(v.most_common()) for k, v in sorted(epoch_fate.items())}
     t["direction_by_classification"] = {k: dict(Counter(r["direction"] for r in confs if r["classification"] == k))
                                         for k in sorted({r["classification"] for r in confs})}
     t["context_at_confirmation"] = dict(Counter(f"{r['context_at_confirmation']}/{r['phase_at_confirmation']}"
                                                 for r in confs).most_common())
     waits = [r for r in confs if r["routing"] == "WAIT_OPEN"]
+    t["waits_corridor_vs_economic"] = {
+        "waits": len(waits),
+        "any_sampled_close_in_structural_corridor": sum(1 for r in waits if r["DERIVED_wait"]["any_close_in_corridor"]),
+        "any_sampled_close_in_economic_region": sum(1 for r in waits
+                                                    if r["DERIVED_wait"]["any_close_in_economic_region"]),
+        "corridor_return_without_economic_close": sum(1 for r in waits if r["DERIVED_wait"]["any_close_in_corridor"]
+                                                      and not r["DERIVED_wait"]["any_close_in_economic_region"]),
+        "economic_share_of_corridor_at_confirmation": [s(x) for x in sorted(
+            Decimal(r["DERIVED_economic_share_of_corridor"]) for r in waits if r["DERIVED_economic_share_of_corridor"])],
+        "note": "a return into the structural corridor is not enough: the fixed-cost economic predicate restricts the "
+                "usable part further, by a variable share of the corridor (1.00 = whole corridor usable)"}
     t["waits_derived"] = {
         "waits": len(waits),
         "with_any_close_in_economic_region": sum(1 for r in waits if r["DERIVED_wait"]["closes_in_economic_region"]),
         "derived_vs_stored_blockers": f"{sum(int(r['DERIVED_wait']['derived_blockers_equal_stored'].split('/')[0]) for r in waits)}/"
                                       f"{sum(int(r['DERIVED_wait']['derived_blockers_equal_stored'].split('/')[1]) for r in waits)}",
-        "required_retrace_bps_from_close_to_economic_edge": [
-            (r["entry_attempt_id"], (bps(Decimal(r["confirmation_close"]), Decimal(r["economic_fixed_k"].split("..")[1]))
-                                     if r["direction"] == "LONG" else
-                                     bps(Decimal(r["economic_fixed_k"].split("..")[0]), Decimal(r["confirmation_close"])))
-             if r["economic_fixed_k"] else None) for r in waits]}
+        "required_retrace_to_economic_edge_bps_of_close": [
+            (r["entry_attempt_id"], r["DERIVED_required_retrace_to_economic_edge_bps_of_close"]) for r in waits]}
     t["waits_non_price_blockers_STORED"] = dict(sum((Counter(r["DERIVED_wait"]["sampled_minutes_with_non_price_blockers_STORED"])
                                                      for r in waits), Counter()))
     t["minutes_confirmation_to_usable_return"] = [
@@ -997,11 +1083,29 @@ def tabulations(confs, calls):
                    "guidance": c["outcomes_STORED"]["guidance"]["thesis_status"]} for c in calls]
     sums = {}
     for v in ("PRIMARY", "ENTRY_DELAY_0", "ENTRY_DELAY_120", "HORIZON_ONLY"):
-        xs = [Decimal(c["outcomes_STORED"]["paths"][v]["price_net_pct"]) for c in calls
-              if c["outcomes_STORED"]["paths"].get(v, {}).get("price_net_pct") is not None]
-        sums[v] = {"paths": len(xs), "sum_price_net_pct": s(sum(xs)) if xs else None,
+        ps = [c["outcomes_STORED"]["paths"].get(v) or {} for c in calls]
+        xs = [Decimal(x["price_net"]) for x in ps if x.get("price_net") is not None]
+        sums[v] = {"calls": len(calls), "paths_with_price_net": len(xs),
+                   "status": dict(Counter(x.get("status") for x in ps)),
+                   "sum_price_net_normalized": s(exact_sum(xs)) if xs else None,
+                   "sum_price_net_pct_presentation": pct(exact_sum(xs)) if xs else None,
                    "positive": sum(1 for x in xs if x > 0)}
-    t["path_variant_sums_pct"] = sums
+    stopped = [c for c in calls if (c["outcomes_STORED"]["paths"].get("PRIMARY") or {}).get("exit_class") == "STOP"]
+
+    def tot(v):
+        return exact_sum(c["outcomes_STORED"]["paths"][v]["price_net"] for c in stopped)
+    sums["stopped_primary_subset"] = {
+        "calls": [c["call_id"] for c in stopped],
+        "PRIMARY_sum_normalized": s(tot("PRIMARY")), "PRIMARY_sum_pct_presentation": pct(tot("PRIMARY")),
+        "HORIZON_ONLY_sum_normalized": s(tot("HORIZON_ONLY")),
+        "HORIZON_ONLY_sum_pct_presentation": pct(tot("HORIZON_ONLY")),
+        "HORIZON_ONLY_positive_endpoints": [c["call_id"] for c in stopped
+                                            if Decimal(c["outcomes_STORED"]["paths"]["HORIZON_ONLY"]["price_net"]) > 0]}
+    sums["note"] = ("Denominators differ: ENTRY_DELAY_120 has no entry for one call (NO_ENTRY), so its sum covers 9 "
+                    "paths. HORIZON_ONLY replaces the WHOLE exit policy (no target and no stop guidance; exit at the "
+                    "horizon), so it is not a stop-only counterfactual. Sums are normalized one-unit hypothetical "
+                    "outcomes, not account returns.")
+    t["path_variant_sums"] = sums
     return t
 
 
@@ -1058,6 +1162,30 @@ def main(export: Path, out: Path):
             "per-minute STORED return samples (blockers are journaled only on change; minutes are DERIVED and "
             "validated against stored blocker changes)",
             "news/calendar coverage (capability profile NONE_UNKNOWN)"],
+        "conclusion": {
+            "status": "DIAGNOSTIC HYPOTHESIS ON RETURN; CAUSAL MECHANISM NOT IDENTIFIED",
+            "text": "The records show a descriptive association between a usable RETURN after confirmation and a later "
+                    "structural V contact (7/9 vs 3/37 WAITs without a usable return), between paths classified by "
+                    "post-confirmation events with competing terminals. It is a hypothesis to examine, not a causal "
+                    "effect of RETURN, not evidence about scenario quality in general, and it authorizes no new rule.",
+        },
+        "erratum_vs_091df18": [
+            "7/9 vs 3/37 restated as a descriptive association with competing terminals, not a causal selection effect "
+            "or proof of general scenario quality; the 'single supported mechanism' conclusion is withdrawn",
+            "corridor return distinguished from the further fixed-cost economic restriction (variable share of the "
+            "corridor); the 31 Oct counterexample is kept",
+            "delay/stop exclusions withdrawn: sensitivity denominators differ (ENTRY_DELAY_120 9 entered + 1 NO_ENTRY); "
+            "HORIZON_ONLY replaces the whole exit policy; 23 Nov and 5 Dec both have positive HORIZON_ONLY endpoints",
+            "re-anchoring not declared economically harmless; the comparison group without replacement may include "
+            "revisions; similar proportions do not prove equivalence",
+            "warmup exclusion withdrawn: every call lacks previous-month levels; price bounds do not reconstruct zones, "
+            "publication, breaking or decisions; pivot memory completeness after warmup_start+168h is NOT_CERTIFIED "
+            "(field renamed pivot_1h_lookback_starts_before_warmup); the tail conclusion stays separate",
+            "totals computed at full precision: PRIMARY sum -0.01308174343518912325907484550 (normalized, about "
+            "-1.308 %); the earlier -1.307 % summed per-path percentages already rounded to 3 decimals",
+            "distances 'from the close' now all use the close as denominator (fields renamed *_bps_of_close); the "
+            "earlier SHORT target, LONG V and LONG retrace distances used the other price as denominator",
+        ],
     }
     out.mkdir(parents=True, exist_ok=True)
     (out / "dossier.json").write_text(json.dumps(dossier, indent=1, default=str) + "\n", encoding="utf-8")
@@ -1106,11 +1234,13 @@ def main(export: Path, out: Path):
              ("guidance_outcome", lambda c: c["outcomes_STORED"]["guidance"]["thesis_status"]),
              ("guidance_outcome_at", lambda c: c["outcomes_STORED"]["guidance"]["at"]),
              ("primary_exit_class", lambda c: c["outcomes_STORED"]["paths"]["PRIMARY"]["exit_class"]),
+             ("primary_price_net_normalized", lambda c: c["outcomes_STORED"]["paths"]["PRIMARY"]["price_net"]),
              ("primary_price_net_pct", lambda c: c["outcomes_STORED"]["paths"]["PRIMARY"]["price_net_pct"]),
              ("primary_held_min", lambda c: c["outcomes_STORED"]["paths"]["PRIMARY"]["held_minutes"]),
              ("primary_mfe_pct", lambda c: c["outcomes_STORED"]["paths"]["PRIMARY"]["mfe_pct"]),
              ("primary_mae_pct", lambda c: c["outcomes_STORED"]["paths"]["PRIMARY"]["mae_pct"]),
              ("delay0_price_net_pct", lambda c: c["outcomes_STORED"]["paths"]["ENTRY_DELAY_0"]["price_net_pct"]),
+             ("delay120_status", lambda c: c["outcomes_STORED"]["paths"]["ENTRY_DELAY_120"]["status"]),
              ("delay120_price_net_pct", lambda c: c["outcomes_STORED"]["paths"]["ENTRY_DELAY_120"]["price_net_pct"]),
              ("horizon_only_exit", lambda c: c["outcomes_STORED"]["paths"]["HORIZON_ONLY"]["exit_class"]),
              ("horizon_only_price_net_pct", lambda c: c["outcomes_STORED"]["paths"]["HORIZON_ONLY"]["price_net_pct"]),
@@ -1119,19 +1249,24 @@ def main(export: Path, out: Path):
     fcols = ["month", "entry_attempt_id", "direction", "birth_published", "anchor_losses_before_confirmation",
              "anchor_epoch_at_confirmation", "confirmed_after_replacement", "confirmed_at", "R", "K_trigger", "V",
              "confirmation_close", "S15", "T_confirm", "target_type", "limiting_landmark", "limiting_is_own_impulse_B",
-             "destination_B", "DERIVED_target_distance_bps_from_close", "DERIVED_V_distance_bps_from_close",
+             "destination_B", "DERIVED_target_ahead_bps_of_close", "DERIVED_V_behind_bps_of_close",
+             "DERIVED_required_retrace_to_economic_edge_bps_of_close", "DERIVED_economic_share_of_corridor",
              "G_bps", "Q_bps", "margin_bps", "corridor", "economic_fixed_k", "in_D", "in_N", "exclusion",
              "blockers_at_confirmation", "routing", "routing_reason", "wait_end_transition", "wait_end_reason",
              "wait_end_at", "usable_return_at", "cap_revisions", "call_id", "classification", "scenario_terminal",
              "scenario_terminal_at", "minutes_confirmation_to_scenario_terminal", "context_at_confirmation",
              "phase_at_confirmation", "market_view_at_confirmation", "v03_same_boundary"]
     wcols = [("wait_return_samples_DERIVED", "return_samples"), ("wait_closes_in_economic_DERIVED", "closes_in_economic_region"),
-             ("wait_best_close_distance_bps_DERIVED", "best_close_distance_to_region_bps"),
+             ("wait_best_close_remaining_retrace_bps_of_close_DERIVED", "best_close_remaining_retrace_bps_of_close"),
+             ("wait_any_close_in_corridor_DERIVED", "any_close_in_corridor"),
+             ("wait_any_close_in_economic_DERIVED", "any_close_in_economic_region"),
              ("wait_blockers_equal_stored_DERIVED", "derived_blockers_equal_stored")]
     _csv(out / "confirmations.csv", confs,
          [(k, (lambda k: lambda r: r[k])(k)) for k in fcols]
          + [(n, (lambda k: lambda r: (r["DERIVED_wait"] or {}).get(k))(k)) for n, k in wcols]
-         + [("pivot_1h_memory_truncated", lambda r: r["warmup_limits"]["pivot_1h_memory_truncated"]),
+         + [("pivot_1h_lookback_starts_before_warmup",
+             lambda r: r["warmup_limits"]["pivot_1h_lookback_starts_before_warmup"]),
+            ("prev_1mo_not_yet_published", lambda r: r["warmup_limits"]["prev_1mo_not_yet_published"]),
             ("prev_1w_not_yet_published", lambda r: r["warmup_limits"]["prev_1w_not_yet_published"])])
     print(json.dumps({"reconciliation": {m: dossier["reconciliation"][m]["matches"] for m in (*MONTHS, "total")},
                       "chains": {rid: [v["journal"]["matches_finish_commitment"], v["evaluation_records"]["matches_finish_commitment"]]

@@ -4,6 +4,16 @@ Data: 2026-10-07. Incarico Owner: diagnosi trasversale in sola lettura delle tre
 
 **Stato dei tre mesi.** Ottobre, novembre e dicembre 2025 sono ora **sviluppo esposto**. Non vanno più usati come verifica intatta per revisioni future.
 
+> **ERRATUM — correzione del 2026-10-07 alla consegna `091df18`** (review Astra). La versione precedente resta nella storia Git. Gli artefatti sono stati rigenerati dagli **stessi export** (snapshot sha256 `44c5dbc2…e094`), senza nuova estrazione. Correzioni:
+> 1. Il confronto 7/9 contro 3/37 è ora presentato come **associazione descrittiva** fra percorsi classificati da eventi successivi alla conferma, con terminali concorrenti. Non è un effetto causale del RETURN né una prova della bontà generale degli scenari. La conclusione "un meccanismo supportato" è **ritirata**.
+> 2. Il ritorno nel corridoio strutturale è distinto dall'ulteriore restrizione economica, che varia per profondità. Il controesempio del 31 ottobre è conservato.
+> 3. Le esclusioni su ritardo e stop sono ritirate. Le sensibilità hanno denominatori diversi, e HORIZON_ONLY cambia l'intera politica d'uscita. Le call del 23 novembre e del 5 dicembre hanno entrambe un endpoint HORIZON_ONLY positivo.
+> 4. Il re-anchoring non è più dichiarato economicamente innocuo. Il gruppo senza sostituzione può includere revisioni, e proporzioni simili non provano equivalenza.
+> 5. L'esclusione del warmup per le call è ritirata. **Tutte** le call mancano dei livelli del mese precedente. I bound sui prezzi non ricostruiscono zone, pubblicazione, rottura o decisioni. La completezza della memoria dei pivot dopo `warmup_start + 168 h` non è certificata (campo rinominato `pivot_1h_lookback_starts_before_warmup`).
+> 6. Destinazione B, target della call, scenario, guidance e percorso ipotetico restano distinti.
+> 7. I totali sono ora calcolati a precisione piena e arrotondati solo per la presentazione. Il precedente −1,307 % era la somma delle percentuali per path già arrotondate a 3 decimali; il valore corretto è ≈ −1,308 %.
+> 8. Tutte le distanze "dal close" usano ora il close come denominatore, e i campi sono rinominati `*_bps_of_close`. Prima, la distanza dal target per gli SHORT e le distanze da V e dal bordo economico per i LONG usavano l'altro prezzo come denominatore.
+
 | Mese | v0.4 (candidata) | v0.3 (baseline) | Pack / cache pinnata |
 |---|---|---|---|
 | Ottobre | `eval-20261007T094006-67272e` / `obs-…094006-0f9af7` | `eval-20261006T175135-9ddf6d` (build bd5d81c) | `pack-30c0661f…` / `fc-de5aa4a9…` |
@@ -54,7 +64,14 @@ Etichette:
 | Ottobre | 19 | 14 | 4 (3 RETURN + 1 IMMEDIATE) | 3 | 2 target, 1 stop, 1 uscita guidance (TIME_EXPIRED) |
 | Novembre | 20 | 16 | 2 RETURN | 2 | 2 stop |
 | Dicembre | 25 | 16 | 4 RETURN | 4 | 4 stop |
-| **Totale** | **64** | **46** | **10** | **9** | price-net somma **−1,307 %** (ott +1,084; nov −0,887; dic −1,504) |
+| **Totale** | **64** | **46** | **10** | **9** | somma price-net normalizzata **≈ −1,308 %** (ott +1,083; nov −0,887; dic −1,504) |
+
+**Totale price-net.**
+- Somma esatta dei 10 valori PRIMARY STORED, a precisione piena: **−0,0130817434351891232589748454948995…**. La somma esatta dei valori per famiglia dei tre report (−0,013081743435189123258974845495) coincide con questa fino alla 28ª cifra decimale. I valori dei report sono somme del builder a 28 cifre significative.
+- Il valore indicato nella review, −0,01308174343518912325907484550, coincide con questa somma fino alla 21ª cifra decimale. Differisce di 1,0×10⁻²² alla 22ª: il record dà …258974…, il valore indicato …259074…. Non riesco a riprodurre quella differenza dai record (export dei report Owner non disponibile qui). La segnalo invece di forzare l'uguaglianza.
+- In percentuale entrambi danno −1,308174 %.
+- È una **somma di esiti ipotetici normalizzati** (unità N0 = 1), non un rendimento di conto: niente capitalizzazione, niente sizing, funding escluso.
+- Origine del precedente −1,307 %: somma delle percentuali per path già arrotondate a 3 decimali (`tabulations.path_variant_sums_pct` in `091df18`). Ora quel campo è `path_variant_sums`, a precisione piena.
 
 - Il funding non è coperto: ogni path è `PRICE_NET_ONLY_TOTAL_NET_UNAVAILABLE`.
 - Nel warmup di novembre compare la call del 31 ottobre 03:32 con lo stesso id della run di ottobre. Non è conteggiata due volte.
@@ -81,6 +98,16 @@ Fonti delle colonne:
 - **DERIVED**: margine all'ingresso PRIMARY (prezzo d'ingresso STORED, V e cap attivi a quel cutoff) e minuti della prima finestra.
 - Il totale minuti di entry disponibile, riaperture incluse, è quello del report STORED: mediana 17 (ott), 32–35 (nov), 5 (dic).
 
+**Esiti distinti.**
+- **Scenario**: esito strutturale. Contatto con la destinazione narrativa B, oppure con V, o scadenza/stallo.
+- **Target della call**: `T`, il bordo vicino della zona del landmark limitante. È diverso da B: arrivare a B non coincide con raggiungere il target, e nessuno dei due coincide con un profitto.
+- **Guidance**: lo stato della tesi della call (TARGET_REACHED, INVALIDATED, TIME_EXPIRED).
+- **PRIMARY e sensibilità**: percorsi ipotetici normalizzati del valutatore. Nessun ordine né fill.
+
+**Sensibilità.**
+- Denominatori: PRIMARY, 0 s e HORIZON_ONLY coprono 10 path su 10; 120 s ne copre 9, più 1 NO_ENTRY (12-05).
+- HORIZON_ONLY sostituisce l'**intera** politica d'uscita: niente target, niente guidance di stop, uscita all'orizzonte. Non è un controfattuale del solo stop.
+
 **Anchor e provenienza (STORED, `anchors_STORED`).** Per ogni call il dossier riporta ogni ARM/REVISE/REARM/ANCHOR_LOST con:
 - R/K/V e barra 15m sorgente;
 - pubblicazione e cursore;
@@ -102,7 +129,7 @@ Fonti delle colonne:
 - Dislocation `NORMAL/NORMAL` sempre.
 - MarketView `CONDITIONAL_SCENARIO` nella direzione della call.
 
-**Confronto con v0.3 (STORED).** Per 9 call su 10 lo scenario v0.3 nato sullo stesso bordo 15m e nella stessa direzione era terminato prima della conferma per V_CONTACT, senza call. Queste 9 call esistono solo per la sostituzione dell'anchor introdotta da MP-003. La call 10 (12-25, epoch 1) è identica nella baseline v0.3 di dicembre, ed è anch'essa uno stop.
+**Confronto con v0.3 (STORED).** Per 9 call su 10 lo scenario v0.3 nato sullo stesso bordo 15m e nella stessa direzione era terminato prima della conferma per V_CONTACT, senza call. In v0.4 questi 9 owner hanno confermato su un anchor sostituito dopo un contatto (REARM), con eventuali revisioni successive. La provenienza di ogni anchor è in `anchors_STORED`: barra sorgente, pubblicazione, cursore, intervallo d'invalidazione. La call 10 (12-25, epoch 1) è identica nella baseline v0.3 di dicembre, ed è anch'essa uno stop.
 
 ## Le 54 conferme senza call (e le 64 complessive)
 
@@ -127,10 +154,17 @@ La classificazione è DERIVED dalle ragioni STORED di instradamento e fine. Vale
 **WAIT minuto per minuto (DERIVED, cutoff = fine di ciascuna WAIT).**
 - I blocker di prezzo ricostruiti coincidono con quelli STORED in **963 su 963** minuti campionati.
 - L'unico blocker non di prezzo osservato è `BLOCKED_BY_ZONE`, per 4 minuti (WAIT del 21 dicembre).
-- Solo 9 WAIT su 46 hanno avuto almeno una chiusura nella regione economica: sono esattamente le 9 entrate.
-- Il ritracciamento richiesto dalla chiusura di conferma al bordo della regione economica è di 5–71 bps, mediana ≈ 24.
+**Ritorno nel corridoio e restrizione economica (DERIVED).**
+- Ritornare nel corridoio strutturale R–K non basta. Il predicato economico a costo fisso (14 bps, rapporto 1,2) restringe la parte usabile a una quota variabile del corridoio.
+- Quota economica alla conferma, sulle 46 WAIT: da 0,00 a 1,00, mediana ≈ 0,37.
+- 32 WAIT su 46 hanno avuto almeno una chiusura campionata nel corridoio. Solo 9 hanno avuto una chiusura nella regione economica: sono esattamente le 9 entrate. Le altre 23 sono tornate nel corridoio senza mai chiudere nella parte economica.
+- Ritracciamento richiesto dalla chiusura di conferma al bordo economico, in bps del close: da 5,2 a 70,7, mediana ≈ 23,8.
+- La profondità varia anche fra le entrate:
+  - quota economica 0,24–1,00;
+  - ritracciamento richiesto 5,2–40,1 bps del close.
+- **Controesempio 31 ottobre (call 4):** tutto il corridoio era economico (quota 1,00) e il ritracciamento richiesto era di soli 9,3 bps; il ritorno è stato poco profondo e la call ha raggiunto il target. Anche la call 1 (10-06: quota 0,56, 11,2 bps) è arrivata a target. Il ritorno non è dunque sempre "profondo verso V".
 
-**Esito strutturale dello scenario dopo la conferma (STORED, indipendente dall'ingresso).**
+**Esito strutturale dello scenario dopo la conferma (STORED), per gruppo.** I gruppi sono definiti da eventi successivi alla conferma.
 
 | Gruppo | Destinazione B | V_CONTACT | Scadenza dura | STALLED |
 |---|---:|---:|---:|---:|
@@ -140,9 +174,19 @@ La classificazione è DERIVED dalle ragioni STORED di instradamento e fine. Vale
 | IMMEDIATE (1) | 0 | 0 | 1 | 0 |
 | **Tutte le 64** | **43** | 16 | 4 | 1 |
 
+**Come leggere questa tabella.** È un'**associazione descrittiva**, non un effetto causale.
+- I gruppi "con" e "senza" ritorno usabile sono definiti da eventi successivi alla conferma, e i terminali sono concorrenti.
+- Una WAIT finisce al primo fra: ritorno usabile, contatto lato target (cap o destinazione B), contatto con V, restrizione di contesto, scadenza. Un percorso che arriva prima dal lato del target **non può** entrare per costruzione nel gruppo con ritorno; per questo il gruppo senza ritorno è arricchito di destinazioni B.
+- Il "43/64 a B" descrive lo scenario strutturale, non la bontà generale degli scenari né il target o il profitto di una call.
+
 **Storia dell'anchor (STORED).**
-- Lo scenario raggiunge B con la stessa frequenza dopo una sostituzione (29/43) e sul primo anchor (14/21).
-- La sostituzione cambia invece l'instradamento: dopo una sostituzione 37 WAIT + 1 IMMEDIATE su 43; sul primo anchor 9 WAIT su 21, con 12 terminali alla conferma.
+- Due gruppi:
+  - confermati dopo una sostituzione (REARM dopo contatto): B raggiunta in 29 casi su 43;
+  - senza sostituzione dopo contatto, gruppo che **può includere revisioni** (REVISE senza contatto): B raggiunta in 14 casi su 21.
+- Proporzioni simili non provano equivalenza né rendono innocuo il re-anchoring: il campione è piccolo e i gruppi non sono confrontabili per costruzione.
+- L'instradamento differisce:
+  - dopo una sostituzione: 37 WAIT e 1 IMMEDIATE su 43;
+  - senza sostituzione: 9 WAIT su 21 e 12 terminali alla conferma.
 
 ## Funnel B/C e MarketView (STORED, builder di report)
 
@@ -173,21 +217,28 @@ Le dipendenze dichiarate 15m e 1h diventano READY dopo 6 h 15 e 21 h di warmup, 
 | Orizzonte | Memoria registrata | Primo landmark pubblicato (ott / nov / dic) | Conseguenza |
 |---|---|---|---|
 | Pivot 15m | 24 h | ore 05:15 del primo giorno di warmup | completa all'inizio del mese |
-| Pivot 1h | **168 h** | primo giorno di warmup | memoria troncata fino al 4 del mese (ott/nov/dic) |
+| Pivot 1h | **168 h** | primo giorno di warmup | finestra troncata nota fino al 4 del mese (ott/nov/dic); dopo, completezza **non certificata** |
 | Massimo/minimo del giorno precedente | giorno UTC completo | secondo giorno di warmup | completa |
 | Massimo/minimo della settimana precedente | settimana completa | **6 ott / 10 nov / 8 dic** | assente nei primi 5–9 giorni del mese |
 | Massimo/minimo del mese precedente | mese completo | **1 nov / 1 dic / 1 gen** (nel tail) | **mai disponibile** nel mese valutato |
 
 **Conferme toccate.**
-- Pivot 1h troncati: 1 (ott), 1 (nov), 2 (dic).
+- Finestra pivot 1h che inizia prima del warmup: 1 (ott), 1 (nov), 2 (dic).
 - Livelli settimanali assenti: 1, 7 e 3.
-- Livelli mensili assenti: tutte e 64.
+- Livelli del mese precedente assenti: **tutte e 64**.
 
-**Call toccate.** Solo la 7 (12-01: pivot 1h troncati e settimana assente) e la 8 (12-05: settimana assente). Bound DERIVED, descrittivo; la logica dei landmark non è stata rieseguita:
-- **call 7**: delle 3.292 barre reali in [24-11 17:08, 27-11 00:00), mai ammesse nella run, nessuna ha scambiato nell'intervallo emissione–target [83825,0; 84937,9]. Quel periodo stava tra 86057,4 e 90664,4;
-- **settimana precedente** [24-11, 01-12), completa con 10.080 barre: massimo 93133,9, minimo 85217,9. È fuori dagli intervalli emissione–target delle call 7 e 8.
+`warmup_start + 168 h` segnala solo un troncamento **noto**. Non certifica che dopo quella data la memoria dei pivot sia completa: formazione, pubblicazione, rottura, ritiro e limite per orizzonte non sono ricostruiti qui.
 
-Nessun pivot 1h o livello settimanale mancante poteva quindi trovarsi tra ingresso e target di queste due call. L'effetto della memoria troncata su altre decisioni, per esempio `AT_OPPOSING_AREA` o le nascite, resta UNAVAILABLE senza replay. Per ottobre il bound pre-warmup è UNAVAILABLE: la cache sorgente di settembre non è stata copiata.
+**Call toccate: tutte e 10.**
+- A nessuna call erano disponibili i livelli del mese precedente.
+- La call 7 (12-01) aveva in più la finestra pivot 1h troncata e la settimana precedente assente; la call 8 (12-05) la settimana precedente assente.
+
+**Bound descrittivi (DERIVED), solo per le call 7 e 8.**
+- **Call 7**: nessuna delle 3.292 barre reali in [24-11 17:08, 27-11 00:00), mai ammesse nella run, ha scambiato nell'intervallo emissione–target [83825,0; 84937,9]. Quel periodo è rimasto fra 86057,4 e 90664,4.
+- **Settimana precedente** [24-11, 01-12): massimo 93133,9, minimo 85217,9. Il prezzo è fuori dagli intervalli emissione–target delle call 7 e 8.
+- Questi bound **non** ricostruiscono zone (semiampiezze), pubblicazione, rottura, ritiro o decisioni. Non escludono quindi un effetto del warmup: né sul target o sul cap, né su `AT_OPPOSING_AREA`, nascite o instradamento.
+
+**Conclusione sul warmup.** Un effetto del contesto iniziale ridotto **non è escluso** per nessuna call né conferma, e resta UNAVAILABLE senza replay. Il bound pre-warmup di ottobre è UNAVAILABLE: la cache sorgente di settembre non è stata copiata.
 
 ## Tail del 1° gennaio 2026 (00:00–06:05 UTC)
 
@@ -206,77 +257,82 @@ Il cursore finale corrisponde a 2026-01-01T06:05.
 
 **Conclusione sul tail.** Gennaio–agosto 2026 non è stato toccato oltre questa finestra di 6 h 05. Le statistiche di vista a 4 h di dicembre includono 3 campioni misurati con prezzi del 1° gennaio. Nessun esito di call o conferma qui esaminato usa dati 2026. Non c'è motivo, da questi record, di dichiarare contaminati gli otto mesi protetti; resta esposta solo la finestra del 1° gennaio 00:00–06:05.
 
-## Ipotesi alternative
+## Ipotesi alternative (nessuna esclusa dai record)
 
-**1. Debolezza dello scenario: non supportata come spiegazione generale.**
-- Le conferme A raggiungono la destinazione B in 43/64 casi.
-- L'invalidazione colpisce soprattutto il sottoinsieme entrato: 7 casi su 9.
+**1. Debolezza dello scenario: non valutabile in generale da questi gruppi.**
+- B è stata raggiunta in 43 conferme su 64 e V contattata in 16, ma è un esito strutturale, con terminali concorrenti. Non misura la bontà generale degli scenari né il target o il profitto di una call.
+- Dopo un ritorno usabile, 7 scenari su 9 sono terminati su V. È coerente con una debolezza dello scenario quanto con un effetto del punto d'ingresso.
 
-**2. Re-anchoring (MP-003): non distinguibile come causa delle perdite.**
-- 9 call su 10 esistono grazie alla sostituzione, comprese entrambe le call a target.
-- Il tasso strutturale di arrivo a B è uguale con e senza sostituzione (29/43 e 14/21).
-- L'unica call sul primo anchor (12-25) perde anche nella baseline v0.3.
-- La sostituzione aumenta il volume di WAIT, non peggiora gli scenari osservabili.
+**2. Selezione del ritorno: associazione descrittiva, causalità non identificata.**
+- V è stata contattata in 7 casi su 9 con ritorno usabile, contro 3 su 37 senza.
+- I gruppi però sono definiti da eventi post-conferma con terminali concorrenti. Chi raggiunge prima il lato target è escluso per costruzione dal gruppo con ritorno.
+- Il ritorno nel corridoio (32/46) non coincide con la restrizione economica (9/46). La profondità richiesta varia; il 31 ottobre un ritorno poco profondo ha raggiunto il target.
 
-**3. Stop stretti: non supportata come meccanismo principale.**
-- Distanza dallo stop all'emissione: 0,28–1,35 S15, pari a 1,1–5,4 volte la mediana del range 1m dei 60 minuti precedenti. Non separa vincenti (2,5 e 5,4 volte) da perdenti (1,1–5,3 volte).
-- Sulle 7 call fermate, HORIZON_ONLY dà in somma −2,30 % contro −2,63 %, e 5 su 7 restano negative all'orizzonte. Lo stop di solito non tagliava un movimento recuperabile.
-- Eccezione: la call 8 (+0,94 % all'orizzonte, stop entro il primo minuto).
-- Su tutte e 10 le call HORIZON_ONLY è peggiore di PRIMARY (−1,98 % contro −1,31 %).
+**3. Re-anchoring (MP-003): non dichiarabile né causa né innocuo.**
+- 9 call su 10 vengono da owner confermati dopo una sostituzione, comprese le due a target. La provenienza è in `anchors_STORED`.
+- Il confronto 29/43 contro 14/21 (gruppo che può includere revisioni) non prova equivalenza.
+- L'unica call senza sostituzione (12-25) è uno stop anche in v0.3.
 
-**4. Geometria e target vicini alla conferma.**
-- Spiegano gran parte delle **mancate call**: 26 WAIT finite lato target prima del ritorno, 17 terminali alla conferma, ritracciamenti richiesti mediani ≈ 24 bps.
-- Non spiegano il segno dell'esito delle call entrate.
+**4. Stop stretti e geometria dell'uscita: non esclusi.**
+- Distanza dallo stop all'emissione: 0,28–1,35 S15, cioè 1,1–5,4 volte la mediana del range 1m dei 60 minuti precedenti. Non separa vincenti (2,5 e 5,4) da perdenti (1,1–5,3); con n = 10, non è un'esclusione.
+- HORIZON_ONLY cambia **tutta** la politica d'uscita (niente target, niente stop guidance), quindi non isola lo stop.
+- Sulle 7 call fermate dà in somma −2,298 % contro −2,630 % di PRIMARY, e **due** endpoint sono positivi: 23 novembre (+0,045 %) e 5 dicembre (+0,944 %).
+- Su tutte e 10 le call HORIZON_ONLY dà −1,982 % contro −1,308 % di PRIMARY, soprattutto perché rinuncia ai due target.
 
-**5. Fruibilità.**
+**5. Geometria alla conferma (target vicino, regione economica ristretta).**
+- È associata alla maggior parte delle **mancate call**: 26 WAIT finite lato target prima di un ritorno usabile, 17 terminali alla conferma, ritracciamento richiesto mediano ≈ 23,8 bps del close.
+- Il suo ruolo negli esiti delle call entrate non è identificato.
+
+**6. Fruibilità e ritardo: non esclusi.**
 - Le prime finestre d'ingresso durano 1–9 minuti (mediana 2,5).
 - Due stop arrivano entro 1 minuto dall'ingresso PRIMARY.
-- È un limite pratico reale per un umano. Non spiega le perdite: le sensibilità 0 s e 120 s danno quasi la stessa somma (−1,30 % e −1,20 %).
+- Sensibilità sul ritardo:
+  - 0 s: −1,295 % su 10 path;
+  - 120 s: −1,200 % su **9** path (1 NO_ENTRY).
+- I denominatori differiscono, e le sensibilità registrate coprono solo 0 e 120 s di ingresso. Non escludono il ritardo umano reale né altri tempi di reazione.
 
-**6. Mancanza di analisi ciclica: non verificabile.**
-- Il profilo dichiara i cicli predittivi `NOT_COVERED`.
-- Nessun record consente di attribuire o escludere un effetto.
-- Contesto e fase osservati non separano vincenti da perdenti: tutte le call hanno contesto 1h allineato.
+**7. Mancanza di analisi ciclica: non verificabile.** I cicli predittivi sono `NOT_COVERED`. Contesto 1h e fase osservati non separano vincenti e perdenti: tutte le call hanno contesto allineato.
 
-**7. Warmup e tail: esclusi per le call** (vedi sopra). Restano possibili, ma non misurabili, effetti sulle conferme dei primi giorni.
+**8. Contesto iniziale (warmup): non escluso**, vedi sopra. **Tail:** nessun contributo a decisioni o esiti esaminati; la conclusione è separata e circoscritta.
 
-## Conclusione: un meccanismo supportato
+## Conclusione
 
-**Selezione del ritorno.**
+**Ipotesi diagnostica sul RETURN; meccanismo causale non identificato.**
 
-Con target conservativo vicino e rapporto 1,2 fisso, la regione economica di una WAIT è la parte del corridoio vicina alla reazione R. L'ingresso RETURN avviene quindi solo quando, dopo la conferma, il prezzo ritraccia in profondità verso V. Nei record questo ritracciamento seleziona proprio gli scenari che poi falliscono:
+I record mostrano un'associazione descrittiva: le WAIT con un ritorno economicamente usabile sono terminate per contatto con V molto più spesso (7/9) delle WAIT senza ritorno (3/37).
 
-| Gruppo | Scenari terminati per V_CONTACT |
+| Gruppo (definito da eventi post-conferma) | Scenari terminati per V_CONTACT |
 |---|---|
-| WAIT con ritorno usabile | **7/9** |
-| WAIT senza ritorno | 3/37 |
+| WAIT con ritorno usabile | 7/9 |
+| WAIT senza ritorno usabile | 3/37 |
 | Terminali alla conferma | 6/17 |
 
-Gli scenari confermati arrivano a B in 43/64 casi in generale, ma solo in 2/9 dopo un ritorno usabile. Le perdite non sono recuperate tenendo la posizione senza stop. Non dipendono dal ritardo d'esecuzione né dall'anchor sostituito.
+Il confronto è viziato per costruzione dai terminali concorrenti. Non separa:
+- l'informazione del ritorno sullo scenario;
+- la vicinanza meccanica a V;
+- la geometria del target e dello stop;
+- il contesto iniziale ridotto;
+- la sostituzione dell'anchor.
 
-**Limiti.**
-- Il campione è di 9 call RETURN entrate, su tre mesi di sviluppo ora esposti.
-- Parte dell'effetto è meccanica: un prezzo vicino a V lo tocca più facilmente. I record non separano "il ritorno segnala il fallimento" da "il ritorno avvicina il prezzo allo stop"; HORIZON_ONLY ne attenua ma non elimina il peso.
-- Non è dimostrabile che un ingresso diverso, per esempio immediato, sarebbe stato redditizio: servirebbe un controfattuale, non autorizzato.
-- Il funding non è coperto.
+Il campione è di 9 call RETURN entrate, su tre mesi di sviluppo ora esposti, senza controfattuale autorizzato e senza funding.
 
 **Controevidenze.**
-- 2 delle 9 entrate RETURN hanno raggiunto il target: +0,38 % e +0,84 %, che rendono ottobre positivo.
-- 3 WAIT senza ritorno sono comunque finite per V_CONTACT.
-- La call 8 si sarebbe ripresa all'orizzonte.
-- La profondità del ritorno nel corridoio non separa vincenti e perdenti: 0,5 e 0,9 dal lato R per le vincenti, 0,15–0,85 per le perdenti.
+- Due entrate RETURN hanno raggiunto il target (10-06 +0,378 %, 10-31 +0,843 %). Il 31 ottobre era un ritorno poco profondo, su un corridoio interamente economico.
+- 3 WAIT senza ritorno sono finite comunque su V.
+- Due stop hanno endpoint HORIZON_ONLY positivo (11-23, 12-05).
+- La profondità del ritorno non separa gli esiti.
 
-Nessun parametro o nuova regola è proposto o implementato.
+Il dossier **non autorizza** una nuova regola né un parametro, e non ne propone.
 
 ## Campi mancanti (UNAVAILABLE)
 
 - Esiti di regole o ingressi alternativi (controfattuale).
 - Ordine intrabar dentro il minuto.
-- Landmark che la run avrebbe pubblicato da storia pre-warmup: è dato solo un bound di prezzo.
+- Landmark, zone e decisioni che la run avrebbe prodotto con un contesto iniziale più lungo: sono dati solo bound di prezzo descrittivi.
 - Bound pre-warmup per ottobre (cache di settembre non copiata).
 - Funding e total net.
 - Copertura di news e calendario (`NONE_UNKNOWN`).
 - Campioni di ritorno minuto per minuto STORED: sono DERIVED e validati sui cambi di blocker.
 - Stato di `validation_outcome` dell'API: per la comparabilità è usato lo stato di assurance del replay.
 
-READY FOR DIRECTOR REVIEW — WP-012 OWNER Q4 DIAGNOSIS ONLY
+READY FOR DIRECTOR REVIEW — WP-012 OWNER Q4 DIAGNOSIS CORRECTION ONLY
