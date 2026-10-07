@@ -1,9 +1,9 @@
-# Current task — WP-012 exact-SHA CI release gate
+# Current task — Owner Q4 v0.4 read-only diagnosis (delivered)
 Date: 2026-10-07 Europe/Rome.
-Status: NO EXECUTOR TASK; OWNER CI NOTIFICATION PENDING. OWNER ECONOMIC PLAN INACTIVE.
+Status: DELIVERED — READY FOR DIRECTOR REVIEW. No executor task active. No next package activated. Owner economic plan INACTIVE.
 
-Technical findings are closed in [Director review](delivery/WP-012-CORRECTION-DIRECTOR-REVIEW.md) on product e3a5afa6e355363cd2df93871c68ad8cb4de3626.
+The Owner assigned a read-only cross-month diagnosis of the v0.4 October–December 2025 evaluations (product c525941), with the v0.3 baselines as record comparison. The deliverable is [delivery/evidence/WP-012-OWNER-Q4-DIAGNOSIS/](delivery/evidence/WP-012-OWNER-Q4-DIAGNOSIS/SUMMARY.md): SUMMARY, dossier.json, calls.csv (10 calls), confirmations.csv (64 A confirmations), and the reproducible extraction script with its read-only SQL.
 
-The Owner watches CI and supplies green/red for that SHA; the Director verifies the exact-SHA checks/compose-smoke outcome once notified. No polling, monitoring shell or repeat tests. If red, diagnose the reported failure under a bounded task; no blind retry.
+October, November and December 2025 are EXPOSED DEVELOPMENT. They are not intact verification for future revisions. January–August 2026 remains protected; only the consumed 1 Jan 00:00–06:05 tail is inspected in the dossier.
 
-No implementation, acquisition, Owner data inspection, replay, Deep or economic run active. Only after release acceptance will the Director activate the registered app comparison and provide Owner commands/configuration. Old v0.3 series and October evidence remain preserved.
+No method revision, new evaluation, replay, backtest, Deep validation, counterfactual, acquisition, or product/schema/data change is authorized. The Director reviews the dossier and decides any next step. The Owner watches CI for the pushed SHA; remote CI is PENDING / NOT CHECKED.

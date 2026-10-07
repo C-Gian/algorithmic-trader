@@ -1,8 +1,8 @@
 # Project State
 
-Updated: 2026-10-07 — WP-012 technical findings CLOSED at e3a5afa; release awaits Owner-operated exact-SHA CI; economic plan INACTIVE.
+Updated: 2026-10-07 — Owner-assigned read-only Q4 (Oct–Dec 2025) v0.4 diagnosis delivered, READY FOR DIRECTOR REVIEW; Oct/Nov/Dec 2025 now EXPOSED DEVELOPMENT; no next package active.
 
-**Current task: [task.md](task.md) — Owner CI notification / Director release gate only.** [Technical closure](delivery/WP-012-CORRECTION-DIRECTOR-REVIEW.md). No executor implementation or Owner economic run is active.
+**Current task: [task.md](task.md) — Owner-assigned read-only Q4 diagnosis delivered; awaiting Director review.** [Dossier](delivery/evidence/WP-012-OWNER-Q4-DIAGNOSIS/SUMMARY.md). No executor implementation, economic run or next package is active. Oct/Nov/Dec 2025 are exposed development, not intact verification for future revisions.
 
 Goal (Foundation v3.1): an integrated BTC adviser with persistent actionable LONG/SHORT calls, entry area, targets, stop/exit guidance and holding horizon. Capital, size, leverage and orders stay human. Historical ACCEPTED/READY/HOLD labels in older documents do not authorize work; only task.md does.
 
@@ -411,3 +411,48 @@ CI run 37587727298 (job 112681663191) on e3a5afa failed only `test_owner_runs_v0
 - **Cause (test timing, no product defect):** observation `progress.applied_events` is the committed checkpoint cursor; at speed > 0 the worker commits every `checkpoint_seconds` (2 s) of wall time, so at speed 100 it can trail the kernel by ~200 deliveries. The test switched to speed 1 when the *reported* cursor reached `CONTACT_DISPATCH - 120`, only 147 deliveries before the 04:00 rearm, so on a fast runner the kernel could already be past 04:00 before the speed change/pause applied. Documented PAUSE/STEP semantics behaved as specified.
 - **Fix (`tests/e2e/test_mp003_e2e.py` only):** pause via the UI at reported cursor ≥ `CONTACT_DISPATCH - 450`, wait until the replay is parked (`status == paused`; committed cursor final), assert the parked cursor is before the 03:51 contact, then grant exactly `CONTACT_DISPATCH + 2 - parked` STEPs and wait for that exact committed cursor. The "Scenario under observation; waiting for a new completed reaction" assertion and all later assertions (STEP to anchor 2, completion, diagnostics, comparison, copy, layouts) are unchanged. No timeout/retry increase; MP-003, parameters and product code unchanged.
 - **Checks:** the affected test passed 3/3 on Windows and 3/3 on Linux (uv python3.14-trixie container, WSL2 kernel), each against a disposable Postgres 18.6 (plus 2 earlier Windows development runs). Instrumented run: reported 4214 → parked 4237 (contact 5013, rearm 5040). Full suite and Compose smoke left to CI (test-only change). CI PENDING / NOT CHECKED, Owner-operated. Economic comparison remains INACTIVE.
+
+## Owner Q4 v0.4 read-only diagnosis — executor evidence (base `c525941`; READY FOR DIRECTOR REVIEW — Q4 DIAGNOSIS ONLY; not accepted)
+
+[Summary](delivery/evidence/WP-012-OWNER-Q4-DIAGNOSIS/SUMMARY.md) · [dossier.json](delivery/evidence/WP-012-OWNER-Q4-DIAGNOSIS/dossier.json) · [calls.csv](delivery/evidence/WP-012-OWNER-Q4-DIAGNOSIS/calls.csv) · [confirmations.csv](delivery/evidence/WP-012-OWNER-Q4-DIAGNOSIS/confirmations.csv) · [extraction](delivery/evidence/WP-012-OWNER-Q4-DIAGNOSIS/extract_q4_diagnosis.py) · [export SQL](delivery/evidence/WP-012-OWNER-Q4-DIAGNOSIS/export.sql).
+- **Scope (Owner assignment, 7 Oct).** Read-only cross-month diagnosis of the Owner v0.4 runs at c525941: eval-20261007T094006-67272e (Oct), eval-20261007T102821-ae14be (Nov), eval-20261007T105636-6d9276 (Dec). The v0.3 baselines (eval-20261006T175135-9ddf6d, eval-20261007T101912-087dd1, eval-20261007T105343-eb536a) were used for record comparison. No replay, backtest, Deep validation, counterfactual, download, or product/schema/method/data/Owner-stack change.
+- **Evidence status.** October–December 2025 are now **EXPOSED DEVELOPMENT**. They are not intact verification for any future revision.
+- **Provenance.**
+  - One `REPEATABLE READ READ ONLY` psql transaction via `docker exec` (snapshot `704341:704341:`).
+  - All six journal and evaluation-record chains equal their finish commitments.
+  - The three pinned caches were byte-copied; manifests equal the pins and all partitions verified.
+  - Product `compare.comparability` gives COMPARABLE for each month.
+  - The extraction is byte-reproducible (two runs). Raw exports stay outside Git.
+- **Reconciliation (product report builders).**
+  - Owner figures reproduced exactly: 64 A confirmations (19/20/25), 46 WAITs, 10 calls (9 RETURN + 1 IMMEDIATE), 9 RETURN owners entered at PRIMARY 60 s.
+  - PRIMARY: 2 target, 1 guidance time exit, 7 stop; price-net sum −1.307 %. Funding is not covered.
+  - Derived WAIT price blockers equal the stored blocker changes in 963/963 sampled minutes; the only non-price blocker was BLOCKED_BY_ZONE, 4 minutes.
+- **Findings (STORED/DERIVED).**
+  - Selection: 0 rejections for slot/priority/execution.
+  - Confirmations without a call:
+    - 26 WAITs ended target-side before any return;
+    - 6 expired without a return;
+    - 3 hit a context restriction;
+    - 2 ended on V contact during the WAIT;
+    - 17 ended at confirmation (9 no economic region, 6 at opposing area, 2 target contact).
+  - Scenario fate after confirmation: B reached in 43/64 overall, but only 2/9 after a usable return. V contact in 7/9 after a usable return versus 3/37 in WAITs without one.
+  - 9/10 calls exist only through MP-003 anchor replacement. Scenario B-rate is equal with and without replacement (29/43 vs 14/21).
+  - Stop distance does not separate winners from losers. On the 7 stopped calls HORIZON_ONLY sums −2.30 % against −2.63 % stopped.
+  - The 0 s / 120 s sensitivities are nearly identical to PRIMARY.
+  - First entry windows last 1–9 min (median 2.5).
+- **Supported mechanism (single).** Return selection: the RETURN entry fires only after a deep post-confirmation retrace toward V, and in these records that retrace selects the failing scenarios.
+  - Limits: n=9; a mechanical proximity-to-V component cannot be separated; the counterfactual is not authorized.
+  - Counter-evidence: 2 RETURN targets; call 12-05 recovers at horizon; return depth does not separate outcomes.
+  - No parameter or rule is proposed.
+- **Warmup (96 h).**
+  - 15m/1h dependencies are ready before each month starts.
+  - 1h pivot memory (168 h) is truncated until day 4.
+  - Previous-week levels are absent until 6 Oct / 10 Nov / 8 Dec.
+  - Previous-month levels are never available inside an evaluated month.
+  - Affected calls are 12-01 and 12-05 only. A descriptive price-range bound shows no missing pivot or weekly level could lie between their entry and target.
+  - October's pre-warmup bound is UNAVAILABLE (September source cache not copied).
+- **1 Jan 2026 tail.**
+  - Both December runs admitted only 365 trade, 365 mark and 365 index 1m bars for 00:00–06:05; no funding.
+  - Zero decision records in the tail; no December call path or scenario resolved there.
+  - Only contribution: 3 Dec-31 view samples have 4 h endpoints in the tail (1 directional). January–August 2026 is otherwise untouched; there is no basis for declaring the protected months contaminated.
+- **Checks.** Count reconciliation, chain/pin/hash provenance, two-run reproducibility and link check. No full suite, E2E or Compose (diagnostic-only delivery). CI PENDING / NOT CHECKED, Owner-operated.
