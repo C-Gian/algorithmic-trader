@@ -1,6 +1,6 @@
 # Current task — continuous v0.4 diagnosis (read-only)
 Date: 2026-10-07 Europe/Rome.
-Status: EXECUTOR WORK DELIVERED — READY FOR DIRECTOR REVIEW — CONTINUOUS V0.4 DIAGNOSIS ONLY. No further package activated.
+Status: DOSSIER DELIVERED at e07bbe0; Astra F1–F4 dossier corrections delivered — READY FOR DIRECTOR REVIEW — CONTINUOUS V0.4 DIAGNOSIS CORRECTION ONLY. No further package activated.
 
 ## Preceding record
 
@@ -28,3 +28,13 @@ Delivered: [dossier](delivery/evidence/WP-013-CONTINUOUS-V04-DIAGNOSIS/SUMMARY.m
 - **Data scope.** January–August 2026 stays protected, except the authorized tail.
 - **Checks.** Dossier verifications only; no product suites or Compose.
 - **Review.** The Director reviews; the Owner watches CI. Remote CI: PENDING / NOT CHECKED.
+
+## Correction delivered (Astra review of `e07bbe0`, F1–F4 only)
+
+This pass corrects the dossier and its script only, using the existing local exports. No new extraction.
+- **F1:** observation limits; INDETERMINATE for missing observations.
+- **F2:** uniform H2 / OBSTACLE_ONLY wording.
+- **F3:** no statistical conclusion about chance.
+- **F4:** structural vs operational V, explicit price references, terminal publication vs contact bar, #3 timing, entry open naming, 12 = 10 + 2 and 10 = 9 + 1.
+
+No rule or parameter proposal. After closure, the Director may open a design discussion on return compatibility, without further general dossiers.

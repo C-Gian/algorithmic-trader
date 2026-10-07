@@ -96,6 +96,16 @@ def pub(e):
     return dt(e["record"]["env"]["published_at"])
 
 
+def contact_bar(prefix, reason):
+    """The 1m bar of a certified contact named in a terminal reason (``...#obs@<bar start>``): bar interval
+    [start, start+1m). The instant inside the bar is UNAVAILABLE (no intrabar order is recorded)."""
+    start = None
+    if reason and "#obs@" in str(reason):
+        start = dt(str(reason).split("#obs@")[1])
+    return {f"{prefix}_bar_start": iso(start), f"{prefix}_bar_end": iso(start + MIN) if start else None,
+            f"{prefix}_intrabar_instant": "UNAVAILABLE" if start else None}
+
+
 def ceil_minute(t):
     f = t.replace(second=0, microsecond=0)
     return f if f == t else f + MIN
@@ -244,19 +254,30 @@ def evidence(journal, lo_seq, hi_seq, d_name, attempt_id, *, inclusive_hi=False,
     return hits, unavailable
 
 
-def last_obs(journal, hi_seq, name):
-    """Latest observation known at the decision ``hi_seq`` (same-dispatch observations included)."""
-    for e in reversed(journal[:hi_seq - 1] + same_dispatch_observations(journal, hi_seq)):
+def last_obs(journal, hi_seq, name, *, dispatch=True):
+    """Latest PUBLISHED observation known at the decision ``hi_seq`` (same-dispatch observations included unless
+    ``dispatch`` is False). Observations are publications: the category persists until the next record, but the
+    publisher may not emit a new record when only a value changes, so ``values_as_published`` are the values attached
+    to that publication at ``published_at`` - not a numeric snapshot certainly current at the decision."""
+    rows = journal[:hi_seq - 1] + (same_dispatch_observations(journal, hi_seq) if dispatch else [])
+    for e in reversed(rows):
         if e["kind"] == "observation" and e["record"].get("name") == name:
-            return {"seq": e["seq"], "at": e["record"]["env"]["published_at"], "category": e["record"]["category"],
-                    "values": e["record"].get("values")}
+            return {"seq": e["seq"], "published_at": e["record"]["env"]["published_at"],
+                    "category": e["record"]["category"], "values_as_published": e["record"].get("values")}
     return None
 
 
-def classify(hits, unavailable, *, immediate, returned):
+def observations_known(ctx, phase):
+    """Context and phase categories are both known (published and not UNAVAILABLE) at the decision."""
+    return all(o is not None and o["category"] != "UNAVAILABLE" for o in (ctx, phase))
+
+
+def classify(hits, unavailable, *, immediate, returned, known=True):
+    """DEFINITIONS classes. Missing required observations (an UNAVAILABLE publication inside the window, or no known
+    context/phase category at the decision) give INDETERMINATE - never H2."""
     if immediate:
         return "NOT_APPLICABLE_IMMEDIATE"
-    if unavailable:
+    if unavailable or not known:
         return "INDETERMINATE"
     if any(hits[c] for c in H1_CODES):
         return "H1_RECORDED"
@@ -364,14 +385,18 @@ def call_evidence(run, c):
     returned = any(e["record"]["transition"] == "RETURN_USABLE" and e["seq"] < issue["seq"] for e in run.ent[aid])
     hits, unav = evidence(run.journal, sd["confirm_seq"], issue["seq"], d_name, aid)
     strict, strict_unav = evidence(run.journal, sd["confirm_seq"], issue["seq"], d_name, aid, dispatch=False)
-    return {"strict_seq_counts": counts(strict),
-            "strict_seq_classification": classify(strict, strict_unav, immediate=immediate, returned=returned),"call_id": r["call_id"], "issue_seq": issue["seq"], "confirm_seq": sd["confirm_seq"],
+    ctx, ph = last_obs(run.journal, issue["seq"], "context"), last_obs(run.journal, issue["seq"], "phase")
+    known = observations_known(ctx, ph)
+    known_strict = observations_known(last_obs(run.journal, issue["seq"], "context", dispatch=False),
+                                      last_obs(run.journal, issue["seq"], "phase", dispatch=False))
+    return {"strict_seq_counts": counts(strict), "observations_known_at_issue": known,
+            "strict_seq_classification": classify(strict, strict_unav, immediate=immediate, returned=returned,
+                                                  known=known_strict),"call_id": r["call_id"], "issue_seq": issue["seq"], "confirm_seq": sd["confirm_seq"],
             "window_records": issue["seq"] - sd["confirm_seq"] - 1, "evidence_counts": counts(hits),
             "evidence": hits, "unavailable": unav, "returned_before_issue": returned,
-            "context_at_issue": last_obs(run.journal, issue["seq"], "context"),
-            "phase_at_issue": last_obs(run.journal, issue["seq"], "phase"),
+            "context_at_issue": ctx, "phase_at_issue": ph,
             "context_at_confirmation": last_obs(run.journal, sd["confirm_seq"], "context"),
-            "classification": classify(hits, unav, immediate=immediate, returned=returned)}
+            "classification": classify(hits, unav, immediate=immediate, returned=returned, known=known)}
 
 
 def call_row(run, c, ev):
@@ -422,6 +447,7 @@ def call_row(run, c, ev):
         "residual_at_issue_min": minutes(ti, hard),
         # at confirmation (STORED geometry of the WAIT_OPEN/ISSUE record; DERIVED distances)
         "conf_close": conf["confirmation_close"], "R": g["R"], "K_trigger": g["K_trigger"], "V": g["V"],
+        "V_structural_scenario": conf["invalidation_level"], "V_operational_tick": r["invalidation"],
         "T_confirm": g["T_confirm"], "S15_conf": g["S15"] or conf["confirmation_scale"], "corridor": g["corridor"],
         "economic_initial": g["economic_current"], "I0": g["I0"],
         "conf_close_to_V_bps": bps(d, conf["confirmation_close"], g["V"] or r["invalidation"]),
@@ -444,31 +470,40 @@ def call_row(run, c, ev):
         **{f"pre_{k}": v for k, v in ev["evidence_counts"].items()},
         "classification_strict_seq": ev["strict_seq_classification"],
         "strict_seq_differs": ev["strict_seq_counts"] != ev["evidence_counts"],
+        "observations_known_at_issue": ev["observations_known_at_issue"],
         "context_at_confirmation": (ev["context_at_confirmation"] or {}).get("category"),
+        "context_at_confirmation_published_at": (ev["context_at_confirmation"] or {}).get("published_at"),
         "context_at_issue": (ev["context_at_issue"] or {}).get("category"),
+        "context_at_issue_published_at": (ev["context_at_issue"] or {}).get("published_at"),
         "phase_at_issue": (ev["phase_at_issue"] or {}).get("category"),
+        "phase_at_issue_published_at": (ev["phase_at_issue"] or {}).get("published_at"),
         # entry
         "first_candidate_boundary_primary": iso(first_boundary), "entry_status_timeline": status_tl,
         "primary_entry_at": entry.get("time_start"), "primary_entry_price": entry.get("price"),
         "primary_entry_after_issue_min": minutes(ti, t_entry), "primary_entry_attempts": pr.get("entry_attempts"),
         "primary_rejected_opens": pr.get("rejected_opens"),
         "primary_no_entry_class": pr.get("exit_class") if pr.get("status") == "NO_ENTRY" else None,
-        "primary_entry_close_to_V_bps": bps(d, entry.get("price"), r["invalidation"]),
-        "primary_entry_close_to_T_bps": bps(d, entry.get("price"), r["target"]),
+        "primary_entry_open_to_V_operational_bps": bps(d, entry.get("price"), r["invalidation"]),
+        "primary_entry_open_to_T_bps": bps(d, entry.get("price"), r["target"]),
         **{f"entry_window_{k}": len(v) for k, v in h_entry.items()},
         # outcomes (joined after the evidence; STORED)
         "guidance_terminal": term["record"]["thesis_status"] if term else "ONGOING_AT_END",
         "guidance_terminal_reason": None if not term else str(term["record"].get("terminal_reason"))[:80],
-        "guidance_terminal_at": term["record"]["env"]["published_at"] if term else None,
+        "guidance_terminal_published_at": term["record"]["env"]["published_at"] if term else None,
+        **contact_bar("guidance_contact", None if not term else term["record"].get("terminal_reason")),
         "scenario_terminal": (sd["terminal"] or {}).get("state"),
         "scenario_terminal_reason": (sd["terminal"] or {}).get("reason"),
-        "scenario_terminal_at": (sd["terminal"] or {}).get("at"), "destination_B": sd["destination_B"],
+        "scenario_terminal_published_at": (sd["terminal"] or {}).get("at"), "destination_B": sd["destination_B"],
         "primary_status": pr.get("status"), "primary_exit_class": pr.get("exit_class"),
-        "primary_exit_at": (pr.get("exit") or {}).get("time_start"), "primary_exit_price": (pr.get("exit") or {}).get(
-            "price"), "primary_held_min": pr.get("held_minutes"), "primary_price_net": pr.get("price_net"),
+        "primary_exit_fill_start": (pr.get("exit") or {}).get("time_start"),
+        "primary_exit_fill_end": (pr.get("exit") or {}).get("time_end"),
+        "primary_exit_reason": (pr.get("exit") or {}).get("reason"),
+        "primary_exit_price": (pr.get("exit") or {}).get("price"), "primary_held_min": pr.get("held_minutes"), "primary_price_net": pr.get("price_net"),
         "primary_mfe": pr.get("mfe"), "primary_mae": pr.get("mae"),
         **{f"{v.lower()}_status": (p[v] or {}).get("status") for v in VARIANTS[1:]},
         **{f"{v.lower()}_price_net": (p[v] or {}).get("price_net") for v in VARIANTS[1:]},
+        **{f"{v.lower()}_entry_open_at": ((p[v] or {}).get("entry") or {}).get("time_start") for v in VARIANTS[1:]},
+        **{f"{v.lower()}_exit_fill_start": ((p[v] or {}).get("exit") or {}).get("time_start") for v in VARIANTS[1:]},
         **{f"hold_window_{k}": len(v) for k, v in h_hold.items()},
     }
     return row
@@ -534,6 +569,10 @@ def wait_row(run, w):
     hits, unav = evidence(run.journal, sd["confirm_seq"], hi, d_name, aid, inclusive_hi=not issued)
     strict, strict_unav = evidence(run.journal, sd["confirm_seq"], hi, d_name, aid, inclusive_hi=not issued,
                                    dispatch=False)
+    hi_obs = min(hi, len(run.journal))
+    known = observations_known(last_obs(run.journal, hi_obs, "context"), last_obs(run.journal, hi_obs, "phase"))
+    known_strict = observations_known(last_obs(run.journal, hi_obs, "context", dispatch=False),
+                                      last_obs(run.journal, hi_obs, "phase", dispatch=False))
     blockers = Counter(b for e in ents if e["record"]["transition"] == "BLOCKERS" for b in e["record"]["blockers"])
     caps = [{"at": e["record"]["env"]["published_at"], "cap": (e["record"].get("cap_history") or [{}])[-1].get("cap"),
              "reason": e["record"].get("reason")} for e in ents if e["record"]["transition"] == "CAP_REVISION"]
@@ -559,14 +598,16 @@ def wait_row(run, w):
         "issued_call_id": end["record"].get("call_id") if issued else None,
         "class": "ISSUED" if issued else ("RETURN_USABLE_NOT_ISSUED" if usable else "ENDED_WITHOUT_USABLE_RETURN"),
         "scenario_terminal": (st or {}).get("state"), "scenario_terminal_reason": (st or {}).get("reason"),
-        "scenario_terminal_at": (st or {}).get("at"),
+        "scenario_terminal_published_at": (st or {}).get("at"),
         "scenario_terminal_same_dispatch_as_entry_end": bool(st and end_at and st["at"] == end_at),
         "scenario_terminal_before_entry_end": bool(st and end and st["seq"] < end["seq"]),
         "owner_release_during_wait": [x for x in sd["owner_release"] if end_at and r["env"]["published_at"]
                                       <= x["at"] <= end_at],
-        "window_class": classify(hits, unav, immediate=False, returned=bool(usable)),
+        "window_class": classify(hits, unav, immediate=False, returned=bool(usable), known=known),
+        "observations_known_at_end": known,
         **{f"win_{k}": v for k, v in counts(hits).items()}, "window_unavailable": len(unav),
-        "window_class_strict_seq": classify(strict, strict_unav, immediate=False, returned=bool(usable)),
+        "window_class_strict_seq": classify(strict, strict_unav, immediate=False, returned=bool(usable),
+                                           known=known_strict),
     }
 
 
@@ -586,6 +627,17 @@ def reconcile(rep, run, calls, waits, export):
         "matches": {k: got[k] == EXPECTED[k] for k in EXPECTED},
         "report_issued_equals_calls": f.get("issued") == len(calls),
         "report_waits_equals_waits": (f.get("waiting") or {}).get("opened") == len(waits)}
+    inv = [c for c in ret if c["guidance_terminal"] == "INVALIDATED"]
+    tgt = [c for c in ret if c["guidance_terminal"] == "TARGET_REACHED"]
+    out["return_outcome_identities"] = {
+        "return": len(ret), "invalidated": len(inv), "target_reached": len(tgt),
+        "invalidated_entered_primary_stopped": sum(1 for c in inv if c["primary_status"] == "CLOSED"
+                                                   and c["primary_exit_class"] == "STOP"),
+        "invalidated_primary_no_entry": sum(1 for c in inv if c["primary_status"] == "NO_ENTRY"),
+        "return_eq_invalidated_plus_target": len(ret) == len(inv) + len(tgt),
+        "invalidated_eq_stopped_plus_no_entry": len(inv) == sum(
+            1 for c in inv if (c["primary_status"] == "CLOSED" and c["primary_exit_class"] == "STOP")
+            or c["primary_status"] == "NO_ENTRY")}
     periods = rep.get("periods") or {}
     out["periods_reconciliation_all_passed"] = (periods.get("reconciliation") or {}).get("all_passed")
     out["periods_outcome_completeness"] = (periods.get("outcome_completeness") or {}).get("state")
@@ -683,6 +735,25 @@ def main(export: Path, out: Path):
                               "context_at_issue": v["context_at_issue"], "phase_at_issue": v["phase_at_issue"]}
                           for k, v in evs.items()},
         "waits": waits,
+        "levels_and_times": {
+            "V_structural_scenario": "the confirmed scenario's frozen V (scenario CONFIRM invalidation_level, unrounded)",
+            "V_operational_tick": ("the call/guidance V: derived from the structural V and tick-rounded away from the "
+                                   "entry (call invalidation; also the WAIT geometry V)"),
+            "distances": ("every *_to_V_* distance uses V_operational_tick; conf_close_* use the stored confirmation "
+                          "close, issue_close_* the stored issue reference close, primary_entry_open_* the stored "
+                          "modeled PRIMARY entry OPEN; the denominator is always that reference price"),
+            "terminal_times": ("*_published_at = journal publication of the terminal record; *_contact_bar_start/"
+                               "end = the certified 1m contact bar named in the reason; the instant inside the bar is "
+                               "UNAVAILABLE"),
+            "path_times": "entry/exit fills are the evaluator's modeled fills (time_start/time_end of the fill)"},
+        "observation_limits": (
+            "S1-S6 count PUBLISHED occurrences, not every possible state change. Observation categories persist until "
+            "the next publication; values attached to the last publication are as of its published_at and the "
+            "publisher may not emit when only a value changes, so they are not a certainly-current numeric snapshot. "
+            "S1 is a landmark break, S2 an opposite-direction scenario transition, S3 counterevidence of the "
+            "aggregate view - none is automatically specific to the call. The absence of S5/S6 at issue is expected "
+            "from the method's gates (A withdrawal on forbidden context / opposite expansion) and is not an "
+            "independent check of selection quality."),
         "unavailable": {
             "intrabar_order": "order of high/low inside a minute is not recorded (stored contacts only)",
             "quotes": "historical bid/ask were not recorded; the modeled side price is the complete-minute close",
@@ -704,5 +775,37 @@ def main(export: Path, out: Path):
                       "classification": dossier["tabulations"]["calls_by_classification"]}, indent=1))
 
 
+def selfcheck():
+    """Synthetic probes of classify()/evidence() (no export needed)."""
+    def obs(seq, t, name, cat, **values):
+        return {"seq": seq, "kind": "observation", "clock_time": t,
+                "record": {"name": name, "category": cat, "values": values, "env": {"published_at": t}}}
+
+    def ent(seq, t, tr):
+        return {"seq": seq, "kind": "entry_attempt", "clock_time": t,
+                "record": {"entry_attempt_id": "a", "transition": tr, "env": {"published_at": t}}}
+    t0, t1 = "2025-09-01T00:00:00Z", "2025-09-01T00:10:00Z"
+    full = [obs(1, t0, "context", "UP"), obs(2, t0, "phase", "REACTION"), ent(3, t0, "WAIT_OPEN"),
+            ent(4, t1, "ISSUE")]
+    missing_phase = [obs(1, t0, "context", "UP"), ent(2, t0, "WAIT_OPEN"), ent(3, t1, "ISSUE")]
+    none = [ent(1, t0, "WAIT_OPEN"), ent(2, t1, "ISSUE")]
+    unavailable_ctx = [obs(1, t0, "context", "UNAVAILABLE"), obs(2, t0, "phase", "REACTION"), ent(3, t0, "WAIT_OPEN"),
+                       ent(4, t1, "ISSUE")]
+    out = {}
+    for name, j in (("full", full), ("missing_phase", missing_phase), ("no_observations", none),
+                    ("context_unavailable", unavailable_ctx)):
+        issue = j[-1]["seq"]
+        h, u = evidence(j, issue - 2, issue, "LONG", "a")
+        known = observations_known(last_obs(j, issue, "context"), last_obs(j, issue, "phase"))
+        out[name] = classify(h, u, immediate=False, returned=True, known=known)
+    expected = {"full": "NONE_RECORDED_H2_CONSISTENT", "missing_phase": "INDETERMINATE",
+                "no_observations": "INDETERMINATE", "context_unavailable": "INDETERMINATE"}
+    assert out == expected, out
+    print(json.dumps({"selfcheck": out, "passed": True}))
+
+
 if __name__ == "__main__":
-    main(Path(sys.argv[1]), Path(sys.argv[2]))
+    if sys.argv[1:] == ["--selfcheck"]:
+        selfcheck()
+    else:
+        main(Path(sys.argv[1]), Path(sys.argv[2]))

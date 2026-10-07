@@ -1,8 +1,8 @@
 # Project State
 
-Updated: 2026-10-07 — WP-013 continuous v0.4 Sep–Dec 2025 run (`eval-20261007T182934-3f41ad`, build 97a2a8c) accepted by the Director as descriptive development evidence (negative result; cause not identified; no method change authorized); read-only continuous v0.4 diagnosis delivered, READY FOR DIRECTOR REVIEW — CONTINUOUS V0.4 DIAGNOSIS ONLY.
+Updated: 2026-10-07 — WP-013 continuous v0.4 Sep–Dec 2025 run (`eval-20261007T182934-3f41ad`, build 97a2a8c) accepted by the Director as descriptive development evidence (negative result; cause not identified; no method change authorized); read-only continuous v0.4 diagnosis delivered at e07bbe0; Astra F1–F4 dossier corrections delivered, READY FOR DIRECTOR REVIEW — CONTINUOUS V0.4 DIAGNOSIS CORRECTION ONLY.
 
-**Current task: [task.md](task.md) — continuous v0.4 diagnosis (read-only) delivered; awaiting Director review.** [Dossier](delivery/evidence/WP-013-CONTINUOUS-V04-DIAGNOSIS/SUMMARY.md) · [protocol](delivery/WP-013-CONTINUOUS-REFERENCE-PROTOCOL.md). No method, parameter, threshold or infrastructure change is authorized. No further package is active. Sep–Dec 2025 (continuous and single-month runs) is exposed development; Jan–Aug 2026 stays protected except the authorized tail.
+**Current task: [task.md](task.md) — continuous v0.4 diagnosis (read-only) corrected per Astra F1–F4; awaiting Director review.** [Dossier](delivery/evidence/WP-013-CONTINUOUS-V04-DIAGNOSIS/SUMMARY.md) · [protocol](delivery/WP-013-CONTINUOUS-REFERENCE-PROTOCOL.md). No method, parameter, threshold or infrastructure change is authorized. No further package is active. Sep–Dec 2025 (continuous and single-month runs) is exposed development; Jan–Aug 2026 stays protected except the authorized tail.
 
 Goal (Foundation v3.1): an integrated BTC adviser with persistent actionable LONG/SHORT calls, entry area, targets, stop/exit guidance and holding horizon. Capital, size, leverage and orders stay human. Historical ACCEPTED/READY/HOLD labels in older documents do not authorize work; only task.md does.
 
@@ -551,3 +551,27 @@ A non-blocking typo is corrected: `dossier.json → erratum_vs_091df18` and the 
   - **Findings — outcomes.** 10 of 12 RETURN calls end on the frozen V, with the scenario invalidated in the same dispatch. The issue close sits 4.67–61.94 bps (median 12.7) from V, after an adverse return of 0.15–2.06 S15 into the R–K corridor.
   - **Not decidable from the records.** Whether that return was itself unrecorded deterioration, and causality. The WAITs without return are not controls.
 - **Checks.** Dossier verifications only (reconciliation, chains, reproducibility). No product suites or Compose. CI PENDING / NOT CHECKED, Owner-operated.
+
+### Continuous v0.4 diagnosis — Astra F1–F4 correction (base `e07bbe0`; READY FOR DIRECTOR REVIEW — CONTINUOUS V0.4 DIAGNOSIS CORRECTION ONLY; not accepted)
+
+These are dossier and script corrections only, made from the existing local exports. There was no new extraction, acquisition, replay, Deep validation, backtest or method change.
+- **F1 — observation limits.**
+  - S1–S6 count published occurrences, not every state change. Categories persist; values are as of their publication. Each decision now reports the published category, its timestamp and the values as published.
+  - S1, S2 and S3 are described as landmark break, opposite scenario transition and aggregate-view counterevidence, none automatically specific to the call.
+  - The absence of S5/S6 at issue is expected from the gates; it is not an independent check of selection quality.
+  - `classify()` is aligned to the definition: missing context/phase observations give INDETERMINATE, never H2.
+- **F2 — wording.** All 12 RETURN calls reach the economic region with no directional H1 occurrence: 11 are in the H2 class and #13 is OBSTACLE_ONLY. The #13 cap 88564.3 → 88564.0 is a target constraint.
+- **F3 — no conclusion about chance.** The chance-indistinguishability sentence is withdrawn and replaced: a small selected sample, no generalizable estimate, no causal identification, no equivalence-to-chance conclusion.
+- **F4 — levels, prices and times.**
+  - V structural (scenario) and V operational (tick-rounded guidance) are separated; every distance declares V_op and its reference price.
+  - Terminal publication, contact bar and the UNAVAILABLE intrabar instant are distinguished.
+  - #3 corrected: issued 00:52, contact bar 00:52–00:53, terminal published 00:53; the zero-delay path enters and stops in the 00:52 bar.
+  - PRIMARY entry prices are modeled opens; the field is renamed `primary_entry_open_to_V_operational_bps`, values unchanged.
+  - Reconciliation 12 = 10 + 2 and 10 = 9 + 1 is added.
+- **Provenance.** The initial definitions came before joining outcomes. The cutoff was corrected afterwards (context/phase computed before, published after the decision; MarketView after selection excluded). Only the 4 context-withdrawn WAITs change.
+- **Executor checks.**
+  - The synthetic probe gives INDETERMINATE for missing observations; it failed on the `e07bbe0` script, which returned H2.
+  - Classes, counts and exact sums are unchanged, and regeneration is byte-identical.
+  - No product suites, E2E or Compose were run.
+  - Astra's independent verification is separate.
+- CI PENDING / NOT CHECKED, Owner-operated.
