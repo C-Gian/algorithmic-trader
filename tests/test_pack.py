@@ -57,8 +57,10 @@ def T(s: str) -> datetime:
 
 
 def test_registered_presets_are_the_director_file_with_exact_windows():
+    # WP-013 re-registered the file with one added preset; the WP-008-R3 presets keep their exact documents and
+    # identities (pinned in test_wp013_continuous)
     assert (ROOT / "src/algotrader/corpus/presets.json").read_text(encoding="utf-8") == \
-        (ROOT / "delivery/WP-008-R3-PRESETS.json").read_text(encoding="utf-8")
+        (ROOT / "delivery/WP-013-PRESETS.json").read_text(encoding="utf-8")
     f = ps.load_presets(ps.PRESETS_FILE)
     assert (f.fine_warmup_hours, f.outcome_tail_minutes, f.fixture) == (96, 365, False)
     d = f.default

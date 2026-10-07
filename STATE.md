@@ -1,8 +1,8 @@
 # Project State
 
-Updated: 2026-10-07 — Q4 v0.4 diagnosis CORRECTED per Astra review of 091df18 (erratum), READY FOR DIRECTOR REVIEW; Oct/Nov/Dec 2025 EXPOSED DEVELOPMENT; no next package active.
+Updated: 2026-10-07 — Q4 dossier CLOSED at 2d6fe9e (descriptive evidence); WP-013 continuous v0.4 reference support delivered, READY FOR DIRECTOR TECHNICAL REVIEW; Owner launch INACTIVE.
 
-**Current task: [task.md](task.md) — Q4 diagnosis correction delivered; awaiting Director review.** [Dossier](delivery/evidence/WP-012-OWNER-Q4-DIAGNOSIS/SUMMARY.md). No executor implementation, economic run or next package is active. Oct/Nov/Dec 2025 are exposed development, not intact verification for future revisions. Proposed, NOT activated: an Owner-run continuous v0.4 September–December reference with adequate initial context, launched from the web app.
+**Current task: [task.md](task.md) — WP-013 delivered; awaiting Director technical review and green exact-SHA CI.** [Protocol](delivery/WP-013-CONTINUOUS-REFERENCE-PROTOCOL.md) · [evidence](delivery/evidence/WP-013-ENGINEERING-EVIDENCE.md). Owner launch of the continuous v0.4 September–December reference is INACTIVE until then. No further package is active. Oct/Nov/Dec 2025 single-month runs are exposed development.
 
 Goal (Foundation v3.1): an integrated BTC adviser with persistent actionable LONG/SHORT calls, entry area, targets, stop/exit guidance and holding horizon. Capital, size, leverage and orders stay human. Historical ACCEPTED/READY/HOLD labels in older documents do not authorize work; only task.md does.
 
@@ -478,3 +478,34 @@ Astra reviewed the dossier at 091df18 and this correction applies that review. O
 - **Conclusion.** Diagnostic hypothesis on RETURN; causal mechanism not identified. The dossier authorizes no new rule or parameter.
 - **Proposed next step (NOT activated).** An Owner-run continuous v0.4 September–December reference with adequate initial context, launched from the web app. January–August 2026 stays protected apart from the documented 1 Jan 00:00–06:05 tail.
 - **Checks.** Exact totals, distance definitions, artifact consistency (no stale field names), two-run reproducibility and links. No full suite, E2E or Compose. CI PENDING / NOT CHECKED, Owner-operated.
+
+## Q4 dossier closure — 7 October 2026
+
+Director closure of [the Q4 dossier](delivery/evidence/WP-012-OWNER-Q4-DIAGNOSIS/SUMMARY.md) at `2d6fe9e`: "Accettato come evidenza descrittiva; associazione RETURN–terminali osservata; causalità non identificata; nessuna modifica metodologica autorizzata."
+
+A non-blocking typo is corrected: `dossier.json → erratum_vs_091df18` and the script string now quote the authoritative total −0.0130817434351891232589748454948995…. The earlier figure was a Director transcription, and its comparison field is renamed `director_quoted_total_typo_superseded`. Only `dossier.json` was regenerated, from the existing local exports, with no Owner-DB read; the CSVs are byte-identical.
+
+## WP-013 executor evidence (base `2d6fe9e`; READY FOR DIRECTOR REVIEW — WP-013 ONLY; not accepted)
+
+[Protocol, registered before launch](delivery/WP-013-CONTINUOUS-REFERENCE-PROTOCOL.md) · [evidence](delivery/evidence/WP-013-ENGINEERING-EVIDENCE.md) · [presets registration](delivery/WP-013-PRESETS.json).
+- **Preset.** `btc-2025-09-to-2025-12-continuous-init35d-v1` (identity `fabd1c55…2dbc`):
+  - initialization 2025-07-28 → 2025-09-01, not evaluated;
+  - evaluation 2025-09-01 → 2026-01-01;
+  - tail to 2026-01-01 06:05.
+  - The optional `Preset.initialization` field is omitted when absent, so the WP-008-R3 and month-builder presets keep byte-identical documents and identities. The 96 h fine warmup is unchanged.
+  - Pack contract `algotrader.corpus-pack.v1` revision 2 (changelog). Fine-warmup manifests keep `schema_revision` 1, so a rebuild keeps its pack id.
+- **Run.** One continuous run: the existing v0.4 kernel already has a single WARMUP→EVALUATION transition and no month logic, and it is unchanged.
+  - The engine document gains an `initialization` pin only for explicit-initialization packs.
+  - The method rules and values, the evaluator and stored results are unchanged; PRIMARY stays 60 s.
+- **Report.** `adviser.report.v4` gains additive sections, only for explicit initialization and/or multi-month windows:
+  - a context attestation at the evaluation start: coverage, readiness, previous day/week/month and pivot states; insufficient data and never-built kept apart from built-then-broken/expired/retired; pivot memory completeness NOT_CERTIFIED;
+  - launch pins;
+  - total plus calendar-month sections: calls attributed to their issue month and followed past the month end; confirmations, WAITs, coverage and samples on their own times and denominators; exact per-variant sums and reconciliation checks; censoring and funding stated.
+  - The sections are carried by Copy report for chat and the Markdown/JSON exports.
+- **Workbench.** The initialization is shown separately with a not-evaluated note. The fixed "4 days" lede is generalized, and the run-setup and report hints adapt.
+- **Checks.** Run with a disposable PostgreSQL 18.6, never the Owner stack:
+  - new pure tests 11 passed; new DB tests 4 passed (pure-fold equality, crash/restore inside an open call across a month boundary, API/Copy/export sections, fine-warmup shape unchanged);
+  - new browser E2E 1 passed; existing pack-workbench and MP-003 journeys 2 passed;
+  - pack/schema/corpus 55 passed; schema baselines match; web typecheck and build pass;
+  - full non-E2E suite 860 passed (46 min, `ALGOTRADER_REQUIRE_DB=1`, no skips).
+- **Owner handoff.** INACTIVE until the Director's technical review and green exact-SHA CI. The instructions and the reading criteria (registered before launch) are in the protocol. No real acquisition or Owner-DB extraction was performed. CI PENDING / NOT CHECKED, Owner-operated.

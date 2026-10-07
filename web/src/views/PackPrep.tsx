@@ -32,15 +32,28 @@ export function packState(p: PresetView): { label: string; tone: "pos" | "warn" 
 
 function Windows({ p }: { p: PresetView }) {
   const w = p.windows;
+  const init = w.initialization;
   return (
+    <>
     <div className="metric-grid compact" data-testid="pack-windows">
       <Metric label="Evaluation (scored later)" value={`${utc(w.evaluation.start)} → ${utc(w.evaluation.end)}`} mono={false} />
-      <Metric label="Warmup (not scored)" value={`${utc(w.warmup.start)} → ${utc(w.warmup.end)}`} mono={false}
-              hint={`${fmtInt(w.warmup.minutes / 60)} h before the evaluation`} />
+      {init
+        ? <Metric label="Initialization (context only, not evaluated)" value={`${utc(init.start)} → ${utc(init.end)}`} mono={false}
+                  hint={`${fmtInt(init.hours / 24)} days before the evaluation`} />
+        : <Metric label="Warmup (not scored)" value={`${utc(w.warmup.start)} → ${utc(w.warmup.end)}`} mono={false}
+                  hint={`${fmtInt(w.warmup.minutes / 60)} h before the evaluation`} />}
       <Metric label="Outcome tail (not scored)" value={`${utc(w.tail.start)} → ${utc(w.tail.end)}`} mono={false}
               hint={`${fmtInt(w.tail.minutes)} min after the evaluation`} />
       <Metric label="Evidence class" value={humanize(p.classification.label)} mono={false} hint={p.classification.note} />
     </div>
+    {init && (
+      <p className="muted small-text" data-testid="pack-initialization-note">
+        The initialization builds the method's existing context (scales and previous day/week/month levels) before the
+        evaluation starts. Nothing inside it is evaluated: calls, outcomes and diagnostics count only from{" "}
+        {utc(w.evaluation.start)}. The evaluation then runs as one continuous run, with no restart at month boundaries.
+      </p>
+    )}
+    </>
   );
 }
 

@@ -6,6 +6,12 @@ warmup (unscored factual/derived initialization), evaluation (contiguous calenda
 for a later adviser) and outcome tail, all UTC half-open whole minutes. It contains no market bytes, paths, secrets
 or timestamps of preparation, so its identity hash is reproducible on any machine.
 
+WP-013 adds one OPTIONAL preset field, ``initialization``. Absent (every earlier preset), the warmup is exactly the
+file's ``fine_warmup_hours`` before the evaluation start, as before. ``REGISTERED_EXPLICIT_INITIALIZATION`` declares
+an explicitly registered, longer unscored initialization window (at least the fine warmup, ending at the evaluation
+start); it is context only and is never evaluated. An absent field is not serialized, so the documents and identity
+hashes of the earlier presets are byte-for-byte unchanged and the file-level warmup is not modified globally.
+
 ``ALGOTRADER_CORPUS_PRESETS`` may point at another file; it exists only so deterministic tests can use tiny
 ``"fixture": true`` windows that match offline fixtures. Fixture files may use non-calendar evaluation windows;
 registered files may not.
@@ -79,6 +85,12 @@ class Protected(_Model):
     contamination: str
 
 
+INITIALIZATION_EXPLICIT = "REGISTERED_EXPLICIT_INITIALIZATION"
+INITIALIZATION_NOTE = ("Registered initialization window: market context only. Calls, outcomes and diagnostics "
+                       "inside it are never evaluated; it builds the method's existing dependencies (scales and "
+                       "landmarks) before the evaluation starts.")
+
+
 class Preset(_Model):
     preset_id: str
     label: str
@@ -89,6 +101,7 @@ class Preset(_Model):
     evidence_class: str
     adviser_implemented: Literal[False]
     automatic_prepare: Literal[False]
+    initialization: Literal["REGISTERED_EXPLICIT_INITIALIZATION"] | None = None  # WP-013; absent = fine warmup
 
 
 class PresetsFile(_Model):
@@ -134,8 +147,13 @@ class PresetsFile(_Model):
 def check_windows(f: PresetsFile, p: Preset) -> None:
     """Exact warmup/tail arithmetic around a contiguous evaluation window inside the logical target."""
     w, e, t = p.warmup, p.evaluation, p.tail
-    if w.end != e.start or w.start != e.start - timedelta(hours=f.fine_warmup_hours):
-        raise PresetError(f"{p.preset_id}: warmup must be exactly {f.fine_warmup_hours}h ending at evaluation start")
+    if p.initialization is None:
+        if w.end != e.start or w.start != e.start - timedelta(hours=f.fine_warmup_hours):
+            raise PresetError(f"{p.preset_id}: warmup must be exactly {f.fine_warmup_hours}h ending at evaluation "
+                              "start")
+    elif w.end != e.start or w.start > e.start - timedelta(hours=f.fine_warmup_hours):
+        raise PresetError(f"{p.preset_id}: a registered initialization must end at the evaluation start and last at "
+                          f"least the fine warmup ({f.fine_warmup_hours}h)")
     if t.start != e.end or t.end != e.end + timedelta(minutes=f.outcome_tail_minutes):
         raise PresetError(f"{p.preset_id}: tail must be exactly {f.outcome_tail_minutes}m starting at evaluation end")
     if not f.fixture and not (_month_start(e.start) and _month_start(e.end)):
@@ -169,7 +187,21 @@ def policy_doc(f: PresetsFile) -> dict:
 
 
 def preset_doc(p: Preset) -> dict:
-    return json.loads(p.model_dump_json())
+    """Serialized preset; the optional ``initialization`` is omitted when absent so earlier documents/identities are
+    unchanged."""
+    d = json.loads(p.model_dump_json())
+    if d.get("initialization") is None:
+        d.pop("initialization", None)
+    return d
+
+
+def initialization_doc(p: Preset) -> dict | None:
+    """The explicit initialization of a WP-013 preset (None for the fine-warmup presets)."""
+    if p.initialization is None:
+        return None
+    return {"policy": p.initialization, "start": p.warmup.start.isoformat(), "end": p.warmup.end.isoformat(),
+            "hours": p.warmup.minutes // 60, "minutes": p.warmup.minutes, "evaluated": False,
+            "note": INITIALIZATION_NOTE}
 
 
 def preset_sha256(f: PresetsFile, p: Preset) -> str:
@@ -187,7 +219,7 @@ def requested(p: Preset) -> Window:
 
 
 def windows_doc(p: Preset) -> dict:
-    return {
+    out = {
         "warmup": {"start": p.warmup.start.isoformat(), "end": p.warmup.end.isoformat(), "scored": False,
                    "minutes": p.warmup.minutes},
         "evaluation": {"start": p.evaluation.start.isoformat(), "end": p.evaluation.end.isoformat(), "scored": True,
@@ -197,6 +229,10 @@ def windows_doc(p: Preset) -> dict:
         "requested": {"start": p.warmup.start.isoformat(), "end": p.tail.end.isoformat()},
         "convention": "UTC half-open [start, end), whole minutes; only the evaluation window is ever scored",
     }
+    init = initialization_doc(p)
+    if init is not None:  # additive key only for an explicit initialization (earlier documents unchanged)
+        out["initialization"] = init
+    return out
 
 
 def classify(f: PresetsFile, p: Preset) -> dict:

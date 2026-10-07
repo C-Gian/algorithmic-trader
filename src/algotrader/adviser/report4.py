@@ -20,6 +20,7 @@ from typing import Any
 from . import methods
 from . import report as r2
 from . import report3 as r3
+from . import report_periods as rp
 
 REPORT_VERSION = "adviser.report.v4"
 
@@ -98,6 +99,16 @@ def build(*, engine: dict, journal: list[dict], records: list[dict], view: dict 
             "text": ("v0.4 results are reported for Director diagnosis. More calls are not improvement by themselves; "
                      "compare against the accepted v0.3 baseline on the same pack with the comparison report (the "
                      "integrated MP-003 anchor delta, not a proof that any particular call would be recovered).")}
+    # WP-013 (additive, only for a registered explicit initialization and/or a multi-month evaluation window, so the
+    # reports of earlier single-month runs are unchanged): context attestation, launch pins, total + monthly sections
+    ic = rp.initial_context(engine, journal)
+    if ic is not None:
+        out["initial_context"] = ic
+    pr = rp.periods(engine=engine, journal=journal, records=records, base=out)
+    if pr is not None:
+        out["periods"] = pr
+    if ic is not None or pr is not None:
+        out["launch_pins"] = rp.launch_pins(engine)
     if anchors["owners"]["lost_anchor"] and not anchors["owners"]["rearmed_by_replacement"]:
         out["diagnosis"] = list(out.get("diagnosis") or []) + [
             f"ANCHOR_LOSS_WITHOUT_REPLACEMENT: {anchors['owners']['lost_anchor']} owner(s) lost a local anchor and "
@@ -121,4 +132,4 @@ def render_markdown(a: dict[str, Any]) -> list[str]:
         f"without contact {ev.get('supersessions_without_contact', 0)} · calls after replacement "
         f"{x.get('calls_after_replacement', 0)}",
     ]
-    return lines[:3] + extra + lines[3:]
+    return lines[:3] + extra + lines[3:] + rp.render_markdown(a)

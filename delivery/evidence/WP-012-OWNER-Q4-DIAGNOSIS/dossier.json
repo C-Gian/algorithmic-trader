@@ -1045,9 +1045,10 @@
    "return_owners_entered_primary": 9,
    "primary_price_net_sum_of_report_values_exact": "-0.013081743435189123258974845495",
    "primary_price_net_sum_of_path_values_exact": "-0.0130817434351891232589748454948995412654456207345813",
-   "owner_reports_total_as_given": "-0.01308174343518912325907484550",
-   "difference_path_exact_minus_owner_given": "0.0000000000000000000001000000051004587345543792654187",
-   "agrees_with_owner_given_to_decimal_places": 21,
+   "director_quoted_total_typo_superseded": "-0.01308174343518912325907484550",
+   "difference_path_exact_minus_director_quoted": "0.0000000000000000000001000000051004587345543792654187",
+   "agrees_with_director_quoted_to_decimal_places": 21,
+   "authoritative_total": "the exact sum of the STORED PRIMARY path values (above)",
    "primary_price_net_sum_pct_presentation": "-1.308",
    "meaning": "sum of normalized one-unit hypothetical PRIMARY price-net outcomes (N0=1); not an account return, not compounded, funding excluded",
    "erratum_previous_minus_1_307": "the 091df18 SUMMARY quoted -1.307 %: the sum of per-path percentages each first rounded to 3 decimals (tabulations.path_variant_sums_pct); full precision gives -1.308174... %",
@@ -14220,7 +14221,7 @@
   "delay/stop exclusions withdrawn: sensitivity denominators differ (ENTRY_DELAY_120 9 entered + 1 NO_ENTRY); HORIZON_ONLY replaces the whole exit policy; 23 Nov and 5 Dec both have positive HORIZON_ONLY endpoints",
   "re-anchoring not declared economically harmless; the comparison group without replacement may include revisions; similar proportions do not prove equivalence",
   "warmup exclusion withdrawn: every call lacks previous-month levels; price bounds do not reconstruct zones, publication, breaking or decisions; pivot memory completeness after warmup_start+168h is NOT_CERTIFIED (field renamed pivot_1h_lookback_starts_before_warmup); the tail conclusion stays separate",
-  "totals computed at full precision: PRIMARY sum -0.01308174343518912325907484550 (normalized, about -1.308 %); the earlier -1.307 % summed per-path percentages already rounded to 3 decimals",
+  "totals computed at full precision: PRIMARY sum -0.0130817434351891232589748454948995... (normalized, about -1.308 %); the earlier -1.307 % summed per-path percentages already rounded to 3 decimals",
   "distances 'from the close' now all use the close as denominator (fields renamed *_bps_of_close); the earlier SHORT target, LONG V and LONG retrace distances used the other price as denominator"
  ]
 }

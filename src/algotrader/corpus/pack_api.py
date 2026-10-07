@@ -157,7 +157,9 @@ def render_job_report(r: dict[str, Any]) -> str:
              f"only) · profile `{ids['capability_profile_sha256'][:12]}`",
              f"- Classification: {r['classification']['label']} — {r['classification']['note']}",
              "## Windows (UTC, half-open)",
-             f"- Warmup {w['warmup']['start']} → {w['warmup']['end']} (unscored)",
+             (f"- Initialization {w['warmup']['start']} → {w['warmup']['end']} ({w['initialization']['hours']} h; "
+              "context only, not evaluated)" if w.get("initialization") else
+              f"- Warmup {w['warmup']['start']} → {w['warmup']['end']} (unscored)"),
              f"- Evaluation {w['evaluation']['start']} → {w['evaluation']['end']} (scored later, by an adviser)",
              f"- Tail {w['tail']['start']} → {w['tail']['end']} (unscored)",
              "## Sources",

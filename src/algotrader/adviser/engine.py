@@ -75,14 +75,34 @@ def engine_config(feed_manifest, pack: dict, build: str | None, method: str | No
     ident = rel.composite_identity(profile, pins, build)
     ev = _evaluator_cls(rel)(rel.params(), Decimal(tick), eval_start=None, eval_end=None,
                              funding_mode=profile.funding_outcomes.value)
-    return {"format": rel.runtime_format, "method": rel.key, "engine_format": rel.engine_format,
-            "identity": ident, "profile": profile.model_dump(mode="json"), "tick": tick,
-            "channels": chans, "eval_start": w["evaluation"]["start"], "eval_end": w["evaluation"]["end"],
-            "warmup_start": w["warmup"]["start"], "tail_end": w["tail"]["end"], "clock_end": str(pack["clock_end"]),
-            "clock_policy": ClockPolicy.MODELED_COMPLETE_PREFIX.value, "evaluator": ev.identity(),
-            "origin": sc.Origin.HISTORICAL_MODELED.value, "build": build,
-            "funding_completeness": caps.get("funding_settlements"),
-            "labels": ["ADVISER_EVALUATION", "HYPOTHETICAL_OUTCOMES_SEPARATE", "NO_ORDERS_NO_SIZING"]}
+    out = {"format": rel.runtime_format, "method": rel.key, "engine_format": rel.engine_format,
+           "identity": ident, "profile": profile.model_dump(mode="json"), "tick": tick,
+           "channels": chans, "eval_start": w["evaluation"]["start"], "eval_end": w["evaluation"]["end"],
+           "warmup_start": w["warmup"]["start"], "tail_end": w["tail"]["end"], "clock_end": str(pack["clock_end"]),
+           "clock_policy": ClockPolicy.MODELED_COMPLETE_PREFIX.value, "evaluator": ev.identity(),
+           "origin": sc.Origin.HISTORICAL_MODELED.value, "build": build,
+           "funding_completeness": caps.get("funding_settlements"),
+           "labels": ["ADVISER_EVALUATION", "HYPOTHETICAL_OUTCOMES_SEPARATE", "NO_ORDERS_NO_SIZING"]}
+    init = initialization_pin(pack)
+    if init is not None:  # WP-013 explicit initialization only; earlier engine documents are unchanged
+        out["initialization"] = init
+    return out
+
+
+def initialization_pin(pack: dict) -> dict[str, Any] | None:
+    """Launch-time facts of a registered explicit initialization (WP-013): window, preset identity and the pack's own
+    initialization coverage rows. Context only: the method, its parameters and the kernel are unchanged, and the
+    single WARMUP->EVALUATION transition stays at the evaluation start (no monthly reset)."""
+    preset = pack.get("preset") or {}
+    if not preset.get("initialization"):
+        return None
+    w = pack["windows"]
+    start, end = _dt(w["warmup"]["start"]), _dt(w["warmup"]["end"])
+    return {"policy": preset["initialization"], "preset_id": preset.get("preset_id"),
+            "preset_sha256": pack.get("preset_sha256"), "start": w["warmup"]["start"], "end": w["warmup"]["end"],
+            "hours": int((end - start).total_seconds() // 3600), "evaluated": False,
+            "coverage": [c for c in pack.get("coverage", []) if c.get("window") == "warmup"],
+            "continuity": "ONE_RUN_ONE_EVALUATION_START_TRANSITION_NO_MONTHLY_RESET_OR_FINISH"}
 
 
 def _dt(s: str) -> datetime:

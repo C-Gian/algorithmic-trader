@@ -513,6 +513,12 @@ def build_pack_cache(data_root: Path, contribs: list[Contributor], preset: ps.Pr
     return cache, stats
 
 
+def manifest_revision(preset: ps.Preset) -> int:
+    """The lowest contract revision describing this manifest: revision 2 only adds the optional explicit
+    initialization (WP-013), so every fine-warmup pack keeps revision 1 and a rebuild keeps its pack id."""
+    return PACK_SCHEMA_REVISION if preset.initialization is not None else 1
+
+
 def manifest_body(f: ps.PresetsFile, preset: ps.Preset, contribs: list[Contributor], cache, stats: CompositionStats,
                   provenance_sha: str | None, provenance_name: str | None) -> dict:
     prim = primary_contributor(contribs, preset.evaluation.start)
@@ -525,7 +531,7 @@ def manifest_body(f: ps.PresetsFile, preset: ps.Preset, contribs: list[Contribut
     allowance = modeled_availability().bar_delay
     m = {
         "schema_version": PACK_SCHEMA_VERSION, "contract_status": PACK_CONTRACT_STATUS,
-        "schema_revision": PACK_SCHEMA_REVISION, "pack_id": "",
+        "schema_revision": manifest_revision(preset), "pack_id": "",
         "preset": ps.preset_doc(preset), "preset_sha256": ps.preset_sha256(f, preset),
         "presets_schema": f.schema_version, "presets_version": f.version, "method": f.method,
         "rules_version": f.rules_version, "register_sha256": ps.MP001_REGISTER_SHA256,

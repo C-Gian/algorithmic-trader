@@ -68,7 +68,7 @@ Etichette:
 
 **Totale price-net.**
 - Somma esatta dei 10 valori PRIMARY STORED, a precisione piena: **−0,0130817434351891232589748454948995…**. La somma esatta dei valori per famiglia dei tre report (−0,013081743435189123258974845495) coincide con questa fino alla 28ª cifra decimale. I valori dei report sono somme del builder a 28 cifre significative.
-- Il valore indicato nella review, −0,01308174343518912325907484550, coincide con questa somma fino alla 21ª cifra decimale. Differisce di 1,0×10⁻²² alla 22ª: il record dà …258974…, il valore indicato …259074…. Non riesco a riprodurre quella differenza dai record (export dei report Owner non disponibile qui). La segnalo invece di forzare l'uguaglianza.
+- Il valore −0,01308174343518912325907484550, indicato nella richiesta di correzione, era un refuso del Director: lo ha registrato la chiusura del dossier al commit `2d6fe9e`. Il totale **autorevole** è la somma esatta qui sopra. Il campo JSON di confronto è ora `director_quoted_total_typo_superseded`.
 - In percentuale entrambi danno −1,308174 %.
 - È una **somma di esiti ipotetici normalizzati** (unità N0 = 1), non un rendimento di conto: niente capitalizzazione, niente sizing, funding escluso.
 - Origine del precedente −1,307 %: somma delle percentuali per path già arrotondate a 3 decimali (`tabulations.path_variant_sums_pct` in `091df18`). Ora quel campo è `path_variant_sums`, a precisione piena.

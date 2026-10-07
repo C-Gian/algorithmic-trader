@@ -1005,7 +1005,10 @@ export interface Comparison {
 // ---- Evaluation packs (algotrader.corpus-pack.v1; data preparation only, no adviser) ----
 
 export interface PackWindow { start: string; end: string; scored: boolean; minutes: number }
-export interface PackWindows { warmup: PackWindow; evaluation: PackWindow; tail: PackWindow; requested: { start: string; end: string } }
+/** WP-013: a registered explicit initialization (context only, never evaluated); absent for fine-warmup presets. */
+export interface PackInitialization { policy: string; start: string; end: string; hours: number; minutes: number; evaluated: false; note: string }
+export interface PackWindows { warmup: PackWindow; evaluation: PackWindow; tail: PackWindow; requested: { start: string; end: string };
+  initialization?: PackInitialization }
 export interface PackCoverage { family: string; window: string; expected_slots: number | null; valid: number; missing: number; rejected: number }
 export interface PackCapability { capability: string; status: string; detail: string }
 export interface PackSourceSlice { dataset_id: string; start: string; end: string }
@@ -1030,7 +1033,7 @@ export interface PackJob {
   plan: null | { slices: { dataset_id: string; start: string; end: string }[]; acquisitions: string[][] };
 }
 export interface PresetView {
-  preset: { preset_id: string; label: string; default: boolean; evidence_class: string };
+  preset: { preset_id: string; label: string; default: boolean; evidence_class: string; initialization?: string };
   preset_sha256: string; windows: PackWindows;
   classification: { label: string; note: string; portions: { class: string; start: string; end: string; contamination: string }[] };
   local: { dataset_id: string; start: string; end: string }[];

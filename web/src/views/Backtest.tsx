@@ -466,7 +466,9 @@ function RunSetup({ corpus, preferred, packs, presets, onStarted }: {
             <Badge tone="pos" icon="shield">Verified pack</Badge>
             <Badge tone={pack.status === "READY" ? "pos" : "warn"}>{pack.status === "READY" ? "Ready" : "Ready with limitations"}</Badge>
             <Badge tone="info" icon="clock" title="Historical knowledge times follow a declared convention; they are not measured">Modeled availability</Badge>
-            <span className="muted small-text mono">{fmtInt(pack.event_count)} events · warmup and tail are not scored</span>
+            <span className="muted small-text mono" data-testid="eval-pack-windows-note">{fmtInt(pack.event_count)} events · {packView?.windows.initialization
+              ? `${fmtInt(packView.windows.initialization.hours / 24)}-day initialization and tail are not evaluated; one continuous run`
+              : "warmup and tail are not scored"}</span>
           </div>
         )}
         {needsAck && (
@@ -669,7 +671,7 @@ function ReportCard({ ev }: { ev: Evaluation }) {
                   {fmtInt(report.pack.source_coverage.missing_or_rejected)} of {fmtInt(report.pack.source_coverage.expected_bar_slots)} bar minutes missing/rejected
                 </span>
                 <span className="outcome-hint">Separate from feed integrity: the whole feed can be consumed ({report.pack.feed_consumed}) while
-                  the source itself has gaps. Warmup {fmtTime(report.pack.windows.warmup.start)} and tail up to {fmtTime(report.pack.windows.tail.end)} are not scored.</span>
+                  the source itself has gaps. {report.pack.windows.initialization ? "Initialization (context only)" : "Warmup"} {fmtTime(report.pack.windows.warmup.start)} and tail up to {fmtTime(report.pack.windows.tail.end)} are not scored.</span>
               </li>
             )}
           </ul>
@@ -1121,7 +1123,7 @@ export function Backtest() {
       <StepNav corpus={corpus} ev={evDetail} />
 
       <StepCard n={1} id="step-data" testid="pack-card" title="Prepare data"
-                lede="The September 2025 development check needs 4 days before it (warmup) and 6 hours after it (tail). Data already on this computer is reused; Prepare downloads only what is missing, verifies everything once and composes one immutable pack."
+                lede="Each registered preset declares the context it needs before the evaluation and 6 hours after it (tail): the monthly checks use a 4-day warmup, a continuous reference may declare a longer initialization. Neither is evaluated. Data already on this computer is reused; Prepare downloads only what is missing, verifies everything once and composes one immutable pack."
                 status={presetsPoll.data && (() => {
                   const def = presetsPoll.data.presets.find((x) => x.preset.default);
                   return def?.published?.usable

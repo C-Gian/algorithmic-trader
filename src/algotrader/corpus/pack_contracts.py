@@ -1,4 +1,4 @@
-"""Immutable evaluation pack contracts (``algotrader.corpus-pack.v1``, revision 1, PROVISIONAL).
+"""Immutable evaluation pack contracts (``algotrader.corpus-pack.v1``, revision 2, PROVISIONAL).
 
 A pack composes verified ``marketdata.v1`` source slices (reused local datasets and/or newly acquired boundary
 slices) into ONE canonical feed over the full requested interval (warmup + evaluation + tail) of a registered
@@ -18,11 +18,17 @@ from pydantic import BaseModel, ConfigDict
 
 PACK_SCHEMA_VERSION = "algotrader.corpus-pack.v1"
 PACK_CONTRACT_STATUS = "PROVISIONAL"
-PACK_SCHEMA_REVISION = 1
+PACK_SCHEMA_REVISION = 2
 PACK_CHANGELOG: tuple[tuple[int, str, str], ...] = (
     (1, "2026-10-03", "Initial provisional baseline (WP-008-R3): preset/profile/register identities, windows and "
                       "boundary policies, pinned instrument definition, ordered source slices, composed feed "
                       "identities, per-family/window coverage, overlap accounting, capability facts and status."),
+    (2, "2026-10-07", "WP-013 (additive, compatible): optional Preset.initialization = "
+                      "REGISTERED_EXPLICIT_INITIALIZATION for an explicitly registered unscored initialization window "
+                      "(at least the fine warmup, ending at the evaluation start) and the matching optional "
+                      "windows.initialization fact. Absent for every earlier preset/pack, whose documents, identities "
+                      "and validity are unchanged (their manifests keep schema_revision 1, so a rebuild keeps its pack "
+                      "id); the file-level fine warmup is not modified."),
 )
 COMPOSITION_POLICY = "corpus.compose.slot-dedup-no-merge.v1"
 COMPOSITION_POLICY_TEXT = (

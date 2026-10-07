@@ -370,8 +370,10 @@ def render_markdown(r: dict[str, Any]) -> str:
                   f"{pk['method']} / {pk['rules_version']} (register `{pk['register_sha256'][:12]}`; not the adviser "
                   "chosen for this run) · "
                   f"profile `{pk['capability_profile_sha256'][:12]}`",
-                  f"- Warmup {w['warmup']['start']} → {w['warmup']['end']} (unscored) · evaluation "
-                  f"{w['evaluation']['start']} → {w['evaluation']['end']} · tail {w['tail']['start']} → "
+                  (f"- Initialization {w['warmup']['start']} → {w['warmup']['end']} "
+                   f"({w['initialization']['hours']} h; context only, not evaluated) · evaluation "
+                   if w.get("initialization") else f"- Warmup {w['warmup']['start']} → {w['warmup']['end']} (unscored) · evaluation ")
+                  + f"{w['evaluation']['start']} → {w['evaluation']['end']} · tail {w['tail']['start']} → "
                   f"{w['tail']['end']} (unscored) · engine clock end {pk['clock_end']}",
                   f"- Feed consumed: {pk['feed_consumed']} · source coverage (separate fact): "
                   f"{pk['source_coverage']['missing_or_rejected']} missing/rejected of "

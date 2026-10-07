@@ -63,7 +63,9 @@ EXPECTED = {"2025-10": {"a_confirmations": 19, "waits": 14, "calls": 4, "return_
 TICK, K_HIST, RR = Decimal("0.1"), Decimal(14), Decimal("1.2")
 AGE_1H = timedelta(hours=168)  # MP-001/002/003 register levels.age_1h_hours
 MIN = timedelta(minutes=1)
-OWNER_TOTAL = "-0.01308174343518912325907484550"  # sum of the three Owner v0.4 report PRIMARY price-net sums
+# the total quoted in the correction request; it was a Director transcription typo (closure at 2d6fe9e), kept only
+# as a comparison: the authoritative total is the exact sum of the STORED values computed below
+OWNER_TOTAL = "-0.01308174343518912325907484550"
 PRICE_BLOCKERS = ("CLOSE_OUTSIDE_RETURN_CORRIDOR", "NO_ROOM_AFTER_COSTS", "AT_OR_BEYOND_INVALIDATION",
                   "REWARD_RISK_BELOW_MINIMUM")
 LANDMARK_HORIZONS = ("PIVOT_HIGH_15M", "PIVOT_LOW_15M", "PIVOT_HIGH_1H", "PIVOT_LOW_1H", "PREV_1D_HIGH", "PREV_1D_LOW",
@@ -981,9 +983,10 @@ def reconcile(reports, calls, confs):
     rec["total"] = {**tot, "return_owners_entered_primary": entered,
                     "primary_price_net_sum_of_report_values_exact": s(pn),
                     "primary_price_net_sum_of_path_values_exact": s(path_pn),
-                    "owner_reports_total_as_given": OWNER_TOTAL,
-                    "difference_path_exact_minus_owner_given": s(diff),
-                    "agrees_with_owner_given_to_decimal_places": agree_places(path_pn, owner),
+                    "director_quoted_total_typo_superseded": OWNER_TOTAL,
+                    "difference_path_exact_minus_director_quoted": s(diff),
+                    "agrees_with_director_quoted_to_decimal_places": agree_places(path_pn, owner),
+                    "authoritative_total": "the exact sum of the STORED PRIMARY path values (above)",
                     "primary_price_net_sum_pct_presentation": pct(path_pn),
                     "meaning": "sum of normalized one-unit hypothetical PRIMARY price-net outcomes (N0=1); not an "
                                "account return, not compounded, funding excluded",
@@ -1181,7 +1184,7 @@ def main(export: Path, out: Path):
             "warmup exclusion withdrawn: every call lacks previous-month levels; price bounds do not reconstruct zones, "
             "publication, breaking or decisions; pivot memory completeness after warmup_start+168h is NOT_CERTIFIED "
             "(field renamed pivot_1h_lookback_starts_before_warmup); the tail conclusion stays separate",
-            "totals computed at full precision: PRIMARY sum -0.01308174343518912325907484550 (normalized, about "
+            "totals computed at full precision: PRIMARY sum -0.0130817434351891232589748454948995... (normalized, about "
             "-1.308 %); the earlier -1.307 % summed per-path percentages already rounded to 3 decimals",
             "distances 'from the close' now all use the close as denominator (fields renamed *_bps_of_close); the "
             "earlier SHORT target, LONG V and LONG retrace distances used the other price as denominator",
