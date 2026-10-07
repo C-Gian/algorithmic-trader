@@ -1,8 +1,8 @@
 # Project State
 
-Updated: 2026-10-07 — WP-012 correction F1 delivered: READY FOR DIRECTOR REVIEW — WP-012 CORRECTION ONLY (not accepted); Owner comparison INACTIVE.
+Updated: 2026-10-07 — WP-012 technical findings CLOSED at e3a5afa; release awaits Owner-operated exact-SHA CI; economic plan INACTIVE.
 
-**Current task: [task.md](task.md) — WP-012 bounded correction only.** [Director review](delivery/WP-012-DIRECTOR-REVIEW.md). Earlier active implementation/hand-off labels are superseded; no Owner economic run is authorized.
+**Current task: [task.md](task.md) — Owner CI notification / Director release gate only.** [Technical closure](delivery/WP-012-CORRECTION-DIRECTOR-REVIEW.md). No executor implementation or Owner economic run is active.
 
 Goal (Foundation v3.1): an integrated BTC adviser with persistent actionable LONG/SHORT calls, entry area, targets, stop/exit guidance and holding horizon. Capital, size, leverage and orders stay human. Historical ACCEPTED/READY/HOLD labels in older documents do not authorize work; only task.md does.
 
@@ -10,7 +10,7 @@ Goal (Foundation v3.1): an integrated BTC adviser with persistent actionable LON
 
 Director adopts Astra CHIUDIBILE on eb091648 and closes MP-003 v0.2 design. A pre-confirmation contact invalidates the local anchor rather than automatically releasing the structural owner; replacement is prospective and finite, destination monitoring begins at first actual arm and persists after anchor loss. First confirmation freezes geometry; costs, target policy and durations remain v0.3. Design closure is not engineering/economic acceptance.
 
-WP-012 is the sole active implementation package. Running product remains accepted v0.2/v0.3 at 3fcbfc5; v0.4 is not implemented. Original October results and old partial/suspended v0.3 series stay unchanged. New Oct/Nov/Dec v0.3/v0.4 development plan remains INACTIVE until engineering review and exact-SHA CI; Owner launches the eventual app runs. The dossier's derived SHORT target-distance display imprecision remains acknowledged without rewriting original evidence.
+WP-012 v0.4 is implemented and technical findings are closed at e3a5afa; release acceptance is pending exact-SHA CI. v0.2/v0.3 remain the accepted baselines at 3fcbfc5. No executor implementation task remains active while waiting. Original October results and old partial/suspended v0.3 series stay unchanged. New Oct/Nov/Dec v0.3/v0.4 development plan remains INACTIVE until engineering review and exact-SHA CI; Owner launches the eventual app runs. The dossier's derived SHORT target-distance display imprecision remains acknowledged without rewriting original evidence.
 
 ## 1. Current implementation
 
@@ -399,3 +399,8 @@ Reviewed e434d4311a947f65f2fccf035d61e79d9108add2: CORRECTION REQUIRED. [Review]
 - **Fail-before / fixed-after.** On `e434d43`: 6 failed / 6 passed (controls unchanged). After: all pass.
 - **Relevant suites** with a disposable DB: 208 passed (MP-003 paths/versions/live/DB, MP-002 compatibility/versions/paths/rules incl. the 38 v0.2/v0.3 byte pins). Full suite, browser and Compose were not rerun (kernel-only change).
 - **CI.** Exact-SHA CI is Owner-operated: PENDING / NOT CHECKED. The Owner plan stays INACTIVE.
+
+
+## WP-012 correction Director closure — 7 October 2026
+
+[Review](delivery/WP-012-CORRECTION-DIRECTOR-REVIEW.md): F1 CLOSED on e3a5afa6e355363cd2df93871c68ad8cb4de3626. Director original LONG/SHORT probes now lose epoch 2 at 04:01 and only later legitimately re-arm/confirm epoch 3. 18 independent correction tests pass; 1 DB test deliberately excluded. Genuine old-source four-element states round-trip exactly through current production unpack after supersession and loss. Legacy untagged domains remain conservatively uncertain; pre-correction v0.4 engineering Deep/hash mismatches are not relabelled or forced to match. Executor DB/208-suite results were examined, not rerun by Director. CI PENDING / NOT CHECKED, Owner-operated; no app/economic handoff yet. No product/schema/data change in this closure.

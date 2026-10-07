@@ -1,11 +1,9 @@
-# Current task — WP-012 correction F1
+# Current task — WP-012 exact-SHA CI release gate
 Date: 2026-10-07 Europe/Rome.
-Status: ACTIVE BOUNDED CORRECTION; DIRECTOR REVIEW REQUIRED; NO OWNER ECONOMIC RUN.
+Status: NO EXECUTOR TASK; OWNER CI NOTIFICATION PENDING. OWNER ECONOMIC PLAN INACTIVE.
 
-Fix F1 from [Director review](delivery/WP-012-DIRECTOR-REVIEW.md) on product e434d4311a947f65f2fccf035d61e79d9108add2. Use [complete synthetic probe](delivery/evidence/WP-012-DIRECTOR-PROBE.py) and [observed output](delivery/evidence/WP-012-DIRECTOR-PROBES.json). Closed MP-003 method remains unchanged.
+Technical findings are closed in [Director review](delivery/WP-012-CORRECTION-DIRECTOR-REVIEW.md) on product e3a5afa6e355363cd2df93871c68ad8cb4de3626.
 
-An interval straddling supersession that reaches the old active V but not the new V cannot certify clean continuation: evaluate the overlapping anchor domains, record ambiguity and preserve the replacement cutoff. Do not turn arbitrary inactive old levels into new contacts. Preserve v0.2/v0.3, original deadlines, prospective replacement and frozen confirmed WAIT/call/evaluator policy.
+The Owner watches CI and supplies green/red for that SHA; the Director verifies the exact-SHA checks/compose-smoke outcome once notified. No polling, monitoring shell or repeat tests. If red, diagnose the reported failure under a bounded task; no blind retry.
 
-Follow the review's regression/control/production-restore checks and evidence requirements. Full local suite/browser/benchmark are not required unless additional touched paths justify them; exact final CI remains Owner-operated under AGENTS. Update STATE/evidence, commit/push and deliver READY FOR DIRECTOR REVIEW — WP-012 CORRECTION ONLY.
-
-No economic run, Owner data inspection, acquisition, protected access or next package. App handoff remains INACTIVE.
+No implementation, acquisition, Owner data inspection, replay, Deep or economic run active. Only after release acceptance will the Director activate the registered app comparison and provide Owner commands/configuration. Old v0.3 series and October evidence remain preserved.

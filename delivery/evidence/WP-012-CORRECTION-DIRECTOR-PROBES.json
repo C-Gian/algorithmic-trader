@@ -1,0 +1,138 @@
+[
+  {
+    "side": "LONG",
+    "publication_straddled": "2025-09-01T04:00:30Z",
+    "minute_interval": "[04:00,04:01)",
+    "old_V": "99800",
+    "new_V": "99650",
+    "contact_extremum": "99750",
+    "expected": "anchor UNASSESSABLE; no confirmation using that anchor",
+    "actual": [
+      {
+        "transition": "BIRTH",
+        "anchor_epoch": null,
+        "anchor_status": "NONE",
+        "reason": "FALSE_AT_OR_AFTER_RELEASE_TO_TRUE",
+        "clock": "2025-09-01T03:30:30Z"
+      },
+      {
+        "transition": "ARM",
+        "anchor_epoch": 1,
+        "anchor_status": "ACTIVE",
+        "reason": null,
+        "clock": "2025-09-01T03:45:30Z"
+      },
+      {
+        "transition": "REVISE",
+        "anchor_epoch": 2,
+        "anchor_status": "ACTIVE",
+        "reason": "LOWER_CLEAN_REACTION_REANCHOR",
+        "clock": "2025-09-01T04:00:30Z"
+      },
+      {
+        "transition": "ANCHOR_LOST",
+        "anchor_epoch": 2,
+        "anchor_status": "UNASSESSABLE",
+        "reason": "SUPERSEDED_ANCHOR_CONTACT_TIME_AMBIGUOUS_EPOCH_1:okx/BTC-USDT-SWAP/trade_bar_1m#obs@2025-09-01T04:00:00Z",
+        "clock": "2025-09-01T04:01:00Z"
+      },
+      {
+        "transition": "REARM",
+        "anchor_epoch": 3,
+        "anchor_status": "ACTIVE",
+        "reason": "NEW_COMPLETE_STRICTLY_DEEPER_CLEAN_REACTION",
+        "clock": "2025-09-01T04:15:30Z"
+      },
+      {
+        "transition": "CONFIRM",
+        "anchor_epoch": 3,
+        "anchor_status": "FROZEN_AT_CONFIRMATION",
+        "reason": "okx/BTC-USDT-SWAP/trade_bar_1m#obs@2025-09-01T04:16:00Z",
+        "clock": "2025-09-01T04:17:00Z"
+      },
+      {
+        "transition": "OWNER_RELEASE",
+        "anchor_epoch": 3,
+        "anchor_status": "FROZEN_AT_CONFIRMATION",
+        "reason": "ORIGINAL_SETUP_EXPIRY",
+        "clock": "2025-09-01T05:30:30Z"
+      },
+      {
+        "transition": "TERMINAL",
+        "anchor_epoch": 3,
+        "anchor_status": "FROZEN_AT_CONFIRMATION",
+        "reason": "SCENARIO_PROGRESS_BELOW_HALF_SCALE",
+        "clock": "2025-09-01T06:17:00Z"
+      }
+    ],
+    "unexpected_confirmation": false
+  },
+  {
+    "side": "SHORT",
+    "publication_straddled": "2025-09-01T04:00:30Z",
+    "minute_interval": "[04:00,04:01)",
+    "old_V": "100200",
+    "new_V": "100350",
+    "contact_extremum": "100250",
+    "expected": "anchor UNASSESSABLE; no confirmation using that anchor",
+    "actual": [
+      {
+        "transition": "BIRTH",
+        "anchor_epoch": null,
+        "anchor_status": "NONE",
+        "reason": "FALSE_AT_OR_AFTER_RELEASE_TO_TRUE",
+        "clock": "2025-09-01T03:30:30Z"
+      },
+      {
+        "transition": "ARM",
+        "anchor_epoch": 1,
+        "anchor_status": "ACTIVE",
+        "reason": null,
+        "clock": "2025-09-01T03:45:30Z"
+      },
+      {
+        "transition": "REVISE",
+        "anchor_epoch": 2,
+        "anchor_status": "ACTIVE",
+        "reason": "LOWER_CLEAN_REACTION_REANCHOR",
+        "clock": "2025-09-01T04:00:30Z"
+      },
+      {
+        "transition": "ANCHOR_LOST",
+        "anchor_epoch": 2,
+        "anchor_status": "UNASSESSABLE",
+        "reason": "SUPERSEDED_ANCHOR_CONTACT_TIME_AMBIGUOUS_EPOCH_1:okx/BTC-USDT-SWAP/trade_bar_1m#obs@2025-09-01T04:00:00Z",
+        "clock": "2025-09-01T04:01:00Z"
+      },
+      {
+        "transition": "REARM",
+        "anchor_epoch": 3,
+        "anchor_status": "ACTIVE",
+        "reason": "NEW_COMPLETE_STRICTLY_DEEPER_CLEAN_REACTION",
+        "clock": "2025-09-01T04:15:30Z"
+      },
+      {
+        "transition": "CONFIRM",
+        "anchor_epoch": 3,
+        "anchor_status": "FROZEN_AT_CONFIRMATION",
+        "reason": "okx/BTC-USDT-SWAP/trade_bar_1m#obs@2025-09-01T04:16:00Z",
+        "clock": "2025-09-01T04:17:00Z"
+      },
+      {
+        "transition": "OWNER_RELEASE",
+        "anchor_epoch": 3,
+        "anchor_status": "FROZEN_AT_CONFIRMATION",
+        "reason": "ORIGINAL_SETUP_EXPIRY",
+        "clock": "2025-09-01T05:30:30Z"
+      },
+      {
+        "transition": "TERMINAL",
+        "anchor_epoch": 3,
+        "anchor_status": "FROZEN_AT_CONFIRMATION",
+        "reason": "SCENARIO_PROGRESS_BELOW_HALF_SCALE",
+        "clock": "2025-09-01T06:17:00Z"
+      }
+    ],
+    "unexpected_confirmation": false
+  }
+]

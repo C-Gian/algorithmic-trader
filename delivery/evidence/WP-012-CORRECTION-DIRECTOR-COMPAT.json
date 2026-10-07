@@ -1,0 +1,38 @@
+[
+  {
+    "source_product": "e434d4311a947f65f2fccf035d61e79d9108add2",
+    "fixture": "supersession",
+    "four_element_domains": true,
+    "status": "ARMED",
+    "production_unpack_exact": true,
+    "history": [
+      [
+        "2025-09-01T03:45:30+00:00",
+        "99800.0",
+        1,
+        "2025-09-01T04:00:30+00:00"
+      ],
+      [
+        "2025-09-01T04:00:30+00:00",
+        "99650.0",
+        2,
+        null
+      ]
+    ]
+  },
+  {
+    "source_product": "e434d4311a947f65f2fccf035d61e79d9108add2",
+    "fixture": "loss",
+    "four_element_domains": true,
+    "status": "WATCH",
+    "production_unpack_exact": true,
+    "history": [
+      [
+        "2025-09-01T03:45:00+00:00",
+        "99800.0",
+        1,
+        "2025-09-01T03:51:00+00:00"
+      ]
+    ]
+  }
+]
