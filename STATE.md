@@ -1,8 +1,8 @@
 # Project State
 
-Updated: 2026-10-07 — Q4 dossier CLOSED at 2d6fe9e (descriptive evidence); WP-013 continuous v0.4 reference support delivered at 41790dd; Astra findings F1–F2 corrected at 6f49ae7 (report only); F2-R1 path-record admission corrected, READY FOR DIRECTOR REVIEW — WP-013 F2-R1 ONLY; Owner launch INACTIVE.
+Updated: 2026-10-07 — WP-013 continuous v0.4 Sep–Dec 2025 run (`eval-20261007T182934-3f41ad`, build 97a2a8c) accepted by the Director as descriptive development evidence (negative result; cause not identified; no method change authorized); read-only continuous v0.4 diagnosis delivered, READY FOR DIRECTOR REVIEW — CONTINUOUS V0.4 DIAGNOSIS ONLY.
 
-**Current task: [task.md](task.md) — WP-013 delivered; awaiting Director technical review and green exact-SHA CI.** [Protocol](delivery/WP-013-CONTINUOUS-REFERENCE-PROTOCOL.md) · [evidence](delivery/evidence/WP-013-ENGINEERING-EVIDENCE.md) · [F1–F2 correction evidence](delivery/evidence/WP-013-CORRECTION-EVIDENCE.md). Owner launch of the continuous v0.4 September–December reference is INACTIVE until then. No further package is active. Oct/Nov/Dec 2025 single-month runs are exposed development.
+**Current task: [task.md](task.md) — continuous v0.4 diagnosis (read-only) delivered; awaiting Director review.** [Dossier](delivery/evidence/WP-013-CONTINUOUS-V04-DIAGNOSIS/SUMMARY.md) · [protocol](delivery/WP-013-CONTINUOUS-REFERENCE-PROTOCOL.md). No method, parameter, threshold or infrastructure change is authorized. No further package is active. Sep–Dec 2025 (continuous and single-month runs) is exposed development; Jan–Aug 2026 stays protected except the authorized tail.
 
 Goal (Foundation v3.1): an integrated BTC adviser with persistent actionable LONG/SHORT calls, entry area, targets, stop/exit guidance and holding horizon. Capital, size, leverage and orders stay human. Historical ACCEPTED/READY/HOLD labels in older documents do not authorize work; only task.md does.
 
@@ -537,3 +537,17 @@ A non-blocking typo is corrected: `dossier.json → erratum_vs_091df18` and the 
 - **Protocol.** Rule 1 records the Director decision on REPORT INCOMPLETE (blocks the economic reading; no retroactive status/assurance change; failed reconciliation is a distinct block).
 - **Fail-before / pass-after.** The Astra counterexamples (alien call, PRIMARY-only pin with a HORIZON_ONLY record, LIVE call in the window) plus a call outside the window: 4/4 fail on `6f49ae7` (alien reconciliation passed; HORIZON_ONLY and LIVE records counted in the sums) and pass after. The extended DB test (inserted unknown-call record) also fails before and passes after.
 - **Checks.** Disposable PostgreSQL 18.6, stopped afterwards: WP-013 pure + DB 26 passed; WP-013 E2E 1 passed. The full suite was not rerun. CI PENDING / NOT CHECKED, Owner-operated.
+
+## Continuous v0.4 run — Director acceptance and read-only diagnosis (7 October 2026)
+
+**Director decision, recorded verbatim:** “Prova continua accettata come evidenza descrittiva di sviluppo; risultato negativo; causa non identificata; nessuna modifica metodologica autorizzata.”
+- **Run:** evaluation `eval-20261007T182934-3f41ad`, replay `obs-20261007T182934-f8c3d4`, build `97a2a8c`, pack `pack-1ae7d36c…`.
+- **Recorded result:** COMPLETED, assurance PASSED 21/21. 89 A confirmations, 57 WAITs, 13 calls (12 RETURN, 11 RETURN entered PRIMARY), 52 terminal path records. PRIMARY exact price-net sum −0.01726699… over 12 CLOSED.
+- **Executor diagnosis** ([dossier](delivery/evidence/WP-013-CONTINUOUS-V04-DIAGNOSIS/SUMMARY.md); READY FOR DIRECTOR REVIEW — CONTINUOUS V0.4 DIAGNOSIS ONLY; not accepted):
+  - **Access.** The app report first, then one REPEATABLE READ READ ONLY extraction limited to this run. No cache copy, write, replay, Deep validation, backtest or counterfactual.
+  - **Integrity.** The chains match the finish commitment, the pins are consistent, every count above reconciles, and two runs of the script give byte-identical output.
+  - **Evidence definitions.** S1–S6 were registered before the outcome analysis from existing fields only, without thresholds. One erratum: same-dispatch context/phase observations are included, because they are journaled after the decision.
+  - **Findings — records.** No predefined adverse structural record precedes any of the 13 issues. 11 RETURN calls are H2-consistent; #13 has one new obstacle (cap revision); the IMMEDIATE call is not applicable.
+  - **Findings — outcomes.** 10 of 12 RETURN calls end on the frozen V, with the scenario invalidated in the same dispatch. The issue close sits 4.67–61.94 bps (median 12.7) from V, after an adverse return of 0.15–2.06 S15 into the R–K corridor.
+  - **Not decidable from the records.** Whether that return was itself unrecorded deterioration, and causality. The WAITs without return are not controls.
+- **Checks.** Dossier verifications only (reconciliation, chains, reproducibility). No product suites or Compose. CI PENDING / NOT CHECKED, Owner-operated.
