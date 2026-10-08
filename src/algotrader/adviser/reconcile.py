@@ -25,7 +25,7 @@ from datetime import datetime
 from typing import Any
 
 from ..feed.ordering import canonical
-from .contracts import KIND_CONTRACTS, KIND_CONTRACTS_V3, KIND_CONTRACTS_V4
+from .contracts import KIND_CONTRACTS, KIND_CONTRACTS_V3, KIND_CONTRACTS_V4, KIND_CONTRACTS_V5
 from .core import INITIAL_JOURNAL
 from .evaluator import INITIAL_RECORDS
 
@@ -50,6 +50,16 @@ SCOPE_V7 = (" Version 7 (WP-012 MP-003 v0.4 adviser runs, engine observe.stream.
             "its own dispatch time, an immutable destination-monitoring origin equal to the first arm publication, "
             "no anchor transition after the first confirmation and a confirmation strictly after its anchor's "
             "publication. PASS remains runtime integrity, not profit or forecast quality.")
+SCOPE_V8 = (" Version 8 (WP-014 MP-004 v0.5 adviser runs, engine observe.stream.v6) applies the version-7 binding, "
+            "lineage and anchor checks to the pinned v0.5 release (MP-004 rules manifest: delta and Director closure "
+            "plus the inherited MP-003 disposition, MP-002 rules/disposition and MP-001 rules, register, runtime and "
+            "engine format) and additionally checks the A RETURN response lineage from the stored entry-attempt "
+            "records: at most one reference per child, prepared only from WAIT_RETURN and published at its own "
+            "dispatch time and cursor; the reference never changes afterwards; no record after a child's ending; "
+            "every RETURN call issued by a child holding a pre-existing reference, decided by a complete bar starting "
+            "at/after that publication in a strictly later dispatch; never a RETURN_USABLE record; and each closing "
+            "record's response outcome consistent with its transition/reason. PASS remains runtime integrity, not "
+            "profit or forecast quality.")
 
 
 def _chain(rows: list[dict], initial: str) -> tuple[list[str], str | None]:
@@ -81,8 +91,9 @@ def checks(check, *, status: str, ranges: list[dict], terminal: dict | None, cur
     summary: dict[str, Any] = {"identity": engine["adviser"]["identity"], "journal_records": len(journal),
                                "evaluation_records": len(records)}
     method = engine["adviser"].get("method")
-    v3 = method in ("v0.3", "v0.4")  # MP-002 scenario lineage (v0.4 inherits it)
-    kinds = KIND_CONTRACTS_V4 if method == "v0.4" else KIND_CONTRACTS_V3 if v3 else KIND_CONTRACTS
+    v3 = method in ("v0.3", "v0.4", "v0.5")  # MP-002 scenario lineage (v0.4/v0.5 inherit it)
+    kinds = (KIND_CONTRACTS_V5 if method == "v0.5" else KIND_CONTRACTS_V4 if method == "v0.4" else
+             KIND_CONTRACTS_V3 if v3 else KIND_CONTRACTS)
     if v3:
         summary["method"] = method
     if v3:
@@ -241,8 +252,10 @@ def checks(check, *, status: str, ranges: list[dict], terminal: dict | None, cur
     lp += [f"attempt {a} ended without a birth" for a in ends if a not in births]
     if v3:
         lp += _v3_lineage(journal, calls)
-    if method == "v0.4":
+    if method in ("v0.4", "v0.5"):
         lp += _v4_anchor_lineage(journal)
+    if method == "v0.5":
+        lp += _v5_response_lineage(journal)
     check("adviser_lineage_immutability", not lp, "; ".join(lp[:5]) or
           f"{len(calls)} unique call(s), contiguous revisions, one terminal each; {len(births)} attempt(s) born once "
           "and ended at most once; revisions never restate original geometry")
@@ -288,6 +301,69 @@ def _v4_anchor_lineage(journal: list[dict]) -> list[str]:
             st.update(status="CONFIRMED", confirmed=True)
         if st["origin"] is not None and tr != "ARM" and                 (rec["destination_monitoring_from"], rec["destination_monitoring_cursor"]) != st["origin"]:
             lp.append(f"scenario {sid} destination monitoring origin changed at {tr}")
+    return lp
+
+
+_OUTCOME = {"ISSUE": ("ISSUED",), "RESPONSE_NOT_ISSUABLE": ("NOT_ISSUABLE",),
+            "LOCAL_RESPONSE_CONTRADICTED": ("CONTRADICTED",), "LOCAL_CONTACT_TIME_AMBIGUOUS": ("UNASSESSABLE",)}
+_REF_KEYS = ("reference_bar", "reference_start", "reference_end", "H0", "L0", "reference_close", "published_at",
+             "published_cursor")
+
+
+def _v5_response_lineage(journal: list[dict]) -> list[str]:
+    """MP-004 A RETURN response lineage from the stored entry-attempt records (WP-014)."""
+    lp: list[str] = []
+    st: dict[str, dict] = {}
+    for e in journal:
+        if e["kind"] != "entry_attempt":
+            continue
+        rec = e["record"]
+        eid, tr, env = rec["entry_attempt_id"], rec["transition"], rec["env"]
+        x = st.setdefault(eid, {"wait": False, "ref": None, "ref_seq": None, "ended": False})
+        resp = rec.get("response") or {}
+        if x["ended"]:
+            lp.append(f"entry attempt {eid} {tr} after its ending")
+            continue
+        if tr == "RETURN_USABLE":
+            lp.append(f"entry attempt {eid} has a RETURN_USABLE record (v0.5 prepares a reference instead)")
+        if tr == "WAIT_OPEN":
+            x["wait"] = True
+        elif tr == "RESPONSE_REFERENCE":
+            if not x["wait"] or x["ref"] is not None:
+                lp.append(f"entry attempt {eid} reference not prepared once from WAIT_RETURN")
+            if (_iso_z(resp.get("published_at")) != _iso_z(env["clock_time"])
+                    or str(resp.get("published_cursor")) != str(env["factual_cursor"])
+                    or resp.get("phase") != "WAIT_RESPONSE"):
+                lp.append(f"entry attempt {eid} reference publication differs from its own dispatch time/cursor")
+            x["ref"] = {k: resp.get(k) for k in _REF_KEYS}
+            x["ref_seq"] = env["professional_seq"]
+        elif x["ref"] is not None and {k: resp.get(k) for k in _REF_KEYS} != x["ref"]:
+            lp.append(f"entry attempt {eid} reference changed at {tr}")
+        if tr not in ("ISSUE", "TERMINAL", "REJECT", "CLEARED") or rec["state"] not in ("TERMINAL", "ISSUED",
+                                                                                          "CLEARED"):
+            continue
+        x["ended"] = True
+        reason = str(rec["reason"] or "").split(":")[0].split(",")[0]
+        if tr == "ISSUE" and rec.get("mode") == "RETURN" and x["ref"] is None:
+            lp.append(f"entry attempt {eid} issued a RETURN call without a pre-existing reference")
+        if x["ref"] is None:
+            if reason in ("RESPONSE_NOT_ISSUABLE", "LOCAL_RESPONSE_CONTRADICTED", "LOCAL_CONTACT_TIME_AMBIGUOUS"):
+                lp.append(f"entry attempt {eid} ended {reason} without a reference")
+            continue
+        key = "ISSUE" if tr == "ISSUE" else reason
+        if resp.get("outcome") not in _OUTCOME.get(key, ("ENDED_BY_PRIORITY_CAUSE", "CLEARED")):
+            lp.append(f"entry attempt {eid} closing outcome {resp.get('outcome')} inconsistent with {key}")
+        if key in ("ISSUE", "RESPONSE_NOT_ISSUABLE", "LOCAL_RESPONSE_CONTRADICTED"):
+            bar = resp.get("response_bar") or resp.get("decisive_bar")
+            p0 = x["ref"]["published_at"]
+            try:
+                start = datetime.fromisoformat(str(bar).rsplit("@", 1)[1].replace("Z", "+00:00"))
+                ok = start >= datetime.fromisoformat(str(p0).replace("Z", "+00:00"))
+            except (IndexError, ValueError):
+                ok = False
+            if not ok or env["professional_seq"] <= (x["ref_seq"] or 0):
+                lp.append(f"entry attempt {eid} decided by {bar} not wholly after its reference publication {p0} "
+                          "in a later dispatch")
     return lp
 
 

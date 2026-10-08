@@ -1,0 +1,558 @@
+{
+  "model": "btc.context-action.v0.5",
+  "status": "DIRECTOR_CLOSED_METHOD_DESIGN_NOT_ECONOMIC_VALIDATION",
+  "classification": "All numerical method parameters are uncalibrated preregistered conventions; metadata ticks are source facts.",
+  "scale": {
+    "median_tr_bars": 20,
+    "required_previous_close": true,
+    "decimal_median_even_count": "MEAN_OF_TWO_MIDDLE",
+    "zero_scale": "UNAVAILABLE",
+    "price_tick": "PINNED_INSTRUMENT_METADATA"
+  },
+  "tactical": {
+    "horizon": "1h",
+    "transitions": 8,
+    "direction_displacement_scale": 1,
+    "efficiency_min": 0.35
+  },
+  "phase": {
+    "short_tr_count": 4,
+    "preceding_tr_count": 20,
+    "compression_ratio_max": 0.75,
+    "compression_er6_max": 0.35,
+    "expansion_er6_min": 0.55,
+    "expansion_displacement_scale": 1.5,
+    "rotation_er8_max": 0.25,
+    "expansion_displacement_transitions": 6,
+    "reaction_close_transitions": 3,
+    "priority": [
+      "EXPANSION",
+      "COMPRESSION",
+      "REACTION",
+      "ROTATION",
+      "TRANSITION"
+    ],
+    "age_authority": "DESCRIPTIVE_ONLY"
+  },
+  "levels": {
+    "pivot_left": 2,
+    "pivot_right": 2,
+    "pivot_strict": true,
+    "zone_halfwidth_scale": 0.1,
+    "zone_min_ticks": 2,
+    "max_pivots_per_horizon": 64,
+    "age_15m_hours": 24,
+    "age_1h_hours": 168,
+    "symmetric_zone": true,
+    "scale_owner": "LANDMARK_CREATION",
+    "period_high_low_count": 1,
+    "period_retirement": "NEXT_SAME_HORIZON_COMPLETE_OR_FRESHNESS_EXPIRY",
+    "inside_opposing_zone": "BLOCK_AT_OPPOSING_AREA",
+    "target_selection": "TRIGGER_AFTER_DERIVED_INVALIDATION",
+    "equal_near_edge_tie": [
+      "CREATION_TIME",
+      "ID"
+    ],
+    "overlap_merge": false
+  },
+  "continuation": {
+    "impulse_transitions": 6,
+    "impulse_er_min": 0.55,
+    "impulse_displacement_scale": 1.5,
+    "reaction_min_scale": 0.25,
+    "reaction_max_15m_bars": 8,
+    "hard_thesis_hours": 4,
+    "expected_minutes": [
+      30,
+      180
+    ],
+    "source_bars": 7,
+    "renewal": "STRUCTURAL_RELEASE_THEN_FALSE_AT_OR_AFTER_RELEASE_THEN_NEW_TRUE",
+    "reaction_strict_above_impulse_low_plus_zone": true,
+    "maximum_pending_per_direction": 1,
+    "setup_lifetime_minutes": 120,
+    "spent_before_reaction": "HIGH_ABOVE_FROZEN_B_PLUS_ZONE",
+    "reanchoring": "PRE_CONFIRMATION_LOCAL_ANCHOR_EPOCHS_ONLY_MP003_NO_POST_CONFIRMATION_REVISION"
+  },
+  "compression_retest": {
+    "box_prior_bars": 16,
+    "box_er_max": 0.35,
+    "box_width_scale": [
+      2,
+      6
+    ],
+    "edge_touch_count": 2,
+    "box_lifetime_hours": 4,
+    "retest_max_15m_bars": 4,
+    "hard_thesis_hours": 6,
+    "expected_minutes": [
+      30,
+      240
+    ],
+    "edge_touch_both_required": true,
+    "renewal": "RETIRED_THEN_COMPRESSION_FALSE_THEN_NEW_TRUE_BIRTH_TOKEN_FIRST_QUALIFIED_GEOMETRY",
+    "break_attempts_per_owner_direction": 1,
+    "box_retirement": [
+      "EXPIRY",
+      "REQUIRED_GAP",
+      "OPPOSITE_FAR_EDGE_CLOSE_DURING_EXISTING_BREAK_ATTEMPT"
+    ],
+    "wick_alone_retires": false,
+    "er16_uses_prior_window_preceding_close": true,
+    "unused_birth_token_expires": "COMPRESSION_END"
+  },
+  "failed_exit": {
+    "setup_lifetime_minutes": 30,
+    "hard_thesis_hours": 2,
+    "expected_minutes": [
+      15,
+      90
+    ],
+    "attempts_per_owner_direction": 1,
+    "domain": "COMPRESSION_QUALIFIED_BOX_ONLY",
+    "birth_context": "BALANCED",
+    "birth_directional_expansion_allowed": false,
+    "both_edge_penetration_allowed": false,
+    "target_fallback": "FROZEN_MIDPOINT"
+  },
+  "entry": {
+    "area_each_side_scale": 0.25,
+    "net_reward_risk_min": 1.2,
+    "trigger_offset_ticks": 1,
+    "maximum_active_theses": 1,
+    "same_direction_priority": [
+      "A",
+      "B",
+      "C"
+    ],
+    "trigger_minute_start_at_or_after": "ACTUAL_ARM_PUBLICATION",
+    "residual_minimum_minutes": {
+      "A": 30,
+      "B": 30,
+      "C": 15
+    },
+    "trigger_attempt_retries_after_gate_rejection": false,
+    "primary_price": "ASK_LONG_BID_SHORT_LIVE_OR_HYPOTHETICAL_OPEN",
+    "midpoint_gate": false,
+    "area": "A_IMMEDIATE_V02_AREA_OR_SINGLE_POST_CONFIRMATION_R_TO_K_RETURN_CORRIDOR_BC_V02",
+    "round_stops": "AWAY_FROM_TRIGGER",
+    "round_targets": "TOWARD_TRIGGER",
+    "round_admissible_bounds": "INWARD_TICKS"
+  },
+  "freshness": {
+    "trade_1m_seconds": 120,
+    "trade_15m_seconds": 1200,
+    "trade_1h_seconds": 4500,
+    "trade_4h_seconds": 18000,
+    "trade_day_seconds": 93600,
+    "trade_week_seconds": 691200,
+    "trade_month_seconds": 2764800,
+    "live_quote_seconds": 5,
+    "both_event_end_and_known_at": true
+  },
+  "events": {
+    "pre_minutes": 15,
+    "post_minimum_minutes": 15,
+    "post_event_complete_15m_bar_required": true,
+    "schedule_version_policy": "PROVEN_AVAILABILITY_ONLY_PRIMARY",
+    "unknown_vintage": "UNKNOWN_NO_RETROACTIVE_GATE",
+    "reconstruction": "SECONDARY_CAPABILITY_BRANCH_ONLY",
+    "incident_taxonomy": [
+      "BTC_VENUE_SERVICE_HALT",
+      "VERIFIED_SECURITY_INCIDENT"
+    ],
+    "incident_resolution": "EXPLICIT_SAME_ID_RESOLVED_PLUS_CURRENT_ASSESSMENT",
+    "response_price": "LAST_COMPLETE_1M_CLOSE_KNOWN_STRICTLY_BEFORE_EVENT",
+    "response_scale": "S15_KNOWN_BEFORE_EVENT",
+    "response_window": "FIRST_WHOLE_POST_EVENT_COMPLETE_15M",
+    "response_authority": "UNBLOCK_ASSESSMENT_AND_DESCRIPTION_NO_DIRECTIONAL_VOTE"
+  },
+  "execution": {
+    "base_fee_bps_per_leg": 5,
+    "base_allowance_bps_per_leg": 2,
+    "stress_fee_bps_per_leg": 5,
+    "stress_allowance_bps_per_leg": 5,
+    "fees_are_assumptions_not_verified_account_rates": true,
+    "historical_adequacy_nominal_roundtrip_bps": 14,
+    "stress_nominal_roundtrip_bps": 20,
+    "stress_changes_emissions": false,
+    "live_fee_bps_per_leg": 5,
+    "live_slippage_bps_per_leg": 2,
+    "live_exit_half_spread_bps": "10000*(ask-bid)/(2*midpoint)",
+    "live_entry_spread": "ALREADY_IN_SIDE_PRICE_DO_NOT_ADD_AGAIN",
+    "human_size_impact_modeled": false
+  },
+  "progress": {
+    "at_fraction_of_hard_horizon": 0.5,
+    "minimum_favorable_scale": 0.5,
+    "measure": "MAX_FAVORABLE_COMPLETE_MINUTE_CLOSE_DISPLACEMENT_POST_ISSUE",
+    "failure_transition": "RETIRED_STALLED",
+    "missing_path": "UNASSESSABLE",
+    "issue_reference": "TRIGGER_COMPLETE_1M_CLOSE",
+    "scenario_reference": "CONFIRMATION_CLOSE_AND_CONFIRMATION_S15",
+    "scenario_check_origin": "CONFIRMATION_PLUS_HALF_FAMILY_HORIZON",
+    "call_check_origin": "ISSUE_PLUS_HALF_REMAINING_TO_FROZEN_HARD_DEADLINE"
+  },
+  "evaluation": {
+    "primary_delay_seconds": 60,
+    "sensitivity_delay_seconds": [
+      0,
+      120
+    ],
+    "fine_warmup_hours": 96,
+    "development": [
+      "2025-09-01T00:00:00Z",
+      "2026-01-01T00:00:00Z"
+    ],
+    "protected": [
+      "2026-01-01T00:00:00Z",
+      "2026-09-01T00:00:00Z"
+    ],
+    "contamination_check_required": true,
+    "original_rp001_cases_are_development_only": true,
+    "exit_delay_seconds": 60,
+    "exit_delay_sensitivity_seconds": [
+      0,
+      120
+    ],
+    "outcome_tail_minutes": 365,
+    "boundary_alignment": "UTC_CEIL_MINUTE",
+    "opening_condition": "PREOPEN_EVIDENCE_PLUS_OWN_OPEN_GEOMETRY_NO_FUTURE_HLC",
+    "first_entry_paths_per_call": 1,
+    "protection_while_pending_exit": true,
+    "missing_price_path": "CENSOR_AT_FIRST_MISSING_INTERVAL",
+    "exit_priority_at_open": [
+      "STOP_GAP_ADVERSE_OPEN",
+      "TARGET_GAP_CONSERVATIVE_TARGET",
+      "DISCRETIONARY_OPEN"
+    ],
+    "synthetic_entry_notional_usdt": 1,
+    "synthetic_base_quantity": "1/ENTRY_PRICE_CONSTANT",
+    "fee_basis": "QUANTITY_TIMES_ACTUAL_MODELED_ENTRY_EXIT_PRICE",
+    "funding_basis": "QUANTITY_TIMES_AUTHORITATIVE_SETTLEMENT_MARK_PRICE",
+    "funding_holding_boundary": "ENTRY_STRICTLY_BEFORE_SETTLEMENT_EXIT_AT_SETTLEMENT_OWES_FLOW",
+    "funding_missing": "PRICE_NET_ONLY_TOTAL_NET_UNAVAILABLE",
+    "horizon_baseline_deadline": "A_FROZEN_CONFIRMATION_PLUS_4H_BC_FROZEN_EXISTING_HARD_DEADLINE",
+    "view_sampling": "EVERY_ASSESSABLE_UTC_HOUR_AFTER_ELIGIBLE_DISPATCH_UPDATES",
+    "view_return_horizons_hours": [
+      1,
+      4
+    ],
+    "balanced_uncertain_scoring": "ABSTENTIONS_NOT_HITS",
+    "zero_return_label": "FLAT",
+    "protective_fill_time": "NON_GAP_CONTACT_MINUTE_INTERVAL_OR_CERTIFIED_FINER_TRADE_TIMESTAMP",
+    "funding_inside_unknown_fill_interval": "OWNERSHIP_AMBIGUOUS_TOTAL_NET_UNAVAILABLE",
+    "view_price_anchor": "LATEST_COMPLETE_1M_CLOSE_KNOWN_AT_SAMPLING",
+    "persistence_forecast": "SIGN_LATEST_KNOWN_1H_CLOSE_MINUS_PRECEDING_1H_CLOSE",
+    "conditional_view_scoring": "KEEP_DENOMINATOR_REPORT_ANTECEDENT_ACTIVATION_NOT_CALIBRATION"
+  },
+  "readiness": {
+    "trade_15m_required_bars": 25,
+    "trade_1h_required_bars": 21,
+    "optional_horizons_not_global_gates": true,
+    "trade_1m_required_scale_bars": 0,
+    "trade_1m_lifecycle_required": true
+  },
+  "rules_version": "mp004.rules.v0.5",
+  "identity": "Closed MP-004 delta and its Director closure AND immutable inherited MP-003 disposition, MP-002 rules/disposition and MP-001 referenced rules + rules_version + full register canonical hash + capability/input/clock/config pins + implementation/build.",
+  "participation": {
+    "horizon": "15m",
+    "previous_base_volume_bars": 20,
+    "authority": "DESCRIPTIVE_ONLY"
+  },
+  "dislocation": {
+    "min_abs_bps": 25,
+    "median_multiplier": 3,
+    "prior_contiguous_matched_slots": 60,
+    "current_excluded_from_baseline": true,
+    "pairs": {
+      "TRADE_MARK": "10000*(trade-mark)/mark",
+      "TRADE_INDEX": "10000*(trade-index)/index"
+    },
+    "absence": "UNAVAILABLE_WARNING_NOT_GLOBAL_VETO",
+    "same_enabled_profile_applies_all_modes": true
+  },
+  "lifecycle": {
+    "terminal_states": [
+      "TARGET_REACHED",
+      "INVALIDATED",
+      "TIME_EXPIRED",
+      "UNASSESSABLE",
+      "RETIRED"
+    ],
+    "retired_reasons": [
+      "THESIS_FAILED",
+      "STALLED"
+    ],
+    "retired_frees_guidance_slot_immediately": true,
+    "hypothetical_pending_exit_owns_guidance_slot": false,
+    "certified_contact_minute_start": "AT_OR_AFTER_ACTUAL_ISSUE_PUBLICATION",
+    "straddling_contact": "CONTACT_TIME_AMBIGUOUS_UNASSESSABLE_WITHOUT_FINER_TRADE_EVIDENCE",
+    "both_protective_levels_contact": "AMBIGUOUS_UNASSESSABLE",
+    "required_gap_reopen": false,
+    "context_change_post_issue": "COUNTEREVIDENCE_NOT_UNREGISTERED_EXIT"
+  },
+  "retention": {
+    "trade_15m": 128,
+    "trade_1h": 192,
+    "trade_4h": 8,
+    "trade_day": 3,
+    "trade_week": 2,
+    "trade_month": 2,
+    "matched_reference_slots": 61,
+    "maximum_pending_A_per_direction": 1,
+    "maximum_live_box_owners": 1,
+    "pivot_per_horizon": 64,
+    "active_object_refs_preserved": true
+  },
+  "capabilities": {
+    "execution": [
+      "LIVE_QUOTED",
+      "HISTORICAL_BASE"
+    ],
+    "calendar": [
+      "STRICT_AS_KNOWN_ALLOW_UNKNOWN",
+      "NONE_UNKNOWN",
+      "RECONSTRUCTED_SECONDARY"
+    ],
+    "dislocation": [
+      "ENABLE_WHERE_SUPPORTED",
+      "NOT_COVERED"
+    ],
+    "incident_tape": [
+      "TYPED_TAPE",
+      "NOT_COVERED"
+    ],
+    "funding_outcomes": [
+      "AUTHORITATIVE_IF_COVERED",
+      "PRICE_NET_ONLY"
+    ],
+    "differences_have_distinct_profile_hashes": true,
+    "coverage_changes_are_journalled": true
+  },
+  "mp002_policy": {
+    "scenario_ownership": "STRUCTURAL_INDEPENDENT_OF_ENTRY_CALL_AND_EVALUATOR",
+    "scenario_confirmed_deadline_origin": "STRUCTURAL_CONFIRMATION_PUBLICATION",
+    "scenario_progress_reference": "CONFIRMATION_COMPLETE_MINUTE_CLOSE",
+    "a_entry_modes": [
+      "IMMEDIATE_CONFIRMATION_WITH_V02_AREA",
+      "LATER_COMPLETE_MINUTE_RETURN_WITH_FIXED_R_TO_K_CORRIDOR"
+    ],
+    "a_wait_deadline": "ORIGINAL_SETUP_EXPIRY",
+    "a_call_hard_deadline": "CONFIRMATION_PUBLICATION_PLUS_EXISTING_4H",
+    "a_preissue_target": "CONFIRMATION_TARGET_MONOTONE_TIGHTENING_ONLY",
+    "a_postconfirmation_anchor_revision": false,
+    "a_same_confirmation_issue_count_max": 1,
+    "bc_entry_behavior": "UNCHANGED_V02_ONE_SHOT",
+    "cost_and_quote_effect_on_structural_scenarios": "NONE",
+    "historical_warmup_confirmation_return_issue_in_evaluation": false,
+    "a_discovery_owner_release": "Original setup expiry OR named STRUCTURAL invalidation/destination/gap/preconfirmation withdrawal; LOCAL preconfirmation anchor V contact alone does NOT release owner; never economic/call terminal",
+    "a_renewal_after_structural_release": "New assessable FALSE at/after release, then newly observed FALSE_TO_TRUE; no pre-release banked reset",
+    "a_owner_zone_lifetime": "Structural owner release OR named 15m far-edge break; retained narrative ref is not renewed eligibility",
+    "bc_box_retirement_basis": "Structural B episode lifetime independent of child economic terminal",
+    "scenario_active_capacity": {
+      "A_per_direction": 18,
+      "BC_total": 128,
+      "overflow": "INVARIANT_ERROR_NOT_ECONOMIC_EVICTION"
+    },
+    "structural_identity_cost_invariance": "Normalized structural lineage/content; economic envelope/global record hashes may differ",
+    "confirmation_routing_precedence": [
+      "STRUCTURAL_CONTACT_TARGET",
+      "VALID_PREREQUISITES",
+      "NONSELECTION_EXECUTION_DATA_TIME_GATES",
+      "IMMEDIATE_GEOMETRY_THEN_SELECTION",
+      "RETURN_INTERSECTION_THEN_WAIT",
+      "DISTINCT_EMPTY_REASONS"
+    ],
+    "confirmation_nonselection_veto_with_economic_fail": "TERMINAL_NO_RETURN",
+    "slot_at_return_route_start": "NOT_CHECKED_UNTIL_FIRST_FULLY_ACTIONABLE_RETURN",
+    "initial_immediate_area_incompatibilities_routeable": [
+      "NO_ROOM_AFTER_COSTS",
+      "REWARD_RISK_BELOW_MINIMUM",
+      "EMPTY_STRUCTURAL_AREA",
+      "PRICE_OUTSIDE_STRUCTURAL_AREA"
+    ],
+    "wait_live_economic_emptiness": "TEMPORARY_CURRENT_COST_BLOCKER_ALREADY_ADMITTED_WAIT_ONLY",
+    "wait_fixed_historical_economic_emptiness": "TERMINAL_NO_ECONOMIC_RETURN_REGION",
+    "wait_geometric_emptiness": "TERMINAL_EMPTY_RETURN_CORRIDOR",
+    "cap_effective_origin": "ACTUAL_PUBLICATION_AND_ADMITTED_CURSOR",
+    "new_cap_contact_activation_interval": "TERMINAL_CAP_ACTIVATION_CONTACT_AMBIGUOUS_NOT_TARGET_HIT",
+    "new_cap_not_ahead_current_price": "TERMINAL_CAP_NOT_AHEAD_NOW",
+    "confirmation_target_contact": "BOTH_A_MODES_REJECT_PRE_ENTRY_TARGET_CONTACT",
+    "scenario_progress_timer": "CONFIRMATION_PLUS_HALF_FAMILY_HORIZON",
+    "call_progress_timer": "ISSUE_PLUS_HALF_OF_FROZEN_HARD_DEADLINE_MINUS_ISSUE",
+    "call_progress_reference": "ISSUE_REFERENCE_CLOSE_AND_S15_ISSUE",
+    "a_horizon_only_exit_request": "FROZEN_CONFIRMATION_PLUS_4H_THEN_EXISTING_EXIT_DELAY",
+    "scenario_coverage_loss_propagation": "UNASSESSABLE_GUIDANCE_AND_CENSOR_FROM_FIRST_MISSING_INTERVAL_NOT_DELAYED_EXIT",
+    "short_economic_symmetry": "REAL_POSITIVE_PRICE_DENOMINATOR_SEPARATE_FORMULA_NO_AFFINE_BOUND_SYMMETRY",
+    "scenario_level_revision_effective_time": "ACTUAL_PUBLICATION_CURSOR_NO_RETROACTIVE_CONTACT_ERASURE",
+    "confirmation_live_side_inside_zone": "NONSELECTION_EXECUTION_VETO_NO_RETURN"
+  },
+  "development_evaluation_registration": {
+    "order": [
+      "2025-10",
+      "2025-11",
+      "2025-12"
+    ],
+    "pair_order": [
+      "FROZEN_V03",
+      "FROZEN_V04"
+    ],
+    "same_pack_profile": true,
+    "method_change_between_periods": false,
+    "operator": "OWNER_WEB_APP_ONLY_AFTER_ENGINEERING_ACCEPTANCE",
+    "protected": "NOT_AUTHORIZED",
+    "zero_usable_delayed_entries": "Product variant not validated; separate never-routable upstream failure from activated return mechanism; Director decision, no automatic extension",
+    "majority_confirmations_without_any_corridor": "N/D>0.5: D all geometrically evaluable structural A confirmations, including IMMEDIATE; N empty initial geometric OR fixed-K economic return corridor; exclusions explicitly separate",
+    "minimum_distinct_entered_owners_for_evidence_discussion": 20,
+    "minimum_is": "Reporting convention, not a quota, significance or profitability test",
+    "numeric_profitability_gate": null,
+    "minimum_denominator": "A RETURN owner/confirmation with path ENTERED at PRIMARY_60_SECONDS only; no B/C, IMMEDIATE, sensitivities or hourly samples",
+    "one_to_nineteen": "INSUFFICIENT_EVIDENCE_AND_PRACTICALITY_NOT_VALIDATED_NO_AUTOMATIC_EXTENSION",
+    "comparison_scope": "Integrated MP-003 method delta versus accepted v0.3; neither additional calls nor engineering PASS establishes usefulness",
+    "owner_independence": "Distinct lineage not statistical independence; report regime/concentration",
+    "contamination": {
+      "October": "REDESIGN_EXPOSED_DEVELOPMENT",
+      "November": "DEVELOPMENT_FOLLOWUP",
+      "December": "DEVELOPMENT_FOLLOWUP"
+    }
+  },
+  "mp003_policy": {
+    "authority": "MP-003-A-REACTION-ANCHOR-DISPOSITION.md v0.2",
+    "preconfirmation_contact": "INVALIDATE_LOCAL_ANCHOR_SAME_STRUCTURAL_OWNER_WATCH",
+    "anchor_replacement": "NEW_COMPLETE_ASSESSABLE_STRICTLY_DEEPER_CLEAN_15M_REACTION_ONLY",
+    "publication": "ACTUAL_DISPATCH_TIME_AND_ADMITTED_CURSOR_PROSPECTIVE",
+    "confirmation": "WHOLE_COMPLETE_MINUTE_START_AT_OR_AFTER_ANCHOR_PUBLICATION_AND_LATER_CURSOR",
+    "destination_origin": "IMMUTABLE_FIRST_ACTUALLY_PUBLISHED_ARM_TIME_AND_CURSOR",
+    "before_first_arm": "INHERITED_SPEND_AND_WITHDRAWAL_NO_SIMPLE_B_CONTACT_TERMINAL",
+    "after_anchor_loss": "EVER_ARMED_DESTINATION_MONITORING_REMAINS_ACTIVE_IN_WATCH",
+    "straddling_local_contact": "LOCAL_ANCHOR_UNASSESSABLE_NOT_CERTIFIED_STRUCTURAL_FAILURE",
+    "straddling_destination_contact": "SCENARIO_UNASSESSABLE_NOT_CERTIFIED_SUCCESS",
+    "simultaneous_local_and_destination": "SCENARIO_UNASSESSABLE_NO_REPLACEMENT",
+    "postconfirmation_reanchoring": false,
+    "original_birth_geometry_and_deadline": "IMMUTABLE",
+    "economic_parameters": "UNCHANGED_MP002"
+  },
+  "mp004_policy": {
+    "authority": "MP-004-V05-RETURN-RESPONSE.md + MP-004-DIRECTOR-CLOSURE.md (2026-10-08; both section-8 joints accepted)",
+    "register_provenance": "EXECUTOR_DERIVED_IN_WP014_FROM_MP003_REGISTER_AND_MP004_TEXT_DIRECTOR_REVIEW_REQUIRED",
+    "semantic_base": "btc.context-action.v0.4 at 776752e10b4153900647004cab305a0a6a29e0c6",
+    "scope": "A_RETURN_CHILD_ONLY",
+    "unchanged": [
+      "A_IMMEDIATE",
+      "B",
+      "C",
+      "SCENARIO_AND_ANCHOR_GEOMETRY_V04",
+      "COSTS",
+      "DEADLINES",
+      "POST_ISSUE_LIFECYCLE",
+      "EVALUATOR"
+    ],
+    "return_states": [
+      "WAIT_RETURN",
+      "WAIT_RESPONSE",
+      "RESPONSE_OBSERVED_TRANSIENT",
+      "ISSUED",
+      "TERMINAL_LOCAL_RESPONSE_CONTRADICTED",
+      "TERMINAL_RESPONSE_NOT_ISSUABLE",
+      "TERMINAL_CLEARED_UNASSESSABLE_BY_EXISTING_CAUSE"
+    ],
+    "reference_preparation": "FIRST_COMPLETE_1M_BAR_THAT_WOULD_BE_A_USABLE_EXISTING_RETURN_BEFORE_SLOT_CONFLICT_PRIORITY",
+    "blocked_bar": "DOES_NOT_PREPARE_EXISTING_WAIT_CONTINUES",
+    "reference_frozen": [
+      "H0",
+      "L0",
+      "BAR_ID",
+      "BAR_INTERVAL",
+      "ACTUAL_PUBLICATION_P0",
+      "FACTUAL_CURSOR_C0"
+    ],
+    "reference_is_not": "PIVOT_ANCHOR_V_OR_STOP",
+    "references_per_child": 1,
+    "reference_replacement_retry_or_renewal": false,
+    "long_local_contradiction": "LOW_LT_L0",
+    "long_recovery": "CLOSE_GE_H0_PLUS_TICK_AND_LOW_GE_L0_WITHOUT_EARLIER_CONTRADICTION",
+    "short_local_contradiction": "HIGH_GT_H0",
+    "short_recovery": "CLOSE_LE_L0_MINUS_TICK_AND_HIGH_LE_H0_WITHOUT_EARLIER_CONTRADICTION",
+    "contrary_extreme_equality": "ALLOWED_NOT_A_VIOLATION_NOT_AMBIGUOUS",
+    "favorable_extreme_without_close": "NOT_A_RECOVERY",
+    "reference_confirms_itself": false,
+    "intermediate_bars": "EVERY_BAR_IN_THE_ACTIVE_DOMAIN_CHECKED",
+    "same_bar_violation_and_favorable_close": "CONTRADICTION_NO_INTRABAR_SEQUENCE",
+    "local_contradiction_effect": "TERMINATES_THIS_CHILD_ONLY_NOT_SCENARIO_A",
+    "response_observed": "TRANSIENT_EVENT_SINGLE_EVALUATION_IN_SAME_DISPATCH_NEVER_STORED_CONFIRMATION",
+    "decision_order": [
+      "WINDOW_BOUNDS_AND_EXISTING_PROTECTIONS",
+      "DEADLINES_COVERAGE_SCENARIO_TERMINALITY",
+      "V_B_TARGET_CAP_CONTACTS_BY_THEIR_DOMAINS",
+      "NEW_CAPS_AND_THEIR_CHECKS",
+      "LOCAL_CONTRADICTION_OR_LOCAL_AMBIGUITY",
+      "RECOVERY",
+      "ECONOMICS_AND_OTHER_GATES",
+      "SELECTION",
+      "ISSUE"
+    ],
+    "local_domain_start": "ACTUAL_PUBLICATION_P0_NOT_NOMINAL_BAR_END",
+    "confirming_bar": "COMPLETE_STARTS_AT_OR_AFTER_P0_AVAILABLE_AFTER_C0_ADMITTED_IN_A_LATER_DISPATCH",
+    "bar_ending_at_or_before_p0": "NO_LOCAL_RESPONSE",
+    "bar_straddling_p0_with_contrary_violation": "UNASSESSABLE_LOCAL_CONTACT_TIME_AMBIGUOUS_NO_RENEWAL",
+    "bar_straddling_p0_without_violation": "EXCLUDES_THAT_VIOLATION_CANNOT_CONFIRM",
+    "first_ordered_recovery": "CONSUMES_THE_POSSIBILITY_NO_LATER_MORE_CONVENIENT_BAR",
+    "first_recovery_not_current_usable_bar": "LATE_OBSERVED_RECOVERY_NOT_ISSUABLE_NO_OLD_PRICE_NO_SUBSTITUTION",
+    "partial_bars": "NEITHER_PREPARE_NOR_CONFIRM",
+    "missing_gap_stale_unresolved_order": "NOT_ABSENCE_OF_VIOLATION_EXISTING_COVERAGE_TERMINALS_UNASSESSABLE",
+    "inherited_level_checks_outside_local_domain": "V_TARGET_CAP_CHECKS_UNCHANGED",
+    "geometry": "R_K_V_TARGET_COSTS_CORRIDOR_DEADLINES_EXISTING_STRUCTURAL_AND_OPERATIONAL_V_DISTINCT",
+    "cap_revision": "MONOTONE_TIGHTENING_ONLY_REFERENCE_NOT_MOVED_NO_NEW_ATTEMPT_NO_LIFE_EXTENSION",
+    "recovery_outside_corridor_or_economic_region": "NOT_ISSUABLE_CHILD_CONSUMED",
+    "at_first_recovery_rechecked": [
+      "GEOMETRY_AND_CURRENT_CAP",
+      "CONTEXT",
+      "COVERAGE",
+      "FRESHNESS",
+      "GATES",
+      "RESIDUAL_TIME",
+      "ORIGINAL_DEADLINES",
+      "THEN_SLOT_CONFLICT_PRIORITY"
+    ],
+    "deadline_equality": "PRECEDES_ISSUE",
+    "terminal_context_veto": "STILL_TERMINATES_THE_WAIT_BEFORE_RECOVERY",
+    "temporary_nonterminal_blocker": "STAYS_NONTERMINAL_UNTIL_FIRST_RECOVERY_THEN_BLOCKS_THIS_ENTRY",
+    "historical_evaluation_price": "CLOSE_OF_THE_CURRENT_USABLE_RECOVERY_BAR_FIXED_HISTORICAL_COSTS",
+    "live_evaluation_price": "RECOVERY_EVIDENCE_FROM_COMPLETE_CLOSE_ECONOMICS_ON_CURRENT_VALID_SIDE_PRICE_ASK_LONG_BID_SHORT",
+    "live_quote_missing_or_stale_at_recovery": "CHILD_CONSUMED_NO_WAIT_FOR_A_BETTER_QUOTE",
+    "issue": "CALL_PUBLICATION_NOT_FILL_PINNED_EVALUATOR_FIRST_ADMISSIBLE_OPPORTUNITY",
+    "after_issue": "EXISTING_LIFECYCLE_NO_ADDITIONAL_LOCAL_STOP",
+    "evaluation_start": "EXISTING_CLEARING_ALSO_CLEARS_WAIT_RESPONSE_AND_ITS_REFERENCE_NO_REGENERATION",
+    "evaluation_end": "WAITS_TERMINATE_TAIL_ONLY_WHAT_EXISTING_LIFECYCLE_AUTHORIZES",
+    "monthly_reset_inside_continuous_window": false,
+    "counts": {
+      "unit": "UNIQUE_A_RETURN_CHILD_BY_DIRECTION_AND_WINDOW",
+      "identities": [
+        "P = C + R + X + A",
+        "R = N + I",
+        "W = P + TERMINALS_BEFORE_REFERENCE + WAIT_RETURN_STILL_OPEN"
+      ],
+      "ratios": [
+        "P/W",
+        "C/P",
+        "R/P",
+        "N/R",
+        "I/R",
+        "I/P"
+      ],
+      "zero_denominator": "UNDEFINED",
+      "not_issuable_primary_reason_classes": [
+        "ECONOMICS_GEOMETRY",
+        "OTHER_GATES",
+        "SELECTION"
+      ],
+      "warmup_clearings": "REPORTED_SEPARATELY",
+      "frequency_or_profit_quota": null
+    },
+    "numerical_parameters": "UNCHANGED_MP003_NO_NEW_THRESHOLD",
+    "candidate_choices": "1M_RECOVERY_AND_ONE_TICK_APPROVED_AS_CANDIDATE_NO_INFORMATIONAL_SUPERIORITY_IMPLIED",
+    "alternative_c": "DISTINCT_ALTERNATIVE_NOT_AN_AUTOMATIC_FALLBACK",
+    "development_evaluation_registration": "INHERITED_MP003_BLOCK_DESCRIBES_THE_V03_V04_PLAN_ONLY; THE_V04_V05_CONTINUOUS_COMPARISON_IS_PREPARED_INACTIVE_IN_WP014; READING_CRITERIA_DIRECTOR_OWNED"
+  }
+}

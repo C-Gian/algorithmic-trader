@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import {
-  adviserApi, CallView, ENTRY_TEXT, EXPECTED_TEXT, Lens, LiveStatus, LiveView, METHOD_STATUS, METHOD_TEXT, reasonText,
-  ROW_TEXT, THESIS_TEXT,
+  AdviserMethod, adviserApi, CallView, ENTRY_TEXT, EXPECTED_TEXT, Lens, LiveStatus, LiveView, METHOD_STATUS, METHOD_TEXT,
+  METHODS, reasonText, ROW_TEXT, THESIS_TEXT,
 } from "../adviser";
 import { fmtNum, fmtTime, humanize } from "../lib/format";
 import { usePoll } from "../lib/usePoll";
@@ -174,8 +174,16 @@ function CallPanel({ v }: { v: LiveView | null }) {
         ))}
         {(v?.scenarios ?? []).filter((s) => s.waiting).map((s) => (
           <div className="call-waiting" key={s.scenario_id} data-testid="live-waiting">
-            <Badge tone="info">{s.direction} {s.family} confirmed — waiting for a usable price</Badge>
+            <Badge tone="info">{s.direction} {s.family} confirmed — {s.waiting!.phase === "WAIT_RESPONSE"
+              ? "waiting for a local recovery" : "waiting for a usable price"}</Badge>
             <p className="small-text">{s.waiting!.text} This is not a call: do not treat it as “enter now”.</p>
+            {s.waiting!.response && (
+              <dl className="kv-grid small-text" data-testid="live-waiting-response">
+                <dt>Return reference</dt><dd className="mono">H0 {s.waiting!.response.H0} · L0 {s.waiting!.response.L0} · published {fmtTime(s.waiting!.response.published_at)}</dd>
+                <dt>Call possible only if</dt><dd>{s.waiting!.response.recovery_rule}</dd>
+                <dt>Ends this attempt</dt><dd>{s.waiting!.response.contradiction_rule}</dd>
+              </dl>
+            )}
             <dl className="call-geo">
               <dt>Usable return corridor</dt><dd className="mono">{s.waiting!.corridor ? `${s.waiting!.corridor[0]} – ${s.waiting!.corridor[1]}` : "none left"}</dd>
               <dt>Target now</dt><dd className="mono">{s.waiting!.target_now} <span className="muted">(at confirmation {s.waiting!.target_at_confirmation})</span></dd>
@@ -250,7 +258,7 @@ export function LiveCockpit() {
   const [error, setError] = useState<string | null>(null);
   const [copied, runCopy] = useCopyFeedback();
   // WP-011: the method is chosen explicitly before Start; a running session keeps its pinned method
-  const [method, setMethod] = useState<"v0.2" | "v0.3" | "v0.4">("v0.2");
+  const [method, setMethod] = useState<AdviserMethod>("v0.2");
   const v = st?.view && st.view.chart ? st.view : null;
   const state = st?.state ?? "STOPPED";
   const running = !!st?.running;
@@ -290,9 +298,9 @@ export function LiveCockpit() {
               <label className="small-text live-method" data-testid="live-method">
                 <span>Method</span>
                 <select className="control" value={method}
-                        onChange={(e) => setMethod(e.target.value as "v0.2" | "v0.3" | "v0.4")}
+                        onChange={(e) => setMethod(e.target.value as AdviserMethod)}
                         data-testid="live-method-select" disabled={busy}>
-                  {(["v0.2", "v0.3", "v0.4"] as const).map((m) => (
+                  {METHODS.map((m) => (
                     <option key={m} value={m}>{METHOD_TEXT[m]} ({METHOD_STATUS[m].text.toLowerCase()})</option>))}
                 </select>
               </label>

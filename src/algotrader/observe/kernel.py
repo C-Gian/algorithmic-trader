@@ -48,8 +48,9 @@ ENGINE_FORMAT = "observe.stream.v2"  # R2 runs: factual state + causal temporal 
 ENGINE_FORMAT_V3 = "observe.stream.v3"  # WP-009 adviser evaluations: + algotrader.adviser-runtime.v2 professional state (v1 states are incompatible)
 ENGINE_FORMAT_V4 = "observe.stream.v4"  # WP-011 MP-002 v0.3 adviser evaluations: + algotrader.adviser-runtime.v3
 ENGINE_FORMAT_V5 = "observe.stream.v5"  # WP-012 MP-003 v0.4 adviser evaluations: + algotrader.adviser-runtime.v4
+ENGINE_FORMAT_V6 = "observe.stream.v6"  # WP-014 MP-004 v0.5 adviser evaluations: + algotrader.adviser-runtime.v5
 STREAM_ENGINE_FORMATS = frozenset({ENGINE_FORMAT_V1, ENGINE_FORMAT, ENGINE_FORMAT_V3, ENGINE_FORMAT_V4,
-                                   ENGINE_FORMAT_V5})
+                                   ENGINE_FORMAT_V5, ENGINE_FORMAT_V6})
 
 
 class StateError(Exception):

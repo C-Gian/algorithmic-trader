@@ -1,40 +1,10 @@
-# Current task — continuous v0.4 diagnosis (read-only)
-Date: 2026-10-07 Europe/Rome.
-Status: DOSSIER DELIVERED at e07bbe0; Astra F1–F4 dossier corrections delivered — READY FOR DIRECTOR REVIEW — CONTINUOUS V0.4 DIAGNOSIS CORRECTION ONLY. No further package activated.
+# Current task — WP-014 MP-004 v0.5 implementation
+Date: 2026-10-08. Status: DELIVERED — READY FOR DIRECTOR REVIEW — WP-014 ONLY ([evidence](delivery/evidence/WP-014-ENGINEERING-EVIDENCE.md)); remote CI Owner-operated, PENDING / NOT CHECKED. The continuous v0.4/v0.5 plan stays INACTIVE.
 
-## Preceding record
+Implement [WP-014](delivery/WP-014-MP-004-IMPLEMENTATION-SPEC.md) from [MP-004](delivery/MP-004-V05-RETURN-RESPONSE.md) and its [Director closure](delivery/MP-004-DIRECTOR-CLOSURE.md) (both §8 joints accepted). The closure approves candidate semantics, not economic effectiveness.
 
-The Director accepted the continuous v0.4 September–December 2025 run (evaluation `eval-20261007T182934-3f41ad`, replay `obs-20261007T182934-f8c3d4`, build `97a2a8c`, pack `pack-1ae7d36c20adbde0a468a7e0f6d8750a9951aa8e`), registered under [the WP-013 protocol](delivery/WP-013-CONTINUOUS-REFERENCE-PROTOCOL.md):
+Only the A RETURN child changes: the first usable RETURN prepares one immutable local reference; a later complete 1m local recovery is then required and evaluated once. IMMEDIATE, B/C, geometry, costs, deadlines, the evaluator and post-issue behaviour stay v0.4. Report any semantic conflict with a minimal synthetic counterexample before introducing a solution; do not invent methodology.
 
-> “Prova continua accettata come evidenza descrittiva di sviluppo; risultato negativo; causa non identificata; nessuna modifica metodologica autorizzata.”
+Preserve v0.2/v0.3/v0.4 identities and outputs. New identities, durable reference state, reconciliation/Deep through existing paths, app selection/labels/§7 counts (total and monthly) and a read-only v0.4/v0.5 comparison. Prepare the continuous Sep–Dec v0.4/v0.5 Owner comparison INACTIVE.
 
-## Assignment
-
-A bounded, read-only diagnosis of the sequence confirmation → WAIT → issue → entry → outcome for all 13 calls and all 57 WAITs. It distinguishes:
-- **H1:** structural deterioration already observable before the issue;
-- **H2:** the economic region reached without further recorded structural deterioration.
-
-**Method.** The evidence is defined from existing fields before the outcome analysis, and the same criteria are applied to every case. Every value is labelled STORED, DERIVED or UNAVAILABLE.
-
-**Reconciliation targets.** 89 A confirmations, 57 WAITs, 13 calls, 12 RETURN, 11 RETURN entered PRIMARY, 52 terminal records.
-
-Delivered: [dossier](delivery/evidence/WP-013-CONTINUOUS-V04-DIAGNOSIS/SUMMARY.md).
-
-## Boundaries
-
-- **Access.** The available app export is read first. At most one REPEATABLE READ READ ONLY extraction, limited to this run, is allowed. No write to the Owner DB and no change to or restart of the Owner stack.
-- **No new runs.** No replay, re-execution of the core or evaluator, Deep validation, backtest, counterfactual or acquisition.
-- **No method work.** No proposal or implementation of rules, parameters, thresholds or infrastructure.
-- **Data scope.** January–August 2026 stays protected, except the authorized tail.
-- **Checks.** Dossier verifications only; no product suites or Compose.
-- **Review.** The Director reviews; the Owner watches CI. Remote CI: PENDING / NOT CHECKED.
-
-## Correction delivered (Astra review of `e07bbe0`, F1–F4 only)
-
-This pass corrects the dossier and its script only, using the existing local exports. No new extraction.
-- **F1:** observation limits; INDETERMINATE for missing observations.
-- **F2:** uniform H2 / OBSTACLE_ONLY wording.
-- **F3:** no statistical conclusion about chance.
-- **F4:** structural vs operational V, explicit price references, terminal publication vs contact bar, #3 timing, entry open naming, 12 = 10 + 2 and 10 = 9 + 1.
-
-No rule or parameter proposal. After closure, the Director may open a design discussion on return compatibility, without further general dossiers.
+Synthetic bounded data only; no acquisition, Owner extraction or economic evaluation; never touch the Owner stack. Follow AGENTS for isolated checks, commit/push and Owner-operated CI. Deliver READY FOR DIRECTOR REVIEW — WP-014 ONLY.

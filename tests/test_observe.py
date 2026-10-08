@@ -86,11 +86,11 @@ def test_observe_contract_is_separate_provisional_and_baselined():
     from algotrader.observe import contracts as oc
 
     assert oc.OBSERVE_SCHEMA_VERSION == "algotrader.observe.v1" and oc.OBSERVE_CONTRACT_STATUS == "PROVISIONAL"
-    assert oc.OBSERVE_CHANGELOG[-1][0] == oc.OBSERVE_SCHEMA_REVISION == 7  # WP-012 method value v0.4 (r6: WP-011 adviser_method)
-    assert [r for r, _, _ in oc.OBSERVE_CHANGELOG] == [1, 2, 3, 4, 5, 6, 7]
+    assert oc.OBSERVE_CHANGELOG[-1][0] == oc.OBSERVE_SCHEMA_REVISION == 8  # WP-014 method value v0.5 (r7: v0.4)
+    assert [r for r, _, _ in oc.OBSERVE_CHANGELOG] == [1, 2, 3, 4, 5, 6, 7, 8]
     stored = json.loads(schema.baseline_path(oc.OBSERVE_SCHEMA_VERSION).read_text(encoding="utf-8"))
     assert stored == schema.observe_baseline(), "observe contract drift: bump OBSERVE_SCHEMA_REVISION + changelog"
-    assert (stored["status"], stored["revision"]) == ("PROVISIONAL", 7)
+    assert (stored["status"], stored["revision"]) == ("PROVISIONAL", 8)
     assert "temporal" not in stored["$defs"]["ObservationReplayManifest"]["required"]  # r3 addition is optional
     # revision-2 additions are optional: revision-1 manifests/validations stay readable unchanged
     for name in ("lease_generation", "artifact_dir", "phase_timings", "operational_metrics"):
@@ -386,7 +386,7 @@ def test_dataset_replay_completes_durably_with_valid_artifacts_and_no_synthetic_
     assert m["config"]["feed"]["content_identity"] == src.feed.manifest.content_identity
     assert m["config"]["feed"]["ordered_event_hash"] == src.feed.manifest.ordered_event_hash
     out = art / "observations" / rid / m["artifact_dir"]
-    assert m["artifact_dir"] == f"g{m['lease_generation']}" and m["schema_revision"] == 7
+    assert m["artifact_dir"] == f"g{m['lease_generation']}" and m["schema_revision"] == 8
     names = {a["name"] for a in m["artifacts"]}
     assert names == {"config.json", "engine.json", "ranges.jsonl", "final_snapshot.json", "validation.json",
                      "temporal.json"}

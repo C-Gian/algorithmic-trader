@@ -224,6 +224,7 @@ def semantic_v2_baseline() -> dict[str, Any]:
          "journal_kinds": {k: f"#/$defs/{m.__name__}" for k, m in sorted(ac.KIND_CONTRACTS.items())},
          "journal_kinds_v3": {k: f"#/$defs/{m.__name__}" for k, m in sorted(ac.KIND_CONTRACTS_V3.items())},
          "journal_kinds_v4": {k: f"#/$defs/{m.__name__}" for k, m in sorted(ac.KIND_CONTRACTS_V4.items())},
+         "journal_kinds_v5": {k: f"#/$defs/{m.__name__}" for k, m in sorted(ac.KIND_CONTRACTS_V5.items())},
          "emitted_revision_by_model": dict(sorted(ac.SEMANTIC_V2_EMITTED_REVISION.items()))})
 
 

@@ -147,8 +147,10 @@ def adviser_view(row: dict[str, Any]) -> dict[str, Any] | None:
             "note": "committed adviser state at the latest checkpoint; hypothetical outcomes are separate"}
     if v and v.get("scenarios") is not None:  # v0.3/v0.4: structural scenarios and WAIT_PRICE children
         out["committed"]["scenarios"] = v["scenarios"]
-    if v and v.get("anchors") is not None:  # v0.4: pre-confirmation local reaction anchors
+    if v and v.get("anchors") is not None:  # v0.4/v0.5: pre-confirmation local reaction anchors
         out["committed"]["anchors"] = v["anchors"]
+    if v and v.get("responses") is not None:  # v0.5: A RETURN phases and prepared local references
+        out["committed"]["responses"] = v["responses"]
     return out
 
 

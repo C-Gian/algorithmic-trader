@@ -1,5 +1,6 @@
-"""Explicit adviser method selection (WP-011/WP-012): the fixed MP-001 v0.2 baseline, the accepted MP-002 v0.3 revision
-and the MP-003 v0.4 candidate (pre-confirmation A anchor epochs).
+"""Explicit adviser method selection (WP-011/WP-012/WP-014): the fixed MP-001 v0.2 baseline, the accepted MP-002 v0.3
+revision, the MP-003 v0.4 candidate (pre-confirmation A anchor epochs) and the MP-004 v0.5 candidate (A RETURN local
+reference followed by a local recovery).
 
 A small dispatch table, not a trading DSL. Each release names its immutable packaged rules document and complete
 parameter register (byte-identical copies of the Director documents in ``delivery/``) and every implementation,
@@ -12,7 +13,8 @@ profile SHA-256 + input/clock/config pins + implementation + build (MP-001 §12)
 pinned release, never the current default.
 
 A release that inherits other authoritative rule texts (v0.4: the MP-003 delta over MP-002 rules/disposition and the
-MP-001 rules) pins a rules MANIFEST: ``rules_sha256`` is the SHA-256 of the canonical list of every authoritative
+MP-001 rules; v0.5: the MP-004 delta and its Director closure over the MP-003 disposition, the MP-002 rules/disposition
+and the MP-001 rules) pins a rules MANIFEST: ``rules_sha256`` is the SHA-256 of the canonical list of every authoritative
 document's role, file name and LF-normalized SHA-256, so a changed inherited text changes the behaviour identity even
 though the delta file is unchanged (WP-012 §3). Single-document releases keep their existing single-file hash.
 """
@@ -162,8 +164,31 @@ V04 = Release(
                ("INHERITED_MP002_DISPOSITION", idn.METHOD_DIR / "MP-002-DIRECTOR-DISPOSITION.md"),
                ("INHERITED_MP001_RULES", idn.METHOD_DIR / "MP-001-INTEGRATED-METHOD-PROPOSAL.md")))
 
-RELEASES: dict[str, Release] = {r.key: r for r in (V02, V03, V04)}
-SCENARIO_METHODS = frozenset({"v0.3", "v0.4"})  # MP-002 structural-scenario lineage (scenario/entry_attempt kinds)
+V05 = Release(
+    key="v0.5", label="Candidate v0.5 — RETURN waits for a local recovery",
+    status="ENGINEERING_REVIEW_PENDING", status_label="engineering review pending",
+    purpose=("MP-004: in the A RETURN wait the first usable return no longer issues a call; it prepares one fixed local "
+             "reference bar, and a call can only follow a later complete 1m close beyond that bar's favourable extreme "
+             "without breaking its contrary extreme (one reference, first recovery evaluated once). Everything else is "
+             "v0.4."),
+    model="btc.context-action.v0.5", rules_version="mp004.rules.v0.5",
+    rules_file=idn.METHOD_DIR / "MP-004-V05-RETURN-RESPONSE.md",
+    register_file=idn.METHOD_DIR / "MP-004-PARAMETERS.json",
+    implementation="adviser.core.v5", evaluator_implementation="adviser.evaluator.v3",
+    core_state_format="algotrader.adviser-state.v5", runtime_format="algotrader.adviser-runtime.v5",
+    evaluator_state_format="algotrader.adviser-evaluation-state.v2", engine_format="observe.stream.v6",
+    report_version="adviser.report.v5", reconciliation_version="8", deep_version="9",
+    inherited=(("DELTA_DIRECTOR_CLOSURE", idn.METHOD_DIR / "MP-004-DIRECTOR-CLOSURE.md"),
+               ("INHERITED_MP003_RULES", idn.METHOD_DIR / "MP-003-A-REACTION-ANCHOR-DISPOSITION.md"),
+               ("INHERITED_MP002_RULES", idn.METHOD_DIR / "MP-002-SCENARIO-CONFIRMATION-ENTRY-PROPOSAL.md"),
+               ("INHERITED_MP002_DISPOSITION", idn.METHOD_DIR / "MP-002-DIRECTOR-DISPOSITION.md"),
+               ("INHERITED_MP001_RULES", idn.METHOD_DIR / "MP-001-INTEGRATED-METHOD-PROPOSAL.md")))
+
+RELEASES: dict[str, Release] = {r.key: r for r in (V02, V03, V04, V05)}
+# MP-002 structural-scenario lineage (scenario/entry_attempt kinds); v0.5 inherits the v0.4 anchors
+SCENARIO_METHODS = frozenset({"v0.3", "v0.4", "v0.5"})
+ANCHOR_METHODS = frozenset({"v0.4", "v0.5"})  # MP-003 pre-confirmation A anchor epochs
+RESPONSE_METHODS = frozenset({"v0.5"})  # MP-004 A RETURN local reference / recovery
 BY_MODEL: dict[str, Release] = {r.model: r for r in RELEASES.values()}
 
 
@@ -190,7 +215,7 @@ def for_engine(adviser: dict[str, Any]) -> Release:
 
 
 def is_scenario_method(key: str | None) -> bool:
-    """True for releases emitting MP-002 structural scenarios and child entry attempts (v0.3, v0.4)."""
+    """True for releases emitting MP-002 structural scenarios and child entry attempts (v0.3, v0.4, v0.5)."""
     return (key or DEFAULT) in SCENARIO_METHODS
 
 

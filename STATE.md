@@ -1,8 +1,8 @@
 # Project State
 
-Updated: 2026-10-07 — WP-013 continuous v0.4 Sep–Dec 2025 run (`eval-20261007T182934-3f41ad`, build 97a2a8c) accepted by the Director as descriptive development evidence (negative result; cause not identified; no method change authorized); read-only continuous v0.4 diagnosis delivered at e07bbe0; Astra F1–F4 dossier corrections delivered, READY FOR DIRECTOR REVIEW — CONTINUOUS V0.4 DIAGNOSIS CORRECTION ONLY.
+Updated: 2026-10-08 — MP-004 v0.5 (A RETURN followed by a local recovery) methodologically closed by the Director (both §8 joints accepted; semantics, not effectiveness); WP-014 activated and delivered for review: v0.5 selectable beside v0.2/v0.3/v0.4, READY FOR DIRECTOR REVIEW — WP-014 ONLY. The continuous v0.4/v0.5 Owner comparison is prepared INACTIVE.
 
-**Current task: [task.md](task.md) — continuous v0.4 diagnosis (read-only) corrected per Astra F1–F4; awaiting Director review.** [Dossier](delivery/evidence/WP-013-CONTINUOUS-V04-DIAGNOSIS/SUMMARY.md) · [protocol](delivery/WP-013-CONTINUOUS-REFERENCE-PROTOCOL.md). No method, parameter, threshold or infrastructure change is authorized. No further package is active. Sep–Dec 2025 (continuous and single-month runs) is exposed development; Jan–Aug 2026 stays protected except the authorized tail.
+**Current task: [task.md](task.md) — WP-014 MP-004 v0.5 implementation, delivered; awaiting Director review and Owner-operated exact-SHA CI.** [Specification](delivery/MP-004-V05-RETURN-RESPONSE.md) · [closure](delivery/MP-004-DIRECTOR-CLOSURE.md) · [task](delivery/WP-014-MP-004-IMPLEMENTATION-SPEC.md) · [evidence](delivery/evidence/WP-014-ENGINEERING-EVIDENCE.md) · [inactive plan](delivery/WP-014-CONTINUOUS-V04-V05-PLAN.md). The earlier read-only continuous v0.4 diagnosis remains as recorded below. Sep–Dec 2025 is exposed development; Jan–Aug 2026 stays protected except the authorized tail.
 
 Goal (Foundation v3.1): an integrated BTC adviser with persistent actionable LONG/SHORT calls, entry area, targets, stop/exit guidance and holding horizon. Capital, size, leverage and orders stay human. Historical ACCEPTED/READY/HOLD labels in older documents do not authorize work; only task.md does.
 
@@ -575,3 +575,37 @@ These are dossier and script corrections only, made from the existing local expo
   - No product suites, E2E or Compose were run.
   - Astra's independent verification is separate.
 - CI PENDING / NOT CHECKED, Owner-operated.
+
+## MP-004 Director closure / WP-014 activation — 8 October 2026
+
+Owner-relayed Director closure, recorded verbatim in [MP-004-DIRECTOR-CLOSURE.md](delivery/MP-004-DIRECTOR-CLOSURE.md): MP-004 v0.5 is closed methodologically; the closure approves candidate semantics, not economic effectiveness; both §8 joints are accepted (straddling local contact → UNASSESSABLE without renewal; first recovery observed late and no longer current → not issuable, no later bar searched). WP-014 is the only active package ([task](delivery/WP-014-MP-004-IMPLEMENTATION-SPEC.md)). No Owner run is activated.
+
+## WP-014 executor evidence (base `776752e`; READY FOR DIRECTOR REVIEW — WP-014 ONLY; not accepted)
+
+[Evidence](delivery/evidence/WP-014-ENGINEERING-EVIDENCE.md) · [v0.4 base-pin generator](delivery/evidence/WP-014-V04-BASE-PINS.py) · [inactive continuous plan](delivery/WP-014-CONTINUOUS-V04-V05-PLAN.md).
+- **Implemented.**
+  - `btc.context-action.v0.5` / `mp004.rules.v0.5` is selectable in the Workbench (label, status and purpose before Start; pin *MP-004 v0.5*) and at live Start. Absent selection is still v0.2.
+  - `adviser/core5.py` subclasses the v0.4 fold and changes only the A RETURN child. The first usable return prepares one reference (H0/L0, bar, actual publication p0, cursor c0). WAIT_RESPONSE checks every later domain bar: contradiction, straddling ambiguity, then the first recovery is evaluated once. The outcome is ISSUE or RESPONSE_NOT_ISSUABLE with all blockers and one primary reason. IMMEDIATE, B/C, geometry, costs, deadlines, the evaluator and the post-issue lifecycle are inherited.
+- **Identities.**
+  - `adviser.core.v5`, state/runtime v5, engine `observe.stream.v6`, report `adviser.report.v5`, reconciliation v8 (response lineage), Deep v9; evaluator v3 reused.
+  - The rules identity is a manifest of the MP-004 delta, its closure and every inherited text. The register is executor-derived (no numerical change; `mp004_policy`).
+  - semantic.v2 r4 (`EntryAttemptV5.response`), observe.v1 r8 (method value only). adviser-evaluation.v1 is unchanged (r3). No migration.
+- **Preservation.**
+  - 53 v0.4 fixed-fixture outputs reproduce the unchanged base `776752e` byte for byte (pins computed in a disposable worktree); the 38 WP-012 v0.2/v0.3 pins still pass.
+  - v0.4/v0.5 normalized parity on 33 tapes outside the RETURN child.
+- **Durability.** Production pack/unpack at every response stage; DB crash/reclaim at 6 stages; STEP/paced; corrupted-restore fallback; fencing via the inherited path; cross-method resume refused.
+- **App and reports.**
+  - Follow/live views distinguish "return reference prepared — waiting for a local recovery (no call yet, no entry)" from an entry.
+  - MP-004 §7 W/P/C/R/N/I/X/A with identities, ratios, N reasons and X causes, total and monthly (child → month its WAIT opened), in JSON and Copy report for chat.
+  - Read-only v0.4/v0.5 comparison with the MP-004 limitation, the response row and a *Pinned release vs current package* fact.
+- **For Director decision** (evidence §7):
+  - dispatch-level precedence of a local break over an earlier recovery in the same dispatch;
+  - corridor/economic emptiness evaluated at the first recovery during WAIT_RESPONSE;
+  - "current bar" = latest complete minute, late recovery as its own primary class;
+  - live asymmetry: the bar after the live reference publication always straddles p0;
+  - monthly attribution;
+  - executor-derived register;
+  - §6 SHORT ratio erratum (1.935, not ≈ 2.08);
+  - v0.4 status label left as recorded.
+- **Checks** (disposable PostgreSQL 18.6, Owner stack untouched): new pure/DB/live/browser suites all pass, plus the v0.3/v0.4 regression set (counts in the evidence and executor report). Typecheck/build pass; schema baselines are rewritten only for observe.v1 r8 and semantic.v2 r4. The full suite and Compose smoke are left to CI.
+- **Owner handoff.** The continuous v0.4/v0.5 Sep–Dec comparison (35-day initialization, baseline `eval-20261007T182934-3f41ad` reused only after the pin-compatibility check) is prepared but INACTIVE. CI is Owner-operated: PENDING / NOT CHECKED.

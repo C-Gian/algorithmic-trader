@@ -116,6 +116,14 @@ SCOPE_ADVISER_V4 = SCOPE_ADVISER_V3 + (
     "replacements and the first-arm destination-monitoring origin, and the restorable state carries the current and "
     "lost anchor geometry, its publication cursor and ever_armed. Stored bytes are re-hashed on launch and every "
     "resume. It shares the reducer implementation: not an independent trading or method validation.")
+VALIDATOR_VERSION_ADVISER_V5 = "9"
+SCOPE_ADVISER_V5 = SCOPE_ADVISER_V4 + (
+    " Version 9 (WP-014 MP-004 v0.5 adviser runs, engine observe.stream.v6) applies the same comparisons to the "
+    "pinned v0.5 release: the shadow fold re-executes the packaged MP-004 rules manifest/register identity (a "
+    "different pinned method fails explicitly); the stored entry-attempt records carry the A RETURN local reference, "
+    "the bars checked and the decisive recovery/contradiction with its outcome, and the restorable state carries the "
+    "child phase and its single prepared reference (publication time and cursor). Stored bytes are re-hashed on "
+    "launch and every resume. It shares the reducer implementation: not an independent trading or method validation.")
 TERMINAL_KEYS = ("aggregate_chain", "sealed_commitment", "dispatch_commitment", "dispatch_seq", "clock_time")
 
 
@@ -158,7 +166,7 @@ def create_deep_validation(conn, replay_id: str) -> str:
     if row is None:
         raise LookupError(replay_id)
     if row.get("engine_format") not in STREAM_ENGINE_FORMATS or row["engine"] is None:
-        raise DeepRejected("Deep validation applies to streaming-engine runs (observe.stream.v1-v5) only")
+        raise DeepRejected("Deep validation applies to streaming-engine runs (observe.stream.v1-v6) only")
     if row["status"] not in ("completed", "cancelled", "failed", "paused"):
         raise DeepRejected(f"the run is {row['status']}; Deep validation runs on a finished or paused run")
     if not row["cursor"]:
@@ -167,7 +175,7 @@ def create_deep_validation(conn, replay_id: str) -> str:
     temporal = bool(eng.get("temporal"))
     adviser = bool(eng.get("adviser"))
     method = (eng.get("adviser") or {}).get("method") if adviser else None
-    v3, v4 = method == "v0.3", method == "v0.4"
+    v3, v4, v5 = method == "v0.3", method == "v0.4", method == "v0.5"
     pin = terminal_pin(row) if temporal else None
     finish = None
     if adviser and row["status"] == "completed":
@@ -178,11 +186,13 @@ def create_deep_validation(conn, replay_id: str) -> str:
             "run_status_at_launch": row["status"], "cache_id": eng["cache_id"],
             "cache_manifest_sha256": eng["cache_manifest_sha256"], "state_format": eng["state_format"],
             "validator": VALIDATOR_ID,
-            "validator_version": (VALIDATOR_VERSION_ADVISER_V4 if v4 else VALIDATOR_VERSION_ADVISER_V3 if v3 else
+            "validator_version": (VALIDATOR_VERSION_ADVISER_V5 if v5 else
+                                  VALIDATOR_VERSION_ADVISER_V4 if v4 else VALIDATOR_VERSION_ADVISER_V3 if v3 else
                                   VALIDATOR_VERSION_ADVISER if adviser else
                                   VALIDATOR_VERSION_TEMPORAL if temporal else VALIDATOR_VERSION),
             "mode": "canonical-cache-only",
-            "scope": (SCOPE_ADVISER_V4 if v4 else SCOPE_ADVISER_V3 if v3 else SCOPE_ADVISER if adviser else
+            "scope": (SCOPE_ADVISER_V5 if v5 else SCOPE_ADVISER_V4 if v4 else SCOPE_ADVISER_V3 if v3 else
+                      SCOPE_ADVISER if adviser else
                       SCOPE_TEMPORAL if temporal
                       else SCOPE), "temporal": temporal,
             "terminal": pin, "adviser": adviser, "adviser_finish": finish}

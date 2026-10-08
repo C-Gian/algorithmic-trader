@@ -1,6 +1,6 @@
-"""Two-run adviser comparison (WP-011 §6, generalized by WP-012 §5): an honest, copyable side-by-side of two ALREADY
-EXISTING adviser evaluation reports with explicit roles - A is the BASELINE (e.g. accepted v0.3, or Original v0.2) and
-B the CANDIDATE (e.g. v0.4) on the same prepared pack. It never launches, resumes or replays anything; selecting or
+"""Two-run adviser comparison (WP-011 §6, generalized by WP-012 §5 and WP-014): an honest, copyable side-by-side of two
+ALREADY EXISTING adviser evaluation reports with explicit roles - A is the BASELINE (e.g. v0.4, accepted v0.3, or
+Original v0.2) and B the CANDIDATE (e.g. v0.5) on the same prepared pack. It never launches, resumes or replays anything; selecting or
 refreshing a comparison only reads committed reports. An earlier completed baseline run is reused when its pins match:
 a different build commit alone is not a different input profile (the build is not a comparability pin), and the
 method label stored with a prepared pack describes its input requirements, not the adviser chosen for a run.
@@ -21,7 +21,16 @@ from decimal import Decimal
 from typing import Any
 
 COMPARISON_VERSION = "adviser.comparison.v1"  # shape unchanged; roles/limitations/anchors are additive keys
-SCENARIO_METHODS = ("v0.3", "v0.4")
+SCENARIO_METHODS = ("v0.3", "v0.4", "v0.5")
+ANCHOR_METHODS = ("v0.4", "v0.5")
+MP004_LIMITATION = {
+    "id": "V05_MP004_RETURN_RESPONSE_DELTA",
+    "text": ("v0.5 differs from v0.4 only in the A RETURN child: the first usable return prepares one fixed local "
+             "reference and a call needs a later complete 1m recovery beyond its favourable extreme without breaking "
+             "its contrary extreme (first recovery evaluated once). IMMEDIATE, B/C, structural scenarios and anchors, "
+             "costs, targets, deadlines and the evaluator are unchanged, but a RETURN call issued later (or not at "
+             "all) changes slot use, so later selections and outcomes can differ downstream: the integrated "
+             "difference is not a per-call attribution, and fewer stops are not improvement by themselves.")}
 MP003_LIMITATION = {
     "id": "V04_MP003_PRECONFIRMATION_ANCHOR_DELTA",
     "text": ("v0.4 differs from v0.3 only in the A pre-confirmation anchor domain (a local V touch invalidates the anchor, "
@@ -75,6 +84,22 @@ def _assurance_state(x: Any) -> str:
     return str(x or "UNKNOWN").upper()
 
 
+def release_pin(x: dict) -> dict[str, Any]:
+    """Whether a run's pinned method identity (model, rules version, rules and register hashes, implementation) is the
+    CURRENT packaged release of its method: the reuse condition of an earlier baseline run. The build commit is not part
+    of it. Reported as a fact, never silently assumed."""
+    from . import methods
+
+    try:
+        rel = methods.get(x.get("method"))
+    except methods.UnknownMethod:
+        return {"state": "UNKNOWN_METHOD", "differs": []}
+    want = {"model": rel.model, "rules_version": rel.rules_version, "rules_sha256": rel.rules_sha256(),
+            "register_sha256": rel.register_sha256(), "implementation": rel.implementation}
+    differs = [k for k, v in want.items() if x.get(k) != v]
+    return {"state": "DIFFERS_FROM_CURRENT_PACKAGE" if differs else "MATCHES_CURRENT_PACKAGE", "differs": differs}
+
+
 def comparability(a: dict, b: dict) -> dict[str, Any]:
     diffs = []
     for k in PIN_FIELDS:
@@ -93,7 +118,11 @@ def comparability(a: dict, b: dict) -> dict[str, Any]:
             "expected_differences": ["method model/rules/register/implementation identity", "build commit"]
             + (["evaluator implementation/profile ids (v2 vs v3)"] if "v0.2" in {a["method"], b["method"]}
                and a["method"] != b["method"] else []),
-            "same_method": a["method"] == b["method"]}
+            "same_method": a["method"] == b["method"],
+            "release_pins": {"a": release_pin(a), "b": release_pin(b),
+                             "note": ("a run is the current packaged release of its method only when its pinned model, "
+                                      "rules version, rules/register hashes and implementation match; an earlier "
+                                      "baseline is reused only in that case (the build commit alone is not a pin)")}}
 
 
 def _summary(x: dict) -> dict[str, Any]:
@@ -128,8 +157,17 @@ def _summary(x: dict) -> dict[str, Any]:
                              "evidence_threshold": f.get("evidence_threshold"),
                              "a_destination_before_confirmation":
                                  (f.get("a_destination_before_confirmation") or {}).get("count")}
-        if x["method"] == "v0.4":
+        if x["method"] in ANCHOR_METHODS:
             out["anchors"] = a.get("anchors")
+        if x["method"] == "v0.5":
+            resp = a.get("responses") or {}
+            out["responses"] = {"total": (resp.get("total") or {}).get("counts"),
+                                "ratios": (resp.get("total") or {}).get("ratios"),
+                                "identities_hold": (resp.get("total") or {}).get("identities_hold"),
+                                "months": {m: s.get("counts") for m, s in (resp.get("months") or {}).items()},
+                                "not_issuable_primary_reason":
+                                    ((resp.get("total") or {}).get("not_issuable") or {}).get("primary_reason"),
+                                "cutoff": resp.get("cutoff")}
     else:
         out["registered"] = {"births": f.get("births"), "arms": f.get("arms"),
                              "trigger_evaluations": f.get("trigger_evaluations"),
@@ -172,8 +210,12 @@ def build(a: dict, b: dict) -> dict[str, Any]:
                               "validated. More calls are not improvement by themselves."}
     methods = {a["method"], b["method"]}
     limitations = [DISLOCATION_LIMITATION] if "v0.2" in methods and methods & set(SCENARIO_METHODS) else []
-    if "v0.4" in methods and len(methods) > 1:
+    if "v0.4" in methods and len(methods) > 1 and methods != {"v0.4", "v0.5"}:
         limitations.append(MP003_LIMITATION)
+    if "v0.5" in methods and len(methods) > 1:
+        if methods & {"v0.2", "v0.3"}:
+            limitations.append(MP003_LIMITATION)
+        limitations.append(MP004_LIMITATION)
     return {"comparison_version": COMPARISON_VERSION, "a": sa, "b": sb, "comparability": comp,
             "roles": {"baseline": {"slot": "A", "method": a["method"], "evaluation_id": a["evaluation_id"]},
                       "candidate": {"slot": "B", "method": b["method"], "evaluation_id": b["evaluation_id"]}},
@@ -190,8 +232,9 @@ def build(a: dict, b: dict) -> dict[str, Any]:
             "scope": ("Integrated VERSION comparison on the same prepared pack and profile (A = baseline, B = "
                       "candidate): every rule difference between the two pinned releases acts together (v0.2 -> v0.3: "
                       "structural lifecycle, clocks, the RETURN entry and the dislocation-veto correction; v0.3 -> "
-                      "v0.4: the pre-confirmation A anchor domain), so the difference is not a per-rule or per-call "
-                      "attribution. Hypothetical normalized one-unit paths; no orders, sizing or account.")}
+                      "v0.4: the pre-confirmation A anchor domain; v0.4 -> v0.5: the A RETURN local reference and "
+                      "recovery), so the difference is not a per-rule or per-call attribution. Hypothetical "
+                      "normalized one-unit paths; no orders, sizing or account.")}
 
 
 def render_markdown(c: dict[str, Any]) -> str:
@@ -203,6 +246,11 @@ def render_markdown(c: dict[str, Any]) -> str:
         lines.append(f"- differs: `{d['field']}` — A `{d['a']}` · B `{d['b']}`")
     for x in comp["incomplete"]:
         lines.append(f"- incomplete: {x}")
+    rp = comp.get("release_pins") or {}
+    if rp:
+        lines.append(f"- Pinned release vs current package: A {rp['a']['state']}"
+                     + (f" ({', '.join(rp['a']['differs'])})" if rp["a"]["differs"] else "")
+                     + f" · B {rp['b']['state']}" + (f" ({', '.join(rp['b']['differs'])})" if rp["b"]["differs"] else ""))
     if c.get("limitations"):
         lines += ["", "## Comparison limitations", *(f"- **{x['id']}** — {x['text']}" for x in c["limitations"])]
     p = c["pins"]["a"]
@@ -234,6 +282,16 @@ def render_markdown(c: dict[str, Any]) -> str:
                          f"{o.get('structural_terminal_without_replacement')}; events: certified contacts "
                          f"{ev.get('certified_contacts')} · ambiguous {ev.get('ambiguous_anchors')} · replacements "
                          f"{ev.get('replacements')}")
+        if s.get("responses"):
+            r = s["responses"]
+            t = r.get("total") or {}
+            lines.append("- A RETURN response (MP-004 §7): " + " · ".join(f"{k} {t.get(k)}" for k in
+                                                                           ("W", "P", "C", "R", "N", "I", "X", "A"))
+                         + f" · identities {'hold' if r.get('identities_hold') else 'DO NOT HOLD'} · ratios "
+                         f"{r.get('ratios')} · N primary {r.get('not_issuable_primary_reason') or '{}'}")
+            for m, mc in (r.get("months") or {}).items():
+                lines.append(f"  - {m}: " + " · ".join(f"{k} {(mc or {}).get(k)}" for k in
+                                                         ("W", "P", "C", "R", "N", "I", "X", "A")))
     if c["deltas_b_minus_a"]:
         lines += ["", "## B − A (candidate minus baseline; integrated, not a per-rule attribution)",
                   *(f"- {k}: {v}" for k, v in c["deltas_b_minus_a"].items())]

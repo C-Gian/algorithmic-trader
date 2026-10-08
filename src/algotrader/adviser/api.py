@@ -141,9 +141,9 @@ def build_router(conn: Callable, data_root: Path) -> APIRouter:
         from . import methods
 
         return {"default": methods.DEFAULT, "methods": methods.selectable(),
-                "note": "v0.2 is the accepted baseline, v0.3 is technically accepted and v0.4 is shown as 'engineering "
-                        "review pending' until Director acceptance; economic usefulness is unvalidated for every "
-                        "version; stored results always show their pinned method"}
+                "note": "v0.2 is the accepted baseline, v0.3 is technically accepted; v0.4 and v0.5 are shown with "
+                        "their recorded release status until Director acceptance; economic usefulness is unvalidated "
+                        "for every version; stored results always show their pinned method"}
 
     @r.post("/live/start", status_code=201)
     def live_start(method: str | None = None) -> dict[str, Any]:

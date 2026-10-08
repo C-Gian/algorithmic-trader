@@ -3,6 +3,10 @@
 
 export type Expected = "UP" | "DOWN" | "BALANCED" | "UNCERTAIN" | "UNAVAILABLE";
 
+/** Packaged adviser releases selectable before Start (stored runs always show their pinned method). */
+export type AdviserMethod = "v0.2" | "v0.3" | "v0.4" | "v0.5";
+export const METHODS: readonly AdviserMethod[] = ["v0.2", "v0.3", "v0.4", "v0.5"];
+
 export interface ScenarioView {
   scenario_id: string;
   family: "A" | "B" | "C";
@@ -28,7 +32,13 @@ export interface AnchorState {
   replacements: number; losses: number;
 }
 
-/** v0.3/v0.4 structural scenario with its child entry state (inspection; WAIT_PRICE is never a call). */
+/** v0.5 (MP-004): the A RETURN local reference prepared by the first usable return (never a call or an entry). */
+export interface ResponseWait {
+  reference_bar: string; H0: string; L0: string; published_at: string; recovery_close: string;
+  recovery_rule: string; contradiction_rule: string; bars_checked: number;
+}
+
+/** v0.3/v0.4/v0.5 structural scenario with its child entry state (inspection; a WAIT is never a call). */
 export interface ScenarioState {
   scenario_id: string; family: "A" | "B" | "C"; family_text: string; direction: "LONG" | "SHORT";
   status: "WATCH" | "ARMED" | "CONFIRMED"; antecedent: string; trigger_level: string | null;
@@ -37,7 +47,9 @@ export interface ScenarioState {
   owner: string | null; discovery_owner: string | null; entry_state: string; call_id: string | null;
   waiting?: { text: string; corridor: [string, string] | null; stop_V: string; target_now: string;
               target_at_confirmation: string; wait_until: string; hard_deadline: string; remaining_wait_minutes: number | null;
-              blockers: string[]; caps: { cap: string; since: string; zone_id: string }[] };
+              blockers: string[]; caps: { cap: string; since: string; zone_id: string }[];
+              /** v0.5: WAIT_RETURN (waiting for a usable return) or WAIT_RESPONSE (reference prepared). */
+              phase?: "WAIT_RETURN" | "WAIT_RESPONSE"; response?: ResponseWait };
   /** v0.4: the local reaction anchor and, after an anchor loss, the observation state (never an entry). */
   anchor?: AnchorState;
   observing?: { text: string; lost_anchor: Record<string, string | null> | null; original_expiry: string };
@@ -46,6 +58,9 @@ export interface ScenarioState {
 /** One plain phrase per structural scenario state: observation, active anchor, confirmed wait - never "enter now". */
 export function scenarioPhrase(s: ScenarioState): { tone: "info" | "warn" | "neutral" | "brand"; text: string } {
   if (s.observing) return { tone: "neutral", text: "Scenario under observation; waiting for a new completed reaction" };
+  if (s.waiting?.phase === "WAIT_RESPONSE") {
+    return { tone: "info", text: "Confirmed — return reference prepared; waiting for a local recovery (not a call)" };
+  }
   if (s.waiting) return { tone: "info", text: "Confirmed — waiting for a usable price (not a call)" };
   if (s.status === "CONFIRMED") return { tone: "brand", text: "Confirmed scenario" };
   if (s.status === "ARMED") {
@@ -231,7 +246,7 @@ async function json<T>(r: Response): Promise<T> {
 
 export const adviserApi = {
   live: () => fetch("/api/adviser/live").then((r) => json<LiveStatus>(r)),
-  start: (method?: "v0.2" | "v0.3" | "v0.4") =>
+  start: (method?: AdviserMethod) =>
     fetch(`/api/adviser/live/start${method ? `?method=${method}` : ""}`, { method: "POST" }).then((r) => json<LiveStatus>(r)),
   methods: () => fetch("/api/adviser/methods").then((r) => json<{ default: string; note: string;
     methods: { method: string; label: string; purpose: string; status: string; model: string }[] }>(r)),
@@ -269,6 +284,7 @@ export const METHOD_TEXT: Record<string, string> = {
   "v0.2": "Original v0.2",
   "v0.3": "Revised v0.3 — confirmation then usable entry",
   "v0.4": "Candidate v0.4 — reaction anchor may be replaced before confirmation",
+  "v0.5": "Candidate v0.5 — RETURN waits for a local recovery",
 };
 
 /** Release status shown beside a method choice (economic usefulness is unvalidated for every version). */
@@ -276,12 +292,19 @@ export const METHOD_STATUS: Record<string, { tone: "pos" | "info" | "warn"; text
   "v0.2": { tone: "pos", text: "Baseline" },
   "v0.3": { tone: "info", text: "Technically accepted" },
   "v0.4": { tone: "warn", text: "Engineering review pending" },
+  "v0.5": { tone: "warn", text: "Engineering review pending" },
+};
+
+/** Short method identity shown on pins and results (never the current default). */
+export const METHOD_PIN: Record<string, string> = {
+  "v0.2": "MP-001 v0.2", "v0.3": "MP-002 v0.3", "v0.4": "MP-003 v0.4", "v0.5": "MP-004 v0.5",
 };
 
 export const METHOD_PURPOSE: Record<string, string> = {
   "v0.2": "The accepted MP-001 adviser exactly as evaluated so far — the fixed historical baseline.",
   "v0.3": "MP-002: a confirmed continuation may wait for a later usable price inside its reaction corridor instead of being rejected at once; scenarios persist independently of entry.",
   "v0.4": "MP-003: before confirmation, a touch of the reaction stop invalidates only that reaction anchor; the same scenario waits for a newer, deeper completed reaction. Everything after confirmation is unchanged from v0.3.",
+  "v0.5": "MP-004: in the A RETURN wait the first usable return no longer issues a call; it fixes one reference bar, and a call can only follow a later completed 1-minute close beyond that bar's favourable extreme without breaking its other extreme (first recovery evaluated once). Everything else is v0.4.",
 };
 
 export const THESIS_TEXT: Record<string, string> = {

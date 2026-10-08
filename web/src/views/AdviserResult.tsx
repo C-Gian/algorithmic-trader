@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { adviserApi, CallDetail, ENTRY_TEXT, EXPECTED_TEXT, reasonText, ROW_TEXT, scenarioPhrase, ScenarioState,
   THESIS_TEXT } from "../adviser";
-import { AdviserSection, ObsReplay } from "../api";
+import { AdviserSection, ObsReplay, ResponseKey, ResponseTally } from "../api";
 import { fmtNum, fmtTime, humanize } from "../lib/format";
 import { Badge, Card, cx, Metric, Notice, Skeleton } from "../ui/primitives";
 
@@ -89,7 +89,7 @@ function V4Anchors({ a }: { a: AdviserSection }) {
   if (!x) return null;
   return (
     <div className="stack" data-testid="adv-v4-anchors">
-      <div className="adv-section-title">Candidate v0.4 — reaction anchors before confirmation</div>
+      <div className="adv-section-title">Reaction anchors before confirmation (MP-003; v0.4 and later)</div>
       <div className="adv-metrics">
         <Metric label="Scenarios that lost an anchor" value={String(x.owners.lost_anchor)} testid="adv-v4-lost"
                 hint={`events: ${x.events.certified_contacts} certified V touches · ${x.events.ambiguous_anchors} ambiguous`} />
@@ -101,6 +101,53 @@ function V4Anchors({ a }: { a: AdviserSection }) {
                 testid="adv-v4-ended" hint={Object.entries(x.terminals_without_replacement).map(([k, n]) => `${humanize(k)} ${n}`).join(" · ") || "none"} />
       </div>
       <p className="muted small-text">{x.note}</p>
+    </div>
+  );
+}
+
+const RESPONSE_KEYS: ResponseKey[] = ["W", "P", "C", "R", "N", "I", "X", "A"];
+
+function ResponseRow({ label, t }: { label: string; t: ResponseTally }) {
+  return (
+    <tr data-testid="adv-v5-row"><td>{label}</td>
+      {RESPONSE_KEYS.map((k) => <td key={k} className="mono">{t.counts[k]}</td>)}
+      {["P/W", "C/P", "R/P", "N/R", "I/R", "I/P"].map((r) => <td key={r} className="mono">{t.ratios[r] ?? "undef."}</td>)}
+      <td>{t.identities_hold ? "yes" : <b>NO</b>}</td></tr>
+  );
+}
+
+/** MP-004 v0.5 A RETURN response accounting (§7): one row per period, the identities and the not-issuable reasons. A
+ * prepared reference or an observed recovery is never a call; ratios do not measure deterioration or quality. */
+function V5Responses({ a }: { a: AdviserSection }) {
+  const x = a.responses;
+  if (!x) return null;
+  const t = x.total;
+  const n = t.not_issuable;
+  return (
+    <div className="stack" data-testid="adv-v5-responses">
+      <div className="adv-section-title">Candidate v0.5 — RETURN reference then local recovery (MP-004 §7)</div>
+      <div className="adv-metrics">
+        <Metric label="References prepared" value={`${t.counts.P} / ${t.counts.W}`} testid="adv-v5-prepared"
+                hint={`waits routed to a return · ${t.wait_return_open} still waiting for a usable return`} />
+        <Metric label="Local recoveries observed" value={String(t.counts.R)} testid="adv-v5-recoveries"
+                hint={`issued ${t.counts.I} · not issuable ${t.counts.N} (late ${n.late_first_recovery})`} />
+        <Metric label="Contradicted before a recovery" value={String(t.counts.C)} testid="adv-v5-contradicted"
+                hint={`other endings ${t.counts.X} · still waiting for the response ${t.counts.A}`} />
+      </div>
+      <div className="small-table-wrap">
+        <table className="small-table" data-testid="adv-v5-table">
+          <thead><tr><th>Period</th>{RESPONSE_KEYS.map((k) => <th key={k} title={x.meaning[k]}>{k}</th>)}
+            {["P/W", "C/P", "R/P", "N/R", "I/R", "I/P"].map((r) => <th key={r}>{r}</th>)}<th>Identities</th></tr></thead>
+          <tbody>
+            <ResponseRow label="Total" t={t} />
+            {Object.entries(x.months ?? {}).map(([m, s]) => <ResponseRow key={m} label={m} t={s} />)}
+          </tbody>
+        </table>
+      </div>
+      <div className="small-text muted">{RESPONSE_KEYS.map((k) => `${k} ${x.meaning[k]}`).join(" · ")}</div>
+      <div className="small-text muted">Not issuable — primary reason: {Object.entries(n.primary_reason).map(([k, v]) => `${humanize(k)} ${v}`).join(" · ") || "none"}
+        {" · "}other endings: {Object.entries(t.other_endings_by_priority_cause).map(([k, v]) => `${humanize(k)} ${v}`).join(" · ") || "none"}</div>
+      <p className="muted small-text">Cutoff {fmtTime(x.cutoff)}: {x.cutoff_meaning}. {x.months_attribution ?? ""} {x.note}</p>
     </div>
   );
 }
@@ -135,8 +182,9 @@ export function AdviserSummary({ a }: { a: AdviserSection }) {
           {a.diagnosis.map((d) => <div key={d}>{d}</div>)}
         </Notice>
       )}
-      {(a.report_version === "adviser.report.v3" || a.report_version === "adviser.report.v4") && <V3Funnel a={a} />}
-      {a.report_version === "adviser.report.v4" && <V4Anchors a={a} />}
+      {["adviser.report.v3", "adviser.report.v4", "adviser.report.v5"].includes(a.report_version ?? "") && <V3Funnel a={a} />}
+      {["adviser.report.v4", "adviser.report.v5"].includes(a.report_version ?? "") && <V4Anchors a={a} />}
+      {a.report_version === "adviser.report.v5" && <V5Responses a={a} />}
       <div className="adv-section-title">{a.report_version === "adviser.report.v2" || !a.report_version ? "Candidate funnel" : "Scenario funnel"}</div>
       <div className="funnel" data-testid="adv-funnel">
         <span className="step">births {Object.values(a.funnel.births).reduce((x, y) => x + y, 0)}</span>›

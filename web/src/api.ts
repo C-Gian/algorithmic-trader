@@ -857,7 +857,7 @@ export interface Evaluation {
 }
 
 export interface AdviserMethodPin {
-  method: "v0.2" | "v0.3" | "v0.4" | string; label: string; status: string; model: string; pinned_at_preparation: boolean;
+  method: "v0.2" | "v0.3" | "v0.4" | "v0.5" | string; label: string; status: string; model: string; pinned_at_preparation: boolean;
   status_label?: string; economic_usefulness?: string;
 }
 
@@ -931,6 +931,8 @@ export interface AdviserSection {
   method?: { method: string; model: string; status: string; status_label?: string; economic_usefulness?: string };
   /** adviser.report.v4 (MP-003 v0.4): pre-confirmation anchor diagnostics (owner level vs event level). */
   anchors?: AnchorDiagnostics;
+  /** adviser.report.v5 (MP-004 v0.5): A RETURN response accounting (MP-004 §7), total and monthly. */
+  responses?: ResponseAccounting;
   by_family_mode?: Record<string, { calls: number; entered: number; target: number; stop: number; other_closed: number;
                                     no_entry: number; sum_price_net: string }>;
   identity: Record<string, unknown>;
@@ -980,6 +982,22 @@ export interface AnchorDiagnostics {
   terminals_without_replacement: Record<string, number>; calls_after_replacement: number; note: string;
 }
 
+export type ResponseKey = "W" | "P" | "C" | "R" | "N" | "I" | "X" | "A";
+export interface ResponseTally {
+  counts: Record<ResponseKey, number>; ratios: Record<string, string | null>; by_direction: Record<string, Record<ResponseKey, number>>;
+  ended_before_reference: Record<string, number>; wait_return_open: number;
+  not_issuable: { primary_reason: Record<string, number>; primary_class: Record<string, number>;
+                  blocker_incidence_not_summable: Record<string, number>; late_first_recovery: number };
+  other_endings_by_priority_cause: Record<string, number>; identities: Record<string, boolean>; identities_hold: boolean;
+}
+export interface ResponseAccounting {
+  unit: string; meaning: Record<ResponseKey, string>; cutoff: string | null; cutoff_meaning: string; total: ResponseTally;
+  months?: Record<string, ResponseTally>; months_attribution?: string;
+  months_reconcile?: { months_sum_to_total: boolean; every_month_identities_hold: boolean };
+  warmup: { children: number; cleared_at_evaluation_start: Record<string, number>; other_warmup_endings: number; note: string };
+  report_cross_checks?: Record<string, boolean>; note: string;
+}
+
 export interface ComparisonRun {
   evaluation_id: string; method: string; model: string; implementation: string; status: string; assurance: string;
   report_version: string | null;
@@ -989,11 +1007,15 @@ export interface ComparisonRun {
   longest_no_call_interval_hours: string | null; thesis_terminals: Record<string, number> | null;
   primary: Record<string, number | string | null>; registered: Record<string, unknown>;
   anchors?: AnchorDiagnostics | null;
+  responses?: { total: Record<ResponseKey, number> | null; ratios: Record<string, string | null> | null;
+                identities_hold: boolean | null; months: Record<string, Record<ResponseKey, number> | null>;
+                not_issuable_primary_reason: Record<string, number> | null; cutoff: string | null } | null;
 }
 export interface Comparison {
   comparison_version: string; a: ComparisonRun; b: ComparisonRun;
   comparability: { verdict: string; differences: { field: string; a: unknown; b: unknown }[]; incomplete: string[];
-                   not_adviser_runs: string[]; expected_differences: string[]; same_method: boolean };
+                   not_adviser_runs: string[]; expected_differences: string[]; same_method: boolean;
+                   release_pins?: { a: { state: string; differs: string[] }; b: { state: string; differs: string[] }; note: string } };
   pins: { a: Record<string, unknown>; b: Record<string, unknown> };
   identities: { a: Record<string, string | null>; b: Record<string, string | null> };
   deltas_b_minus_a: Record<string, string | null> | null; conclusion: { verdict: string; text: string }; scope: string;
@@ -1087,7 +1109,7 @@ export const evalApi = {
   start: (chunkId: string, speed: number, paused: boolean) =>
     req<Evaluation>(E, { method: "POST", body: JSON.stringify({ chunk_id: chunkId, speed, paused }) }),
   startPack: (packId: string, speed: number, paused: boolean, acknowledge: boolean,
-              runType: "observation_only" | "adviser_evaluation" = "observation_only", method?: "v0.2" | "v0.3" | "v0.4") =>
+              runType: "observation_only" | "adviser_evaluation" = "observation_only", method?: "v0.2" | "v0.3" | "v0.4" | "v0.5") =>
     req<Evaluation>(E, { method: "POST", body: JSON.stringify({ pack_id: packId, speed, paused, acknowledge_limitations: acknowledge,
                                                               run_type: runType,
                                                               ...(runType === "adviser_evaluation" && method ? { method } : {}) }) }),

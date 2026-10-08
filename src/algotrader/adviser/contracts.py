@@ -28,7 +28,7 @@ from pydantic import BaseModel, ConfigDict
 
 SEMANTIC_V2_VERSION = "algotrader.semantic.v2"
 SEMANTIC_V2_STATUS = "PROVISIONAL"
-SEMANTIC_V2_REVISION = 3
+SEMANTIC_V2_REVISION = 4
 SEMANTIC_V2_CHANGELOG: tuple[tuple[int, str, str], ...] = (
     (1, "2026-10-04", "Initial provisional advisory baseline (WP-009): Observation, Landmark, PhaseState, "
                       "EventContext/EventResponse, MarketView, Scenario, CandidatePlan, Actionability, AdviserCall, "
@@ -48,9 +48,20 @@ SEMANTIC_V2_CHANGELOG: tuple[tuple[int, str, str], ...] = (
                       "Every other v0.4 kind uses the revision-2 contracts unchanged. Revision-1/2 records, their bytes "
                       "and readers are unchanged; v0.2/v0.3 runs never emit the variant (per-method emitted revision: "
                       "v0.2 -> 1, v0.3 -> 2, v0.4 -> 3)."),
+    (4, "2026-10-08", "WP-014 MP-004 btc.context-action.v0.5 (additive): variant EntryAttemptV5 of the 'entry_attempt' "
+                      "kind adds 'response' - the A RETURN local reference (bar, H0/L0, close, interval, actual "
+                      "publication p0 and admitted cursor c0), the phase WAIT_RETURN/WAIT_RESPONSE, the complete bars "
+                      "checked in the local domain and, on the closing record, the decisive bar and outcome "
+                      "(ISSUED / NOT_ISSUABLE with every blocker and one primary reason / CONTRADICTED / UNASSESSABLE "
+                      "/ ENDED_BY_PRIORITY_CAUSE / CLEARED); null for IMMEDIATE, B/C and children without a "
+                      "reference. New values only: entry state WAIT_RESPONSE, transition RESPONSE_REFERENCE, reasons "
+                      "LOCAL_RESPONSE_CONTRADICTED, LOCAL_CONTACT_TIME_AMBIGUOUS and RESPONSE_NOT_ISSUABLE. Every other "
+                      "v0.5 kind uses the revision-3 contracts unchanged. Revision-1/2/3 records, their bytes and "
+                      "readers are unchanged; v0.2/v0.3/v0.4 runs never emit the variant (per-method emitted "
+                      "revision: v0.2 -> 1, v0.3 -> 2, v0.4 -> 3, v0.5 -> 4)."),
 )
 SEMANTIC_V2_EMITTED_REVISION = {"btc.context-action.v0.2": 1, "btc.context-action.v0.3": 2,
-                                "btc.context-action.v0.4": 3}
+                                "btc.context-action.v0.4": 3, "btc.context-action.v0.5": 4}
 
 
 class Record(BaseModel):
@@ -417,10 +428,22 @@ class ScenarioStateV4(ScenarioState):
     destination_monitoring_cursor: int | None
 
 
+class EntryAttemptV5(EntryAttempt):
+    """Revision 4 (MP-004 v0.5): the child entry attempt plus the A RETURN local response provenance.
+
+    ``response`` is null until the first usable return prepares the single immutable reference; afterwards it carries
+    the reference bar/interval, H0/L0 and close, the actual publication (p0) and admitted cursor (c0) - never the
+    nominal bar end - the phase, the complete bars examined in the local domain and, on the closing record, the
+    decisive bar and outcome. A first recovery is a transient event: it is never stored as a confirmation; the
+    dispatch ends with ISSUE or a terminal record carrying the observation. Exact decimal strings."""
+
+    response: dict[str, str | None] | None
+
+
 PUBLIC_CONTRACTS: tuple[type[Record], ...] = (
     MethodRef, DependencyRef, Envelope, Observation, Landmark, PhaseState, EventContext, EventResponse, Scenario,
     MarketView, CandidatePlan, Actionability, AdviserCall, CallRevision, MaterialChange, ScenarioV3, MarketViewV3,
-    AdviserCallV3, CallRevisionV3, ScenarioState, EntryAttempt, ScenarioStateV4,
+    AdviserCallV3, CallRevisionV3, ScenarioState, EntryAttempt, ScenarioStateV4, EntryAttemptV5,
 )
 KIND_CONTRACTS: dict[str, type[Record]] = {  # revision-1 kinds emitted by v0.2 (unchanged)
     "observation": Observation, "landmark": Landmark, "phase": PhaseState, "event_context": EventContext,
@@ -435,7 +458,8 @@ KIND_CONTRACTS_V3: dict[str, type[Record]] = {  # kinds emitted by v0.3 (no 'can
     "scenario": ScenarioState, "entry_attempt": EntryAttempt,
 }
 KIND_CONTRACTS_V4: dict[str, type[Record]] = {**KIND_CONTRACTS_V3, "scenario": ScenarioStateV4}  # v0.4 (revision 3)
+KIND_CONTRACTS_V5: dict[str, type[Record]] = {**KIND_CONTRACTS_V4, "entry_attempt": EntryAttemptV5}  # v0.5 (revision 4)
 
 __all__ = ["SEMANTIC_V2_VERSION", "SEMANTIC_V2_REVISION", "PUBLIC_CONTRACTS", "KIND_CONTRACTS", "Origin", "Direction",
-           "Family", "KIND_CONTRACTS_V3", "KIND_CONTRACTS_V4"]
+           "Family", "KIND_CONTRACTS_V3", "KIND_CONTRACTS_V4", "KIND_CONTRACTS_V5"]
 _ = Decimal  # exact decimal strings in JSON mode

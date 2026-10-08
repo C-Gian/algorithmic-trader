@@ -1337,6 +1337,239 @@
       "title": "EntryAttempt",
       "type": "object"
     },
+    "EntryAttemptV5": {
+      "additionalProperties": false,
+      "description": "Revision 4 (MP-004 v0.5): the child entry attempt plus the A RETURN local response provenance.\n\n``response`` is null until the first usable return prepares the single immutable reference; afterwards it carries\nthe reference bar/interval, H0/L0 and close, the actual publication (p0) and admitted cursor (c0) - never the\nnominal bar end - the phase, the complete bars examined in the local domain and, on the closing record, the\ndecisive bar and outcome. A first recovery is a transient event: it is never stored as a confirmation; the\ndispatch ends with ISSUE or a terminal record carrying the observation. Exact decimal strings.",
+      "properties": {
+        "blockers": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Blockers",
+          "type": "array"
+        },
+        "call_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Call Id"
+        },
+        "cap_history": {
+          "items": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object"
+          },
+          "title": "Cap History",
+          "type": "array"
+        },
+        "clocks": {
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "title": "Clocks",
+          "type": "object"
+        },
+        "containing_zones": {
+          "items": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object"
+          },
+          "title": "Containing Zones",
+          "type": "array"
+        },
+        "diagnostic": {
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "title": "Diagnostic",
+          "type": "object"
+        },
+        "direction": {
+          "$ref": "#/$defs/Direction"
+        },
+        "entry_attempt_id": {
+          "title": "Entry Attempt Id",
+          "type": "string"
+        },
+        "env": {
+          "$ref": "#/$defs/Envelope"
+        },
+        "family": {
+          "$ref": "#/$defs/Family"
+        },
+        "geometry": {
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "title": "Geometry",
+          "type": "object"
+        },
+        "limiting_landmark": {
+          "anyOf": [
+            {
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Limiting Landmark"
+        },
+        "mode": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Mode"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Reason"
+        },
+        "response": {
+          "anyOf": [
+            {
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Response"
+        },
+        "scenario_id": {
+          "title": "Scenario Id",
+          "type": "string"
+        },
+        "selected_zone": {
+          "anyOf": [
+            {
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Selected Zone"
+        },
+        "state": {
+          "title": "State",
+          "type": "string"
+        },
+        "transition": {
+          "title": "Transition",
+          "type": "string"
+        }
+      },
+      "required": [
+        "env",
+        "entry_attempt_id",
+        "scenario_id",
+        "family",
+        "direction",
+        "state",
+        "mode",
+        "transition",
+        "reason",
+        "blockers",
+        "call_id",
+        "geometry",
+        "containing_zones",
+        "selected_zone",
+        "limiting_landmark",
+        "cap_history",
+        "clocks",
+        "diagnostic",
+        "response"
+      ],
+      "title": "EntryAttemptV5",
+      "type": "object"
+    },
     "Envelope": {
       "additionalProperties": false,
       "properties": {
@@ -3259,12 +3492,18 @@
       "date": "2026-10-06",
       "note": "WP-012 MP-003 btc.context-action.v0.4 (additive): variant ScenarioStateV4 of the 'scenario' kind adds the pre-confirmation A local anchor provenance - anchor epoch/status/source bar, actual anchor publication time and admitted cursor, the lost or superseded anchor (geometry, reason, contact interval and its end), ever_armed and the immutable first-arm destination-monitoring origin (time and cursor) - and the transitions ANCHOR_LOST and REARM (prospective replacement). Every other v0.4 kind uses the revision-2 contracts unchanged. Revision-1/2 records, their bytes and readers are unchanged; v0.2/v0.3 runs never emit the variant (per-method emitted revision: v0.2 -> 1, v0.3 -> 2, v0.4 -> 3).",
       "revision": 3
+    },
+    {
+      "date": "2026-10-08",
+      "note": "WP-014 MP-004 btc.context-action.v0.5 (additive): variant EntryAttemptV5 of the 'entry_attempt' kind adds 'response' - the A RETURN local reference (bar, H0/L0, close, interval, actual publication p0 and admitted cursor c0), the phase WAIT_RETURN/WAIT_RESPONSE, the complete bars checked in the local domain and, on the closing record, the decisive bar and outcome (ISSUED / NOT_ISSUABLE with every blocker and one primary reason / CONTRADICTED / UNASSESSABLE / ENDED_BY_PRIORITY_CAUSE / CLEARED); null for IMMEDIATE, B/C and children without a reference. New values only: entry state WAIT_RESPONSE, transition RESPONSE_REFERENCE, reasons LOCAL_RESPONSE_CONTRADICTED, LOCAL_CONTACT_TIME_AMBIGUOUS and RESPONSE_NOT_ISSUABLE. Every other v0.5 kind uses the revision-3 contracts unchanged. Revision-1/2/3 records, their bytes and readers are unchanged; v0.2/v0.3/v0.4 runs never emit the variant (per-method emitted revision: v0.2 -> 1, v0.3 -> 2, v0.4 -> 3, v0.5 -> 4).",
+      "revision": 4
     }
   ],
   "emitted_revision_by_model": {
     "btc.context-action.v0.2": 1,
     "btc.context-action.v0.3": 2,
-    "btc.context-action.v0.4": 3
+    "btc.context-action.v0.4": 3,
+    "btc.context-action.v0.5": 4
   },
   "journal_kinds": {
     "actionability": "#/$defs/Actionability",
@@ -3307,6 +3546,20 @@
     "phase": "#/$defs/PhaseState",
     "scenario": "#/$defs/ScenarioStateV4"
   },
+  "journal_kinds_v5": {
+    "actionability": "#/$defs/Actionability",
+    "call": "#/$defs/AdviserCallV3",
+    "call_revision": "#/$defs/CallRevisionV3",
+    "entry_attempt": "#/$defs/EntryAttemptV5",
+    "event_context": "#/$defs/EventContext",
+    "event_response": "#/$defs/EventResponse",
+    "landmark": "#/$defs/Landmark",
+    "market_view": "#/$defs/MarketViewV3",
+    "material_change": "#/$defs/MaterialChange",
+    "observation": "#/$defs/Observation",
+    "phase": "#/$defs/PhaseState",
+    "scenario": "#/$defs/ScenarioStateV4"
+  },
   "public_contracts": {
     "Actionability": "#/$defs/Actionability",
     "AdviserCall": "#/$defs/AdviserCall",
@@ -3316,6 +3569,7 @@
     "CandidatePlan": "#/$defs/CandidatePlan",
     "DependencyRef": "#/$defs/DependencyRef",
     "EntryAttempt": "#/$defs/EntryAttempt",
+    "EntryAttemptV5": "#/$defs/EntryAttemptV5",
     "Envelope": "#/$defs/Envelope",
     "EventContext": "#/$defs/EventContext",
     "EventResponse": "#/$defs/EventResponse",
@@ -3331,7 +3585,7 @@
     "ScenarioStateV4": "#/$defs/ScenarioStateV4",
     "ScenarioV3": "#/$defs/ScenarioV3"
   },
-  "revision": 3,
+  "revision": 4,
   "schema_version": "algotrader.semantic.v2",
   "status": "PROVISIONAL",
   "title": "Algorithmic Trader advisory semantic contracts (algotrader.semantic.v2, PROVISIONAL)"

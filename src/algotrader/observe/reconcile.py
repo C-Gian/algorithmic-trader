@@ -84,13 +84,14 @@ VALIDATOR_SCOPE_PACK = VALIDATOR_SCOPE_TEMPORAL + (
 VALIDATOR_VERSION_ADVISER = "5"
 VALIDATOR_VERSION_ADVISER_V3 = "6"  # WP-011: MP-002 v0.3 adviser runs (engine observe.stream.v4)
 VALIDATOR_VERSION_ADVISER_V4 = "7"  # WP-012: MP-003 v0.4 adviser runs (engine observe.stream.v5)
+VALIDATOR_VERSION_ADVISER_V5 = "8"  # WP-014: MP-004 v0.5 adviser runs (engine observe.stream.v6)
 
 
 def _adviser_scope(method: str | None = None) -> str:
-    from ..adviser.reconcile import SCOPE, SCOPE_V6, SCOPE_V7
+    from ..adviser.reconcile import SCOPE, SCOPE_V6, SCOPE_V7, SCOPE_V8
 
-    return (VALIDATOR_SCOPE_PACK + SCOPE + (SCOPE_V6 if method in ("v0.3", "v0.4") else "")
-            + (SCOPE_V7 if method == "v0.4" else ""))
+    return (VALIDATOR_SCOPE_PACK + SCOPE + (SCOPE_V6 if method in ("v0.3", "v0.4", "v0.5") else "")
+            + (SCOPE_V7 if method in ("v0.4", "v0.5") else "") + (SCOPE_V8 if method == "v0.5" else ""))
 
 
 def _adviser_method(engine: dict[str, Any]) -> str | None:
@@ -131,7 +132,8 @@ def reconcile(*, status: ReplayStatus, cache: FeedCache, ranges: list[dict[str, 
 
     temporal_cfg = engine.get("temporal")
     method = _adviser_method(engine)
-    version, scope = ((VALIDATOR_VERSION_ADVISER_V4, _adviser_scope("v0.4")) if method == "v0.4" else
+    version, scope = ((VALIDATOR_VERSION_ADVISER_V5, _adviser_scope("v0.5")) if method == "v0.5" else
+                      (VALIDATOR_VERSION_ADVISER_V4, _adviser_scope("v0.4")) if method == "v0.4" else
                       (VALIDATOR_VERSION_ADVISER_V3, _adviser_scope("v0.3")) if method == "v0.3" else
                       (VALIDATOR_VERSION_ADVISER, _adviser_scope()) if engine.get("adviser") else
                       (VALIDATOR_VERSION_PACK, VALIDATOR_SCOPE_PACK) if engine.get("pack") else

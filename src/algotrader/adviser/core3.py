@@ -264,6 +264,7 @@ class AdviserCoreV3(AdviserCore):
     # method-dependent classes / formats (WP-012: a later release subclasses this fold and overrides only these hooks
     # and the named semantics; for v0.3 every hook is the identity, so its outputs and state bytes are unchanged)
     SCEN_CLS: type[Scen] = Scen
+    WAIT_CLS: type[Wait] = Wait
     STATE_FMT = STATE_FORMAT
     KINDS = sc.KIND_CONTRACTS_V3
 
@@ -1101,7 +1102,7 @@ class AdviserCoreV3(AdviserCore):
             self._entry_end(s, "TERMINAL", "TERMINAL", "NO_ECONOMIC_RETURN_REGION", t, **common)
             return None
         cor_t = self._corridor(s, v_real, t_real)
-        w = Wait(sid=s.sid, d=d, conf_at=t, conf_cursor=self.cursor, setup_deadline=s.setup_deadline, hard=hard,
+        w = self.WAIT_CLS(sid=s.sid, d=d, conf_at=t, conf_cursor=self.cursor, setup_deadline=s.setup_deadline, hard=hard,
                  v=v_real, t_conf=t_real, cap=t_real,
                  caps=[{"cap": str(t_real), "since": _iso(t), "cursor": str(self.cursor), "zone_id": "T_CONFIRM",
                         "near_edge": str(t_real)}],
@@ -1178,7 +1179,6 @@ class AdviserCoreV3(AdviserCore):
 
     def _waits(self, minutes: list[Bar], t: datetime) -> list[dict]:
         out: list[dict] = []
-        p, tick = self.p, self.tick
         for eid in sorted(self.waits):
             w = self.waits.get(eid)
             if w is None:
@@ -1186,117 +1186,143 @@ class AdviserCoreV3(AdviserCore):
             s = self.scen.get(w.sid)
             if s is None:  # scenario terminal already ended the child
                 continue
-            d = w.d
-            # (1) timers and pre-issue withdrawals (expiry before issue at equality)
-            if t >= w.setup_deadline:
-                self._wait_end(s, w, "ORIGINAL_SETUP_DEADLINE", t)
+            zones = self._wait_protect(s, w, minutes, t)
+            if zones is None:
                 continue
-            if not self._a_context_ok(s, t):
-                self._wait_end(s, w, f"CONTEXT_FORBIDDEN_PREISSUE:{self.context(t)}/{self.phase_now(t)}", t)
-                continue
-            # (2) newly admitted intervals against the cap active at their START
-            ended = False
-            for m in minutes:
-                if m.end <= w.conf_at:
-                    continue
-                _, h_t, _, _ = tbar(m, d)
-                if m.start < w.conf_at:
-                    if h_t >= w.t_conf * d:
-                        self._wait_end(s, w, "PRE_ENTRY_CONTACT_TIME_AMBIGUOUS", t)
-                        ended = True
-                        break
-                    continue
-                straddled = [Decimal(c["cap"]) * d for c in w.caps if m.start < _dt(c["since"]) < m.end]
-                if straddled and h_t >= min(straddled):
-                    self._wait_end(s, w, "CAP_ACTIVATION_CONTACT_AMBIGUOUS", t)
-                    ended = True
-                    break
-                cap_start = Decimal(next(c["cap"] for c in reversed(w.caps) if _dt(c["since"]) <= m.start)) * d
-                if h_t >= cap_start:
-                    self._wait_end(s, w, "PRE_ENTRY_TARGET_CONTACT", t)
-                    ended = True
-                    break
-            if ended:
-                continue
-            # (3) causal cap activation from newly eligible opposing zones (first eligibility after confirmation)
-            zones = self._zones(d, t)
-            for z in zones:
-                if z[4] in w.seen:
-                    continue
-                w.seen.append(z[4])
-                near, far = z[0], z[1]
-                v_t, cap_t = w.v * d, w.cap_t()
-                if v_t < near < cap_t:
-                    new_t = _tick_floor(near, tick)
-                    close_t = self.last_1m.c * d if self.last_1m is not None else None
-                    exe = self._side_price(d, t)[0]
-                    exe_t = exe * d if exe is not None and self.cfg.profile.execution == Execution.LIVE_QUOTED else None
-                    if (close_t is not None and new_t <= close_t) or (exe_t is not None and new_t <= exe_t):
-                        self._wait_end(s, w, "CAP_NOT_AHEAD_NOW", t, zone=z)
-                        ended = True
-                        break
-                    if any(m.start < t <= m.end and tbar(m, d)[1] >= new_t for m in minutes):
-                        self._wait_end(s, w, "CAP_ACTIVATION_CONTACT_AMBIGUOUS", t, zone=z)
-                        ended = True
-                        break
-                    w.cap = new_t * d
-                    w.caps.append({"cap": str(w.cap), "since": _iso(t), "cursor": str(self.cursor), "zone_id": z[4],
-                                   "near_edge": str(near * d)})
-                    self.counters["v3"]["cap_revisions"] += 1
-                    self._emit_wait(s, w, "CAP_REVISION", f"NEW_ELIGIBLE_ZONE:{z[4]}", t)
-                elif near <= v_t < far:
-                    self.counters["v3"]["zone_crossing_v_exclusions"] += 1
-            if ended:
-                continue
-            cor = w.corridor(tick)
-            if cor is None:
-                self._wait_end(s, w, "EMPTY_RETURN_CORRIDOR", t)
-                continue
-            price, source, k, qb = self._side_price(d, t)
-            hist = self.cfg.profile.execution == Execution.HISTORICAL_BASE
-            econ = geo.admissible_bounds(d, cor, w.v, w.cap, k, p.rr_min, tick) if k is not None else None
-            if hist and econ is None:
-                self._wait_end(s, w, "NO_ECONOMIC_RETURN_REGION", t)
-                continue
-            # (4) return gates on the latest newly admitted complete minute
-            m = minutes[-1] if minutes and minutes[-1].start >= w.conf_at else None
-            if m is None:
-                continue
-            w.samples += 1
-            blockers: list[str] = []
-            if not cor[0] <= m.c <= cor[1]:
-                blockers.append("CLOSE_OUTSIDE_RETURN_CORRIDOR")
-            if any(z[0] <= m.c * d <= z[1] for z in zones):
-                blockers.append("BLOCKED_BY_ZONE")
-            if hist:
-                price, source = m.c, "MODELED_RETURN_COMPLETE_MINUTE_CLOSE"
-            chk = None
-            if price is not None and k is not None:
-                if not hist:
-                    if not cor[0] <= price <= cor[1]:
-                        blockers.append("SIDE_PRICE_OUTSIDE_RETURN_CORRIDOR")
-                    if any(z[0] <= price * d <= z[1] for z in zones):
-                        blockers.append("SIDE_PRICE_INSIDE_OPPOSING_ZONE")
-                    if econ is None:
-                        blockers.append("TEMPORARY_COST_BLOCKED")
-                chk = geo.predicate(d, price, w.v, w.cap, k, p.rr_min)
-                if not chk.ok:
-                    blockers.append(chk.reason)
-            blockers += qb + self._nonselection(s, t, None, zones)
-            if w.hard - t < timedelta(minutes=p.residual_min["A"]):
-                blockers.append("TOO_LATE")
-            blockers = sorted(set(blockers))
-            if blockers != w.blockers:
-                w.blockers = blockers
-                self._emit_wait(s, w, "BLOCKERS", None, t, price=price, k=k, chk=chk, econ=econ)
-            if not blockers:
-                self.counters["v3"]["usable_returns"] += 1
-                self._emit_wait(s, w, "RETURN_USABLE", m.rid, t, price=price, k=k, chk=chk, econ=econ)
-                out.append({"s": s, "m": m, "mode": "RETURN", "price": price, "source": source, "k": k, "chk": chk,
-                            "geom": {"v": w.v, "t": w.cap, "area": cor, "type": "LANDMARK" if len(w.caps) == 1 else
-                                     "LANDMARK_CAP", "limiting": None},
-                            "blockers": [], "rec": None, "ref": m.c, "wait": w})
+            e = self._wait_step(s, w, minutes, zones, t)
+            if e is not None:
+                out.append(e)
         return out
+
+    def _wait_protect(self, s: Scen, w: Wait, minutes: list[Bar], t: datetime) -> list | None:
+        """WAIT steps (1)-(3): timers/context, admitted intervals against the caps active at their start and causal
+        cap activation. Returns the eligible opposing zones, or None when the child ended here."""
+        tick, d = self.tick, w.d
+        # (1) timers and pre-issue withdrawals (expiry before issue at equality)
+        if t >= w.setup_deadline:
+            self._wait_end(s, w, "ORIGINAL_SETUP_DEADLINE", t)
+            return None
+        if not self._a_context_ok(s, t):
+            self._wait_end(s, w, f"CONTEXT_FORBIDDEN_PREISSUE:{self.context(t)}/{self.phase_now(t)}", t)
+            return None
+        # (2) newly admitted intervals against the cap active at their START
+        for m in minutes:
+            if m.end <= w.conf_at:
+                continue
+            _, h_t, _, _ = tbar(m, d)
+            if m.start < w.conf_at:
+                if h_t >= w.t_conf * d:
+                    self._wait_end(s, w, "PRE_ENTRY_CONTACT_TIME_AMBIGUOUS", t)
+                    return None
+                continue
+            straddled = [Decimal(c["cap"]) * d for c in w.caps if m.start < _dt(c["since"]) < m.end]
+            if straddled and h_t >= min(straddled):
+                self._wait_end(s, w, "CAP_ACTIVATION_CONTACT_AMBIGUOUS", t)
+                return None
+            cap_start = Decimal(next(c["cap"] for c in reversed(w.caps) if _dt(c["since"]) <= m.start)) * d
+            if h_t >= cap_start:
+                self._wait_end(s, w, "PRE_ENTRY_TARGET_CONTACT", t)
+                return None
+        # (3) causal cap activation from newly eligible opposing zones (first eligibility after confirmation)
+        zones = self._zones(d, t)
+        for z in zones:
+            if z[4] in w.seen:
+                continue
+            w.seen.append(z[4])
+            near, far = z[0], z[1]
+            v_t, cap_t = w.v * d, w.cap_t()
+            if v_t < near < cap_t:
+                new_t = _tick_floor(near, tick)
+                close_t = self.last_1m.c * d if self.last_1m is not None else None
+                exe = self._side_price(d, t)[0]
+                exe_t = exe * d if exe is not None and self.cfg.profile.execution == Execution.LIVE_QUOTED else None
+                if (close_t is not None and new_t <= close_t) or (exe_t is not None and new_t <= exe_t):
+                    self._wait_end(s, w, "CAP_NOT_AHEAD_NOW", t, zone=z)
+                    return None
+                if any(m.start < t <= m.end and tbar(m, d)[1] >= new_t for m in minutes):
+                    self._wait_end(s, w, "CAP_ACTIVATION_CONTACT_AMBIGUOUS", t, zone=z)
+                    return None
+                w.cap = new_t * d
+                w.caps.append({"cap": str(w.cap), "since": _iso(t), "cursor": str(self.cursor), "zone_id": z[4],
+                               "near_edge": str(near * d)})
+                self.counters["v3"]["cap_revisions"] += 1
+                self._emit_wait(s, w, "CAP_REVISION", f"NEW_ELIGIBLE_ZONE:{z[4]}", t)
+            elif near <= v_t < far:
+                self.counters["v3"]["zone_crossing_v_exclusions"] += 1
+        return zones
+
+    def _wait_step(self, s: Scen, w: Wait, minutes: list[Bar], zones: list, t: datetime) -> dict | None:
+        """WAIT step (4): corridor/economic terminals, then the return gates on the latest newly admitted complete
+        minute. Returns a selection candidate for a usable return."""
+        p, tick, d = self.p, self.tick, w.d
+        cor = w.corridor(tick)
+        if cor is None:
+            self._wait_end(s, w, "EMPTY_RETURN_CORRIDOR", t)
+            return None
+        price, source, k, qb = self._side_price(d, t)
+        hist = self.cfg.profile.execution == Execution.HISTORICAL_BASE
+        econ = geo.admissible_bounds(d, cor, w.v, w.cap, k, p.rr_min, tick) if k is not None else None
+        if hist and econ is None:
+            self._wait_end(s, w, "NO_ECONOMIC_RETURN_REGION", t)
+            return None
+        # (4) return gates on the latest newly admitted complete minute
+        m = minutes[-1] if minutes and minutes[-1].start >= w.conf_at else None
+        if m is None:
+            return None
+        w.samples += 1
+        blockers, price, source, chk = self._return_gates(s, w, m, cor, econ, zones, price, source, k, qb, t)
+        if blockers != w.blockers:
+            w.blockers = blockers
+            self._emit_wait(s, w, "BLOCKERS", None, t, price=price, k=k, chk=chk, econ=econ)
+        if not blockers:
+            return self._return_usable(s, w, m, cor, econ, price, source, k, chk, t)
+        return None
+
+    def _return_gates(self, s: Scen, w: Wait, m: Bar, cor: tuple[Decimal, Decimal] | None, econ, zones: list,
+                      price, source, k, qb: list[str], t: datetime) -> tuple[list[str], Any, Any, Any]:
+        """Every return gate of one complete minute (sorted distinct blockers, evaluation price/source, predicate).
+        ``cor`` None (an empty effective corridor) is only passed by a later release whose corridor is evaluated at
+        its decisive bar (WP-014); v0.3/v0.4 terminate on it before sampling."""
+        p, d = self.p, w.d
+        hist = self.cfg.profile.execution == Execution.HISTORICAL_BASE
+        blockers: list[str] = []
+        if cor is None:
+            blockers.append("EMPTY_RETURN_CORRIDOR")
+        elif not cor[0] <= m.c <= cor[1]:
+            blockers.append("CLOSE_OUTSIDE_RETURN_CORRIDOR")
+        if any(z[0] <= m.c * d <= z[1] for z in zones):
+            blockers.append("BLOCKED_BY_ZONE")
+        if hist:
+            price, source = m.c, "MODELED_RETURN_COMPLETE_MINUTE_CLOSE"
+        chk = None
+        if price is not None and k is not None:
+            if not hist:
+                if cor is not None and not cor[0] <= price <= cor[1]:
+                    blockers.append("SIDE_PRICE_OUTSIDE_RETURN_CORRIDOR")
+                if any(z[0] <= price * d <= z[1] for z in zones):
+                    blockers.append("SIDE_PRICE_INSIDE_OPPOSING_ZONE")
+                if econ is None:
+                    blockers.append("TEMPORARY_COST_BLOCKED")
+            chk = geo.predicate(d, price, w.v, w.cap, k, p.rr_min)
+            if not chk.ok:
+                blockers.append(chk.reason)
+        blockers += qb + self._nonselection(s, t, None, zones)
+        if w.hard - t < timedelta(minutes=p.residual_min["A"]):
+            blockers.append("TOO_LATE")
+        return sorted(set(blockers)), price, source, chk
+
+    def _return_usable(self, s: Scen, w: Wait, m: Bar, cor: tuple[Decimal, Decimal], econ, price, source, k, chk,
+                       t: datetime) -> dict | None:
+        """A fully actionable return minute: v0.3/v0.4 enter the joint slot/conflict/priority selection once."""
+        self.counters["v3"]["usable_returns"] += 1
+        self._emit_wait(s, w, "RETURN_USABLE", m.rid, t, price=price, k=k, chk=chk, econ=econ)
+        return self._return_candidate(s, w, m, cor, price, source, k, chk)
+
+    def _return_candidate(self, s: Scen, w: Wait, m: Bar, cor, price, source, k, chk) -> dict:
+        return {"s": s, "m": m, "mode": "RETURN", "price": price, "source": source, "k": k, "chk": chk,
+                "geom": {"v": w.v, "t": w.cap, "area": cor, "type": "LANDMARK" if len(w.caps) == 1 else
+                         "LANDMARK_CAP", "limiting": None},
+                "blockers": [], "rec": None, "ref": m.c, "wait": w}
 
     def _wait_end(self, s: Scen, w: Wait, reason: str, t: datetime, zone: tuple | None = None) -> None:
         self._entry_end(s, "TERMINAL", "TERMINAL", reason, t, cap_history=w.caps,
@@ -1360,15 +1386,19 @@ class AdviserCoreV3(AdviserCore):
                 self.counters["suppressed_by_slot"] = self.counters["suppressed_by_slot"][-50:]
             transition = "REJECT" if extra else "TERMINAL"
             if e["mode"] == "RETURN":
-                w = e["wait"]
-                self._entry_end(s, "TERMINAL", transition, ",".join(reasons), t, cap_history=w.caps,
-                                geometry=self._wait_geometry(w))
+                self._return_rejected(e, transition, reasons, t)
             else:
                 rec = dict(e["rec"])
                 rec["blockers"] = reasons
                 self._entry_end(s, "TERMINAL", transition, ",".join(reasons), t, **rec)
         if winner is not None:
             self._issue3(winner, t)
+
+    def _return_rejected(self, e: dict, transition: str, reasons: list[str], t: datetime) -> None:
+        """A usable return not selected (slot / conflict / priority): the child ends here (no retry)."""
+        w = e["wait"]
+        self._entry_end(e["s"], "TERMINAL", transition, ",".join(reasons), t, cap_history=w.caps,
+                        geometry=self._wait_geometry(w))
 
     def _gate_stats(self, e: dict, t: datetime) -> None:
         s, chk = e["s"], e["chk"]
@@ -1621,11 +1651,15 @@ class AdviserCoreV3(AdviserCore):
             "reason": reason, "blockers": tuple(blockers), "call_id": call_id,
             "geometry": {k: v for k, v in sorted((geometry or {}).items())}, "containing_zones": tuple(containing),
             "selected_zone": selected, "limiting_landmark": limiting, "cap_history": tuple(cap_history),
-            "clocks": clocks or {}, "diagnostic": diagnostic or {}},
+            "clocks": clocks or {}, "diagnostic": diagnostic or {}, **self._entry_extra(s)},
             rid=f"{s.eid}#{transition.lower()}-{self.journal_seq + 1}", lineage=(s.eid, s.sid))
         key = f"{s.family}:{transition}:{(reason or '').split(':')[0].split(',')[0]}"
         if self.window == "EVALUATION":
             self.counters["v3"]["entry_transitions"][key] = self.counters["v3"]["entry_transitions"].get(key, 0) + 1
+
+    def _entry_extra(self, s: Scen) -> dict:
+        """Release-specific entry-attempt record fields (none for v0.3/v0.4: their record bytes are unchanged)."""
+        return {}
 
     def _entry_end(self, s: Scen, state: str, transition: str, reason: str, t: datetime, *, blockers=(),
                    geometry=None, containing=(), selected=None, limiting=None, cap_history=(), clocks=None,
@@ -1843,7 +1877,7 @@ class AdviserCoreV3(AdviserCore):
         v3 = doc["v3"]
         c.scen = {d["sid"]: cls.SCEN_CLS.decode(d) for d in v3["scen"]}
         c.a_owner = dict(v3["a_owner"])
-        c.waits = {f"{d['sid']}#entry": Wait.decode(d) for d in v3["waits"]}
+        c.waits = {f"{d['sid']}#entry": cls.WAIT_CLS.decode(d) for d in v3["waits"]}
         # absent (states written before the snapshot existed): unknown, not an empty snapshot; it cannot be invented,
         # so records emitted before the first post-restore dependency computation carry no dependencies (disclosed)
         c._deps_known = "deps" in v3
