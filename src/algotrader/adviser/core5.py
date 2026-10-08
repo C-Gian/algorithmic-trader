@@ -13,16 +13,18 @@ protection and the evaluator are inherited unchanged.
 * **WAIT_RESPONSE**: every later complete bar of the local domain is checked; the domain starts at p0 (a bar ending
   at/before p0 gives no local response; a bar straddling p0 cannot confirm and, if it breaks the contrary extreme,
   makes the child UNASSESSABLE ``LOCAL_CONTACT_TIME_AMBIGUOUS``; no bar admitted in the preparation dispatch is ever
-  examined). LONG contradiction ``low < L0``; recovery ``close >= H0 + tick`` and ``low >= L0`` (SHORT reflects);
-  contrary equality is allowed; a violation and a favourable close in one bar is a contradiction. Within one dispatch
-  every bar feeds the safety checks first (inherited protections, then local contradiction/ambiguity, MP-004 §2
-  decision order) and only then the first ordered recovery decides.
+  examined; a bar starting exactly at p0 is in the domain - straddling needs start < p0 < end). LONG contradiction
+  ``low < L0``; recovery ``close >= H0 + tick`` and ``low >= L0`` (SHORT reflects); contrary equality is allowed; a
+  violation and a favourable close in one bar is a contradiction. Within one dispatch the inherited protections cover
+  every admitted bar first, then the inherited corridor/economic terminals (empty effective corridor, empty historical
+  economic region) apply after the cap updates, and only then the local sequence is read in bar order and consumed by
+  its FIRST decisive event (contradiction, straddling ambiguity or recovery; WP-014 correction F1/F2).
 * **First recovery**: evaluated once in the same dispatch. If it is not the current usable bar (the dispatch's latest
   complete minute, the inherited sampling) it is a late observation: not issuable, no later bar searched. Otherwise
   the inherited return gates are re-evaluated on it (current cap/corridor/zones, economics at the historical close or
   the live side price, context/coverage/freshness, residual time) and then slot/conflict/priority: ISSUE, or the
   child ends ``RESPONSE_NOT_ISSUABLE`` with every blocker and one deterministic primary reason. Pre-recovery
-  emptiness of the corridor/economic region is evaluated at that bar (MP-004 §2/§4 order), never terminal earlier.
+  live cost envelope too wide for any admissible price is a temporary blocker (non-terminal until the recovery).
 
 Records: the v0.4 kinds; the ``entry_attempt`` variant ``EntryAttemptV5`` adds ``response`` (reference, phase, bars
 checked, decisive bar and outcome). RESPONSE_OBSERVED is never stored state: the dispatch ends with ISSUE or a
@@ -51,21 +53,19 @@ ECONOMICS_GEOMETRY = frozenset({
     "SIDE_PRICE_INSIDE_OPPOSING_ZONE", "NO_ECONOMIC_RETURN_REGION", "TEMPORARY_COST_BLOCKED", "NO_ROOM_AFTER_COSTS",
     "AT_OR_BEYOND_INVALIDATION", "REWARD_RISK_BELOW_MINIMUM", "INVALID_INPUT"})
 SELECTION = frozenset({"SLOT_OCCUPIED", "CONFLICTED", "PRIORITY"})
-LATE = "RESPONSE_OBSERVED_LATE_NOT_CURRENT"
+LATE = "RESPONSE_OBSERVED_LATE_NOT_CURRENT"  # its own reason in OTHER_GATES (counted separately as late)
 REASON_CLASSES = ("ECONOMICS_GEOMETRY", "OTHER_GATES", "SELECTION")
 
 
 def reason_class(code: str) -> str:
     c = code.split(":")[0]
-    if c == LATE:
-        return "LATE_OBSERVATION"
     return "ECONOMICS_GEOMETRY" if c in ECONOMICS_GEOMETRY else "SELECTION" if c in SELECTION else "OTHER_GATES"
 
 
 def primary_reason(blockers: list[str]) -> str:
     """One deterministic primary reason (MP-004 §7): economics/geometry, then other gates, then selection; inside a
     class the smallest code. Every blocker stays recorded; incidences are never summed."""
-    order = {c: i for i, c in enumerate(("LATE_OBSERVATION",) + REASON_CLASSES)}
+    order = {c: i for i, c in enumerate(REASON_CLASSES)}
     return min(blockers, key=lambda b: (order[reason_class(b)], b.split(":")[0]))
 
 
@@ -151,36 +151,44 @@ class AdviserCoreV5(AdviserCoreV4):
     def _response_step(self, s: Scen, w: Wait5, minutes: list[Bar], zones: list, t: datetime) -> dict | None:
         ref = w.ref
         p0 = _dt(ref["published_at"])
-        d, tick = w.d, self.tick
+        d, tick, p = w.d, self.tick, self.p
+        # inherited corridor/economic terminals, after the cap updates and before any local response (v0.4 order):
+        # an empty effective corridor, or an empty HISTORICAL economic region, ends the child (X); a live envelope
+        # too wide for any admissible price is a temporary blocker decided only at the recovery
+        cor = w.corridor(tick)
+        if cor is None:
+            self._wait_end(s, w, "EMPTY_RETURN_CORRIDOR", t)
+            return None
+        price, source, k, qb = self._side_price(d, t)
+        hist = self.cfg.profile.execution == Execution.HISTORICAL_BASE
+        econ = geo.admissible_bounds(d, cor, w.v, w.cap, k, p.rr_min, tick) if k is not None else None
+        if hist and econ is None:
+            self._wait_end(s, w, "NO_ECONOMIC_RETURN_REGION", t)
+            return None
         h0, l0 = Decimal(ref["H0"]), Decimal(ref["L0"])
-        first: Bar | None = None
-        end: tuple[str, Bar] | None = None
-        for m in minutes:
+        decisive: tuple[str, Bar] | None = None
+        for m in minutes:  # the local sequence in bar order, consumed by its FIRST decisive event
             if m.end <= p0:
                 continue  # wholly at/before the publication: no local response
             w.checked += 1
             v = local_verdict(d, h0, l0, tick, m.lo, m.h, m.c)
-            if m.start < p0:  # straddles p0: can never confirm; a contrary break cannot be dated
+            if m.start < p0:  # straddles p0 (start < p0 < end): never confirms; a contrary break cannot be dated
                 if v == "CONTRADICTION":
-                    end = ("LOCAL_CONTACT_TIME_AMBIGUOUS", m)
+                    decisive = ("LOCAL_CONTACT_TIME_AMBIGUOUS", m)
                     break
                 continue
-            if v == "CONTRADICTION":
-                end = ("LOCAL_RESPONSE_CONTRADICTED", m)
+            if v != "NONE":
+                decisive = ("LOCAL_RESPONSE_CONTRADICTED" if v == "CONTRADICTION" else "RECOVERY", m)
                 break
-            if v == "RECOVERY" and first is None:
-                first = m
-        if end is not None:  # local contradiction / ambiguity precede the recovery (MP-004 §2)
-            reason, m = end
-            note = {"outcome": "CONTRADICTED" if reason == "LOCAL_RESPONSE_CONTRADICTED" else "UNASSESSABLE",
-                    **_bar_note("decisive", m)}
-            if first is not None:
-                note["recovery_close_observed_before_priority"] = first.rid
+        if decisive is None:
+            return None
+        kind, first = decisive
+        if kind != "RECOVERY":
+            note = {"outcome": "CONTRADICTED" if kind == "LOCAL_RESPONSE_CONTRADICTED" else "UNASSESSABLE",
+                    **_bar_note("decisive", first)}
             self._notes[s.eid] = note
             self._count("local_contradictions" if note["outcome"] == "CONTRADICTED" else "local_ambiguous")
-            self._wait_end(s, w, f"{reason}:{m.rid}", t)
-            return None
-        if first is None:
+            self._wait_end(s, w, f"{kind}:{first.rid}", t)
             return None
         self._count("responses_observed")
         current = first is minutes[-1]
@@ -189,15 +197,7 @@ class AdviserCoreV5(AdviserCoreV4):
             self._count("late_responses")
             self._not_issuable(s, w, note, [LATE], t)
             return None
-        p = self.p
-        cor = w.corridor(tick)
-        price, source, k, qb = self._side_price(d, t)
-        hist = self.cfg.profile.execution == Execution.HISTORICAL_BASE
-        econ = (geo.admissible_bounds(d, cor, w.v, w.cap, k, p.rr_min, tick)
-                if k is not None and cor is not None else None)
         blockers, price, source, chk = self._return_gates(s, w, first, cor, econ, zones, price, source, k, qb, t)
-        if hist and cor is not None and econ is None:
-            blockers = sorted(set(blockers) | {"NO_ECONOMIC_RETURN_REGION"})
         if blockers:
             self._not_issuable(s, w, note, blockers, t, price=price, k=k, chk=chk, econ=econ)
             return None

@@ -124,12 +124,18 @@ def test_owner_runs_v05_sees_the_response_wait_and_compares_with_v04(bench5, bro
     expect(page.get_by_test_id("adv-v5-prepared")).to_contain_text("1 / 1")
     expect(page.get_by_test_id("adv-v5-recoveries")).to_contain_text("1")
     expect(page.get_by_test_id("adv-v5-table")).to_contain_text("Total")
+    # WP-014 correction F3: the earlier 20-owner RETURN criterion is not applicable to v0.5 (count kept, no ratio)
+    expect(page.get_by_test_id("adv-v3-threshold")).to_have_text("1")  # descriptive count only, never "1 / 20"
+    expect(page.get_by_test_id("adv-v3-funnel")).to_contain_text("earlier 20-owner criterion not applicable")
+    expect(page.get_by_test_id("adv-v3-funnel")).to_contain_text("NOT_APPLICABLE to v0.5")
     md_report = httpx.get(f"{stack.base}/api/evaluations/{e5}/report.md", timeout=30).text
     page.get_by_test_id("copy-report").click()
     expect(page.get_by_test_id("copy-report")).to_contain_text("Copied")
     assert page.evaluate("() => navigator.clipboard.readText()").replace("\r\n", "\n") == md_report
     assert "Candidate v0.5 (MP-004" in md_report and "### A RETURN response (MP-004 §7" in md_report
     assert "| Total | 1 | 1 | 0 | 1 | 0 | 1 | 0 | 0 |" in md_report
+    assert "evidence criterion NOT_APPLICABLE to this method" in md_report
+    assert "registered minimum for discussion" not in md_report
     page.screenshot(path=str(evidence_dir / "71-mp004-v05-result.png"), full_page=True)
 
     evaluations_before = len(stack.get("/api/evaluations"))
@@ -142,11 +148,15 @@ def test_owner_runs_v05_sees_the_response_wait_and_compares_with_v04(bench5, bro
     expect(page.get_by_test_id("compare-table")).to_contain_text("candidate v0.5")
     expect(page.get_by_test_id("compare-responses")).to_contain_text("1 · 1 · 0 · 1 · 0 · 1 · 0 · 0")
     expect(page.get_by_test_id("compare-limitations")).to_contain_text("only in the A RETURN child")
+    expect(page.get_by_test_id("compare-response-cohort")).to_contain_text("WAIT-open cohort")
+    expect(page.get_by_test_id("compare-response-cohort")).to_contain_text("month of issue")
+    expect(page.get_by_test_id("compare-result")).to_contain_text("no registered evidence criterion for the candidate")
     md = httpx.get(f"{stack.base}/api/evaluations/compare/report.md", params={"a": e4, "b": e5}, timeout=30).text
     page.get_by_test_id("copy-comparison").click()
     expect(page.get_by_test_id("copy-comparison")).to_contain_text("Copied")
     copied = page.evaluate("() => navigator.clipboard.readText()").replace("\r\n", "\n")
     assert copied == md and "baseline v0.4 (A) vs candidate v0.5 (B)" in copied
+    assert "Evidence criterion: NOT_APPLICABLE for v0.5" in copied and "WAIT-open cohort" in copied
     assert len(stack.get("/api/evaluations")) == evaluations_before  # comparing launched nothing
     page.screenshot(path=str(evidence_dir / "72-mp004-comparison.png"), full_page=True)
 

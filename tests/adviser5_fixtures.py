@@ -130,12 +130,12 @@ def blocked_first() -> list:
     return a3([minute(100050, 100080, 100000, 100080), REF, VALID], tail_price=100000)
 
 
-def cap_tape(*from_0459) -> list:
+def cap_tape(*from_0459, pivot=100560) -> list:
     """The ``a3_cap_then_return`` geometry: a 15m pivot high 100560 in [04:15,04:30) becomes eligible at 05:00 (S15 650,
     z 65) and caps the target at floor(100560 - 65) = 100495. Prices stay above the corridor until the reference bar
     [04:44,04:45) (published 04:45, cap still 100700), then neutral until 04:59; ``from_0459`` minutes start at
     04:59. A recovery at [05:00,05:01) is decided against the NEW cap 100495 (no reset, no new attempt)."""
-    post = walk(100050, 100150, 14) + walk(100150, 100560, 5) + walk(100560, 100060, 10)  # [04:01,04:30)
+    post = walk(100050, 100150, 14) + walk(100150, pivot, 5) + walk(pivot, 100060, 10)  # [04:01,04:30)
     post += flat(14, 100060) + [REF] + neutral(14)                                          # [04:30,04:59)
     return a3(post + list(from_0459), tail_price=100000)
 
@@ -161,3 +161,11 @@ def live_tape(*post) -> list:
     ms = a3_base()[:-1] + [minute(99950, 100000, 99950, 99980), minute(99980, 100050, 99980, 100050),
                            minute(100050, 100060, 100050, 100055), REF, *post]
     return ms + flat(420, 100000)
+
+
+def cap_empties_economic_region(*from_0500) -> list:
+    """As ``cap_tape`` with the 15m pivot high 100365: at 05:00 the cap revises to floor(100365 - 65) = 100300 (> the
+    last close 100000, corridor still [99900, 100049.9]) and the fixed-K economic upper bound becomes
+    (100300 + 1.2*99700)/(2.2*1.0014) = 99834.4 < 99900: the historical economic region is EMPTY (MP-004 keeps the
+    inherited terminal before any local response). ``from_0500`` minutes start at 05:00."""
+    return cap_tape(*neutral(1), *from_0500, pivot=100365)

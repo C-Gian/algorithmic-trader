@@ -1278,17 +1278,13 @@ class AdviserCoreV3(AdviserCore):
             return self._return_usable(s, w, m, cor, econ, price, source, k, chk, t)
         return None
 
-    def _return_gates(self, s: Scen, w: Wait, m: Bar, cor: tuple[Decimal, Decimal] | None, econ, zones: list,
+    def _return_gates(self, s: Scen, w: Wait, m: Bar, cor: tuple[Decimal, Decimal], econ, zones: list,
                       price, source, k, qb: list[str], t: datetime) -> tuple[list[str], Any, Any, Any]:
-        """Every return gate of one complete minute (sorted distinct blockers, evaluation price/source, predicate).
-        ``cor`` None (an empty effective corridor) is only passed by a later release whose corridor is evaluated at
-        its decisive bar (WP-014); v0.3/v0.4 terminate on it before sampling."""
+        """Every return gate of one complete minute (sorted distinct blockers, evaluation price/source, predicate)."""
         p, d = self.p, w.d
         hist = self.cfg.profile.execution == Execution.HISTORICAL_BASE
         blockers: list[str] = []
-        if cor is None:
-            blockers.append("EMPTY_RETURN_CORRIDOR")
-        elif not cor[0] <= m.c <= cor[1]:
+        if not cor[0] <= m.c <= cor[1]:
             blockers.append("CLOSE_OUTSIDE_RETURN_CORRIDOR")
         if any(z[0] <= m.c * d <= z[1] for z in zones):
             blockers.append("BLOCKED_BY_ZONE")
@@ -1297,7 +1293,7 @@ class AdviserCoreV3(AdviserCore):
         chk = None
         if price is not None and k is not None:
             if not hist:
-                if cor is not None and not cor[0] <= price <= cor[1]:
+                if not cor[0] <= price <= cor[1]:
                     blockers.append("SIDE_PRICE_OUTSIDE_RETURN_CORRIDOR")
                 if any(z[0] <= price * d <= z[1] for z in zones):
                     blockers.append("SIDE_PRICE_INSIDE_OPPOSING_ZONE")

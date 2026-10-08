@@ -1,5 +1,9 @@
 # WP-014 — MP-004 v0.5 engineering evidence
 
+> **Corrected by the WP-014 correction (§9).** Sections 3, 4 and 7 below describe the corrected semantics; the
+> superseded readings of `0526641` (dispatch-level local precedence, economic emptiness deferred to the recovery, a
+> separate late class, "always straddles" in live) are listed in §9 and are no longer implemented.
+
 Base `776752e` (main). Executor evidence for Director review — **not acceptance**. Synthetic bounded inputs only: no acquisition, no Owner data or stack, no economic evaluation, no protected period. Remote CI: Owner-operated, PENDING / NOT CHECKED.
 
 ## 1. Registration
@@ -32,8 +36,9 @@ Absent selection is still v0.2. A run or live lineage is never converted across 
 - **WAIT_RETURN** = the inherited WAIT_PRICE. The first bar that would be a usable v0.4 RETURN prepares the reference (H0, L0, bar, interval, p0 = this dispatch, c0 = admitted cursor); a blocked bar does not prepare.
 - **WAIT_RESPONSE.**
   - Inherited protections run first, unchanged: deadline, context veto, target/cap contacts, causal caps, plus the scenario V/destination and coverage handled earlier in the dispatch.
-  - Then every domain bar is checked: a bar ending at/before p0 is ignored; a bar straddling p0 cannot confirm, and a contrary break there gives `LOCAL_CONTACT_TIME_AMBIGUOUS`; otherwise a contrary break gives `LOCAL_RESPONSE_CONTRADICTED`.
-  - Then the first recovery is decided. If it is not the dispatch's current (latest) bar it is `RESPONSE_NOT_ISSUABLE:RESPONSE_OBSERVED_LATE_NOT_CURRENT`. Otherwise the inherited return gates are evaluated on it (historical close / live side price), then slot/conflict/priority → ISSUE or `RESPONSE_NOT_ISSUABLE:<primary>` with all blockers.
+  - Then the inherited corridor/economic terminals, after the cap updates and before any local response: an empty effective corridor → `EMPTY_RETURN_CORRIDOR`; an empty historical economic region → `NO_ECONOMIC_RETURN_REGION` (both X). A live envelope too wide for any admissible price is only a temporary blocker (`TEMPORARY_COST_BLOCKED` at the recovery).
+  - Then the local sequence is read in bar order and consumed by its **first decisive event**: a bar ending at/before p0 is ignored; a bar straddling p0 (start < p0 < end; start = p0 is in the domain) cannot confirm, and a contrary break there gives `LOCAL_CONTACT_TIME_AMBIGUOUS`; a contrary break gives `LOCAL_RESPONSE_CONTRADICTED`; a recovery is the first recovery. A later bar of the same dispatch never reclassifies it.
+  - A first recovery that is not the dispatch's current (latest) bar is `RESPONSE_NOT_ISSUABLE:RESPONSE_OBSERVED_LATE_NOT_CURRENT` (class OTHER_GATES, counted as late). Otherwise the inherited return gates are evaluated on it (historical close / live side price), then slot/conflict/priority → ISSUE or `RESPONSE_NOT_ISSUABLE:<primary>` with all blockers.
 - **Records.** `response` on every entry record of a prepared child (reference, phase, bars checked, decisive bar, outcome, primary reason/class; inherited endings annotate local conditions seen in that dispatch without counting them). RESPONSE_OBSERVED is never stored state.
 
 ## 4. MP-004 §6 fixtures → expected → actual
@@ -55,7 +60,7 @@ Base path (MP-002 fixture): confirmation 04:01, corridor [99900, 100049.9], V 99
 | New cap before the recovery | reference 04:45, pivot cap 100495 at 05:00 (WAIT_RESPONSE CAP_REVISION), recovery 05:01 | not issuable on economics with the new cap; reference unchanged |
 | Cap contact inside the activation bar | [04:59,05:00) high 100500 ≥ new cap | CAP_ACTIVATION_CONTACT_AMBIGUOUS first |
 | Reference published late | reference received 04:03, [04:02,04:03) received 04:03:30 | that bar ignored (recovery or violation); [04:03,04:04) issues 04:04 |
-| Recovery received with the next bar (§8 joint 2) | [04:02,04:03) delayed into the 04:04 dispatch | not issuable, LATE_OBSERVATION; second valid bar never used |
+| Recovery received with the next bar (§8 joint 2) | [04:02,04:03) delayed into the 04:04 dispatch | not issuable, late (OTHER_GATES); second valid bar never used; a later break in the same dispatch does not reclassify it |
 | Live quote invalid at the recovery | live tape, quote missing for that minute | RESPONSE_NOT_ISSUABLE:QUOTE_STALE (R=1, N=1, I=0) — `test_mp004_live.py` |
 | Bar straddling p0 (§8 joint 1) | p0 04:02:30, [04:02,04:03) breaks L0 | LOCAL_CONTACT_TIME_AMBIGUOUS, no renewal; without a break it cannot confirm, a later bar issues |
 | Missing data / gap | missing [04:02,04:03) | scenario UNASSESSABLE REQUIRED_MONITORING_GAP; no issue through the hole |
@@ -94,18 +99,13 @@ Disposable PostgreSQL 18.6 container `wp014-pg-disposable` (127.0.0.1:55441, rem
 ## 7. Interpretations and open decisions for the Director
 
 No semantic conflict required a new rule. These readings are flagged for confirmation; each has a test.
-1. **Dispatch-level precedence.** With several domain bars in one dispatch, a local contradiction/ambiguity in any of them precedes the first recovery. This follows §2 (decision order) and §3 ("tutte concorrono ai controlli di sicurezza").
-   - Counterexample: recovery [04:02,04:03) and break [04:03,04:04) admitted together → C, with the recovery annotated.
-   - A chronological reading would give R/N (late) instead. No call either way.
-2. **Corridor/economic emptiness in WAIT_RESPONSE** is evaluated at the first recovery, not terminal earlier (§2 order, §4, §6 new-cap row). In WAIT_RETURN it stays terminal as in v0.4. In historical runs `NO_ECONOMIC_RETURN_REGION` is added to the recovery's blockers when that region is empty.
-3. **"Current usable bar"** = the dispatch's latest complete minute (the inherited sampling). A late first recovery has its own primary class `LATE_OBSERVATION`, outside the three §7 classes, because nothing else is evaluated on it.
-4. **Live asymmetry (implication of the accepted joints, not a fallback).** Live publications follow the receipt, so the bar after each publication straddles it.
-   - After the confirmation: the inherited rule, so that bar is never sampled.
-   - After the reference: that bar can never confirm, and a break there is UNASSESSABLE, not C.
-   - In live the first decisive bar is therefore the second after the reference; historical modeled replay publishes at the bar close.
+1. **First decisive local event (corrected, F1).** Inherited protections cover the whole dispatch; the local sequence is consumed by its first ordered decisive event. Recovery [04:02,04:03) then break [04:03,04:04) in one dispatch → late first recovery (C=0, R=1, N=1, I=0); break then recovery → C; break and recovery in one bar → C.
+2. **Economic terminals in WAIT_RESPONSE (corrected, F2).** `EMPTY_RETURN_CORRIDOR` and `NO_ECONOMIC_RETURN_REGION` keep the v0.4 place: after the cap updates/protections, before the local response (X). A non-empty historical region with an unsuitable recovery price is N; a live temporary cost block is non-terminal until the recovery.
+3. **"Current usable bar"** = the dispatch's latest complete minute (the inherited sampling). A late first recovery is classified OTHER_GATES with its specific reason and a separate late count (aligned; no fourth class).
+4. **Live publication timing (aligned).** A bar straddles p0 only when start < p0 < end; start = p0 is in the active domain. In live, p0 is the dispatch at the bar's receipt; when that falls strictly inside the next bar's interval (the usual case, receipt shortly after the close) that next bar straddles and cannot confirm, and a break there is UNASSESSABLE. Historical modeled replay publishes at the bar close, so the next bar starts at p0 and can confirm. The inherited confirmation-publication rule behaves the same way.
 5. **Month attribution.** A child belongs to the month its WAIT opened and is followed to its ending (the WP-013 WAIT convention); every identity holds per month.
-6. **Register.** `MP-004-PARAMETERS.json` is executor-derived. The inherited `development_evaluation_registration` block (the v0.3/v0.4 plan) is kept byte-identical and declared not applicable to v0.5. Reading criteria for v0.5 are not registered.
-7. **Spec erratum (non-blocking).** §6 states ≈ 2.08 for the SHORT valid path. The inherited predicate gives 1.935 (≈ 1.94 like LONG) at 14 bps; the outcome is unchanged.
+6. **Register.** `MP-004-PARAMETERS.json` is executor-derived; the Director accepts it only for the choices Astra verified (108 inherited values unchanged, `references_per_child = 1`). The inherited `development_evaluation_registration` block is kept byte-identical and not applicable to v0.5; no v0.5 reading criterion is registered, and the earlier 20-owner convention is NOT_APPLICABLE to v0.5 (F3).
+7. **Spec erratum (registered separately).** [MP-004-ERRATUM-SECTION-6-RATIOS.md](../MP-004-ERRATUM-SECTION-6-RATIOS.md): SHORT valid ratio 197783/102217 = 1.934932545… (not ≈ 2.08); SHORT insufficient 0.971777…. The pinned spec and its identity are unchanged.
 8. **Status labels.** v0.4 keeps its recorded "engineering review pending" label; WP-014 does not change it.
 9. **Comparison release pins.** *Pinned release vs current package* is reported as a fact, not a verdict change, so earlier comparisons keep their verdicts. The inactive plan makes MATCHES_CURRENT_PACKAGE a precondition for reusing the v0.4 baseline.
 
@@ -116,3 +116,31 @@ One run with `ALGOTRADER_REQUIRE_DB=1` on the disposable database, after the WP-
 Afterwards (also covering the later comparison release-pin addition): `test_observe`, `test_mp004_report`, `test_mp002_correction`, the paired v0.4/v0.5 DB comparison test, and the browser journeys `test_mp004_e2e` and `test_mp003_e2e` → **82 passed**. Typecheck and build were rerun after the last UI change.
 
 Not run locally: the full non-E2E suite, the remaining E2E journeys and the Compose smoke (left to the exact-SHA CI, Owner-operated). The disposable container was stopped and removed, and the base worktree removed.
+
+## 9. WP-014 correction (Astra review of `0526641`; F1–F3 and alignments only)
+
+MP-004 and every methodological decision are unchanged; no identity, contract or schema changes (the corrected kernel stays `adviser.core.v5`: no v0.5 run exists beyond the executor's synthetic tests).
+
+| Item | Change | Regressions (`tests/test_mp004_correction.py`, LONG/SHORT) |
+|---|---|---|
+| F1 | `core5._response_step`: the local sequence is consumed by its first ordered decisive event; inherited protections still cover the whole dispatch | recovery → violation: `RESPONSE_OBSERVED_LATE_NOT_CURRENT`, C=0 R=1 N=1 I=0, decisive bar 04:02; violation → recovery: C; same bar: C; recovery then V contact: inherited X |
+| F2 | `EMPTY_RETURN_CORRIDOR` / `NO_ECONOMIC_RETURN_REGION` restored during WAIT_RESPONSE after the cap updates, before the local response; the v0.5-only "empty corridor" gate branch removed from `core3._return_gates` (original code) | cap revision to 100300 empties the historical region → X at 05:00, no reopening; empty effective corridor (white-box cap) → X; non-empty region, unsuitable price → N; live temporary cost block → still WAIT_RESPONSE (A), later ISSUE; live block at the recovery → N `TEMPORARY_COST_BLOCKED` |
+| F3 | report v5 sets the earlier 20-owner threshold to NOT_APPLICABLE (count kept, minimum null, no substitute); completed verdict REPORTED_FOR_DIRECTOR_REVIEW independent of it; Markdown line, Workbench metric and comparison conclusion/Markdown follow; v0.3/v0.4 unchanged | inherited minimum 2 vs 1 (the 19 → 20 crossing) gives identical v0.5 verdict/Markdown; v0.4 still moves; comparison verdict identical for baseline INSUFFICIENT/REACHED and candidate 19/20 |
+| Alignments | late recovery → OTHER_GATES (specific reason, late count); straddling only start < p0 < end (docs; code already so); WAIT-open cohort explanation in the comparison (JSON `responses.cohort`, Markdown, Workbench); erratum registered separately | late class; start = p0 decides; cohort text in comparison |
+
+**Fail-before / pass-after.** On the unchanged `0526641` code: 13 of 27 new correction tests failed (F1 recovery → violation ×2, F2 empty region ×2 and empty corridor ×2, late class, F3 verdict/Markdown, comparison ×4, cohort); the 14 guards passed (violation → recovery, same bar, whole-dispatch protection, unsuitable price, live temporary/at-recovery blocks, v0.4 threshold, start = p0). After the correction: 27/27 pass.
+
+**Earlier v0.5 tests corrected.** `test_in_one_dispatch_the_safety_checks_of_every_bar_precede_the_recovery` encoded the wrong precedence; it is now `test_in_one_dispatch_the_first_decisive_local_event_consumes_the_sequence`. The late class assertions and the report-count precedence assertion were updated accordingly.
+
+**Checks run (exact).** Pure v0.5 suites (`test_mp004_paths`, `_report`, `_lineage`, `_live`, `_correction`, `test_mp002_correction`): 188 passed, 1 DB test deselected/skipped. On a disposable PostgreSQL 18.6 (`wp014c-pg-disposable`, 127.0.0.1:55442, removed afterwards): see §10. Web typecheck/build pass. The full suite and Compose smoke are left to CI.
+
+## 10. Correction checks (local, exact)
+
+Disposable PostgreSQL 18.6 `wp014c-pg-disposable` (127.0.0.1:55442), stopped and removed afterwards; the Owner stack was never touched.
+- **One run with `ALGOTRADER_REQUIRE_DB=1`** → **318 passed, 1 failed** (28 min):
+  - `test_mp004_versions` (53 v0.4 base pins, v0.4/v0.5 parity, restore at every response stage), `test_mp004_db`, `test_mp004_live`, `test_mp004_correction`;
+  - `test_mp003_versions` and `test_mp002_versions` (v0.2/v0.3 pins), `test_mp003_paths`, `test_mp002_paths`, `test_mp003_db`, `test_wp013_correction`, `test_wp013_continuous`;
+  - browser `test_mp004_e2e` and `test_mp003_e2e`.
+- **The one failure** was the new browser assertion, which looked for the not-applicable hint on the metric *value* element (test locator only). The UI showed the count "1" without "/ 20", as intended. The locator was moved to the funnel container and the v0.5 journey rerun → **1 passed**. It checks: the count without "/ 20"; "earlier 20-owner criterion not applicable"; "NOT_APPLICABLE to v0.5"; Copy report containing "evidence criterion NOT_APPLICABLE"; the comparison cohort text ("WAIT-open cohort", "month of issue"); and "no registered evidence criterion for the candidate".
+- Also run: pure v0.5 suites (188 passed, see §9), web typecheck and build.
+- Not run locally: the full suite, the other browser journeys and the Compose smoke (CI, Owner-operated). There is no economic run, no acquisition and no Owner data.

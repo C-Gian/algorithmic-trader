@@ -248,6 +248,13 @@ def render_markdown(a: dict[str, Any]) -> list[str]:
     f = a["funnel"]
     dn = f["a_denominators"]
     w = f["waiting"]
+    et = f["evidence_threshold"]
+    owners_line = (f"- **A RETURN owners entered at PRIMARY 60 s: {f['a_return_owners_entered_primary_60s']}** "
+                   "(descriptive count; evidence criterion NOT_APPLICABLE to this method - the earlier 20-owner "
+                   "convention does not apply and no substitute is registered)"
+                   if et.get("status") == "NOT_APPLICABLE" else
+                   f"- **A RETURN owners entered at PRIMARY 60 s: {f['a_return_owners_entered_primary_60s']}** "
+                   f"(registered minimum for discussion {et['registered_minimum_distinct_owners']}) → {et['status']}")
     extra = [
         f"- Scenario transitions: {f['scenario_transitions'] or '{}'} · warmup-context scenarios "
         f"{f['warmup_context_scenarios']}",
@@ -260,9 +267,7 @@ def render_markdown(a: dict[str, Any]) -> list[str]:
         f"endings {w['endings'] or '{}'} · cap revisions {w.get('CAP_REVISIONS', 0)}",
         f"- Issued by family/mode: {f['issued_by_family_mode'] or '{}'} · guidance retired by scenario terminal "
         f"{f['guidance_retired_by_scenario_terminal']}",
-        f"- **A RETURN owners entered at PRIMARY 60 s: {f['a_return_owners_entered_primary_60s']}** "
-        f"(registered minimum for discussion {f['evidence_threshold']['registered_minimum_distinct_owners']}) → "
-        f"{f['evidence_threshold']['status']}",
+        owners_line,
     ]
     for k, v in (a.get("by_family_mode") or {}).items():
         extra.append(f"  - {k}: calls {v['calls']} · entered {v['entered']} · target {v['target']} · stop {v['stop']} "

@@ -1,8 +1,8 @@
 # Project State
 
-Updated: 2026-10-08 — MP-004 v0.5 (A RETURN followed by a local recovery) methodologically closed by the Director (both §8 joints accepted; semantics, not effectiveness); WP-014 activated and delivered for review: v0.5 selectable beside v0.2/v0.3/v0.4, READY FOR DIRECTOR REVIEW — WP-014 ONLY. The continuous v0.4/v0.5 Owner comparison is prepared INACTIVE.
+Updated: 2026-10-08 — WP-014 (MP-004 v0.5) delivered at 0526641; Astra review findings F1–F3 and alignments corrected under WP-014 CORRECTION (MP-004 and its methodological decisions unchanged), READY FOR DIRECTOR REVIEW — WP-014 CORRECTION ONLY. The continuous v0.4/v0.5 Owner comparison stays INACTIVE.
 
-**Current task: [task.md](task.md) — WP-014 MP-004 v0.5 implementation, delivered; awaiting Director review and Owner-operated exact-SHA CI.** [Specification](delivery/MP-004-V05-RETURN-RESPONSE.md) · [closure](delivery/MP-004-DIRECTOR-CLOSURE.md) · [task](delivery/WP-014-MP-004-IMPLEMENTATION-SPEC.md) · [evidence](delivery/evidence/WP-014-ENGINEERING-EVIDENCE.md) · [inactive plan](delivery/WP-014-CONTINUOUS-V04-V05-PLAN.md). The earlier read-only continuous v0.4 diagnosis remains as recorded below. Sep–Dec 2025 is exposed development; Jan–Aug 2026 stays protected except the authorized tail.
+**Current task: [task.md](task.md) — WP-014 CORRECTION (Astra review of 0526641: F1–F3 + alignments), delivered; awaiting Director review and Owner-operated exact-SHA CI.** [Specification](delivery/MP-004-V05-RETURN-RESPONSE.md) · [closure](delivery/MP-004-DIRECTOR-CLOSURE.md) · [erratum](delivery/MP-004-ERRATUM-SECTION-6-RATIOS.md) · [evidence](delivery/evidence/WP-014-ENGINEERING-EVIDENCE.md) · [inactive plan](delivery/WP-014-CONTINUOUS-V04-V05-PLAN.md). Sep–Dec 2025 is exposed development; Jan–Aug 2026 stays protected except the authorized tail.
 
 Goal (Foundation v3.1): an integrated BTC adviser with persistent actionable LONG/SHORT calls, entry area, targets, stop/exit guidance and holding horizon. Capital, size, leverage and orders stay human. Historical ACCEPTED/READY/HOLD labels in older documents do not authorize work; only task.md does.
 
@@ -609,3 +609,17 @@ Owner-relayed Director closure, recorded verbatim in [MP-004-DIRECTOR-CLOSURE.md
   - v0.4 status label left as recorded.
 - **Checks** (disposable PostgreSQL 18.6, Owner stack untouched): new pure/DB/live/browser suites all pass, plus the v0.3/v0.4 regression set (counts in the evidence and executor report). Typecheck/build pass; schema baselines are rewritten only for observe.v1 r8 and semantic.v2 r4. The full suite and Compose smoke are left to CI.
 - **Owner handoff.** The continuous v0.4/v0.5 Sep–Dec comparison (35-day initialization, baseline `eval-20261007T182934-3f41ad` reused only after the pin-compatibility check) is prepared but INACTIVE. CI is Owner-operated: PENDING / NOT CHECKED.
+
+## WP-014 correction executor evidence (base `0526641`; Astra review F1–F3 and alignments only; READY FOR DIRECTOR REVIEW — WP-014 CORRECTION ONLY; not accepted)
+
+[Evidence §9](delivery/evidence/WP-014-ENGINEERING-EVIDENCE.md#9-wp-014-correction-astra-review-of-0526641-f1f3-and-alignments-only) · [erratum](delivery/MP-004-ERRATUM-SECTION-6-RATIOS.md). MP-004, the methodological decisions and every identity/contract/schema are unchanged. The register is accepted only for the choices Astra verified (108 inherited values unchanged, `references_per_child = 1`).
+- **F1.** The local sequence is consumed by its first ordered decisive event; inherited protections still cover the whole dispatch. Recovery → violation in one dispatch: late first recovery (C=0, R=1, N=1, I=0). Violation → recovery: C. Same bar: C. The earlier test that encoded the opposite precedence is corrected.
+- **F2.** `EMPTY_RETURN_CORRIDOR` and `NO_ECONOMIC_RETURN_REGION` keep their v0.4 place during WAIT_RESPONSE: after the cap updates, before the local response (X), with no reopening. An unsuitable single price with a non-empty region is N. A live temporary cost block stays non-terminal until the recovery.
+- **F3.** The earlier 20-owner RETURN convention is NOT_APPLICABLE to v0.5: the count is kept, there is no substitute criterion, and the completed verdict does not depend on it. This holds in JSON, Markdown, the Workbench metric and the comparison (the candidate never inherits the baseline criterion). v0.3/v0.4 are unchanged.
+- **Alignments.**
+  - The late first recovery is classified OTHER_GATES, with its own reason and late count.
+  - Straddling is described only as start < p0 < end (start = p0 is in the domain).
+  - The WAIT-open cohort is explained in the comparison (JSON, Markdown, Workbench).
+  - Separate erratum: SHORT valid 1.934932545…, insufficient 0.971777….
+- **Fail-before / pass-after.** 13 of 27 new regressions fail on `0526641` (the 14 guards pass); 27/27 pass after.
+- **Checks.** See evidence §9–10. The full suite and Compose are left to CI. CI is Owner-operated: PENDING / NOT CHECKED. The continuous plan stays INACTIVE.

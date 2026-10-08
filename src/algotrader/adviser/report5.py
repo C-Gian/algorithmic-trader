@@ -35,6 +35,11 @@ from . import report_periods as rp
 from .core5 import LATE, reason_class
 
 REPORT_VERSION = "adviser.report.v5"
+THRESHOLD_NOT_APPLICABLE = {
+    "registered_minimum_distinct_owners": None, "status": "NOT_APPLICABLE",
+    "note": ("The earlier MP-002 reporting convention (20 distinct A RETURN owners entered at PRIMARY 60 s) belongs to "
+             "the v0.3/v0.4 registrations and is NOT_APPLICABLE to v0.5 (WP-014 correction F3); the count stays "
+             "descriptive and no substitute criterion is registered.")}
 KEYS = ("W", "P", "C", "R", "N", "I", "X", "A")
 RATIOS = (("P/W", "P", "W"), ("C/P", "C", "P"), ("R/P", "R", "P"), ("N/R", "N", "R"), ("I/R", "I", "R"),
           ("I/P", "I", "P"))
@@ -87,7 +92,7 @@ def _classify(f: dict) -> tuple[str, dict[str, Any]]:
         return "N", {"primary": prim, "class": resp.get("primary_class") or reason_class(prim),
                      "blockers": list(end.get("blockers") or [prim]), "late": prim == LATE}
     if reason.startswith("LOCAL_RESPONSE_CONTRADICTED"):
-        return "C", {"recovery_before_contradiction": resp.get("recovery_close_observed_before_priority")}
+        return "C", {"decisive_bar": resp.get("decisive_bar")}
     cause = reason.split(":")[0].split(",")[0] if end["transition"] != "CLEARED" else "CLEARED"
     if cause == "SCENARIO_TERMINAL":
         cause = ":".join(reason.split(":")[:3])
@@ -202,6 +207,8 @@ def build(*, engine: dict, journal: list[dict], records: list[dict], view: dict 
     checks = {"W_equals_waits_opened": t["W"] == w.get("opened"),
               "I_equals_A_RETURN_calls_in_window": t["I"] == f.get("a_return_calls")}
     resp["report_cross_checks"] = checks
+    # F3: the earlier 20-owner convention never decides anything for v0.5 (no substitute criterion)
+    f["evidence_threshold"] = {**THRESHOLD_NOT_APPLICABLE, "observed": f.get("a_return_owners_entered_primary_60s")}
     out.update(report_version=REPORT_VERSION,
                method={"method": "v0.5", "model": engine["adviser"]["identity"]["model"], "status": rel.status,
                        "status_label": rel.status_label, "economic_usefulness": "UNVALIDATED"},
@@ -217,11 +224,12 @@ def build(*, engine: dict, journal: list[dict], records: list[dict], view: dict 
         pr["total"]["waits"]["observed_usable_return"] = t["P"]
     if status == "completed":
         out["conclusion"] = {
-            "verdict": out["conclusion"]["verdict"],
-            "text": ("v0.5 results are reported for Director diagnosis. More or fewer calls are not improvement by "
-                     "themselves; compare against the v0.4 baseline on the same pack with the comparison report (the "
-                     "integrated MP-004 RETURN delta, not a proof that any particular call would be avoided or "
-                     "recovered).")}
+            "verdict": "REPORTED_FOR_DIRECTOR_REVIEW",
+            "text": ("v0.5 results are reported for Director diagnosis; no registered evidence criterion applies to "
+                     "v0.5 (the earlier 20-owner RETURN convention is not applicable). More or fewer calls are not "
+                     "improvement by themselves; compare against the v0.4 baseline on the same pack with the "
+                     "comparison report (the integrated MP-004 RETURN delta, not a proof that any particular call "
+                     "would be avoided or recovered).")}
     if t["W"] and not t["P"]:
         out["diagnosis"] = list(out.get("diagnosis") or []) + [
             f"NO_RETURN_REFERENCE_PREPARED: {t['W']} A RETURN wait(s) opened and none reached a usable return bar"]

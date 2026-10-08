@@ -104,7 +104,7 @@ def test_mp004_section_6_predicates_literally(row, long_bar, short_bar, verdict)
 def test_mp004_section_6_illustrative_economics_with_the_inherited_predicate():
     """14 bps, ratio 1.2, LONG V 990 / T 1050, SHORT V 1050 / T 990. The valid paths pass (LONG ~1.94; SHORT ~1.935
     with the inherited formula - MP-004 §6 prints "circa 2,08" for SHORT, an illustrative-arithmetic slip that
-    changes no outcome, recorded in the WP-014 evidence); the insufficient-economics closes fail (~0.97 both)."""
+    changes no outcome, registered as a separate erratum); the insufficient-economics closes fail (~0.97 both)."""
     k, r = D(14), D("1.2")
 
     def ratio(d, p, v, t):
@@ -114,6 +114,17 @@ def test_mp004_section_6_illustrative_economics_with_the_inherited_predicate():
     rl, okl = ratio(1, 1009, 990, 1050)
     rs, oks = ratio(-1, 1031, 1050, 990)
     assert okl and oks and round(rl, 2) == D("1.94") and round(rs, 3) == D("1.935")
+    # exact values registered in delivery/MP-004-ERRATUM-SECTION-6-RATIOS.md (the pinned spec is not rewritten)
+    from fractions import Fraction
+
+    def exact(d, p, v, t):
+        g, q = Fraction(10000 * d * (t - p), p), Fraction(10000 * d * (p - v), p)
+        return (g - 14) / (q + 14)
+
+    assert exact(-1, 1031, 1050, 990) == Fraction(197783, 102217)
+    assert str(D(197783) / D(102217))[:11] == "1.934932545"
+    assert exact(-1, 1021, 1050, 990) == Fraction(147853, 152147) and round(D(147853) / D(152147), 6) == D("0.971777")
+    assert exact(1, 1009, 990, 1050) == Fraction(65979, 34021) and exact(1, 1019, 990, 1050) == Fraction(49289, 50711)
     for d, p, v, t in ((1, 1019, 990, 1050), (-1, 1021, 1050, 990)):
         x, ok = ratio(d, p, v, t)
         assert not ok and round(x, 2) == D("0.97")
@@ -128,7 +139,7 @@ def test_primary_reason_is_deterministic_by_class_then_code():
     assert primary_reason(["SLOT_OCCUPIED", "QUOTE_STALE"]) == "QUOTE_STALE"
     assert primary_reason(["PRIORITY"]) == "PRIORITY" and reason_class("PRIORITY") == "SELECTION"
     assert reason_class("TRADE_1M_STALE") == "OTHER_GATES" and reason_class("NO_ROOM_AFTER_COSTS") == "ECONOMICS_GEOMETRY"
-    assert reason_class("RESPONSE_OBSERVED_LATE_NOT_CURRENT") == "LATE_OBSERVATION"
+    assert reason_class("RESPONSE_OBSERVED_LATE_NOT_CURRENT") == "OTHER_GATES"  # WP-014 correction alignment
 
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -428,20 +439,21 @@ def test_first_recovery_observed_late_is_not_issuable_and_never_substituted(side
                                              "NOT_ISSUABLE")]
     r = a_entries(st.journal)[-1]["response"]
     assert (r["primary_reason"], r["primary_class"], r["response_current"]) == (
-        "RESPONSE_OBSERVED_LATE_NOT_CURRENT", "LATE_OBSERVATION", "false")
+        "RESPONSE_OBSERVED_LATE_NOT_CURRENT", "OTHER_GATES", "false")
     assert r["response_bar"].endswith("@2025-09-01T04:02:00Z") and not calls(st.journal)
 
 
 @pytest.mark.parametrize("side", ["L", "S"])
-def test_in_one_dispatch_the_safety_checks_of_every_bar_precede_the_recovery(side):
-    """[04:02,04:03) valid recovery and [04:03,04:04) a contradiction admitted together: MP-004 §2/§3 order - the
-    local contradiction precedes the recovery (annotated, never counted as a decisive recovery)."""
+def test_in_one_dispatch_the_first_decisive_local_event_consumes_the_sequence(side):
+    """WP-014 correction F1 (this test encoded the wrong local precedence at 0526641): [04:02,04:03) valid recovery
+    and [04:03,04:04) a contradiction admitted together - the first ordered decisive event is the recovery, consumed
+    as a late (not current) first recovery; the later break never reclassifies it."""
     ms = fx.recovery_then_violation()
     st = delayed(ms if side == "L" else fx.mirror(ms), {T(4, 2): 60})
-    assert steps(st.journal)[-1] == ("04:04:00", "TERMINAL", "TERMINAL", "LOCAL_RESPONSE_CONTRADICTED", "CONTRADICTED")
+    assert steps(st.journal)[-1] == ("04:04:00", "TERMINAL", "TERMINAL", "RESPONSE_NOT_ISSUABLE", "NOT_ISSUABLE")
     r = a_entries(st.journal)[-1]["response"]
-    assert r["decisive_bar"].endswith("@2025-09-01T04:03:00Z")
-    assert r["recovery_close_observed_before_priority"].endswith("@2025-09-01T04:02:00Z")
+    assert r["response_bar"].endswith("@2025-09-01T04:02:00Z") and "decisive_bar" not in r
+    assert r["primary_reason"] == "RESPONSE_OBSERVED_LATE_NOT_CURRENT"
 
 
 # ---------------------------------------------------------------------------------------------------------------------

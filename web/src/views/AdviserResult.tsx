@@ -70,8 +70,11 @@ function V3Funnel({ a }: { a: AdviserSection }) {
                 hint={`usable return seen ${f.waiting.observed_usable_return} · these are not calls`} />
         <Metric label="Issued by mode" value={Object.entries(f.issued_by_family_mode ?? {}).map(([k, n]) => `${k.replace("_", " ")} ${n}`).join(" · ") || "none"}
                 mono={false} testid="adv-v3-modes" />
-        <Metric label="A RETURN owners entered (60 s)" value={`${f.a_return_owners_entered_primary_60s} / ${f.evidence_threshold.registered_minimum_distinct_owners}`}
-                hint={humanize(f.evidence_threshold.status)} testid="adv-v3-threshold" />
+        <Metric label="A RETURN owners entered (60 s)" testid="adv-v3-threshold"
+                value={f.evidence_threshold.status === "NOT_APPLICABLE" ? String(f.a_return_owners_entered_primary_60s)
+                  : `${f.a_return_owners_entered_primary_60s} / ${f.evidence_threshold.registered_minimum_distinct_owners}`}
+                hint={f.evidence_threshold.status === "NOT_APPLICABLE"
+                  ? "descriptive · earlier 20-owner criterion not applicable" : humanize(f.evidence_threshold.status)} />
       </div>
       <div className="small-text muted">A routing: {Object.entries(f.a_routing ?? {}).map(([k, n]) => `${humanize(k)} ${n}`).join(" · ") || "none"}
         {Object.keys(dn.excluded).length > 0 && <> · excluded {Object.entries(dn.excluded).map(([k, n]) => `${humanize(k)} ${n}`).join(" · ")}</>}</div>

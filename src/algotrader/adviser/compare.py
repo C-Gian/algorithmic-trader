@@ -44,6 +44,10 @@ DISLOCATION_LIMITATION = {
              "(the trade/mark dislocation veto is never active), unchanged by design; v0.3 applies the retained "
              "once-per-slot dislocation rule. The integrated comparison therefore also includes this correction and "
              "cannot attribute any difference to RETURN alone.")}
+RESPONSE_COHORT = ("Monthly A RETURN response counts follow the WAIT-open cohort: each RETURN child belongs to the "
+                   "calendar month in which its WAIT opened and is followed to its ending wherever it falls; calls "
+                   "and their outcomes belong to their month of issue, so the two monthly tables are different "
+                   "populations.")
 PIN_FIELDS = ("pack_id", "instrument", "feed_content_identity", "availability_policy_id", "clock_policy", "tick",
               "channels", "evaluation", "clock_end")
 EVALUATOR_FIELDS = ("entry_delay_seconds", "exit_delay_seconds", "boundary_alignment", "opening_condition",
@@ -167,7 +171,7 @@ def _summary(x: dict) -> dict[str, Any]:
                                 "months": {m: s.get("counts") for m, s in (resp.get("months") or {}).items()},
                                 "not_issuable_primary_reason":
                                     ((resp.get("total") or {}).get("not_issuable") or {}).get("primary_reason"),
-                                "cutoff": resp.get("cutoff")}
+                                "cutoff": resp.get("cutoff"), "cohort": RESPONSE_COHORT}
     else:
         out["registered"] = {"births": f.get("births"), "arms": f.get("arms"),
                              "trigger_evaluations": f.get("trigger_evaluations"),
@@ -199,6 +203,12 @@ def build(a: dict, b: dict) -> dict[str, Any]:
         conclusion = {"verdict": comp["verdict"],
                       "text": "Not compared: " + ("; ".join(d["field"] for d in comp["differences"]) or
                                                   "; ".join(comp["incomplete"] + comp["not_adviser_runs"]))}
+    elif ev and ev.get("status") == "NOT_APPLICABLE":
+        conclusion = {"verdict": "REPORTED_FOR_DIRECTOR_REVIEW",
+                      "text": "Integrated version comparison on identical inputs; no registered evidence criterion for "
+                              "the candidate (the earlier 20-owner RETURN convention is not applicable to it and the "
+                              "baseline's criterion is not transferred). The Director diagnoses it; no automatic "
+                              "improvement claim, ranking or variant choice."}
     elif ev and ev.get("status") == "MINIMUM_REPORTING_COUNT_REACHED":
         conclusion = {"verdict": "REPORTED_FOR_DIRECTOR_REVIEW",
                       "text": "Integrated version comparison on identical inputs; the Director diagnoses it. No "
@@ -274,6 +284,9 @@ def render_markdown(c: dict[str, Any]) -> str:
                   f"censored {pr['censored']} · unresolved {pr['unresolved']} · price-net sum {pr['sum_price_net']} · "
                   f"stress {pr['sum_stress_price_net']} · total net {pr['total_net']}",
                   f"- Registered funnel: {s['registered']}"]
+        if ((s.get("registered") or {}).get("evidence_threshold") or {}).get("status") == "NOT_APPLICABLE":
+            lines.append(f"- Evidence criterion: NOT_APPLICABLE for {s['method']} (the earlier 20-owner RETURN "
+                         "convention does not apply; no substitute criterion)")
         if s.get("anchors"):
             o, ev = s["anchors"].get("owners") or {}, s["anchors"].get("events") or {}
             lines.append(f"- Pre-confirmation anchors: owners lost {o.get('lost_anchor')} · re-armed "
@@ -289,6 +302,7 @@ def render_markdown(c: dict[str, Any]) -> str:
                                                                            ("W", "P", "C", "R", "N", "I", "X", "A"))
                          + f" · identities {'hold' if r.get('identities_hold') else 'DO NOT HOLD'} · ratios "
                          f"{r.get('ratios')} · N primary {r.get('not_issuable_primary_reason') or '{}'}")
+            lines.append(f"  - {r.get('cohort') or RESPONSE_COHORT}")
             for m, mc in (r.get("months") or {}).items():
                 lines.append(f"  - {m}: " + " · ".join(f"{k} {(mc or {}).get(k)}" for k in
                                                          ("W", "P", "C", "R", "N", "I", "X", "A")))

@@ -105,8 +105,8 @@ def test_live_view_while_waiting_for_the_response_is_never_an_entry():
 @pytest.mark.parametrize("side", ["L", "S"])
 @pytest.mark.parametrize("bar", ["VALID", "VIOLATE"])
 def test_live_bar_straddling_the_publication_never_confirms_and_a_break_there_is_unassessable(side, bar):
-    """Live publication follows the receipt (04:04:01), so the bar [04:04,04:05) after the reference always
-    straddles p0 (MP-004 §3 / §8 joint 1): a recovery there cannot confirm, a contrary break is UNASSESSABLE."""
+    """Live publication follows the receipt (04:04:01), so the bar [04:04,04:05) after the reference
+    straddles p0 since start < p0 < end (MP-004 §3 / §8 joint 1): a recovery there cannot confirm, a contrary break is UNASSESSABLE."""
     mins = fx.live_tape(getattr(fx, bar), *fx.neutral(10))
     mins = mins if side == "L" else fx.mirror(mins)
     sess, _ = session(mins, fx.T(4, 9))

@@ -67,11 +67,11 @@ def test_late_first_recovery_and_dispatch_precedence_are_counted_once():
     late.finish()
     t = acc(late.journal)["total"]
     assert t["counts"] == counts(W=1, P=1, R=1, N=1) and t["not_issuable"]["late_first_recovery"] == 1
-    assert t["not_issuable"]["primary_class"] == {"LATE_OBSERVATION": 1}
+    assert t["not_issuable"]["primary_class"] == {"OTHER_GATES": 1}
     prec = Stepper(fx.recovery_then_violation(),
                    events=fx.delayed_events(fx.recovery_then_violation(), {fx.index_of(T(4, 2)): 60}), method="v0.5")
     prec.finish()
-    assert acc(prec.journal)["total"]["counts"] == counts(W=1, P=1, C=1)  # never R and C for one child
+    assert acc(prec.journal)["total"]["counts"] == counts(W=1, P=1, R=1, N=1)  # first decisive event; never R and C
     amb = Stepper(fx.tape(fx.VIOLATE, fx.VALID), events=fx.delayed_events(fx.tape(fx.VIOLATE, fx.VALID),
                                                                           {fx.index_of(T(4, 1)): 30}), method="v0.5")
     amb.finish()

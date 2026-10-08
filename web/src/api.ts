@@ -970,7 +970,7 @@ export interface AdviserFunnelV3 {
   waiting: { opened: number; observed_usable_return: number; endings: Record<string, number>;
              blocker_observations: Record<string, number>; CAP_REVISIONS?: number };
   issued_by_family_mode: Record<string, number>; a_return_calls: number; a_return_owners_entered_primary_60s: number;
-  evidence_threshold: { registered_minimum_distinct_owners: number; observed: number; status: string; note: string };
+  evidence_threshold: { registered_minimum_distinct_owners: number | null; observed: number; status: string; note: string };
   guidance_retired_by_scenario_terminal: number;
 }
 
@@ -1009,7 +1009,7 @@ export interface ComparisonRun {
   anchors?: AnchorDiagnostics | null;
   responses?: { total: Record<ResponseKey, number> | null; ratios: Record<string, string | null> | null;
                 identities_hold: boolean | null; months: Record<string, Record<ResponseKey, number> | null>;
-                not_issuable_primary_reason: Record<string, number> | null; cutoff: string | null } | null;
+                not_issuable_primary_reason: Record<string, number> | null; cutoff: string | null; cohort?: string } | null;
 }
 export interface Comparison {
   comparison_version: string; a: ComparisonRun; b: ComparisonRun;

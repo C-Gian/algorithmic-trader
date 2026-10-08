@@ -1036,6 +1036,9 @@ function ComparePanel({ items }: { items: Evaluation[] | null }) {
               </tbody>
             </table>
           </div>
+          {(cmp.a.responses || cmp.b.responses) && (
+            <p className="muted small-text" data-testid="compare-response-cohort">
+              {(cmp.b.responses ?? cmp.a.responses)?.cohort}</p>)}
           <div className="report-actions">
             <Button icon={copied === "copied" ? "check" : "copy"} onClick={copy} data-testid="copy-comparison">
               {copied === "copied" ? "Copied — paste into chat" : copied === "copying" ? "Copying…"
