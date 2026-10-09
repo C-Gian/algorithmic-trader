@@ -22,12 +22,36 @@
  "paths": [
   {
    "between_preparation_and_recovery": {
-    "cap_revisions_after_p0": [],
-    "cap_revisions_before_p0_after_wait_open": [],
-    "entry_attempt_records": [],
-    "geometry_changes": {},
-    "labels": "STORED (journal records published in (p0, recovery publication])",
-    "scenario_records": []
+    "cap_history_and_region_recompute": {
+     "E0_recomputed_equals_stored": true,
+     "E1_recomputed_equals_stored": true,
+     "cap_history_identical": true,
+     "cap_revisions_after_p0": [],
+     "cap_revisions_before_p0_after_wait_open": [],
+     "label": "STORED cap history of both records; E0/E1 DERIVED from each record with the pinned formulas (asserted equal to the stored regions)"
+    },
+    "geometry_snapshot_comparison": {
+     "changes": {},
+     "fields": [
+      "R",
+      "K_trigger",
+      "V",
+      "T_confirm",
+      "T_current",
+      "corridor_effective",
+      "economic_current",
+      "K_cost"
+     ],
+     "label": "STORED: geometric fields of the preparation record vs the terminal record"
+    },
+    "intermediate_records": {
+     "entry_attempt_seqs": [],
+     "label": "STORED: journal records of the child/scenario with preparation seq < seq < terminal seq (endpoints excluded)",
+     "preparation_seq": 10316,
+     "scenario_seqs": [],
+     "terminal_seq": 10317
+    },
+    "scope": "E1 = E0 holds for the geometric quantities considered; it does not imply that the market or context was generally unchanged"
    },
    "checks": {
     "1_E0_cap_F_empty_at_preparation": true,
@@ -191,12 +215,36 @@
   },
   {
    "between_preparation_and_recovery": {
-    "cap_revisions_after_p0": [],
-    "cap_revisions_before_p0_after_wait_open": [],
-    "entry_attempt_records": [],
-    "geometry_changes": {},
-    "labels": "STORED (journal records published in (p0, recovery publication])",
-    "scenario_records": []
+    "cap_history_and_region_recompute": {
+     "E0_recomputed_equals_stored": true,
+     "E1_recomputed_equals_stored": true,
+     "cap_history_identical": true,
+     "cap_revisions_after_p0": [],
+     "cap_revisions_before_p0_after_wait_open": [],
+     "label": "STORED cap history of both records; E0/E1 DERIVED from each record with the pinned formulas (asserted equal to the stored regions)"
+    },
+    "geometry_snapshot_comparison": {
+     "changes": {},
+     "fields": [
+      "R",
+      "K_trigger",
+      "V",
+      "T_confirm",
+      "T_current",
+      "corridor_effective",
+      "economic_current",
+      "K_cost"
+     ],
+     "label": "STORED: geometric fields of the preparation record vs the terminal record"
+    },
+    "intermediate_records": {
+     "entry_attempt_seqs": [],
+     "label": "STORED: journal records of the child/scenario with preparation seq < seq < terminal seq (endpoints excluded)",
+     "preparation_seq": 24673,
+     "scenario_seqs": [],
+     "terminal_seq": 24675
+    },
+    "scope": "E1 = E0 holds for the geometric quantities considered; it does not imply that the market or context was generally unchanged"
    },
    "checks": {
     "1_E0_cap_F_empty_at_preparation": true,
@@ -361,12 +409,36 @@
   },
   {
    "between_preparation_and_recovery": {
-    "cap_revisions_after_p0": [],
-    "cap_revisions_before_p0_after_wait_open": [],
-    "entry_attempt_records": [],
-    "geometry_changes": {},
-    "labels": "STORED (journal records published in (p0, recovery publication])",
-    "scenario_records": []
+    "cap_history_and_region_recompute": {
+     "E0_recomputed_equals_stored": true,
+     "E1_recomputed_equals_stored": true,
+     "cap_history_identical": true,
+     "cap_revisions_after_p0": [],
+     "cap_revisions_before_p0_after_wait_open": [],
+     "label": "STORED cap history of both records; E0/E1 DERIVED from each record with the pinned formulas (asserted equal to the stored regions)"
+    },
+    "geometry_snapshot_comparison": {
+     "changes": {},
+     "fields": [
+      "R",
+      "K_trigger",
+      "V",
+      "T_confirm",
+      "T_current",
+      "corridor_effective",
+      "economic_current",
+      "K_cost"
+     ],
+     "label": "STORED: geometric fields of the preparation record vs the terminal record"
+    },
+    "intermediate_records": {
+     "entry_attempt_seqs": [],
+     "label": "STORED: journal records of the child/scenario with preparation seq < seq < terminal seq (endpoints excluded)",
+     "preparation_seq": 27714,
+     "scenario_seqs": [],
+     "terminal_seq": 27715
+    },
+    "scope": "E1 = E0 holds for the geometric quantities considered; it does not imply that the market or context was generally unchanged"
    },
    "checks": {
     "1_E0_cap_F_empty_at_preparation": true,
@@ -538,20 +610,44 @@
   },
   {
    "between_preparation_and_recovery": {
-    "cap_revisions_after_p0": [],
-    "cap_revisions_before_p0_after_wait_open": [
-     {
-      "cap": "88564.0",
-      "cursor": "650970",
-      "near_edge": "88564.085",
-      "since": "2025-12-25T16:30:00+00:00",
-      "zone_id": "lm-pv15m-H-2025-12-25T15:45:00+00:00-1f980c5daaf7"
-     }
-    ],
-    "entry_attempt_records": [],
-    "geometry_changes": {},
-    "labels": "STORED (journal records published in (p0, recovery publication])",
-    "scenario_records": []
+    "cap_history_and_region_recompute": {
+     "E0_recomputed_equals_stored": true,
+     "E1_recomputed_equals_stored": true,
+     "cap_history_identical": true,
+     "cap_revisions_after_p0": [],
+     "cap_revisions_before_p0_after_wait_open": [
+      {
+       "cap": "88564.0",
+       "cursor": "650970",
+       "near_edge": "88564.085",
+       "since": "2025-12-25T16:30:00+00:00",
+       "zone_id": "lm-pv15m-H-2025-12-25T15:45:00+00:00-1f980c5daaf7"
+      }
+     ],
+     "label": "STORED cap history of both records; E0/E1 DERIVED from each record with the pinned formulas (asserted equal to the stored regions)"
+    },
+    "geometry_snapshot_comparison": {
+     "changes": {},
+     "fields": [
+      "R",
+      "K_trigger",
+      "V",
+      "T_confirm",
+      "T_current",
+      "corridor_effective",
+      "economic_current",
+      "K_cost"
+     ],
+     "label": "STORED: geometric fields of the preparation record vs the terminal record"
+    },
+    "intermediate_records": {
+     "entry_attempt_seqs": [],
+     "label": "STORED: journal records of the child/scenario with preparation seq < seq < terminal seq (endpoints excluded)",
+     "preparation_seq": 33062,
+     "scenario_seqs": [],
+     "terminal_seq": 33063
+    },
+    "scope": "E1 = E0 holds for the geometric quantities considered; it does not imply that the market or context was generally unchanged"
    },
    "checks": {
     "1_E0_cap_F_empty_at_preparation": true,

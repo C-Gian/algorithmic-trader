@@ -40,7 +40,9 @@ The stored corridor, E0 and E1 were re-derived from their own records with the p
 | Corridor ∩ F | D | 115469.7..115517.0 | **∅** (54.0 short of K) | 84499.2..84814.9 | 88197.6..88410.7 |
 | **E0 ∩ F** · gap | D | **∅** · 0.4 (4 ticks) | **∅** · 143.7 | **∅** · 22.9 | **∅** · 2.6 (26 ticks) |
 | Reference favourable extreme beyond E0 edge | D | L0 115517.1 < 115517.4 by 0.3 | L0 91823.5 < 91967.1 by 143.6 | L0 84815 < 84837.8 by 22.8 | H0 88197.5 > 88195.0 by 2.5 |
-| Records published in (p0, recovery] · geometry changes | S | none · none | none · none | none · none | none · none |
+| Intermediate child/scenario records between the preparation and terminal seq, endpoints excluded | S | none (10316 → 10317) | none (24673 → 24675) | none (27714 → 27715) | none (33062 → 33063) |
+| Geometric fields, preparation vs terminal snapshot (R, K, V, T confirm, cap, corridor, economic region, K cost) | S | identical | identical | identical | identical |
+| Cap history · E0/E1 recomputed from their own records | S·D | identical, no revision after p0 · equal to the stored values | identical, none · equal | identical, none · equal | identical, last revision 16:30 before p0 · equal |
 | **E1** | S | 115517.4..115560.2 (= E0) | 91967.1..92223.5 (= E0) | 84837.8..85419.2 (= E0) | 88125.9..88195.0 (= E0) |
 | Check 1: E0 ∩ F empty at preparation | D | **yes** | **yes** | **yes** | **yes** |
 | Check 2: E0 ∩ F non-empty but close outside, same geometry | D | not applicable | not applicable | not applicable | not applicable |
@@ -49,7 +51,7 @@ The stored corridor, E0 and E1 were re-derived from their own records with the p
 Notes on the table:
 - **Times and cutoffs.** Times are UTC, dates in 2025. RR = `REWARD_RISK_BELOW_MINIMUM`; CLOSE_OUTSIDE = `CLOSE_OUTSIDE_RETURN_CORRIDOR`.
 - **Reference open.** It comes from the pinned cache. Its high, low and close equal the stored H0, L0 and close.
-- **Local domain.** Every domain bar starts at or after p0, so none straddles p0. Each verdict was re-derived with the pinned predicate, and the count equals the stored `bars_checked`. Two high-only overshoots did not confirm, because the predicate requires the close: #4 at 16:39 (high 88222) and #1 at 18:16 (high = H0, contrary equality allowed).
+- **Local domain.** Every domain bar starts at or after p0, so none straddles p0. Each verdict was re-derived with the pinned predicate, and the count equals the stored `bars_checked`. The two intrabar overshoots without confirmation are both in #4: at 16:38 (high 88200) and at 16:39 (high 88222), each above H0 + tick = 88197.6 but with closes 88190.1 and 88192.7 below it. The predicate requires the close, so neither is a recovery. In #1 the 18:16 bar is a valid RECOVERY (close 115504.7 ≤ L0 − tick = 115517.0) with high = H0 = 115520: equality on the contrary extreme is allowed.
 - **Dependencies at the recovery.** trade.1m/15m/1h were READY with known_at ≤ the publication. The stored limitations were: calendar coverage unknown, modeled historical execution without measured quotes, funding completeness unproven.
 
 ## The three checks
@@ -62,8 +64,10 @@ Notes on the table:
    - In #4 the cap revision 88564.3 → 88564.0 (16:30, cursor 650970) **precedes** the preparation and is already in E0. The region stored at WAIT open (88125.9..88195.1) was disjoint from F as well.
 2. **Not applicable in all four**, because the precondition E0 ∩ F ≠ ∅ is false. Each recovery close lies in F and outside E1 with unchanged geometry. This follows from check 1 rather than being an independent cause.
 3. **No restriction between the preparation and the recovery.**
-   - No `entry_attempt` or `scenario` record was published in (p0, recovery].
-   - R, K, V, T, cap, corridor, K cost and the economic region are identical, so E1 = E0.
+   - **Intermediate records.** No intermediate record of the child/scenario between the preparation sequence and the terminal sequence, endpoints excluded.
+   - **Snapshot comparison.** The geometric fields of the preparation and terminal records (R, K, V, T confirm, cap, corridor, K cost, economic region) are identical.
+   - **Cap history and recomputation.** The cap history of the two records is identical, with no revision after p0. E0 and E1, recomputed from their own records with the pinned formulas, equal the stored regions. Hence E1 = E0.
+   - **Scope.** E1 = E0 holds for the geometric quantities considered. It does not imply that the market or the context was generally unchanged.
    - No zone contains the price, and there is no context, coverage, freshness, timing or selection blocker.
    - Every recovery was the current bar (late first recovery 0).
 

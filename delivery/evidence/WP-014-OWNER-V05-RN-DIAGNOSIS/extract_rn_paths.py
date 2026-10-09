@@ -189,10 +189,15 @@ def path(child: str, ea: list[dict], sc: list[dict], export: Path, p, tick_reg: 
     chk_prep = geo.predicate(d, D(gp["price"]), v_op, cap0, k_cost, rr)
     assert chk_prep.ok and s(chk_prep.g) == gp["G"]
 
-    # ---- relevant changes between preparation and recovery (records published in (p0, recovery])
+    # ---- preparation -> recovery, three distinct facts:
+    # (a) intermediate records of the child/scenario between the preparation and terminal journal sequences,
+    #     endpoints excluded (`between`, `scen_between` above);
+    # (b) comparison of the geometric fields of the two snapshots (preparation and terminal records);
+    # (c) cap history check and recomputation of E0/E1 from their own records (asserted equal to the stored values).
     keys = ("R", "K_trigger", "V", "T_confirm", "T_current", "corridor_effective", "economic_current", "K_cost")
     changed = {k: [gp[k], gt[k]] for k in keys if gp[k] != gt[k]}
     caps_after_prep = [c for c in T["cap_history"] if c["since"] > p0]
+    caps_same = P["cap_history"] == T["cap_history"]
 
     cls1 = e0f is None
     return {
@@ -248,10 +253,23 @@ def path(child: str, ea: list[dict], sc: list[dict], export: Path, p, tick_reg: 
             "close_in_F": True, "close_in_E1": bool(e1 and e1[0] <= price <= e1[1]),
             "geometry_unchanged": not changed},
         "between_preparation_and_recovery": {
-            "entry_attempt_records": [r["seq"] for r in between], "scenario_records": scen_between,
-            "geometry_changes": changed, "cap_revisions_after_p0": caps_after_prep,
-            "cap_revisions_before_p0_after_wait_open": [c for c in P["cap_history"] if c["since"] > W["env"]["published_at"]],
-            "labels": "STORED (journal records published in (p0, recovery publication])"},
+            "intermediate_records": {
+                "preparation_seq": prep["seq"], "terminal_seq": term["seq"],
+                "entry_attempt_seqs": [r["seq"] for r in between], "scenario_seqs": scen_between,
+                "label": "STORED: journal records of the child/scenario with preparation seq < seq < terminal seq "
+                         "(endpoints excluded)"},
+            "geometry_snapshot_comparison": {
+                "fields": list(keys), "changes": changed,
+                "label": "STORED: geometric fields of the preparation record vs the terminal record"},
+            "cap_history_and_region_recompute": {
+                "cap_history_identical": caps_same, "cap_revisions_after_p0": caps_after_prep,
+                "cap_revisions_before_p0_after_wait_open":
+                    [c for c in P["cap_history"] if c["since"] > W["env"]["published_at"]],
+                "E0_recomputed_equals_stored": True, "E1_recomputed_equals_stored": True,
+                "label": "STORED cap history of both records; E0/E1 DERIVED from each record with the pinned "
+                         "formulas (asserted equal to the stored regions)"},
+            "scope": "E1 = E0 holds for the geometric quantities considered; it does not imply that the market "
+                     "or context was generally unchanged"},
     }
 
 

@@ -644,7 +644,14 @@ Owner-relayed Director closure, recorded verbatim in [MP-004-DIRECTOR-CLOSURE.md
     - In all four paths (1 LONG, 3 SHORT; cohorts Sep 1, Nov 1, Dec 2) E0 ∩ F was already empty at the preparation. The gaps are 0.4, 143.7, 22.9 and 2.6.
     - The reference bar's favourable extreme already lay beyond E0's near edge.
     - Check 2 is not applicable, because its precondition is false.
-    - Check 3 found no restriction: there are no records in (p0, recovery] and E1 = E0. The #4 cap revision precedes the preparation.
+    - Check 3 found no restriction. There is no intermediate record of the child/scenario between the preparation sequence and the terminal sequence, endpoints excluded. The geometric fields of the two snapshots are identical. The cap history is unchanged after p0, and E0/E1 recomputed equal the stored values, so E1 = E0. This holds for the geometric quantities considered and does not imply a generally unchanged context. The #4 cap revision precedes the preparation.
     - For three paths F meets the corridor and the only blocker is reward/risk. For #2 F lies wholly outside the corridor, so both blockers apply and the corridor is primary (smaller code in the same class).
   - **Reconciliation.** R = N = 4, I = 0. Blocker incidence: RR 4, corridor 1. Primary: RR 3, corridor 1. This matches the report.
 - **Checks.** Dossier verifications only (re-derivations, reconciliation, reproducibility). No product suites, E2E or Compose. CI PENDING / NOT CHECKED, Owner-operated.
+
+### Four R→N paths diagnosis — Astra documentary correction (base `cb356f2`; READY FOR DIRECTOR REVIEW — FOUR R→N PATHS DIAGNOSIS CORRECTION ONLY; not accepted)
+
+Only the dossier, the JSON labels and the script strings were corrected, from the existing local exports. There was no new extraction, acquisition, replay, Deep validation or economic run. Counts, classifications, sums and method are unchanged; outside the restructured preparation→recovery block, `paths.json` is identical.
+- **Local domain.** The two intrabar overshoots without confirmation are #4 at 16:38 and 16:39. #1 at 18:16 is a valid RECOVERY with high = H0, because contrary equality is allowed.
+- **Interval.** The "(p0, recovery]" statement is replaced by: no intermediate record of the child/scenario between the preparation sequence and the terminal sequence, endpoints excluded. That absence, the comparison of the two snapshots' geometric fields, and the cap-history check with the E0/E1 recomputation are now kept as separate facts. E1 = E0 is stated for the geometric quantities considered only, not as a generally unchanged context.
+- **Checks.** Artifact consistency only (regeneration byte-identical, unchanged fields compared with `cb356f2`). No product suites, E2E or Compose. CI is Owner-operated: PENDING / NOT CHECKED.

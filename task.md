@@ -1,6 +1,12 @@
 # Current task — four R→N paths of the Owner v0.5 run (read-only diagnosis)
 Date: 2026-10-09. Status: DELIVERED — READY FOR DIRECTOR REVIEW — FOUR R→N PATHS DIAGNOSIS ONLY ([summary](delivery/evidence/WP-014-OWNER-V05-RN-DIAGNOSIS/SUMMARY.md)). Remote CI is Owner-operated: PENDING / NOT CHECKED. No further package is activated.
 
+**Correction (Astra review of `cb356f2`, documentary only).**
+- The local-domain overshoots are those of #4 at 16:38 and 16:39; #1 at 18:16 is a valid RECOVERY with high = H0.
+- The interval statement now reads: no intermediate child/scenario record between the preparation and terminal sequences, endpoints excluded. It is kept separate from the snapshot comparison and from the cap-history check with the E0/E1 recomputation.
+- E1 = E0 holds for the geometric quantities only.
+- Counts, classifications and method are unchanged. Only the local exports were used.
+
 ## Preceding record
 
 WP-014 CORRECTION (Astra review of `0526641`) was delivered at `eab7d23`; see the STATE.
