@@ -1,8 +1,8 @@
 # Project State
 
-Updated: 2026-10-08 — WP-014 (MP-004 v0.5) delivered at 0526641; Astra review findings F1–F3 and alignments corrected under WP-014 CORRECTION (MP-004 and its methodological decisions unchanged), READY FOR DIRECTOR REVIEW — WP-014 CORRECTION ONLY. The continuous v0.4/v0.5 Owner comparison stays INACTIVE.
+Updated: 2026-10-09 — Owner continuous v0.5 run `eval-20261009T155751-be8b2b` (build eab7d23) accepted descriptively. A read-only diagnosis of its four R→N paths has been delivered: READY FOR DIRECTOR REVIEW — FOUR R→N PATHS DIAGNOSIS ONLY (see the last section). Earlier: WP-014 (MP-004 v0.5) delivered at 0526641 and the WP-014 CORRECTION at eab7d23.
 
-**Current task: [task.md](task.md) — WP-014 CORRECTION (Astra review of 0526641: F1–F3 + alignments), delivered; awaiting Director review and Owner-operated exact-SHA CI.** [Specification](delivery/MP-004-V05-RETURN-RESPONSE.md) · [closure](delivery/MP-004-DIRECTOR-CLOSURE.md) · [erratum](delivery/MP-004-ERRATUM-SECTION-6-RATIOS.md) · [evidence](delivery/evidence/WP-014-ENGINEERING-EVIDENCE.md) · [inactive plan](delivery/WP-014-CONTINUOUS-V04-V05-PLAN.md). Sep–Dec 2025 is exposed development; Jan–Aug 2026 stays protected except the authorized tail.
+**Current task: [task.md](task.md) — four R→N paths diagnosis (read-only), delivered; awaiting Director review and Owner-operated CI.** Previous package: WP-014 CORRECTION (Astra review of 0526641: F1–F3 + alignments). [Specification](delivery/MP-004-V05-RETURN-RESPONSE.md) · [closure](delivery/MP-004-DIRECTOR-CLOSURE.md) · [erratum](delivery/MP-004-ERRATUM-SECTION-6-RATIOS.md) · [evidence](delivery/evidence/WP-014-ENGINEERING-EVIDENCE.md) · [inactive plan](delivery/WP-014-CONTINUOUS-V04-V05-PLAN.md). Sep–Dec 2025 is exposed development; Jan–Aug 2026 stays protected except the authorized tail.
 
 Goal (Foundation v3.1): an integrated BTC adviser with persistent actionable LONG/SHORT calls, entry area, targets, stop/exit guidance and holding horizon. Capital, size, leverage and orders stay human. Historical ACCEPTED/READY/HOLD labels in older documents do not authorize work; only task.md does.
 
@@ -623,3 +623,28 @@ Owner-relayed Director closure, recorded verbatim in [MP-004-DIRECTOR-CLOSURE.md
   - Separate erratum: SHORT valid 1.934932545…, insufficient 0.971777….
 - **Fail-before / pass-after.** 13 of 27 new regressions fail on `0526641` (the 14 guards pass); 27/27 pass after.
 - **Checks.** See evidence §9–10. The full suite and Compose are left to CI. CI is Owner-operated: PENDING / NOT CHECKED. The continuous plan stays INACTIVE.
+
+## Owner continuous v0.5 run — descriptive acceptance and four R→N paths diagnosis (9 October 2026)
+
+**Director decision (as relayed in the Owner assignment).** The run result is accepted as descriptive development evidence and the task below is recorded. No verbatim decision text beyond the assignment was supplied. There is no method, threshold or parameter change and no next package.
+- **Run.**
+  - Evaluation `eval-20261009T155751-be8b2b`, replay `obs-20261009T155751-0f255b`, build `eab7d23`.
+  - Method `btc.context-action.v0.5` / `mp004.rules.v0.5`, pack `pack-1ae7d36c…`, preset `btc-2025-09-to-2025-12-continuous-init35d-v1`.
+- **Recorded result (app report).**
+  - COMPLETED, coverage complete, assurance PASSED 21/21.
+  - 89 A confirmations and 1 call (A IMMEDIATE, TIME_EXPIRED).
+  - A RETURN response: W 57, P 12, C 6, R 4, N 4, I 0, X 2, A 0.
+- **Executor diagnosis** ([summary](delivery/evidence/WP-014-OWNER-V05-RN-DIAGNOSIS/SUMMARY.md) · [paths.json](delivery/evidence/WP-014-OWNER-V05-RN-DIAGNOSIS/paths.json) · [script](delivery/evidence/WP-014-OWNER-V05-RN-DIAGNOSIS/extract_rn_paths.py)). READY FOR DIRECTOR REVIEW — FOUR R→N PATHS DIAGNOSIS ONLY; not accepted.
+  - **Access.**
+    - Only the app's read-only GET surfaces: report, journal pages and the bar window clamped before each recovery cursor.
+    - The authorized DB extraction was not used. Raw exports stay outside Git.
+    - No write, replay, Deep validation, acquisition or economic run.
+  - **Integrity.** The stored corridor, E0, E1, G, Q, margin, blockers and primary reason are re-derived with the pinned formulas and register, and they are equal. The pinned-cache reference bars equal the stored H0/L0/close. Local verdicts reproduce `bars_checked`. Regeneration is byte-identical.
+  - **Findings.**
+    - In all four paths (1 LONG, 3 SHORT; cohorts Sep 1, Nov 1, Dec 2) E0 ∩ F was already empty at the preparation. The gaps are 0.4, 143.7, 22.9 and 2.6.
+    - The reference bar's favourable extreme already lay beyond E0's near edge.
+    - Check 2 is not applicable, because its precondition is false.
+    - Check 3 found no restriction: there are no records in (p0, recovery] and E1 = E0. The #4 cap revision precedes the preparation.
+    - For three paths F meets the corridor and the only blocker is reward/risk. For #2 F lies wholly outside the corridor, so both blockers apply and the corridor is primary (smaller code in the same class).
+  - **Reconciliation.** R = N = 4, I = 0. Blocker incidence: RR 4, corridor 1. Primary: RR 3, corridor 1. This matches the report.
+- **Checks.** Dossier verifications only (re-derivations, reconciliation, reproducibility). No product suites, E2E or Compose. CI PENDING / NOT CHECKED, Owner-operated.

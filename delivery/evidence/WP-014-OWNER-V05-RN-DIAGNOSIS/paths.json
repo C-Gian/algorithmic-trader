@@ -1,0 +1,787 @@
+{
+ "access": "app read-only GET surfaces only; no DB extraction",
+ "build": "eab7d23438d7188118600dbb358f9136f96bd32b",
+ "definitions": {
+  "E0": "corridor ∩ economic region at the preparation record (stored; re-derived)",
+  "E1": "the same at the first-recovery record",
+  "F": "LONG close >= H0+tick; SHORT close <= L0-tick"
+ },
+ "evaluation_id": "eval-20261009T155751-be8b2b",
+ "input_sha256": {
+  "ea_0.json": "643e5754c5530337d864ff119f0f6b370abf2195a41da6ce720f4744d312f82a",
+  "ea_1.json": "07697e4ca20ac3186ac762cc60c3cf2ba6035291f68b19461bb06e778ab3131a",
+  "evaluation.json": "f795409eea2f33a8167f4efc37e7e2e40f321c78b0a6e760e6076643d0a97169",
+  "report.json": "1015d98cfe15206cb701c1543f4366d8371557f09d18e0d12d5bb1202dde39c5",
+  "sc_0.json": "a09c9c2f910269ab08e3ac7eb6374ce42ec048689ed97e698f02491e92b709cf",
+  "sc_1.json": "9e9a4640af77c92f20880a0e7112bf78936e4bb62103d95063fa839ed1ec0d96",
+  "win_206331.json": "a1de14b6fdddadb753f296cd70bc8f0338b520a6e8b31a1114ef354d1d8f8613",
+  "win_487755.json": "8bbeda41217d8e46bcf59770af86ac2fac817ef9adbff1db628645b14411d40b",
+  "win_547410.json": "d3d41fbc55d8773f8e9eb48130771cbe9b3283cf03976c70215acaffd6ca8a9e",
+  "win_651003.json": "8aaaebc9b0cdb7d3c3e4aa3d702d620113c9279318165a3866516199a76ca04b"
+ },
+ "paths": [
+  {
+   "between_preparation_and_recovery": {
+    "cap_revisions_after_p0": [],
+    "cap_revisions_before_p0_after_wait_open": [],
+    "entry_attempt_records": [],
+    "geometry_changes": {},
+    "labels": "STORED (journal records published in (p0, recovery publication])",
+    "scenario_records": []
+   },
+   "checks": {
+    "1_E0_cap_F_empty_at_preparation": true,
+    "2_E0_cap_F_nonempty_but_close_outside_usable_region": "NOT_APPLICABLE (E0 ∩ F empty)",
+    "3_later_documented_restriction_E0_to_E1": false,
+    "close_in_E1": false,
+    "close_in_F": true,
+    "geometry_unchanged": true
+   },
+   "child": "AS-2025-09-13T16:45:00+00:00-18955ad23d59#entry",
+   "direction": "SHORT",
+   "first_recovery": {
+    "G": "35.574309963144356896299457944135606603021348914806",
+    "Q": "5.9910981977356765568846981984282890652934469333283",
+    "bar": "okx/BTC-USDT-SWAP/trade_bar_1m#obs@2025-09-13T18:16:00Z",
+    "bars_checked": "1",
+    "blockers": [
+     "REWARD_RISK_BELOW_MINIMUM"
+    ],
+    "cursor": 206331,
+    "dependencies": [
+     {
+      "digest": null,
+      "event_end": "2025-09-13T18:15:00Z",
+      "known_at": "2025-09-13T18:15:00Z",
+      "latest_ref": "okx/BTC-USDT-SWAP/trade_bar_1m/15m/2025-09-13T18:00:00+00:00",
+      "name": "trade.15m",
+      "status": "READY"
+     },
+     {
+      "digest": null,
+      "event_end": "2025-09-13T18:00:00Z",
+      "known_at": "2025-09-13T18:00:00Z",
+      "latest_ref": "okx/BTC-USDT-SWAP/trade_bar_1m/1h/2025-09-13T17:00:00+00:00",
+      "name": "trade.1h",
+      "status": "READY"
+     },
+     {
+      "digest": null,
+      "event_end": "2025-09-13T18:17:00Z",
+      "known_at": "2025-09-13T18:17:00Z",
+      "latest_ref": "okx/BTC-USDT-SWAP/trade_bar_1m#obs@2025-09-13T18:16:00Z",
+      "name": "trade.1m",
+      "status": "READY"
+     }
+    ],
+    "evaluated_price": "115504.7",
+    "known_at": "2025-09-13T18:17:00Z",
+    "labels": {
+     "blockers": "STORED; re-derived: equal",
+     "intrabar order": "UNAVAILABLE (never inferred)",
+     "local_sequence": "bars STORED (pinned cache); verdicts DERIVED with core5.local_verdict",
+     "per-bar admission cursor of checked bars": "UNAVAILABLE (not returned by the surfaces used)",
+     "ratio": "DERIVED (G-K)/(Q+K) from STORED G/Q/K"
+    },
+    "limitations": [
+     "CALENDAR_COVERAGE_UNKNOWN",
+     "HISTORICAL_MODELED_EXECUTION_NOT_MEASURED_QUOTES",
+     "FUNDING_COMPLETENESS_UNPROVEN"
+    ],
+    "local_sequence": [
+     {
+      "bar_start": "2025-09-13T18:16:00+00:00",
+      "c": "115504.7",
+      "h": "115520",
+      "l": "115504.7",
+      "o": "115520",
+      "verdict": "RECOVERY"
+     }
+    ],
+    "margin": "-2.41500787413845497196217989",
+    "price_source": "historical close of the current recovery bar",
+    "primary_class": "ECONOMICS_GEOMETRY",
+    "primary_reason": "REWARD_RISK_BELOW_MINIMUM",
+    "published_at": "2025-09-13T18:17:00Z",
+    "ratio": "1.0792",
+    "response_current": "true"
+   },
+   "geometry_at_preparation": {
+    "G": "36.885419741533709776410817530139828722150902138939",
+    "K_cost_bps": "14",
+    "K_trigger": "115469.7",
+    "Q": "4.6745192819592122223097492293535572658909850164344",
+    "R": "115560.2",
+    "T_cap_current": "115093.8",
+    "T_confirm": "115093.8",
+    "V_operational": "115573.9",
+    "V_structural": "115573.9",
+    "cap_history_at_preparation": [
+     {
+      "cap": "115093.8",
+      "cursor": "206289",
+      "near_edge": "115093.8",
+      "since": "2025-09-13T18:03:00+00:00",
+      "zone_id": "T_CONFIRM"
+     }
+    ],
+    "corridor_effective": "115469.7..115560.2",
+    "corridor_structural": "115469.7..115560.2",
+    "economic_region_E0": "115517.4..115560.2",
+    "labels": {
+     "V_structural": "STORED (scenario CONFIRMED record seq 10309)",
+     "corridor/E0": "STORED; re-derived from the preparation record with the pinned formulas: equal",
+     "others": "STORED (journal, preparation record)",
+     "ratio_at_reference_close": "DERIVED (G-K)/(Q+K)",
+     "rr_min": "STORED (register 255ab5b7cc59)"
+    },
+    "margin": "0.47599660318265510963911846",
+    "price_reference_close": "115519.9",
+    "ratio_at_reference_close": "1.2255",
+    "rr_min": "1.2"
+   },
+   "reference_bar": {
+    "c0_cursor": "206328",
+    "close": "115519.9",
+    "high_H0": "115520",
+    "id": "okx/BTC-USDT-SWAP/trade_bar_1m#obs@2025-09-13T18:15:00Z",
+    "interval": [
+     "2025-09-13T18:15:00+00:00",
+     "2025-09-13T18:16:00+00:00"
+    ],
+    "journal_seq": 10316,
+    "labels": {
+     "open": "STORED (pinned cache via read-only window)",
+     "others": "STORED (journal)"
+    },
+    "low_L0": "115517.1",
+    "open": "115517.1",
+    "p0_published_at": "2025-09-13T18:16:00+00:00",
+    "tick": "0.1"
+   },
+   "scenario_id": "AS-2025-09-13T16:45:00+00:00-18955ad23d59",
+   "sets": {
+    "E0": "115517.4..115560.2",
+    "E0_F_gap_price": "0.4",
+    "E0_F_gap_ticks": "4",
+    "E0_cap_F": null,
+    "E1": "115517.4..115560.2",
+    "E1_F_gap_price": "0.4",
+    "E1_cap_F": null,
+    "F": "(-inf, 115517.0]",
+    "best_ratio_over_F_in_corridor": "1.1960",
+    "best_ratio_price": "115517.0",
+    "corridor0": "115469.7..115560.2",
+    "corridor0_F_gap_price": "-47.3",
+    "corridor0_cap_F": "115469.7..115517.0",
+    "labels": "DERIVED from STORED H0/L0/tick and the STORED (re-derived) corridor/E0/E1",
+    "reference_extreme_vs_E0": {
+     "E0_near_edge": "115517.4",
+     "beyond_E0_by": "0.3",
+     "favourable_extreme": "115517.1"
+    }
+   },
+   "wait_open": {
+    "cohort_month": "2025-09",
+    "cursor": 206289,
+    "journal_seq": 10310,
+    "label": "STORED",
+    "published_at": "2025-09-13T18:03:00Z"
+   }
+  },
+  {
+   "between_preparation_and_recovery": {
+    "cap_revisions_after_p0": [],
+    "cap_revisions_before_p0_after_wait_open": [],
+    "entry_attempt_records": [],
+    "geometry_changes": {},
+    "labels": "STORED (journal records published in (p0, recovery publication])",
+    "scenario_records": []
+   },
+   "checks": {
+    "1_E0_cap_F_empty_at_preparation": true,
+    "2_E0_cap_F_nonempty_but_close_outside_usable_region": "NOT_APPLICABLE (E0 ∩ F empty)",
+    "3_later_documented_restriction_E0_to_E1": false,
+    "close_in_E1": false,
+    "close_in_F": true,
+    "geometry_unchanged": true
+   },
+   "child": "AS-2025-11-17T20:00:00+00:00-6114b7079cf7#entry",
+   "direction": "SHORT",
+   "first_recovery": {
+    "G": "54.991014540107825518706093775526874693677503675870",
+    "Q": "50.481947394216631269400424767194902793661166476066",
+    "bar": "okx/BTC-USDT-SWAP/trade_bar_1m#obs@2025-11-17T21:44:00Z",
+    "bars_checked": "1",
+    "blockers": [
+     "CLOSE_OUTSIDE_RETURN_CORRIDOR",
+     "REWARD_RISK_BELOW_MINIMUM"
+    ],
+    "cursor": 487755,
+    "dependencies": [
+     {
+      "digest": null,
+      "event_end": "2025-11-17T21:45:00Z",
+      "known_at": "2025-11-17T21:45:00Z",
+      "latest_ref": "okx/BTC-USDT-SWAP/trade_bar_1m/15m/2025-11-17T21:30:00+00:00",
+      "name": "trade.15m",
+      "status": "READY"
+     },
+     {
+      "digest": null,
+      "event_end": "2025-11-17T21:00:00Z",
+      "known_at": "2025-11-17T21:00:00Z",
+      "latest_ref": "okx/BTC-USDT-SWAP/trade_bar_1m/1h/2025-11-17T20:00:00+00:00",
+      "name": "trade.1h",
+      "status": "READY"
+     },
+     {
+      "digest": null,
+      "event_end": "2025-11-17T21:45:00Z",
+      "known_at": "2025-11-17T21:45:00Z",
+      "latest_ref": "okx/BTC-USDT-SWAP/trade_bar_1m#obs@2025-11-17T21:44:00Z",
+      "name": "trade.1m",
+      "status": "READY"
+     }
+    ],
+    "evaluated_price": "91815",
+    "known_at": "2025-11-17T21:45:00Z",
+    "labels": {
+     "blockers": "STORED; re-derived: equal",
+     "intrabar order": "UNAVAILABLE (never inferred)",
+     "local_sequence": "bars STORED (pinned cache); verdicts DERIVED with core5.local_verdict",
+     "per-bar admission cursor of checked bars": "UNAVAILABLE (not returned by the surfaces used)",
+     "ratio": "DERIVED (G-K)/(Q+K) from STORED G/Q/K"
+    },
+    "limitations": [
+     "CALENDAR_COVERAGE_UNKNOWN",
+     "HISTORICAL_MODELED_EXECUTION_NOT_MEASURED_QUOTES",
+     "FUNDING_COMPLETENESS_UNPROVEN"
+    ],
+    "local_sequence": [
+     {
+      "bar_start": "2025-11-17T21:44:00+00:00",
+      "c": "91815",
+      "h": "92030.9",
+      "l": "91782.7",
+      "o": "92030.9",
+      "verdict": "RECOVERY"
+     }
+    ],
+    "margin": "-36.38732233295213200457441594",
+    "price_source": "historical close of the current recovery bar",
+    "primary_class": "ECONOMICS_GEOMETRY",
+    "primary_reason": "CLOSE_OUTSIDE_RETURN_CORRIDOR",
+    "published_at": "2025-11-17T21:45:00Z",
+    "ratio": "0.6357",
+    "response_current": "true"
+   },
+   "geometry_at_preparation": {
+    "G": "78.332301072464712977149004139909378361639012941292",
+    "K_cost_bps": "14",
+    "K_trigger": "91877.4",
+    "Q": "26.893112103530332170681618150405841509926003194576",
+    "R": "92223.5",
+    "T_cap_current": "91310.1",
+    "T_confirm": "91310.1",
+    "V_operational": "92278.5",
+    "V_structural": "92278.475",
+    "cap_history_at_preparation": [
+     {
+      "cap": "91310.1",
+      "cursor": "487674",
+      "near_edge": "91310.1",
+      "since": "2025-11-17T21:18:00+00:00",
+      "zone_id": "T_CONFIRM"
+     }
+    ],
+    "corridor_effective": "91877.4..92223.5",
+    "corridor_structural": "91877.4..92223.5",
+    "economic_region_E0": "91967.1..92223.5",
+    "labels": {
+     "V_structural": "STORED (scenario CONFIRMED record seq 24668)",
+     "corridor/E0": "STORED; re-derived from the preparation record with the pinned formulas: equal",
+     "others": "STORED (journal, preparation record)",
+     "ratio_at_reference_close": "DERIVED (G-K)/(Q+K)",
+     "rr_min": "STORED (register 255ab5b7cc59)"
+    },
+    "margin": "15.26056654822831437233106236",
+    "price_reference_close": "92031",
+    "ratio_at_reference_close": "1.5732",
+    "rr_min": "1.2"
+   },
+   "reference_bar": {
+    "c0_cursor": "487752",
+    "close": "92031",
+    "high_H0": "92045.5",
+    "id": "okx/BTC-USDT-SWAP/trade_bar_1m#obs@2025-11-17T21:43:00Z",
+    "interval": [
+     "2025-11-17T21:43:00+00:00",
+     "2025-11-17T21:44:00+00:00"
+    ],
+    "journal_seq": 24673,
+    "labels": {
+     "open": "STORED (pinned cache via read-only window)",
+     "others": "STORED (journal)"
+    },
+    "low_L0": "91823.5",
+    "open": "91873.3",
+    "p0_published_at": "2025-11-17T21:44:00+00:00",
+    "tick": "0.1"
+   },
+   "scenario_id": "AS-2025-11-17T20:00:00+00:00-6114b7079cf7",
+   "sets": {
+    "E0": "91967.1..92223.5",
+    "E0_F_gap_price": "143.7",
+    "E0_F_gap_ticks": "1437",
+    "E0_cap_F": null,
+    "E1": "91967.1..92223.5",
+    "E1_F_gap_price": "143.7",
+    "E1_cap_F": null,
+    "F": "(-inf, 91823.4]",
+    "best_ratio_over_F_in_corridor": null,
+    "best_ratio_price": null,
+    "corridor0": "91877.4..92223.5",
+    "corridor0_F_gap_price": "54.0",
+    "corridor0_cap_F": null,
+    "labels": "DERIVED from STORED H0/L0/tick and the STORED (re-derived) corridor/E0/E1",
+    "reference_extreme_vs_E0": {
+     "E0_near_edge": "91967.1",
+     "beyond_E0_by": "143.6",
+     "favourable_extreme": "91823.5"
+    }
+   },
+   "wait_open": {
+    "cohort_month": "2025-11",
+    "cursor": 487674,
+    "journal_seq": 24669,
+    "label": "STORED",
+    "published_at": "2025-11-17T21:18:00Z"
+   }
+  },
+  {
+   "between_preparation_and_recovery": {
+    "cap_revisions_after_p0": [],
+    "cap_revisions_before_p0_after_wait_open": [],
+    "entry_attempt_records": [],
+    "geometry_changes": {},
+    "labels": "STORED (journal records published in (p0, recovery publication])",
+    "scenario_records": []
+   },
+   "checks": {
+    "1_E0_cap_F_empty_at_preparation": true,
+    "2_E0_cap_F_nonempty_but_close_outside_usable_region": "NOT_APPLICABLE (E0 ∩ F empty)",
+    "3_later_documented_restriction_E0_to_E1": false,
+    "close_in_E1": false,
+    "close_in_F": true,
+    "geometry_unchanged": true
+   },
+   "child": "AS-2025-12-01T16:00:00+00:00-cfdb2979f085#entry",
+   "direction": "SHORT",
+   "first_recovery": {
+    "G": "112.06133883810085520495429076968445886169271601298",
+    "Q": "81.273960483633146564435269831907991742848717192569",
+    "bar": "okx/BTC-USDT-SWAP/trade_bar_1m#obs@2025-12-01T17:09:00Z",
+    "bars_checked": "2",
+    "blockers": [
+     "REWARD_RISK_BELOW_MINIMUM"
+    ],
+    "cursor": 547410,
+    "dependencies": [
+     {
+      "digest": null,
+      "event_end": "2025-12-01T17:00:00Z",
+      "known_at": "2025-12-01T17:00:00Z",
+      "latest_ref": "okx/BTC-USDT-SWAP/trade_bar_1m/15m/2025-12-01T16:45:00+00:00",
+      "name": "trade.15m",
+      "status": "READY"
+     },
+     {
+      "digest": null,
+      "event_end": "2025-12-01T17:00:00Z",
+      "known_at": "2025-12-01T17:00:00Z",
+      "latest_ref": "okx/BTC-USDT-SWAP/trade_bar_1m/1h/2025-12-01T16:00:00+00:00",
+      "name": "trade.1h",
+      "status": "READY"
+     },
+     {
+      "digest": null,
+      "event_end": "2025-12-01T17:10:00Z",
+      "known_at": "2025-12-01T17:10:00Z",
+      "latest_ref": "okx/BTC-USDT-SWAP/trade_bar_1m#obs@2025-12-01T17:09:00Z",
+      "name": "trade.1m",
+      "status": "READY"
+     }
+    ],
+    "evaluated_price": "84775",
+    "known_at": "2025-12-01T17:10:00Z",
+    "labels": {
+     "blockers": "STORED; re-derived: equal",
+     "intrabar order": "UNAVAILABLE (never inferred)",
+     "local_sequence": "bars STORED (pinned cache); verdicts DERIVED with core5.local_verdict",
+     "per-bar admission cursor of checked bars": "UNAVAILABLE (not returned by the surfaces used)",
+     "ratio": "DERIVED (G-K)/(Q+K) from STORED G/Q/K"
+    },
+    "limitations": [
+     "CALENDAR_COVERAGE_UNKNOWN",
+     "HISTORICAL_MODELED_EXECUTION_NOT_MEASURED_QUOTES",
+     "FUNDING_COMPLETENESS_UNPROVEN"
+    ],
+    "local_sequence": [
+     {
+      "bar_start": "2025-12-01T17:08:00+00:00",
+      "c": "84917.2",
+      "h": "84937.9",
+      "l": "84837.4",
+      "o": "84937.9",
+      "verdict": "NONE"
+     },
+     {
+      "bar_start": "2025-12-01T17:09:00+00:00",
+      "c": "84775",
+      "h": "84923.1",
+      "l": "84755.9",
+      "o": "84917.2",
+      "verdict": "RECOVERY"
+     }
+    ],
+    "margin": "-16.26741374225892067236803303",
+    "price_source": "historical close of the current recovery bar",
+    "primary_class": "ECONOMICS_GEOMETRY",
+    "primary_reason": "REWARD_RISK_BELOW_MINIMUM",
+    "published_at": "2025-12-01T17:10:00Z",
+    "ratio": "1.0293",
+    "response_current": "true"
+   },
+   "geometry_at_preparation": {
+    "G": "131.02513718846357162114909834125873137904280656809",
+    "K_cost_bps": "14",
+    "K_trigger": "84499.2",
+    "Q": "61.939369821952273366777374999852833658472837214012",
+    "R": "85419.2",
+    "T_cap_current": "83825.0",
+    "T_confirm": "83825.0",
+    "V_operational": "85464.0",
+    "V_structural": "85463.99",
+    "cap_history_at_preparation": [
+     {
+      "cap": "83825.0",
+      "cursor": "547365",
+      "near_edge": "83825.0",
+      "since": "2025-12-01T16:55:00+00:00",
+      "zone_id": "T_CONFIRM"
+     }
+    ],
+    "corridor_effective": "84499.2..85419.2",
+    "corridor_structural": "84499.2..85419.2",
+    "economic_region_E0": "84837.8..85419.2",
+    "labels": {
+     "V_structural": "STORED (scenario CONFIRMED record seq 27705)",
+     "corridor/E0": "STORED; re-derived from the preparation record with the pinned formulas: equal",
+     "others": "STORED (journal, preparation record)",
+     "ratio_at_reference_close": "DERIVED (G-K)/(Q+K)",
+     "rr_min": "STORED (register 255ab5b7cc59)"
+    },
+    "margin": "25.89789340212084358101624834",
+    "price_reference_close": "84937.9",
+    "ratio_at_reference_close": "1.5410",
+    "rr_min": "1.2"
+   },
+   "reference_bar": {
+    "c0_cursor": "547404",
+    "close": "84937.9",
+    "high_H0": "84962.5",
+    "id": "okx/BTC-USDT-SWAP/trade_bar_1m#obs@2025-12-01T17:07:00Z",
+    "interval": [
+     "2025-12-01T17:07:00+00:00",
+     "2025-12-01T17:08:00+00:00"
+    ],
+    "journal_seq": 27714,
+    "labels": {
+     "open": "STORED (pinned cache via read-only window)",
+     "others": "STORED (journal)"
+    },
+    "low_L0": "84815",
+    "open": "84815",
+    "p0_published_at": "2025-12-01T17:08:00+00:00",
+    "tick": "0.1"
+   },
+   "scenario_id": "AS-2025-12-01T16:00:00+00:00-cfdb2979f085",
+   "sets": {
+    "E0": "84837.8..85419.2",
+    "E0_F_gap_price": "22.9",
+    "E0_F_gap_ticks": "229",
+    "E0_cap_F": null,
+    "E1": "84837.8..85419.2",
+    "E1_F_gap_price": "22.9",
+    "E1_cap_F": null,
+    "F": "(-inf, 84814.9]",
+    "best_ratio_over_F_in_corridor": "1.1346",
+    "best_ratio_price": "84814.9",
+    "corridor0": "84499.2..85419.2",
+    "corridor0_F_gap_price": "-315.7",
+    "corridor0_cap_F": "84499.2..84814.9",
+    "labels": "DERIVED from STORED H0/L0/tick and the STORED (re-derived) corridor/E0/E1",
+    "reference_extreme_vs_E0": {
+     "E0_near_edge": "84837.8",
+     "beyond_E0_by": "22.8",
+     "favourable_extreme": "84815"
+    }
+   },
+   "wait_open": {
+    "cohort_month": "2025-12",
+    "cursor": 547365,
+    "journal_seq": 27706,
+    "label": "STORED",
+    "published_at": "2025-12-01T16:55:00Z"
+   }
+  },
+  {
+   "between_preparation_and_recovery": {
+    "cap_revisions_after_p0": [],
+    "cap_revisions_before_p0_after_wait_open": [
+     {
+      "cap": "88564.0",
+      "cursor": "650970",
+      "near_edge": "88564.085",
+      "since": "2025-12-25T16:30:00+00:00",
+      "zone_id": "lm-pv15m-H-2025-12-25T15:45:00+00:00-1f980c5daaf7"
+     }
+    ],
+    "entry_attempt_records": [],
+    "geometry_changes": {},
+    "labels": "STORED (journal records published in (p0, recovery publication])",
+    "scenario_records": []
+   },
+   "checks": {
+    "1_E0_cap_F_empty_at_preparation": true,
+    "2_E0_cap_F_nonempty_but_close_outside_usable_region": "NOT_APPLICABLE (E0 ∩ F empty)",
+    "3_later_documented_restriction_E0_to_E1": false,
+    "close_in_E1": false,
+    "close_in_F": true,
+    "geometry_unchanged": true
+   },
+   "child": "AL-2025-12-25T15:45:00+00:00-6eeeab2b228d#entry",
+   "direction": "LONG",
+   "first_recovery": {
+    "G": "39.346202371654410889523435985621802625120583470968",
+    "Q": "11.675767341631818846502200825465415356921406215816",
+    "bar": "okx/BTC-USDT-SWAP/trade_bar_1m#obs@2025-12-25T16:40:00Z",
+    "bars_checked": "3",
+    "blockers": [
+     "REWARD_RISK_BELOW_MINIMUM"
+    ],
+    "cursor": 651003,
+    "dependencies": [
+     {
+      "digest": null,
+      "event_end": "2025-12-25T16:30:00Z",
+      "known_at": "2025-12-25T16:30:00Z",
+      "latest_ref": "okx/BTC-USDT-SWAP/trade_bar_1m/15m/2025-12-25T16:15:00+00:00",
+      "name": "trade.15m",
+      "status": "READY"
+     },
+     {
+      "digest": null,
+      "event_end": "2025-12-25T16:00:00Z",
+      "known_at": "2025-12-25T16:00:00Z",
+      "latest_ref": "okx/BTC-USDT-SWAP/trade_bar_1m/1h/2025-12-25T15:00:00+00:00",
+      "name": "trade.1h",
+      "status": "READY"
+     },
+     {
+      "digest": null,
+      "event_end": "2025-12-25T16:41:00Z",
+      "known_at": "2025-12-25T16:41:00Z",
+      "latest_ref": "okx/BTC-USDT-SWAP/trade_bar_1m#obs@2025-12-25T16:40:00Z",
+      "name": "trade.1m",
+      "status": "READY"
+     }
+    ],
+    "evaluated_price": "88216.9",
+    "known_at": "2025-12-25T16:41:00Z",
+    "labels": {
+     "blockers": "STORED; re-derived: equal",
+     "intrabar order": "UNAVAILABLE (never inferred)",
+     "local_sequence": "bars STORED (pinned cache); verdicts DERIVED with core5.local_verdict",
+     "per-bar admission cursor of checked bars": "UNAVAILABLE (not returned by the surfaces used)",
+     "ratio": "DERIVED (G-K)/(Q+K) from STORED G/Q/K"
+    },
+    "limitations": [
+     "CALENDAR_COVERAGE_UNKNOWN",
+     "HISTORICAL_MODELED_EXECUTION_NOT_MEASURED_QUOTES",
+     "FUNDING_COMPLETENESS_UNPROVEN"
+    ],
+    "local_sequence": [
+     {
+      "bar_start": "2025-12-25T16:38:00+00:00",
+      "c": "88190.1",
+      "h": "88200",
+      "l": "88169.5",
+      "o": "88169.6",
+      "verdict": "NONE"
+     },
+     {
+      "bar_start": "2025-12-25T16:39:00+00:00",
+      "c": "88192.7",
+      "h": "88222",
+      "l": "88190",
+      "o": "88190.1",
+      "verdict": "NONE"
+     },
+     {
+      "bar_start": "2025-12-25T16:40:00+00:00",
+      "c": "88216.9",
+      "h": "88217",
+      "l": "88192.6",
+      "o": "88192.6",
+      "verdict": "RECOVERY"
+     }
+    ],
+    "margin": "-5.46471843830377172627920500",
+    "price_source": "historical close of the current recovery bar",
+    "primary_class": "ECONOMICS_GEOMETRY",
+    "primary_reason": "REWARD_RISK_BELOW_MINIMUM",
+    "published_at": "2025-12-25T16:41:00Z",
+    "ratio": "0.9872",
+    "response_current": "true"
+   },
+   "geometry_at_preparation": {
+    "G": "44.743363634817028564299445953532684204855420525238",
+    "K_cost_bps": "14",
+    "K_trigger": "88410.7",
+    "Q": "6.3060355338297256987960689354028320450949591411996",
+    "R": "88125.9",
+    "T_cap_current": "88564.0",
+    "T_confirm": "88564.3",
+    "V_operational": "88113.9",
+    "V_structural": "88113.96",
+    "cap_history_at_preparation": [
+     {
+      "cap": "88564.3",
+      "cursor": "650961",
+      "near_edge": "88564.3",
+      "since": "2025-12-25T16:27:00+00:00",
+      "zone_id": "T_CONFIRM"
+     },
+     {
+      "cap": "88564.0",
+      "cursor": "650970",
+      "near_edge": "88564.085",
+      "since": "2025-12-25T16:30:00+00:00",
+      "zone_id": "lm-pv15m-H-2025-12-25T15:45:00+00:00-1f980c5daaf7"
+     }
+    ],
+    "corridor_effective": "88125.9..88410.7",
+    "corridor_structural": "88125.9..88410.7",
+    "economic_region_E0": "88125.9..88195.0",
+    "labels": {
+     "V_structural": "STORED (scenario CONFIRMED record seq 33055)",
+     "corridor/E0": "STORED; re-derived from the preparation record with the pinned formulas: equal",
+     "others": "STORED (journal, preparation record)",
+     "ratio_at_reference_close": "DERIVED (G-K)/(Q+K)",
+     "rr_min": "STORED (register 255ab5b7cc59)"
+    },
+    "margin": "6.37612099422135772574416323",
+    "price_reference_close": "88169.5",
+    "ratio_at_reference_close": "1.5140",
+    "rr_min": "1.2"
+   },
+   "reference_bar": {
+    "c0_cursor": "650994",
+    "close": "88169.5",
+    "high_H0": "88197.5",
+    "id": "okx/BTC-USDT-SWAP/trade_bar_1m#obs@2025-12-25T16:37:00Z",
+    "interval": [
+     "2025-12-25T16:37:00+00:00",
+     "2025-12-25T16:38:00+00:00"
+    ],
+    "journal_seq": 33062,
+    "labels": {
+     "open": "STORED (pinned cache via read-only window)",
+     "others": "STORED (journal)"
+    },
+    "low_L0": "88157.2",
+    "open": "88197.4",
+    "p0_published_at": "2025-12-25T16:38:00+00:00",
+    "tick": "0.1"
+   },
+   "scenario_id": "AL-2025-12-25T15:45:00+00:00-6eeeab2b228d",
+   "sets": {
+    "E0": "88125.9..88195.0",
+    "E0_F_gap_price": "2.6",
+    "E0_F_gap_ticks": "26",
+    "E0_cap_F": null,
+    "E1": "88125.9..88195.0",
+    "E1_F_gap_price": "2.6",
+    "E1_cap_F": null,
+    "F": "[88197.6, +inf)",
+    "best_ratio_over_F_in_corridor": "1.1725",
+    "best_ratio_price": "88197.6",
+    "corridor0": "88125.9..88410.7",
+    "corridor0_F_gap_price": "-213.1",
+    "corridor0_cap_F": "88197.6..88410.7",
+    "labels": "DERIVED from STORED H0/L0/tick and the STORED (re-derived) corridor/E0/E1",
+    "reference_extreme_vs_E0": {
+     "E0_near_edge": "88195.0",
+     "beyond_E0_by": "2.5",
+     "favourable_extreme": "88197.5"
+    }
+   },
+   "wait_open": {
+    "cohort_month": "2025-12",
+    "cursor": 650961,
+    "journal_seq": 33056,
+    "label": "STORED",
+    "published_at": "2025-12-25T16:27:00Z"
+   }
+  }
+ ],
+ "reconciliation": {
+  "blocker_incidence": {
+   "CLOSE_OUTSIDE_RETURN_CORRIDOR": 1,
+   "REWARD_RISK_BELOW_MINIMUM": 4
+  },
+  "cohorts": {
+   "2025-09": 1,
+   "2025-11": 1,
+   "2025-12": 2
+  },
+  "directions": {
+   "LONG": 1,
+   "SHORT": 3
+  },
+  "matches_director_quote_and_report": true,
+  "paths": 4,
+  "primary": {
+   "CLOSE_OUTSIDE_RETURN_CORRIDOR": 1,
+   "REWARD_RISK_BELOW_MINIMUM": 3
+  },
+  "primary_class": [
+   "ECONOMICS_GEOMETRY"
+  ],
+  "report_not_issuable": {
+   "blocker_incidence_not_summable": {
+    "CLOSE_OUTSIDE_RETURN_CORRIDOR": 1,
+    "REWARD_RISK_BELOW_MINIMUM": 4
+   },
+   "late_first_recovery": 0,
+   "primary_class": {
+    "ECONOMICS_GEOMETRY": 4
+   },
+   "primary_reason": {
+    "CLOSE_OUTSIDE_RETURN_CORRIDOR": 1,
+    "REWARD_RISK_BELOW_MINIMUM": 3
+   }
+  },
+  "report_total": {
+   "I": 0,
+   "N": 4,
+   "R": 4
+  }
+ },
+ "register_sha256": "255ab5b7cc591b9ea32cb6978d4b0e929063b68f4b19d2f2ae22a0d38dc280cc",
+ "replay_id": "obs-20261009T155751-0f255b",
+ "rules_sha256": "0e34059a17f6655b72d003261ceaa7283dda7906078b8cb6e264bbf3387334ac",
+ "run_status": null
+}

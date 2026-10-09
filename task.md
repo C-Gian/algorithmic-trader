@@ -1,16 +1,53 @@
-# Current task — WP-014 CORRECTION (Astra review of 0526641)
-Date: 2026-10-08. Status: DELIVERED — READY FOR DIRECTOR REVIEW — WP-014 CORRECTION ONLY ([evidence §9](delivery/evidence/WP-014-ENGINEERING-EVIDENCE.md)); remote CI Owner-operated, PENDING / NOT CHECKED. The continuous v0.4/v0.5 plan stays INACTIVE.
+# Current task — four R→N paths of the Owner v0.5 run (read-only diagnosis)
+Date: 2026-10-09. Status: DELIVERED — READY FOR DIRECTOR REVIEW — FOUR R→N PATHS DIAGNOSIS ONLY ([summary](delivery/evidence/WP-014-OWNER-V05-RN-DIAGNOSIS/SUMMARY.md)). Remote CI is Owner-operated: PENDING / NOT CHECKED. No further package is activated.
 
-Correct only F1–F3 and the listed alignments on [WP-014](delivery/WP-014-MP-004-IMPLEMENTATION-SPEC.md) (commit `0526641`). [MP-004](delivery/MP-004-V05-RETURN-RESPONSE.md), its [closure](delivery/MP-004-DIRECTOR-CLOSURE.md) and the methodological decisions stay unchanged.
+## Preceding record
 
-- **F1:** keep the inherited protections over the whole dispatch, but consume the local sequence at its first ordered decisive event; a later local violation never reclassifies an already consumed late first recovery.
-- **F2:** preserve `EMPTY_RETURN_CORRIDOR` and `NO_ECONOMIC_RETURN_REGION` during WAIT_RESPONSE, after the cap updates/protections and before the local response. Distinguish an empty historical region, a single unsuitable price and a live temporary cost block.
-- **F3:** the earlier 20-owner RETURN criterion is NOT_APPLICABLE to v0.5: keep the descriptive counts, remove its effect on verdict, Markdown, UI and comparison, and introduce no substitute. Earlier versions keep their behaviour.
-- **Alignments:**
-  - late first recovery in OTHER_GATES (specific reason and late count kept, no fourth class);
-  - straddling only when start < p0 < end;
-  - WAIT-open cohort explanation in the monthly comparison;
-  - a separate erratum of the pinned spec's §6 ratios (SHORT valid 1.934932545…, insufficient ≈ 0.971777) without rewriting the authoritative document or its identity.
-- **Register:** accepted only for the choices Astra verified (108 inherited values, `references_per_child = 1`). No other methodological change.
+WP-014 CORRECTION (Astra review of `0526641`) was delivered at `eab7d23`; see the STATE.
 
-Synthetic bounded data only; no acquisition, Owner extraction, backtest or economic run; the Owner stack stays untouched. Follow AGENTS for isolated checks, commit/push and Owner-operated CI.
+## Assignment (Owner-relayed Director instruction)
+
+**Scope.** A bounded diagnosis of the four R→N children of run `eval-20261009T155751-be8b2b` (build `eab7d23`): the first recoveries that were not issuable. There is one LONG and three SHORT. The WAIT-open cohorts are September 1, November 1 and December 2.
+
+**Access.**
+- Read-only artifacts and surfaces first.
+- If they are insufficient, one REPEATABLE READ READ ONLY extraction from the Owner DB, limited to this run and these paths.
+- No write or stack change. Raw exports stay outside Git.
+
+**Per path, document:**
+- child/scenario, direction and WAIT opening;
+- the reference bar: ID, interval, OHLC, p0, cursor and tick;
+- the geometry at the preparation: R/K, structural and operational V, target/cap, corridor, economic region, costs and reward/risk;
+- the first recovery: bar, times/cursor, evaluated price, ratio, all blockers and the primary reason;
+- only the relevant changes between the preparation and the recovery.
+
+**Definitions.**
+- E0 = prices admitted by corridor and economics at the preparation.
+- E1 = the same at the recovery.
+- F = LONG close ≥ H0 + tick; SHORT close ≤ L0 − tick.
+
+**Checks, separately:**
+1. E0 ∩ F empty at the preparation.
+2. E0 ∩ F non-empty, but the confirming close is outside the usable region with unchanged geometry.
+3. Later documented restrictions that change E0 into E1.
+
+Explanations may coexist, and no exclusive class is forced.
+
+**Labels and method.**
+- Every value is labelled STORED, DERIVED or UNAVAILABLE.
+- Use the pinned formulas and rounding.
+- No parameter search, alternative-rule simulation, future data or intrabar inference.
+
+**Reconcile.**
+- R = 4, N = 4, I = 0.
+- Blocker incidence: REWARD_RISK_BELOW_MINIMUM 4, CLOSE_OUTSIDE_RETURN_CORRIDOR 1.
+- Primary reasons: reward/risk 3, outside the corridor 1.
+
+**Deliverable and boundaries.**
+- A table of the four paths and a short summary.
+- No general dossier, no link to v0.4 outcomes, no rule, threshold or parameter proposal.
+- Record the descriptive acceptance of the result and this task in STATE.
+- No product, method, identity, schema or stored-result change.
+- No acquisition, replay, Deep validation or economic evaluation.
+- No product suites, E2E or Compose are needed.
+- CI is followed by the Owner. Commit and push per AGENTS.md.
