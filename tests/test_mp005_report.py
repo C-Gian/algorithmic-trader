@@ -139,3 +139,25 @@ def test_comparison_names_the_mp005_delta_and_carries_the_subset():
         "V05_MP004_RETURN_RESPONSE_DELTA", "V06_MP005_INITIAL_RESPONSE_INCOMPATIBILITY_DELTA"]
     assert [x["id"] for x in cmp.build(_facts("v0.4", four), _facts("v0.5", base))["limitations"]] == [
         "V05_MP004_RETURN_RESPONSE_DELTA"]
+
+
+def test_comparison_mp005_limitation_text_in_json_and_markdown():
+    """Astra F1: WAIT_RESPONSE does not hold the slot and MP-005 neither ends a call nor releases the structural owner,
+    so the limitation must not attribute slot release or downstream selection/outcome effects to the ended child."""
+    base = {"report_version": "adviser.report.v5", "calls": {"count": 1}, "outcomes": {"variants": {"PRIMARY": {}}},
+            "funnel": {"evidence_threshold": {"status": "NOT_APPLICABLE"}}, "anchors": {"owners": {}},
+            "responses": r5.response_accounting(engine=ENG2, journal=continuous_journal(), status="completed")}
+    cand = {**base, "report_version": "adviser.report.v6", "responses": acc(continuous_journal6(), eng=ENG2)}
+    c = cmp.build(_facts("v0.5", base), _facts("v0.6", cand))
+    (lim,) = [x for x in c["limitations"] if x["id"] == "V06_MP005_INITIAL_RESPONSE_INCOMPATIBILITY_DELTA"]
+    text = lim["text"]
+    assert text == cmp.MP005_LIMITATION["text"]
+    (md_line,) = [ln for ln in cmp.render_markdown(c).splitlines()
+                  if ln.startswith("- **V06_MP005_INITIAL_RESPONSE_INCOMPATIBILITY_DELTA** — ")]
+    assert md_line.endswith(text)
+    for out in (text, md_line):
+        assert "lose the later C/R classification" in out and "no counterfactual is reconstructed" in out
+        assert "show no informational or economic improvement" in out
+        assert "do not show a better local response" in out and "not a per-call attribution" in out
+        for wrong in ("slot", "free", "releas", "selection", "downstream"):
+            assert wrong not in out.lower()

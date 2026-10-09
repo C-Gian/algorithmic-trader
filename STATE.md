@@ -692,3 +692,9 @@ Only the dossier, the JSON labels and the script strings were corrected, from th
   - the full suite and Compose smoke are left to CI.
 - **Owner handoff.** None prepared: this delta needs technical acceptance first. CI is Owner-operated: PENDING / NOT CHECKED.
 
+
+### WP-015 correction F1 (base `18f670a`; READY FOR DIRECTOR REVIEW — WP-015 CORRECTION ONLY; not accepted)
+
+- The v0.5/v0.6 comparison limitation `V06_MP005_INITIAL_RESPONSE_INCOMPATIBILITY_DELTA` no longer claims that an ended child frees the slot or changes later selections/outcomes (WAIT_RESPONSE does not hold the slot; MP-005 neither ends a call nor releases the structural owner). It keeps the C/R loss and the statement that the new counts show no informational or economic improvement. JSON and Markdown/Copy carry the same constant.
+- Kernel, method, register, identities and contracts unchanged. New targeted regression; fails on the base text.
+- Checks: pure report/comparison tests only (48 + 6 passed). No full suite, E2E, DB or Compose. CI Owner-operated: PENDING / NOT CHECKED. [Evidence §8](delivery/evidence/WP-015-ENGINEERING-EVIDENCE.md).

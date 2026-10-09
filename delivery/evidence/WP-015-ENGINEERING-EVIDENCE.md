@@ -143,3 +143,12 @@ They were updated (observe tail 9, map + v0.6 → 5, a fifth ENGINEERING_REVIEW_
 - The register is executor-derived and awaits Director review.
 - v0.5 and v0.6 both remain *engineering review pending*.
 - Under MP-005 §6 the lost C/R classifications are declared, never reconstructed.
+
+## 8. Correction F1 (Astra review of `18f670a`) — READY FOR DIRECTOR REVIEW — WP-015 CORRECTION ONLY
+
+Base `18f670a845a01b16b25db4f1885b27ab2a90ecaf`. Scope: the text of `MP005_LIMITATION` in `adviser/compare.py` only.
+
+- **Defect.** The limitation attributed to the earlier child ending a release of the slot and downstream effects on later selections/outcomes. That is wrong: WAIT_RESPONSE does not hold the slot, and MP-005 neither ends a call nor releases the structural owner.
+- **Fix.** The slot-release explanation and its downstream effects are removed. Kept: the loss of the later C/R classifications (no counterfactual reconstructed), and that the new counts show no informational or economic improvement (C/P and R/P changes do not show a better local response; the integrated difference is not a per-call attribution). The limitation id, the comparison shape/version, kernel, method, register, identities and contracts are unchanged. The text reaches the comparison JSON (`limitations`) and its Markdown/Copy text through the same constant.
+- **Regression.** `test_mp005_report.py::test_comparison_mp005_limitation_text_in_json_and_markdown` checks the v0.5/v0.6 comparison JSON text and its Markdown line: the retained statements are present; `slot`, `free`, `releas`, `selection`, `downstream` are absent. It fails on the base text and passes on the corrected one.
+- **Checks run (pure, no DB).** `tests/test_mp005_report.py` + `tests/test_mp004_report.py`: **48 passed**. Comparison tests in `test_mp002_correction.py` / `test_mp004_correction.py` (`-k compar`): **6 passed**. Per the correction scope, the full suite, E2E, DB suites (including the `test_mp005_db` comparison, whose limitation id assertion is unchanged) and Compose were not run. Remote CI is Owner-operated: PENDING / NOT CHECKED.

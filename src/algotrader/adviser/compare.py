@@ -30,9 +30,8 @@ MP005_LIMITATION = {
              "reference could lie in the usable corridor (or, historically, the fixed-cost economic region) the entry "
              "attempt ends at once (INITIAL_RESPONSE_INCOMPATIBLE, a subset of X), never the scenario. Those children "
              "lose the later C/R classification they might have received under v0.5 (no counterfactual is "
-             "reconstructed), so C/P and R/P changes do not show a better local response; an attempt ending earlier "
-             "can also free the slot sooner, so later selections and outcomes can differ downstream: the integrated "
-             "difference is not a per-call attribution.")}
+             "reconstructed). The new counts show no informational or economic improvement: C/P and R/P changes do "
+             "not show a better local response, and the integrated difference is not a per-call attribution.")}
 MP004_LIMITATION = {
     "id": "V05_MP004_RETURN_RESPONSE_DELTA",
     "text": ("v0.5 differs from v0.4 only in the A RETURN child: the first usable return prepares one fixed local "
