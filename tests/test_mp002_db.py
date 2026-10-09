@@ -185,8 +185,8 @@ def test_deep_v7_matches_a_completed_v03_run_and_detects_stored_tamper(database_
 def test_paired_v02_v03_evaluations_and_read_only_comparison(database_url, tmp_path, monkeypatch):
     root, art, pack = _prepared(database_url, tmp_path, monkeypatch)
     api = TestClient(create_app(database_url, art, web_dist=tmp_path / "no-ui", data_root=root))
-    assert [m["method"] for m in api.get("/api/adviser/methods").json()["methods"]] == ["v0.2", "v0.3", "v0.4",
-                                                                                         "v0.5"]  # WP-014 adds v0.5
+    assert [m["method"] for m in api.get("/api/adviser/methods").json()["methods"]] == [
+        "v0.2", "v0.3", "v0.4", "v0.5", "v0.6"]  # WP-014 adds v0.5, WP-015 v0.6
     ids = {}
     for m in ("v0.2", "v0.3"):
         r = api.post("/api/evaluations", json={"pack_id": pack["pack_id"], "run_type": "adviser_evaluation",

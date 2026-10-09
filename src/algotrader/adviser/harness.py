@@ -147,12 +147,12 @@ class PureResult:
                 or e["record"]["attempt_id"].startswith(prefix)]
 
     def scenarios(self, prefix: str | None = None) -> list[dict]:
-        """v0.3/v0.4/v0.5 structural scenario records whose scenario id starts with ``prefix``."""
+        """v0.3-v0.6 structural scenario records whose scenario id starts with ``prefix``."""
         return [e["record"] for e in self.kinds("scenario") if prefix is None
                 or e["record"]["scenario_id"].startswith(prefix)]
 
     def entries(self, prefix: str | None = None) -> list[dict]:
-        """v0.3/v0.4/v0.5 child entry-attempt records."""
+        """v0.3-v0.6 child entry-attempt records."""
         return [e["record"] for e in self.kinds("entry_attempt") if prefix is None
                 or e["record"]["scenario_id"].startswith(prefix)]
 
@@ -194,7 +194,7 @@ def make_runtime(*, tick=Decimal("0.1"), eval_start=None, eval_end=None, evaluat
                  profile: CapabilityProfile | None = None, origin: str = sc.Origin.HISTORICAL_MODELED.value,
                  clock_policy: str = ClockPolicy.MODELED_COMPLETE_PREFIX.value, sample_views: bool = True,
                  funding_mode: str | None = None, method: str = "v0.2", params=None) -> AdviserRuntime:
-    """``method`` selects the packaged release (v0.2 baseline / v0.3 MP-002 / v0.4 MP-003 / v0.5 MP-004); ``params`` overrides the typed register
+    """``method`` selects the packaged release (v0.2 baseline / v0.3 MP-002 / v0.4 MP-003 / v0.5 MP-004 / v0.6 MP-005); ``params`` overrides the typed register
     for engineering fixtures only (e.g. a different cost envelope to test cost invariance)."""
     from . import methods
 
@@ -215,11 +215,13 @@ def make_runtime(*, tick=Decimal("0.1"), eval_start=None, eval_end=None, evaluat
     from .runtime3 import AdviserRuntimeV3
     from .runtime4 import AdviserRuntimeV4
     from .runtime5 import AdviserRuntimeV5
+    from .runtime6 import AdviserRuntimeV6
 
     if evaluator:
         ev = EvaluatorV3(p, D(tick), eval_start=eval_start, eval_end=eval_end,
                          funding_mode=funding_mode or profile.funding_outcomes.value, sample_views=sample_views)
-    rt_cls = {"v0.4": AdviserRuntimeV4, "v0.5": AdviserRuntimeV5}.get(rel.key, AdviserRuntimeV3)
+    rt_cls = {"v0.4": AdviserRuntimeV4, "v0.5": AdviserRuntimeV5, "v0.6": AdviserRuntimeV6}.get(
+        rel.key, AdviserRuntimeV3)
     return rt_cls(rt_cls.CORE_CLS(cfg), ev)
 
 

@@ -128,13 +128,15 @@ def test_method_dispatch_identities_and_defaults():
 
 def test_provisional_contract_revisions_and_per_method_emission():
     # WP-012 bumped semantic.v2 to r3 (ScenarioStateV4) and observe.v1 to r7 (method value v0.4); WP-014 to r4
-    # (EntryAttemptV5) and r8 (method value v0.5); the evaluation contract stays r3 (v0.4/v0.5 reuse the v0.3 evaluator)
-    assert (sc.SEMANTIC_V2_REVISION, ec.EVALUATION_REVISION, oc.OBSERVE_SCHEMA_REVISION) == (4, 3, 8)
-    assert [r for r, _, _ in sc.SEMANTIC_V2_CHANGELOG] == [1, 2, 3, 4]
+    # (EntryAttemptV5) and r8 (method value v0.5); WP-015 to r5 (v0.6 values only) and r9 (method value v0.6); the
+    # evaluation contract stays r3 (v0.4-v0.6 reuse the v0.3 evaluator)
+    assert (sc.SEMANTIC_V2_REVISION, ec.EVALUATION_REVISION, oc.OBSERVE_SCHEMA_REVISION) == (5, 3, 9)
+    assert [r for r, _, _ in sc.SEMANTIC_V2_CHANGELOG] == [1, 2, 3, 4, 5]
     assert [r for r, _, _ in ec.EVALUATION_CHANGELOG] == [1, 2, 3]
-    assert [r for r, _, _ in oc.OBSERVE_CHANGELOG][-1] == 8
+    assert [r for r, _, _ in oc.OBSERVE_CHANGELOG][-1] == 9  # WP-015
     assert sc.SEMANTIC_V2_EMITTED_REVISION == {"btc.context-action.v0.2": 1, "btc.context-action.v0.3": 2,
-                                               "btc.context-action.v0.4": 3, "btc.context-action.v0.5": 4}
+                                               "btc.context-action.v0.4": 3, "btc.context-action.v0.5": 4,
+                                               "btc.context-action.v0.6": 5}  # WP-015
     assert "candidate" in sc.KIND_CONTRACTS and "candidate" not in sc.KIND_CONTRACTS_V3
     assert {"scenario", "entry_attempt"} <= set(sc.KIND_CONTRACTS_V3) and "scenario" not in sc.KIND_CONTRACTS
     # a revision-1 (v0.2) record still validates with the revision-1 contract after the revision bump

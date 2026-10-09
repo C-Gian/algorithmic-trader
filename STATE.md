@@ -1,8 +1,8 @@
 # Project State
 
-Updated: 2026-10-09 — Owner continuous v0.5 run `eval-20261009T155751-be8b2b` (build eab7d23) accepted descriptively. A read-only diagnosis of its four R→N paths has been delivered: READY FOR DIRECTOR REVIEW — FOUR R→N PATHS DIAGNOSIS ONLY (see the last section). Earlier: WP-014 (MP-004 v0.5) delivered at 0526641 and the WP-014 CORRECTION at eab7d23.
+Updated: 2026-10-09 — WP-015 (MP-005 v0.6) implemented and delivered: READY FOR DIRECTOR REVIEW — WP-015 ONLY (see the last section). Earlier the same day: the Owner continuous v0.5 run `eval-20261009T155751-be8b2b` was accepted descriptively and its four R→N paths were diagnosed (cb356f2, corrected at 3c6af11). WP-014 (MP-004 v0.5) and its correction remain awaiting Director engineering review.
 
-**Current task: [task.md](task.md) — four R→N paths diagnosis (read-only), delivered; awaiting Director review and Owner-operated CI.** Previous package: WP-014 CORRECTION (Astra review of 0526641: F1–F3 + alignments). [Specification](delivery/MP-004-V05-RETURN-RESPONSE.md) · [closure](delivery/MP-004-DIRECTOR-CLOSURE.md) · [erratum](delivery/MP-004-ERRATUM-SECTION-6-RATIOS.md) · [evidence](delivery/evidence/WP-014-ENGINEERING-EVIDENCE.md) · [inactive plan](delivery/WP-014-CONTINUOUS-V04-V05-PLAN.md). Sep–Dec 2025 is exposed development; Jan–Aug 2026 stays protected except the authorized tail.
+**Current task: [task.md](task.md) — WP-015 MP-005 v0.6 implementation, delivered; awaiting Director engineering review and Owner-operated CI. No Owner run prepared.** [MP-005](delivery/MP-005-V06-INITIAL-RESPONSE-INCOMPATIBILITY.md) · [closure](delivery/MP-005-DIRECTOR-CLOSURE.md) · [authorization](delivery/WP-015-MP-005-IMPLEMENTATION-SPEC.md) · [evidence](delivery/evidence/WP-015-ENGINEERING-EVIDENCE.md). v0.5: [MP-004](delivery/MP-004-V05-RETURN-RESPONSE.md) · [closure](delivery/MP-004-DIRECTOR-CLOSURE.md) · [erratum](delivery/MP-004-ERRATUM-SECTION-6-RATIOS.md) · [evidence](delivery/evidence/WP-014-ENGINEERING-EVIDENCE.md). Sep–Dec 2025 is exposed development; Jan–Aug 2026 stays protected except the authorized tail.
 
 Goal (Foundation v3.1): an integrated BTC adviser with persistent actionable LONG/SHORT calls, entry area, targets, stop/exit guidance and holding horizon. Capital, size, leverage and orders stay human. Historical ACCEPTED/READY/HOLD labels in older documents do not authorize work; only task.md does.
 
@@ -655,3 +655,40 @@ Only the dossier, the JSON labels and the script strings were corrected, from th
 - **Local domain.** The two intrabar overshoots without confirmation are #4 at 16:38 and 16:39. #1 at 18:16 is a valid RECOVERY with high = H0, because contrary equality is allowed.
 - **Interval.** The "(p0, recovery]" statement is replaced by: no intermediate record of the child/scenario between the preparation sequence and the terminal sequence, endpoints excluded. That absence, the comparison of the two snapshots' geometric fields, and the cap-history check with the E0/E1 recomputation are now kept as separate facts. E1 = E0 is stated for the geometric quantities considered only, not as a generally unchanged context.
 - **Checks.** Artifact consistency only (regeneration byte-identical, unchanged fields compared with `cb356f2`). No product suites, E2E or Compose. CI is Owner-operated: PENDING / NOT CHECKED.
+
+## MP-005 closure and WP-015 executive authorization — 9 October 2026
+
+- **Methodological closure** ([MP-005-DIRECTOR-CLOSURE.md](delivery/MP-005-DIRECTOR-CLOSURE.md)). It approves MP-005 for candidate v0.6 as a delta over MP-004. It certifies no economic effectiveness or predictive quality, and alone it authorized no work.
+- **Executive authorization**, a separate act recorded verbatim in [WP-015](delivery/WP-015-MP-005-IMPLEMENTATION-SPEC.md). It covers implementation and synthetic engineering checks only. It does not authorize economic runs, acquisition, Owner extraction, real-data replay or an Owner launch.
+
+## WP-015 executor evidence (base `3c6af11`; READY FOR DIRECTOR REVIEW — WP-015 ONLY; not accepted)
+
+[Evidence](delivery/evidence/WP-015-ENGINEERING-EVIDENCE.md) · [v0.5 base-pin generator](delivery/evidence/WP-015-V05-BASE-PINS.py).
+- **Implemented.**
+  - `btc.context-action.v0.6` / `mp005.rules.v0.6` (`adviser/core6.py`), selectable in the Workbench and at live Start. The default is still v0.2.
+  - Only addition: right after the MP-004 preparation of the single RETURN reference, in the same dispatch, the check F ∩ C0 (∩ A0 historically).
+  - Historical: F ∩ C0 = ∅ → `INITIAL_RESPONSE_INCOMPATIBLE:CORRIDOR` (economics annotated); otherwise J0 = ∅ → `HISTORICAL_ECONOMICS`.
+  - Live: the CORRIDOR test only, cost-independent; the MP-004 temporary cost restriction is unchanged.
+  - A single tick is non-empty. Inherited protections come first with their own reasons.
+  - The child ends (P and X), never the scenario. No renewal, reopening or later C/R.
+- **Identities.**
+  - `adviser.core.v6`, state/runtime v6, engine `observe.stream.v7`, report `adviser.report.v6`, reconciliation v9 (same-dispatch and recomputed-compatibility checks), Deep v10; evaluator v3 reused.
+  - The rules manifest covers the MP-005 delta, its closure, the MP-004 rules/closure and every earlier inherited text.
+  - The register is executor-derived: every MP-004 value is kept, and only `mp005_policy` (categorical) is added.
+  - semantic.v2 r5 (values only; v0.6 emits the r4 shapes) and observe.v1 r9 (method value). No migration.
+- **Preservation.**
+  - 68 v0.5 fixed-fixture outputs reproduce the unchanged base `3c6af11` byte for byte (pins computed in a disposable worktree). The v0.4 and v0.2/v0.3 pins pass in their suites.
+  - v0.5/v0.6 normalized parity on 75 tapes outside the new terminal.
+- **Durability.** Production pack/unpack around the P→X dispatch; DB crash/reclaim at 5 stages; STEP; a v0.6 run refused under v0.5; a live restart does not reopen; live tape replay is identical.
+- **App and reports.**
+  - The `INITIAL_RESPONSE_INCOMPATIBLE` count is a subset of X (never added again): by base, direction and WAIT-open month, ratio over P, with the declared loss of C/R classifications, in JSON, Markdown and Copy report for chat. The 20-owner criterion is NOT_APPLICABLE.
+  - The UI shows *entry attempt ended — scenario not invalidated*.
+  - The read-only v0.5/v0.6 comparison carries the MP-005 limitation and the subset row.
+- **Fixtures.** Every MP-005 §8/§9 row (LONG/SHORT) is checked literally through the pinned functions, and every behaviour on reachable engine tapes. There is a direct live CORRIDOR terminal with a preparable reference. **No counterexample to the actual predicates** was found.
+- **Checks** (disposable PostgreSQL 18.6, Owner stack untouched):
+  - new suites: paths 104, versions 83, report 14, live 10, DB 11;
+  - E2E: v0.6 plus the v0.5 regression;
+  - the regression set, typecheck/build and schemas pass (exact counts in the evidence);
+  - the full suite and Compose smoke are left to CI.
+- **Owner handoff.** None prepared: this delta needs technical acceptance first. CI is Owner-operated: PENDING / NOT CHECKED.
+

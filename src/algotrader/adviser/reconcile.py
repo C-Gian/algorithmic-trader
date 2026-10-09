@@ -22,10 +22,11 @@ from __future__ import annotations
 import hashlib
 import json
 from datetime import datetime
+from decimal import Decimal
 from typing import Any
 
 from ..feed.ordering import canonical
-from .contracts import KIND_CONTRACTS, KIND_CONTRACTS_V3, KIND_CONTRACTS_V4, KIND_CONTRACTS_V5
+from .contracts import KIND_CONTRACTS, KIND_CONTRACTS_V3, KIND_CONTRACTS_V4, KIND_CONTRACTS_V5, KIND_CONTRACTS_V6
 from .core import INITIAL_JOURNAL
 from .evaluator import INITIAL_RECORDS
 
@@ -60,6 +61,15 @@ SCOPE_V8 = (" Version 8 (WP-014 MP-004 v0.5 adviser runs, engine observe.stream.
             "at/after that publication in a strictly later dispatch; never a RETURN_USABLE record; and each closing "
             "record's response outcome consistent with its transition/reason. PASS remains runtime integrity, not "
             "profit or forecast quality.")
+SCOPE_V9 = (" Version 9 (WP-015 MP-005 v0.6 adviser runs, engine observe.stream.v7) applies the version-8 binding, "
+            "lineage, anchor and response checks to the pinned v0.6 release (MP-005 rules manifest: delta and Director "
+            "closure plus the inherited MP-004 rules/closure and every earlier inherited text, register, runtime and "
+            "engine format) and additionally checks the initial response incompatibility: an "
+            "INITIAL_RESPONSE_INCOMPATIBLE terminal only right after its own RESPONSE_REFERENCE in the same dispatch "
+            "(same clock time and factual cursor), with no bar checked, a CORRIDOR or HISTORICAL_ECONOMICS base and the "
+            "matching response outcome; and, recomputed from each stored reference record's own H0/L0, tick, effective "
+            "corridor and historical economic region, the terminal occurs exactly when F meets no usable price (base "
+            "CORRIDOR when F misses the corridor). PASS remains runtime integrity, not profit or forecast quality.")
 
 
 def _chain(rows: list[dict], initial: str) -> tuple[list[str], str | None]:
@@ -91,9 +101,9 @@ def checks(check, *, status: str, ranges: list[dict], terminal: dict | None, cur
     summary: dict[str, Any] = {"identity": engine["adviser"]["identity"], "journal_records": len(journal),
                                "evaluation_records": len(records)}
     method = engine["adviser"].get("method")
-    v3 = method in ("v0.3", "v0.4", "v0.5")  # MP-002 scenario lineage (v0.4/v0.5 inherit it)
-    kinds = (KIND_CONTRACTS_V5 if method == "v0.5" else KIND_CONTRACTS_V4 if method == "v0.4" else
-             KIND_CONTRACTS_V3 if v3 else KIND_CONTRACTS)
+    v3 = method in ("v0.3", "v0.4", "v0.5", "v0.6")  # MP-002 scenario lineage (v0.4-v0.6 inherit it)
+    kinds = (KIND_CONTRACTS_V6 if method == "v0.6" else KIND_CONTRACTS_V5 if method == "v0.5" else
+             KIND_CONTRACTS_V4 if method == "v0.4" else KIND_CONTRACTS_V3 if v3 else KIND_CONTRACTS)
     if v3:
         summary["method"] = method
     if v3:
@@ -252,10 +262,13 @@ def checks(check, *, status: str, ranges: list[dict], terminal: dict | None, cur
     lp += [f"attempt {a} ended without a birth" for a in ends if a not in births]
     if v3:
         lp += _v3_lineage(journal, calls)
-    if method in ("v0.4", "v0.5"):
+    if method in ("v0.4", "v0.5", "v0.6"):
         lp += _v4_anchor_lineage(journal)
-    if method == "v0.5":
+    if method in ("v0.5", "v0.6"):
         lp += _v5_response_lineage(journal)
+    if method == "v0.6":
+        hist = ((engine["adviser"].get("profile") or {}).get("execution") or "HISTORICAL_BASE") == "HISTORICAL_BASE"
+        lp += _v6_initial_compatibility(journal, hist)
     check("adviser_lineage_immutability", not lp, "; ".join(lp[:5]) or
           f"{len(calls)} unique call(s), contiguous revisions, one terminal each; {len(births)} attempt(s) born once "
           "and ended at most once; revisions never restate original geometry")
@@ -305,7 +318,8 @@ def _v4_anchor_lineage(journal: list[dict]) -> list[str]:
 
 
 _OUTCOME = {"ISSUE": ("ISSUED",), "RESPONSE_NOT_ISSUABLE": ("NOT_ISSUABLE",),
-            "LOCAL_RESPONSE_CONTRADICTED": ("CONTRADICTED",), "LOCAL_CONTACT_TIME_AMBIGUOUS": ("UNASSESSABLE",)}
+            "LOCAL_RESPONSE_CONTRADICTED": ("CONTRADICTED",), "LOCAL_CONTACT_TIME_AMBIGUOUS": ("UNASSESSABLE",),
+            "INITIAL_RESPONSE_INCOMPATIBLE": ("INITIAL_RESPONSE_INCOMPATIBLE",)}  # v0.6 (MP-005)
 _REF_KEYS = ("reference_bar", "reference_start", "reference_end", "H0", "L0", "reference_close", "published_at",
              "published_cursor")
 
@@ -347,7 +361,8 @@ def _v5_response_lineage(journal: list[dict]) -> list[str]:
         if tr == "ISSUE" and rec.get("mode") == "RETURN" and x["ref"] is None:
             lp.append(f"entry attempt {eid} issued a RETURN call without a pre-existing reference")
         if x["ref"] is None:
-            if reason in ("RESPONSE_NOT_ISSUABLE", "LOCAL_RESPONSE_CONTRADICTED", "LOCAL_CONTACT_TIME_AMBIGUOUS"):
+            if reason in ("RESPONSE_NOT_ISSUABLE", "LOCAL_RESPONSE_CONTRADICTED", "LOCAL_CONTACT_TIME_AMBIGUOUS",
+                          "INITIAL_RESPONSE_INCOMPATIBLE"):
                 lp.append(f"entry attempt {eid} ended {reason} without a reference")
             continue
         key = "ISSUE" if tr == "ISSUE" else reason
@@ -364,6 +379,65 @@ def _v5_response_lineage(journal: list[dict]) -> list[str]:
             if not ok or env["professional_seq"] <= (x["ref_seq"] or 0):
                 lp.append(f"entry attempt {eid} decided by {bar} not wholly after its reference publication {p0} "
                           "in a later dispatch")
+    return lp
+
+
+def _rng_d(x) -> tuple[Decimal, Decimal] | None:
+    if not x:
+        return None
+    a, b = str(x).split("..")
+    return Decimal(a), Decimal(b)
+
+
+def _v6_initial_compatibility(journal: list[dict], hist: bool) -> list[str]:
+    """MP-005 initial response incompatibility (WP-015), from the stored entry-attempt records only."""
+    from .core6 import BASES, REASON, initial_compatibility
+
+    lp: list[str] = []
+    prev: dict[str, dict] = {}  # entry attempt id -> its previous record
+    for e in journal:
+        if e["kind"] != "entry_attempt":
+            continue
+        rec = e["record"]
+        eid, tr, env = rec["entry_attempt_id"], rec["transition"], rec["env"]
+        before = prev.get(eid)
+        prev[eid] = rec
+        reason = str(rec["reason"] or "")
+        if reason.startswith(REASON):
+            base = reason.split(":", 1)[1] if ":" in reason else None
+            resp = rec.get("response") or {}
+            if (before is None or before["transition"] != "RESPONSE_REFERENCE"
+                    or before["env"]["clock_time"] != env["clock_time"]
+                    or before["env"]["factual_cursor"] != env["factual_cursor"]):
+                lp.append(f"entry attempt {eid} {REASON} not in the dispatch of its own reference")
+            if (tr != "TERMINAL" or rec["state"] != "TERMINAL" or base not in BASES
+                    or resp.get("incompatibility_base") != base or str(resp.get("bars_checked")) != "0"):
+                lp.append(f"entry attempt {eid} {REASON} record inconsistent (base {base})")
+        if before is not None and before["transition"] == "RESPONSE_REFERENCE":
+            ref, g = before.get("response") or {}, before.get("geometry") or {}
+            try:
+                d = 1 if before["direction"] == "LONG" else -1
+                c = initial_compatibility(d, Decimal(ref["H0"]), Decimal(ref["L0"]), Decimal(g["tick"]),
+                                          _rng_d(g.get("corridor_effective")), _rng_d(g.get("economic_current")), hist)
+            except (KeyError, TypeError, ValueError, ArithmeticError):
+                lp.append(f"entry attempt {eid} reference geometry not recomputable")
+                continue
+            ended = reason.startswith(REASON) and rec["env"]["clock_time"] == before["env"]["clock_time"]
+            if ended == c.compatible or (ended and reason != f"{REASON}:{c.base}"):
+                lp.append(f"entry attempt {eid} initial compatibility recomputed {c.base or 'COMPATIBLE'} differs "
+                          f"from the stored outcome {reason or tr}")
+    for eid, rec in prev.items():  # a reference left as the last record must be compatible
+        if rec["transition"] == "RESPONSE_REFERENCE":
+            ref, g = rec.get("response") or {}, rec.get("geometry") or {}
+            try:
+                d = 1 if rec["direction"] == "LONG" else -1
+                c = initial_compatibility(d, Decimal(ref["H0"]), Decimal(ref["L0"]), Decimal(g["tick"]),
+                                          _rng_d(g.get("corridor_effective")), _rng_d(g.get("economic_current")), hist)
+            except (KeyError, TypeError, ValueError, ArithmeticError):
+                lp.append(f"entry attempt {eid} reference geometry not recomputable")
+                continue
+            if not c.compatible:
+                lp.append(f"entry attempt {eid} reference incompatible ({c.base}) but left waiting")
     return lp
 
 

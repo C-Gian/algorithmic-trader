@@ -3497,13 +3497,19 @@
       "date": "2026-10-08",
       "note": "WP-014 MP-004 btc.context-action.v0.5 (additive): variant EntryAttemptV5 of the 'entry_attempt' kind adds 'response' - the A RETURN local reference (bar, H0/L0, close, interval, actual publication p0 and admitted cursor c0), the phase WAIT_RETURN/WAIT_RESPONSE, the complete bars checked in the local domain and, on the closing record, the decisive bar and outcome (ISSUED / NOT_ISSUABLE with every blocker and one primary reason / CONTRADICTED / UNASSESSABLE / ENDED_BY_PRIORITY_CAUSE / CLEARED); null for IMMEDIATE, B/C and children without a reference. New values only: entry state WAIT_RESPONSE, transition RESPONSE_REFERENCE, reasons LOCAL_RESPONSE_CONTRADICTED, LOCAL_CONTACT_TIME_AMBIGUOUS and RESPONSE_NOT_ISSUABLE. Every other v0.5 kind uses the revision-3 contracts unchanged. Revision-1/2/3 records, their bytes and readers are unchanged; v0.2/v0.3/v0.4 runs never emit the variant (per-method emitted revision: v0.2 -> 1, v0.3 -> 2, v0.4 -> 3, v0.5 -> 4).",
       "revision": 4
+    },
+    {
+      "date": "2026-10-09",
+      "note": "WP-015 MP-005 btc.context-action.v0.6 (values only; no kind, field, type or shape change): v0.6 emits the revision-4 contracts unchanged (KIND_CONTRACTS_V6 = KIND_CONTRACTS_V5). New values only: entry-attempt reason INITIAL_RESPONSE_INCOMPATIBLE:<CORRIDOR|HISTORICAL_ECONOMICS> on a TERMINAL record published in the same dispatch as its RESPONSE_REFERENCE, whose 'response' outcome is INITIAL_RESPONSE_INCOMPATIBLE with the string keys incompatibility_base, incompatibility_annotations, execution_profile, F, C0, A0, F_cap_C0, J0 and economic_basis (diagnostic bases; exact decimal strings or null). Revision-1..4 records, their bytes and readers are unchanged; v0.2-v0.5 runs never emit the new values (per-method emitted revision: v0.2 -> 1, v0.3 -> 2, v0.4 -> 3, v0.5 -> 4, v0.6 -> 5).",
+      "revision": 5
     }
   ],
   "emitted_revision_by_model": {
     "btc.context-action.v0.2": 1,
     "btc.context-action.v0.3": 2,
     "btc.context-action.v0.4": 3,
-    "btc.context-action.v0.5": 4
+    "btc.context-action.v0.5": 4,
+    "btc.context-action.v0.6": 5
   },
   "journal_kinds": {
     "actionability": "#/$defs/Actionability",
@@ -3560,6 +3566,20 @@
     "phase": "#/$defs/PhaseState",
     "scenario": "#/$defs/ScenarioStateV4"
   },
+  "journal_kinds_v6": {
+    "actionability": "#/$defs/Actionability",
+    "call": "#/$defs/AdviserCallV3",
+    "call_revision": "#/$defs/CallRevisionV3",
+    "entry_attempt": "#/$defs/EntryAttemptV5",
+    "event_context": "#/$defs/EventContext",
+    "event_response": "#/$defs/EventResponse",
+    "landmark": "#/$defs/Landmark",
+    "market_view": "#/$defs/MarketViewV3",
+    "material_change": "#/$defs/MaterialChange",
+    "observation": "#/$defs/Observation",
+    "phase": "#/$defs/PhaseState",
+    "scenario": "#/$defs/ScenarioStateV4"
+  },
   "public_contracts": {
     "Actionability": "#/$defs/Actionability",
     "AdviserCall": "#/$defs/AdviserCall",
@@ -3585,7 +3605,7 @@
     "ScenarioStateV4": "#/$defs/ScenarioStateV4",
     "ScenarioV3": "#/$defs/ScenarioV3"
   },
-  "revision": 4,
+  "revision": 5,
   "schema_version": "algotrader.semantic.v2",
   "status": "PROVISIONAL",
   "title": "Algorithmic Trader advisory semantic contracts (algotrader.semantic.v2, PROVISIONAL)"

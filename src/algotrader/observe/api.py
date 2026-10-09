@@ -149,7 +149,7 @@ def adviser_view(row: dict[str, Any]) -> dict[str, Any] | None:
         out["committed"]["scenarios"] = v["scenarios"]
     if v and v.get("anchors") is not None:  # v0.4/v0.5: pre-confirmation local reaction anchors
         out["committed"]["anchors"] = v["anchors"]
-    if v and v.get("responses") is not None:  # v0.5: A RETURN phases and prepared local references
+    if v and v.get("responses") is not None:  # v0.5/v0.6: A RETURN phases and local references
         out["committed"]["responses"] = v["responses"]
     return out
 

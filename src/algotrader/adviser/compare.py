@@ -21,8 +21,18 @@ from decimal import Decimal
 from typing import Any
 
 COMPARISON_VERSION = "adviser.comparison.v1"  # shape unchanged; roles/limitations/anchors are additive keys
-SCENARIO_METHODS = ("v0.3", "v0.4", "v0.5")
-ANCHOR_METHODS = ("v0.4", "v0.5")
+SCENARIO_METHODS = ("v0.3", "v0.4", "v0.5", "v0.6")
+ANCHOR_METHODS = ("v0.4", "v0.5", "v0.6")
+RESPONSE_METHODS = ("v0.5", "v0.6")
+MP005_LIMITATION = {
+    "id": "V06_MP005_INITIAL_RESPONSE_INCOMPATIBILITY_DELTA",
+    "text": ("v0.6 differs from v0.5 only at the A RETURN reference preparation: when no confirming close beyond the "
+             "reference could lie in the usable corridor (or, historically, the fixed-cost economic region) the entry "
+             "attempt ends at once (INITIAL_RESPONSE_INCOMPATIBLE, a subset of X), never the scenario. Those children "
+             "lose the later C/R classification they might have received under v0.5 (no counterfactual is "
+             "reconstructed), so C/P and R/P changes do not show a better local response; an attempt ending earlier "
+             "can also free the slot sooner, so later selections and outcomes can differ downstream: the integrated "
+             "difference is not a per-call attribution.")}
 MP004_LIMITATION = {
     "id": "V05_MP004_RETURN_RESPONSE_DELTA",
     "text": ("v0.5 differs from v0.4 only in the A RETURN child: the first usable return prepares one fixed local "
@@ -163,7 +173,7 @@ def _summary(x: dict) -> dict[str, Any]:
                                  (f.get("a_destination_before_confirmation") or {}).get("count")}
         if x["method"] in ANCHOR_METHODS:
             out["anchors"] = a.get("anchors")
-        if x["method"] == "v0.5":
+        if x["method"] in RESPONSE_METHODS:
             resp = a.get("responses") or {}
             out["responses"] = {"total": (resp.get("total") or {}).get("counts"),
                                 "ratios": (resp.get("total") or {}).get("ratios"),
@@ -172,6 +182,13 @@ def _summary(x: dict) -> dict[str, Any]:
                                 "not_issuable_primary_reason":
                                     ((resp.get("total") or {}).get("not_issuable") or {}).get("primary_reason"),
                                 "cutoff": resp.get("cutoff"), "cohort": RESPONSE_COHORT}
+            if x["method"] == "v0.6":
+                inc = (resp.get("total") or {}).get("initial_incompatibility") or {}
+                out["responses"]["initial_incompatibility"] = {
+                    "count": inc.get("count"), "by_base": inc.get("by_base"), "ratio_over_P": inc.get("ratio_over_P"),
+                    "subset_of_X": inc.get("subset_of_X"),
+                    "months": {m: (s.get("initial_incompatibility") or {}).get("count")
+                               for m, s in (resp.get("months") or {}).items()}}
     else:
         out["registered"] = {"births": f.get("births"), "arms": f.get("arms"),
                              "trigger_evaluations": f.get("trigger_evaluations"),
@@ -220,12 +237,15 @@ def build(a: dict, b: dict) -> dict[str, Any]:
                               "validated. More calls are not improvement by themselves."}
     methods = {a["method"], b["method"]}
     limitations = [DISLOCATION_LIMITATION] if "v0.2" in methods and methods & set(SCENARIO_METHODS) else []
-    if "v0.4" in methods and len(methods) > 1 and methods != {"v0.4", "v0.5"}:
+    if "v0.4" in methods and len(methods) > 1 and not methods & {"v0.5", "v0.6"}:
         limitations.append(MP003_LIMITATION)
-    if "v0.5" in methods and len(methods) > 1:
+    if methods & {"v0.5", "v0.6"} and len(methods) > 1:
         if methods & {"v0.2", "v0.3"}:
             limitations.append(MP003_LIMITATION)
-        limitations.append(MP004_LIMITATION)
+        if methods & {"v0.2", "v0.3", "v0.4"}:
+            limitations.append(MP004_LIMITATION)
+        if "v0.6" in methods:
+            limitations.append(MP005_LIMITATION)
     return {"comparison_version": COMPARISON_VERSION, "a": sa, "b": sb, "comparability": comp,
             "roles": {"baseline": {"slot": "A", "method": a["method"], "evaluation_id": a["evaluation_id"]},
                       "candidate": {"slot": "B", "method": b["method"], "evaluation_id": b["evaluation_id"]}},
@@ -243,7 +263,7 @@ def build(a: dict, b: dict) -> dict[str, Any]:
                       "candidate): every rule difference between the two pinned releases acts together (v0.2 -> v0.3: "
                       "structural lifecycle, clocks, the RETURN entry and the dislocation-veto correction; v0.3 -> "
                       "v0.4: the pre-confirmation A anchor domain; v0.4 -> v0.5: the A RETURN local reference and "
-                      "recovery), so the difference is not a per-rule or per-call attribution. Hypothetical "
+                      "recovery; v0.5 -> v0.6: the initial response incompatibility terminal), so the difference is not a per-rule or per-call attribution. Hypothetical "
                       "normalized one-unit paths; no orders, sizing or account.")}
 
 
@@ -306,6 +326,11 @@ def render_markdown(c: dict[str, Any]) -> str:
             for m, mc in (r.get("months") or {}).items():
                 lines.append(f"  - {m}: " + " · ".join(f"{k} {(mc or {}).get(k)}" for k in
                                                          ("W", "P", "C", "R", "N", "I", "X", "A")))
+            inc = r.get("initial_incompatibility")
+            if inc:
+                lines.append(f"  - INITIAL_RESPONSE_INCOMPATIBLE (MP-005; subset of X, not added again): "
+                             f"{inc.get('count')} · by base {inc.get('by_base')} · over P "
+                             f"{inc.get('ratio_over_P') or 'undef.'} · by WAIT-open month {inc.get('months') or '{}'}")
     if c["deltas_b_minus_a"]:
         lines += ["", "## B − A (candidate minus baseline; integrated, not a per-rule attribution)",
                   *(f"- {k}: {v}" for k, v in c["deltas_b_minus_a"].items())]

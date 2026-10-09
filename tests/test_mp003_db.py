@@ -248,9 +248,10 @@ def test_paired_v03_v04_evaluations_reports_and_read_only_comparison(database_ur
     root, art, pack = _prepared(database_url, tmp_path, monkeypatch)
     api = TestClient(create_app(database_url, art, web_dist=tmp_path / "no-ui", data_root=root))
     listed = api.get("/api/adviser/methods").json()
-    assert [m["method"] for m in listed["methods"]] == ["v0.2", "v0.3", "v0.4", "v0.5"] and listed["default"] == "v0.2"
+    assert [m["method"] for m in listed["methods"]] == ["v0.2", "v0.3", "v0.4", "v0.5", "v0.6"] and listed["default"] == "v0.2"
     assert [m["status"] for m in listed["methods"]] == ["ACCEPTED_BASELINE", "TECHNICALLY_ACCEPTED",
-                                                        "ENGINEERING_REVIEW_PENDING", "ENGINEERING_REVIEW_PENDING"]
+                                                        "ENGINEERING_REVIEW_PENDING", "ENGINEERING_REVIEW_PENDING",
+                                                        "ENGINEERING_REVIEW_PENDING"]  # WP-015 adds v0.6
     ids = {}
     for m in ("v0.2", "v0.3", "v0.4"):
         r = api.post("/api/evaluations", json={"pack_id": pack["pack_id"], "run_type": "adviser_evaluation",
@@ -258,7 +259,7 @@ def test_paired_v03_v04_evaluations_reports_and_read_only_comparison(database_ur
         assert r.status_code == 201, r.text
         ids[m] = r.json()["evaluation_id"]
     assert api.post("/api/evaluations", json={"pack_id": pack["pack_id"], "run_type": "adviser_evaluation",
-                                              "method": "v0.6"}).status_code == 422  # WP-014: v0.5 exists
+                                              "method": "v0.7"}).status_code == 422  # WP-015: v0.6 exists
     run_all(worker(database_url, root, art, "observe:x", checkpoint_events=2000))
     det = api.get(f"/api/evaluations/{ids['v0.4']}").json()
     assert det["method"]["method"] == "v0.4" and det["method"]["status"] == "ENGINEERING_REVIEW_PENDING"

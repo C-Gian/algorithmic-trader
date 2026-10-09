@@ -160,6 +160,18 @@ function CallPanel({ v }: { v: LiveView | null }) {
             <span className="small-text">{mv.principal.antecedent}</span>
           </div>
         )}
+        {(v?.scenarios ?? []).filter((s) => s.entry_ended).map((s) => (
+          <div className="call-waiting" key={`${s.scenario_id}-ended`} data-testid="live-entry-ended">
+            <Badge tone="neutral">{s.direction} {s.family} confirmed — entry attempt ended</Badge>
+            <p className="small-text">{s.entry_ended!.text} This is not a call and not an invalidation of the scenario.</p>
+            <dl className="call-geo">
+              <dt>Why</dt><dd>{s.entry_ended!.base === "CORRIDOR" ? "no confirming close could be inside the usable corridor"
+                : "no confirming close could be inside the historical economic region"}</dd>
+              <dt>Ended at</dt><dd className="mono">{fmtTime(s.entry_ended!.at)}</dd>
+              <dt>Scenario</dt><dd>still {s.status.toLowerCase()} · invalid at {s.invalidation_level ?? "—"}</dd>
+            </dl>
+          </div>
+        ))}
         {(v?.scenarios ?? []).filter((s) => s.observing).map((s) => (
           <div className="call-waiting" key={s.scenario_id} data-testid="live-observing">
             <Badge tone="neutral">{s.direction} {s.family} — scenario under observation</Badge>

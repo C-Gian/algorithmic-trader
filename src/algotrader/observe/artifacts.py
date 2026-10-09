@@ -315,7 +315,7 @@ def adviser_reference(engine: dict, summary: dict | None) -> dict | None:
             "evaluator_sha256": adv["evaluator"]["sha256"], "journal_records": s.get("journal_records"),
             "journal_chain": s.get("journal_chain"), "evaluation_records": s.get("evaluation_records"),
             "evaluation_chain": s.get("evaluation_chain"), "calls": s.get("calls"), "labels": adv["labels"]}
-    if adv.get("method") in ("v0.3", "v0.4", "v0.5"):  # observe.v1 r6-r8: the pinned method (v0.2 refs unchanged)
+    if adv.get("method") in ("v0.3", "v0.4", "v0.5", "v0.6"):  # observe.v1 r6-r9: pinned method (v0.2 unchanged)
         ref.update(method=adv["method"], model=adv["identity"]["model"], rules_version=adv["identity"]["rules_version"],
                    implementation=adv["identity"]["implementation"])
     return ref

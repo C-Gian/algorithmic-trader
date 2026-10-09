@@ -141,7 +141,7 @@ def build_router(conn: Callable, data_root: Path) -> APIRouter:
         from . import methods
 
         return {"default": methods.DEFAULT, "methods": methods.selectable(),
-                "note": "v0.2 is the accepted baseline, v0.3 is technically accepted; v0.4 and v0.5 are shown with "
+                "note": "v0.2 is the accepted baseline, v0.3 is technically accepted; v0.4, v0.5 and v0.6 are shown with "
                         "their recorded release status until Director acceptance; economic usefulness is unvalidated "
                         "for every version; stored results always show their pinned method"}
 

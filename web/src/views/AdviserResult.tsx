@@ -126,9 +126,12 @@ function V5Responses({ a }: { a: AdviserSection }) {
   if (!x) return null;
   const t = x.total;
   const n = t.not_issuable;
+  const v6 = a.method?.method === "v0.6";
   return (
     <div className="stack" data-testid="adv-v5-responses">
-      <div className="adv-section-title">Candidate v0.5 — RETURN reference then local recovery (MP-004 §7)</div>
+      <div className="adv-section-title">{v6
+        ? "Candidate v0.6 — RETURN reference, early end when confirmation is impossible (MP-004 §7 with MP-005 §6)"
+        : "Candidate v0.5 — RETURN reference then local recovery (MP-004 §7)"}</div>
       <div className="adv-metrics">
         <Metric label="References prepared" value={`${t.counts.P} / ${t.counts.W}`} testid="adv-v5-prepared"
                 hint={`waits routed to a return · ${t.wait_return_open} still waiting for a usable return`} />
@@ -151,6 +154,46 @@ function V5Responses({ a }: { a: AdviserSection }) {
       <div className="small-text muted">Not issuable — primary reason: {Object.entries(n.primary_reason).map(([k, v]) => `${humanize(k)} ${v}`).join(" · ") || "none"}
         {" · "}other endings: {Object.entries(t.other_endings_by_priority_cause).map(([k, v]) => `${humanize(k)} ${v}`).join(" · ") || "none"}</div>
       <p className="muted small-text">Cutoff {fmtTime(x.cutoff)}: {x.cutoff_meaning}. {x.months_attribution ?? ""} {x.note}</p>
+      {t.initial_incompatibility && <V6Incompatibility a={a} />}
+    </div>
+  );
+}
+
+function IncompatibilityRow({ label, t }: { label: string; t: ResponseTally }) {
+  const i = t.initial_incompatibility!;
+  return (
+    <tr data-testid="adv-v6-row"><td>{label}</td><td className="mono">{i.count}</td>
+      <td className="mono">{i.by_base.CORRIDOR}</td><td className="mono">{i.by_base.HISTORICAL_ECONOMICS}</td>
+      <td className="mono">{t.counts.X}</td><td className="mono">{t.counts.P}</td>
+      <td className="mono">{i.ratio_over_P ?? "undef."}</td><td>{i.subset_of_X ? "yes" : <b>NO</b>}</td></tr>
+  );
+}
+
+/** MP-005 v0.6: entry attempts ended at their return reference (a subset of X, never added again). Ending the attempt
+ * never invalidates the scenario; the lost C/R classifications are declared, not reconstructed. */
+function V6Incompatibility({ a }: { a: AdviserSection }) {
+  const x = a.responses!;
+  const t = x.total;
+  const i = t.initial_incompatibility!;
+  const notes = x.initial_incompatibility_notes;
+  return (
+    <div className="stack" data-testid="adv-v6-incompatibility">
+      <div className="adv-metrics">
+        <Metric label="Entry attempts ended at the reference" value={`${i.count} / ${t.counts.P}`} testid="adv-v6-ended"
+                hint={`initial response incompatible · corridor ${i.by_base.CORRIDOR} · historical economics ${i.by_base.HISTORICAL_ECONOMICS} · part of X, not an extra count`} />
+      </div>
+      <div className="small-table-wrap">
+        <table className="small-table" data-testid="adv-v6-table">
+          <thead><tr><th>Period</th><th>Ended at reference</th><th>Corridor</th><th>Historical economics</th><th>X</th>
+            <th>P</th><th>over P</th><th>subset of X</th></tr></thead>
+          <tbody>
+            <IncompatibilityRow label="Total" t={t} />
+            {Object.entries(x.months ?? {}).map(([m, s]) => s.initial_incompatibility
+              ? <IncompatibilityRow key={m} label={m} t={s} /> : null)}
+          </tbody>
+        </table>
+      </div>
+      <p className="muted small-text" data-testid="adv-v6-notes">{notes?.attempt_not_scenario} {notes?.subset} {notes?.information_loss}</p>
     </div>
   );
 }
@@ -185,9 +228,10 @@ export function AdviserSummary({ a }: { a: AdviserSection }) {
           {a.diagnosis.map((d) => <div key={d}>{d}</div>)}
         </Notice>
       )}
-      {["adviser.report.v3", "adviser.report.v4", "adviser.report.v5"].includes(a.report_version ?? "") && <V3Funnel a={a} />}
-      {["adviser.report.v4", "adviser.report.v5"].includes(a.report_version ?? "") && <V4Anchors a={a} />}
-      {a.report_version === "adviser.report.v5" && <V5Responses a={a} />}
+      {["adviser.report.v3", "adviser.report.v4", "adviser.report.v5", "adviser.report.v6"].includes(a.report_version ?? "")
+        && <V3Funnel a={a} />}
+      {["adviser.report.v4", "adviser.report.v5", "adviser.report.v6"].includes(a.report_version ?? "") && <V4Anchors a={a} />}
+      {["adviser.report.v5", "adviser.report.v6"].includes(a.report_version ?? "") && <V5Responses a={a} />}
       <div className="adv-section-title">{a.report_version === "adviser.report.v2" || !a.report_version ? "Candidate funnel" : "Scenario funnel"}</div>
       <div className="funnel" data-testid="adv-funnel">
         <span className="step">births {Object.values(a.funnel.births).reduce((x, y) => x + y, 0)}</span>›

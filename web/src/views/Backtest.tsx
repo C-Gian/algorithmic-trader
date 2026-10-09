@@ -941,13 +941,15 @@ function ComparePanel({ items }: { items: Evaluation[] | null }) {
   const [error, setError] = useState<string | null>(null);
   const [copied, runCopy] = useCopyFeedback();
   useEffect(() => {
-    // default pair: the newest candidate against its predecessor - baseline A = the latest v0.4 run and candidate
-    // B = the latest v0.5 run when both exist, else v0.3/v0.4, else v0.2/v0.3; the Owner can change both. Only
+    // default pair: the newest candidate against its predecessor - baseline A = the latest v0.5 run and candidate
+    // B = the latest v0.6 run when both exist, else v0.4/v0.5, v0.3/v0.4, v0.2/v0.3; the Owner can change both. Only
     // completed reports are read; nothing is launched or rebuilt.
     const latest = (m: string) => advisers.find((e) => e.method?.method === m)?.evaluation_id;
     if (picked) return;
-    const pair = ([["v0.4", "v0.5"], ["v0.3", "v0.4"], ["v0.2", "v0.3"]] as const).find(([x, y]) => latest(x) && latest(y))
-      ?? (latest("v0.5") ? ["v0.4", "v0.5"] : latest("v0.4") ? ["v0.3", "v0.4"] : ["v0.2", "v0.3"]);
+    const pair = ([["v0.5", "v0.6"], ["v0.4", "v0.5"], ["v0.3", "v0.4"], ["v0.2", "v0.3"]] as const)
+      .find(([x, y]) => latest(x) && latest(y))
+      ?? (latest("v0.6") ? ["v0.5", "v0.6"] : latest("v0.5") ? ["v0.4", "v0.5"] : latest("v0.4") ? ["v0.3", "v0.4"]
+        : ["v0.2", "v0.3"]);
     setA(latest(pair[0]) ?? "");
     setB(latest(pair[1]) ?? "");
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1032,6 +1034,14 @@ function ComparePanel({ items }: { items: Evaluation[] | null }) {
                       <td key={i} className="mono">{s.responses?.total
                         ? (["W", "P", "C", "R", "N", "I", "X", "A"] as const).map((k) => s.responses!.total![k]).join(" · ")
                         : "— (no response step)"}</td>))}
+                  </tr>)}
+                {(cmp.a.responses?.initial_incompatibility || cmp.b.responses?.initial_incompatibility) && (
+                  <tr data-testid="compare-initial-incompatibility"><td>Ended at the reference (MP-005; part of X, not added again)</td>
+                    {[cmp.a, cmp.b].map((s, i) => {
+                      const x = s.responses?.initial_incompatibility;
+                      return <td key={i} className="mono">{x ? `${x.count} · corridor ${x.by_base?.CORRIDOR ?? 0} · `
+                        + `economics ${x.by_base?.HISTORICAL_ECONOMICS ?? 0} · over P ${x.ratio_over_P ?? "undef."}` : "— (no such step)"}</td>;
+                    })}
                   </tr>)}
               </tbody>
             </table>

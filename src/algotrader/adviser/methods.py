@@ -1,6 +1,7 @@
 """Explicit adviser method selection (WP-011/WP-012/WP-014): the fixed MP-001 v0.2 baseline, the accepted MP-002 v0.3
-revision, the MP-003 v0.4 candidate (pre-confirmation A anchor epochs) and the MP-004 v0.5 candidate (A RETURN local
-reference followed by a local recovery).
+revision, the MP-003 v0.4 candidate (pre-confirmation A anchor epochs), the MP-004 v0.5 candidate (A RETURN local
+reference followed by a local recovery) and the MP-005 v0.6 candidate (v0.5 plus the initial response incompatibility
+terminal of the prepared reference).
 
 A small dispatch table, not a trading DSL. Each release names its immutable packaged rules document and complete
 parameter register (byte-identical copies of the Director documents in ``delivery/``) and every implementation,
@@ -14,7 +15,8 @@ pinned release, never the current default.
 
 A release that inherits other authoritative rule texts (v0.4: the MP-003 delta over MP-002 rules/disposition and the
 MP-001 rules; v0.5: the MP-004 delta and its Director closure over the MP-003 disposition, the MP-002 rules/disposition
-and the MP-001 rules) pins a rules MANIFEST: ``rules_sha256`` is the SHA-256 of the canonical list of every authoritative
+and the MP-001 rules; v0.6: the MP-005 delta and its Director closure over the MP-004 rules and closure and every v0.5
+inherited text) pins a rules MANIFEST: ``rules_sha256`` is the SHA-256 of the canonical list of every authoritative
 document's role, file name and LF-normalized SHA-256, so a changed inherited text changes the behaviour identity even
 though the delta file is unchanged (WP-012 §3). Single-document releases keep their existing single-file hash.
 """
@@ -116,7 +118,7 @@ def _sha_lf(path: Path) -> str:
     return hashlib.sha256(path.read_bytes().replace(b"\r\n", b"\n")).hexdigest()
 
 
-@lru_cache(maxsize=4)
+@lru_cache(maxsize=8)
 def _register(path: Path, model: str, rules_version: str) -> dict[str, Any]:
     doc = json.loads(path.read_text(encoding="utf-8"))
     if doc.get("model") != model or doc.get("rules_version") != rules_version:
@@ -184,11 +186,34 @@ V05 = Release(
                ("INHERITED_MP002_DISPOSITION", idn.METHOD_DIR / "MP-002-DIRECTOR-DISPOSITION.md"),
                ("INHERITED_MP001_RULES", idn.METHOD_DIR / "MP-001-INTEGRATED-METHOD-PROPOSAL.md")))
 
-RELEASES: dict[str, Release] = {r.key: r for r in (V02, V03, V04, V05)}
-# MP-002 structural-scenario lineage (scenario/entry_attempt kinds); v0.5 inherits the v0.4 anchors
-SCENARIO_METHODS = frozenset({"v0.3", "v0.4", "v0.5"})
-ANCHOR_METHODS = frozenset({"v0.4", "v0.5"})  # MP-003 pre-confirmation A anchor epochs
-RESPONSE_METHODS = frozenset({"v0.5"})  # MP-004 A RETURN local reference / recovery
+V06 = Release(
+    key="v0.6", label="Candidate v0.6 — RETURN reference ends early when its confirmation is already impossible",
+    status="ENGINEERING_REVIEW_PENDING", status_label="engineering review pending",
+    purpose=("MP-005: as v0.5, but right after the RETURN reference is prepared the entry attempt ends at once "
+             "(INITIAL_RESPONSE_INCOMPATIBLE) when no confirming close beyond the reference could lie in the usable "
+             "corridor (historical and live) or, historically, in the fixed-cost economic region. Only the entry "
+             "attempt ends: the scenario is not invalidated. Everything else is v0.5."),
+    model="btc.context-action.v0.6", rules_version="mp005.rules.v0.6",
+    rules_file=idn.METHOD_DIR / "MP-005-V06-INITIAL-RESPONSE-INCOMPATIBILITY.md",
+    register_file=idn.METHOD_DIR / "MP-005-PARAMETERS.json",
+    implementation="adviser.core.v6", evaluator_implementation="adviser.evaluator.v3",
+    core_state_format="algotrader.adviser-state.v6", runtime_format="algotrader.adviser-runtime.v6",
+    evaluator_state_format="algotrader.adviser-evaluation-state.v2", engine_format="observe.stream.v7",
+    report_version="adviser.report.v6", reconciliation_version="9", deep_version="10",
+    inherited=(("DELTA_DIRECTOR_CLOSURE", idn.METHOD_DIR / "MP-005-DIRECTOR-CLOSURE.md"),
+               ("INHERITED_MP004_RULES", idn.METHOD_DIR / "MP-004-V05-RETURN-RESPONSE.md"),
+               ("INHERITED_MP004_CLOSURE", idn.METHOD_DIR / "MP-004-DIRECTOR-CLOSURE.md"),
+               ("INHERITED_MP003_RULES", idn.METHOD_DIR / "MP-003-A-REACTION-ANCHOR-DISPOSITION.md"),
+               ("INHERITED_MP002_RULES", idn.METHOD_DIR / "MP-002-SCENARIO-CONFIRMATION-ENTRY-PROPOSAL.md"),
+               ("INHERITED_MP002_DISPOSITION", idn.METHOD_DIR / "MP-002-DIRECTOR-DISPOSITION.md"),
+               ("INHERITED_MP001_RULES", idn.METHOD_DIR / "MP-001-INTEGRATED-METHOD-PROPOSAL.md")))
+
+RELEASES: dict[str, Release] = {r.key: r for r in (V02, V03, V04, V05, V06)}
+# MP-002 structural-scenario lineage (scenario/entry_attempt kinds); v0.5/v0.6 inherit the v0.4 anchors
+SCENARIO_METHODS = frozenset({"v0.3", "v0.4", "v0.5", "v0.6"})
+ANCHOR_METHODS = frozenset({"v0.4", "v0.5", "v0.6"})  # MP-003 pre-confirmation A anchor epochs
+RESPONSE_METHODS = frozenset({"v0.5", "v0.6"})  # MP-004 A RETURN local reference / recovery
+INITIAL_COMPATIBILITY_METHODS = frozenset({"v0.6"})  # MP-005 initial response incompatibility
 BY_MODEL: dict[str, Release] = {r.model: r for r in RELEASES.values()}
 
 
@@ -215,7 +240,7 @@ def for_engine(adviser: dict[str, Any]) -> Release:
 
 
 def is_scenario_method(key: str | None) -> bool:
-    """True for releases emitting MP-002 structural scenarios and child entry attempts (v0.3, v0.4, v0.5)."""
+    """True for releases emitting MP-002 structural scenarios and child entry attempts (v0.3-v0.6)."""
     return (key or DEFAULT) in SCENARIO_METHODS
 
 

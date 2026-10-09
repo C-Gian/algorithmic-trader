@@ -28,7 +28,7 @@ from pydantic import BaseModel, ConfigDict
 
 SEMANTIC_V2_VERSION = "algotrader.semantic.v2"
 SEMANTIC_V2_STATUS = "PROVISIONAL"
-SEMANTIC_V2_REVISION = 4
+SEMANTIC_V2_REVISION = 5
 SEMANTIC_V2_CHANGELOG: tuple[tuple[int, str, str], ...] = (
     (1, "2026-10-04", "Initial provisional advisory baseline (WP-009): Observation, Landmark, PhaseState, "
                       "EventContext/EventResponse, MarketView, Scenario, CandidatePlan, Actionability, AdviserCall, "
@@ -59,9 +59,19 @@ SEMANTIC_V2_CHANGELOG: tuple[tuple[int, str, str], ...] = (
                       "v0.5 kind uses the revision-3 contracts unchanged. Revision-1/2/3 records, their bytes and "
                       "readers are unchanged; v0.2/v0.3/v0.4 runs never emit the variant (per-method emitted "
                       "revision: v0.2 -> 1, v0.3 -> 2, v0.4 -> 3, v0.5 -> 4)."),
+    (5, "2026-10-09", "WP-015 MP-005 btc.context-action.v0.6 (values only; no kind, field, type or shape change): v0.6 "
+                      "emits the revision-4 contracts unchanged (KIND_CONTRACTS_V6 = KIND_CONTRACTS_V5). New values "
+                      "only: entry-attempt reason INITIAL_RESPONSE_INCOMPATIBLE:<CORRIDOR|HISTORICAL_ECONOMICS> on a "
+                      "TERMINAL record published in the same dispatch as its RESPONSE_REFERENCE, whose 'response' "
+                      "outcome is INITIAL_RESPONSE_INCOMPATIBLE with the string keys incompatibility_base, "
+                      "incompatibility_annotations, execution_profile, F, C0, A0, F_cap_C0, J0 and economic_basis "
+                      "(diagnostic bases; exact decimal strings or null). Revision-1..4 records, their bytes and "
+                      "readers are unchanged; v0.2-v0.5 runs never emit the new values (per-method emitted revision: "
+                      "v0.2 -> 1, v0.3 -> 2, v0.4 -> 3, v0.5 -> 4, v0.6 -> 5)."),
 )
 SEMANTIC_V2_EMITTED_REVISION = {"btc.context-action.v0.2": 1, "btc.context-action.v0.3": 2,
-                                "btc.context-action.v0.4": 3, "btc.context-action.v0.5": 4}
+                                "btc.context-action.v0.4": 3, "btc.context-action.v0.5": 4,
+                                "btc.context-action.v0.6": 5}
 
 
 class Record(BaseModel):
@@ -459,7 +469,8 @@ KIND_CONTRACTS_V3: dict[str, type[Record]] = {  # kinds emitted by v0.3 (no 'can
 }
 KIND_CONTRACTS_V4: dict[str, type[Record]] = {**KIND_CONTRACTS_V3, "scenario": ScenarioStateV4}  # v0.4 (revision 3)
 KIND_CONTRACTS_V5: dict[str, type[Record]] = {**KIND_CONTRACTS_V4, "entry_attempt": EntryAttemptV5}  # v0.5 (revision 4)
+KIND_CONTRACTS_V6: dict[str, type[Record]] = dict(KIND_CONTRACTS_V5)  # v0.6 (revision 5: new values only)
 
 __all__ = ["SEMANTIC_V2_VERSION", "SEMANTIC_V2_REVISION", "PUBLIC_CONTRACTS", "KIND_CONTRACTS", "Origin", "Direction",
-           "Family", "KIND_CONTRACTS_V3", "KIND_CONTRACTS_V4", "KIND_CONTRACTS_V5"]
+           "Family", "KIND_CONTRACTS_V3", "KIND_CONTRACTS_V4", "KIND_CONTRACTS_V5", "KIND_CONTRACTS_V6"]
 _ = Decimal  # exact decimal strings in JSON mode

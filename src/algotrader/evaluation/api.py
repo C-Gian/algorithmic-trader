@@ -40,7 +40,7 @@ class StartEvaluation(BaseModel):
     pack_id: str | None = Field(default=None, min_length=1, max_length=100)  # prepared evaluation pack (R3)
     acknowledge_limitations: bool = False  # explicit Owner acknowledgement for a READY_WITH_LIMITATIONS pack
     run_type: str = Field(default="observation_only", pattern="^(observation_only|adviser_evaluation)$")
-    method: str | None = Field(default=None, pattern="^v0\\.[2345]$")  # adviser release; absent = v0.2 default
+    method: str | None = Field(default=None, pattern="^v0\\.[23456]$")  # adviser release; absent = v0.2 default
     speed: float = Field(default=0.0, ge=0, le=control.MAX_SPEED)
     paused: bool = False
 
@@ -136,9 +136,10 @@ def adviser_section(c, ev: dict[str, Any], replay: dict[str, Any]) -> dict[str, 
     fin = c.execute("SELECT 1 FROM adviser_finish WHERE run_id = %s", (rid,)).fetchone()
     from ..adviser import report4 as ar4
     from ..adviser import report5 as ar5
+    from ..adviser import report6 as ar6
 
     key = eng["adviser"].get("method")
-    builder = {"v0.5": ar5, "v0.4": ar4, "v0.3": ar3}.get(key, ar)
+    builder = {"v0.6": ar6, "v0.5": ar5, "v0.4": ar4, "v0.3": ar3}.get(key, ar)
     return builder.build(engine=eng, journal=journal, records=records, view=(view or {}).get("adviser_view"),
                     status=replay["status"], clock_end_reached=fin is not None)
 

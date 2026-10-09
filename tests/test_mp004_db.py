@@ -100,7 +100,7 @@ def test_v05_pack_evaluation_equals_the_pure_fold_with_reconciliation_v8(databas
     assert "Version 8 (WP-014" in v["scope"] and "Version 7 (WP-012" in v["scope"]
     names = {c["name"]: c["passed"] for c in v["checks"]}
     assert names["adviser_method_binding"] and names["adviser_lineage_immutability"] and names["adviser_finish_rederived"]
-    assert row["manifest"]["adviser"]["method"] == "v0.5" and row["manifest"]["schema_revision"] == 8
+    assert row["manifest"]["adviser"]["method"] == "v0.5" and row["manifest"]["schema_revision"] == 9  # WP-015 r9
     pure = _pure()
     dj = journal(database_url, rid)
     assert [(e["kind"], _strip(e["record"])) for e in dj] == [(e["kind"], _strip(e["record"])) for e in pure.journal]
@@ -256,7 +256,7 @@ def test_paired_v04_v05_evaluations_reports_and_read_only_comparison(database_ur
     root, art, pack = _prepared(database_url, tmp_path, monkeypatch)
     api = TestClient(create_app(database_url, art, web_dist=tmp_path / "no-ui", data_root=root))
     listed = api.get("/api/adviser/methods").json()
-    assert [m["method"] for m in listed["methods"]] == ["v0.2", "v0.3", "v0.4", "v0.5"] and listed["default"] == "v0.2"
+    assert [m["method"] for m in listed["methods"]] == ["v0.2", "v0.3", "v0.4", "v0.5", "v0.6"] and listed["default"] == "v0.2"
     assert listed["methods"][3]["status"] == "ENGINEERING_REVIEW_PENDING"
     assert listed["methods"][3]["label"] == "Candidate v0.5 — RETURN waits for a local recovery"
     ids = {}
@@ -267,7 +267,7 @@ def test_paired_v04_v05_evaluations_reports_and_read_only_comparison(database_ur
         ids[m] = r.json()["evaluation_id"]
         assert r.json()["method"]["method"] == m  # recognisable before the worker pins it
     assert api.post("/api/evaluations", json={"pack_id": pack["pack_id"], "run_type": "adviser_evaluation",
-                                              "method": "v0.6"}).status_code == 422
+                                              "method": "v0.7"}).status_code == 422  # WP-015: v0.6 exists
     run_all(worker(database_url, root, art, "observe:x", checkpoint_events=2000))
     det = api.get(f"/api/evaluations/{ids['v0.5']}").json()
     assert det["method"]["method"] == "v0.5" and det["method"]["status"] == "ENGINEERING_REVIEW_PENDING"
