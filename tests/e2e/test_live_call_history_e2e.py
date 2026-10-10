@@ -143,6 +143,7 @@ def test_live_call_history_identity_order_states_and_read_only(stack, browser, e
     expect(rows.nth(0)).to_contain_text("REASON_c1_1")
     expect(rows.nth(1)).to_contain_text("recorded guidance c1 r2")
     expect(rows.nth(1)).to_contain_text("96 – 99")
+    expect(rows.nth(1)).to_contain_text("Entry available at this revision")
     expect(hist).to_contain_text("2026-10-10 09:00:00 UTC")  # issue time, explicit UTC
     expect(hist).not_to_contain_text("Hypothetical")
     shot(page, hist, str(evidence_dir / "live-history-1-current.png"))
@@ -174,7 +175,13 @@ def test_live_call_history_identity_order_states_and_read_only(stack, browser, e
     expect(hist.get_by_test_id("history-status-terminal")).to_contain_text("No entry is available from this call now")
     expect(rows).to_have_count(4)
     expect(rows.nth(3)).to_contain_text("STOP_CONTACT")
-    expect(rows.nth(2)).to_contain_text("Entry closed now")
+    expect(rows.nth(2)).to_contain_text("Entry closed at this revision")
+    # after the terminal, the old AVAILABLE revision stays readable without claiming availability "now"
+    expect(rows.nth(1)).to_contain_text("Entry available at this revision")
+    expect(rows.nth(1)).to_contain_text("AVAILABLE / ONGOING")
+    expect(hist.get_by_test_id("history-revisions")).not_to_contain_text("valid now")
+    expect(hist.get_by_test_id("history-revisions")).not_to_contain_text("closed now")
+    assert " now" not in hist.get_by_test_id("history-revisions").inner_text()
     shot(page, hist, str(evidence_dir / "live-history-2-terminal.png"))
 
     # 5. call switch with an older response held and released last: never shown under the new identity

@@ -49,6 +49,13 @@ The E2E test checks:
 - GET-only requests;
 - at 390 px, the panel adds no horizontal overflow.
 
+## Correction — revision labels (base `3a8f783`)
+
+Director finding: past revisions in the live card used the present-tense labels "Entry valid now" / "Entry closed now", so the terminal screen still showed "Entry valid now" on an earlier revision.
+- **Fix.** `RevisionList` in `detail` mode (live history only) now labels the recorded state at that revision: "Entry available at this revision", "Entry closed at this revision", "Entry not verifiable at this revision". Current availability stays only in the status banner.
+- **Unchanged.** The historical call detail keeps its labels and markup. No method, API or persistence change.
+- **Checks.** `npm run build` passed. `test_live_call_history_e2e` 2 passed: after the terminal, the old AVAILABLE revision remains readable as "Entry available at this revision" with no "now" in the revision list. Regression `test_adviser_e2e` (historical panel) 2 passed. Both ran on a fresh disposable PostgreSQL, removed afterwards. Screenshots regenerated; the terminal one shows the corrected labels.
+
 ## Synthetic screenshots
 
 [current](live-history-1-current.png) · [terminal](live-history-2-terminal.png) · [other run / session changed](live-history-3-other-run.png) · [partial](live-history-4-partial.png) · [error](live-history-5-error.png) · [phone](live-history-6-phone.png).

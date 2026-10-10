@@ -309,6 +309,12 @@ function MiniChart({ bars, call }: { bars: { t: string; c: string; h: string; l:
   );
 }
 
+/** Entry status as recorded AT a past revision (live history): never phrased as availability now. */
+const REVISION_ENTRY_TEXT: Record<string, string> = {
+  AVAILABLE: "Entry available at this revision", CLOSED: "Entry closed at this revision",
+  UNVERIFIED: "Entry not verifiable at this revision",
+};
+
 /** The recorded guidance revisions of one call, in journal order (shared by the historical call detail and the live
  *  call history). ``detail`` adds the other recorded values of each revision with full UTC times; every value shown
  *  is the stored one, and absent fields read "not recorded" instead of being reconstructed. */
@@ -321,7 +327,7 @@ export function RevisionList({ revisions, detail = false, testid = "call-revisio
       {revisions.map((r) => (
         <li key={r.revision} data-testid={detail ? "revision-row" : undefined} data-revision={detail ? r.revision : undefined}>
           <span className="mono small-text">{detail ? `r${r.revision} · ${fmtTime(r.env.published_at)}` : fmtTime(r.env.published_at).slice(11, 16)}</span>
-          <span className="tl-kind">{r.thesis_status === "ONGOING" ? ENTRY_TEXT[r.entry_status] ?? r.entry_status : THESIS_TEXT[r.thesis_status] ?? r.thesis_status}</span>
+          <span className="tl-kind">{r.thesis_status === "ONGOING" ? (detail ? REVISION_ENTRY_TEXT : ENTRY_TEXT)[r.entry_status] ?? r.entry_status : THESIS_TEXT[r.thesis_status] ?? r.thesis_status}</span>
           <span className="tl-text" title={r.terminal_reason ?? r.entry_reasons.join(", ")}>{r.terminal_reason ? reasonText(r.terminal_reason) : r.entry_reasons.map(reasonText).join(", ")}</span>
           {detail && (
             <dl className="kv-grid small-text revision-values">
