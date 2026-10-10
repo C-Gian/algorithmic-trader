@@ -858,3 +858,18 @@ Only the dossier, the JSON labels and the script strings were corrected, from th
   - The thesis stays separate; AVAILABLE and CLOSED are unchanged.
   - Checks: build; proposal and presentation E2E 5 passed; `test_adviser_e2e` 2 passed. Screenshots 4 and 6 updated. CI is Owner-operated: PENDING / NOT CHECKED.
 
+## Live entry availability — technical continuity check (base `09951a7`; verification only, READY FOR DIRECTOR REVIEW — LIVE CONTINUITY CHECK ONLY)
+
+[Note](delivery/evidence/LIVE-CONTINUITY/NOTE.md). Authorized by Astra. No correction made; method, API, persistence and UI unchanged.
+- **Coverage.** Existing tests covered the service (stale quote, disconnect/reconnect, silent > 120 s) and the presentation layer separately. None crossed worker → API → cockpit with an interruption, a reload and a resume.
+- **Added.** `tests/e2e/test_live_continuity_e2e.py`, reusing the live-worker fakes and stack. 1 passed.
+- **Observed.**
+  - AVAILABLE r2.
+  - Scripted pushes and quotes stop (socket open, session current); the 5 s quote rule gives UNVERIFIED `QUOTE_STALE` r3.
+  - Reload during the interruption: AVAILABLE is never rendered and no band appears.
+  - On resume the backend sets CLOSED `PRICE_OUTSIDE_STRUCTURAL_AREA` r4, not AVAILABLE, and the cockpit equals the backend.
+- **Findings reported.**
+  1. Reproducible: the cockpit's alert banner and timeline keep the earlier `ENTRY_REOPENED` summary "Entry still valid now inside the admissible part of …", with its range, while the call is UNVERIFIED or CLOSED.
+  2. Minor: before the first poll after a reload, the cockpit shows its defaults (NO_VIEW panel; "Stopped" badge by code).
+- **Note.** CI is Owner-operated: PENDING / NOT CHECKED.
+

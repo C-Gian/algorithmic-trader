@@ -1,0 +1,60 @@
+{
+  "1_available": {
+    "call_id": "call-AL-2025-09-01T05:21:01+00:00-5e9629dcc808",
+    "revision": 2,
+    "entry_status": "AVAILABLE",
+    "entry_reasons": [],
+    "admissible_bounds": [
+      "100238.3",
+      "100245.7"
+    ]
+  },
+  "2_interrupted": {
+    "call_id": "call-AL-2025-09-01T05:21:01+00:00-5e9629dcc808",
+    "revision": 3,
+    "entry_status": "UNVERIFIED",
+    "entry_reasons": [
+      "QUOTE_STALE"
+    ],
+    "thesis_status": "ONGOING"
+  },
+  "3_after_reload": {
+    "rendered_states": [
+      "NO_VIEW",
+      "UNVERIFIED"
+    ],
+    "alerts_banner": "4 new changes\nENTRY UNVERIFIED \u2014 Thesis ongoing; current entry cannot be verified (no fresh quote). Do not treat as ready now.\nENTRY REOPENED \u2014 Entry still valid now inside the admissible part of 100238.3\u2013100245.7; stop 100226.5, target 100798.5, hard deadline 2025-09-01T09:21:01+00:00.\nENTRY UNVERIFIED \u2014 Thesis ongoing; current entry cannot be verified (no fresh quote). Do not treat as ready now.",
+    "api_alerts": [
+      [
+        "ENTRY_UNVERIFIED",
+        "Thesis ongoing; current entry cannot be verified (no fresh quote). Do not treat as ready now."
+      ],
+      [
+        "ENTRY_REOPENED",
+        "Entry still valid now inside the admissible part of 100238.3\u2013100245.7; stop 100226.5, target 100798.5, hard deadline 2025-09-01T09:21:01+00:00."
+      ],
+      [
+        "ENTRY_UNVERIFIED",
+        "Thesis ongoing; current entry cannot be verified (no fresh quote). Do not treat as ready now."
+      ],
+      [
+        "NEW_CALL",
+        "New LONG call (A): entry available inside 100238.3\u2013100245.7, target 100798.5, stop 100226.5"
+      ]
+    ]
+  },
+  "4_resumed": {
+    "call_id": "call-AL-2025-09-01T05:21:01+00:00-5e9629dcc808",
+    "revision": 4,
+    "entry_status": "CLOSED",
+    "entry_reasons": [
+      "PRICE_OUTSIDE_STRUCTURAL_AREA"
+    ],
+    "thesis_status": "ONGOING"
+  },
+  "rendered_states_since_reload": [
+    "NO_VIEW",
+    "UNVERIFIED",
+    "CLOSED"
+  ]
+}
