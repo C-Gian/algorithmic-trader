@@ -1,0 +1,158 @@
+{
+ "method": "v0.6 (btc.context-action.v0.6 / adviser.core.v6), live profile, mocked services",
+ "run_id": "live-20250828T0316-a9c168",
+ "session_id_displayed": "demo-synthetic-session",
+ "scenario_id": "AL-2025-09-01T03:15:00+00:00-d49a8b5618ff",
+ "call_id": "call-AL-2025-09-01T04:07:01+00:00-05a41e24819a",
+ "issued_at": "2025-09-01T04:07:01Z",
+ "entry_mode": "RETURN",
+ "structural_area": [
+  "99900",
+  "100049.9"
+ ],
+ "target": "100700.0",
+ "stop": "99700.0",
+ "hard_deadline": "2025-09-01T08:02:01Z",
+ "tape": "tests/test_mp005_live.py L1-L3 LONG (REF, neutral, eq, VALID; WIDE quote 04:05) + 3 appended minutes (c 100100, 100300, high 100720); re-quotes every 4 s at the last close",
+ "revisions": [
+  {
+   "revision": 1,
+   "published_at": "2025-09-01T04:08:00.500000Z",
+   "entry_status": "CLOSED",
+   "entry_reasons": [
+    "PRICE_OUTSIDE_STRUCTURAL_AREA",
+    "REWARD_RISK_BELOW_MINIMUM"
+   ],
+   "thesis_status": "ONGOING",
+   "terminal_reason": null,
+   "admissible": [
+    "99900",
+    "100014.5"
+   ],
+   "guidance": "Thesis ongoing but new entry is closed now (PRICE_OUTSIDE_STRUCTURAL_AREA, REWARD_RISK_BELOW_MINIMUM). If following this call: hold with stop 99700.0, target 100700.0."
+  },
+  {
+   "revision": 2,
+   "published_at": "2025-09-01T04:10:00.500000Z",
+   "entry_status": "CLOSED",
+   "entry_reasons": [
+    "AT_OPPOSING_AREA",
+    "NO_ROOM_AFTER_COSTS",
+    "PRICE_OUTSIDE_STRUCTURAL_AREA"
+   ],
+   "thesis_status": "ONGOING",
+   "terminal_reason": null,
+   "admissible": [
+    "99900",
+    "100014.5"
+   ],
+   "guidance": "Thesis ongoing but new entry is closed now (AT_OPPOSING_AREA, NO_ROOM_AFTER_COSTS, PRICE_OUTSIDE_STRUCTURAL_AREA). If following this call: hold with stop 99700.0, target 100700.0."
+  },
+  {
+   "revision": 3,
+   "published_at": "2025-09-01T04:10:01Z",
+   "entry_status": "CLOSED",
+   "entry_reasons": [
+    "THESIS_TERMINAL"
+   ],
+   "thesis_status": "TARGET_REACHED",
+   "terminal_reason": "CERTIFIED_TARGET_CONTACT:okx/BTC-USDT-SWAP/trade_bar_1m#obs@2025-09-01T04:09:00Z",
+   "admissible": null,
+   "guidance": "Target reached: the call's guidance is complete."
+  }
+ ],
+ "material_changes": [
+  {
+   "type": "NEW_CALL",
+   "published_at": "2025-09-01T04:07:01Z",
+   "alertable": true,
+   "summary": "New LONG call (A, RETURN): usable return price reached; entry available inside 99900–100049.9, target 100700.0, stop 99700.0"
+  },
+  {
+   "type": "ENTRY_WITHDRAWN",
+   "published_at": "2025-09-01T04:08:00.500000Z",
+   "alertable": true,
+   "summary": "Thesis ongoing but new entry is closed now (PRICE_OUTSIDE_STRUCTURAL_AREA, REWARD_RISK_BELOW_MINIMUM). If following this call: hold with stop 99700.0, target 100700.0."
+  },
+  {
+   "type": "TERMINAL",
+   "published_at": "2025-09-01T04:10:01Z",
+   "alertable": true,
+   "summary": "TARGET_REACHED (CERTIFIED_TARGET_CONTACT:okx/BTC-USDT-SWAP/trade_bar_1m#obs@2025-09-01T04:09:00Z): Target reached: the call's guidance is complete."
+  }
+ ],
+ "moments": [
+  {
+   "n": 1,
+   "clock": "2025-09-01 04:07:01.500000+00:00",
+   "call": {
+    "revision": 0,
+    "entry_status": "AVAILABLE",
+    "entry_reasons": [],
+    "thesis_status": "ONGOING",
+    "admissible_bounds": [
+     "99900",
+     "100014.5"
+    ],
+    "guidance": "Entry still valid now inside the admissible part of 99900–100049.9; stop 99700.0, target 100700.0, hard deadline 2025-09-01T08:02:01+00:00."
+   },
+   "recent_call": null
+  },
+  {
+   "n": 2,
+   "clock": "2025-09-01 04:08:01.500000+00:00",
+   "call": {
+    "revision": 1,
+    "entry_status": "CLOSED",
+    "entry_reasons": [
+     "PRICE_OUTSIDE_STRUCTURAL_AREA",
+     "REWARD_RISK_BELOW_MINIMUM"
+    ],
+    "thesis_status": "ONGOING",
+    "admissible_bounds": [
+     "99900",
+     "100014.5"
+    ],
+    "guidance": "Thesis ongoing but new entry is closed now (PRICE_OUTSIDE_STRUCTURAL_AREA, REWARD_RISK_BELOW_MINIMUM). If following this call: hold with stop 99700.0, target 100700.0."
+   },
+   "recent_call": null
+  },
+  {
+   "n": 3,
+   "clock": "2025-09-01 04:10:01.500000+00:00",
+   "call": null,
+   "recent_call": {
+    "terminal": "TARGET_REACHED",
+    "reason": "CERTIFIED_TARGET_CONTACT:okx/BTC-USDT-SWAP/trade_bar_1m#obs@2025-09-01T04:09:00Z",
+    "terminal_at": "2025-09-01T04:10:01+00:00"
+   }
+  }
+ ],
+ "rendered": {
+  "1": {
+   "panel_state": "AVAILABLE",
+   "panel_visible": "CHE COSA PROPONE IL SISTEMA ADESSO\nDisponibilità di un nuovo ingresso\nIngresso disponibile secondo il sistema\nCALL LIVE\nUltimo aggiornamento: 01/09/2025, 06:07:01 CEST\nFascia d'ingresso ammessa ora\n99900 – 100014.5\nAggiornamento della call già emessa\nLONG\nIndicazione di acquisto: il sistema si aspetta un rialzo del prezzo.\nTarget operativo\n100700.0\nStop indicato\n99700.0\nScadenza dell'indicazione\n01/09/2025, 10:02:01 CEST\nOrizzonte atteso\n30–180 min\nTesi\nancora valida\nTesto del sistema per questa call, alla valutazione del 01/09/2025, 06:07:01 CEST — originale, non tradotto:\nEntry still valid now inside the admissible part of 99900–100049.9; stop 99700.0, target 100700.0, hard deadline 2025-09-01T08:02:01+00:00.\n\nÈ l'indicazione del sistema, non una tua operazione: l'app non sa se hai aperto posizioni. Lo stop è un'indicazione, non un ordine.\n\nApprofondimenti\nmotivazioni, dettagli tecnici e cronologia",
+   "details_only": "LetturaUP · conditional · CONDITIONAL_SCENARIOContesto 1h osservatoUPFaseREACTIONValutazione (UTC)2025-09-01 04:07:01 UTCMotivazioni (testo del sistema)A LONG confirmed: confirmed: continuation toward 100900 while V 99700.0 holds and before 2025-09-01T08:02:01+00:00Testo del sistemaEntry still valid now inside the admissible part of 99900–100049.9; stop 99700.0, target 100700.0, hard deadline 2025-09-01T08:02:01+00:00.Codici registratiAVAILABLEArea strutturale (storico)99900 – 100049.9FamigliaA · continuation after a reaction · target LANDMARKEmessa (UTC)2025-09-01 04:07:01 UTC a 100012Scadenza (UTC)2025-09-01 08:02:01 UTCMinuti residui alla valutazione235Revisioner0Show this call's recorded history (revision r0)LONG A confirmedconfirmed: continuation toward 100900 while V 99700.0 holds and before 2025-09-01T08:02:01+00:00Lettura qualitativa, non una probabilità.",
+   "alerts_banner": "1 avviso registrato non ancora letto\n\nSono eventi passati, mostrati con l'ora in cui sono stati registrati. La disponibilità attuale dell'ingresso si legge nel riquadro principale «Che cosa propone il sistema adesso», che riporta lo stato attuale del sistema.\n\n01/09/2025, 06:07:01 CEST\nIl sistema ha emesso una nuova call.\nTesto registrato a quell'ora",
+   "call_guidance_shown": "Entry still valid now inside the admissible part of 99900–100049.9; stop 99700.0, target 100700.0, hard deadline 2025-09-01T08:02:01+00:00.",
+   "concluded": null
+  },
+  "2": {
+   "panel_state": "CLOSED",
+   "panel_visible": "CHE COSA PROPONE IL SISTEMA ADESSO\nDisponibilità di un nuovo ingresso\nIngresso non più disponibile\nCALL LIVE\nUltimo aggiornamento: 01/09/2025, 06:08:01 CEST\nMotivo\nprezzo fuori dall'area d'ingresso; rapporto rendimento/rischio sotto il minimo\nAggiornamento della call già emessa\nLONG\nIndicazione di acquisto: il sistema si aspetta un rialzo del prezzo.\nTarget operativo\n100700.0\nStop indicato\n99700.0\nScadenza dell'indicazione\n01/09/2025, 10:02:01 CEST\nOrizzonte atteso\n30–180 min\nTesi\nancora valida\nTesto del sistema per questa call, alla valutazione del 01/09/2025, 06:08:01 CEST — originale, non tradotto:\nThesis ongoing but new entry is closed now (PRICE_OUTSIDE_STRUCTURAL_AREA, REWARD_RISK_BELOW_MINIMUM). If following this call: hold with stop 99700.0, target 100700.0.\n\nÈ l'indicazione del sistema, non una tua operazione: l'app non sa se hai aperto posizioni. Lo stop è un'indicazione, non un ordine.\n\nApprofondimenti\nmotivazioni, dettagli tecnici e cronologia",
+   "details_only": "LetturaUP · conditional · CONDITIONAL_SCENARIOContesto 1h osservatoUPFaseREACTIONValutazione (UTC)2025-09-01 04:08:01 UTCMotivazioni (testo del sistema)A LONG confirmed: confirmed: continuation toward 100900 while V 99700.0 holds and before 2025-09-01T08:02:01+00:00Testo del sistemaThesis ongoing but new entry is closed now (PRICE_OUTSIDE_STRUCTURAL_AREA, REWARD_RISK_BELOW_MINIMUM). If following this call: hold with stop 99700.0, target 100700.0.Codici registratiCLOSED · PRICE_OUTSIDE_STRUCTURAL_AREA, REWARD_RISK_BELOW_MINIMUMArea strutturale (storico)99900 – 100049.9Ultima fascia calcolata (non utilizzabile ora)99900 – 100014.5FamigliaA · continuation after a reaction · target LANDMARKEmessa (UTC)2025-09-01 04:07:01 UTC a 100012Scadenza (UTC)2025-09-01 08:02:01 UTCMinuti residui alla valutazione234Revisioner1Show this call's recorded history (revision r1)LONG A confirmedconfirmed: continuation toward 100900 while V 99700.0 holds and before 2025-09-01T08:02:01+00:00Lettura qualitativa, non una probabilità.",
+   "alerts_banner": "2 avvisi registrati non ancora letti\n\nSono eventi passati, mostrati con l'ora in cui sono stati registrati. La disponibilità attuale dell'ingresso si legge nel riquadro principale «Che cosa propone il sistema adesso», che riporta lo stato attuale del sistema.\n\n01/09/2025, 06:08:00 CEST\nIl sistema ha segnalato che l'ingresso non era più disponibile.\nTesto registrato a quell'ora\n01/09/2025, 06:07:01 CEST\nIl sistema ha emesso una nuova call.\nTesto registrato a quell'ora",
+   "call_guidance_shown": "Thesis ongoing but new entry is closed now (PRICE_OUTSIDE_STRUCTURAL_AREA, REWARD_RISK_BELOW_MINIMUM). If following this call: hold with stop 99700.0, target 100700.0.",
+   "concluded": null
+  },
+  "3": {
+   "panel_state": "WAITING",
+   "panel_visible": "CHE COSA PROPONE IL SISTEMA ADESSO\nDisponibilità di un nuovo ingresso\nIn attesa — nessun ingresso proposto\nUltimo aggiornamento: 01/09/2025, 06:10:01 CEST\nAggiornamento della call già emessa\n\nUltima indicazione: LONG A, conclusa — target raggiunto (01/09/2025, 06:10:01 CEST).\n\nMotivo registrato\ncontatto certificato con il target operativo della call\nTarget operativo della call\n100700.0\nTesto registrato alla conclusione (01/09/2025, 06:10:01 CEST) — originale, non tradotto:\nTarget reached: the call's guidance is complete.\n\nLa lettura attuale del mercato qui sotto è una valutazione nuova: non estende la call conclusa.\n\nLettura attuale del mercato\n▲\nDirezione attesa: Rialzo (condizionale)\nCondizionale: uno scenario supportato in una direzione\nScenario\nLONG A\nCondizione ancora necessaria\nnon indicata dal sistema\nDestinazione dello scenario\n100900 (non è un target operativo)\nInvalidazione dello scenario\n99700.0 (livello strutturale, non è uno stop)\nOrizzonte atteso\n30–180 min\n\nÈ l'indicazione del sistema, non una tua operazione: l'app non sa se hai aperto posizioni. Lo stop è un'indicazione, non un ordine.\n\nApprofondimenti\nmotivazioni, dettagli tecnici e cronologia",
+   "details_only": "LetturaUP · conditional · CONDITIONAL_SCENARIOContesto 1h osservatoUPFaseREACTIONValutazione (UTC)2025-09-01 04:10:01 UTCMotivazioni (testo del sistema)A LONG confirmed: confirmed: continuation toward 100900 while V 99700.0 holds and before 2025-09-01T08:02:01+00:00LONG A confirmedconfirmed: continuation toward 100900 while V 99700.0 holds and before 2025-09-01T08:02:01+00:00Lettura qualitativa, non una probabilità.",
+   "alerts_banner": "3 avvisi registrati non ancora letti\n\nSono eventi passati, mostrati con l'ora in cui sono stati registrati. La disponibilità attuale dell'ingresso si legge nel riquadro principale «Che cosa propone il sistema adesso», che riporta lo stato attuale del sistema.\n\n01/09/2025, 06:10:01 CEST\nIl sistema ha segnalato la conclusione della call.\nTesto registrato a quell'ora\n01/09/2025, 06:08:00 CEST\nIl sistema ha segnalato che l'ingresso non era più disponibile.\nTesto registrato a quell'ora\n01/09/2025, 06:07:01 CEST\nIl sistema ha emesso una nuova call.\nTesto registrato a quell'ora",
+   "call_guidance_shown": null,
+   "concluded": "Aggiornamento della call già emessa\n\nUltima indicazione: LONG A, conclusa — target raggiunto (01/09/2025, 06:10:01 CEST).\n\nMotivo registrato\ncontatto certificato con il target operativo della call\nTarget operativo della call\n100700.0\nTesto registrato alla conclusione (01/09/2025, 06:10:01 CEST) — originale, non tradotto:\nTarget reached: the call's guidance is complete.\n\nLa lettura attuale del mercato qui sotto è una valutazione nuova: non estende la call conclusa.",
+   "history_card": "RECORDED ADVICE HISTORY · ALL TIMES UTC\nCall history\nReload\nClose\nCall\ncall-AL-2025-09-01T04:07:01+00:00-05a41e24819a\nRun (continuity epoch)\nlive-20250828T0316-a9c168\nOpened from session\ndemo-synthetic-session\nTerminal — Target reached. No entry is available from this call now; earlier revisions are history only.\nAt issue (call record)\nIssued\n2025-09-01 04:07:01 UTC at 100012 · LIVE\nDirection\nLONG A\nEntry at issue\nAVAILABLE · admissible 99900 – 100014.5\nStructural area\n99900 – 100049.9\nTarget / invalidation\n100700.0 / 99700.0\nHard deadline\n2025-09-01 08:02:01 UTC\nRevisions in recorded order\nr1 · 2025-09-01 04:08:00 UTC\nEntry closed at this revision\nPrice outside structural area, Reward risk below minimum\nRecorded change\nentry\nEntry / thesis\nCLOSED / ONGOING\nEntry reasons\nPRICE_OUTSIDE_STRUCTURAL_AREA, REWARD_RISK_BELOW_MINIMUM\nTerminal reason\nnone recorded\nAdmissible then\n99900 – 100014.5\nRemaining then\n234 min\nGuidance\nThesis ongoing but new entry is closed now (PRICE_OUTSIDE_STRUCTURAL_AREA, REWARD_RISK_BELOW_MINIMUM). If following this call: hold with stop 99700.0, target 100700.0.\nr2 · 2025-09-01 04:10:00 UTC\nEntry closed at this revision\nAt opposing area, No room after costs, Price outside structural area\nRecorded change\nentry_reasons\nEntry / thesis\nCLOSED / ONGOING\nEntry reasons\nAT_OPPOSING_AREA, NO_ROOM_AFTER_COSTS, PRICE_OUTSIDE_STRUCTURAL_AREA\nTerminal reason\nnone recorded\nAdmissible then\n99900 – 100014.5\nRemaining then\n232 min\nGuidance\nThesis ongoing but new entry is closed now (AT_OPPOSING_AREA, NO_ROOM_AFTER_COSTS, PRICE_OUTSIDE_STRUCTURAL_AREA). If following this call: hold with stop 99700.0, target 100700.0.\nr3 · 2025-09-01 04:10:01 UTC\nTarget reached\nCertified target contact\nRecorded change\nthesis\nEntry / thesis\nCLOSED / TARGET_REACHED\nEntry reasons\nTHESIS_TERMINAL\nTerminal reason\nCERTIFIED_TARGET_CONTACT:okx/BTC-USDT-SWAP/trade_bar_1m#obs@2025-09-01T04:09:00Z\nAdmissible then\nnone recorded\nRemaining then\n232 min\nGuidance\nTarget reached: the call's guidance is complete.\n\nRecorded advice only: it does not mean you entered, and no hypothetical outcome is computed here. Stops are guidance, not orders."
+  }
+ }
+}

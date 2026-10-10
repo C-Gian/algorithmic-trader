@@ -144,6 +144,15 @@ def test_main_panel_states_follow_only_the_authoritative_backend_state(stack, br
     expect(page.get_by_test_id("live-call-technical")).to_contain_text("non utilizzabile ora")
     expect(page.get_by_test_id("live-entry-consequence")).to_have_count(0)  # CLOSED unchanged
     expect(page.get_by_test_id("live-call-levels-note")).to_have_count(0)
+    # the issued call's update is a separate group; its recorded system text is shown verbatim, nothing is derived
+    expect(page.get_by_test_id("live-new-entry-title")).to_have_text("Disponibilità di un nuovo ingresso")
+    expect(page.get_by_test_id("live-call-update")).to_contain_text("Aggiornamento della call già emessa")
+    expect(page.get_by_test_id("live-call-guidance-text")).to_have_text("guidance now c1")
+    expect(page.get_by_test_id("live-call-guidance")).to_contain_text("originale, non tradotto")
+    for word in ("mantieni", "Mantieni", "mantenere", "esci", "Esci", "uscire", "chiudi la posizione"):
+        expect(panel).not_to_contain_text(word)  # neither CLOSED nor ONGOING becomes a hold/exit instruction
+    show(with_call(entry="CLOSED", entry_reasons=["PRICE_OUTSIDE_STRUCTURAL_AREA"], guidance=""), "CLOSED")
+    expect(page.get_by_test_id("live-call-guidance")).to_have_text("Il sistema non ha registrato un testo per questa call.")
 
     # UNVERIFIED
     show(with_call(entry="UNVERIFIED", entry_reasons=["QUOTE_STALE"], admissible_bounds=None), "UNVERIFIED")
@@ -181,6 +190,15 @@ def test_main_panel_states_follow_only_the_authoritative_backend_state(stack, br
     show(done, "WAITING")
     expect(page.get_by_test_id("live-last-terminal")).to_contain_text("conclusa — target raggiunto")
     expect(page.get_by_test_id("live-entry")).to_have_count(0)
+    concluded = page.get_by_test_id("live-call-concluded")
+    expect(concluded).to_have_attribute("data-terminal", "TARGET_REACHED")
+    expect(concluded).to_contain_text("Aggiornamento della call già emessa")
+    expect(page.get_by_test_id("live-concluded-reason")).to_have_text("motivo registrato: R")
+    # the call's history is not stored here: its closing text and target are declared missing, never rebuilt
+    expect(page.get_by_test_id("live-concluded-text-missing")).to_have_text("Testo registrato alla conclusione non disponibile.")
+    expect(page.get_by_test_id("live-concluded-target")).to_have_text("non disponibile")
+    expect(page.get_by_test_id("live-concluded-separation")).to_contain_text("non estende la call conclusa")
+    expect(panel).to_contain_text("Lettura attuale del mercato")
 
     # a non-current session through the real presentation boundary (saved entry was AVAILABLE)
     show(not_current(), "UNVERIFIED")
@@ -192,6 +210,8 @@ def test_main_panel_states_follow_only_the_authoritative_backend_state(stack, br
     expect(cons).to_have_attribute("data-kind", "NOT_CURRENT")
     expect(cons).to_contain_text("la sessione live non è corrente")
     expect(cons).not_to_contain_text("quotazione")  # never promises that waiting for a quote is enough
+    expect(page.get_by_test_id("live-call-guidance")).to_contain_text("non è mostrato come attuale")
+    expect(page.get_by_test_id("live-call-guidance-text")).to_have_count(0)  # a saved text is never shown as current
 
     # an unrecognised status is never presented as available
     show(with_call(entry="SOMETHING_NEW"), "UNKNOWN")

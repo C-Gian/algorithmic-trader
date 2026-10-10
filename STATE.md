@@ -1090,3 +1090,17 @@ Registered verbatim in [HDP-001 references §8.1](delivery/HDP-001-VERIFICATION-
 - **Fixture adaptation.** Three appended minutes and re-quotes every 4 s at the last close; no rule change.
 - **Observed, not changed.** The timeline's conclusion row shows a UTC time without a zone.
 - **Checks.** The generator's consistency assertions only; disposable PostgreSQL removed. CI is Owner-operated: PENDING / NOT CHECKED. v0.6 and HDP-001 frozen; studies INACTIVE.
+
+## Live cockpit — clarity of a call's updates after the guided test (base `3b10e1a`; READY FOR DIRECTOR REVIEW — COCKPIT CALL UPDATES ONLY)
+
+[Note, correction section](delivery/evidence/LIVE-CALL-UPDATES-EPISODE/NOTE.md). **Guided test with Gian on one synthetic episode; not a general usability validation, not evidence of the method's effectiveness.**
+- **Findings.** CLOSED + ONGOING was read as "keep holding" from the thesis. TARGET_REACHED followed by a still-bullish scenario was read as a reason to keep the earlier operation.
+- **Change.** Main panel only (`LiveProposal.tsx`, two CSS rules).
+  - New-entry availability and the issued call's update are separate groups.
+  - The recorded system text for the call is shown verbatim and attributed, with the evaluation time; nothing is derived from the thesis. A missing text is declared; a non-current saved text is never shown as current.
+  - A concluded call shows its conclusion, recorded reason, operational target (TARGET_REACHED) and closing text, read from the existing read-only call API. It is separated from "Lettura attuale del mercato" by a sentence saying the current reading does not extend it.
+  - No method, API, persistence or Workbench change.
+- **Checks.**
+  - Episode regenerated with per-moment assertions (`*-dopo-correzione.png`); the guided-test screenshots are kept.
+  - `test_live_proposal_e2e` extended. Cockpit E2E 10 passed (disposable PostgreSQL, removed). Build and typecheck passed.
+- **Limits.** The recorded texts stay in English (the CLOSED one contains "hold" as recorded). The text time is the evaluation time. The timeline row time is unchanged. CI is Owner-operated: PENDING / NOT CHECKED. v0.6 and HDP-001 frozen; studies INACTIVE.

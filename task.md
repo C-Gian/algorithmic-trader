@@ -1,4 +1,17 @@
-# Current task — Comprehension of a call's updates (synthetic episode, live cockpit)
+# Current task — Clarity of a call's updates (live cockpit main panel)
+Date: 2026-10-10. Status: DELIVERED — READY FOR DIRECTOR REVIEW — COCKPIT CALL UPDATES ONLY ([note, correction section](delivery/evidence/LIVE-CALL-UPDATES-EPISODE/NOTE.md)). Guided test only, not a general usability or effectiveness validation. Studies INACTIVE. Remote CI is Owner-operated: PENDING / NOT CHECKED.
+
+## Assignment (relayed by the Owner, 10 October 2026; expected base `3b10e1a`)
+
+After the guided test with Gian:
+- **Groups.** Separate "Disponibilità di un nuovo ingresso" from "Aggiornamento della call già emessa".
+- **Call present.** Show the call's recorded guidance in the main panel with its time; never derive "keep" from ONGOING; invent no hold or exit text; assume no entry.
+- **Concluded call.** Show the conclusion and recorded reason apart from the current MarketView. Distinguish the operational target from the scenario destination for TARGET_REACHED. Make clear the current expectation does not extend the call.
+- **Missing guidance.** Declare it; do not rebuild it.
+- **Excluded.** Method, API, persistence, Workbench, general restyling.
+- **Checks.** The same v0.6 episode and the existing tests.
+
+## Previous task — Comprehension of a call's updates (synthetic episode, live cockpit)
 Date: 2026-10-10. Status: DELIVERED — evidence for the Owner's interpretation ([note](delivery/evidence/LIVE-CALL-UPDATES-EPISODE/NOTE.md)). No UI correction made. Studies INACTIVE; v0.6 and HDP-001 frozen. Remote CI is Owner-operated: PENDING / NOT CHECKED.
 
 ## Assignment (relayed by the Owner, 10 October 2026; expected base `2159ef6`)

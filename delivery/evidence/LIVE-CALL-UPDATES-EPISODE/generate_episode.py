@@ -17,6 +17,11 @@ material changes). The session's committed journal is inserted, as produced, int
 stack (the live store's own INSERT), so the history card is served by the real ``GET /api/adviser/runs/{run}/calls/{id}``.
 The only addition to the page is the CSS label "Dimostrazione sintetica". Synthetic engineering inputs only.
 
+Screenshots after the clarity correction are written as ``*-dopo-correzione.png``; the screenshots of the guided test
+(commit 3b10e1a) keep their original names and are not regenerated. The generator also checks the main panel:
+the recorded system text is shown verbatim per moment, no hold/exit wording is produced, and the concluded call (its
+operational target and closing text) is kept apart from the current market reading.
+
 Usage (disposable PostgreSQL, built UI):
     ALGOTRADER_TEST_DATABASE_URL=postgresql://... uv run python delivery/evidence/LIVE-CALL-UPDATES-EPISODE/generate_episode.py
 """
@@ -184,7 +189,11 @@ def persist_journal(url: str, run_id: str, journal: list[dict]) -> None:
               e["origin"], e["subject"], e["digest"], e["chain"], Jsonb(e["record"]), 1) for e in journal])
 
 
-def screenshots(bodies: list[str], run_id: str, journal: list[dict], cid: str) -> dict:
+FORBIDDEN = ("mantieni", "Mantieni", "mantenere", "esci", "Esci", "uscire", "chiudi la posizione")
+
+
+def screenshots(bodies: list[str], run_id: str, journal: list[dict], cid: str, guidance: list[str],
+                target: str) -> dict:
     admin = os.environ["ALGOTRADER_TEST_DATABASE_URL"]
     name = f"algotrader_demo_{uuid.uuid4().hex[:10]}"
     with psycopg.connect(admin, autocommit=True) as c:
@@ -219,28 +228,40 @@ def screenshots(bodies: list[str], run_id: str, journal: list[dict], cid: str) -
                                 clip={"x": box["x"], "y": box["y"] + y, "width": box["width"], "height": box["height"]})
 
             def texts(n: int) -> None:
+                for word in FORBIDDEN:  # the panel never turns a status into a hold/exit instruction
+                    expect(panel).not_to_contain_text(word)
                 det = page.get_by_test_id("live-proposal-details")
                 seen[n] = {"panel_state": panel.get_attribute("data-state"),
                            "panel_visible": panel.inner_text(),
                            "details_only": det.locator(".more-body").text_content() if det.count() else None,
                            "alerts_banner": (page.get_by_test_id("live-alerts").inner_text()
-                                             if page.get_by_test_id("live-alerts").count() else None)}
+                                             if page.get_by_test_id("live-alerts").count() else None),
+                           "call_guidance_shown": (page.get_by_test_id("live-call-guidance-text").inner_text()
+                                                   if page.get_by_test_id("live-call-guidance-text").count() else None),
+                           "concluded": (page.get_by_test_id("live-call-concluded").inner_text()
+                                         if page.get_by_test_id("live-call-concluded").count() else None)}
 
             for n, (body, state, fname) in enumerate(zip(bodies[:2], ("AVAILABLE", "CLOSED"),
-                                                         ("1-ingresso-disponibile.png", "2-ingresso-chiuso-tesi-aperta.png")),
+                                                         ("1-ingresso-disponibile-dopo-correzione.png",
+                                                          "2-ingresso-chiuso-tesi-aperta-dopo-correzione.png")),
                                                      start=1):
                 current["body"] = body
                 expect(panel).to_have_attribute("data-state", state, timeout=15_000)
+                expect(page.get_by_test_id("live-call-guidance-text")).to_have_text(guidance[n - 1])  # verbatim
                 texts(n)
                 shot(fname)
             current["body"] = bodies[2]
             expect(page.get_by_test_id("live-last-terminal")).to_be_visible(timeout=15_000)
+            expect(page.get_by_test_id("live-concluded-text")).to_have_text(guidance[2], timeout=15_000)
+            expect(page.get_by_test_id("live-concluded-target")).to_have_text(target)  # the call's operational target
+            expect(page.get_by_test_id("live-call-concluded")).to_have_attribute("data-terminal", "TARGET_REACHED")
+            expect(page.get_by_test_id("live-scenario-levels")).to_contain_text("(non è un target operativo)")
             texts(3)
             page.get_by_test_id("timeline-call-history-open").first.click()  # the cockpit's existing path
             card = page.get_by_test_id("live-call-history")
             expect(card.get_by_test_id("history-revisions")).to_be_visible(timeout=15_000)
             seen[3]["history_card"] = card.inner_text()
-            shot("3-conclusione-storico-della-call.png")
+            shot("3-conclusione-storico-della-call-dopo-correzione.png")
             b.close()
     finally:
         stack.stop()
@@ -253,8 +274,11 @@ def main() -> None:
     views, journal = episode()
     facts = check(views, journal)
     bodies = [status_json(m, journal) for m in views]
-    facts["rendered"] = screenshots(bodies, facts["run_id"], journal, facts["call_id"])
-    (OUT / "episode.json").write_text(json.dumps(facts, indent=1, default=str, ensure_ascii=False) + "\n",
+    revs = facts["revisions"]  # the system texts recorded at each moment (call record r0 = the view's text)
+    guidance = [views[0]["view"]["call"]["guidance"], views[1]["view"]["call"]["guidance"], revs[-1]["guidance"]]
+    assert guidance[1] == revs[0]["guidance"] and revs[-1]["thesis_status"] == "TARGET_REACHED"
+    facts["rendered"] = screenshots(bodies, facts["run_id"], journal, facts["call_id"], guidance, facts["target"])
+    (OUT / "episode-dopo-correzione.json").write_text(json.dumps(facts, indent=1, default=str, ensure_ascii=False) + "\n",
                                       encoding="utf-8")
     print(json.dumps({k: facts[k] for k in ("run_id", "call_id")}, indent=1))
 

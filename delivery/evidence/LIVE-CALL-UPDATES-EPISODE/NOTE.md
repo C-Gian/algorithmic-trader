@@ -70,4 +70,50 @@ ALGOTRADER_TEST_DATABASE_URL=postgresql://<user>:<pw>@127.0.0.1:<port>/postgres 
   uv run python delivery/evidence/LIVE-CALL-UPDATES-EPISODE/generate_episode.py
 ```
 
-It rewrites the three PNG files and `episode.json` in this folder. The run id suffix changes; the states, times and call id do not. Remote CI: PENDING / NOT CHECKED.
+Since the correction below, it writes the `*-dopo-correzione.png` files and `episode-dopo-correzione.json`. The screenshots and `episode.json` of the guided test above are kept as recorded at `3b10e1a`. The run id suffix changes; the states, times and call id do not. Remote CI: PENDING / NOT CHECKED.
+
+## Correction after the guided test (base `3b10e1a`)
+
+**Guided test with Gian.** This is a guided test of one synthetic episode, not a general usability validation and not evidence of the method's effectiveness.
+- At **CLOSED + ONGOING** he understood that there was no new entry, but inferred "I keep holding" from the thesis without opening the details.
+- At **TARGET_REACHED** with the scenario still bullish, he read the expected direction as a reason to keep the earlier operation.
+
+**Change.** Live cockpit main panel only: `web/src/views/LiveProposal.tsx`, plus two CSS rules. No method, API, persistence or Workbench change.
+- **Two groups.**
+  - "Disponibilità di un nuovo ingresso": the headline state; the admissible band, or the recorded reason, or the UNVERIFIED consequence, all unchanged.
+  - "Aggiornamento della call già emessa": direction, the call's target, stop, deadline, horizon and thesis.
+- **Call still present.** The system text recorded for the call is shown in the panel verbatim, attributed: "Testo del sistema per questa call, alla valutazione del <local time> — originale, non tradotto".
+  - Nothing is derived from `thesis_status`.
+  - A missing text is declared as missing.
+  - In a non-current session the saved text is not shown as current.
+- **Concluded call.** A separate "Aggiornamento della call già emessa" block, placed before "Lettura attuale del mercato", shows:
+  - the conclusion and time, and the recorded reason (`CERTIFIED_TARGET_CONTACT` → "contatto certificato con il target operativo della call");
+  - for TARGET_REACHED, the call's **operational target** (100700.0), shown apart from the scenario's destination (100900, "non è un target operativo");
+  - the closing text recorded at the conclusion, verbatim, with its time;
+  - "La lettura attuale del mercato qui sotto è una valutazione nuova: non estende la call conclusa."
+
+  The target and closing text are read from the existing read-only `GET /api/adviser/runs/{run}/calls/{call}`. When it is unavailable, both are declared not available and never rebuilt.
+- **Kept.** The details, the technical codes and the call history.
+
+**Screenshots** (same episode and states; run id `live-20250828T0316-a9c168`; [facts](episode-dopo-correzione.json)):
+- [1](1-ingresso-disponibile-dopo-correzione.png) AVAILABLE r0;
+- [2](2-ingresso-chiuso-tesi-aperta-dopo-correzione.png) CLOSED r1 with the thesis ONGOING;
+- [3](3-conclusione-storico-della-call-dopo-correzione.png) TARGET_REACHED, with the history opened.
+
+**Checks.**
+- The generator asserts, per moment:
+  - the panel shows the recorded text verbatim;
+  - no hold/exit wording appears ("mantieni", "mantenere", "esci", "uscire", "chiudi la posizione");
+  - for moment 3, the concluded block's target is 100700.0, its closing text is the recorded r3 guidance, its terminal is `TARGET_REACHED`, and the scenario destination stays labelled "(non è un target operativo)".
+- `tests/e2e/test_live_proposal_e2e.py` was extended:
+  - CLOSED shows the recorded text with no hold/exit wording, and an empty text is declared;
+  - a concluded call whose history is not stored declares its text and target as not available;
+  - a non-current session never shows the saved text as current;
+  - AVAILABLE and UNVERIFIED keep their existing assertions.
+- Cockpit E2E (proposal, presentation, call history, continuity, adviser): 10 passed on a disposable PostgreSQL, removed. Build and typecheck passed.
+
+**Limits for the Director.**
+- **English, untranslated.** The recorded texts stay in English and untranslated. A translation of "If following this call: hold with stop …" would be an interpretation, so the original is shown and attributed. That recorded text itself contains "hold"; the panel adds no hold or exit wording of its own.
+- **Time shown with the text.** It is the view's evaluation time. The revision's publication time is in the call history.
+- **Concluded block.** It shows the latest concluded call of the run in `recent_calls`, whatever its age.
+- **Not changed.** The timeline's conclusion row still shows a UTC time without a zone.

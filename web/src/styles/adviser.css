@@ -160,3 +160,6 @@
 .proposal-consequence { padding: 10px 14px; border-radius: var(--radius); border-left: 3px solid var(--warn); background: var(--surface-3); font-size: var(--fs-md); }
 .proposal-consequence p { margin: 4px 0 0; font-size: var(--fs-sm); color: var(--text-2); }
 .proposal-facts .proposal-group-note { grid-column: 1 / -1; margin: 6px 0 0; font-size: var(--fs-sm); color: var(--text-2); }
+/* live main panel: the issued call's update kept apart from new-entry availability */
+.proposal-group { border-top: 1px solid var(--line, rgba(127, 127, 127, 0.35)); padding-top: var(--s-2); display: flex; flex-direction: column; gap: var(--s-2); }
+.proposal-group blockquote, .proposal-guidance blockquote { margin: 2px 0 0; padding-left: var(--s-2); border-left: 2px solid var(--line, rgba(127, 127, 127, 0.35)); overflow-wrap: anywhere; }
