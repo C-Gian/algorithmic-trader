@@ -1,5 +1,5 @@
 # Current task — A v0.6 statistical completion (offline bootstrap)
-Date: 2026-10-10. Status: DELIVERED — READY FOR DIRECTOR REVIEW — A V0.6 BOOTSTRAP TOOLING ONLY ([references §9](delivery/A-V06-OPERATIONAL-EVALUATION-REFERENCES.md)). **The orchestrator decision named in the assignment was not included in the relayed message and is NOT registered.** Studies INACTIVE. Remote CI is Owner-operated: PENDING / NOT CHECKED.
+Date: 2026-10-10. Status: DELIVERED — READY FOR DIRECTOR REVIEW — A V0.6 BOOTSTRAP TOOLING ONLY ([references §9](delivery/A-V06-OPERATIONAL-EVALUATION-REFERENCES.md)). **Decision registered; statistical implementation delivered, awaiting the Director's final review; studies INACTIVE.** The orchestrator decision, missing at delivery (`e52f237`), was then relayed and registered verbatim: [decision](delivery/A-V06-STATISTICAL-CONVENTIONS-DECISION.md). Remote CI is Owner-operated: PENDING / NOT CHECKED.
 
 ## Assignment (relayed by the Owner, 10 October 2026; expected base `b2ebf20`)
 

@@ -334,9 +334,13 @@ The ledger now presents a COMPLETE balance or any hourly value only when every c
 
 ## 9. Statistical completion — offline bootstrap (base `b2ebf20`; synthetic evidence only; study INACTIVE)
 
-**Authoritative decision — NOT registered.** The assignment of 10 October 2026 asks to register "integralmente" the orchestrator decision "riportata sotto", but the relayed message contained no decision text. Nothing was invented or summarized in its place. The verbatim decision still has to be supplied and registered in a separate document linked to the design and to these references.
+**Authoritative decision — registered afterwards.** At the time of the tool delivery (`e52f237`) the decision text had not been received. It is now registered verbatim in a separate [decision](A-V06-STATISTICAL-CONVENTIONS-DECISION.md) (base `e52f237`). That decision:
+- approves the two conventions: the bootstrap draw procedure of §9.2, and the undetermined-path and attestation protections of §9.3;
+- accepts `be44370` as the designated executive build candidate, with behaviour reference `b47b997`.
 
-The tools below implement the conventions that the assignment states explicitly (§9.2). Those conventions supersede the open items of §7 and §8.6(3) only once the decision is registered.
+It certifies neither general equivalence, nor green CI, nor readiness for real execution. The conventions therefore close the open items of §7 and §8.6(3). The design term is not extended.
+
+**Status.** Decision registered; statistical implementation delivered, awaiting the Director's final review; studies INACTIVE.
 
 ### 9.1 Identities, product and tools kept separate
 
@@ -395,7 +399,7 @@ The owner register stays descriptive (`owner_register_scope`). It is not an exha
 
 ### 9.5 Residual conditions
 
-- The verbatim orchestrator decision must be registered (§9 above).
+- The orchestrator decision is registered ([decision](A-V06-STATISTICAL-CONVENTIONS-DECISION.md)); the Director's final review of the statistical implementation is pending.
 - Exact-SHA CI of the executive build, reported by the Owner.
 - Data and provenance: acquisition after 2027-07-26T06:05Z, then the pack registration.
 - Pre-execution controls: the Director's acceptance of the build and its equivalence evidence; the freeze completed before **2027-01-25T00:00Z** (design term unchanged).
