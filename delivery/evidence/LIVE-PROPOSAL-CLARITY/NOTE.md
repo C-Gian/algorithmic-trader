@@ -50,6 +50,23 @@ Base `1c346ff31104a2d2f31376f1beb1817798312c01` (`main`). READY FOR DIRECTOR REV
 
 A fixed note says the indication is the system's, not an operation of the user, which the app does not know. Missing data read "non indicata"; nothing is reconstructed. The chart's admissible band is now drawn only while AVAILABLE.
 
+## Correction — UNVERIFIED practical consequence (base `89f1a9b`)
+
+Comprehension test (relayed): the states "waiting" and "available" were understood. Facing UNVERIFIED / `QUOTE_STALE`, the participant asked whether it was "a long with target and stop but no entry indication" and what to do.
+- **Consequence block.** UNVERIFIED now shows it under the headline, chosen from the recorded reasons only. Each version states that no usable entry is presented now.
+
+  | Recorded reasons | Text shown |
+  |---|---|
+  | quote reasons only | "Ingresso non verificabile — attendi una quotazione aggiornata.", then "occorre attendere che ne confermi di nuovo la disponibilità". QUOTE_UNAVAILABLE and QUOTE_CLOCK_UNCERTAIN have their own titles |
+  | connection reasons only | "dati di mercato non aggiornati" |
+  | session not current (`NOT_CURRENT`, `SESSION_NOT_CURRENT`, `LIVE_SESSION_STOPPED`) | "la sessione live non è corrente"; this is the last saved assessment. It never promises that waiting for a quote is enough |
+  | any other or mixed reason | the prudent "Ingresso non verificabile." with no instruction |
+
+- **Levels note.** Before target and stop: "Livelli della call già emessa: target e stop da soli non sono una proposta d'ingresso attuale."
+- **Unchanged.** The thesis line stays separate; AVAILABLE and CLOSED are unchanged. No method, API, persistence or Workbench change.
+- **Checks.** `npm run build` passed. `test_live_proposal_e2e` (quote, connection, unknown and not-current consequences; none for AVAILABLE or CLOSED) plus `test_live_presentation_e2e`: 5 passed. `test_adviser_e2e` (real live worker): 2 passed. All on a disposable PostgreSQL, removed afterwards.
+- **Screenshots.** 4 (UNVERIFIED) and 6 (not current, also UNVERIFIED) were regenerated; the others are unchanged.
+
 ## Synthetic screenshots
 
 Each screenshot carries the label "Dimostrazione sintetica" and shows real engine states over existing fixtures, with no rule changed. Generator: `generate_states.py`; recorded facts: `states.json`. Browser time zone: Europe/Rome.

@@ -130,6 +130,8 @@ def test_main_panel_states_follow_only_the_authoritative_backend_state(stack, br
     expect(page.get_by_test_id("live-thesis")).to_have_text("ancora valida")
     expect(page.get_by_test_id("live-direction")).to_contain_text("Indicazione di acquisto")
     expect(page.locator(".band-admissible")).to_have_count(1)
+    expect(page.get_by_test_id("live-entry-consequence")).to_have_count(0)
+    expect(page.get_by_test_id("live-call-levels-note")).to_have_count(0)
     shot = page.get_by_test_id("live-call")
     shot.screenshot(path=str(evidence_dir / "proposal-test-available.png"))
 
@@ -140,12 +142,33 @@ def test_main_panel_states_follow_only_the_authoritative_backend_state(stack, br
     expect(page.get_by_test_id("live-entry-reasons")).to_have_text("prezzo fuori dall'area d'ingresso")
     expect(page.locator(".band-admissible")).to_have_count(0)
     expect(page.get_by_test_id("live-call-technical")).to_contain_text("non utilizzabile ora")
+    expect(page.get_by_test_id("live-entry-consequence")).to_have_count(0)  # CLOSED unchanged
+    expect(page.get_by_test_id("live-call-levels-note")).to_have_count(0)
 
     # UNVERIFIED
     show(with_call(entry="UNVERIFIED", entry_reasons=["QUOTE_STALE"], admissible_bounds=None), "UNVERIFIED")
     expect(page.get_by_test_id("live-entry")).to_have_text("Non è possibile confermare la disponibilità dell'ingresso")
     expect(page.get_by_test_id("live-entry-reasons")).to_have_text("quotazione non aggiornata")
     expect(page.get_by_test_id("live-admissible")).to_have_count(0)
+    # the practical consequence: no usable entry now, wait for the system to confirm it again; levels belong to the call
+    cons = page.get_by_test_id("live-entry-consequence")
+    expect(cons).to_have_attribute("data-kind", "QUOTE")
+    expect(cons).to_contain_text("Ingresso non verificabile — attendi una quotazione aggiornata.")
+    expect(cons).to_contain_text("non presenta un ingresso utilizzabile")
+    expect(cons).to_contain_text("confermi di nuovo la disponibilità")
+    expect(page.get_by_test_id("live-call-levels-note")).to_contain_text(
+        "target e stop da soli non sono una proposta d'ingresso attuale")
+    expect(page.get_by_test_id("live-thesis")).to_have_text("ancora valida")  # thesis kept apart from entry
+
+    show(with_call(entry="UNVERIFIED", entry_reasons=["CANDLE_CONNECTION_LOST"], admissible_bounds=None), "UNVERIFIED")
+    expect(cons).to_have_attribute("data-kind", "CONNECTION")
+    expect(cons).not_to_contain_text("quotazione")
+
+    show(with_call(entry="UNVERIFIED", entry_reasons=["SOMETHING_NEW"], admissible_bounds=None), "UNVERIFIED")
+    expect(cons).to_have_attribute("data-kind", "OTHER")
+    expect(cons).to_contain_text("Ingresso non verificabile.")
+    expect(cons).not_to_contain_text("quotazione")
+    expect(cons).not_to_contain_text("attendi")
 
     # a terminal thesis still in the view (defensive) and a terminated call in recent_calls
     show(with_call(entry="CLOSED", entry_reasons=["THESIS_TERMINAL"], thesis_status="INVALIDATED"), "TERMINAL")
@@ -165,6 +188,10 @@ def test_main_panel_states_follow_only_the_authoritative_backend_state(stack, br
     expect(page.get_by_test_id("live-admissible")).to_have_count(0)
     expect(page.get_by_test_id("live-entry-reasons")).to_contain_text("sessione non corrente")
     expect(page.locator(".band-admissible")).to_have_count(0)
+    cons = page.get_by_test_id("live-entry-consequence")
+    expect(cons).to_have_attribute("data-kind", "NOT_CURRENT")
+    expect(cons).to_contain_text("la sessione live non è corrente")
+    expect(cons).not_to_contain_text("quotazione")  # never promises that waiting for a quote is enough
 
     # an unrecognised status is never presented as available
     show(with_call(entry="SOMETHING_NEW"), "UNKNOWN")

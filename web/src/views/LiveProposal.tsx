@@ -159,7 +159,36 @@ function ScenarioCards({ v }: { v: LiveView }) {
   );
 }
 
-function CallFacts({ c, available }: { c: CallView; available: boolean }) {
+const QUOTE_TITLES: [string, string][] = [
+  ["QUOTE_STALE", "Ingresso non verificabile — attendi una quotazione aggiornata."],
+  ["QUOTE_UNAVAILABLE", "Ingresso non verificabile — manca una quotazione utilizzabile."],
+  ["QUOTE_CLOCK_UNCERTAIN", "Ingresso non verificabile — l'orario della quotazione è incerto."],
+];
+const CONNECTION = new Set(["CANDLE_CONNECTION_LOST", "CANDLE_CONNECTION_AWAITING_FRESH_BAR"]);
+const WAIT_AGAIN = "Adesso il sistema non presenta un ingresso utilizzabile: occorre attendere che ne confermi di nuovo " +
+  "la disponibilità (“Ingresso disponibile secondo il sistema”). La tesi della call è un'informazione separata.";
+
+/** Practical consequence of UNVERIFIED, from the recorded reasons only: what waiting can (or cannot) resolve. */
+export function unverifiedExplanation(c: CallView): { title: string; body: string; kind: string } {
+  const codes = c.entry_reasons.map((r) => r.split(":")[0]);
+  if (c.presentation === "NOT_CURRENT" || codes.includes("SESSION_NOT_CURRENT") || codes.includes("LIVE_SESSION_STOPPED")) {
+    return { kind: "NOT_CURRENT", title: "Ingresso non verificabile — la sessione live non è corrente.",
+      body: "Questa è l'ultima valutazione salvata, non una proposta attuale: adesso il sistema non presenta un ingresso " +
+            "utilizzabile e non può confermarne la disponibilità finché la sessione non è corrente." };
+  }
+  const quote = QUOTE_TITLES.filter(([k]) => codes.includes(k));
+  if (codes.length && quote.length && codes.every((k) => QUOTE_TITLES.some(([q]) => q === k))) {
+    return { kind: "QUOTE", title: quote[0][1], body: WAIT_AGAIN };
+  }
+  if (codes.length && codes.every((k) => CONNECTION.has(k))) {
+    return { kind: "CONNECTION", title: "Ingresso non verificabile — dati di mercato non aggiornati.", body: WAIT_AGAIN };
+  }
+  return { kind: "OTHER", title: "Ingresso non verificabile.",
+    body: "Adesso il sistema non presenta un ingresso utilizzabile. Finché non ne conferma di nuovo la disponibilità, " +
+          "non considerarlo disponibile." };
+}
+
+function CallFacts({ c, available, unverified }: { c: CallView; available: boolean; unverified: boolean }) {
   const reasons = c.entry_reasons.length ? c.entry_reasons.map(reasonIt).join("; ") : "nessun motivo registrato";
   return (
     <dl className="call-geo proposal-facts">
@@ -168,6 +197,10 @@ function CallFacts({ c, available }: { c: CallView; available: boolean }) {
           <dd className="mono" data-testid="live-admissible">{c.admissible_bounds ? `${c.admissible_bounds[0]} – ${c.admissible_bounds[1]}` : "non indicata dal sistema"}</dd></>
       ) : (
         <><dt>Motivo</dt><dd data-testid="live-entry-reasons">{reasons}</dd></>
+      )}
+      {unverified && (
+        <dd className="proposal-group-note" data-testid="live-call-levels-note">Livelli della call già emessa: target e stop
+          da soli non sono una proposta d'ingresso attuale.</dd>
       )}
       <dt>Target operativo</dt><dd className="mono" data-testid="live-target">{c.target}</dd>
       <dt>Stop indicato</dt><dd className="mono" data-testid="live-stop-guidance">{c.stop}</dd>
@@ -200,6 +233,14 @@ export function ProposalPanel({ v, onHistory }: { v: LiveView | null; onHistory:
           : c && <Badge tone={c.origin === "LIVE" ? "pos" : "pending"}>{c.origin === "LIVE" ? "Call live" : "Ricostruita — non operativa"}</Badge>}
       </div>
       {!v && <p className="proposal-note">Avvia l'adviser live per valutare il mercato. Da fermo non viene monitorato nulla.</p>}
+      {c && st.key === "UNVERIFIED" && (() => {
+        const x = unverifiedExplanation(c);
+        return (
+          <div className="proposal-consequence" data-testid="live-entry-consequence" data-kind={x.kind}>
+            <b>{x.title}</b><p>{x.body}</p>
+          </div>
+        );
+      })()}
       {v && <div className="proposal-updated" data-testid="live-updated">Ultimo aggiornamento: {fmtLocal(v.clock)}</div>}
 
       {!c && (
@@ -236,7 +277,7 @@ export function ProposalPanel({ v, onHistory }: { v: LiveView | null; onHistory:
             <span>{c.direction === "LONG" ? "Indicazione di acquisto: il sistema si aspetta un rialzo del prezzo."
               : "Indicazione di vendita: il sistema si aspetta un ribasso del prezzo."}</span>
           </div>
-          <CallFacts c={c} available={available} />
+          <CallFacts c={c} available={available} unverified={st.key === "UNVERIFIED"} />
         </>
       )}
 

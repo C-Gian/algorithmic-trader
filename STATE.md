@@ -848,4 +848,13 @@ Only the dossier, the JSON labels and the script strings were corrected, from th
   - local time with time zone, and a collapsed *Approfondimenti*.
 - **Checks.** Build; new state E2E 1 passed; presentation 4, live call history 2 + 2, shell smoke 1 and `test_adviser_e2e` 2, all passed, on a disposable PostgreSQL. Seven real-state synthetic screenshots plus a phone one.
 - **Limits.** System free texts stay in English in the details; the rest of the cockpit is unchanged. No real live-session check. CI is Owner-operated: PENDING / NOT CHECKED.
+- **Correction (base `89f1a9b`), after the comprehension test.**
+  - UNVERIFIED now states its practical consequence, taken from the recorded reasons:
+    - quote reasons: "Ingresso non verificabile — attendi una quotazione aggiornata", then wait for the system to confirm availability again;
+    - connection reasons: market data not updated;
+    - session not current: last saved assessment, with no promise that waiting for a quote is enough;
+    - any other reason: prudent text with no instruction.
+  - A note says that target and stop belong to the issued call and are not, on their own, a current entry proposal.
+  - The thesis stays separate; AVAILABLE and CLOSED are unchanged.
+  - Checks: build; proposal and presentation E2E 5 passed; `test_adviser_e2e` 2 passed. Screenshots 4 and 6 updated. CI is Owner-operated: PENDING / NOT CHECKED.
 
