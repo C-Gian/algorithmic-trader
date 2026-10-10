@@ -16,6 +16,14 @@ hashes of the earlier presets are byte-for-byte unchanged and the file-level war
 ``"fixture": true`` windows that match offline fixtures. Fixture files may use non-calendar evaluation windows;
 registered files may not.
 
+Registered study windows (``study_presets.json``, ``algotrader.study-presets.v1``) are the only exception to the
+calendar-month / logical-target rules: a preset that equals, field for field, a study preset registered there (window,
+initialization and tail taken from the study's pinned authoritative design) is accepted outside the target and
+without month alignment. It must still use an explicit initialization and the file's tail, may not overlap the
+development or protected periods, and is classified ``REGISTERED_STUDY_WINDOW``. Nothing else widens the date range:
+the month builder and every other preset keep the earlier checks. ``ALGOTRADER_STUDY_PRESETS`` may point at another
+file only so that tests can use tiny synthetic study windows.
+
 No call, outcome or adviser metric is defined or computed here.
 """
 
@@ -34,6 +42,8 @@ from pydantic import BaseModel, ConfigDict, model_validator
 from ..feed.ordering import canonical
 
 PRESETS_FILE = Path(__file__).with_name("presets.json")
+STUDY_PRESETS_FILE = Path(__file__).with_name("study_presets.json")
+STUDY_EVIDENCE_CLASS = "REGISTERED_STUDY_WINDOW"
 PRESETS_SCHEMA_VERSION = "algotrader.corpus-presets.v1"
 # Canonical-JSON SHA-256 of delivery/MP-001-PARAMETERS.json (the method register these presets serve as input
 # requirements; it is NOT implemented here). Pinned by a regression test against the delivery file.
@@ -104,6 +114,29 @@ class Preset(_Model):
     initialization: Literal["REGISTERED_EXPLICIT_INITIALIZATION"] | None = None  # WP-013; absent = fine warmup
 
 
+class StudySource(_Model):
+    path: str
+    sha256_lf: str
+
+
+class StudyPreset(_Model):
+    """One registered study window: its authoritative sources, the run it admits and its exact preset."""
+
+    study_id: str
+    label: str
+    sources: tuple[StudySource, ...]
+    run_type: Literal["adviser_evaluation"]
+    method: str
+    preset: Preset
+
+
+class StudyPresetsFile(_Model):
+    schema_version: Literal["algotrader.study-presets.v1"]
+    version: int
+    studies: tuple[StudyPreset, ...]
+    fixture: bool = False  # test-only files use tiny synthetic windows
+
+
 class PresetsFile(_Model):
     schema_version: Literal["algotrader.corpus-presets.v1"]
     version: int
@@ -144,8 +177,30 @@ class PresetsFile(_Model):
         return next(p for p in self.presets if p.default)
 
 
+def study_presets_path() -> Path:
+    override = os.environ.get("ALGOTRADER_STUDY_PRESETS")
+    return Path(override) if override else STUDY_PRESETS_FILE
+
+
+@lru_cache(maxsize=4)
+def _load_studies(path: str, mtime: float) -> StudyPresetsFile:
+    return StudyPresetsFile.model_validate(json.loads(Path(path).read_text(encoding="utf-8")))
+
+
+def load_study_presets(path: Path | None = None) -> StudyPresetsFile:
+    p = path or study_presets_path()
+    return _load_studies(str(p), p.stat().st_mtime)
+
+
+def registered_study(p: Preset) -> StudyPreset | None:
+    """The registered study whose preset equals ``p`` field for field (None for every other preset)."""
+    doc = preset_doc(p)
+    return next((s for s in load_study_presets().studies if preset_doc(s.preset) == doc), None)
+
+
 def check_windows(f: PresetsFile, p: Preset) -> None:
-    """Exact warmup/tail arithmetic around a contiguous evaluation window inside the logical target."""
+    """Exact warmup/tail arithmetic around a contiguous evaluation window inside the logical target (or a registered
+    study window: see the module note)."""
     w, e, t = p.warmup, p.evaluation, p.tail
     if p.initialization is None:
         if w.end != e.start or w.start != e.start - timedelta(hours=f.fine_warmup_hours):
@@ -156,6 +211,14 @@ def check_windows(f: PresetsFile, p: Preset) -> None:
                           f"least the fine warmup ({f.fine_warmup_hours}h)")
     if t.start != e.end or t.end != e.end + timedelta(minutes=f.outcome_tail_minutes):
         raise PresetError(f"{p.preset_id}: tail must be exactly {f.outcome_tail_minutes}m starting at evaluation end")
+    if registered_study(p) is not None:
+        if p.initialization is None or p.evidence_class != STUDY_EVIDENCE_CLASS:
+            raise PresetError(f"{p.preset_id}: a registered study window needs an explicit initialization and the "
+                              f"{STUDY_EVIDENCE_CLASS} class")
+        for name, win in (("development", f.development), ("protected", f.protected_provisional)):
+            if max(w.start, win.start) < min(t.end, win.end):
+                raise PresetError(f"{p.preset_id}: a registered study window may not overlap the {name} period")
+        return
     if not f.fixture and not (_month_start(e.start) and _month_start(e.end)):
         raise PresetError(f"{p.preset_id}: evaluation must be whole contiguous calendar months")
     if not (f.target.start <= e.start < e.end <= f.target.end):
@@ -237,6 +300,13 @@ def windows_doc(p: Preset) -> dict:
 
 def classify(f: PresetsFile, p: Preset) -> dict:
     """Development / provisional-protected portions of the evaluation window, reported separately."""
+    study = registered_study(p)
+    if study is not None:  # never labelled DEVELOPMENT by default: it lies outside both periods (check_windows)
+        return {"label": STUDY_EVIDENCE_CLASS, "portions": [], "study_id": study.study_id, "method": study.method,
+                "run_type": study.run_type,
+                "note": ("Registered prospective study window outside the development and protected periods; data "
+                         "preparation and integrity checks never certify uncontaminated evidence."),
+                "certified_uncontaminated": False}
     e = p.evaluation
     portions = []
     for cls, w in (("DEVELOPMENT", f.development), ("PROTECTED_PROVISIONAL", f.protected_provisional)):
@@ -288,6 +358,8 @@ def resolve(f: PresetsFile, preset_id: str | None = None, months: list[str] | No
     if months:
         return months_preset(f, months)
     p = f.preset(preset_id) if preset_id else f.default
+    if p is None and preset_id:
+        p = next((s.preset for s in load_study_presets().studies if s.preset.preset_id == preset_id), None)
     if p is None:
         raise PresetError(f"unknown preset {preset_id!r}")
     return p

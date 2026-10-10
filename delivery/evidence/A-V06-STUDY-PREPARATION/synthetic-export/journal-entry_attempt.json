@@ -1,0 +1,409 @@
+{
+ "kind": "entry_attempt",
+ "records": [
+  {
+   "clock_time": "2025-09-01T04:01:00+00:00",
+   "digest": "f23dcdc383239d51be72d8512d470b03f0b94563f754afc1a04d27d453c557b9",
+   "kind": "entry_attempt",
+   "origin": "HISTORICAL_MODELED",
+   "record": {
+    "blockers": [
+     "REWARD_RISK_BELOW_MINIMUM"
+    ],
+    "call_id": null,
+    "cap_history": [
+     {
+      "cap": "100700.0",
+      "cursor": "5043",
+      "near_edge": "100700.0",
+      "since": "2025-09-01T04:01:00+00:00",
+      "zone_id": "T_CONFIRM"
+     }
+    ],
+    "clocks": {
+     "confirmed_at": "2025-09-01T04:01:00+00:00",
+     "hard_deadline": "2025-09-01T08:01:00+00:00",
+     "scenario_progress_at": "2025-09-01T06:01:00+00:00",
+     "setup_expiry": "2025-09-01T05:30:00+00:00"
+    },
+    "containing_zones": [],
+    "diagnostic": {
+     "corridor_fixed_k_economic_empty": "false",
+     "corridor_geometric_empty": "false",
+     "exclusion": null,
+     "in_D": "true",
+     "in_N": "false"
+    },
+    "direction": "LONG",
+    "entry_attempt_id": "AL-2025-09-01T03:15:00+00:00-d49a8b5618ff#entry",
+    "env": {
+     "clock_policy": "temporal.clock.modeled-complete-prefix.v1",
+     "clock_time": "2025-09-01T04:01:00Z",
+     "dependencies": [
+      {
+       "digest": null,
+       "event_end": "2025-09-01T04:00:00Z",
+       "known_at": "2025-09-01T04:00:00Z",
+       "latest_ref": "okx/BTC-USDT-SWAP/trade_bar_1m/15m/2025-09-01T03:45:00+00:00",
+       "name": "trade.15m",
+       "status": "READY"
+      },
+      {
+       "digest": null,
+       "event_end": "2025-09-01T04:00:00Z",
+       "known_at": "2025-09-01T04:00:00Z",
+       "latest_ref": "okx/BTC-USDT-SWAP/trade_bar_1m/1h/2025-09-01T03:00:00+00:00",
+       "name": "trade.1h",
+       "status": "READY"
+      },
+      {
+       "digest": null,
+       "event_end": "2025-09-01T04:01:00Z",
+       "known_at": "2025-09-01T04:01:00Z",
+       "latest_ref": "okx/BTC-USDT-SWAP/trade_bar_1m#obs@2025-09-01T04:00:00Z",
+       "name": "trade.1m",
+       "status": "READY"
+      }
+     ],
+     "event_end": null,
+     "event_start": null,
+     "factual_cursor": 5043,
+     "instrument": "BTC-USDT-SWAP",
+     "kind": "entry_attempt",
+     "known_at": "2025-09-01T04:01:00Z",
+     "limitations": [
+      "CALENDAR_COVERAGE_UNKNOWN",
+      "HISTORICAL_MODELED_EXECUTION_NOT_MEASURED_QUOTES",
+      "FUNDING_COMPLETENESS_UNPROVEN"
+     ],
+     "lineage": [
+      "AL-2025-09-01T03:15:00+00:00-d49a8b5618ff#entry",
+      "AL-2025-09-01T03:15:00+00:00-d49a8b5618ff"
+     ],
+     "method": {
+      "build": "77420cdb8b95c62ba10431d547252241519cbd14-dirty",
+      "implementation": "adviser.core.v6",
+      "model": "btc.context-action.v0.6",
+      "profile_sha256": "7c86833734da7258f62f8f7569b2a74253867e4b82e5b537907749f910220296",
+      "register_sha256": "98ef101e4c23fbdfee80b2e1f0adf61eea92aeb8665db777bb8582b0ae4c5bda",
+      "rules_sha256": "57bf2309990d5085326f62fae9e6a88808b1de566a837995341910692e832e66",
+      "rules_version": "mp005.rules.v0.6"
+     },
+     "origin": "HISTORICAL_MODELED",
+     "price_role": "TRADE",
+     "professional_seq": 6874,
+     "published_at": "2025-09-01T04:01:00Z",
+     "record_id": "AL-2025-09-01T03:15:00+00:00-d49a8b5618ff#entry#wait_open-34",
+     "revision": 0,
+     "schema_version": "algotrader.semantic.v2"
+    },
+    "family": "A",
+    "geometry": {
+     "G": "64.967516241879060469765117441279360319840079960020",
+     "I0": "99700.1..100550.0",
+     "K_cost": "14",
+     "K_cost_fixed_historical": "14",
+     "K_trigger": "100049.9",
+     "Q": "34.982508745627186406796601699150424787606196901549",
+     "R": "99900",
+     "S15": "2000",
+     "T_confirm": "100700.0",
+     "T_current": "100700.0",
+     "V": "99700.0",
+     "confirmation_close": "100050",
+     "corridor": "99900..100049.9",
+     "economic_current": "99900..100014.5",
+     "economic_fixed_k": "99900..100014.5",
+     "margin": "-7.81149425287356321839080460",
+     "price": "100050",
+     "price_source": "MODELED_CONFIRMATION_COMPLETE_MINUTE_CLOSE",
+     "target_type": "LANDMARK",
+     "tick": "0.1"
+    },
+    "limiting_landmark": {
+     "age_minutes": "31",
+     "created_at": "2025-09-01T03:30:00+00:00",
+     "landmark_id": "AL-2025-09-01T03:15:00+00:00-d49a8b5618ff#B",
+     "price": "100900",
+     "source": "okx/BTC-USDT-SWAP/trade_bar_1m/15m/2025-09-01T01:45:00+00:00,okx/BTC-USDT-SWAP/trade_bar_1m/15m/2025-09-01T02:00:00+00:00,okx/BTC-USDT-SWAP/trade_bar_1m/15m/2025-09-01T02:15:00+00:00,okx/BTC-USDT-SWAP/trade_bar_1m/15m/2025-09-01T02:30:00+00:00,okx/BTC-USDT-SWAP/trade_bar_1m/15m/2025-09-01T02:45:00+00:00,okx/BTC-USDT-SWAP/trade_bar_1m/15m/2025-09-01T03:00:00+00:00,okx/BTC-USDT-SWAP/trade_bar_1m/15m/2025-09-01T03:15:00+00:00",
+     "type": "IMPULSE_B",
+     "zone_halfwidth": "200.0"
+    },
+    "mode": "RETURN",
+    "reason": "IMMEDIATE_ECONOMIC_FAILURE_RETURN_CORRIDOR_USABLE",
+    "response": null,
+    "scenario_id": "AL-2025-09-01T03:15:00+00:00-d49a8b5618ff",
+    "selected_zone": null,
+    "state": "WAIT_PRICE",
+    "transition": "WAIT_OPEN"
+   },
+   "record_id": "AL-2025-09-01T03:15:00+00:00-d49a8b5618ff#entry#wait_open-34",
+   "seq": 34,
+   "subject": "AL-2025-09-01T03:15:00+00:00-d49a8b5618ff#entry"
+  },
+  {
+   "clock_time": "2025-09-01T04:02:00+00:00",
+   "digest": "933a8f76c81007e5ca8328ef98570ef2b49fca61aed30f0890c0172c945a7a14",
+   "kind": "entry_attempt",
+   "origin": "HISTORICAL_MODELED",
+   "record": {
+    "blockers": [],
+    "call_id": null,
+    "cap_history": [
+     {
+      "cap": "100700.0",
+      "cursor": "5043",
+      "near_edge": "100700.0",
+      "since": "2025-09-01T04:01:00+00:00",
+      "zone_id": "T_CONFIRM"
+     }
+    ],
+    "clocks": {
+     "confirmed_at": "2025-09-01T04:01:00+00:00",
+     "hard_deadline": "2025-09-01T08:01:00+00:00",
+     "setup_expiry": "2025-09-01T05:30:00+00:00"
+    },
+    "containing_zones": [],
+    "diagnostic": {},
+    "direction": "LONG",
+    "entry_attempt_id": "AL-2025-09-01T03:15:00+00:00-d49a8b5618ff#entry",
+    "env": {
+     "clock_policy": "temporal.clock.modeled-complete-prefix.v1",
+     "clock_time": "2025-09-01T04:02:00Z",
+     "dependencies": [
+      {
+       "digest": null,
+       "event_end": "2025-09-01T04:00:00Z",
+       "known_at": "2025-09-01T04:00:00Z",
+       "latest_ref": "okx/BTC-USDT-SWAP/trade_bar_1m/15m/2025-09-01T03:45:00+00:00",
+       "name": "trade.15m",
+       "status": "READY"
+      },
+      {
+       "digest": null,
+       "event_end": "2025-09-01T04:00:00Z",
+       "known_at": "2025-09-01T04:00:00Z",
+       "latest_ref": "okx/BTC-USDT-SWAP/trade_bar_1m/1h/2025-09-01T03:00:00+00:00",
+       "name": "trade.1h",
+       "status": "READY"
+      },
+      {
+       "digest": null,
+       "event_end": "2025-09-01T04:02:00Z",
+       "known_at": "2025-09-01T04:02:00Z",
+       "latest_ref": "okx/BTC-USDT-SWAP/trade_bar_1m#obs@2025-09-01T04:01:00Z",
+       "name": "trade.1m",
+       "status": "READY"
+      }
+     ],
+     "event_end": null,
+     "event_start": null,
+     "factual_cursor": 5046,
+     "instrument": "BTC-USDT-SWAP",
+     "kind": "entry_attempt",
+     "known_at": "2025-09-01T04:02:00Z",
+     "limitations": [
+      "CALENDAR_COVERAGE_UNKNOWN",
+      "HISTORICAL_MODELED_EXECUTION_NOT_MEASURED_QUOTES",
+      "FUNDING_COMPLETENESS_UNPROVEN"
+     ],
+     "lineage": [
+      "AL-2025-09-01T03:15:00+00:00-d49a8b5618ff#entry",
+      "AL-2025-09-01T03:15:00+00:00-d49a8b5618ff"
+     ],
+     "method": {
+      "build": "77420cdb8b95c62ba10431d547252241519cbd14-dirty",
+      "implementation": "adviser.core.v6",
+      "model": "btc.context-action.v0.6",
+      "profile_sha256": "7c86833734da7258f62f8f7569b2a74253867e4b82e5b537907749f910220296",
+      "register_sha256": "98ef101e4c23fbdfee80b2e1f0adf61eea92aeb8665db777bb8582b0ae4c5bda",
+      "rules_sha256": "57bf2309990d5085326f62fae9e6a88808b1de566a837995341910692e832e66",
+      "rules_version": "mp005.rules.v0.6"
+     },
+     "origin": "HISTORICAL_MODELED",
+     "price_role": "TRADE",
+     "professional_seq": 6878,
+     "published_at": "2025-09-01T04:02:00Z",
+     "record_id": "AL-2025-09-01T03:15:00+00:00-d49a8b5618ff#entry#response_reference-36",
+     "revision": 0,
+     "schema_version": "algotrader.semantic.v2"
+    },
+    "family": "A",
+    "geometry": {
+     "G": "70.503525176258812940647032351617580879043952197610",
+     "K_cost": "14",
+     "K_trigger": "100049.9",
+     "Q": "29.501475073753687684384219210960548027401370068503",
+     "R": "99900",
+     "S15": "2000",
+     "T_confirm": "100700.0",
+     "T_current": "100700.0",
+     "V": "99700.0",
+     "confirmation_close": "100050",
+     "corridor_effective": "99900..100049.9",
+     "corridor_structural": "99900..100049.9",
+     "economic_current": "99900..100014.5",
+     "margin": "4.30175508775438771938596930",
+     "price": "99995",
+     "tick": "0.1"
+    },
+    "limiting_landmark": null,
+    "mode": "RETURN",
+    "reason": "okx/BTC-USDT-SWAP/trade_bar_1m#obs@2025-09-01T04:01:00Z",
+    "response": {
+     "H0": "100014.4",
+     "L0": "99990",
+     "bars_checked": "0",
+     "outcome": null,
+     "phase": "WAIT_RESPONSE",
+     "published_at": "2025-09-01T04:02:00+00:00",
+     "published_cursor": "5046",
+     "reference_bar": "okx/BTC-USDT-SWAP/trade_bar_1m#obs@2025-09-01T04:01:00Z",
+     "reference_close": "99995",
+     "reference_end": "2025-09-01T04:02:00+00:00",
+     "reference_start": "2025-09-01T04:01:00+00:00"
+    },
+    "scenario_id": "AL-2025-09-01T03:15:00+00:00-d49a8b5618ff",
+    "selected_zone": null,
+    "state": "WAIT_RESPONSE",
+    "transition": "RESPONSE_REFERENCE"
+   },
+   "record_id": "AL-2025-09-01T03:15:00+00:00-d49a8b5618ff#entry#response_reference-36",
+   "seq": 36,
+   "subject": "AL-2025-09-01T03:15:00+00:00-d49a8b5618ff#entry"
+  },
+  {
+   "clock_time": "2025-09-01T04:03:00+00:00",
+   "digest": "1b09bfd7dae2673751ed84f41fb87f2f7e6d8fd8834fd2c5d57b7905daf1ffa7",
+   "kind": "entry_attempt",
+   "origin": "HISTORICAL_MODELED",
+   "record": {
+    "blockers": [],
+    "call_id": "call-AL-2025-09-01T04:03:00+00:00-33d5d0d48b6a",
+    "cap_history": [
+     {
+      "cap": "100700.0",
+      "cursor": "5043",
+      "near_edge": "100700.0",
+      "since": "2025-09-01T04:01:00+00:00",
+      "zone_id": "T_CONFIRM"
+     }
+    ],
+    "clocks": {
+     "call_progress_at": "2025-09-01T06:02:00+00:00",
+     "confirmed_at": "2025-09-01T04:01:00+00:00",
+     "hard_deadline": "2025-09-01T08:01:00+00:00",
+     "issued_at": "2025-09-01T04:03:00+00:00",
+     "scenario_progress_at": "2025-09-01T06:01:00+00:00"
+    },
+    "containing_zones": [],
+    "diagnostic": {},
+    "direction": "LONG",
+    "entry_attempt_id": "AL-2025-09-01T03:15:00+00:00-d49a8b5618ff#entry",
+    "env": {
+     "clock_policy": "temporal.clock.modeled-complete-prefix.v1",
+     "clock_time": "2025-09-01T04:03:00Z",
+     "dependencies": [
+      {
+       "digest": null,
+       "event_end": "2025-09-01T04:00:00Z",
+       "known_at": "2025-09-01T04:00:00Z",
+       "latest_ref": "okx/BTC-USDT-SWAP/trade_bar_1m/15m/2025-09-01T03:45:00+00:00",
+       "name": "trade.15m",
+       "status": "READY"
+      },
+      {
+       "digest": null,
+       "event_end": "2025-09-01T04:00:00Z",
+       "known_at": "2025-09-01T04:00:00Z",
+       "latest_ref": "okx/BTC-USDT-SWAP/trade_bar_1m/1h/2025-09-01T03:00:00+00:00",
+       "name": "trade.1h",
+       "status": "READY"
+      },
+      {
+       "digest": null,
+       "event_end": "2025-09-01T04:03:00Z",
+       "known_at": "2025-09-01T04:03:00Z",
+       "latest_ref": "okx/BTC-USDT-SWAP/trade_bar_1m#obs@2025-09-01T04:02:00Z",
+       "name": "trade.1m",
+       "status": "READY"
+      }
+     ],
+     "event_end": null,
+     "event_start": null,
+     "factual_cursor": 5049,
+     "instrument": "BTC-USDT-SWAP",
+     "kind": "entry_attempt",
+     "known_at": "2025-09-01T04:03:00Z",
+     "limitations": [
+      "CALENDAR_COVERAGE_UNKNOWN",
+      "HISTORICAL_MODELED_EXECUTION_NOT_MEASURED_QUOTES",
+      "FUNDING_COMPLETENESS_UNPROVEN"
+     ],
+     "lineage": [
+      "AL-2025-09-01T03:15:00+00:00-d49a8b5618ff#entry",
+      "AL-2025-09-01T03:15:00+00:00-d49a8b5618ff"
+     ],
+     "method": {
+      "build": "77420cdb8b95c62ba10431d547252241519cbd14-dirty",
+      "implementation": "adviser.core.v6",
+      "model": "btc.context-action.v0.6",
+      "profile_sha256": "7c86833734da7258f62f8f7569b2a74253867e4b82e5b537907749f910220296",
+      "register_sha256": "98ef101e4c23fbdfee80b2e1f0adf61eea92aeb8665db777bb8582b0ae4c5bda",
+      "rules_sha256": "57bf2309990d5085326f62fae9e6a88808b1de566a837995341910692e832e66",
+      "rules_version": "mp005.rules.v0.6"
+     },
+     "origin": "HISTORICAL_MODELED",
+     "price_role": "TRADE",
+     "professional_seq": 6882,
+     "published_at": "2025-09-01T04:03:00Z",
+     "record_id": "AL-2025-09-01T03:15:00+00:00-d49a8b5618ff#entry#issue-37",
+     "revision": 0,
+     "schema_version": "algotrader.semantic.v2"
+    },
+    "family": "A",
+    "geometry": {
+     "K_trigger": "100049.9",
+     "R": "99900",
+     "S15": "2000",
+     "T_confirm": "100700.0",
+     "T_current": "100700.0",
+     "V": "99700.0",
+     "confirmation_close": "100050",
+     "corridor_effective": "99900..100049.9",
+     "corridor_structural": "99900..100049.9",
+     "tick": "0.1"
+    },
+    "limiting_landmark": null,
+    "mode": "RETURN",
+    "reason": "call-AL-2025-09-01T04:03:00+00:00-33d5d0d48b6a",
+    "response": {
+     "H0": "100014.4",
+     "L0": "99990",
+     "bars_checked": "1",
+     "outcome": "ISSUED",
+     "phase": "WAIT_RESPONSE",
+     "published_at": "2025-09-01T04:02:00+00:00",
+     "published_cursor": "5046",
+     "reference_bar": "okx/BTC-USDT-SWAP/trade_bar_1m#obs@2025-09-01T04:01:00Z",
+     "reference_close": "99995",
+     "reference_end": "2025-09-01T04:02:00+00:00",
+     "reference_start": "2025-09-01T04:01:00+00:00",
+     "response_bar": "okx/BTC-USDT-SWAP/trade_bar_1m#obs@2025-09-01T04:02:00Z",
+     "response_close": "100014.5",
+     "response_current": "true",
+     "response_high": "100014.5",
+     "response_low": "99990"
+    },
+    "scenario_id": "AL-2025-09-01T03:15:00+00:00-d49a8b5618ff",
+    "selected_zone": null,
+    "state": "ISSUED",
+    "transition": "ISSUE"
+   },
+   "record_id": "AL-2025-09-01T03:15:00+00:00-d49a8b5618ff#entry#issue-37",
+   "seq": 37,
+   "subject": "AL-2025-09-01T03:15:00+00:00-d49a8b5618ff#entry"
+  }
+ ],
+ "run_id": "obs-20261010T175049-10e017"
+}

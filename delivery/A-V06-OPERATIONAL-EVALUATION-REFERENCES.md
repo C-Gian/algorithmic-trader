@@ -3,7 +3,7 @@
 **Operational addendum** prepared by the executor on base `7c16bc97ee13d6b6b2785d130b1626fd73008681` and updated on base `aff2a3d4747a71238c864129955a9f06fdbdb008` (Astra authorizations relayed by the Owner, 10 October 2026: documentary preparation only).
 - **Authority.** The [design](A-V06-OPERATIONAL-EVALUATION-DESIGN.md), the [orchestrator decision](A-V06-OPERATIONAL-EVALUATION-CLOSURE.md) and the [decision on the study references](HDP-001-A-V06-REFERENCES-DECISION.md) prevail. The first two are unchanged.
 - **Identities.** They come only from the project's existing functions (`adviser/methods.py` release `V06`, `adviser/identity.py` `historical_profile`, `EvaluatorV3.identity`). This addendum creates no new identity scheme.
-- **Status.** References registered; executive preparation still incomplete (§5–§7). Execution INACTIVE.
+- **Status.** References registered; study path technically prepared on synthetic evidence (§8); study not launchable (§8.6). Execution INACTIVE.
 
 Machine-readable output: [identities-b47b997.json](evidence/A-V06-REFERENCES/identities-b47b997.json), produced by [v06_identity.py](evidence/A-V06-REFERENCES/v06_identity.py) from `git archive b47b997 src delivery`. The same script gives an identical document on the trees of `7c16bc9` and `aff2a3d` (recomputed 10 October). It runs no adviser, evaluation or replay.
 
@@ -155,3 +155,156 @@ They are identical at `b47b997`, `7c16bc9` and `aff2a3d`.
 - **Exposure declarations** in the common [study exposure register](STUDY-EXPOSURE-REGISTER.md).
 
 v0.6 and HDP-001 frozen; January–August 2026 protected. References registered; executive preparation still incomplete; execution INACTIVE.
+
+
+## 8. Study path — technical preparation (synthetic evidence only; study INACTIVE)
+
+Prepared on base `77420cd`. The path is **technically ready** only to the extent the synthetic checks below show. The **study is not launchable**: §8.6 lists what is still needed. Evidence: [`evidence/A-V06-STUDY-PREPARATION/`](evidence/A-V06-STUDY-PREPARATION/).
+
+### 8.1 Existing path and the impediments found
+
+| Step | Existing tool | Status for this window |
+|---|---|---|
+| Window and preset | `corpus/presets.py`, registered `presets.json` | **Blocked.** `check_windows` accepts only whole calendar months inside the target [2025-09-01, 2026-09-01). `classify` would also label any window outside both periods as DEVELOPMENT. |
+| Dataset composition | Pack job: local reuse, missing slices of at most 31 days split at UTC months, one immutable receipt-pinned pack and feed cache | Works for any window once the preset is accepted. Acquisition is possible only after the tail end. |
+| Initialization | `REGISTERED_EXPLICIT_INITIALIZATION` (WP-013): context only, never evaluated; warmup calls and waiting children cleared at the start | Works: 35 days ≥ the 96 h fine warmup |
+| Continuous launch | `/api/evaluations` on a pack, adviser v0.6, one run with no monthly reset (`internal_month: CONTINUE_NO_FINISH_NO_RESET`) | Works; the protected guard is unchanged |
+| Checkpoint and resume | Observation worker: fenced checkpoints, crash reclaim, pause/step/resume | Works (existing v0.6 coverage plus §8.4) |
+| Boundaries | No new call at or after the evaluation end; tail only completes paths; calls outside the window are not evaluated | Works, unchanged |
+| Evaluator | `adviser.evaluator.v3`, PRIMARY path with 60 s delay, price_net or total_net | Unchanged |
+| Per-call results | `GET /api/adviser/runs/{replay_id}/calls` (calls with their hypothetical paths), journal pages, `report.json` | Available, but no study-level arrangement existed: issue-hour attribution, undetermined paths, owner register |
+
+### 8.2 Minimal adaptation (diff circumscribed)
+
+**Product (`src/`)** — the only changes since `b47b997`:
+
+| File | Change |
+|---|---|
+| `corpus/study_presets.json` (new) | One registered study preset, `a-v06-operational-evaluation-2027-v1` (SHA-256 LF `d3592119…db43`; preset identity `861455df…19ca`). Initialization [2026-12-21T00:00Z, 2027-01-25T00:00Z), evaluation [2027-01-25T00:00Z, 2027-07-26T00:00Z), tail to 2027-07-26T06:05Z. It pins the design, orchestrator decision and references decision by hash. Method v0.6; adviser evaluation only. |
+| `corpus/presets.py` | `check_windows` accepts **only** a preset equal, field for field, to a registered study preset. That preset still needs the explicit initialization, the file's tail and the `REGISTERED_STUDY_WINDOW` class, and may not overlap the development or protected periods. `classify` labels it `REGISTERED_STUDY_WINDOW`. `resolve` finds it by id. The month builder and every other preset keep the earlier checks. The registered `presets.json` is unchanged. |
+| `corpus/pack_api.py` | `GET /api/corpus/presets` also lists the registered study presets, so the Workbench shows them under its other presets. No UI code changed. |
+| `evaluation/api.py` | A study-window pack admits only the run its study registers (adviser evaluation, method v0.6). Observation-only and every other method are refused (409). |
+
+**Study tool (not product).** [`scripts/a_v06_study_ledger.py`](../scripts/a_v06_study_ledger.py) (`a-v06.study-ledger.v1`, SHA-256 LF `4df40f18…f245`).
+- `export` copies one evaluation GET-only into a new directory with file hashes.
+- `ledger`, offline, produces:
+  - an identity check against `identities-b47b997.json`;
+  - the primary population (every A call issued in the window), with B/C and out-of-window calls kept apart;
+  - per-call PRIMARY results (`price_net`, or `total_net` only with certified funding);
+  - UTC issue-hour attribution: hours without an A call are 0, and an hour holding an undetermined included path has no value;
+  - NO_ENTRY kept apart from entered-but-undetermined paths;
+  - weekly issue and entry counts, and the A owner register;
+  - a balance that stays INCOMPLETE when any included path is undetermined.
+- The bootstrap is **not computed** (§8.6).
+
+### 8.3 Diff map against `b47b997`
+
+Product tree since `b47b997`:
+- **Unchanged:** `schemas/`, dependencies (`pyproject.toml`, `uv.lock`), `Dockerfile`, `docker-compose.yml`, every `delivery/MP-00*` document.
+- **Changed:** the four `src/` items of §8.2, and UI-only `web/` changes (live cockpit, call history, the Workbench result view's labels).
+
+| Area that can change decisions or outcomes | Modules | Diff since `b47b997` |
+|---|---|---|
+| Input construction and temporal availability | `marketdata/`, `feed/`, `temporal/`, `corpus/pack.py`, `observe/feedcache.py` | none |
+| Initialization | `presets.py` (window facts), `adviser/engine.py` (`initialization_pin`), `report_periods.py` | window acceptance only: the registered study window becomes admissible; initialization semantics unchanged |
+| Boundaries (start, end, tail, clock end) | the adviser cores (`eval_start`/`eval_end` gating), `engine_config` | none; window values come from the accepted preset |
+| State, checkpoint and resume | `observe/` (job, kernel, worker, control), adviser runtimes and codecs | none |
+| Selection, slots, conflicts, protections | `adviser/core*.py`, `methods.py`, `params.py`, `method/` | none |
+| Management and costs | the adviser cores, `geometry.py`, the MP-005 register | none |
+| Evaluator | `evaluator.py`, `evaluator3.py`, `evaluation_contracts.py` | none |
+| Reports | `adviser/report*.py`, `evaluation/report.py` | none |
+| Launch and API | `evaluation/api.py`, `corpus/pack_api.py` | additive: one refusal and one listing entry |
+| Dependencies | `pyproject.toml`, `uv.lock` | none |
+
+**Combined statement.** The code examination and the comparisons below support the following, for inputs that `b47b997` accepts:
+- the executive build changes no decision or outcome;
+- the study window is new input data, fed to unchanged code.
+
+**Not claimed.**
+- This is not a general equivalence proof.
+- One synthetic tape cannot exercise every branch.
+- The Director's acceptance of the executive build is pending.
+
+### 8.4 Comparisons and synthetic checks actually run
+
+- **Reference against the build, on the same input** ([`compare_builds.py`](evidence/A-V06-STUDY-PREPARATION/compare_builds.py)).
+  - **Setup.** `git archive b47b997 src` was run against the candidate executive tree (base `77420cd` plus this diff), each on a fresh disposable database. The input was one synthetic v0.6 A call tape, in a fixture window that both trees accept.
+  - **Durable path** (pack job → evaluation API → worker → report) matched:
+    - the pack id;
+    - the journal digests (87 records) and the evaluation-record digests (10);
+    - the finish commitment;
+    - the call and its PRIMARY path (CLOSED, price_net −0.0014);
+    - the report with volatile fields removed, **byte-equal**.
+
+    The volatile fields are ids, times, the build, and the run-manifest file hash, which embeds the replay id, the launch time and the build.
+  - **Pure fold** with the study fixture windows: equal digests on both trees.
+  - **Files:** `compare-b47b997.json`, `compare-build.json` and both `.report.json`.
+- **Window extension, build only** (the reference cannot prepare it, and it is not altered to do so). `tests/test_a_v06_study.py` (6 passed) and `tests/test_a_v06_study_db.py` (3 passed, disposable PostgreSQL) show:
+  - the packaged study preset states the pinned design windows (35-day initialization, 365 min tail = MP-005 register) and is accepted against the real `presets.json`;
+  - shifted, renamed or re-classed copies, the month builder outside the target, and an overlap with the protected period are refused;
+  - earlier presets keep their labels;
+  - a tiny registered study window outside the fixture target, crossing the Aug/Sep 2025 month boundary, is prepared by the real pack job and listed by the API;
+  - observation-only, the default method and v0.5 are refused (409); v0.6 runs to COMPLETED with assurance passed;
+  - the durable journal equals the pure fold, so there is one continuous fold with no monthly reset; the report's month sections (Aug, Sep) reconcile;
+  - a crash right after the first September delivery, then reclaim, and a pause before the reference with stepping through the issue, then resume, each equal the uninterrupted run (journal, evaluation records, finish commitment);
+  - the A call issued 04:03 in the window is resolved 06:03 in the tail and is DETERMINED in the ledger;
+  - every other hour is 0; the identities match the registered ones; the owner is BORN_IN_WINDOW.
+- **Pure ledger cases.**
+  - A confirmation in the warmup: the owner is PRE_EXISTING_AT_START and CONFIRMED, nothing is issued, and the reason is kept.
+  - A window ending before the issue: no call after the boundary, with the reason kept.
+  - Data ending before the exit: the path is UNDETERMINED, the hour has no value, and the balance is INCOMPLETE. Nothing is imputed.
+- **Regression on the touched paths.** pack/preset (`test_pack`, `test_pack_correction`), WP-013 continuity (`test_wp013_continuous`, `_db`), evaluation launch (`test_evaluation`), MP-005 v0.6 (`test_mp005_db`, `test_mp005_versions`), the new study tests and the HDP-001 executor tests: **167 passed** (15 min 46 s, disposable PostgreSQL 18.6). `algotrader schema`: all baselines match. No full suite or E2E was run.
+- **Synthetic artifacts.**
+  - `synthetic-export/` and `synthetic-ledger/`: one study-window run, labelled SYNTHETIC.
+  - The build recorded there is `77420cd…-dirty`: the uncommitted candidate tree, whose `src/` equals the delivery commit.
+
+### 8.5 Identities registered now
+
+| Item | Value |
+|---|---|
+| Frozen behaviour reference | `b47b997ee93513c7a358b49e961020705e4fbb85` (unchanged) |
+| Method, parameters, implementation, evaluator, profile | §2–§3 above, unchanged and re-checked by the ledger against `identities-b47b997.json` |
+| Study preset | `a-v06-operational-evaluation-2027-v1`, preset identity `861455dfd8f993cdb08c6c0191f1cb64bccdfb9408060c67e1cf525e325919ca`; file `d3592119c393a54e93be875a28ddaedd53fdcf574419aadb8dbd4242dbb3db43` |
+| Executive build | **not yet identified.** The candidate is the delivery commit recorded in STATE; its `src/` differs from `b47b997` only by §8.2. |
+| Synthetic inputs (engineering only) | Fixture comparison pack `pack-d7656fe07cd850f0a4fc5ab89c36e57933a93dc6`; study fixture pack `pack-82683f8d12fd7162f5b80fcace39ef6bfea9abdd`, feed `feedcontent.v1:001e4756…93ad` |
+| Future pack, run pins, composite identity | To be registered when they exist (§4); nothing is certified now |
+
+### 8.6 Technically ready vs. study launchable — residual dependencies
+
+**Technically ready, as demonstrated synthetically:**
+- the window can be prepared through the app;
+- an unauthorized run on it is refused;
+- one continuous run crosses months, survives a crash or a pause, and resolves tail paths;
+- per-call results, hours and owners can be arranged without imputation.
+
+**Still needed before the study can start or be computed:**
+1. **Director**:
+   - accept or reject this executive build and its equivalence evidence (§8.3–8.4), deciding on any further targeted checks;
+   - complete the freeze before **2027-01-25T00:00Z**, or the window lapses (design §5).
+2. **Exact-SHA CI** of the executive build, reported by the Owner (not polled).
+3. **Computation conventions** to register before computing, already listed in §7:
+   - the bootstrap draw procedure;
+   - how included entered paths without a determinable result are represented in the bootstrap and in the balance.
+
+   The ledger stops there: `NOT_COMPUTED_CONVENTIONS_OPEN`.
+4. **Separate assignments:**
+   - acquisition after 2027-07-26T06:05Z;
+   - the Owner's preparation and launch through the Workbench;
+   - the GET export and ledger;
+   - the bootstrap computation.
+
+   The run duration for about 217 days is not measured here.
+5. **Exposure declarations** in the [study exposure register](STUDY-EXPOSURE-REGISTER.md).
+
+**Noted, not changed.** The pack manifest keeps its existing input-requirement label (`btc.context-action.v0.2` register of `presets.json`), as for every pack. The method of the run is the pinned v0.6 identity.
+
+### 8.7 Technical commands (no real launch is authorized)
+
+```text
+# after the tail end, under the executive assignment, in the app:
+Historical Workbench → Prepare data → other presets → "A v0.6 operational evaluation — 2027-01-25 to 2027-07-26 …" → Prepare
+Historical Workbench → Adviser evaluation → that pack → method v0.6 → Start
+# then, read-only:
+uv run python scripts/a_v06_study_ledger.py export --api http://127.0.0.1:8000 --evaluation <evaluation id> --out <new dir>
+uv run python scripts/a_v06_study_ledger.py ledger --export <that dir> --out <new dir> --assignment "<assignment reference>"
+```

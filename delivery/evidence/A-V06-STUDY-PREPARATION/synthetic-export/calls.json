@@ -1,0 +1,492 @@
+{
+ "calls": [
+  {
+   "call": {
+    "actionability": {
+     "actionable": true,
+     "admissible_bounds": [
+      "99900",
+      "100014.5"
+     ],
+     "blockers": [],
+     "cost_envelope_bps": "14",
+     "env": {
+      "clock_policy": "temporal.clock.modeled-complete-prefix.v1",
+      "clock_time": "2025-09-01T04:03:00Z",
+      "dependencies": [
+       {
+        "digest": null,
+        "event_end": "2025-09-01T04:00:00Z",
+        "known_at": "2025-09-01T04:00:00Z",
+        "latest_ref": "okx/BTC-USDT-SWAP/trade_bar_1m/15m/2025-09-01T03:45:00+00:00",
+        "name": "trade.15m",
+        "status": "READY"
+       },
+       {
+        "digest": null,
+        "event_end": "2025-09-01T04:00:00Z",
+        "known_at": "2025-09-01T04:00:00Z",
+        "latest_ref": "okx/BTC-USDT-SWAP/trade_bar_1m/1h/2025-09-01T03:00:00+00:00",
+        "name": "trade.1h",
+        "status": "READY"
+       },
+       {
+        "digest": null,
+        "event_end": "2025-09-01T04:03:00Z",
+        "known_at": "2025-09-01T04:03:00Z",
+        "latest_ref": "okx/BTC-USDT-SWAP/trade_bar_1m#obs@2025-09-01T04:02:00Z",
+        "name": "trade.1m",
+        "status": "READY"
+       }
+      ],
+      "event_end": null,
+      "event_start": null,
+      "factual_cursor": 5049,
+      "instrument": "BTC-USDT-SWAP",
+      "kind": "actionability",
+      "known_at": "2025-09-01T04:03:00Z",
+      "limitations": [
+       "CALENDAR_COVERAGE_UNKNOWN",
+       "HISTORICAL_MODELED_EXECUTION_NOT_MEASURED_QUOTES",
+       "FUNDING_COMPLETENESS_UNPROVEN"
+      ],
+      "lineage": [],
+      "method": {
+       "build": "77420cdb8b95c62ba10431d547252241519cbd14-dirty",
+       "implementation": "adviser.core.v6",
+       "model": "btc.context-action.v0.6",
+       "profile_sha256": "7c86833734da7258f62f8f7569b2a74253867e4b82e5b537907749f910220296",
+       "register_sha256": "98ef101e4c23fbdfee80b2e1f0adf61eea92aeb8665db777bb8582b0ae4c5bda",
+       "rules_sha256": "57bf2309990d5085326f62fae9e6a88808b1de566a837995341910692e832e66",
+       "rules_version": "mp005.rules.v0.6"
+      },
+      "origin": "HISTORICAL_MODELED",
+      "price_role": "TRADE",
+      "professional_seq": 6882,
+      "published_at": "2025-09-01T04:03:00Z",
+      "record_id": "call-AL-2025-09-01T04:03:00+00:00-33d5d0d48b6a#act",
+      "revision": 0,
+      "schema_version": "algotrader.semantic.v2"
+     },
+     "execution_mode": "HISTORICAL_BASE",
+     "gain_bps": "68.540061691054797054427108069329947157662138989846",
+     "limiting_landmark": null,
+     "remaining_minutes": null,
+     "reward_risk_margin": "0.00553319768633548135520350",
+     "risk_bps": "31.445440411140384644226587144863994720765489004094",
+     "side_price": "100014.5",
+     "side_price_source": "MODELED_RETURN_COMPLETE_MINUTE_CLOSE",
+     "structural_area": [
+      "99900",
+      "100049.9"
+     ],
+     "subject_id": "call-AL-2025-09-01T04:03:00+00:00-33d5d0d48b6a"
+    },
+    "attempt_id": "AL-2025-09-01T03:15:00+00:00-d49a8b5618ff#entry",
+    "call_id": "call-AL-2025-09-01T04:03:00+00:00-33d5d0d48b6a",
+    "cap_history": [
+     {
+      "cap": "100700.0",
+      "cursor": "5043",
+      "near_edge": "100700.0",
+      "since": "2025-09-01T04:01:00+00:00",
+      "zone_id": "T_CONFIRM"
+     }
+    ],
+    "confirmed_at": "2025-09-01T04:01:00Z",
+    "cost_assumptions": "HISTORICAL_BASE K=14bps (fees 5/leg + allowance 2/leg; declared assumptions, not account rates)",
+    "direction": "LONG",
+    "entry_mode": "RETURN",
+    "entry_status": "AVAILABLE",
+    "env": {
+     "clock_policy": "temporal.clock.modeled-complete-prefix.v1",
+     "clock_time": "2025-09-01T04:03:00Z",
+     "dependencies": [
+      {
+       "digest": null,
+       "event_end": "2025-09-01T04:00:00Z",
+       "known_at": "2025-09-01T04:00:00Z",
+       "latest_ref": "okx/BTC-USDT-SWAP/trade_bar_1m/15m/2025-09-01T03:45:00+00:00",
+       "name": "trade.15m",
+       "status": "READY"
+      },
+      {
+       "digest": null,
+       "event_end": "2025-09-01T04:00:00Z",
+       "known_at": "2025-09-01T04:00:00Z",
+       "latest_ref": "okx/BTC-USDT-SWAP/trade_bar_1m/1h/2025-09-01T03:00:00+00:00",
+       "name": "trade.1h",
+       "status": "READY"
+      },
+      {
+       "digest": null,
+       "event_end": "2025-09-01T04:03:00Z",
+       "known_at": "2025-09-01T04:03:00Z",
+       "latest_ref": "okx/BTC-USDT-SWAP/trade_bar_1m#obs@2025-09-01T04:02:00Z",
+       "name": "trade.1m",
+       "status": "READY"
+      }
+     ],
+     "event_end": "2025-09-01T04:03:00Z",
+     "event_start": "2025-09-01T04:02:00Z",
+     "factual_cursor": 5049,
+     "instrument": "BTC-USDT-SWAP",
+     "kind": "call",
+     "known_at": "2025-09-01T04:03:00Z",
+     "limitations": [
+      "CALENDAR_COVERAGE_UNKNOWN",
+      "HISTORICAL_MODELED_EXECUTION_NOT_MEASURED_QUOTES",
+      "FUNDING_COMPLETENESS_UNPROVEN"
+     ],
+     "lineage": [
+      "AL-2025-09-01T03:15:00+00:00-d49a8b5618ff#entry",
+      "AL-2025-09-01T03:15:00+00:00-d49a8b5618ff"
+     ],
+     "method": {
+      "build": "77420cdb8b95c62ba10431d547252241519cbd14-dirty",
+      "implementation": "adviser.core.v6",
+      "model": "btc.context-action.v0.6",
+      "profile_sha256": "7c86833734da7258f62f8f7569b2a74253867e4b82e5b537907749f910220296",
+      "register_sha256": "98ef101e4c23fbdfee80b2e1f0adf61eea92aeb8665db777bb8582b0ae4c5bda",
+      "rules_sha256": "57bf2309990d5085326f62fae9e6a88808b1de566a837995341910692e832e66",
+      "rules_version": "mp005.rules.v0.6"
+     },
+     "origin": "HISTORICAL_MODELED",
+     "price_role": "TRADE",
+     "professional_seq": 6882,
+     "published_at": "2025-09-01T04:03:00Z",
+     "record_id": "call-AL-2025-09-01T04:03:00+00:00-33d5d0d48b6a",
+     "revision": 0,
+     "schema_version": "algotrader.semantic.v2"
+    },
+    "expected_minutes": [
+     30,
+     180
+    ],
+    "family": "A",
+    "frozen_scale": "2000",
+    "hard_deadline": "2025-09-01T08:01:00Z",
+    "hard_deadline_origin": "STRUCTURAL_CONFIRMATION_PUBLICATION",
+    "invalidation": "99700.0",
+    "issue_reference": "100014.5",
+    "issue_scale": "2000",
+    "issued_at": "2025-09-01T04:03:00Z",
+    "limiting_landmark": null,
+    "minimum_residual_minutes": 30,
+    "premise": "15M_CLOSE_BEYOND_IMPULSE_A 97000",
+    "progress_check_at": "2025-09-01T06:02:00Z",
+    "scenario_id": "AL-2025-09-01T03:15:00+00:00-d49a8b5618ff",
+    "structural_area": [
+     "99900",
+     "100049.9"
+    ],
+    "target": "100700.0",
+    "target_at_confirmation": "100700.0",
+    "target_type": "LANDMARK",
+    "thesis": "LONG A (continuation after a reaction): from 100014.5 toward 100700.0 (landmark), invalidated at 99700.0 \u2014 entered on a later usable return after confirmation",
+    "thesis_status": "ONGOING",
+    "trigger_minute_start": "2025-09-01T04:02:00Z",
+    "uncertainties": [
+     "no calibrated probability",
+     "targets are not expected returns",
+     "stop is guidance, not an order or guaranteed fill",
+     "unknown news/calendar coverage",
+     "the minimum residual time is an eligibility filter, not a guaranteed holding period"
+    ]
+   },
+   "hypothetical_paths": [
+    {
+     "allowances": "0.0004",
+     "bounds": {},
+     "call_id": "call-AL-2025-09-01T04:03:00+00:00-33d5d0d48b6a",
+     "censored_from": null,
+     "direction": "LONG",
+     "entry": {
+      "price": "100005",
+      "reason": "OPEN",
+      "time_end": "2025-09-01T04:04:00Z",
+      "time_start": "2025-09-01T04:04:00Z"
+     },
+     "entry_attempts": 1,
+     "exit": {
+      "price": "100005",
+      "reason": "DISCRETIONARY_OPEN",
+      "time_end": "2025-09-01T06:02:00Z",
+      "time_start": "2025-09-01T06:02:00Z"
+     },
+     "exit_class": "GUIDANCE_RETIRED",
+     "family": "A",
+     "fees": "0.0010",
+     "funding": null,
+     "funding_status": "PRICE_NET_ONLY_TOTAL_NET_UNAVAILABLE",
+     "gross": "0",
+     "held_minutes": "118",
+     "mae": "-0.000049997500124993750312484375781210939453027348632568",
+     "mfe": "0",
+     "notes": [],
+     "path_id": "call-AL-2025-09-01T04:03:00+00:00-33d5d0d48b6a#primary",
+     "price_net": "-0.0014",
+     "profile": {
+      "adequacy_envelope_bps": "14",
+      "allowance_per_leg": "0.0002",
+      "boundary_alignment": "UTC_CEIL_MINUTE",
+      "entry_delay_seconds": 60,
+      "exit_delay_seconds": 60,
+      "exit_mode": "GUIDANCE",
+      "fee_per_leg": "0.0005",
+      "funding": "PRICE_NET_ONLY",
+      "notional_unit": "N0=1 abstract USDT reporting unit; q=N0/E constant; not a human size",
+      "opening_condition": "PREOPEN_EVIDENCE_PLUS_OWN_OPEN_GEOMETRY_NO_FUTURE_HLC",
+      "profile_id": "mp002.evaluation.primary.v1"
+     },
+     "rejected_opens": 0,
+     "resolved_at": "2025-09-01T06:03:00Z",
+     "status": "CLOSED",
+     "stress_price_net": "-0.0020",
+     "total_net": null,
+     "variant": "PRIMARY"
+    },
+    {
+     "allowances": "0.000400010",
+     "bounds": {},
+     "call_id": "call-AL-2025-09-01T04:03:00+00:00-33d5d0d48b6a",
+     "censored_from": null,
+     "direction": "LONG",
+     "entry": {
+      "price": "100000",
+      "reason": "OPEN",
+      "time_end": "2025-09-01T04:03:00Z",
+      "time_start": "2025-09-01T04:03:00Z"
+     },
+     "entry_attempts": 1,
+     "exit": {
+      "price": "100005",
+      "reason": "DISCRETIONARY_OPEN",
+      "time_end": "2025-09-01T06:02:00Z",
+      "time_start": "2025-09-01T06:02:00Z"
+     },
+     "exit_class": "GUIDANCE_RETIRED",
+     "family": "A",
+     "fees": "0.001000025",
+     "funding": null,
+     "funding_status": "PRICE_NET_ONLY_TOTAL_NET_UNAVAILABLE",
+     "gross": "0.00005",
+     "held_minutes": "119",
+     "mae": "0",
+     "mfe": "0.00005",
+     "notes": [],
+     "path_id": "call-AL-2025-09-01T04:03:00+00:00-33d5d0d48b6a#entry_delay_0",
+     "price_net": "-0.001350035",
+     "profile": {
+      "adequacy_envelope_bps": "14",
+      "allowance_per_leg": "0.0002",
+      "boundary_alignment": "UTC_CEIL_MINUTE",
+      "entry_delay_seconds": 0,
+      "exit_delay_seconds": 60,
+      "exit_mode": "GUIDANCE",
+      "fee_per_leg": "0.0005",
+      "funding": "PRICE_NET_ONLY",
+      "notional_unit": "N0=1 abstract USDT reporting unit; q=N0/E constant; not a human size",
+      "opening_condition": "PREOPEN_EVIDENCE_PLUS_OWN_OPEN_GEOMETRY_NO_FUTURE_HLC",
+      "profile_id": "mp002.evaluation.entry_delay_0.v1"
+     },
+     "rejected_opens": 0,
+     "resolved_at": "2025-09-01T06:03:00Z",
+     "status": "CLOSED",
+     "stress_price_net": null,
+     "total_net": null,
+     "variant": "ENTRY_DELAY_0"
+    },
+    {
+     "allowances": "0.000400010",
+     "bounds": {},
+     "call_id": "call-AL-2025-09-01T04:03:00+00:00-33d5d0d48b6a",
+     "censored_from": null,
+     "direction": "LONG",
+     "entry": {
+      "price": "100000",
+      "reason": "OPEN",
+      "time_end": "2025-09-01T04:05:00Z",
+      "time_start": "2025-09-01T04:05:00Z"
+     },
+     "entry_attempts": 1,
+     "exit": {
+      "price": "100005",
+      "reason": "DISCRETIONARY_OPEN",
+      "time_end": "2025-09-01T06:02:00Z",
+      "time_start": "2025-09-01T06:02:00Z"
+     },
+     "exit_class": "GUIDANCE_RETIRED",
+     "family": "A",
+     "fees": "0.001000025",
+     "funding": null,
+     "funding_status": "PRICE_NET_ONLY_TOTAL_NET_UNAVAILABLE",
+     "gross": "0.00005",
+     "held_minutes": "117",
+     "mae": "0",
+     "mfe": "0.00005",
+     "notes": [],
+     "path_id": "call-AL-2025-09-01T04:03:00+00:00-33d5d0d48b6a#entry_delay_120",
+     "price_net": "-0.001350035",
+     "profile": {
+      "adequacy_envelope_bps": "14",
+      "allowance_per_leg": "0.0002",
+      "boundary_alignment": "UTC_CEIL_MINUTE",
+      "entry_delay_seconds": 120,
+      "exit_delay_seconds": 60,
+      "exit_mode": "GUIDANCE",
+      "fee_per_leg": "0.0005",
+      "funding": "PRICE_NET_ONLY",
+      "notional_unit": "N0=1 abstract USDT reporting unit; q=N0/E constant; not a human size",
+      "opening_condition": "PREOPEN_EVIDENCE_PLUS_OWN_OPEN_GEOMETRY_NO_FUTURE_HLC",
+      "profile_id": "mp002.evaluation.entry_delay_120.v1"
+     },
+     "rejected_opens": 0,
+     "resolved_at": "2025-09-01T06:03:00Z",
+     "status": "CLOSED",
+     "stress_price_net": null,
+     "total_net": null,
+     "variant": "ENTRY_DELAY_120"
+    },
+    {
+     "allowances": "0.0004",
+     "bounds": {},
+     "call_id": "call-AL-2025-09-01T04:03:00+00:00-33d5d0d48b6a",
+     "censored_from": null,
+     "direction": "LONG",
+     "entry": {
+      "price": "100005",
+      "reason": "OPEN",
+      "time_end": "2025-09-01T04:04:00Z",
+      "time_start": "2025-09-01T04:04:00Z"
+     },
+     "entry_attempts": 1,
+     "exit": {
+      "price": "100005",
+      "reason": "DISCRETIONARY_OPEN",
+      "time_end": "2025-09-01T08:02:00Z",
+      "time_start": "2025-09-01T08:02:00Z"
+     },
+     "exit_class": "HORIZON_EXIT",
+     "family": "A",
+     "fees": "0.0010",
+     "funding": null,
+     "funding_status": "PRICE_NET_ONLY_TOTAL_NET_UNAVAILABLE",
+     "gross": "0",
+     "held_minutes": "238",
+     "mae": "-0.000049997500124993750312484375781210939453027348632568",
+     "mfe": "0",
+     "notes": [],
+     "path_id": "call-AL-2025-09-01T04:03:00+00:00-33d5d0d48b6a#horizon_only",
+     "price_net": "-0.0014",
+     "profile": {
+      "adequacy_envelope_bps": "14",
+      "allowance_per_leg": "0.0002",
+      "boundary_alignment": "UTC_CEIL_MINUTE",
+      "entry_delay_seconds": 60,
+      "exit_delay_seconds": 60,
+      "exit_mode": "HORIZON_ONLY",
+      "fee_per_leg": "0.0005",
+      "funding": "PRICE_NET_ONLY",
+      "notional_unit": "N0=1 abstract USDT reporting unit; q=N0/E constant; not a human size",
+      "opening_condition": "PREOPEN_EVIDENCE_PLUS_OWN_OPEN_GEOMETRY_NO_FUTURE_HLC",
+      "profile_id": "mp002.evaluation.horizon_only.v1"
+     },
+     "rejected_opens": 0,
+     "resolved_at": "2025-09-01T08:03:00Z",
+     "status": "CLOSED",
+     "stress_price_net": null,
+     "total_net": null,
+     "variant": "HORIZON_ONLY"
+    }
+   ],
+   "revisions": [
+    {
+     "call_id": "call-AL-2025-09-01T04:03:00+00:00-33d5d0d48b6a",
+     "changed": [
+      "thesis"
+     ],
+     "coverage_loss_from": null,
+     "current_admissible_bounds": null,
+     "duration_window_minutes": null,
+     "entry_conditions_enabled": false,
+     "entry_reasons": [
+      "THESIS_TERMINAL"
+     ],
+     "entry_status": "CLOSED",
+     "env": {
+      "clock_policy": "temporal.clock.modeled-complete-prefix.v1",
+      "clock_time": "2025-09-01T06:01:00Z",
+      "dependencies": [
+       {
+        "digest": null,
+        "event_end": "2025-09-01T06:00:00Z",
+        "known_at": "2025-09-01T06:00:00Z",
+        "latest_ref": "okx/BTC-USDT-SWAP/trade_bar_1m/15m/2025-09-01T05:45:00+00:00",
+        "name": "trade.15m",
+        "status": "READY"
+       },
+       {
+        "digest": null,
+        "event_end": "2025-09-01T06:00:00Z",
+        "known_at": "2025-09-01T06:00:00Z",
+        "latest_ref": "okx/BTC-USDT-SWAP/trade_bar_1m/1h/2025-09-01T05:00:00+00:00",
+        "name": "trade.1h",
+        "status": "READY"
+       },
+       {
+        "digest": null,
+        "event_end": "2025-09-01T06:01:00Z",
+        "known_at": "2025-09-01T06:01:00Z",
+        "latest_ref": "okx/BTC-USDT-SWAP/trade_bar_1m#obs@2025-09-01T06:00:00Z",
+        "name": "trade.1m",
+        "status": "READY"
+       }
+      ],
+      "event_end": null,
+      "event_start": null,
+      "factual_cursor": 5403,
+      "instrument": "BTC-USDT-SWAP",
+      "kind": "call_revision",
+      "known_at": "2025-09-01T06:01:00Z",
+      "limitations": [
+       "CALENDAR_COVERAGE_UNKNOWN",
+       "HISTORICAL_MODELED_EXECUTION_NOT_MEASURED_QUOTES",
+       "FUNDING_COMPLETENESS_UNPROVEN"
+      ],
+      "lineage": [
+       "call-AL-2025-09-01T04:03:00+00:00-33d5d0d48b6a"
+      ],
+      "method": {
+       "build": "77420cdb8b95c62ba10431d547252241519cbd14-dirty",
+       "implementation": "adviser.core.v6",
+       "model": "btc.context-action.v0.6",
+       "profile_sha256": "7c86833734da7258f62f8f7569b2a74253867e4b82e5b537907749f910220296",
+       "register_sha256": "98ef101e4c23fbdfee80b2e1f0adf61eea92aeb8665db777bb8582b0ae4c5bda",
+       "rules_sha256": "57bf2309990d5085326f62fae9e6a88808b1de566a837995341910692e832e66",
+       "rules_version": "mp005.rules.v0.6"
+      },
+      "origin": "HISTORICAL_MODELED",
+      "price_role": "TRADE",
+      "professional_seq": 7364,
+      "published_at": "2025-09-01T06:01:00Z",
+      "record_id": "call-AL-2025-09-01T04:03:00+00:00-33d5d0d48b6a#r1",
+      "revision": 1,
+      "schema_version": "algotrader.semantic.v2"
+     },
+     "guidance": "Thesis retired (SCENARIO_TERMINAL): exit guidance if following this call. This is guidance withdrawal, not a statement about any position.",
+     "progress_max_favorable_scale": "-0.00475",
+     "remaining_minutes": "120",
+     "revision": 1,
+     "scenario_terminal": "STALLED:SCENARIO_PROGRESS_BELOW_HALF_SCALE",
+     "terminal_reason": "SCENARIO_TERMINAL:STALLED:SCENARIO_PROGRESS_BELOW_HALF_SCALE",
+     "thesis_status": "RETIRED"
+    }
+   ]
+  }
+ ],
+ "cutoff": null,
+ "hypothetical_paths_withheld_at_cutoff": 0,
+ "note": "hypothetical paths are normalized one-unit simulations, not fills or account results",
+ "replay_id": "obs-20261010T175049-10e017"
+}

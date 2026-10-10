@@ -1,0 +1,13 @@
+{
+ "access": "GET only",
+ "evaluation_id": "eval-20261010T175049-b90adb",
+ "files": {
+  "calls.json": "88c766f5b148e33e6cd37332d80e5393554ff69ead21e25ba6e2bd1982112905",
+  "evaluation.json": "b0ce56710a5925e73b9b991014ac080841815a49ae090a4a5319d280c8656138",
+  "journal-entry_attempt.json": "ae8587af82f79f949b668e1b54a79f97019f8231365239b2ab13ffe2395e156d",
+  "journal-scenario.json": "3600336e937a2c65cc0c91c83e20ee6262874b49833c081ae373db6e1f18553b",
+  "report.json": "a45624084b213e728b4220d7f6c498a3276c658e5c5543a66dfb628d4b5d3b1f"
+ },
+ "ledger_tool": "a-v06.study-ledger.v1",
+ "replay_id": "obs-20261010T175049-10e017"
+}

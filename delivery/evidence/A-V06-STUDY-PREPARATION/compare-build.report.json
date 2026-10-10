@@ -1,0 +1,1896 @@
+{
+ "adviser": {
+  "anchors": {
+   "calls_after_replacement": 0,
+   "events": {
+    "ambiguous_anchors": 0,
+    "anchor_losses": 0,
+    "certified_contacts": 0,
+    "loss_reasons": {},
+    "replacements": 0,
+    "supersessions_without_contact": 1
+   },
+   "note": "Owner-level counts are distinct structural A scenario ids (one owner re-anchoring several times is one owner, not several observations); event-level counts are journal transitions. Only records published inside the evaluation window count; owners born in warmup are reported separately. A dead anchor is never re-tested, so repeated contacts cannot inflate the counts.",
+   "owners": {
+    "confirmed_after_replacement": 0,
+    "lost_anchor": 0,
+    "lost_anchor_warmup_origin": 0,
+    "rearmed_by_replacement": 0,
+    "structural_terminal_without_replacement": 0
+   },
+   "terminals_without_replacement": {}
+  },
+  "boundary_effect": {
+   "evaluation_end": {
+    "active_scenarios": [
+     "AL-2025-09-01T03:15:00+00:00-d49a8b5618ff"
+    ],
+    "at": "2025-09-01T06:00:00+00:00",
+    "open_call": "call-AL-2025-09-01T04:03:00+00:00-33d5d0d48b6a"
+   },
+   "evaluation_start": {
+    "at": "2025-09-01T00:00:00+00:00",
+    "cleared": {
+     "box_kept": null,
+     "box_token": "READY",
+     "call": null,
+     "entry_attempts": [],
+     "latch": {
+      "-1": "READY",
+      "1": "READY"
+     },
+     "scenarios_kept_as_warmup_context": []
+    },
+    "note": "structural warmup scenarios remain labelled context; their pending entry attempts were removed",
+    "warmup_calls": 0
+   }
+  },
+  "by_family_mode": {
+   "A_RETURN": {
+    "calls": 1,
+    "entered": 1,
+    "no_entry": 0,
+    "other_closed": 1,
+    "stop": 0,
+    "sum_price_net": "-0.0014",
+    "target": 0,
+    "unresolved_or_censored_or_ambiguous": 0
+   }
+  },
+  "calls": {
+   "by_family": {
+    "A_LONG": 1
+   },
+   "by_family_mode": {
+    "A_RETURN": 1
+   },
+   "count": 1,
+   "entry_available_minutes": {
+    "max": "118.0000",
+    "median": "118.0000",
+    "min": "118.0000",
+    "n": "1",
+    "p25": "118.0000",
+    "p75": "118.0000"
+   },
+   "entry_reopens": 0,
+   "list": [
+    {
+     "call_id": "call-AL-2025-09-01T04:03:00+00:00-33d5d0d48b6a",
+     "direction": "LONG",
+     "entry_available_minutes": "118",
+     "entry_reopens": 0,
+     "family": "A",
+     "gain_bps": "68.540061691054797054427108069329947157662138989846",
+     "hard_deadline": "2025-09-01T08:01:00Z",
+     "issue_reference": "100014.5",
+     "issued_at": "2025-09-01T04:03:00Z",
+     "limiting_age_minutes": null,
+     "limiting_landmark": null,
+     "risk_bps": "31.445440411140384644226587144863994720765489004094",
+     "stop": "99700.0",
+     "structural_area": [
+      "99900",
+      "100049.9"
+     ],
+     "target": "100700.0",
+     "target_type": "LANDMARK",
+     "terminal": "RETIRED",
+     "terminal_at": "2025-09-01T06:01:00Z",
+     "terminal_reason": "SCENARIO_TERMINAL:STALLED:SCENARIO_PROGRESS_BELOW_HALF_SCALE"
+    }
+   ],
+   "longest_no_call_interval_hours": "4.05",
+   "per_assessable_week": "28.00",
+   "per_evaluated_week": "28.00",
+   "terminal": {
+    "RETIRED": 1
+   },
+   "warmup_calls_not_scored": 0
+  },
+  "conclusion": {
+   "text": "v0.6 results are reported for Director diagnosis; no registered evidence criterion applies to v0.6 (the earlier 20-owner RETURN convention is not applicable). More or fewer calls are not improvement by themselves; a v0.5/v0.6 comparison on the same pack shows the integrated MP-005 delta, and children ended at the preparation lose their later C/R classification (no counterfactual).",
+   "verdict": "REPORTED_FOR_DIRECTOR_REVIEW"
+  },
+  "condition_durations": {
+   "active_at_last_commit": [
+    "ANY_COMMON_BLOCKER",
+    "NO_ARMED_SCENARIO",
+    "TRADE_15M_NOT_READY",
+    "TRADE_1H_NOT_READY"
+   ],
+   "available": true,
+   "conditions": {
+    "CONFIRMED_SCENARIO_ACTIVE": {
+     "fraction_of_covered": "0.3306",
+     "minutes": "119.00",
+     "onsets": 1
+    },
+    "ISSUABLE_IF_TRIGGERED": {
+     "fraction_of_covered": "0.6750",
+     "minutes": "243.00",
+     "onsets": 0
+    },
+    "NO_ARMED_SCENARIO": {
+     "fraction_of_covered": "0.6250",
+     "minutes": "225.00",
+     "onsets": 0
+    },
+    "SLOT_OCCUPIED": {
+     "fraction_of_covered": "0.3250",
+     "minutes": "117.00",
+     "onsets": 1
+    },
+    "WAITING_FOR_LOCAL_RESPONSE": {
+     "fraction_of_covered": "0.0028",
+     "minutes": "1.00",
+     "onsets": 1
+    },
+    "WAITING_FOR_USABLE_PRICE": {
+     "fraction_of_covered": "0.0028",
+     "minutes": "1.00",
+     "onsets": 1
+    }
+   },
+   "covered_minutes": "360.00",
+   "note": "overlapping durations (a minute counts toward every condition holding then; ANY_COMMON_BLOCKER = union of the common blockers); onsets count separate episodes, not elapsed time; ISSUABLE_IF_TRIGGERED = no common blocker and slot free"
+  },
+  "coverage": {
+   "assessable_minutes": 360,
+   "assessable_weeks": "0.036",
+   "capabilities": {
+    "calendar": "NONE_UNKNOWN",
+    "dislocation": "ENABLE_WHERE_SUPPORTED",
+    "execution": "HISTORICAL_BASE",
+    "funding_outcomes": "PRICE_NET_ONLY",
+    "incidents": "NOT_COVERED",
+    "oi_liquidations_depth_flow": "NOT_COVERED",
+    "predictive_cycles": "NOT_COVERED (observed phase only)",
+    "quotes": "NOT_COVERED (historical)"
+   },
+   "covered_minutes": 360,
+   "evaluation_minutes": 360,
+   "unavailable_minutes": 0,
+   "view_row_minutes": {
+    "BALANCED_RANGE": 180,
+    "CONDITIONAL_SCENARIO": 135,
+    "NO_QUALIFIED_STRUCTURE": 30,
+    "WATCH_ONLY": 15
+   }
+  },
+  "diagnosis": [],
+  "funnel": {
+   "a_confirmations": 1,
+   "a_denominators": {
+    "D_geometrically_evaluable": 1,
+    "N_initially_empty_corridor_or_fixed_k_economics": 0,
+    "N_over_D": "0.0000",
+    "N_over_D_above_half": false,
+    "excluded": {},
+    "note": "D = distinct structurally confirmed A owners with valid R/K/V/T/scale/price at confirmation (IMMEDIATE included); N = D rows with an empty R-K corridor or empty fixed-K (historical 14 bps) economics at that cutoff. Exclusions are separate, never assumed empty. N/D>0.5 is a preregistered selected-domain diagnostic for Director review, not proof about timeframes."
+   },
+   "a_destination_before_confirmation": {
+    "by_direction": {},
+    "count": 0,
+    "examples": [],
+    "note": "A scenarios whose narrative destination was contacted after arm and before any confirmation (MP-002 \u00a73 literal after-arm destination precedence; reachable when K >= the frozen impulse B): ended DESTINATION_REACHED with no confirmation or call. Diagnostic only; K and destination rules are unchanged."
+   },
+   "a_return_calls": 1,
+   "a_return_owners_entered_primary_60s": 1,
+   "a_routing": {
+    "RETURN_WAIT": 1
+   },
+   "arms": {
+    "A_LONG": 1
+   },
+   "births": {
+    "A_LONG": 1
+   },
+   "conflicted": 0,
+   "end_reasons": {},
+   "ends": {},
+   "evidence_threshold": {
+    "note": "The earlier MP-002 reporting convention (20 distinct A RETURN owners entered at PRIMARY 60 s) belongs to the v0.3/v0.4 registrations and is NOT_APPLICABLE to v0.5 and v0.6; the count stays descriptive and no substitute criterion is registered.",
+    "observed": 1,
+    "registered_minimum_distinct_owners": null,
+    "status": "NOT_APPLICABLE"
+   },
+   "guidance_retired_by_scenario_terminal": 1,
+   "issued": 1,
+   "issued_by_family_mode": {
+    "A_RETURN": 1
+   },
+   "priority": 0,
+   "rejection_blockers": {},
+   "scenario_terminals": {},
+   "scenario_transitions": {
+    "A_LONG:ARM": 1,
+    "A_LONG:BIRTH": 1,
+    "A_LONG:CONFIRM": 1,
+    "A_LONG:OWNER_RELEASE": 1,
+    "A_LONG:REVISE": 1
+   },
+   "slot_occupied": 0,
+   "slot_priority_minutes": {
+    "CONFLICTED_ARMED": "0.00",
+    "PRIORITY_COMPETITION": "0.00",
+    "SLOT_OCCUPIED": "117.00",
+    "SLOT_OCCUPIED_WITH_ARMED": "0.00"
+   },
+   "trigger_evaluations": 1,
+   "waiting": {
+    "blocker_observations": {},
+    "endings": {
+     "ISSUE:call-AL-2025-09-01T04": 1
+    },
+    "observed_usable_return": 1,
+    "opened": 1,
+    "usable_return_meaning": "v0.5: the usable return bar prepares the local reference (P); it never issues"
+   },
+   "warmup_context_scenarios": 0
+  },
+  "gates": {},
+  "gates_note": "v0.6 gate statistics are in the entry_attempt records (G/Q/K per routing, return sample, initial incompatibility bases and decisive recovery)",
+  "identity": {
+   "capability_profile": {
+    "calendar": "NONE_UNKNOWN",
+    "dislocation": "ENABLE_WHERE_SUPPORTED",
+    "execution": "HISTORICAL_BASE",
+    "funding_outcomes": "PRICE_NET_ONLY",
+    "horizon_inputs": "R2_COMPLETE_MINUTE_DERIVED_UTC_HORIZONS",
+    "incident_tape": "NOT_COVERED",
+    "late_policy": "temporal.seal-no-revision.v1",
+    "origin": "HISTORICAL_MODELED"
+   },
+   "capability_profile_sha256": "7c86833734da7258f62f8f7569b2a74253867e4b82e5b537907749f910220296",
+   "evaluator_sha256": "85504d5843e144d0b86a0ee3e693c064f4d7f64e7928c1e54fb9c9e9f308615c",
+   "implementation": "adviser.core.v6",
+   "model": "btc.context-action.v0.6",
+   "register_sha256": "98ef101e4c23fbdfee80b2e1f0adf61eea92aeb8665db777bb8582b0ae4c5bda",
+   "rules_sha256": "57bf2309990d5085326f62fae9e6a88808b1de566a837995341910692e832e66",
+   "rules_version": "mp005.rules.v0.6"
+  },
+  "limiting_landmarks": {},
+  "method": {
+   "economic_usefulness": "UNVALIDATED",
+   "method": "v0.6",
+   "model": "btc.context-action.v0.6",
+   "status": "ENGINEERING_REVIEW_PENDING",
+   "status_label": "engineering review pending"
+  },
+  "outcomes": {
+   "note": "normalized one-unit hypothetical paths (N0=1, q=1/E); not a fill, account or size; PRICE_NET_ONLY - total net with funding unavailable unless coverage is proven",
+   "variants": {
+    "ENTRY_DELAY_0": {
+     "ambiguous": 0,
+     "ambiguous_bounds": [],
+     "censored": 0,
+     "exit_class": {
+      "GUIDANCE_RETIRED": 1
+     },
+     "guidance_exits": 1,
+     "held_minutes_distribution": {
+      "max": "119.0000",
+      "median": "119.0000",
+      "min": "119.0000",
+      "n": "1",
+      "p25": "119.0000",
+      "p75": "119.0000"
+     },
+     "mean_price_net": "-0.001350035",
+     "no_entry": 0,
+     "nonpositive_price_net": 1,
+     "paths": 1,
+     "positive_price_net": 0,
+     "price_net_bps_distribution": {
+      "max": "-13.5004",
+      "median": "-13.5004",
+      "min": "-13.5004",
+      "n": "1",
+      "p25": "-13.5004",
+      "p75": "-13.5004"
+     },
+     "status": {
+      "CLOSED": 1
+     },
+     "stop_exits": 0,
+     "sum_gross": "0.00005",
+     "sum_price_net": "-0.001350035",
+     "sum_stress_price_net": null,
+     "target_exits": 0,
+     "total_net": "UNAVAILABLE (PRICE_NET_ONLY: funding completeness unproven)",
+     "unresolved": 0
+    },
+    "ENTRY_DELAY_120": {
+     "ambiguous": 0,
+     "ambiguous_bounds": [],
+     "censored": 0,
+     "exit_class": {
+      "GUIDANCE_RETIRED": 1
+     },
+     "guidance_exits": 1,
+     "held_minutes_distribution": {
+      "max": "117.0000",
+      "median": "117.0000",
+      "min": "117.0000",
+      "n": "1",
+      "p25": "117.0000",
+      "p75": "117.0000"
+     },
+     "mean_price_net": "-0.001350035",
+     "no_entry": 0,
+     "nonpositive_price_net": 1,
+     "paths": 1,
+     "positive_price_net": 0,
+     "price_net_bps_distribution": {
+      "max": "-13.5004",
+      "median": "-13.5004",
+      "min": "-13.5004",
+      "n": "1",
+      "p25": "-13.5004",
+      "p75": "-13.5004"
+     },
+     "status": {
+      "CLOSED": 1
+     },
+     "stop_exits": 0,
+     "sum_gross": "0.00005",
+     "sum_price_net": "-0.001350035",
+     "sum_stress_price_net": null,
+     "target_exits": 0,
+     "total_net": "UNAVAILABLE (PRICE_NET_ONLY: funding completeness unproven)",
+     "unresolved": 0
+    },
+    "HORIZON_ONLY": {
+     "ambiguous": 0,
+     "ambiguous_bounds": [],
+     "censored": 0,
+     "exit_class": {
+      "HORIZON_EXIT": 1
+     },
+     "guidance_exits": 0,
+     "held_minutes_distribution": {
+      "max": "238.0000",
+      "median": "238.0000",
+      "min": "238.0000",
+      "n": "1",
+      "p25": "238.0000",
+      "p75": "238.0000"
+     },
+     "mean_price_net": "-0.0014",
+     "no_entry": 0,
+     "nonpositive_price_net": 1,
+     "paths": 1,
+     "positive_price_net": 0,
+     "price_net_bps_distribution": {
+      "max": "-14.0000",
+      "median": "-14.0000",
+      "min": "-14.0000",
+      "n": "1",
+      "p25": "-14.0000",
+      "p75": "-14.0000"
+     },
+     "status": {
+      "CLOSED": 1
+     },
+     "stop_exits": 0,
+     "sum_gross": "0",
+     "sum_price_net": "-0.0014",
+     "sum_stress_price_net": null,
+     "target_exits": 0,
+     "total_net": "UNAVAILABLE (PRICE_NET_ONLY: funding completeness unproven)",
+     "unresolved": 0
+    },
+    "PRIMARY": {
+     "ambiguous": 0,
+     "ambiguous_bounds": [],
+     "censored": 0,
+     "exit_class": {
+      "GUIDANCE_RETIRED": 1
+     },
+     "guidance_exits": 1,
+     "held_minutes_distribution": {
+      "max": "118.0000",
+      "median": "118.0000",
+      "min": "118.0000",
+      "n": "1",
+      "p25": "118.0000",
+      "p75": "118.0000"
+     },
+     "mean_price_net": "-0.0014",
+     "no_entry": 0,
+     "nonpositive_price_net": 1,
+     "paths": 1,
+     "positive_price_net": 0,
+     "price_net_bps_distribution": {
+      "max": "-14.0000",
+      "median": "-14.0000",
+      "min": "-14.0000",
+      "n": "1",
+      "p25": "-14.0000",
+      "p75": "-14.0000"
+     },
+     "status": {
+      "CLOSED": 1
+     },
+     "stop_exits": 0,
+     "sum_gross": "0",
+     "sum_price_net": "-0.0014",
+     "sum_stress_price_net": "-0.0020",
+     "target_exits": 0,
+     "total_net": "UNAVAILABLE (PRICE_NET_ONLY: funding completeness unproven)",
+     "unresolved": 0
+    }
+   }
+  },
+  "report_version": "adviser.report.v6",
+  "responses": {
+   "cutoff": "2025-09-01T12:05:00+00:00",
+   "cutoff_meaning": "A = waits still open at the last committed record",
+   "initial_incompatibility_notes": {
+    "attempt_not_scenario": "An INITIAL_RESPONSE_INCOMPATIBLE ending terminates the entry attempt only; the structural scenario is not invalidated and keeps its own lifecycle.",
+    "information_loss": "Declared information loss (MP-005 \u00a76): a child ended INITIAL_RESPONSE_INCOMPATIBLE at its preparation receives no later local classification (C or R) that it might have produced under MP-004 v0.5; no counterfactual classification is reconstructed. Changes of C/P or R/P between v0.5 and v0.6 therefore do not show a better local response.",
+    "subset": "INITIAL_RESPONSE_INCOMPATIBLE is a subset of X (never added a second time): P = C + R + X + A still holds; ratio over P, a zero denominator is undefined."
+   },
+   "meaning": {
+    "A": "still waiting for the response at the report cutoff",
+    "C": "ended by a local contradiction before any recovery",
+    "I": "calls issued",
+    "N": "first recoveries not issuable",
+    "P": "local references prepared",
+    "R": "first decisive recoveries observed",
+    "W": "A RETURN children routed to WAIT_RETURN",
+    "X": "other endings after the reference"
+   },
+   "note": "C/P does not measure real deterioration and R/P does not measure continuation quality; outcomes and later entries belong to the separate economic report. No frequency or profit quota.",
+   "report_cross_checks": {
+    "I_equals_A_RETURN_calls_in_window": true,
+    "W_equals_waits_opened": true
+   },
+   "total": {
+    "by_direction": {
+     "LONG": {
+      "A": 0,
+      "C": 0,
+      "I": 1,
+      "N": 0,
+      "P": 1,
+      "R": 1,
+      "W": 1,
+      "X": 0
+     },
+     "SHORT": {
+      "A": 0,
+      "C": 0,
+      "I": 0,
+      "N": 0,
+      "P": 0,
+      "R": 0,
+      "W": 0,
+      "X": 0
+     }
+    },
+    "counts": {
+     "A": 0,
+     "C": 0,
+     "I": 1,
+     "N": 0,
+     "P": 1,
+     "R": 1,
+     "W": 1,
+     "X": 0
+    },
+    "ended_before_reference": {},
+    "identities": {
+     "N_primary_partition": true,
+     "P_eq_C_plus_R_plus_X_plus_A": true,
+     "R_eq_N_plus_I": true,
+     "W_eq_P_plus_ended_before_reference_plus_wait_return_open": true,
+     "X_cause_partition": true,
+     "initial_incompatible_subset_of_X": true
+    },
+    "identities_hold": true,
+    "initial_incompatibility": {
+     "by_base": {
+      "CORRIDOR": 0,
+      "HISTORICAL_ECONOMICS": 0
+     },
+     "by_direction": {
+      "LONG": 0,
+      "SHORT": 0
+     },
+     "concurrent_annotations": {},
+     "count": 0,
+     "examples": [],
+     "ratio_over_P": "0.0000",
+     "subset_of_X": true
+    },
+    "local_conditions_annotated_in_priority_dispatches": {},
+    "not_issuable": {
+     "blocker_incidence_not_summable": {},
+     "late_first_recovery": 0,
+     "primary_class": {},
+     "primary_reason": {}
+    },
+    "other_endings_by_priority_cause": {},
+    "ratios": {
+     "C/P": "0.0000",
+     "I/P": "1.0000",
+     "I/R": "1.0000",
+     "N/R": "0.0000",
+     "P/W": "1.0000",
+     "R/P": "1.0000"
+    },
+    "wait_return_open": 0
+   },
+   "unit": "A RETURN child (entry attempt), by direction; evaluation window only (warmup clearings apart)",
+   "warmup": {
+    "children": 0,
+    "cleared_at_evaluation_start": {},
+    "note": "warmup references are cleared at the evaluation start and never become evaluation references; the structural scenarios stay labelled warmup context",
+    "other_warmup_endings": 0
+   }
+  },
+  "room_erosion": [
+   {
+    "call_id": "call-AL-2025-09-01T04:03:00+00:00-33d5d0d48b6a",
+    "erosion_bps": "-0.96",
+    "room_at_primary_open_bps": "69.50",
+    "room_at_trigger_bps": "68.54"
+   }
+  ],
+  "section": "ADVISER_EVALUATION",
+  "view_samples": {
+   "1h": {
+    "abstentions_balanced_uncertain": 4,
+    "antecedent_activated": 2,
+    "conditional_samples": 2,
+    "directional_matching_sign": 1,
+    "directional_scored": 2,
+    "endpoint_unavailable": 0,
+    "note": "conditional labels; not calibrated probabilities; abstentions are not hits",
+    "persistence_matching_sign": 2,
+    "persistence_scored": 3,
+    "unavailable_view": 0
+   },
+   "4h": {
+    "abstentions_balanced_uncertain": 4,
+    "antecedent_activated": 2,
+    "conditional_samples": 2,
+    "directional_matching_sign": 1,
+    "directional_scored": 2,
+    "endpoint_unavailable": 0,
+    "note": "conditional labels; not calibrated probabilities; abstentions are not hits",
+    "persistence_matching_sign": 2,
+    "persistence_scored": 3,
+    "unavailable_view": 0
+   },
+   "by_view": {
+    "BALANCED": 3,
+    "UNCERTAIN": 1,
+    "UP": 2
+   },
+   "samples": 6
+  },
+  "windows": {
+   "clock_end": "2025-09-01T12:05:00Z",
+   "clock_end_reached": true,
+   "evaluation": [
+    "2025-09-01T00:00:00+00:00",
+    "2025-09-01T06:00:00+00:00"
+   ],
+   "tail_end": "2025-09-01T12:05:00+00:00",
+   "warmup_start": "2025-08-31T00:00:00+00:00"
+  }
+ },
+ "availability": {
+  "basis": "MODELED",
+  "label": "MODELED availability - not measured publication timing: each completed bar is known at its bar close and each settled funding event at its funding time (zero-extra-delay lower-bound convention). No live receipt measurement is applied to historical data.",
+  "measured": false,
+  "policy_id": "feed.modeled.v1(bar+PT0S,funding+PT0S)"
+ },
+ "capabilities": {
+  "baseline_comparison": {
+   "label": "Baseline comparison",
+   "reason": "see the adviser section",
+   "status": "REPORTED",
+   "value": null
+  },
+  "call_count": {
+   "label": "Call count",
+   "reason": "see the adviser section",
+   "status": "REPORTED",
+   "value": null
+  },
+  "calls_per_week": {
+   "label": "Calls per evaluated week",
+   "reason": "see the adviser section",
+   "status": "REPORTED",
+   "value": null
+  },
+  "candidate_funnel": {
+   "label": "Candidate funnel / rejection reasons",
+   "reason": "see the adviser section",
+   "status": "REPORTED",
+   "value": null
+  },
+  "entry_window_durations": {
+   "label": "Entry-window durations",
+   "reason": "see the adviser section",
+   "status": "REPORTED",
+   "value": null
+  },
+  "longest_no_call_interval": {
+   "label": "Longest no-call interval",
+   "reason": "see the adviser section",
+   "status": "REPORTED",
+   "value": null
+  },
+  "market_view_metrics": {
+   "label": "MarketView metrics",
+   "reason": "see the adviser section",
+   "status": "REPORTED",
+   "value": null
+  },
+  "normalized_gross_net_results": {
+   "label": "Normalized gross/net results",
+   "reason": "see the adviser section",
+   "status": "REPORTED",
+   "value": null
+  },
+  "outcomes": {
+   "label": "Win/loss/expired/unresolved outcomes",
+   "reason": "see the adviser section",
+   "status": "REPORTED",
+   "value": null
+  },
+  "professional_adviser": {
+   "reason": "MP-005 btc.context-action.v0.6 adviser",
+   "status": "CONNECTED"
+  }
+ },
+ "completion": "COMPLETE",
+ "conclusion": {
+  "text": "The adviser evaluation ran end to end over the whole prepared pack and its runtime integrity checks (bounded terminal reconciliation incl. adviser journal/evaluation commitments) passed. Integrity is not profitability or forecast quality: the adviser section reports calls, entry windows, the candidate funnel and hypothetical outcomes for Director diagnosis.",
+  "verdict": "ADVISER_EVALUATION_COMPLETED"
+ },
+ "corpus": {
+  "base_url": "https://www.okx.com",
+  "binding_outcome": "prepared",
+  "bytes_on_disk": 1199085,
+  "chunk_id": "adviser-fixture-v1",
+  "chunk_label": "Adviser fixture",
+  "dataset_id": "pack-d7656fe07cd850f0a4fc5ab89c36e57933a93dc6",
+  "end": "2025-09-01T12:05:00Z",
+  "manifest_sha256": "796436b584df6a4394b4d8e57bb99ac884aabdaccb70689581067552bd2f840a",
+  "pack": {
+   "acknowledged_limitations": true,
+   "boundaries": {
+    "clock_end": "FULL_COVERAGE_END_PLUS_DECLARED_CLOSURE_ALLOWANCE",
+    "internal_month": "CONTINUE_NO_FINISH_NO_RESET",
+    "warmup": "UNSCORED_FACTUAL_DERIVED_INITIALIZATION"
+   },
+   "capabilities": [
+    {
+     "capability": "trade_1m",
+     "detail": "2165 valid minutes; 0 missing/rejected slots kept as explicit quality events (never filled)",
+     "status": "OBSERVED_COMPLETE"
+    },
+    {
+     "capability": "mark_1m",
+     "detail": "2165 valid minutes; 0 missing/rejected; optional reference context, never a veto of the price core",
+     "status": "ENABLE_WHERE_SUPPORTED: OBSERVED_COMPLETE"
+    },
+    {
+     "capability": "index_1m",
+     "detail": "2165 valid minutes; 0 missing/rejected; optional reference context, never a veto of the price core",
+     "status": "ENABLE_WHERE_SUPPORTED: OBSERVED_COMPLETE"
+    },
+    {
+     "capability": "funding_settlements",
+     "detail": "0 settlement row(s) observed; returned rows never certify that no other settlement occurred (no eight-hour schedule is assumed); outcome funding therefore PRICE_NET_ONLY / TOTAL_NET_UNAVAILABLE until completeness is proven",
+     "status": "EMPTY_UNKNOWN"
+    },
+    {
+     "capability": "event_calendar",
+     "detail": "no historical as-known event schedule exists; a present-day calendar is not historical known-at evidence; unknown is not 'no event'",
+     "status": "NONE_UNKNOWN"
+    },
+    {
+     "capability": "incident_tape",
+     "detail": "no incident collector in R3",
+     "status": "NOT_COVERED"
+    },
+    {
+     "capability": "quotes_oi_liquidations_depth_flow",
+     "detail": "no obtainable historical input assigned; execution stays a declared bar/delay/cost model, never live quote parity",
+     "status": "NOT_COVERED"
+    },
+    {
+     "capability": "instrument_metadata",
+     "detail": "pinned retrieval-time snapshot assumed for the window; not historical effective-date proof",
+     "status": "PINNED_RETRIEVAL_SNAPSHOT_ASSUMED_FOR_WINDOW"
+    },
+    {
+     "capability": "source_capability_probes",
+     "detail": "no live capability probe was executed for this pack; coverage facts come only from the verified source packages",
+     "status": "NOT_PROBED"
+    }
+   ],
+   "capability_profile": {
+    "calendar": "NONE_UNKNOWN",
+    "dislocation": "ENABLE_WHERE_SUPPORTED",
+    "execution": "HISTORICAL_BASE",
+    "funding_outcomes": "AUTHORITATIVE_IF_COVERED_ELSE_PRICE_NET_ONLY",
+    "incident_tape": "NOT_COVERED",
+    "metadata": "PINNED_RETRIEVAL_SNAPSHOT_ASSUMED_FOR_WINDOW"
+   },
+   "capability_profile_sha256": "b343c88c95c59137faa5c8b5ea2cac99ed38a5d672719b03af15b4c7645d1eab",
+   "clock_end": "2025-09-01T12:05:00Z",
+   "coverage": [
+    {
+     "expected_slots": 1440,
+     "family": "trade_bar_1m",
+     "missing": 0,
+     "reasons": {},
+     "rejected": 0,
+     "valid": 1440,
+     "window": "warmup"
+    },
+    {
+     "expected_slots": 360,
+     "family": "trade_bar_1m",
+     "missing": 0,
+     "reasons": {},
+     "rejected": 0,
+     "valid": 360,
+     "window": "evaluation"
+    },
+    {
+     "expected_slots": 365,
+     "family": "trade_bar_1m",
+     "missing": 0,
+     "reasons": {},
+     "rejected": 0,
+     "valid": 365,
+     "window": "tail"
+    },
+    {
+     "expected_slots": 1440,
+     "family": "mark_bar_1m",
+     "missing": 0,
+     "reasons": {},
+     "rejected": 0,
+     "valid": 1440,
+     "window": "warmup"
+    },
+    {
+     "expected_slots": 360,
+     "family": "mark_bar_1m",
+     "missing": 0,
+     "reasons": {},
+     "rejected": 0,
+     "valid": 360,
+     "window": "evaluation"
+    },
+    {
+     "expected_slots": 365,
+     "family": "mark_bar_1m",
+     "missing": 0,
+     "reasons": {},
+     "rejected": 0,
+     "valid": 365,
+     "window": "tail"
+    },
+    {
+     "expected_slots": 1440,
+     "family": "index_bar_1m",
+     "missing": 0,
+     "reasons": {},
+     "rejected": 0,
+     "valid": 1440,
+     "window": "warmup"
+    },
+    {
+     "expected_slots": 360,
+     "family": "index_bar_1m",
+     "missing": 0,
+     "reasons": {},
+     "rejected": 0,
+     "valid": 360,
+     "window": "evaluation"
+    },
+    {
+     "expected_slots": 365,
+     "family": "index_bar_1m",
+     "missing": 0,
+     "reasons": {},
+     "rejected": 0,
+     "valid": 365,
+     "window": "tail"
+    },
+    {
+     "expected_slots": null,
+     "family": "funding_settlement",
+     "missing": 0,
+     "reasons": {},
+     "rejected": 0,
+     "valid": 0,
+     "window": "warmup"
+    },
+    {
+     "expected_slots": null,
+     "family": "funding_settlement",
+     "missing": 0,
+     "reasons": {},
+     "rejected": 0,
+     "valid": 0,
+     "window": "evaluation"
+    },
+    {
+     "expected_slots": null,
+     "family": "funding_settlement",
+     "missing": 0,
+     "reasons": {},
+     "rejected": 0,
+     "valid": 0,
+     "window": "tail"
+    }
+   ],
+   "evidence_classes": {
+    "certified_uncontaminated": false,
+    "label": "DEVELOPMENT",
+    "note": "Development evidence only.",
+    "portions": [
+     {
+      "class": "DEVELOPMENT",
+      "contamination": "DEVELOPMENT_EVIDENCE_ONLY",
+      "end": "2025-09-01T06:00:00+00:00",
+      "start": "2025-09-01T00:00:00+00:00"
+     }
+    ]
+   },
+   "feed": {
+    "availability_policy_id": "feed.modeled.v1(bar+PT0S,funding+PT0S)",
+    "cache_id": "fc-f2af44fe12314942e056a6905d6bd267bb3fbea2",
+    "cache_manifest_sha256": "a113f5995b17b5fc63b4d82d571357039e9563e16fe8484a1616d17f3573f48c",
+    "content_identity": "feedcontent.v1:3dea921369bf5dba6e84dd03f2ac47611274390875150449b4cadeaebc1f8b13",
+    "event_count": 6495,
+    "event_counts": {
+     "index_bar_1m/bar_observation": 2165,
+     "mark_bar_1m/bar_observation": 2165,
+     "trade_bar_1m/bar_observation": 2165
+    },
+    "ordered_event_hash": "4b498d5bb1910c3d360b7b46637147004cd8ca2b67e15d443a3c3532339043a8",
+    "ordering_policy_id": "feed.order.availability-family-series-time-kind.v1"
+   },
+   "input_readiness_preview": {
+    "at": "2025-09-01T00:00:00Z",
+    "label": "input readiness preview \u2014 no adviser",
+    "matched_mark_index_minutes_before_evaluation": 61,
+    "matched_reference_desired_by_mp001": 60,
+    "note": "counts of complete input bars available before the evaluation start; no adviser predicate is implemented or evaluated, and R2 demonstration readiness is not relabelled as the method",
+    "trade_15m_contiguous_complete": 96,
+    "trade_15m_required_by_mp001": 25,
+    "trade_1h_contiguous_complete": 24,
+    "trade_1h_required_by_mp001": 21
+   },
+   "instrument": {
+    "definition": {
+     "base_ccy": "BTC",
+     "ct_mult": "1",
+     "ct_type": "linear",
+     "ct_val": "0.01",
+     "ct_val_ccy": "BTC",
+     "index_id": "BTC-USDT",
+     "inst_family": "BTC-USDT",
+     "inst_id": "BTC-USDT-SWAP",
+     "inst_type": "SWAP",
+     "lot_sz": "0.01",
+     "min_sz": "0.01",
+     "quote_ccy": "USDT",
+     "settle_ccy": "USDT",
+     "tick_sz": "0.1",
+     "underlying": "BTC-USDT"
+    },
+    "definition_sha256": "b56c9f376a3b325cc0c5fc3393deab91715d7d878a0b86c564b9ee80e30a24ac",
+    "note": "retrieval-time snapshot assumed for the window; not historical effective-date proof; all contributors share this definition",
+    "policy": "PINNED_RETRIEVAL_SNAPSHOT_ASSUMED_FOR_WINDOW",
+    "snapshot_dataset_id": "okx-btc-usdt-swap-1m-20250901T0000-20250901T1205-aa310c6d0c20",
+    "snapshot_raw_sha256": "1a6eeb4c4cc625067010d0110718feaee4a6f03becc60f661b800acb4f5ac4e2"
+   },
+   "limitations": [
+    "funding completeness unproven: future outcome reporting is PRICE_NET_ONLY (TOTAL_NET_UNAVAILABLE)",
+    "instrument definition is a retrieval-time snapshot assumed for the whole window (approximation)"
+   ],
+   "manifest_sha256": "796436b584df6a4394b4d8e57bb99ac884aabdaccb70689581067552bd2f840a",
+   "method": "btc.context-action.v0.2",
+   "overlap": {
+    "conflicts": 0,
+    "gap_replaced_by_valid": 0,
+    "identical_collapsed": 0,
+    "overlapping_slots": 0,
+    "provenance_file": null,
+    "provenance_sha256": null
+   },
+   "pack_id": "pack-d7656fe07cd850f0a4fc5ab89c36e57933a93dc6",
+   "preset": {
+    "adviser_implemented": false,
+    "automatic_prepare": false,
+    "default": true,
+    "evaluation": {
+     "end": "2025-09-01T06:00:00Z",
+     "start": "2025-09-01T00:00:00Z"
+    },
+    "evidence_class": "DEVELOPMENT",
+    "label": "Adviser fixture",
+    "preset_id": "adviser-fixture-v1",
+    "tail": {
+     "end": "2025-09-01T12:05:00Z",
+     "start": "2025-09-01T06:00:00Z"
+    },
+    "warmup": {
+     "end": "2025-09-01T00:00:00Z",
+     "start": "2025-08-31T00:00:00Z"
+    }
+   },
+   "preset_sha256": "68abc7b09daf37a3f7916b3256073f6013c33b9b98e6124ea889997158ffcabc",
+   "register_sha256": "e2e2dd8ef0501e239c3e4f07dc17732e72fdbbaab3a10471a521bfd2a2d60bae",
+   "requested_end": "2025-09-01T12:05:00Z",
+   "requested_start": "2025-08-31T00:00:00Z",
+   "rules_version": "mp001.rules.v0.2",
+   "sources": [
+    {
+     "cache_id": "fc-7400f460abe7ed79c6f1c73655105cf55716bf54",
+     "cache_manifest_sha256": "de779a293b27d0d6228d502c321637c1344cdf81c93c7d94b29f2dc203cf459c",
+     "dataset_id": "okx-btc-usdt-swap-1m-20250831T0000-20250901T0000-0cbc1e2f14ea",
+     "end": "2025-09-01T00:00:00Z",
+     "request_end": "2025-09-01T00:00:00Z",
+     "request_start": "2025-08-31T00:00:00Z",
+     "source_manifest_sha256": "f4b34248fc4ce988a573da164870fd2c0c88f51834a5a8134c13023a200147fc",
+     "start": "2025-08-31T00:00:00Z"
+    },
+    {
+     "cache_id": "fc-59a14f586f301aaa7519917d4447fcc036869766",
+     "cache_manifest_sha256": "5982ca3ce45bb8451d8937346ce036be7fd476005f8645ed8e74226cbac201bb",
+     "dataset_id": "okx-btc-usdt-swap-1m-20250901T0000-20250901T1205-aa310c6d0c20",
+     "end": "2025-09-01T12:05:00Z",
+     "request_end": "2025-09-01T12:05:00Z",
+     "request_start": "2025-09-01T00:00:00Z",
+     "source_manifest_sha256": "824053a521ba39630a119bb4b1cbf6b9c172adb673c3ff4371265617841342a5",
+     "start": "2025-09-01T00:00:00Z"
+    }
+   ],
+   "status": "READY",
+   "tail_end": "2025-09-01T12:05:00Z",
+   "windows": {
+    "convention": "UTC half-open [start, end), whole minutes; only the evaluation window is ever scored",
+    "evaluation": {
+     "end": "2025-09-01T06:00:00+00:00",
+     "minutes": 360,
+     "scored": true,
+     "start": "2025-09-01T00:00:00+00:00"
+    },
+    "requested": {
+     "end": "2025-09-01T12:05:00+00:00",
+     "start": "2025-08-31T00:00:00+00:00"
+    },
+    "tail": {
+     "end": "2025-09-01T12:05:00+00:00",
+     "minutes": 365,
+     "scored": false,
+     "start": "2025-09-01T06:00:00+00:00"
+    },
+    "warmup": {
+     "end": "2025-09-01T00:00:00+00:00",
+     "minutes": 1440,
+     "scored": false,
+     "start": "2025-08-31T00:00:00+00:00"
+    }
+   }
+  },
+  "plan_id": "algotrader.corpus-presets.v1",
+  "plan_version": 1,
+  "quality_status": "clean",
+  "start": "2025-08-31T00:00:00Z"
+ },
+ "coverage": {
+  "applied_events": 6495,
+  "channels": [
+   {
+    "covered_from": "2025-08-31T00:00:00Z",
+    "covered_until": "2025-09-01T12:05:00Z",
+    "family": "trade_bar_1m"
+   },
+   {
+    "covered_from": "2025-08-31T00:00:00Z",
+    "covered_until": "2025-09-01T12:05:00Z",
+    "family": "mark_bar_1m"
+   },
+   {
+    "covered_from": "2025-08-31T00:00:00Z",
+    "covered_until": "2025-09-01T12:05:00Z",
+    "family": "index_bar_1m"
+   },
+   {
+    "covered_from": "2025-08-31T00:00:00Z",
+    "covered_until": "2025-09-01T12:05:00Z",
+    "family": "funding_settlement"
+   }
+  ],
+  "committed_information_time": "2025-09-01T12:05:00+00:00",
+  "final_information_time": "2025-09-01T12:05:00Z",
+  "fraction": 1.0,
+  "requested": {
+   "end": "2025-09-01T12:05:00Z",
+   "start": "2025-08-31T00:00:00Z"
+  },
+  "total_events": 6495
+ },
+ "feed": {
+  "applied_events": 6495,
+  "content_identity": "feedcontent.v1:3dea921369bf5dba6e84dd03f2ac47611274390875150449b4cadeaebc1f8b13",
+  "event_count": 6495,
+  "event_counts": {
+   "index_bar_1m/bar_observation": 2165,
+   "mark_bar_1m/bar_observation": 2165,
+   "trade_bar_1m/bar_observation": 2165
+  },
+  "ordered_event_hash": "4b498d5bb1910c3d360b7b46637147004cd8ca2b67e15d443a3c3532339043a8"
+ },
+ "manifest_check": {
+  "artifact_dir": "g1",
+  "artifacts": [
+   {
+    "name": "adviser.json",
+    "present": true,
+    "sha256_matches": true,
+    "size_matches": true
+   },
+   {
+    "name": "config.json",
+    "present": true,
+    "sha256_matches": true,
+    "size_matches": true
+   },
+   {
+    "name": "engine.json",
+    "present": true,
+    "sha256_matches": true,
+    "size_matches": true
+   },
+   {
+    "name": "final_snapshot.json",
+    "present": true,
+    "sha256_matches": true,
+    "size_matches": true
+   },
+   {
+    "name": "ranges.jsonl",
+    "present": true,
+    "sha256_matches": true,
+    "size_matches": true
+   },
+   {
+    "name": "temporal.json",
+    "present": true,
+    "sha256_matches": true,
+    "size_matches": true
+   },
+   {
+    "name": "validation.json",
+    "present": true,
+    "sha256_matches": true,
+    "size_matches": true
+   }
+  ],
+  "claimed": true,
+  "manifest_file_matches_database": true,
+  "manifest_file_present": true,
+  "note": "file presence and sizes checked; artifacts up to 64 MiB re-hashed against the manifest (larger legacy traces: size only)"
+ },
+ "next_diagnostic": "Copy this report to the Director: diagnose calls/coverage/funnel before any change; no parameter search.",
+ "notice": "Adviser evaluation: the integrated MP-001 adviser replayed causally over the prepared pack, with a SEPARATE normalized hypothetical evaluator (one abstract unit, declared delay/costs). It never places orders or chooses size/leverage; outcomes are hypothetical, not fills or account results.",
+ "pack": {
+  "acknowledged_limitations": true,
+  "adviser_run": true,
+  "boundaries": {
+   "clock_end": "FULL_COVERAGE_END_PLUS_DECLARED_CLOSURE_ALLOWANCE",
+   "internal_month": "CONTINUE_NO_FINISH_NO_RESET",
+   "warmup": "UNSCORED_FACTUAL_DERIVED_INITIALIZATION"
+  },
+  "capabilities": [
+   {
+    "capability": "trade_1m",
+    "detail": "2165 valid minutes; 0 missing/rejected slots kept as explicit quality events (never filled)",
+    "status": "OBSERVED_COMPLETE"
+   },
+   {
+    "capability": "mark_1m",
+    "detail": "2165 valid minutes; 0 missing/rejected; optional reference context, never a veto of the price core",
+    "status": "ENABLE_WHERE_SUPPORTED: OBSERVED_COMPLETE"
+   },
+   {
+    "capability": "index_1m",
+    "detail": "2165 valid minutes; 0 missing/rejected; optional reference context, never a veto of the price core",
+    "status": "ENABLE_WHERE_SUPPORTED: OBSERVED_COMPLETE"
+   },
+   {
+    "capability": "funding_settlements",
+    "detail": "0 settlement row(s) observed; returned rows never certify that no other settlement occurred (no eight-hour schedule is assumed); outcome funding therefore PRICE_NET_ONLY / TOTAL_NET_UNAVAILABLE until completeness is proven",
+    "status": "EMPTY_UNKNOWN"
+   },
+   {
+    "capability": "event_calendar",
+    "detail": "no historical as-known event schedule exists; a present-day calendar is not historical known-at evidence; unknown is not 'no event'",
+    "status": "NONE_UNKNOWN"
+   },
+   {
+    "capability": "incident_tape",
+    "detail": "no incident collector in R3",
+    "status": "NOT_COVERED"
+   },
+   {
+    "capability": "quotes_oi_liquidations_depth_flow",
+    "detail": "no obtainable historical input assigned; execution stays a declared bar/delay/cost model, never live quote parity",
+    "status": "NOT_COVERED"
+   },
+   {
+    "capability": "instrument_metadata",
+    "detail": "pinned retrieval-time snapshot assumed for the window; not historical effective-date proof",
+    "status": "PINNED_RETRIEVAL_SNAPSHOT_ASSUMED_FOR_WINDOW"
+   },
+   {
+    "capability": "source_capability_probes",
+    "detail": "no live capability probe was executed for this pack; coverage facts come only from the verified source packages",
+    "status": "NOT_PROBED"
+   }
+  ],
+  "capability_profile": {
+   "calendar": "NONE_UNKNOWN",
+   "dislocation": "ENABLE_WHERE_SUPPORTED",
+   "execution": "HISTORICAL_BASE",
+   "funding_outcomes": "AUTHORITATIVE_IF_COVERED_ELSE_PRICE_NET_ONLY",
+   "incident_tape": "NOT_COVERED",
+   "metadata": "PINNED_RETRIEVAL_SNAPSHOT_ASSUMED_FOR_WINDOW"
+  },
+  "capability_profile_sha256": "b343c88c95c59137faa5c8b5ea2cac99ed38a5d672719b03af15b4c7645d1eab",
+  "clock_end": "2025-09-01T12:05:00Z",
+  "coverage": [
+   {
+    "expected_slots": 1440,
+    "family": "trade_bar_1m",
+    "missing": 0,
+    "reasons": {},
+    "rejected": 0,
+    "valid": 1440,
+    "window": "warmup"
+   },
+   {
+    "expected_slots": 360,
+    "family": "trade_bar_1m",
+    "missing": 0,
+    "reasons": {},
+    "rejected": 0,
+    "valid": 360,
+    "window": "evaluation"
+   },
+   {
+    "expected_slots": 365,
+    "family": "trade_bar_1m",
+    "missing": 0,
+    "reasons": {},
+    "rejected": 0,
+    "valid": 365,
+    "window": "tail"
+   },
+   {
+    "expected_slots": 1440,
+    "family": "mark_bar_1m",
+    "missing": 0,
+    "reasons": {},
+    "rejected": 0,
+    "valid": 1440,
+    "window": "warmup"
+   },
+   {
+    "expected_slots": 360,
+    "family": "mark_bar_1m",
+    "missing": 0,
+    "reasons": {},
+    "rejected": 0,
+    "valid": 360,
+    "window": "evaluation"
+   },
+   {
+    "expected_slots": 365,
+    "family": "mark_bar_1m",
+    "missing": 0,
+    "reasons": {},
+    "rejected": 0,
+    "valid": 365,
+    "window": "tail"
+   },
+   {
+    "expected_slots": 1440,
+    "family": "index_bar_1m",
+    "missing": 0,
+    "reasons": {},
+    "rejected": 0,
+    "valid": 1440,
+    "window": "warmup"
+   },
+   {
+    "expected_slots": 360,
+    "family": "index_bar_1m",
+    "missing": 0,
+    "reasons": {},
+    "rejected": 0,
+    "valid": 360,
+    "window": "evaluation"
+   },
+   {
+    "expected_slots": 365,
+    "family": "index_bar_1m",
+    "missing": 0,
+    "reasons": {},
+    "rejected": 0,
+    "valid": 365,
+    "window": "tail"
+   },
+   {
+    "expected_slots": null,
+    "family": "funding_settlement",
+    "missing": 0,
+    "reasons": {},
+    "rejected": 0,
+    "valid": 0,
+    "window": "warmup"
+   },
+   {
+    "expected_slots": null,
+    "family": "funding_settlement",
+    "missing": 0,
+    "reasons": {},
+    "rejected": 0,
+    "valid": 0,
+    "window": "evaluation"
+   },
+   {
+    "expected_slots": null,
+    "family": "funding_settlement",
+    "missing": 0,
+    "reasons": {},
+    "rejected": 0,
+    "valid": 0,
+    "window": "tail"
+   }
+  ],
+  "evidence_classes": {
+   "certified_uncontaminated": false,
+   "label": "DEVELOPMENT",
+   "note": "Development evidence only.",
+   "portions": [
+    {
+     "class": "DEVELOPMENT",
+     "contamination": "DEVELOPMENT_EVIDENCE_ONLY",
+     "end": "2025-09-01T06:00:00+00:00",
+     "start": "2025-09-01T00:00:00+00:00"
+    }
+   ]
+  },
+  "feed_consumed": "entirely",
+  "input_readiness_preview": {
+   "at": "2025-09-01T00:00:00Z",
+   "label": "input readiness preview \u2014 no adviser",
+   "matched_mark_index_minutes_before_evaluation": 61,
+   "matched_reference_desired_by_mp001": 60,
+   "note": "counts of complete input bars available before the evaluation start; no adviser predicate is implemented or evaluated, and R2 demonstration readiness is not relabelled as the method",
+   "trade_15m_contiguous_complete": 96,
+   "trade_15m_required_by_mp001": 25,
+   "trade_1h_contiguous_complete": 24,
+   "trade_1h_required_by_mp001": 21
+  },
+  "instrument": {
+   "definition": {
+    "base_ccy": "BTC",
+    "ct_mult": "1",
+    "ct_type": "linear",
+    "ct_val": "0.01",
+    "ct_val_ccy": "BTC",
+    "index_id": "BTC-USDT",
+    "inst_family": "BTC-USDT",
+    "inst_id": "BTC-USDT-SWAP",
+    "inst_type": "SWAP",
+    "lot_sz": "0.01",
+    "min_sz": "0.01",
+    "quote_ccy": "USDT",
+    "settle_ccy": "USDT",
+    "tick_sz": "0.1",
+    "underlying": "BTC-USDT"
+   },
+   "definition_sha256": "b56c9f376a3b325cc0c5fc3393deab91715d7d878a0b86c564b9ee80e30a24ac",
+   "note": "retrieval-time snapshot assumed for the window; not historical effective-date proof; all contributors share this definition",
+   "policy": "PINNED_RETRIEVAL_SNAPSHOT_ASSUMED_FOR_WINDOW",
+   "snapshot_dataset_id": "okx-btc-usdt-swap-1m-20250901T0000-20250901T1205-aa310c6d0c20",
+   "snapshot_raw_sha256": "1a6eeb4c4cc625067010d0110718feaee4a6f03becc60f661b800acb4f5ac4e2"
+  },
+  "limitations": [
+   "funding completeness unproven: future outcome reporting is PRICE_NET_ONLY (TOTAL_NET_UNAVAILABLE)",
+   "instrument definition is a retrieval-time snapshot assumed for the whole window (approximation)"
+  ],
+  "method": "btc.context-action.v0.2",
+  "method_label_meaning": "input requirements of the prepared pack (preset file label); NOT the adviser method chosen for this run, which is pinned in the adviser section",
+  "overlap": {
+   "conflicts": 0,
+   "gap_replaced_by_valid": 0,
+   "identical_collapsed": 0,
+   "overlapping_slots": 0,
+   "provenance_file": null,
+   "provenance_sha256": null
+  },
+  "pack_id": "pack-d7656fe07cd850f0a4fc5ab89c36e57933a93dc6",
+  "preset_id": "adviser-fixture-v1",
+  "preset_sha256": "68abc7b09daf37a3f7916b3256073f6013c33b9b98e6124ea889997158ffcabc",
+  "register_sha256": "e2e2dd8ef0501e239c3e4f07dc17732e72fdbbaab3a10471a521bfd2a2d60bae",
+  "rules_version": "mp001.rules.v0.2",
+  "scoring_note": "warmup and tail are never scored; only calls issued inside the evaluation window are scored (hypothetical evaluator)",
+  "source_coverage": {
+   "expected_bar_slots": 6495,
+   "missing_or_rejected": 0
+  },
+  "sources": [
+   {
+    "cache_id": "fc-7400f460abe7ed79c6f1c73655105cf55716bf54",
+    "cache_manifest_sha256": "de779a293b27d0d6228d502c321637c1344cdf81c93c7d94b29f2dc203cf459c",
+    "dataset_id": "okx-btc-usdt-swap-1m-20250831T0000-20250901T0000-0cbc1e2f14ea",
+    "end": "2025-09-01T00:00:00Z",
+    "request_end": "2025-09-01T00:00:00Z",
+    "request_start": "2025-08-31T00:00:00Z",
+    "source_manifest_sha256": "f4b34248fc4ce988a573da164870fd2c0c88f51834a5a8134c13023a200147fc",
+    "start": "2025-08-31T00:00:00Z"
+   },
+   {
+    "cache_id": "fc-59a14f586f301aaa7519917d4447fcc036869766",
+    "cache_manifest_sha256": "5982ca3ce45bb8451d8937346ce036be7fd476005f8645ed8e74226cbac201bb",
+    "dataset_id": "okx-btc-usdt-swap-1m-20250901T0000-20250901T1205-aa310c6d0c20",
+    "end": "2025-09-01T12:05:00Z",
+    "request_end": "2025-09-01T12:05:00Z",
+    "request_start": "2025-09-01T00:00:00Z",
+    "source_manifest_sha256": "824053a521ba39630a119bb4b1cbf6b9c172adb673c3ff4371265617841342a5",
+    "start": "2025-09-01T00:00:00Z"
+   }
+  ],
+  "status": "READY",
+  "tail_end": "2025-09-01T12:05:00Z",
+  "windows": {
+   "convention": "UTC half-open [start, end), whole minutes; only the evaluation window is ever scored",
+   "evaluation": {
+    "end": "2025-09-01T06:00:00+00:00",
+    "minutes": 360,
+    "scored": true,
+    "start": "2025-09-01T00:00:00+00:00"
+   },
+   "requested": {
+    "end": "2025-09-01T12:05:00+00:00",
+    "start": "2025-08-31T00:00:00+00:00"
+   },
+   "tail": {
+    "end": "2025-09-01T12:05:00+00:00",
+    "minutes": 365,
+    "scored": false,
+    "start": "2025-09-01T06:00:00+00:00"
+   },
+   "warmup": {
+    "end": "2025-09-01T00:00:00+00:00",
+    "minutes": 1440,
+    "scored": false,
+    "start": "2025-08-31T00:00:00+00:00"
+   }
+  }
+ },
+ "preset": "adviser-evaluation",
+ "quality_status": "clean",
+ "report_format": "algotrader.evaluation-report.v0",
+ "report_kind": "ADVISER_EVALUATION",
+ "run_type": "Adviser evaluation (hypothetical outcomes, no orders)",
+ "snapshot": false,
+ "source": {
+  "base_url": "https://www.okx.com",
+  "dataset_id": "pack-d7656fe07cd850f0a4fc5ab89c36e57933a93dc6",
+  "index_id": "BTC-USDT",
+  "inst_id": "BTC-USDT-SWAP",
+  "schema": "algotrader.corpus-pack.v1",
+  "source": "okx",
+  "verification": {
+   "method": "pack pack-d7656fe07cd850f0a4fc5ab89c36e57933a93dc6: manifest SHA-256 equals its publication receipt and re-hashes to its id; feed cache fc-f2af44fe12314942e056a6905d6bd267bb3fbea2 reused under its trusted receipt; partitions SHA-256-verified when read",
+   "problems": [],
+   "verified": true
+  }
+ },
+ "status": "completed",
+ "temporal": {
+  "clock_end": "2025-09-01T12:05:00+00:00",
+  "clock_policy": "temporal.clock.modeled-complete-prefix.v1",
+  "closure_allowance": "PT0S",
+  "committed": {
+   "admitted_cursor": 6495,
+   "clock_time": "2025-09-01T12:00:00+00:00",
+   "counters": {
+    "admitted": 6495,
+    "barriers": 144,
+    "deadline_callbacks": 0,
+    "dispatches": 144,
+    "late_excluded": 0,
+    "misaligned_excluded": 0,
+    "outside_coverage_excluded": 0,
+    "sealed": 576
+   },
+   "dispatch_seq": 144,
+   "next_deadline": "2025-09-01T12:05:00+00:00",
+   "pending_tie_time": "2025-09-01T12:05:00+00:00"
+  },
+  "contract": "algotrader.temporal.v1 r1",
+  "engine": "temporal.engine.v1",
+  "invariants": [
+   "UTC half-open intervals: 15m/1h/4h/day anchored at UTC midnight, Monday-00:00-UTC weeks, calendar months",
+   "trade/mark/index aggregated separately; funding stays sparse settlement context (no candle, no schedule)",
+   "COMPLETE only when every expected minute was admitted valid by the closure barrier; values only when COMPLETE",
+   "seal-no-revision: a sealed interval is never reopened; later evidence is counted late-excluded",
+   "a barrier admits the prefix it declares (modeled: whole <=t tie group; recorded: logged receipts) and never reads past it; clock and cursor are monotone; dispatch ids are sequence-unique",
+   "restore uses the explicit temporal state committed with the factual checkpoint (no prefix replay)"
+  ],
+  "label": "temporal substrate only; no adviser",
+  "newest_sealed": [
+   {
+    "expected": 15,
+    "interval_end": "2025-09-01T12:00:00Z",
+    "interval_start": "2025-09-01T11:45:00Z",
+    "known_at": "2025-09-01T12:00:00Z",
+    "late_excluded": 0,
+    "record_id": "okx/BTC-USDT-SWAP/mark_bar_1m/15m/2025-09-01T11:45:00+00:00",
+    "role": "setup",
+    "sealed_by_status": {
+     "COMPLETE": 144
+    },
+    "status": "COMPLETE",
+    "track": "okx/BTC-USDT-SWAP/mark_bar_1m/15m",
+    "valid": 15
+   },
+   {
+    "expected": 1440,
+    "interval_end": "2025-09-01T00:00:00Z",
+    "interval_start": "2025-08-31T00:00:00Z",
+    "known_at": "2025-09-01T00:00:00Z",
+    "late_excluded": 0,
+    "record_id": "okx/BTC-USDT-SWAP/mark_bar_1m/1d/2025-08-31T00:00:00+00:00",
+    "role": "broad",
+    "sealed_by_status": {
+     "COMPLETE": 1
+    },
+    "status": "COMPLETE",
+    "track": "okx/BTC-USDT-SWAP/mark_bar_1m/1d",
+    "valid": 1440
+   },
+   {
+    "expected": 60,
+    "interval_end": "2025-09-01T12:00:00Z",
+    "interval_start": "2025-09-01T11:00:00Z",
+    "known_at": "2025-09-01T12:00:00Z",
+    "late_excluded": 0,
+    "record_id": "okx/BTC-USDT-SWAP/mark_bar_1m/1h/2025-09-01T11:00:00+00:00",
+    "role": "tactical",
+    "sealed_by_status": {
+     "COMPLETE": 36
+    },
+    "status": "COMPLETE",
+    "track": "okx/BTC-USDT-SWAP/mark_bar_1m/1h",
+    "valid": 60
+   },
+   {
+    "expected": 44640,
+    "interval_end": "2025-09-01T00:00:00Z",
+    "interval_start": "2025-08-01T00:00:00Z",
+    "known_at": "2025-09-01T00:00:00Z",
+    "late_excluded": 0,
+    "record_id": "okx/BTC-USDT-SWAP/mark_bar_1m/1mo/2025-08-01T00:00:00+00:00",
+    "role": "context",
+    "sealed_by_status": {
+     "OUTSIDE_COVERAGE": 1
+    },
+    "status": "OUTSIDE_COVERAGE",
+    "track": "okx/BTC-USDT-SWAP/mark_bar_1m/1mo",
+    "valid": 1440
+   },
+   {
+    "expected": 10080,
+    "interval_end": "2025-09-01T00:00:00Z",
+    "interval_start": "2025-08-25T00:00:00Z",
+    "known_at": "2025-09-01T00:00:00Z",
+    "late_excluded": 0,
+    "record_id": "okx/BTC-USDT-SWAP/mark_bar_1m/1w/2025-08-25T00:00:00+00:00",
+    "role": "context",
+    "sealed_by_status": {
+     "OUTSIDE_COVERAGE": 1
+    },
+    "status": "OUTSIDE_COVERAGE",
+    "track": "okx/BTC-USDT-SWAP/mark_bar_1m/1w",
+    "valid": 1440
+   },
+   {
+    "expected": 240,
+    "interval_end": "2025-09-01T12:00:00Z",
+    "interval_start": "2025-09-01T08:00:00Z",
+    "known_at": "2025-09-01T12:00:00Z",
+    "late_excluded": 0,
+    "record_id": "okx/BTC-USDT-SWAP/mark_bar_1m/4h/2025-09-01T08:00:00+00:00",
+    "role": "broad",
+    "sealed_by_status": {
+     "COMPLETE": 9
+    },
+    "status": "COMPLETE",
+    "track": "okx/BTC-USDT-SWAP/mark_bar_1m/4h",
+    "valid": 240
+   },
+   {
+    "expected": 15,
+    "interval_end": "2025-09-01T12:00:00Z",
+    "interval_start": "2025-09-01T11:45:00Z",
+    "known_at": "2025-09-01T12:00:00Z",
+    "late_excluded": 0,
+    "record_id": "okx/BTC-USDT-SWAP/trade_bar_1m/15m/2025-09-01T11:45:00+00:00",
+    "role": "setup",
+    "sealed_by_status": {
+     "COMPLETE": 144
+    },
+    "status": "COMPLETE",
+    "track": "okx/BTC-USDT-SWAP/trade_bar_1m/15m",
+    "valid": 15
+   },
+   {
+    "expected": 1440,
+    "interval_end": "2025-09-01T00:00:00Z",
+    "interval_start": "2025-08-31T00:00:00Z",
+    "known_at": "2025-09-01T00:00:00Z",
+    "late_excluded": 0,
+    "record_id": "okx/BTC-USDT-SWAP/trade_bar_1m/1d/2025-08-31T00:00:00+00:00",
+    "role": "broad",
+    "sealed_by_status": {
+     "COMPLETE": 1
+    },
+    "status": "COMPLETE",
+    "track": "okx/BTC-USDT-SWAP/trade_bar_1m/1d",
+    "valid": 1440
+   },
+   {
+    "expected": 60,
+    "interval_end": "2025-09-01T12:00:00Z",
+    "interval_start": "2025-09-01T11:00:00Z",
+    "known_at": "2025-09-01T12:00:00Z",
+    "late_excluded": 0,
+    "record_id": "okx/BTC-USDT-SWAP/trade_bar_1m/1h/2025-09-01T11:00:00+00:00",
+    "role": "tactical",
+    "sealed_by_status": {
+     "COMPLETE": 36
+    },
+    "status": "COMPLETE",
+    "track": "okx/BTC-USDT-SWAP/trade_bar_1m/1h",
+    "valid": 60
+   },
+   {
+    "expected": 44640,
+    "interval_end": "2025-09-01T00:00:00Z",
+    "interval_start": "2025-08-01T00:00:00Z",
+    "known_at": "2025-09-01T00:00:00Z",
+    "late_excluded": 0,
+    "record_id": "okx/BTC-USDT-SWAP/trade_bar_1m/1mo/2025-08-01T00:00:00+00:00",
+    "role": "context",
+    "sealed_by_status": {
+     "OUTSIDE_COVERAGE": 1
+    },
+    "status": "OUTSIDE_COVERAGE",
+    "track": "okx/BTC-USDT-SWAP/trade_bar_1m/1mo",
+    "valid": 1440
+   },
+   {
+    "expected": 10080,
+    "interval_end": "2025-09-01T00:00:00Z",
+    "interval_start": "2025-08-25T00:00:00Z",
+    "known_at": "2025-09-01T00:00:00Z",
+    "late_excluded": 0,
+    "record_id": "okx/BTC-USDT-SWAP/trade_bar_1m/1w/2025-08-25T00:00:00+00:00",
+    "role": "context",
+    "sealed_by_status": {
+     "OUTSIDE_COVERAGE": 1
+    },
+    "status": "OUTSIDE_COVERAGE",
+    "track": "okx/BTC-USDT-SWAP/trade_bar_1m/1w",
+    "valid": 1440
+   },
+   {
+    "expected": 240,
+    "interval_end": "2025-09-01T12:00:00Z",
+    "interval_start": "2025-09-01T08:00:00Z",
+    "known_at": "2025-09-01T12:00:00Z",
+    "late_excluded": 0,
+    "record_id": "okx/BTC-USDT-SWAP/trade_bar_1m/4h/2025-09-01T08:00:00+00:00",
+    "role": "broad",
+    "sealed_by_status": {
+     "COMPLETE": 9
+    },
+    "status": "COMPLETE",
+    "track": "okx/BTC-USDT-SWAP/trade_bar_1m/4h",
+    "valid": 240
+   },
+   {
+    "expected": 15,
+    "interval_end": "2025-09-01T12:00:00Z",
+    "interval_start": "2025-09-01T11:45:00Z",
+    "known_at": "2025-09-01T12:00:00Z",
+    "late_excluded": 0,
+    "record_id": "okx/BTC-USDT/index_bar_1m/15m/2025-09-01T11:45:00+00:00",
+    "role": "setup",
+    "sealed_by_status": {
+     "COMPLETE": 144
+    },
+    "status": "COMPLETE",
+    "track": "okx/BTC-USDT/index_bar_1m/15m",
+    "valid": 15
+   },
+   {
+    "expected": 1440,
+    "interval_end": "2025-09-01T00:00:00Z",
+    "interval_start": "2025-08-31T00:00:00Z",
+    "known_at": "2025-09-01T00:00:00Z",
+    "late_excluded": 0,
+    "record_id": "okx/BTC-USDT/index_bar_1m/1d/2025-08-31T00:00:00+00:00",
+    "role": "broad",
+    "sealed_by_status": {
+     "COMPLETE": 1
+    },
+    "status": "COMPLETE",
+    "track": "okx/BTC-USDT/index_bar_1m/1d",
+    "valid": 1440
+   },
+   {
+    "expected": 60,
+    "interval_end": "2025-09-01T12:00:00Z",
+    "interval_start": "2025-09-01T11:00:00Z",
+    "known_at": "2025-09-01T12:00:00Z",
+    "late_excluded": 0,
+    "record_id": "okx/BTC-USDT/index_bar_1m/1h/2025-09-01T11:00:00+00:00",
+    "role": "tactical",
+    "sealed_by_status": {
+     "COMPLETE": 36
+    },
+    "status": "COMPLETE",
+    "track": "okx/BTC-USDT/index_bar_1m/1h",
+    "valid": 60
+   },
+   {
+    "expected": 44640,
+    "interval_end": "2025-09-01T00:00:00Z",
+    "interval_start": "2025-08-01T00:00:00Z",
+    "known_at": "2025-09-01T00:00:00Z",
+    "late_excluded": 0,
+    "record_id": "okx/BTC-USDT/index_bar_1m/1mo/2025-08-01T00:00:00+00:00",
+    "role": "context",
+    "sealed_by_status": {
+     "OUTSIDE_COVERAGE": 1
+    },
+    "status": "OUTSIDE_COVERAGE",
+    "track": "okx/BTC-USDT/index_bar_1m/1mo",
+    "valid": 1440
+   },
+   {
+    "expected": 10080,
+    "interval_end": "2025-09-01T00:00:00Z",
+    "interval_start": "2025-08-25T00:00:00Z",
+    "known_at": "2025-09-01T00:00:00Z",
+    "late_excluded": 0,
+    "record_id": "okx/BTC-USDT/index_bar_1m/1w/2025-08-25T00:00:00+00:00",
+    "role": "context",
+    "sealed_by_status": {
+     "OUTSIDE_COVERAGE": 1
+    },
+    "status": "OUTSIDE_COVERAGE",
+    "track": "okx/BTC-USDT/index_bar_1m/1w",
+    "valid": 1440
+   },
+   {
+    "expected": 240,
+    "interval_end": "2025-09-01T12:00:00Z",
+    "interval_start": "2025-09-01T08:00:00Z",
+    "known_at": "2025-09-01T12:00:00Z",
+    "late_excluded": 0,
+    "record_id": "okx/BTC-USDT/index_bar_1m/4h/2025-09-01T08:00:00+00:00",
+    "role": "broad",
+    "sealed_by_status": {
+     "COMPLETE": 9
+    },
+    "status": "COMPLETE",
+    "track": "okx/BTC-USDT/index_bar_1m/4h",
+    "valid": 240
+   }
+  ],
+  "profile_fingerprint": "45069086b3bb45d83c010b6dbe55d377b52ba87387702da89139ac49b26a528b",
+  "profile_id": "temporal.utc-horizons.v1",
+  "readiness": [
+   {
+    "blockers": [],
+    "dependency": "mp001.trade.15m",
+    "status": "READY"
+   },
+   {
+    "blockers": [],
+    "dependency": "mp001.trade.1h",
+    "status": "READY"
+   },
+   {
+    "blockers": [],
+    "dependency": "mp001.trade.4h",
+    "status": "READY"
+   },
+   {
+    "blockers": [],
+    "dependency": "mp001.trade.1d",
+    "status": "READY"
+   },
+   {
+    "blockers": [
+     "WARMING_UP: 0/1 consecutive complete records"
+    ],
+    "dependency": "mp001.trade.1w",
+    "status": "WARMING_UP"
+   },
+   {
+    "blockers": [
+     "WARMING_UP: 0/1 consecutive complete records"
+    ],
+    "dependency": "mp001.trade.1mo",
+    "status": "WARMING_UP"
+   }
+  ],
+  "readiness_note": "engineering demonstration dependencies only; production lookbacks and decision authority are MP-001 choices; an unavailable optional horizon is not a universal gate",
+  "seal_policy": "temporal.seal-no-revision.v1"
+ },
+ "validation": {
+  "checks": [
+   {
+    "detail": "13 positive committed ranges cover [0, 6495) exactly once, order bounds strictly increasing",
+    "name": "committed_ranges_contiguous",
+    "passed": true
+   },
+   {
+    "detail": "recorded input commitments chain through all ranges to 1a3c6de8c9e202cc (terminal checkpoint)",
+    "name": "input_commitment_chain",
+    "passed": true
+   },
+   {
+    "detail": "cache manifest a113f5995b17b5fc, run pin a113f5995b17b5fc, trusted receipt a113f5995b17b5fc",
+    "name": "cache_receipt_and_pin",
+    "passed": true
+   },
+   {
+    "detail": "2 partitions match their pinned SHA-256",
+    "name": "feed_cache_integrity",
+    "passed": true
+   },
+   {
+    "detail": "6495 consumed lines re-hashed; recomputed input commitment 1a3c6de8c9e202cc equals every range boundary and the terminal checkpoint",
+    "name": "consumed_input_exact",
+    "passed": true
+   },
+   {
+    "detail": "terminal state (cursor 6495) verified; snapshot digest 8de9f20e007e5e14 equals the committed digest",
+    "name": "terminal_state_verified",
+    "passed": true
+   },
+   {
+    "detail": "cursor 6495/6495; final commitment equals the cache's full-stream commitment",
+    "name": "completed_consumed_entire_feed",
+    "passed": true
+   },
+   {
+    "detail": "13 ranges record temporal state SHA-256, output/aggregate commitments and a non-decreasing dispatch sequence (last 144)",
+    "name": "temporal_ranges_recorded",
+    "passed": true
+   },
+   {
+    "detail": "terminal temporal state (cursor 6495, profile temporal.utc-horizons.v1, temporal.clock.modeled-complete-prefix.v1) verified; 576 sealed records, 144 dispatches, late-excluded 0",
+    "name": "temporal_state_verified",
+    "passed": true
+   },
+   {
+    "detail": "finite clock end 2025-09-01T12:05:00+00:00 derived from the verified terminal state without further input: 1 final dispatch(es); 0 interval(s) still unsealed at clock end",
+    "name": "temporal_clock_end_finish",
+    "passed": true
+   },
+   {
+    "detail": "pack pack-d7656fe07cd850f0a4fc5ab89c36e57933a93dc6 manifest 796436b584df6a43 == run pin == publication receipt; feed cache fc-f2af44fe12314942e056a6905d6bd267bb3fbea2 pinned",
+    "name": "pack_receipt_and_pins",
+    "passed": true
+   },
+   {
+    "detail": "feed consumed entirely; source coverage (separate fact): 0 missing/rejected of 6495 expected bar slots, trade 0 missing/rejected of 2165 (pack status READY)",
+    "name": "pack_coverage_reported",
+    "passed": true
+   },
+   {
+    "detail": "pinned release v0.6 (btc.context-action.v0.6 / mp005.rules.v0.6, rules 57bf2309990d, register 98ef101e4c23, runtime algotrader.adviser-runtime.v6, engine observe.stream.v7)",
+    "name": "adviser_method_binding",
+    "passed": true
+   },
+   {
+    "detail": "13 ranges record adviser state + commitments (journal 83, evaluation 10, professional sequence 8848)",
+    "name": "adviser_ranges_recorded",
+    "passed": true
+   },
+   {
+    "detail": "87 semantic.v2 records recomputed from stored bytes; chain b9bc0b7c456440d6 equals every range and the final commitment",
+    "name": "adviser_journal_chain",
+    "passed": true
+   },
+   {
+    "detail": "10 adviser-evaluation.v1 records recomputed; chain e9869056573ecfef equals the commitments",
+    "name": "adviser_evaluation_chain",
+    "passed": true
+   },
+   {
+    "detail": "terminal adviser state (cursor 6495, professional sequence 8848, journal 83) verified and equal to the last committed range",
+    "name": "adviser_terminal_state_verified",
+    "passed": true
+   },
+   {
+    "detail": "clock-end finish re-derived from the verified terminal state: 4 journal and 0 evaluation record(s), commitment equal",
+    "name": "adviser_finish_rederived",
+    "passed": true
+   },
+   {
+    "detail": "1 unique call(s), contiguous revisions, one terminal each; 0 attempt(s) born once and ended at most once; revisions never restate original geometry",
+    "name": "adviser_lineage_immutability",
+    "passed": true
+   },
+   {
+    "detail": "professional outputs are advisory semantic.v2 records and separate hypothetical evaluation records; no order/account/sizing records exist",
+    "name": "adviser_labels",
+    "passed": true
+   },
+   {
+    "detail": "input 1a3c6de8c9e202cc \u00b7 state 528abcc878eecd8b \u00b7 output 8c3453cd620a08bc (three distinct commitments; none substitutes for another)",
+    "name": "commitments_reported",
+    "passed": true
+   }
+  ],
+  "outcome": "passed",
+  "passed": true,
+  "ran": true,
+  "scope": "Runtime integrity verified, engine reference-tested: bounded terminal reconciliation of a streaming run - committed range continuity and order bounds, exact re-hash of every consumed input line against the receipt-pinned feed cache with the rolling input commitment recomputed at every range boundary, verified terminal restorable state and snapshot digest, cache/receipt/partition integrity and (completed runs) exactly-once consumption of the whole canonical stream. No independent reference replay was performed in this run: kernel/reference equivalence is covered by protected differential fixtures and by the optional Deep validation job. Version 3 (temporal-enabled observe.stream.v2 runs) additionally verifies the committed temporal substrate: temporal state SHA-256, output/aggregate commitments and dispatch sequence recorded at every committed range; the terminal temporal restore state (pinned profile fingerprint, exact round-trip, cursor) equal to the last range's records; and, for completed runs, the clock-end finish derived from that verified state. No independent temporal re-execution was performed in this run (optional Deep validation v2). Version 4 (evaluation-pack runs, source kind pack) additionally verifies the pack pins: the pack manifest file SHA-256 equals the run pin and the trusted publication receipt, its body re-hashes to the pack id, and its feed cache id/manifest SHA-256 equal the run's pinned cache. Consuming the whole canonical feed is reported separately from per-minute source coverage: a completed pack run can contain explicit source gaps. Version 5 (adviser evaluation runs, engine observe.stream.v3) additionally verifies the professional outputs' runtime integrity: adviser state SHA-256 and commitments at every committed range; the semantic.v2 journal and adviser-evaluation.v1 records recomputed from their stored bytes (digest, contiguous sequence, chain) against every range and the finish; the terminal adviser restore state; for completed runs the professional clock-end finish re-derived from that verified state (tail timers only); and call/attempt lineage, revision contiguity and immutability. PASS is runtime integrity, not profit, forecast quality or an independent audit of the original sources; it shares the method implementation. Version 6 (WP-011 MP-002 v0.3 adviser runs, engine observe.stream.v4) additionally binds the pinned method release (packaged MP-002 rules/register identity, runtime format and engine format must match the engine document; another release fails) and checks v0.3 lineage: every structural scenario born once and terminal at most once, contiguous scenario transitions, every child entry attempt linked to a born scenario with at most one ISSUE and at most one terminal, and every v0.3 call linked to exactly one issuing entry attempt and its scenario. PASS remains runtime integrity, not profit or forecast quality. Version 7 (WP-012 MP-003 v0.4 adviser runs, engine observe.stream.v5) applies the version-6 binding and lineage checks to the pinned v0.4 release (MP-003 rules manifest: delta plus inherited MP-002 rules/disposition and MP-001 rules, register, runtime and engine format) and additionally checks the pre-confirmation A anchor lineage: anchor epochs contiguous from 1, first ARM once, REVISE only from an active anchor, ANCHOR_LOST only from ARMED, REARM only after a loss, every anchor publication equal to its own dispatch time, an immutable destination-monitoring origin equal to the first arm publication, no anchor transition after the first confirmation and a confirmation strictly after its anchor's publication. PASS remains runtime integrity, not profit or forecast quality. Version 8 (WP-014 MP-004 v0.5 adviser runs, engine observe.stream.v6) applies the version-7 binding, lineage and anchor checks to the pinned v0.5 release (MP-004 rules manifest: delta and Director closure plus the inherited MP-003 disposition, MP-002 rules/disposition and MP-001 rules, register, runtime and engine format) and additionally checks the A RETURN response lineage from the stored entry-attempt records: at most one reference per child, prepared only from WAIT_RETURN and published at its own dispatch time and cursor; the reference never changes afterwards; no record after a child's ending; every RETURN call issued by a child holding a pre-existing reference, decided by a complete bar starting at/after that publication in a strictly later dispatch; never a RETURN_USABLE record; and each closing record's response outcome consistent with its transition/reason. PASS remains runtime integrity, not profit or forecast quality. Version 9 (WP-015 MP-005 v0.6 adviser runs, engine observe.stream.v7) applies the version-8 binding, lineage, anchor and response checks to the pinned v0.6 release (MP-005 rules manifest: delta and Director closure plus the inherited MP-004 rules/closure and every earlier inherited text, register, runtime and engine format) and additionally checks the initial response incompatibility: an INITIAL_RESPONSE_INCOMPATIBLE terminal only right after its own RESPONSE_REFERENCE in the same dispatch (same clock time and factual cursor), with no bar checked, a CORRIDOR or HISTORICAL_ECONOMICS base and the matching response outcome; and, recomputed from each stored reference record's own H0/L0, tick, effective corridor and historical economic region, the terminal occurs exactly when F meets no usable price (base CORRIDOR when F misses the corridor). PASS remains runtime integrity, not profit or forecast quality.",
+  "validator": "observe.stream-reconciliation"
+ },
+ "warnings": [
+  "funding completeness unproven: future outcome reporting is PRICE_NET_ONLY (TOTAL_NET_UNAVAILABLE)",
+  "instrument definition is a retrieval-time snapshot assumed for the whole window (approximation)",
+  "MODELED availability: historical bar/funding knowledge times follow the zero-extra-delay convention; they are not measured publication or receipt times"
+ ]
+}

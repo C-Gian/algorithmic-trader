@@ -1,0 +1,94 @@
+{
+ "algotrader_imported_from_repo_src": true,
+ "durable": {
+  "assurance": "passed",
+  "calls": [
+   [
+    "call-AL-2025-09-01T04:03:00+00:00-33d5d0d48b6a",
+    "2025-09-01T04:03:00Z"
+   ]
+  ],
+  "evaluator": "85504d5843e144d0b86a0ee3e693c064f4d7f64e7928c1e54fb9c9e9f308615c",
+  "finish_commitment": {
+   "adviser_sha256": "ba10e449ea3d20a348e12b578f069e8c3d4f848e3f8c397f53cb0bbe821bf67c",
+   "clock": "2025-09-01T12:05:00+00:00",
+   "evaluation_chain": "e9869056573ecfefff5cb386571eda3b9c106ebacbf91ce3234d5fbd2f8bc156",
+   "evaluation_seq": 10,
+   "factual_cursor": 6495,
+   "journal_chain": "b9bc0b7c456440d6388dbd46e8053b0a2a3205e47913787bcb823afaad6a28fa",
+   "journal_seq": 87,
+   "professional_seq": 8858,
+   "temporal_clock": "2025-09-01T12:05:00+00:00",
+   "temporal_commitment": "68cc3569f165db11e7ead4e1d0a9fb9af75afdf21640909caf9d6cc8ac7519da"
+  },
+  "identity_without_build": {
+   "capability_profile": {
+    "calendar": "NONE_UNKNOWN",
+    "dislocation": "ENABLE_WHERE_SUPPORTED",
+    "execution": "HISTORICAL_BASE",
+    "funding_outcomes": "PRICE_NET_ONLY",
+    "horizon_inputs": "R2_COMPLETE_MINUTE_DERIVED_UTC_HORIZONS",
+    "incident_tape": "NOT_COVERED",
+    "late_policy": "temporal.seal-no-revision.v1",
+    "origin": "HISTORICAL_MODELED"
+   },
+   "capability_profile_sha256": "7c86833734da7258f62f8f7569b2a74253867e4b82e5b537907749f910220296",
+   "implementation": "adviser.core.v6",
+   "model": "btc.context-action.v0.6",
+   "pins": {
+    "availability_policy_id": "feed.modeled.v1(bar+PT0S,funding+PT0S)",
+    "channels": {
+     "funding": "okx/BTC-USDT-SWAP/funding_settlement",
+     "index": "okx/BTC-USDT/index_bar_1m",
+     "mark": "okx/BTC-USDT-SWAP/mark_bar_1m",
+     "trade": "okx/BTC-USDT-SWAP/trade_bar_1m"
+    },
+    "clock_end": "2025-09-01T12:05:00Z",
+    "clock_policy": "temporal.clock.modeled-complete-prefix.v1",
+    "evaluation": [
+     "2025-09-01T00:00:00+00:00",
+     "2025-09-01T06:00:00+00:00"
+    ],
+    "feed_content_identity": "feedcontent.v1:3dea921369bf5dba6e84dd03f2ac47611274390875150449b4cadeaebc1f8b13",
+    "instrument": "BTC-USDT-SWAP",
+    "pack_id": "pack-d7656fe07cd850f0a4fc5ab89c36e57933a93dc6",
+    "tick": "0.1"
+   },
+   "register_sha256": "98ef101e4c23fbdfee80b2e1f0adf61eea92aeb8665db777bb8582b0ae4c5bda",
+   "rules_sha256": "57bf2309990d5085326f62fae9e6a88808b1de566a837995341910692e832e66",
+   "rules_version": "mp005.rules.v0.6"
+  },
+  "journal_digests_sha256": "a9403d852df4b01c302a94235df086bb5020845751e93b5a9298468171468ec9",
+  "journal_records": 87,
+  "pack_id": "pack-d7656fe07cd850f0a4fc5ab89c36e57933a93dc6",
+  "primary_paths": [
+   [
+    "call-AL-2025-09-01T04:03:00+00:00-33d5d0d48b6a",
+    "CLOSED",
+    "-0.0014",
+    "2025-09-01T06:03:00Z"
+   ]
+  ],
+  "record_digests_sha256": "f3cd7810cc873a5bde02bd68158e79615149b92ba1f03b261961c75c41209bd4",
+  "records": 10,
+  "report_adviser_sha256_without_volatile": "2b736801397ad9a39023e19ce388e5bdc0e09c8206c242fab91eb7884afcde60",
+  "report_sha256_without_volatile": "af5b6153c8dff885b0fa2824f1f692cd2a422f16299a27b42f384973621aef0a",
+  "status": "completed",
+  "window": [
+   "2025-09-01T00:00:00+00:00",
+   "2025-09-01T06:00:00+00:00"
+  ]
+ },
+ "pure_study_windows": {
+  "calls": [
+   "call-AL-2025-09-01T04:03:00+00:00-33d5d0d48b6a"
+  ],
+  "journal_digests_sha256": "4476cffa8fcc59a70fb32013c83ac9e0f0268ab693842ba8ae6fb6cb722d2490",
+  "records_sha256": "270485f41df1f7d7c4c669f63977fec2098f81177b978ea09966f61a89e3b8de",
+  "window": [
+   "2025-08-31T22:00:00+00:00",
+   "2025-09-01T04:30:00+00:00"
+  ]
+ },
+ "tree": "executive-build-candidate"
+}

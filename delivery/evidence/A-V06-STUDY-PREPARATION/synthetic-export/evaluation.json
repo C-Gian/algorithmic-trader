@@ -1,0 +1,1851 @@
+{
+ "corpus": {
+  "acquisition": {
+   "bytes_fetched": 800455,
+   "downloaded_children": 2,
+   "elapsed_seconds": 3.514305,
+   "job_id": "pack-job-20261010T175046-ae566c",
+   "outcome": "prepared"
+  },
+  "base_url": "https://www.okx.com",
+  "binding_outcome": "prepared",
+  "bytes_on_disk": 1146602,
+  "chunk_id": "study-fixture-v1",
+  "chunk_label": "Study fixture",
+  "dataset_id": "pack-82683f8d12fd7162f5b80fcace39ef6bfea9abdd",
+  "end": "2025-09-01T10:35:00Z",
+  "manifest_sha256": "93be34ed1d41ea3781a54c3286b2af83ad8407c1abaa698d851e538e23d326a7",
+  "pack": {
+   "acknowledged_limitations": false,
+   "boundaries": {
+    "clock_end": "FULL_COVERAGE_END_PLUS_DECLARED_CLOSURE_ALLOWANCE",
+    "internal_month": "CONTINUE_NO_FINISH_NO_RESET",
+    "warmup": "UNSCORED_FACTUAL_DERIVED_INITIALIZATION"
+   },
+   "capabilities": [
+    {
+     "capability": "trade_1m",
+     "detail": "2075 valid minutes; 0 missing/rejected slots kept as explicit quality events (never filled)",
+     "status": "OBSERVED_COMPLETE"
+    },
+    {
+     "capability": "mark_1m",
+     "detail": "2075 valid minutes; 0 missing/rejected; optional reference context, never a veto of the price core",
+     "status": "ENABLE_WHERE_SUPPORTED: OBSERVED_COMPLETE"
+    },
+    {
+     "capability": "index_1m",
+     "detail": "2075 valid minutes; 0 missing/rejected; optional reference context, never a veto of the price core",
+     "status": "ENABLE_WHERE_SUPPORTED: OBSERVED_COMPLETE"
+    },
+    {
+     "capability": "funding_settlements",
+     "detail": "0 settlement row(s) observed; returned rows never certify that no other settlement occurred (no eight-hour schedule is assumed); outcome funding therefore PRICE_NET_ONLY / TOTAL_NET_UNAVAILABLE until completeness is proven",
+     "status": "EMPTY_UNKNOWN"
+    },
+    {
+     "capability": "event_calendar",
+     "detail": "no historical as-known event schedule exists; a present-day calendar is not historical known-at evidence; unknown is not 'no event'",
+     "status": "NONE_UNKNOWN"
+    },
+    {
+     "capability": "incident_tape",
+     "detail": "no incident collector in R3",
+     "status": "NOT_COVERED"
+    },
+    {
+     "capability": "quotes_oi_liquidations_depth_flow",
+     "detail": "no obtainable historical input assigned; execution stays a declared bar/delay/cost model, never live quote parity",
+     "status": "NOT_COVERED"
+    },
+    {
+     "capability": "instrument_metadata",
+     "detail": "pinned retrieval-time snapshot assumed for the window; not historical effective-date proof",
+     "status": "PINNED_RETRIEVAL_SNAPSHOT_ASSUMED_FOR_WINDOW"
+    },
+    {
+     "capability": "source_capability_probes",
+     "detail": "no live capability probe was executed for this pack; coverage facts come only from the verified source packages",
+     "status": "NOT_PROBED"
+    }
+   ],
+   "capability_profile": {
+    "calendar": "NONE_UNKNOWN",
+    "dislocation": "ENABLE_WHERE_SUPPORTED",
+    "execution": "HISTORICAL_BASE",
+    "funding_outcomes": "AUTHORITATIVE_IF_COVERED_ELSE_PRICE_NET_ONLY",
+    "incident_tape": "NOT_COVERED",
+    "metadata": "PINNED_RETRIEVAL_SNAPSHOT_ASSUMED_FOR_WINDOW"
+   },
+   "capability_profile_sha256": "b343c88c95c59137faa5c8b5ea2cac99ed38a5d672719b03af15b4c7645d1eab",
+   "clock_end": "2025-09-01T10:35:00Z",
+   "coverage": [
+    {
+     "expected_slots": 1320,
+     "family": "trade_bar_1m",
+     "missing": 0,
+     "reasons": {},
+     "rejected": 0,
+     "valid": 1320,
+     "window": "warmup"
+    },
+    {
+     "expected_slots": 390,
+     "family": "trade_bar_1m",
+     "missing": 0,
+     "reasons": {},
+     "rejected": 0,
+     "valid": 390,
+     "window": "evaluation"
+    },
+    {
+     "expected_slots": 365,
+     "family": "trade_bar_1m",
+     "missing": 0,
+     "reasons": {},
+     "rejected": 0,
+     "valid": 365,
+     "window": "tail"
+    },
+    {
+     "expected_slots": 1320,
+     "family": "mark_bar_1m",
+     "missing": 0,
+     "reasons": {},
+     "rejected": 0,
+     "valid": 1320,
+     "window": "warmup"
+    },
+    {
+     "expected_slots": 390,
+     "family": "mark_bar_1m",
+     "missing": 0,
+     "reasons": {},
+     "rejected": 0,
+     "valid": 390,
+     "window": "evaluation"
+    },
+    {
+     "expected_slots": 365,
+     "family": "mark_bar_1m",
+     "missing": 0,
+     "reasons": {},
+     "rejected": 0,
+     "valid": 365,
+     "window": "tail"
+    },
+    {
+     "expected_slots": 1320,
+     "family": "index_bar_1m",
+     "missing": 0,
+     "reasons": {},
+     "rejected": 0,
+     "valid": 1320,
+     "window": "warmup"
+    },
+    {
+     "expected_slots": 390,
+     "family": "index_bar_1m",
+     "missing": 0,
+     "reasons": {},
+     "rejected": 0,
+     "valid": 390,
+     "window": "evaluation"
+    },
+    {
+     "expected_slots": 365,
+     "family": "index_bar_1m",
+     "missing": 0,
+     "reasons": {},
+     "rejected": 0,
+     "valid": 365,
+     "window": "tail"
+    },
+    {
+     "expected_slots": null,
+     "family": "funding_settlement",
+     "missing": 0,
+     "reasons": {},
+     "rejected": 0,
+     "valid": 0,
+     "window": "warmup"
+    },
+    {
+     "expected_slots": null,
+     "family": "funding_settlement",
+     "missing": 0,
+     "reasons": {},
+     "rejected": 0,
+     "valid": 0,
+     "window": "evaluation"
+    },
+    {
+     "expected_slots": null,
+     "family": "funding_settlement",
+     "missing": 0,
+     "reasons": {},
+     "rejected": 0,
+     "valid": 0,
+     "window": "tail"
+    }
+   ],
+   "evidence_classes": {
+    "certified_uncontaminated": false,
+    "label": "REGISTERED_STUDY_WINDOW",
+    "method": "v0.6",
+    "note": "Registered prospective study window outside the development and protected periods; data preparation and integrity checks never certify uncontaminated evidence.",
+    "portions": [],
+    "run_type": "adviser_evaluation",
+    "study_id": "STUDY-FIXTURE"
+   },
+   "feed": {
+    "availability_policy_id": "feed.modeled.v1(bar+PT0S,funding+PT0S)",
+    "cache_id": "fc-9da2b576a5348729b144aad4d85113e9a81d688b",
+    "cache_manifest_sha256": "376badb96ae13ce741ecce8c852a3840839ac264bdc1096dbcaa58deab038254",
+    "content_identity": "feedcontent.v1:001e4756d3d61afbb843cd82e4ee2d5f725a614f5fb75c8e2cdc0d61fd6593ad",
+    "event_count": 6225,
+    "event_counts": {
+     "index_bar_1m/bar_observation": 2075,
+     "mark_bar_1m/bar_observation": 2075,
+     "trade_bar_1m/bar_observation": 2075
+    },
+    "ordered_event_hash": "e845e23372e441ffa4bdb03aa7fa685df2548dd14e4edac1a012cbb6c8d39886",
+    "ordering_policy_id": "feed.order.availability-family-series-time-kind.v1"
+   },
+   "input_readiness_preview": {
+    "at": "2025-08-31T22:00:00Z",
+    "label": "input readiness preview \u2014 no adviser",
+    "matched_mark_index_minutes_before_evaluation": 61,
+    "matched_reference_desired_by_mp001": 60,
+    "note": "counts of complete input bars available before the evaluation start; no adviser predicate is implemented or evaluated, and R2 demonstration readiness is not relabelled as the method",
+    "trade_15m_contiguous_complete": 88,
+    "trade_15m_required_by_mp001": 25,
+    "trade_1h_contiguous_complete": 22,
+    "trade_1h_required_by_mp001": 21
+   },
+   "instrument": {
+    "definition": {
+     "base_ccy": "BTC",
+     "ct_mult": "1",
+     "ct_type": "linear",
+     "ct_val": "0.01",
+     "ct_val_ccy": "BTC",
+     "index_id": "BTC-USDT",
+     "inst_family": "BTC-USDT",
+     "inst_id": "BTC-USDT-SWAP",
+     "inst_type": "SWAP",
+     "lot_sz": "0.01",
+     "min_sz": "0.01",
+     "quote_ccy": "USDT",
+     "settle_ccy": "USDT",
+     "tick_sz": "0.1",
+     "underlying": "BTC-USDT"
+    },
+    "definition_sha256": "b56c9f376a3b325cc0c5fc3393deab91715d7d878a0b86c564b9ee80e30a24ac",
+    "note": "retrieval-time snapshot assumed for the window; not historical effective-date proof; all contributors share this definition",
+    "policy": "PINNED_RETRIEVAL_SNAPSHOT_ASSUMED_FOR_WINDOW",
+    "snapshot_dataset_id": "okx-btc-usdt-swap-1m-20250831T0000-20250901T0000-0cbc1e2f14ea",
+    "snapshot_raw_sha256": "1a6eeb4c4cc625067010d0110718feaee4a6f03becc60f661b800acb4f5ac4e2",
+    "snapshot_retrieved_at": "2026-09-30T09:00:00Z"
+   },
+   "limitations": [
+    "funding completeness unproven: future outcome reporting is PRICE_NET_ONLY (TOTAL_NET_UNAVAILABLE)",
+    "instrument definition is a retrieval-time snapshot assumed for the whole window (approximation)"
+   ],
+   "manifest_sha256": "93be34ed1d41ea3781a54c3286b2af83ad8407c1abaa698d851e538e23d326a7",
+   "method": "btc.context-action.v0.2",
+   "overlap": {
+    "conflicts": 0,
+    "gap_replaced_by_valid": 0,
+    "identical_collapsed": 0,
+    "overlapping_slots": 0,
+    "provenance_file": null,
+    "provenance_sha256": null
+   },
+   "pack_id": "pack-82683f8d12fd7162f5b80fcace39ef6bfea9abdd",
+   "preset": {
+    "adviser_implemented": false,
+    "automatic_prepare": false,
+    "default": false,
+    "evaluation": {
+     "end": "2025-09-01T04:30:00Z",
+     "start": "2025-08-31T22:00:00Z"
+    },
+    "evidence_class": "REGISTERED_STUDY_WINDOW",
+    "initialization": "REGISTERED_EXPLICIT_INITIALIZATION",
+    "label": "Study fixture",
+    "preset_id": "study-fixture-v1",
+    "tail": {
+     "end": "2025-09-01T10:35:00Z",
+     "start": "2025-09-01T04:30:00Z"
+    },
+    "warmup": {
+     "end": "2025-08-31T22:00:00Z",
+     "start": "2025-08-31T00:00:00Z"
+    }
+   },
+   "preset_sha256": "65779cd3c0224b4b021733492b0ccd28b537c6f726fe643dde2098c5769e6d37",
+   "register_sha256": "e2e2dd8ef0501e239c3e4f07dc17732e72fdbbaab3a10471a521bfd2a2d60bae",
+   "requested_end": "2025-09-01T10:35:00Z",
+   "requested_start": "2025-08-31T00:00:00Z",
+   "rules_version": "mp001.rules.v0.2",
+   "sources": [
+    {
+     "cache_id": "fc-7400f460abe7ed79c6f1c73655105cf55716bf54",
+     "cache_manifest_sha256": "de779a293b27d0d6228d502c321637c1344cdf81c93c7d94b29f2dc203cf459c",
+     "dataset_id": "okx-btc-usdt-swap-1m-20250831T0000-20250901T0000-0cbc1e2f14ea",
+     "end": "2025-09-01T00:00:00Z",
+     "request_end": "2025-09-01T00:00:00Z",
+     "request_start": "2025-08-31T00:00:00Z",
+     "source_manifest_sha256": "f4b34248fc4ce988a573da164870fd2c0c88f51834a5a8134c13023a200147fc",
+     "start": "2025-08-31T00:00:00Z"
+    },
+    {
+     "cache_id": "fc-c0be5f29825a770338a5d4e774cb28305cf59ccc",
+     "cache_manifest_sha256": "f1ac7e2f62e1b7e3b5a461f8c042bffeff5a763ac08f9a70971ff64bec977d7d",
+     "dataset_id": "okx-btc-usdt-swap-1m-20250901T0000-20250901T1035-5521f0c468b1",
+     "end": "2025-09-01T10:35:00Z",
+     "request_end": "2025-09-01T10:35:00Z",
+     "request_start": "2025-09-01T00:00:00Z",
+     "source_manifest_sha256": "17425379d86212513de6951969fd03ac59395f4075f914865e9d0d9dbd28b206",
+     "start": "2025-09-01T00:00:00Z"
+    }
+   ],
+   "status": "READY",
+   "storage": {
+    "note": "the pack adds its own composed feed cache; source packages are referenced, never copied",
+    "pack_cache_bytes": 346147,
+    "pack_cache_partitions": 2,
+    "source_package_bytes": 800455
+   },
+   "tail_end": "2025-09-01T10:35:00Z",
+   "windows": {
+    "convention": "UTC half-open [start, end), whole minutes; only the evaluation window is ever scored",
+    "evaluation": {
+     "end": "2025-09-01T04:30:00+00:00",
+     "minutes": 390,
+     "scored": true,
+     "start": "2025-08-31T22:00:00+00:00"
+    },
+    "initialization": {
+     "end": "2025-08-31T22:00:00+00:00",
+     "evaluated": false,
+     "hours": 22,
+     "minutes": 1320,
+     "note": "Registered initialization window: market context only. Calls, outcomes and diagnostics inside it are never evaluated; it builds the method's existing dependencies (scales and landmarks) before the evaluation starts.",
+     "policy": "REGISTERED_EXPLICIT_INITIALIZATION",
+     "start": "2025-08-31T00:00:00+00:00"
+    },
+    "requested": {
+     "end": "2025-09-01T10:35:00+00:00",
+     "start": "2025-08-31T00:00:00+00:00"
+    },
+    "tail": {
+     "end": "2025-09-01T10:35:00+00:00",
+     "minutes": 365,
+     "scored": false,
+     "start": "2025-09-01T04:30:00+00:00"
+    },
+    "warmup": {
+     "end": "2025-08-31T22:00:00+00:00",
+     "minutes": 1320,
+     "scored": false,
+     "start": "2025-08-31T00:00:00+00:00"
+    }
+   }
+  },
+  "plan_id": "algotrader.corpus-presets.v1",
+  "plan_version": 1,
+  "quality_status": "clean",
+  "retrieved_at": null,
+  "start": "2025-08-31T00:00:00Z",
+  "storage": {
+   "pack_cache_bytes": 346147,
+   "source_package_bytes": 800455,
+   "total_bytes": 1146602
+  },
+  "verified_at": "2026-10-10T17:50:49.797524+00:00"
+ },
+ "created_at": "2026-10-10T17:50:49.965946+00:00",
+ "evaluation_id": "eval-20261010T175049-b90adb",
+ "method": {
+  "economic_usefulness": "UNVALIDATED",
+  "label": "Candidate v0.6 \u2014 RETURN reference ends early when its confirmation is already impossible",
+  "method": "v0.6",
+  "model": "btc.context-action.v0.6",
+  "pinned_at_preparation": true,
+  "status": "ENGINEERING_REVIEW_PENDING",
+  "status_label": "engineering review pending"
+ },
+ "notice": "Adviser evaluation: the integrated MP-001 adviser replayed causally over the prepared pack, with a SEPARATE normalized hypothetical evaluator (one abstract unit, declared delay/costs). It never places orders or chooses size/leverage; outcomes are hypothetical, not fills or account results.",
+ "preset": "adviser-evaluation",
+ "replay": {
+  "adviser": {
+   "committed": {
+    "anchors": {},
+    "attempts": [],
+    "box": null,
+    "call": null,
+    "clock": "2025-09-01T10:35:00+00:00",
+    "journal_seq": 82,
+    "lenses": [
+     {
+      "lens": "structure",
+      "name": "Structure & levels",
+      "result": "resistance near 100700.0; support near 97200.0",
+      "role": "Targets come from the nearest eligible opposing level; inside an opposing zone blocks entry.",
+      "status": "WARMING_UP"
+     },
+     {
+      "detail": {
+       "displacement8_scale": "1.5025",
+       "er8": "1"
+      },
+      "lens": "momentum",
+      "name": "Momentum (1h context)",
+      "result": "UNAVAILABLE",
+      "role": "Context gate: A needs UP for LONG, B must not be against, C needs BALANCED. Not a vote.",
+      "since": "2025-09-01T10:35:00+00:00",
+      "status": "UNAVAILABLE"
+     },
+     {
+      "detail": {
+       "compression_ratio": "1",
+       "er6": "0",
+       "expansion_direction": null,
+       "s15": null
+      },
+      "lens": "volatility",
+      "name": "Volatility & phase",
+      "result": "UNAVAILABLE",
+      "role": "Scale for zones/room; COMPRESSION gates box birth; adverse EXPANSION withdraws attempts.",
+      "since": "2025-09-01T10:35:00+00:00",
+      "status": "UNAVAILABLE"
+     },
+     {
+      "lens": "timing",
+      "name": "Timing / cycle",
+      "result": "phase UNAVAILABLE (age descriptive)",
+      "role": "Observed contraction/expansion phase only. Predictive periodic cycles: NOT COVERED.",
+      "status": "LIMITED"
+     },
+     {
+      "lens": "participation",
+      "name": "Participation (volume)",
+      "result": "1",
+      "role": "Descriptive only; never confirms a call.",
+      "status": "READY"
+     },
+     {
+      "lens": "events",
+      "name": "News & events",
+      "result": "calendar coverage UNKNOWN (no typed schedule tape): unscheduled/unknown news not covered",
+      "role": "Known scheduled events restrict new entry around release; unknown coverage is shown, not 'no news'.",
+      "status": "NONE_UNKNOWN"
+     },
+     {
+      "detail": {
+       "funding_last": null,
+       "trade_index_bps": "0",
+       "trade_mark_bps": "0"
+      },
+      "lens": "derivatives",
+      "name": "Derivatives (mark/index, funding)",
+      "result": {
+       "TRADE_INDEX": "NORMAL",
+       "TRADE_MARK": "NORMAL"
+      },
+      "role": "Dislocation above threshold blocks execution adequacy; no direction. OI/liquidations NOT COVERED.",
+      "status": "ENABLE_WHERE_SUPPORTED"
+     },
+     {
+      "detail": {
+       "last_trade_close": "100000",
+       "quote": null
+      },
+      "lens": "execution",
+      "name": "Execution adequacy",
+      "result": "NOT_COVERED",
+      "role": "Historical mode: MODELED latest complete trade-minute close; never a measured quote.",
+      "status": "HISTORICAL_BASE"
+     }
+    ],
+    "origin": "HISTORICAL_MODELED",
+    "professional_seq": 8489,
+    "readiness": [
+     {
+      "digest": null,
+      "event_end": null,
+      "known_at": null,
+      "latest_ref": null,
+      "name": "trade.15m",
+      "status": "WARMING_UP"
+     },
+     {
+      "digest": null,
+      "event_end": null,
+      "known_at": null,
+      "latest_ref": null,
+      "name": "trade.1h",
+      "status": "WARMING_UP"
+     },
+     {
+      "digest": null,
+      "event_end": "2025-09-01T10:35:00Z",
+      "known_at": "2025-09-01T10:35:00Z",
+      "latest_ref": "okx/BTC-USDT-SWAP/trade_bar_1m#obs@2025-09-01T10:34:00Z",
+      "name": "trade.1m",
+      "status": "READY"
+     }
+    ],
+    "recent_calls": [
+     {
+      "call_id": "call-AL-2025-09-01T04:03:00+00:00-33d5d0d48b6a",
+      "direction": "LONG",
+      "family": "A",
+      "issued_at": "2025-09-01T04:03:00+00:00",
+      "origin": "HISTORICAL_MODELED",
+      "reason": "SCENARIO_TERMINAL:STALLED:SCENARIO_PROGRESS_BELOW_HALF_SCALE",
+      "terminal": "RETIRED",
+      "terminal_at": "2025-09-01T06:01:00+00:00"
+     }
+    ],
+    "responses": {},
+    "scenarios": [],
+    "view": {
+     "alternatives": [],
+     "blockers": [
+      "TRADE_15M_NOT_READY",
+      "TRADE_1H_NOT_READY"
+     ],
+     "conditional": false,
+     "counterevidence": [],
+     "expected_direction": "UNAVAILABLE",
+     "horizon_minutes": null,
+     "levels": {
+      "last_trade_close": "100000",
+      "nearest_resistance_near_edge": "100700.0",
+      "nearest_support_near_edge": "97200.0"
+     },
+     "observed_context": "UNAVAILABLE",
+     "ongoing_call_id": null,
+     "phase": "UNAVAILABLE",
+     "principal": null,
+     "reasons": [],
+     "table_row": "REQUIRED_CONTEXT_UNAVAILABLE",
+     "watch": []
+    },
+    "window": "TAIL"
+   },
+   "counters": {
+    "a_true_while_pending": 0,
+    "armed": {
+     "A": 1,
+     "B": 0,
+     "C": 0
+    },
+    "attempt_end": {},
+    "box_geometry_not_qualified": 3,
+    "box_tokens_discarded": 5,
+    "boxes": 0,
+    "c_both_edge_ambiguous": 0,
+    "calls_issued": {
+     "A": {
+      "LONG": 1,
+      "SHORT": 0
+     },
+     "B": {
+      "LONG": 0,
+      "SHORT": 0
+     },
+     "C": {
+      "LONG": 0,
+      "SHORT": 0
+     }
+    },
+    "calls_issued_warmup": 0,
+    "dispatches": 2075,
+    "episodes": {
+     "A": {
+      "LONG": 1,
+      "SHORT": 0
+     },
+     "B": {
+      "LONG": 0,
+      "SHORT": 0
+     },
+     "C": {
+      "LONG": 0,
+      "SHORT": 0
+     }
+    },
+    "events_unknown_vintage": 0,
+    "gates": {
+     "A:RETURN": [
+      {
+       "G": "68.540061691054797054427108069329947157662138989846",
+       "K": "14",
+       "Q": "31.445440411140384644226587144863994720765489004094",
+       "at": "2025-09-01T04:03:00+00:00",
+       "attempt": "AL-2025-09-01T03:15:00+00:00-d49a8b5618ff#entry",
+       "margin": "0.00553319768633548135520350",
+       "ok": true
+      }
+     ]
+    },
+    "landmarks_created": 5,
+    "quotes_admitted": 0,
+    "quotes_not_newer": 0,
+    "rejections": {
+     "TRIGGER_CONTACT_AMBIGUOUS": 0
+    },
+    "suppressed_by_slot": [],
+    "terminal": {
+     "RETIRED": 1
+    },
+    "triggered": {
+     "A": 1,
+     "B": 0,
+     "C": 0
+    },
+    "v3": {
+     "a_denominators": {
+      "D": 1,
+      "N": 0,
+      "confirmations": 1,
+      "excluded": {}
+     },
+     "cap_revisions": 0,
+     "confirmations": {
+      "A_LONG": 1
+     },
+     "entry_transitions": {
+      "A:ISSUE:call-AL-2025-09-01T04": 1,
+      "A:RESPONSE_REFERENCE:okx/BTC-USDT-SWAP/trade_bar_1m#obs@2025-09-01T04": 1,
+      "A:WAIT_OPEN:IMMEDIATE_ECONOMIC_FAILURE_RETURN_CORRIDOR_USABLE": 1
+     },
+     "issued_by_mode": {
+      "A_RETURN": 1
+     },
+     "owner_releases": {
+      "ORIGINAL_SETUP_EXPIRY": 1
+     },
+     "routes": {
+      "IMMEDIATE": 0,
+      "RETURN_WAIT": 1
+     },
+     "scenario_end": {
+      "A:STALLED:SCENARIO_PROGRESS_BELOW_HALF_SCALE": 1
+     },
+     "scenario_transitions": {
+      "A:ARM": 1,
+      "A:BIRTH": 1,
+      "A:CONFIRM": 1,
+      "A:REVISE": 1
+     },
+     "usable_returns": 1,
+     "zone_crossing_v_exclusions": 0
+    },
+    "v4": {
+     "anchor_losses": {},
+     "confirmations_after_replacement": 0,
+     "owners_losing_anchor": 0,
+     "replacements": 0,
+     "supersessions": 1,
+     "terminals_without_replacement": 0
+    },
+    "v5": {
+     "ended_after_reference": 0,
+     "issued": 1,
+     "late_responses": 0,
+     "local_ambiguous": 0,
+     "local_contradictions": 0,
+     "not_issuable": 0,
+     "references_prepared": 1,
+     "responses_observed": 1
+    },
+    "v6": {
+     "CORRIDOR": 0,
+     "HISTORICAL_ECONOMICS": 0,
+     "initial_incompatible": 0
+    },
+    "view_changes": 28
+   },
+   "identity": {
+    "capability_profile_sha256": "7c86833734da7258f62f8f7569b2a74253867e4b82e5b537907749f910220296",
+    "identity_sha256": "06ed29baa09ec512c0750bbab2e9a56a69e15d421322bdb38822be5b0d832500",
+    "implementation": "adviser.core.v6",
+    "model": "btc.context-action.v0.6",
+    "register_sha256": "98ef101e4c23fbdfee80b2e1f0adf61eea92aeb8665db777bb8582b0ae4c5bda",
+    "rules_sha256": "57bf2309990d5085326f62fae9e6a88808b1de566a837995341910692e832e66",
+    "rules_version": "mp005.rules.v0.6"
+   },
+   "method": "v0.6",
+   "note": "committed adviser state at the latest checkpoint; hypothetical outcomes are separate",
+   "profile": {
+    "calendar": "NONE_UNKNOWN",
+    "dislocation": "ENABLE_WHERE_SUPPORTED",
+    "execution": "HISTORICAL_BASE",
+    "funding_outcomes": "PRICE_NET_ONLY",
+    "horizon_inputs": "R2_COMPLETE_MINUTE_DERIVED_UTC_HORIZONS",
+    "incident_tape": "NOT_COVERED",
+    "late_policy": "temporal.seal-no-revision.v1",
+    "origin": "HISTORICAL_MODELED"
+   },
+   "windows": {
+    "clock_end": "2025-09-01T10:35:00Z",
+    "evaluation_end": "2025-09-01T04:30:00+00:00",
+    "evaluation_start": "2025-08-31T22:00:00+00:00",
+    "tail_end": "2025-09-01T10:35:00+00:00",
+    "warmup_start": "2025-08-31T00:00:00+00:00"
+   }
+  },
+  "assurance_summary": {
+   "deep_validation": "not_run",
+   "deep_validations": 0,
+   "headline": "Runtime integrity verified, engine reference-tested; no Deep validation of this run",
+   "latest_deep_validation": null,
+   "limitations": [],
+   "reference": {
+    "earlier_match": null,
+    "label": "no Deep validation of this run",
+    "state": "not_run"
+   },
+   "run_validation": "passed",
+   "runtime": {
+    "label": "Runtime integrity verified, engine reference-tested",
+    "pending": false,
+    "state": "passed"
+   },
+   "warnings": []
+  },
+  "attempt": 1,
+  "availability": {
+   "basis": "MODELED",
+   "label": "MODELED availability - not measured publication timing: each completed bar is known at its bar close and each settled funding event at its funding time (zero-extra-delay lower-bound convention). No live receipt measurement is applied to historical data.",
+   "measured": false,
+   "note": "MODELED availability: marketdata.v1 modeled availability plus the stated delay. Zero delay is a lower-bound convention, not a measurement.",
+   "policy_id": "feed.modeled.v1(bar+PT0S,funding+PT0S)"
+  },
+  "cancel_requested": false,
+  "clock_policy": "Event-driven replay clock: one step applies exactly one causal feed delivery, in the accepted feed.v1 total order; replay/information time becomes that delivery's available_time. Pacing (events/s) is operational only and never changes order, state or digests.",
+  "code_version": "77420cdb8b95c62ba10431d547252241519cbd14-dirty",
+  "code_version_label": "77420cdb8b95c62ba10431d547252241519cbd14 with uncommitted local changes",
+  "configured": true,
+  "control": {
+   "paused": false,
+   "speed": 0.0,
+   "step_budget": 0,
+   "unit": "events/s"
+  },
+  "control_log": [
+   {
+    "at": "2026-10-10T17:50:50.029518+00:00",
+    "command": "start",
+    "paused": false,
+    "speed": 0.0
+   }
+  ],
+  "created_at": "2026-10-10T17:50:49.965946+00:00",
+  "error": null,
+  "feed": {
+   "content_identity": "feedcontent.v1:001e4756d3d61afbb843cd82e4ee2d5f725a614f5fb75c8e2cdc0d61fd6593ad",
+   "contract_status": "PROVISIONAL",
+   "event_count": 6225,
+   "event_counts": {
+    "index_bar_1m/bar_observation": 2075,
+    "mark_bar_1m/bar_observation": 2075,
+    "trade_bar_1m/bar_observation": 2075
+   },
+   "ordered_event_hash": "e845e23372e441ffa4bdb03aa7fa685df2548dd14e4edac1a012cbb6c8d39886",
+   "ordering_policy_id": "feed.order.availability-family-series-time-kind.v1",
+   "schema_revision": 1,
+   "schema_version": "algotrader.feed.v1"
+  },
+  "finished_at": "2026-10-10T17:50:54.583597+00:00",
+  "freshness_policy": {
+   "bar_max_age": "PT2M",
+   "funding_max_age": null,
+   "history_limit": 240,
+   "note": "Inspection default for developer tooling; not a validated research parameter.",
+   "policy_id": "feed.freshness.v1(bar<=PT120S,funding=n/a,history=240)"
+  },
+  "has_manifest": true,
+  "kind": "market_observation_replay",
+  "labels": [
+   "REAL_MARKET_EVIDENCE",
+   "OBSERVATION_ONLY",
+   "NO_INTERPRETATION",
+   "NO_TRADING"
+  ],
+  "lease_expired": false,
+  "lease_owner": null,
+  "max_attempts": 3,
+  "operation": {
+   "assurance": {
+    "checks_passed": 21,
+    "checks_total": 21,
+    "scope": "Runtime integrity verified, engine reference-tested: bounded terminal reconciliation of a streaming run - committed range continuity and order bounds, exact re-hash of every consumed input line against the receipt-pinned feed cache with the rolling input commitment recomputed at every range boundary, verified terminal restorable state and snapshot digest, cache/receipt/partition integrity and (completed runs) exactly-once consumption of the whole canonical stream. No independent reference replay was performed in this run: kernel/reference equivalence is covered by protected differential fixtures and by the optional Deep validation job. Version 3 (temporal-enabled observe.stream.v2 runs) additionally verifies the committed temporal substrate: temporal state SHA-256, output/aggregate commitments and dispatch sequence recorded at every committed range; the terminal temporal restore state (pinned profile fingerprint, exact round-trip, cursor) equal to the last range's records; and, for completed runs, the clock-end finish derived from that verified state. No independent temporal re-execution was performed in this run (optional Deep validation v2). Version 4 (evaluation-pack runs, source kind pack) additionally verifies the pack pins: the pack manifest file SHA-256 equals the run pin and the trusted publication receipt, its body re-hashes to the pack id, and its feed cache id/manifest SHA-256 equal the run's pinned cache. Consuming the whole canonical feed is reported separately from per-minute source coverage: a completed pack run can contain explicit source gaps. Version 5 (adviser evaluation runs, engine observe.stream.v3) additionally verifies the professional outputs' runtime integrity: adviser state SHA-256 and commitments at every committed range; the semantic.v2 journal and adviser-evaluation.v1 records recomputed from their stored bytes (digest, contiguous sequence, chain) against every range and the finish; the terminal adviser restore state; for completed runs the professional clock-end finish re-derived from that verified state (tail timers only); and call/attempt lineage, revision contiguity and immutability. PASS is runtime integrity, not profit, forecast quality or an independent audit of the original sources; it shares the method implementation. Version 6 (WP-011 MP-002 v0.3 adviser runs, engine observe.stream.v4) additionally binds the pinned method release (packaged MP-002 rules/register identity, runtime format and engine format must match the engine document; another release fails) and checks v0.3 lineage: every structural scenario born once and terminal at most once, contiguous scenario transitions, every child entry attempt linked to a born scenario with at most one ISSUE and at most one terminal, and every v0.3 call linked to exactly one issuing entry attempt and its scenario. PASS remains runtime integrity, not profit or forecast quality. Version 7 (WP-012 MP-003 v0.4 adviser runs, engine observe.stream.v5) applies the version-6 binding and lineage checks to the pinned v0.4 release (MP-003 rules manifest: delta plus inherited MP-002 rules/disposition and MP-001 rules, register, runtime and engine format) and additionally checks the pre-confirmation A anchor lineage: anchor epochs contiguous from 1, first ARM once, REVISE only from an active anchor, ANCHOR_LOST only from ARMED, REARM only after a loss, every anchor publication equal to its own dispatch time, an immutable destination-monitoring origin equal to the first arm publication, no anchor transition after the first confirmation and a confirmation strictly after its anchor's publication. PASS remains runtime integrity, not profit or forecast quality. Version 8 (WP-014 MP-004 v0.5 adviser runs, engine observe.stream.v6) applies the version-7 binding, lineage and anchor checks to the pinned v0.5 release (MP-004 rules manifest: delta and Director closure plus the inherited MP-003 disposition, MP-002 rules/disposition and MP-001 rules, register, runtime and engine format) and additionally checks the A RETURN response lineage from the stored entry-attempt records: at most one reference per child, prepared only from WAIT_RETURN and published at its own dispatch time and cursor; the reference never changes afterwards; no record after a child's ending; every RETURN call issued by a child holding a pre-existing reference, decided by a complete bar starting at/after that publication in a strictly later dispatch; never a RETURN_USABLE record; and each closing record's response outcome consistent with its transition/reason. PASS remains runtime integrity, not profit or forecast quality. Version 9 (WP-015 MP-005 v0.6 adviser runs, engine observe.stream.v7) applies the version-8 binding, lineage, anchor and response checks to the pinned v0.6 release (MP-005 rules manifest: delta and Director closure plus the inherited MP-004 rules/closure and every earlier inherited text, register, runtime and engine format) and additionally checks the initial response incompatibility: an INITIAL_RESPONSE_INCOMPATIBLE terminal only right after its own RESPONSE_REFERENCE in the same dispatch (same clock time and factual cursor), with no bar checked, a CORRIDOR or HISTORICAL_ECONOMICS base and the matching response outcome; and, recomputed from each stored reference record's own H0/L0, tick, effective corridor and historical economic region, the terminal occurs exactly when F meets no usable price (base CORRIDOR when F misses the corridor). PASS remains runtime integrity, not profit or forecast quality.",
+    "state": "passed",
+    "validator": "observe.stream-reconciliation",
+    "validator_version": "9"
+   },
+   "attempt": 1,
+   "contract": "algotrader.ops.v1",
+   "controls": {
+    "cancel": {
+     "enabled": false,
+     "reason": "operation completed"
+    },
+    "pause": {
+     "enabled": false,
+     "reason": "operation completed"
+    },
+    "resume": {
+     "enabled": false,
+     "reason": "operation completed"
+    },
+    "speed": {
+     "enabled": false,
+     "reason": "operation completed"
+    },
+    "step": {
+     "enabled": false,
+     "reason": "operation completed"
+    }
+   },
+   "diagnostic_log": [],
+   "eta": {
+    "basis": "finished",
+    "scope": "current phase only (never a whole-job estimate)",
+    "seconds": null
+   },
+   "generation": 1,
+   "health": "finished",
+   "health_detail": "operation completed",
+   "health_label": "Finished",
+   "lifecycle_version": 4,
+   "metrics": {
+    "1": {
+     "adviser_records_verified": 0,
+     "cache_build_events": null,
+     "cache_bytes_read": 346147,
+     "cache_partitions_read": 2,
+     "cache_reused": true,
+     "checkpoint_adviser_bytes": 8991,
+     "checkpoint_state_bytes": 19098,
+     "checkpoint_temporal_bytes": 40792,
+     "checkpoints_committed": 13,
+     "cpu_seconds": 10.266,
+     "deliveries_loaded_for_finalize": 0,
+     "delivery_rows_written": 0,
+     "evaluation_records_committed": 11,
+     "events_applied": 6225,
+     "events_decoded": 6225,
+     "feed_builds": 0,
+     "feed_events": 6225,
+     "journal_entries_committed": 82,
+     "max_checkpoint_gap_events": 500,
+     "max_control_gap_seconds": 0.251,
+     "max_rss_bytes": 150540288,
+     "max_rss_source": "Windows PeakWorkingSetSize (process lifetime peak)",
+     "output_bytes": 1227564,
+     "pacing_sleep_seconds": 0.0,
+     "pid": 14544,
+     "prefix_restore_events": 0,
+     "preparation": {},
+     "professional_dispatches": 2075,
+     "ranges_committed": 13,
+     "recorded_at": "2026-10-10T17:50:54.628590+00:00",
+     "restore_fallbacks": 0,
+     "restore_suffix_events": 0,
+     "snapshots_built": 14,
+     "sort_spill_runs": null,
+     "source_records_read": 6225,
+     "source_verifications": 0,
+     "state_encodes": 14,
+     "transactions_committed": 15,
+     "validation_deliveries_rederived": 0
+    }
+   },
+   "phase": "GENERATING_REPORT",
+   "phase_label": "Generating report",
+   "phase_started_at": null,
+   "progress": {
+    "detail": null,
+    "done": 7,
+    "fraction": 1.0,
+    "last_progress_age_seconds": null,
+    "last_progress_at": "2026-10-10T17:50:54.574361+00:00",
+    "noninterruptible_units": null,
+    "progress_seq": 33,
+    "stage": "hash artifacts",
+    "stall_limit_seconds": 60.0,
+    "total": 7,
+    "unit": "files",
+    "waiting": null
+   },
+   "status": "completed",
+   "supervisor": {
+    "child_checked_at": "2026-10-10 17:50:54.444097+00",
+    "child_pid": null,
+    "claimed_at": "2026-10-10T17:50:50.071517+00:00",
+    "generation": 1,
+    "heartbeat_interval": 2.0,
+    "isolated_compute": false,
+    "lease_seconds": 5,
+    "supervisor_pid": 14544,
+    "worker_id": "observe:s"
+   },
+   "suspension": null,
+   "timeline": {
+    "active_complete": true,
+    "active_seconds_total": 4.392,
+    "current": null,
+    "definitions": {
+     "active_seconds": "compute-process monotonic time of the span minus its declared waits; null when the span was interrupted and could not be measured (never reported as zero)",
+     "waiting_seconds": "declared intentional waits inside the span: queue wait, configured replay pacing sleeps; paused time is not inside any span",
+     "wall_seconds": "wall-clock length of the span (start to end, database clock)"
+    },
+    "phases": [
+     {
+      "active_complete": true,
+      "active_seconds": 0.0,
+      "interrupted_spans": 0,
+      "label": "Queued",
+      "phase": "QUEUED",
+      "spans": 1,
+      "state": "done",
+      "unmeasured_spans": 0,
+      "waiting_seconds": 0.105543,
+      "wall_seconds": 0.105543
+     },
+     {
+      "active_complete": true,
+      "active_seconds": 0.104,
+      "interrupted_spans": 0,
+      "label": "Preparing source",
+      "phase": "PREPARING_SOURCE",
+      "spans": 1,
+      "state": "done",
+      "unmeasured_spans": 0,
+      "waiting_seconds": 0.0,
+      "wall_seconds": 0.108889
+     },
+     {
+      "active_complete": true,
+      "active_seconds": 0.0,
+      "interrupted_spans": 0,
+      "label": "Verifying source",
+      "phase": "VERIFYING_SOURCE",
+      "spans": 0,
+      "state": "pending",
+      "unmeasured_spans": 0,
+      "waiting_seconds": 0.0,
+      "wall_seconds": 0.0
+     },
+     {
+      "active_complete": true,
+      "active_seconds": 0.0,
+      "interrupted_spans": 0,
+      "label": "Building feed",
+      "phase": "BUILDING_FEED",
+      "spans": 0,
+      "state": "pending",
+      "unmeasured_spans": 0,
+      "waiting_seconds": 0.0,
+      "wall_seconds": 0.0
+     },
+     {
+      "active_complete": true,
+      "active_seconds": 0.019,
+      "interrupted_spans": 0,
+      "label": "Initializing",
+      "phase": "INITIALIZING",
+      "spans": 1,
+      "state": "done",
+      "unmeasured_spans": 0,
+      "waiting_seconds": 0.0,
+      "wall_seconds": 0.022592
+     },
+     {
+      "active_complete": true,
+      "active_seconds": 3.954,
+      "interrupted_spans": 0,
+      "label": "Replaying",
+      "phase": "REPLAYING",
+      "spans": 1,
+      "state": "done",
+      "unmeasured_spans": 0,
+      "waiting_seconds": 0.0,
+      "wall_seconds": 3.957962
+     },
+     {
+      "active_complete": true,
+      "active_seconds": 0.046,
+      "interrupted_spans": 0,
+      "label": "Finalizing",
+      "phase": "FINALIZING",
+      "spans": 2,
+      "state": "done",
+      "unmeasured_spans": 0,
+      "waiting_seconds": 0.0,
+      "wall_seconds": 0.054167
+     },
+     {
+      "active_complete": true,
+      "active_seconds": 0.178,
+      "interrupted_spans": 0,
+      "label": "Validating",
+      "phase": "VALIDATING",
+      "spans": 1,
+      "state": "done",
+      "unmeasured_spans": 0,
+      "waiting_seconds": 0.0,
+      "wall_seconds": 0.182307
+     },
+     {
+      "active_complete": true,
+      "active_seconds": 0.091,
+      "interrupted_spans": 0,
+      "label": "Generating report",
+      "phase": "GENERATING_REPORT",
+      "spans": 1,
+      "state": "done",
+      "unmeasured_spans": 0,
+      "waiting_seconds": 0.0,
+      "wall_seconds": 0.09479
+     }
+    ],
+    "unmeasured_spans": 0,
+    "waiting_seconds_total": 0.105543
+   },
+   "wall_seconds": 4.617651
+  },
+  "progress": {
+   "applied_events": 6225,
+   "committed_events": 6225,
+   "computed_events": 6225,
+   "elapsed_seconds": 4.515594,
+   "eta_basis": "replay ETA applies only while REPLAYING; see the current-phase ETA",
+   "eta_seconds": null,
+   "heartbeat_age_seconds": 0.212197,
+   "information_time": "2025-09-01T10:35:00+00:00",
+   "last_event_id": "okx/BTC-USDT/index_bar_1m#obs@2025-09-01T10:34:00Z",
+   "snapshot_digest": "51f7ef8565709ba3d3ef2c246beb13ae93488880828dc1010e08788fd3b5363e",
+   "snapshot_id": "snap-f576971106f1e29b447c3669",
+   "total_events": 6225
+  },
+  "recovery_log": [],
+  "replay_id": "obs-20261010T175049-10e017",
+  "run_type": "adviser_evaluation",
+  "run_type_label": "Adviser evaluation",
+  "runtime_detail": "replay cursor 6,225/6,225 and terminal artifacts published (operational completion); assurance passed is reported separately",
+  "runtime_state": "completed",
+  "source": {
+   "coverage": [
+    {
+     "channel": {
+      "family": "trade_bar_1m",
+      "series_id": "BTC-USDT-SWAP",
+      "source": "okx"
+     },
+     "covered_from": "2025-08-31T00:00:00Z",
+     "covered_until": "2025-09-01T10:35:00Z",
+     "expected_cadence": "PT1M"
+    },
+    {
+     "channel": {
+      "family": "mark_bar_1m",
+      "series_id": "BTC-USDT-SWAP",
+      "source": "okx"
+     },
+     "covered_from": "2025-08-31T00:00:00Z",
+     "covered_until": "2025-09-01T10:35:00Z",
+     "expected_cadence": "PT1M"
+    },
+    {
+     "channel": {
+      "family": "index_bar_1m",
+      "series_id": "BTC-USDT",
+      "source": "okx"
+     },
+     "covered_from": "2025-08-31T00:00:00Z",
+     "covered_until": "2025-09-01T10:35:00Z",
+     "expected_cadence": "PT1M"
+    },
+    {
+     "channel": {
+      "family": "funding_settlement",
+      "series_id": "BTC-USDT-SWAP",
+      "source": "okx"
+     },
+     "covered_from": "2025-08-31T00:00:00Z",
+     "covered_until": "2025-09-01T10:35:00Z",
+     "expected_cadence": null
+    }
+   ],
+   "exclusions": [],
+   "index_id": "BTC-USDT",
+   "inst_id": "BTC-USDT-SWAP",
+   "kind": "pack",
+   "notes": [
+    "preset study-fixture-v1 \u00b7 2 source slice(s) \u00b7 corpus.compose.slot-dedup-no-merge.v1"
+   ],
+   "source_id": "pack-82683f8d12fd7162f5b80fcace39ef6bfea9abdd",
+   "source_schema": "algotrader.corpus-pack.v1",
+   "source_status": "ready",
+   "warnings": [
+    "funding completeness unproven: future outcome reporting is PRICE_NET_ONLY (TOTAL_NET_UNAVAILABLE)",
+    "instrument definition is a retrieval-time snapshot assumed for the whole window (approximation)"
+   ]
+  },
+  "started_at": "2026-10-10T17:50:50.068003+00:00",
+  "status": "completed",
+  "temporal": {
+   "clock_end": "2025-09-01T10:35:00+00:00",
+   "clock_policy": "temporal.clock.modeled-complete-prefix.v1",
+   "closure_allowance": "PT0S",
+   "committed": {
+    "admitted_cursor": 6225,
+    "aggregate_chain": "1915ae9adc311530336374973ec786ce300190b6b034d1e99d84c6b6660901ed",
+    "clock_policy": "temporal.clock.modeled-complete-prefix.v1",
+    "clock_time": "2025-09-01T10:30:00+00:00",
+    "closure_allowance_seconds": 0.0,
+    "counters": {
+     "admitted": 6225,
+     "barriers": 138,
+     "deadline_callbacks": 0,
+     "dispatches": 138,
+     "late_excluded": 0,
+     "misaligned_excluded": 0,
+     "outside_coverage_excluded": 0,
+     "sealed": 549
+    },
+    "dispatch_commitment": "5d4c20d803e1f0f08fb9cf6bdc82ff2cae8a41f0d58c88131a2742bdbd5fa915",
+    "dispatch_seq": 138,
+    "engine": "temporal.engine.v1",
+    "format": "algotrader.temporal-state.v1",
+    "labels": [
+     "TEMPORAL_SUBSTRATE_ONLY",
+     "NO_ADVISER",
+     "NO_INTERPRETATION"
+    ],
+    "next_deadline": "2025-09-01T10:35:00+00:00",
+    "pending_tie_time": "2025-09-01T10:35:00+00:00",
+    "profile_fingerprint": "f17c1b194d324a023f1b0b8334a3095c73b53f30b83a65830ef74952fdb7fae3",
+    "profile_id": "temporal.utc-horizons.v1",
+    "readiness": [
+     {
+      "age_since_end": "PT0S",
+      "age_since_known": "PT0S",
+      "blockers": [],
+      "complete_consecutive": 25,
+      "dependency": "mp001.trade.15m",
+      "latest_record_id": "okx/BTC-USDT-SWAP/trade_bar_1m/15m/2025-09-01T10:15:00+00:00",
+      "required": 25,
+      "status": "READY"
+     },
+     {
+      "age_since_end": "PT30M",
+      "age_since_known": "PT30M",
+      "blockers": [],
+      "complete_consecutive": 21,
+      "dependency": "mp001.trade.1h",
+      "latest_record_id": "okx/BTC-USDT-SWAP/trade_bar_1m/1h/2025-09-01T09:00:00+00:00",
+      "required": 21,
+      "status": "READY"
+     },
+     {
+      "age_since_end": "PT2H30M",
+      "age_since_known": "PT2H30M",
+      "blockers": [],
+      "complete_consecutive": 1,
+      "dependency": "mp001.trade.4h",
+      "latest_record_id": "okx/BTC-USDT-SWAP/trade_bar_1m/4h/2025-09-01T04:00:00+00:00",
+      "required": 1,
+      "status": "READY"
+     },
+     {
+      "age_since_end": "PT10H30M",
+      "age_since_known": "PT10H30M",
+      "blockers": [],
+      "complete_consecutive": 1,
+      "dependency": "mp001.trade.1d",
+      "latest_record_id": "okx/BTC-USDT-SWAP/trade_bar_1m/1d/2025-08-31T00:00:00+00:00",
+      "required": 1,
+      "status": "READY"
+     },
+     {
+      "age_since_end": null,
+      "age_since_known": null,
+      "blockers": [
+       "WARMING_UP: 0/1 consecutive complete records"
+      ],
+      "complete_consecutive": 0,
+      "dependency": "mp001.trade.1w",
+      "latest_record_id": null,
+      "required": 1,
+      "status": "WARMING_UP"
+     },
+     {
+      "age_since_end": null,
+      "age_since_known": null,
+      "blockers": [
+       "WARMING_UP: 0/1 consecutive complete records"
+      ],
+      "complete_consecutive": 0,
+      "dependency": "mp001.trade.1mo",
+      "latest_record_id": null,
+      "required": 1,
+      "status": "WARMING_UP"
+     }
+    ],
+    "recent_dispatches": [
+     {
+      "admitted_cursor": 6030,
+      "barrier": "scheduled",
+      "clock_time": "2025-09-01T09:30:00+00:00",
+      "dispatch_id": "dsp-00000134-4042c6259d26",
+      "reasons": [
+       "closed:okx/BTC-USDT-SWAP/mark_bar_1m/15m:COMPLETE",
+       "closed:okx/BTC-USDT-SWAP/trade_bar_1m/15m:COMPLETE",
+       "closed:okx/BTC-USDT/index_bar_1m/15m:COMPLETE"
+      ],
+      "seq": 134
+     },
+     {
+      "admitted_cursor": 6075,
+      "barrier": "scheduled",
+      "clock_time": "2025-09-01T09:45:00+00:00",
+      "dispatch_id": "dsp-00000135-b165e526ce48",
+      "reasons": [
+       "closed:okx/BTC-USDT-SWAP/mark_bar_1m/15m:COMPLETE",
+       "closed:okx/BTC-USDT-SWAP/trade_bar_1m/15m:COMPLETE",
+       "closed:okx/BTC-USDT/index_bar_1m/15m:COMPLETE"
+      ],
+      "seq": 135
+     },
+     {
+      "admitted_cursor": 6120,
+      "barrier": "scheduled",
+      "clock_time": "2025-09-01T10:00:00+00:00",
+      "dispatch_id": "dsp-00000136-c5f45743155b",
+      "reasons": [
+       "closed:okx/BTC-USDT-SWAP/mark_bar_1m/15m:COMPLETE",
+       "closed:okx/BTC-USDT-SWAP/mark_bar_1m/1h:COMPLETE",
+       "closed:okx/BTC-USDT-SWAP/trade_bar_1m/15m:COMPLETE",
+       "closed:okx/BTC-USDT-SWAP/trade_bar_1m/1h:COMPLETE",
+       "closed:okx/BTC-USDT/index_bar_1m/15m:COMPLETE",
+       "closed:okx/BTC-USDT/index_bar_1m/1h:COMPLETE"
+      ],
+      "seq": 136
+     },
+     {
+      "admitted_cursor": 6165,
+      "barrier": "scheduled",
+      "clock_time": "2025-09-01T10:15:00+00:00",
+      "dispatch_id": "dsp-00000137-3c6d69c84eab",
+      "reasons": [
+       "closed:okx/BTC-USDT-SWAP/mark_bar_1m/15m:COMPLETE",
+       "closed:okx/BTC-USDT-SWAP/trade_bar_1m/15m:COMPLETE",
+       "closed:okx/BTC-USDT/index_bar_1m/15m:COMPLETE"
+      ],
+      "seq": 137
+     },
+     {
+      "admitted_cursor": 6210,
+      "barrier": "scheduled",
+      "clock_time": "2025-09-01T10:30:00+00:00",
+      "dispatch_id": "dsp-00000138-8b3374efe229",
+      "reasons": [
+       "closed:okx/BTC-USDT-SWAP/mark_bar_1m/15m:COMPLETE",
+       "closed:okx/BTC-USDT-SWAP/trade_bar_1m/15m:COMPLETE",
+       "closed:okx/BTC-USDT/index_bar_1m/15m:COMPLETE"
+      ],
+      "seq": 138
+     }
+    ],
+    "seal_policy": "temporal.seal-no-revision.v1",
+    "sealed_commitment": "ee6b0f847e392cd928076df24afb36abe374cf568a9b9c226c6f7e674cd69e63",
+    "tracks": [
+     {
+      "family": "mark_bar_1m",
+      "forming": [
+       {
+        "expected": 15,
+        "interval_start": "2025-09-01T10:30:00+00:00",
+        "missing": 0,
+        "rejected": 0,
+        "valid": 5
+       }
+      ],
+      "horizon": "15m",
+      "late_excluded": 0,
+      "newest_sealed": {
+       "expected": 15,
+       "interval_end": "2025-09-01T10:30:00Z",
+       "interval_start": "2025-09-01T10:15:00Z",
+       "known_at": "2025-09-01T10:30:00Z",
+       "record_id": "okx/BTC-USDT-SWAP/mark_bar_1m/15m/2025-09-01T10:15:00+00:00",
+       "status": "COMPLETE",
+       "valid": 15
+      },
+      "next_unsealed_start": "2025-09-01T10:30:00+00:00",
+      "retained": 96,
+      "retention": 96,
+      "role": "setup",
+      "sealed_by_status": {
+       "COMPLETE": 138
+      },
+      "track": "okx/BTC-USDT-SWAP/mark_bar_1m/15m"
+     },
+     {
+      "family": "mark_bar_1m",
+      "forming": [
+       {
+        "expected": 1440,
+        "interval_start": "2025-09-01T00:00:00+00:00",
+        "missing": 0,
+        "rejected": 0,
+        "valid": 635
+       }
+      ],
+      "horizon": "1d",
+      "late_excluded": 0,
+      "newest_sealed": {
+       "expected": 1440,
+       "interval_end": "2025-09-01T00:00:00Z",
+       "interval_start": "2025-08-31T00:00:00Z",
+       "known_at": "2025-09-01T00:00:00Z",
+       "record_id": "okx/BTC-USDT-SWAP/mark_bar_1m/1d/2025-08-31T00:00:00+00:00",
+       "status": "COMPLETE",
+       "valid": 1440
+      },
+      "next_unsealed_start": "2025-09-01T00:00:00+00:00",
+      "retained": 1,
+      "retention": 31,
+      "role": "broad",
+      "sealed_by_status": {
+       "COMPLETE": 1
+      },
+      "track": "okx/BTC-USDT-SWAP/mark_bar_1m/1d"
+     },
+     {
+      "family": "mark_bar_1m",
+      "forming": [
+       {
+        "expected": 60,
+        "interval_start": "2025-09-01T10:00:00+00:00",
+        "missing": 0,
+        "rejected": 0,
+        "valid": 35
+       }
+      ],
+      "horizon": "1h",
+      "late_excluded": 0,
+      "newest_sealed": {
+       "expected": 60,
+       "interval_end": "2025-09-01T10:00:00Z",
+       "interval_start": "2025-09-01T09:00:00Z",
+       "known_at": "2025-09-01T10:00:00Z",
+       "record_id": "okx/BTC-USDT-SWAP/mark_bar_1m/1h/2025-09-01T09:00:00+00:00",
+       "status": "COMPLETE",
+       "valid": 60
+      },
+      "next_unsealed_start": "2025-09-01T10:00:00+00:00",
+      "retained": 34,
+      "retention": 72,
+      "role": "tactical",
+      "sealed_by_status": {
+       "COMPLETE": 34
+      },
+      "track": "okx/BTC-USDT-SWAP/mark_bar_1m/1h"
+     },
+     {
+      "family": "mark_bar_1m",
+      "forming": [
+       {
+        "expected": 43200,
+        "interval_start": "2025-09-01T00:00:00+00:00",
+        "missing": 0,
+        "rejected": 0,
+        "valid": 635
+       }
+      ],
+      "horizon": "1mo",
+      "late_excluded": 0,
+      "newest_sealed": {
+       "expected": 44640,
+       "interval_end": "2025-09-01T00:00:00Z",
+       "interval_start": "2025-08-01T00:00:00Z",
+       "known_at": "2025-09-01T00:00:00Z",
+       "record_id": "okx/BTC-USDT-SWAP/mark_bar_1m/1mo/2025-08-01T00:00:00+00:00",
+       "status": "OUTSIDE_COVERAGE",
+       "valid": 1440
+      },
+      "next_unsealed_start": "2025-09-01T00:00:00+00:00",
+      "retained": 1,
+      "retention": 3,
+      "role": "context",
+      "sealed_by_status": {
+       "OUTSIDE_COVERAGE": 1
+      },
+      "track": "okx/BTC-USDT-SWAP/mark_bar_1m/1mo"
+     },
+     {
+      "family": "mark_bar_1m",
+      "forming": [
+       {
+        "expected": 10080,
+        "interval_start": "2025-09-01T00:00:00+00:00",
+        "missing": 0,
+        "rejected": 0,
+        "valid": 635
+       }
+      ],
+      "horizon": "1w",
+      "late_excluded": 0,
+      "newest_sealed": {
+       "expected": 10080,
+       "interval_end": "2025-09-01T00:00:00Z",
+       "interval_start": "2025-08-25T00:00:00Z",
+       "known_at": "2025-09-01T00:00:00Z",
+       "record_id": "okx/BTC-USDT-SWAP/mark_bar_1m/1w/2025-08-25T00:00:00+00:00",
+       "status": "OUTSIDE_COVERAGE",
+       "valid": 1440
+      },
+      "next_unsealed_start": "2025-09-01T00:00:00+00:00",
+      "retained": 1,
+      "retention": 8,
+      "role": "context",
+      "sealed_by_status": {
+       "OUTSIDE_COVERAGE": 1
+      },
+      "track": "okx/BTC-USDT-SWAP/mark_bar_1m/1w"
+     },
+     {
+      "family": "mark_bar_1m",
+      "forming": [
+       {
+        "expected": 240,
+        "interval_start": "2025-09-01T08:00:00+00:00",
+        "missing": 0,
+        "rejected": 0,
+        "valid": 155
+       }
+      ],
+      "horizon": "4h",
+      "late_excluded": 0,
+      "newest_sealed": {
+       "expected": 240,
+       "interval_end": "2025-09-01T08:00:00Z",
+       "interval_start": "2025-09-01T04:00:00Z",
+       "known_at": "2025-09-01T08:00:00Z",
+       "record_id": "okx/BTC-USDT-SWAP/mark_bar_1m/4h/2025-09-01T04:00:00+00:00",
+       "status": "COMPLETE",
+       "valid": 240
+      },
+      "next_unsealed_start": "2025-09-01T08:00:00+00:00",
+      "retained": 8,
+      "retention": 42,
+      "role": "broad",
+      "sealed_by_status": {
+       "COMPLETE": 8
+      },
+      "track": "okx/BTC-USDT-SWAP/mark_bar_1m/4h"
+     },
+     {
+      "family": "trade_bar_1m",
+      "forming": [
+       {
+        "expected": 15,
+        "interval_start": "2025-09-01T10:30:00+00:00",
+        "missing": 0,
+        "rejected": 0,
+        "valid": 5
+       }
+      ],
+      "horizon": "15m",
+      "late_excluded": 0,
+      "newest_sealed": {
+       "expected": 15,
+       "interval_end": "2025-09-01T10:30:00Z",
+       "interval_start": "2025-09-01T10:15:00Z",
+       "known_at": "2025-09-01T10:30:00Z",
+       "record_id": "okx/BTC-USDT-SWAP/trade_bar_1m/15m/2025-09-01T10:15:00+00:00",
+       "status": "COMPLETE",
+       "valid": 15
+      },
+      "next_unsealed_start": "2025-09-01T10:30:00+00:00",
+      "retained": 96,
+      "retention": 96,
+      "role": "setup",
+      "sealed_by_status": {
+       "COMPLETE": 138
+      },
+      "track": "okx/BTC-USDT-SWAP/trade_bar_1m/15m"
+     },
+     {
+      "family": "trade_bar_1m",
+      "forming": [
+       {
+        "expected": 1440,
+        "interval_start": "2025-09-01T00:00:00+00:00",
+        "missing": 0,
+        "rejected": 0,
+        "valid": 635
+       }
+      ],
+      "horizon": "1d",
+      "late_excluded": 0,
+      "newest_sealed": {
+       "expected": 1440,
+       "interval_end": "2025-09-01T00:00:00Z",
+       "interval_start": "2025-08-31T00:00:00Z",
+       "known_at": "2025-09-01T00:00:00Z",
+       "record_id": "okx/BTC-USDT-SWAP/trade_bar_1m/1d/2025-08-31T00:00:00+00:00",
+       "status": "COMPLETE",
+       "valid": 1440
+      },
+      "next_unsealed_start": "2025-09-01T00:00:00+00:00",
+      "retained": 1,
+      "retention": 31,
+      "role": "broad",
+      "sealed_by_status": {
+       "COMPLETE": 1
+      },
+      "track": "okx/BTC-USDT-SWAP/trade_bar_1m/1d"
+     },
+     {
+      "family": "trade_bar_1m",
+      "forming": [
+       {
+        "expected": 60,
+        "interval_start": "2025-09-01T10:00:00+00:00",
+        "missing": 0,
+        "rejected": 0,
+        "valid": 35
+       }
+      ],
+      "horizon": "1h",
+      "late_excluded": 0,
+      "newest_sealed": {
+       "expected": 60,
+       "interval_end": "2025-09-01T10:00:00Z",
+       "interval_start": "2025-09-01T09:00:00Z",
+       "known_at": "2025-09-01T10:00:00Z",
+       "record_id": "okx/BTC-USDT-SWAP/trade_bar_1m/1h/2025-09-01T09:00:00+00:00",
+       "status": "COMPLETE",
+       "valid": 60
+      },
+      "next_unsealed_start": "2025-09-01T10:00:00+00:00",
+      "retained": 34,
+      "retention": 72,
+      "role": "tactical",
+      "sealed_by_status": {
+       "COMPLETE": 34
+      },
+      "track": "okx/BTC-USDT-SWAP/trade_bar_1m/1h"
+     },
+     {
+      "family": "trade_bar_1m",
+      "forming": [
+       {
+        "expected": 43200,
+        "interval_start": "2025-09-01T00:00:00+00:00",
+        "missing": 0,
+        "rejected": 0,
+        "valid": 635
+       }
+      ],
+      "horizon": "1mo",
+      "late_excluded": 0,
+      "newest_sealed": {
+       "expected": 44640,
+       "interval_end": "2025-09-01T00:00:00Z",
+       "interval_start": "2025-08-01T00:00:00Z",
+       "known_at": "2025-09-01T00:00:00Z",
+       "record_id": "okx/BTC-USDT-SWAP/trade_bar_1m/1mo/2025-08-01T00:00:00+00:00",
+       "status": "OUTSIDE_COVERAGE",
+       "valid": 1440
+      },
+      "next_unsealed_start": "2025-09-01T00:00:00+00:00",
+      "retained": 1,
+      "retention": 3,
+      "role": "context",
+      "sealed_by_status": {
+       "OUTSIDE_COVERAGE": 1
+      },
+      "track": "okx/BTC-USDT-SWAP/trade_bar_1m/1mo"
+     },
+     {
+      "family": "trade_bar_1m",
+      "forming": [
+       {
+        "expected": 10080,
+        "interval_start": "2025-09-01T00:00:00+00:00",
+        "missing": 0,
+        "rejected": 0,
+        "valid": 635
+       }
+      ],
+      "horizon": "1w",
+      "late_excluded": 0,
+      "newest_sealed": {
+       "expected": 10080,
+       "interval_end": "2025-09-01T00:00:00Z",
+       "interval_start": "2025-08-25T00:00:00Z",
+       "known_at": "2025-09-01T00:00:00Z",
+       "record_id": "okx/BTC-USDT-SWAP/trade_bar_1m/1w/2025-08-25T00:00:00+00:00",
+       "status": "OUTSIDE_COVERAGE",
+       "valid": 1440
+      },
+      "next_unsealed_start": "2025-09-01T00:00:00+00:00",
+      "retained": 1,
+      "retention": 8,
+      "role": "context",
+      "sealed_by_status": {
+       "OUTSIDE_COVERAGE": 1
+      },
+      "track": "okx/BTC-USDT-SWAP/trade_bar_1m/1w"
+     },
+     {
+      "family": "trade_bar_1m",
+      "forming": [
+       {
+        "expected": 240,
+        "interval_start": "2025-09-01T08:00:00+00:00",
+        "missing": 0,
+        "rejected": 0,
+        "valid": 155
+       }
+      ],
+      "horizon": "4h",
+      "late_excluded": 0,
+      "newest_sealed": {
+       "expected": 240,
+       "interval_end": "2025-09-01T08:00:00Z",
+       "interval_start": "2025-09-01T04:00:00Z",
+       "known_at": "2025-09-01T08:00:00Z",
+       "record_id": "okx/BTC-USDT-SWAP/trade_bar_1m/4h/2025-09-01T04:00:00+00:00",
+       "status": "COMPLETE",
+       "valid": 240
+      },
+      "next_unsealed_start": "2025-09-01T08:00:00+00:00",
+      "retained": 8,
+      "retention": 42,
+      "role": "broad",
+      "sealed_by_status": {
+       "COMPLETE": 8
+      },
+      "track": "okx/BTC-USDT-SWAP/trade_bar_1m/4h"
+     },
+     {
+      "family": "index_bar_1m",
+      "forming": [
+       {
+        "expected": 15,
+        "interval_start": "2025-09-01T10:30:00+00:00",
+        "missing": 0,
+        "rejected": 0,
+        "valid": 5
+       }
+      ],
+      "horizon": "15m",
+      "late_excluded": 0,
+      "newest_sealed": {
+       "expected": 15,
+       "interval_end": "2025-09-01T10:30:00Z",
+       "interval_start": "2025-09-01T10:15:00Z",
+       "known_at": "2025-09-01T10:30:00Z",
+       "record_id": "okx/BTC-USDT/index_bar_1m/15m/2025-09-01T10:15:00+00:00",
+       "status": "COMPLETE",
+       "valid": 15
+      },
+      "next_unsealed_start": "2025-09-01T10:30:00+00:00",
+      "retained": 96,
+      "retention": 96,
+      "role": "setup",
+      "sealed_by_status": {
+       "COMPLETE": 138
+      },
+      "track": "okx/BTC-USDT/index_bar_1m/15m"
+     },
+     {
+      "family": "index_bar_1m",
+      "forming": [
+       {
+        "expected": 1440,
+        "interval_start": "2025-09-01T00:00:00+00:00",
+        "missing": 0,
+        "rejected": 0,
+        "valid": 635
+       }
+      ],
+      "horizon": "1d",
+      "late_excluded": 0,
+      "newest_sealed": {
+       "expected": 1440,
+       "interval_end": "2025-09-01T00:00:00Z",
+       "interval_start": "2025-08-31T00:00:00Z",
+       "known_at": "2025-09-01T00:00:00Z",
+       "record_id": "okx/BTC-USDT/index_bar_1m/1d/2025-08-31T00:00:00+00:00",
+       "status": "COMPLETE",
+       "valid": 1440
+      },
+      "next_unsealed_start": "2025-09-01T00:00:00+00:00",
+      "retained": 1,
+      "retention": 31,
+      "role": "broad",
+      "sealed_by_status": {
+       "COMPLETE": 1
+      },
+      "track": "okx/BTC-USDT/index_bar_1m/1d"
+     },
+     {
+      "family": "index_bar_1m",
+      "forming": [
+       {
+        "expected": 60,
+        "interval_start": "2025-09-01T10:00:00+00:00",
+        "missing": 0,
+        "rejected": 0,
+        "valid": 35
+       }
+      ],
+      "horizon": "1h",
+      "late_excluded": 0,
+      "newest_sealed": {
+       "expected": 60,
+       "interval_end": "2025-09-01T10:00:00Z",
+       "interval_start": "2025-09-01T09:00:00Z",
+       "known_at": "2025-09-01T10:00:00Z",
+       "record_id": "okx/BTC-USDT/index_bar_1m/1h/2025-09-01T09:00:00+00:00",
+       "status": "COMPLETE",
+       "valid": 60
+      },
+      "next_unsealed_start": "2025-09-01T10:00:00+00:00",
+      "retained": 34,
+      "retention": 72,
+      "role": "tactical",
+      "sealed_by_status": {
+       "COMPLETE": 34
+      },
+      "track": "okx/BTC-USDT/index_bar_1m/1h"
+     },
+     {
+      "family": "index_bar_1m",
+      "forming": [
+       {
+        "expected": 43200,
+        "interval_start": "2025-09-01T00:00:00+00:00",
+        "missing": 0,
+        "rejected": 0,
+        "valid": 635
+       }
+      ],
+      "horizon": "1mo",
+      "late_excluded": 0,
+      "newest_sealed": {
+       "expected": 44640,
+       "interval_end": "2025-09-01T00:00:00Z",
+       "interval_start": "2025-08-01T00:00:00Z",
+       "known_at": "2025-09-01T00:00:00Z",
+       "record_id": "okx/BTC-USDT/index_bar_1m/1mo/2025-08-01T00:00:00+00:00",
+       "status": "OUTSIDE_COVERAGE",
+       "valid": 1440
+      },
+      "next_unsealed_start": "2025-09-01T00:00:00+00:00",
+      "retained": 1,
+      "retention": 3,
+      "role": "context",
+      "sealed_by_status": {
+       "OUTSIDE_COVERAGE": 1
+      },
+      "track": "okx/BTC-USDT/index_bar_1m/1mo"
+     },
+     {
+      "family": "index_bar_1m",
+      "forming": [
+       {
+        "expected": 10080,
+        "interval_start": "2025-09-01T00:00:00+00:00",
+        "missing": 0,
+        "rejected": 0,
+        "valid": 635
+       }
+      ],
+      "horizon": "1w",
+      "late_excluded": 0,
+      "newest_sealed": {
+       "expected": 10080,
+       "interval_end": "2025-09-01T00:00:00Z",
+       "interval_start": "2025-08-25T00:00:00Z",
+       "known_at": "2025-09-01T00:00:00Z",
+       "record_id": "okx/BTC-USDT/index_bar_1m/1w/2025-08-25T00:00:00+00:00",
+       "status": "OUTSIDE_COVERAGE",
+       "valid": 1440
+      },
+      "next_unsealed_start": "2025-09-01T00:00:00+00:00",
+      "retained": 1,
+      "retention": 8,
+      "role": "context",
+      "sealed_by_status": {
+       "OUTSIDE_COVERAGE": 1
+      },
+      "track": "okx/BTC-USDT/index_bar_1m/1w"
+     },
+     {
+      "family": "index_bar_1m",
+      "forming": [
+       {
+        "expected": 240,
+        "interval_start": "2025-09-01T08:00:00+00:00",
+        "missing": 0,
+        "rejected": 0,
+        "valid": 155
+       }
+      ],
+      "horizon": "4h",
+      "late_excluded": 0,
+      "newest_sealed": {
+       "expected": 240,
+       "interval_end": "2025-09-01T08:00:00Z",
+       "interval_start": "2025-09-01T04:00:00Z",
+       "known_at": "2025-09-01T08:00:00Z",
+       "record_id": "okx/BTC-USDT/index_bar_1m/4h/2025-09-01T04:00:00+00:00",
+       "status": "COMPLETE",
+       "valid": 240
+      },
+      "next_unsealed_start": "2025-09-01T08:00:00+00:00",
+      "retained": 8,
+      "retention": 42,
+      "role": "broad",
+      "sealed_by_status": {
+       "COMPLETE": 8
+      },
+      "track": "okx/BTC-USDT/index_bar_1m/4h"
+     }
+    ]
+   },
+   "contract": "algotrader.temporal.v1",
+   "contract_revision": 1,
+   "note": "temporal substrate only; no adviser",
+   "profile_fingerprint": "f17c1b194d324a023f1b0b8334a3095c73b53f30b83a65830ef74952fdb7fae3",
+   "profile_id": "temporal.utc-horizons.v1",
+   "seal_policy": "temporal.seal-no-revision.v1"
+  },
+  "validation_passed": true,
+  "verification": {
+   "checked_at": "2026-10-10T17:50:50.168335Z",
+   "method": "pack pack-82683f8d12fd7162f5b80fcace39ef6bfea9abdd: manifest SHA-256 equals its publication receipt and re-hashes to its id; feed cache fc-9da2b576a5348729b144aad4d85113e9a81d688b reused under its trusted receipt; partitions SHA-256-verified when read",
+   "problems": [],
+   "verified": true
+  }
+ },
+ "report_available": true,
+ "report_terminal": true,
+ "run_type": "adviser_evaluation",
+ "run_type_label": "Adviser evaluation"
+}

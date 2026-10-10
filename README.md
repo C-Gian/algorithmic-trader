@@ -160,6 +160,21 @@ v0.6 is v0.5 with ONE named addition ([MP-005](delivery/MP-005-V06-INITIAL-RESPO
 - **Evidence.** Synthetic tests only: `tests/test_hdp001_verify.py`. No real run.
 - **Details.** `delivery/HDP-001-VERIFICATION-REFERENCES.md` §7.
 
+## A v0.6 operational evaluation — study path (technically prepared; study INACTIVE)
+
+The Historical Workbench lists one registered study preset, `a-v06-operational-evaluation-2027-v1`:
+- **Window.** 35-day initialization from 2026-12-21, evaluation [2027-01-25, 2027-07-26), 365 min tail. It comes from `src/algotrader/corpus/study_presets.json` and is pinned to the A v0.6 design.
+- **Why it is special.** It is the only preset accepted outside the logical target and off calendar months. The month builder and every other preset are unchanged.
+- **Runs.** Its pack admits only an adviser evaluation with method v0.6; observation-only and other methods are refused. The run is one continuous evaluation, as for any pack.
+- **Ledger.** `scripts/a_v06_study_ledger.py` makes a GET-only export, then an offline ledger:
+  - per-call PRIMARY results and UTC issue-hour attribution;
+  - undetermined paths never counted as zero;
+  - the A owner register.
+
+  It does not compute the bootstrap, whose conventions are still to register.
+- **Status.** Synthetic evidence only. Preparing the real window needs data that exist only after 2027-07-26T06:05Z and a separate executive assignment.
+- **Details.** `delivery/A-V06-OPERATIONAL-EVALUATION-REFERENCES.md` §8.
+
 ## Synthetic DEMO runs (Replay Lab → Synthetic Demo)
 
 - **Runs**: start (replay speed, optional DEMO fault injection), cancel, status, progress, elapsed time, heartbeat, attempt, failure text and recovery log.

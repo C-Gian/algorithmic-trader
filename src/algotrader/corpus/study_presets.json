@@ -1,0 +1,33 @@
+{
+  "schema_version": "algotrader.study-presets.v1",
+  "version": 1,
+  "studies": [
+    {
+      "study_id": "A-V06-OPERATIONAL-EVALUATION",
+      "label": "A v0.6 operational evaluation (registered study window)",
+      "sources": [
+        {"path": "delivery/A-V06-OPERATIONAL-EVALUATION-DESIGN.md",
+         "sha256_lf": "b33335808687c9b866e86c18160a8847afa55f187014b4b6129d85f473472923"},
+        {"path": "delivery/A-V06-OPERATIONAL-EVALUATION-CLOSURE.md",
+         "sha256_lf": "4842ff0bafa30c2c0cee21b27ccc36587a68c495eb2e6fc7e4eea0c4f440c5f6"},
+        {"path": "delivery/HDP-001-A-V06-REFERENCES-DECISION.md",
+         "sha256_lf": "7b91a1b3e667965dba19cb8771285fd39c4f662d7c7c06882feae2795c77ffb8"}
+      ],
+      "run_type": "adviser_evaluation",
+      "method": "v0.6",
+      "preset": {
+        "preset_id": "a-v06-operational-evaluation-2027-v1",
+        "label": "A v0.6 operational evaluation — 2027-01-25 to 2027-07-26 (35-day initialization, registered study)",
+        "default": false,
+        "warmup": {"start": "2026-12-21T00:00:00Z", "end": "2027-01-25T00:00:00Z"},
+        "evaluation": {"start": "2027-01-25T00:00:00Z", "end": "2027-07-26T00:00:00Z"},
+        "tail": {"start": "2027-07-26T00:00:00Z", "end": "2027-07-26T06:05:00Z"},
+        "evidence_class": "REGISTERED_STUDY_WINDOW",
+        "adviser_implemented": false,
+        "automatic_prepare": false,
+        "initialization": "REGISTERED_EXPLICIT_INITIALIZATION"
+      }
+    }
+  ],
+  "fixture": false
+}

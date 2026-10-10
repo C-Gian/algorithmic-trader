@@ -215,6 +215,11 @@ def add_routes(r: APIRouter, conn: Callable, data_root: Path) -> None:
         f = ps.load_presets()
         with conn() as c:
             views = [preset_view(c, data_root, f, p) for p in f.presets]
+            # registered study windows (outside the target; prepared only when pressed, like any preset)
+            views += [{**preset_view(c, data_root, f, s.preset),
+                       "study": {"study_id": s.study_id, "label": s.label, "run_type": s.run_type, "method": s.method,
+                                 "sources": [x.model_dump() for x in s.sources]}}
+                      for s in ps.load_study_presets().studies]
         return {"file": {"schema_version": f.schema_version, "version": f.version, "method": f.method,
                          "rules_version": f.rules_version, "register_sha256": ps.MP001_REGISTER_SHA256,
                          "capability_profile": f.capability_profile, "boundaries": f.boundaries,

@@ -1,7 +1,27 @@
-# Current task — HDP-001 verification executor, technical preparation
+# Current task — A v0.6 continuous evaluation, technical preparation
+Date: 2026-10-10. Status: DELIVERED — READY FOR DIRECTOR REVIEW — A V0.6 STUDY PATH ONLY. **Technically ready** on synthetic evidence only; the **study is not launchable** ([references §8.6](delivery/A-V06-OPERATIONAL-EVALUATION-REFERENCES.md)). Studies INACTIVE. Remote CI is Owner-operated: PENDING / NOT CHECKED.
+
+## Assignment (relayed by the Owner, 10 October 2026; expected base `77420cd`)
+
+Make the full A v0.6 preparation, execution and reporting path technically executable, proven only with isolated synthetic data.
+- **Sources.** The design, the orchestrator decision, the references decision, the operational references and `identities-b47b997.json`. Authoritative sources prevail. `b47b997` is the frozen behaviour reference. Pinned documents are not modified.
+- **First step.** Reconstruct the existing path and locate the impediments; choose the minimal adaptation of existing tools. No new engine or parallel infrastructure.
+- **Window and continuity.** [2027-01-25, 2027-07-26), with the registered initialization and tail. One continuous run, no monthly reset. Technical partitions keep state, order and identity. The tail only completes included paths. No indiscriminate date access; no protected periods.
+- **Method and population.** The ordinary v0.6 policy, unchanged. Primary = every A call issued in the window. These are kept apart:
+  - pre-existing owners and owners born in the window;
+  - non-confirmation and non-issue;
+  - included calls and post-boundary issues;
+  - NO_ENTRY and undetermined entered paths.
+
+  No imputation and no invented balance.
+- **Reporting.** PRIMARY results, price_net or total_net (only with certified funding), per-call results, UTC issue-hour attribution. Hours without a call are 0; undetermined hours are not automatically 0. No HDP-001 conventions. Open statistical conventions go to the Director.
+- **Identity and equivalence.** Register the reference, the build, the method, parameters, profile and evaluator, and the synthetic inputs. Map the relevant diff, compare reference and build on the same inputs where applicable, and verify the window extension separately. No general equivalence from a few fixtures.
+- **Excluded.** Real feed, Owner data, acquisition, real cache, economic replay, the Owner stack, real evaluations, CI polling. HDP-001 and v0.6 frozen.
+
+## Previous task — HDP-001 verification executor, technical preparation
 Date: 2026-10-10. Status: DELIVERED — READY FOR DIRECTOR REVIEW — HDP-001 EXECUTOR ONLY. The executor is prepared only to the extent shown by synthetic tests ([references §7](delivery/HDP-001-VERIFICATION-REFERENCES.md)). **HDP-001 INACTIVE.** Remote CI is Owner-operated: PENDING / NOT CHECKED.
 
-## Assignment (relayed by the Owner, 10 October 2026; expected base `d5a666b`)
+### HDP-001 executor assignment (relayed by the Owner, 10 October 2026; expected base `d5a666b`)
 
 Implement and document an offline HDP-001 verification executor, ready to apply the frozen protocol, verified only with isolated synthetic fixtures.
 - **Sources.** The protocol, the Director decision, the exploration closure and the references decision. The operational references are an index only. The temporal semantics and the exploration script are reused, not modified.

@@ -1,0 +1,2 @@
+call_id,family,direction,issued_at,issue_hour,in_window,primary,primary_status,entered,measure,value,class,undetermined_reason,resolved_at,resolved_in_tail
+call-AL-2025-09-01T04:03:00+00:00-33d5d0d48b6a,A,LONG,2025-09-01T04:03:00Z,2025-09-01T04:00:00Z,True,True,CLOSED,True,price_net,-0.0014,DETERMINED,,2025-09-01T06:03:00Z,True

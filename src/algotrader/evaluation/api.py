@@ -19,6 +19,7 @@ from fastapi.responses import PlainTextResponse
 from psycopg.types.json import Jsonb
 from pydantic import BaseModel, Field
 
+from ..corpus import presets as ps
 from ..corpus import state
 from ..corpus.plan import load_plan
 from ..observe import control
@@ -204,6 +205,14 @@ def build_router(conn: Callable, data_root: Path, art_root: Path) -> APIRouter:
             if adviser and any(x["class"] != "DEVELOPMENT" for x in p["evidence_classes"].get("portions", [])):
                 raise HTTPException(409, "protected (Jan-Aug 2026) evaluation is not enabled before the Director's "
                                          "contamination inventory and model freeze; choose a development pack")
+            if p["evidence_classes"].get("label") == ps.STUDY_EVIDENCE_CLASS:
+                # a registered study window admits only the run its study registers (still registered now)
+                study = ps.registered_study(ps.Preset.model_validate(p["preset"]))
+                if study is None:
+                    raise HTTPException(409, "this pack's study window is no longer a registered study preset")
+                if not adviser or (body.method or "v0.2") != study.method:
+                    raise HTTPException(409, f"the registered study window {study.study_id} admits only an adviser "
+                                             f"evaluation with method {study.method}")
             c.commit()
             evaluation_id = new_evaluation_id()
             try:
