@@ -1,13 +1,14 @@
 import { useMemo, useState } from "react";
 import {
-  AdviserMethod, adviserApi, CallView, ENTRY_TEXT, EXPECTED_TEXT, Lens, LiveStatus, LiveView, METHOD_STATUS, METHOD_TEXT,
-  METHODS, reasonText, ROW_TEXT, THESIS_TEXT,
+  AdviserMethod, adviserApi, Lens, LiveStatus, LiveView, METHOD_STATUS, METHOD_TEXT,
+  METHODS, reasonText, THESIS_TEXT,
 } from "../adviser";
 import { fmtNum, fmtTime, humanize } from "../lib/format";
 import { usePoll } from "../lib/usePoll";
 import { Icon } from "../ui/Icon";
 import { Badge, Button, Card, cx, Mono, Notice, Tone } from "../ui/primitives";
 import { HistoryKey, LiveCallHistory } from "./LiveCallHistory";
+import { ProposalPanel } from "./LiveProposal";
 import { useCopyFeedback } from "./replay/MarketReplay";
 
 // Home live cockpit (WP-009): the Owner starts/stops the local live adviser here. Every value comes from the committed
@@ -22,16 +23,6 @@ const STATE_TEXT: Record<string, string> = {
   LIVE: "Live", WARMING_UP: "Warming up", RECONSTRUCTING: "Catching up", STARTING: "Starting",
   DISCONNECTED: "Disconnected", UNRESPONSIVE: "Not responding", STOPPED: "Stopped", FAILED: "Failed",
 };
-
-function dirTone(d: string | undefined): Tone {
-  return d === "UP" ? "pos" : d === "DOWN" ? "neg" : d === "UNAVAILABLE" ? "pending" : "neutral";
-}
-
-function Arrow({ d }: { d: string | undefined }) {
-  if (d === "UP") return <span className="dir-arrow up" aria-hidden>▲</span>;
-  if (d === "DOWN") return <span className="dir-arrow down" aria-hidden>▼</span>;
-  return <span className="dir-arrow flat" aria-hidden>◆</span>;
-}
 
 function PriceChart({ v }: { v: LiveView | null }) {
   const bars = v?.chart?.minutes ?? [];
@@ -63,7 +54,8 @@ function PriceChart({ v }: { v: LiveView | null }) {
     const x = (i: number) => 8 + (i / (bars.length - 1)) * (W - 90);
     const path = closes.map((c, i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${y(c).toFixed(1)}`).join(" ");
     const area = call ? { y1: y(Number(call.structural_area[1])), y2: y(Number(call.structural_area[0])) } : null;
-    const adm = call?.admissible_bounds ? { y1: y(Number(call.admissible_bounds[1])), y2: y(Number(call.admissible_bounds[0])) } : null;
+    // the admissible band is drawn only while the backend says the entry is AVAILABLE (never as a usable-looking past level)
+    const adm = call?.admissible_bounds && call.entry_status === "AVAILABLE" && call.presentation !== "NOT_CURRENT" ? { y1: y(Number(call.admissible_bounds[1])), y2: y(Number(call.admissible_bounds[0])) } : null;
     return { path, lines: lines.map((l) => ({ ...l, py: y(l.y) })), area, adm, last: { x: x(closes.length - 1), y: y(closes[closes.length - 1]) } };
   }, [bars, call, lv]);
   if (!shapes) {
@@ -111,135 +103,6 @@ function LensCard({ l }: { l: Lens }) {
       <div className="lens-role">{l.role}</div>
       {l.since && <div className="lens-since mono">since {fmtTime(l.since)}</div>}
     </div>
-  );
-}
-
-function DirectionPanel({ v }: { v: LiveView | null }) {
-  const mv = v?.market_view;
-  const d = mv?.expected_direction ?? "UNAVAILABLE";
-  return (
-    <section className={cx("dir-panel", `tone-${dirTone(d)}`)} data-testid="live-direction">
-      <div className="eyebrow">Expected direction {mv?.conditional ? "· conditional" : ""}</div>
-      <div className="dir-main"><Arrow d={d} /><span data-testid="live-expected">{EXPECTED_TEXT[d] ?? d}</span></div>
-      <div className="dir-sub">{mv ? ROW_TEXT[mv.table_row] ?? humanize(mv.table_row) : "No view yet"}
-        {mv?.horizon_minutes && <> · horizon {mv.horizon_minutes[0]}–{mv.horizon_minutes[1]} min</>}</div>
-      <div className="dir-facts">
-        <span>Observed 1h context <b>{mv?.observed_context ?? "—"}</b></span>
-        <span>Phase <b>{mv ? humanize(mv.phase) : "—"}</b></span>
-      </div>
-      {(mv?.reasons.length ?? 0) > 0 && <ul className="dir-reasons">{mv!.reasons.map((r) => <li key={r}>{r}</li>)}</ul>}
-      {(mv?.counterevidence.length ?? 0) > 0 && (
-        <ul className="dir-counter">{mv!.counterevidence.map((r) => <li key={r}>Against: {r}</li>)}</ul>)}
-      <div className="muted small-text">Qualitative, not a probability. Observed context is a measured path label, not a
-        forecast.</div>
-    </section>
-  );
-}
-
-function CallPanel({ v, onHistory }: { v: LiveView | null; onHistory: (callId: string) => void }) {
-  const c: CallView | null = v?.call ?? null;
-  const mv = v?.market_view;
-  if (!v) {
-    return (
-      <section className="call-panel is-none" data-testid="live-call">
-        <div className="call-none-title">No current assessment</div>
-        <div className="call-none-why">Start the live adviser to assess the market now. While it is stopped nothing is
-          monitored.</div>
-      </section>
-    );
-  }
-  if (!c) {
-    const top = mv?.blockers?.[0] ?? (mv ? ROW_TEXT[mv.table_row] : null);
-    return (
-      <section className="call-panel is-none" data-testid="live-call">
-        <div className="call-none-title" data-testid="live-no-trade">No actionable trade now</div>
-        <div className="call-none-why">{top ? `Top reason: ${reasonText(top)}` : "Waiting for the first assessment"}</div>
-        {mv?.principal && (
-          <div className="call-scenario" data-testid="live-scenario">
-            <Badge tone={mv.principal.direction === "LONG" ? "pos" : "neg"}>{mv.principal.direction} {mv.principal.family}{" "}
-              {(mv.principal.status ?? "ARMED").toLowerCase()}</Badge>
-            <span className="small-text">{mv.principal.antecedent}</span>
-          </div>
-        )}
-        {(v?.scenarios ?? []).filter((s) => s.entry_ended).map((s) => (
-          <div className="call-waiting" key={`${s.scenario_id}-ended`} data-testid="live-entry-ended">
-            <Badge tone="neutral">{s.direction} {s.family} confirmed — entry attempt ended</Badge>
-            <p className="small-text">{s.entry_ended!.text} This is not a call and not an invalidation of the scenario.</p>
-            <dl className="call-geo">
-              <dt>Why</dt><dd>{s.entry_ended!.base === "CORRIDOR" ? "no confirming close could be inside the usable corridor"
-                : "no confirming close could be inside the historical economic region"}</dd>
-              <dt>Ended at</dt><dd className="mono">{fmtTime(s.entry_ended!.at)}</dd>
-              <dt>Scenario</dt><dd>still {s.status.toLowerCase()} · invalid at {s.invalidation_level ?? "—"}</dd>
-            </dl>
-          </div>
-        ))}
-        {(v?.scenarios ?? []).filter((s) => s.observing).map((s) => (
-          <div className="call-waiting" key={s.scenario_id} data-testid="live-observing">
-            <Badge tone="neutral">{s.direction} {s.family} — scenario under observation</Badge>
-            <p className="small-text">{s.observing!.text} The previous reaction anchor
-              {s.observing!.lost_anchor?.V ? ` (stop ${s.observing!.lost_anchor.V})` : ""} was touched before confirmation.
-              This is not a call and not an entry: nothing to do now.</p>
-            <dl className="call-geo">
-              <dt>Narrative destination</dt><dd className="mono">{s.destination ?? "—"}</dd>
-              <dt>Observation ends</dt><dd className="mono">{fmtTime(s.observing!.original_expiry)} (original deadline)</dd>
-            </dl>
-          </div>
-        ))}
-        {(v?.scenarios ?? []).filter((s) => s.waiting).map((s) => (
-          <div className="call-waiting" key={s.scenario_id} data-testid="live-waiting">
-            <Badge tone="info">{s.direction} {s.family} confirmed — {s.waiting!.phase === "WAIT_RESPONSE"
-              ? "waiting for a local recovery" : "waiting for a usable price"}</Badge>
-            <p className="small-text">{s.waiting!.text} This is not a call: do not treat it as “enter now”.</p>
-            {s.waiting!.response && (
-              <dl className="kv-grid small-text" data-testid="live-waiting-response">
-                <dt>Return reference</dt><dd className="mono">H0 {s.waiting!.response.H0} · L0 {s.waiting!.response.L0} · published {fmtTime(s.waiting!.response.published_at)}</dd>
-                <dt>Call possible only if</dt><dd>{s.waiting!.response.recovery_rule}</dd>
-                <dt>Ends this attempt</dt><dd>{s.waiting!.response.contradiction_rule}</dd>
-              </dl>
-            )}
-            <dl className="call-geo">
-              <dt>Usable return corridor</dt><dd className="mono">{s.waiting!.corridor ? `${s.waiting!.corridor[0]} – ${s.waiting!.corridor[1]}` : "none left"}</dd>
-              <dt>Target now</dt><dd className="mono">{s.waiting!.target_now} <span className="muted">(at confirmation {s.waiting!.target_at_confirmation})</span></dd>
-              <dt>Stop guidance if issued</dt><dd className="mono">{s.waiting!.stop_V}</dd>
-              <dt>Waits until</dt><dd className="mono">{fmtTime(s.waiting!.wait_until)} · hard deadline {fmtTime(s.waiting!.hard_deadline)}</dd>
-              <dt>Blockers now</dt><dd>{s.waiting!.blockers.length ? s.waiting!.blockers.map(reasonText).join(", ") : "none (waiting for a fresh minute)"}</dd>
-            </dl>
-          </div>
-        ))}
-      </section>
-    );
-  }
-  const entryTone: Tone = c.entry_status === "AVAILABLE" ? "pos" : c.entry_status === "UNVERIFIED" ? "warn" : "neutral";
-  return (
-    <section className={cx("call-panel", c.direction === "LONG" ? "is-long" : "is-short")} data-testid="live-call">
-      <div className="call-head">
-        <span className="call-dir" data-testid="live-call-direction">{c.direction}</span>
-        <span className="call-family">{c.family} · {c.family_text}</span>
-        {c.presentation === "NOT_CURRENT"
-          ? <Badge tone="warn" testid="live-call-not-current">Not current — entry not verifiable</Badge>
-          : <Badge tone={c.origin === "LIVE" ? "pos" : "pending"}>{c.origin === "LIVE" ? "Live call" : "Reconstructed — not actionable"}</Badge>}
-      </div>
-      <div className={cx("call-entry", `tone-${entryTone}`)} data-testid="live-entry">
-        <b>{ENTRY_TEXT[c.entry_status]}</b>
-        {c.entry_reasons.length > 0 && <span className="small-text"> ({c.entry_reasons.map(reasonText).join(", ")})</span>}
-      </div>
-      <dl className="call-geo">
-        <dt>Entry now (admissible)</dt>
-        <dd className="mono" data-testid="live-admissible">{c.admissible_bounds ? `${c.admissible_bounds[0]} – ${c.admissible_bounds[1]}` : "not verifiable"}</dd>
-        <dt>Structural area</dt><dd className="mono">{c.structural_area[0]} – {c.structural_area[1]}</dd>
-        <dt>Target</dt><dd className="mono" data-testid="live-target">{c.target} <span className="muted">({humanize(c.target_type)})</span></dd>
-        <dt>Stop guidance</dt><dd className="mono" data-testid="live-stop-guidance">{c.stop}</dd>
-        <dt>Expected duration</dt><dd>{c.duration_window ? `${c.duration_window[0]}–${c.duration_window[1]} min` : "too late for a new entry"}</dd>
-        <dt>Time left</dt><dd className="mono">{c.remaining_minutes} min · hard deadline {fmtTime(c.hard_deadline)}</dd>
-        <dt>Thesis</dt><dd><Badge tone={c.thesis_status === "ONGOING" ? "info" : "neutral"}>{THESIS_TEXT[c.thesis_status] ?? c.thesis_status}</Badge></dd>
-      </dl>
-      <p className="call-guidance" data-testid="live-guidance">{c.guidance}</p>
-      {v.run_id && (
-        <button type="button" className="link-btn" onClick={() => onHistory(c.call_id)} data-testid="live-call-history-open">
-          Show this call's recorded history (revision r{c.revision})</button>
-      )}
-      <p className="muted small-text">Stop is guidance, not an order or guaranteed fill. Size, leverage and orders are yours.</p>
-    </section>
   );
 }
 
@@ -355,8 +218,7 @@ export function LiveCockpit() {
       )}
       <div className="live-grid">
         <aside className="live-side">
-          <DirectionPanel v={v} />
-          <CallPanel v={v} onHistory={openHistory} />
+          <ProposalPanel v={v} onHistory={openHistory} />
         </aside>
         <div className="live-main">
           {history && (

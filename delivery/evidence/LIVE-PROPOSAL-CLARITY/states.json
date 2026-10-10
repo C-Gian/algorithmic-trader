@@ -1,0 +1,83 @@
+{
+ "v0.6 episode": {
+  "method": "v0.6",
+  "run_id": "live-20250828T0316-6df1a9",
+  "session_id": "demo-synthetic-session",
+  "call_id": "call-AL-2025-09-01T04:07:01+00:00-05a41e24819a",
+  "scenario_id": "AL-2025-09-01T03:15:00+00:00-d49a8b5618ff",
+  "tape": "tests/test_mp005_live.py L1-L3 LONG (REF, neutral, eq, VALID; WIDE quote 04:05)",
+  "moments": [
+   {
+    "n": 1,
+    "clock": "2025-09-01 04:06:01.500000+00:00",
+    "expected": "UP",
+    "conditional": true,
+    "table_row": "CONDITIONAL_SCENARIO",
+    "call": null,
+    "scenario": {
+     "family": "A",
+     "direction": "LONG",
+     "status": "CONFIRMED",
+     "phase": "WAIT_RESPONSE",
+     "blockers": []
+    }
+   },
+   {
+    "n": 2,
+    "clock": "2025-09-01 04:07:01.500000+00:00",
+    "call_id": "call-AL-2025-09-01T04:07:01+00:00-05a41e24819a",
+    "entry_status": "AVAILABLE",
+    "revision": 0,
+    "issued_at": "2025-09-01T04:07:01+00:00",
+    "admissible": [
+     "99900",
+     "100014.5"
+    ],
+    "target": "100700.0",
+    "stop": "99700.0",
+    "hard_deadline": "2025-09-01T08:02:01+00:00",
+    "material_change": "NEW_CALL"
+   },
+   {
+    "n": 3,
+    "clock": "2025-09-01 04:07:06+00:00",
+    "call_id": "call-AL-2025-09-01T04:07:01+00:00-05a41e24819a",
+    "entry_status": "UNVERIFIED",
+    "entry_reasons": [
+     "QUOTE_STALE"
+    ],
+    "revision": 1,
+    "revision_published": "2025-09-01T04:07:05.500001Z",
+    "thesis": "ONGOING",
+    "guidance": "Thesis ongoing; current entry cannot be verified (no fresh quote). Do not treat as ready now.",
+    "material_change": "ENTRY_UNVERIFIED"
+   }
+  ]
+ },
+ "v0.2 CLOSED": {
+  "run_id": "live-20250828T0400-583cc1",
+  "call_id": "call-AL-2025-09-01T05:21:01+00:00-5e9629dcc808",
+  "clock": "2025-09-01 05:23:01.500000+00:00",
+  "entry_status": "CLOSED",
+  "entry_reasons": [
+   "PRICE_OUTSIDE_STRUCTURAL_AREA"
+  ],
+  "revision": 4
+ },
+ "v0.2 terminal": {
+  "clock": "2025-09-01 08:27:01.500000+00:00",
+  "recent_calls": [
+   {
+    "call_id": "call-AL-2025-09-01T05:21:01+00:00-5e9629dcc808",
+    "family": "A",
+    "direction": "LONG",
+    "issued_at": "2025-09-01T05:21:01+00:00",
+    "terminal": "TARGET_REACHED",
+    "reason": "CERTIFIED_TARGET_CONTACT:okx/BTC-USDT-SWAP/trade_bar_1m#obs@2025-09-01T08:26:00Z",
+    "terminal_at": "2025-09-01T08:27:01+00:00",
+    "origin": "LIVE"
+   }
+  ]
+ },
+ "not current": "v0.6 AVAILABLE view (moment 2) served with a STOPPED session row: API presents UNVERIFIED, NOT_CURRENT"
+}

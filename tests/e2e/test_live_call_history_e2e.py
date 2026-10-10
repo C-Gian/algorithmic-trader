@@ -75,6 +75,14 @@ def detail(cid: str, revisions: list) -> dict:
             "market_view_at_issue": None, "hypothetical_paths": [], "hypothetical_paths_withheld_at_cutoff": 0}
 
 
+def open_history(page) -> None:
+    """The history entry point sits in the cockpit panel's "Approfondimenti" (opened if needed)."""
+    det = page.get_by_test_id("live-proposal-details")
+    if not det.evaluate("e => e.open"):
+        det.locator("summary").click()
+    page.get_by_test_id("live-call-history-open").click()
+
+
 def shot(page, loc, path) -> None:
     """Element evidence from a full-page render, so the sticky app header never covers the card."""
     box = loc.bounding_box()
@@ -130,7 +138,7 @@ def test_live_call_history_identity_order_states_and_read_only(stack, browser, e
     s.details["live-R1/calls/c1"] = (200, detail("c1", [rev("c1", 1, "CLOSED"), rev("c1", 2, "AVAILABLE")]))
     page.goto(f"{stack.base}/#market")
     expect(page.get_by_test_id("live-call-direction")).to_have_text("LONG", timeout=15_000)
-    page.get_by_test_id("live-call-history-open").click()
+    open_history(page)
     expect(hist).to_have_attribute("data-state", "ok")
     expect(hist.get_by_test_id("history-identity")).to_contain_text("c1")
     expect(hist.get_by_test_id("history-identity")).to_contain_text("live-R1")
@@ -189,14 +197,14 @@ def test_live_call_history_identity_order_states_and_read_only(stack, browser, e
     s.hold.add("live-R1/calls/c5")
     s.details["live-R1/calls/c5"] = (200, detail("c5", [rev("c5", 1, "AVAILABLE")]))
     s.details["live-R1/calls/c6"] = (200, detail("c6", [rev("c6", 1, "AVAILABLE")]))
-    expect(page.get_by_test_id("live-call-history-open")).to_contain_text("r1", timeout=10_000)
-    page.get_by_test_id("live-call-history-open").click()
+    expect(page.get_by_test_id("live-call")).to_have_attribute("data-state", "AVAILABLE", timeout=10_000)
+    open_history(page)
     expect(hist.get_by_test_id("history-identity")).to_contain_text("c5")
     expect(hist.get_by_test_id("history-loading")).to_be_visible()
     expect(hist).to_have_attribute("data-state", "loading")
     s.live = live("live-R1", "S1", call_view("c6", 1))
-    expect(page.get_by_test_id("live-guidance")).to_contain_text("c6", timeout=10_000)
-    page.get_by_test_id("live-call-history-open").click()
+    expect(page.get_by_test_id("live-guidance")).to_contain_text("c6", timeout=10_000)  # inside the details
+    open_history(page)
     expect(hist.get_by_test_id("history-identity")).to_contain_text("c6")
     expect(hist).to_have_attribute("data-state", "ok")
     s.release()  # the stale c5 response arrives last
@@ -215,7 +223,7 @@ def test_live_call_history_identity_order_states_and_read_only(stack, browser, e
 
     # 7. no revisions, partial, missing and error are distinct states
     s.details["live-R2/calls/c9"] = (200, detail("c9", []))
-    page.get_by_test_id("live-call-history-open").click()
+    open_history(page)
     expect(hist.get_by_test_id("history-identity")).to_contain_text("live-R2")
     expect(hist.get_by_test_id("history-no-revisions")).to_be_visible()
     s.details["live-R2/calls/c9"] = (200, detail("c9", [rev("c9", 1, "AVAILABLE"), rev("c9", 3, "CLOSED")]))
@@ -254,7 +262,7 @@ def test_live_call_history_fits_a_phone_width(stack, browser, evidence_dir):  # 
     expect(page.get_by_test_id("live-call-direction")).to_have_text("LONG", timeout=15_000)
     page.wait_for_timeout(300)
     before = page.evaluate(OFFENDERS)  # the cockpit's own pre-existing offenders (method badge), not this panel
-    page.get_by_test_id("live-call-history-open").click()
+    open_history(page)
     hist = page.get_by_test_id("live-call-history")
     expect(hist.get_by_test_id("revision-row")).to_have_count(2, timeout=15_000)
     page.wait_for_timeout(300)

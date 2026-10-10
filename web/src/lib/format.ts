@@ -46,3 +46,15 @@ export function humanize(s: string): string {
 export function shortId(id: string, keep = 10): string {
   return id.length <= keep + 1 ? id : `${id.slice(0, keep)}…`;
 }
+
+const LOCAL_TIME = new Intl.DateTimeFormat("it-IT", {
+  day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit",
+  timeZoneName: "short",
+});
+
+/** Readable local date/time with an identifiable time zone (e.g. 01/09/2025, 07:07:01 CEST); precise UTC stays in fmtTime. */
+export function fmtLocal(iso: string | null | undefined): string {
+  if (!iso) return "—";
+  const d = new Date(iso.replace(/(\.\d{3})\d+/, "$1"));
+  return Number.isNaN(d.getTime()) ? iso : LOCAL_TIME.format(d);
+}

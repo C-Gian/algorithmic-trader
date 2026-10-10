@@ -1,7 +1,22 @@
-# Current task — Live call history in the live cockpit (product, read-only consultation)
-Date: 2026-10-10. Status: DELIVERED — READY FOR DIRECTOR REVIEW — LIVE CALL HISTORY ONLY ([evidence](delivery/evidence/LIVE-CALL-HISTORY/SUMMARY.md)). Remote CI is Owner-operated: PENDING / NOT CHECKED. No Owner launch is prepared and no further package is activated.
+# Current task — Cockpit: clarity of the operational state (live cockpit only)
+Date: 2026-10-10. Status: DELIVERED — READY FOR DIRECTOR REVIEW — COCKPIT CLARITY ONLY ([evidence](delivery/evidence/LIVE-PROPOSAL-CLARITY/NOTE.md)). Remote CI is Owner-operated: PENDING / NOT CHECKED. No Owner launch is prepared and no further package is activated.
 
-## Authorization (relayed by the Owner, 10 October 2026)
+## Authorization (Astra, relayed by the Owner, 10 October 2026)
+
+Live cockpit only; Workbench excluded. The main panel must answer "Che cosa propone il sistema adesso?":
+- **States.** "In attesa — nessun ingresso proposto" / "Ingresso disponibile secondo il sistema" / "Ingresso non più disponibile" / "Non è possibile confermare la disponibilità dell'ingresso". Terminal and non-current keep the existing protections.
+- **Source.** Only the backend's authoritative state; no availability inferred from direction, quotes or levels.
+- **Without a call.** Direction, the needed condition, the scenario destination and the structural invalidation, never called entry, target or stop.
+- **With a call.** Plain LONG/SHORT, the admissible band only when available, the published target and stop, conditions, deadline and the reason for unavailability. Past levels are history only.
+- **Kept distinct.** Narrative destination vs operational target, horizon vs deadline, entry availability vs thesis validity, the system's indication vs the user's unknown operation.
+- **Presentation.** Grouped, readable on phones, simple Italian, details collapsed, local time with time zone; no probabilities, promises or countdowns; absences declared.
+- **Checks.** Fields and states verified first, including CLOSED, UNVERIFIED, terminal and not current, without changing rules.
+- **Excluded.** Method, API or persistence changes; Owner data, live feed or economic replay. v0.6 and HDP-001 frozen; evaluations INACTIVE.
+
+## Previous task — Live call history in the live cockpit (product, read-only consultation)
+Date: 2026-10-10. Status: DELIVERED — READY FOR DIRECTOR REVIEW — LIVE CALL HISTORY ONLY ([evidence](delivery/evidence/LIVE-CALL-HISTORY/SUMMARY.md)), with the revision-label correction at `e582f38`; synthetic comprehension episode at `1c346ff` ([note](delivery/evidence/LIVE-COMPREHENSION-EPISODE/NOTE.md)).
+
+### Live call history authorization (relayed by the Owner, 10 October 2026)
 
 After the read-only adviser user-path survey at `6710474` (the Owner's visual review was closed as not assessable from the available material, with no interface finding), the Director authorized making the already-recorded history of a single call consultable from the live cockpit:
 - identity = session/run + call, never mixing records; reuse of *Guidance revisions* where compatible; minimal presentation adaptation and reading of existing records only;

@@ -1,7 +1,8 @@
 """WP-009 correction, finding 4 (E2E presentation): the cockpit renders a non-current session's saved call without any
 usable-entry presentation. The page is served the REAL ``live_status`` payload (stopped / unresponsive / disconnected
-session whose saved call entry was AVAILABLE) and must show "Not current", "Entry cannot be verified now", no admissible
-range and no "Live call" badge; the current session keeps its saved presentation."""
+session whose saved call entry was AVAILABLE) and must show the not-current badge, "Non è possibile confermare la
+disponibilità dell'ingresso", no admissible range and no "Call live" badge; the current session keeps its saved
+presentation (cockpit clarity pass: Italian main panel, same protections)."""
 
 from __future__ import annotations
 
@@ -54,15 +55,16 @@ def test_cockpit_never_presents_a_usable_entry_for_a_non_current_session(stack, 
     assert not errors, errors
     expect(page.get_by_test_id("live-call")).to_be_visible(timeout=15_000)
     if case == "current":
-        expect(page.get_by_test_id("live-entry")).to_contain_text("Entry valid now")
+        expect(page.get_by_test_id("live-entry")).to_contain_text("Ingresso disponibile secondo il sistema")
         expect(page.get_by_test_id("live-admissible")).to_contain_text("1 – 2")
         expect(page.get_by_test_id("live-call-not-current")).to_have_count(0)
     else:
         expect(page.get_by_test_id("live-call-not-current")).to_be_visible()
-        expect(page.get_by_test_id("live-entry")).to_contain_text("Entry cannot be verified now")
-        expect(page.get_by_test_id("live-entry")).not_to_contain_text("Entry valid now")
-        expect(page.get_by_test_id("live-admissible")).to_contain_text("not verifiable")
-        expect(page.get_by_test_id("live-call")).not_to_contain_text("Live call")
+        expect(page.get_by_test_id("live-entry")).to_contain_text("Non è possibile confermare la disponibilità")
+        expect(page.get_by_test_id("live-entry")).not_to_contain_text("Ingresso disponibile")
+        expect(page.get_by_test_id("live-admissible")).to_have_count(0)
+        expect(page.get_by_test_id("live-entry-reasons")).to_contain_text("sessione non corrente")
+        expect(page.get_by_test_id("live-call")).not_to_contain_text("Call live")
         expect(page.get_by_test_id("live-not-current")).to_be_visible()
     assert not errors, errors
     ctx.close()

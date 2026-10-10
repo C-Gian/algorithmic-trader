@@ -501,8 +501,8 @@ def test_shell_market_overview_is_default_honest_and_navigable(stack, browser, e
     expect(page.get_by_test_id("live-start")).to_be_visible()
     for area in COCKPIT_AREAS:
         expect(page.get_by_test_id(area)).to_be_visible()
-    expect(page.get_by_test_id("live-call")).to_contain_text("No current assessment")
-    expect(page.get_by_test_id("live-expected")).to_have_text("Unavailable")
+    expect(page.get_by_test_id("live-call")).to_contain_text("Nessuna valutazione in corso")
+    expect(page.get_by_test_id("live-expected")).to_have_text("Non disponibile")
     # real readiness is shown; synthetic output is not
     expect(page.get_by_test_id("overview-run-workers")).to_have_text("1", timeout=10_000)
     expect(page.get_by_test_id("readiness")).to_contain_text("Integrated adviser")
