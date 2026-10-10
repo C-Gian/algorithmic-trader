@@ -1,6 +1,6 @@
 # MarketView +1h vs last-hour persistence — descriptive tabulation (run v0.5)
 
-Base `11a74b6`. Evaluation `eval-20261009T155751-be8b2b`, replay `obs-20261009T155751-0f255b`, `btc.context-action.v0.5`, evaluator `adviser.evaluator.v3`. No equivalence with v0.6 is assumed. Feasibility: [MARKETVIEW-PERSISTENCE-FEASIBILITY.md](../MARKETVIEW-PERSISTENCE-FEASIBILITY.md). READY FOR DIRECTOR REVIEW — TABULATION ONLY; not accepted.
+Base `11a74b6`. Evaluation `eval-20261009T155751-be8b2b`, replay `obs-20261009T155751-0f255b`, `btc.context-action.v0.5`, evaluator `adviser.evaluator.v3`. No equivalence with v0.6 is assumed. Feasibility: [MARKETVIEW-PERSISTENCE-FEASIBILITY.md](../MARKETVIEW-PERSISTENCE-FEASIBILITY.md). **Director: descriptive closure of the tabulation at `ced7b2f`.** A later documentary correction (chain wording only) leaves counts and conclusions unchanged.
 
 ## Access actually used
 
@@ -11,7 +11,9 @@ Base `11a74b6`. Evaluation `eval-20261009T155751-be8b2b`, replay `obs-20261009T1
 - **Scenario links and cross-checks.** From the existing local GET exports of the R→N diagnosis (`sc_0/1.json`, `report.json`; hashes in `tabulation.json`).
 - **Not done.** No GET call, price cache, replay, Deep validation, backtest, product suite or CI query.
 
-## Integrity — what was actually checked
+## Integrity — executor checks (what was actually checked)
+
+These are the executor's own checks. They are not an independent review; the Director's review and closure are separate.
 
 | Check | Result |
 |---|---|
@@ -19,7 +21,7 @@ Base `11a74b6`. Evaluation `eval-20261009T155751-be8b2b`, replay `obs-20261009T1
 | seq, record_id, sample_time unique | yes; `record_id = sample-<sample_time>` for every row |
 | Sample times = hourly grid 2025-09-01T00Z … 2025-12-31T23Z; seq order = time order | yes |
 | Per-record digest recomputed (sha256 of canonical record) | 2928/2928 equal |
-| Chain links inside the extracted subset | 2927 verified, 0 failed. Seq 1349 is not verifiable: it follows the 4 non-extracted records, seq 1345–1348. |
+| Chain checks inside the extracted subset | 2927 successful checks, made of 2926 links between extracted records and one check from the initial seed (seq 1); 0 failed. One link is not verifiable: seq 1349, which follows the 4 non-extracted records, seq 1345–1348. |
 | Stored-value consistency (no prices): outcome_1h(h) = sign(anchor(h+1h) − anchor(h)); persistence(h+1h) = outcome_1h(h) | 2927/2927 each (the last hour has no successor) |
 | Report cross-check (by_view, samples, 158 scored, 77 matching, 0 endpoint missing; antecedent 132) | all equal |
 
@@ -117,5 +119,5 @@ Distinct scenarios are not independent observations either: they can overlap in 
 |---|---|
 | [export.sql](export.sql) | the single read-only extraction |
 | [tabulate_view_persistence.py](tabulate_view_persistence.py) | offline script: `uv run python tabulate_view_persistence.py <vs_export> <journal_export> <out_dir>`; two regenerations are byte-identical |
-| [tabulation.json](tabulation.json) | every count above, with denominators, integrity results and input hashes |
+| [tabulation.json](tabulation.json) | every count above, with denominators, integrity results and input hashes. Its `chain_links_verified_within_subset` = 2927 counts the seed check plus the 2926 links (see `chain_scope`). |
 | [samples.csv](samples.csv) | one row per sample (2928). Prefixes: `s_` = STORED in the `view_sample` record; `d_` = DERIVED (month, population, match flags, paired cell, owner, repetition ordinal, antecedent class, first CONFIRM); `a_` = annotation (activation after +1h, scenario terminal) |

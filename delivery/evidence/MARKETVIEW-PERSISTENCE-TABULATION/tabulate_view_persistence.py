@@ -96,8 +96,8 @@ def integrity(meta: dict, count: dict, rows: list[dict]) -> dict:
         t += timedelta(hours=1)
     by_seq = {r["seq"]: r for r in rows}
     digest_ok = sum(1 for r in rows if hashlib.sha256(canonical(r["record"])).hexdigest() == r["digest"])
-    # chain links verifiable inside the extracted subset only: seq 1 from the initial value, and seq s whose
-    # predecessor s-1 is also a view_sample. Links after a non-extracted record (path rows) are NOT verifiable.
+    # chain checks possible inside the extracted subset only: seq 1 from the initial seed, and the link into seq s whose
+    # predecessor s-1 is also a view_sample. A link after a non-extracted record (path rows) is NOT verifiable.
     links_ok = links_bad = 0
     unverifiable = []
     for r in rows:
@@ -140,9 +140,12 @@ def integrity(meta: dict, count: dict, rows: list[dict]) -> dict:
         "seq_range": [min(seqs), max(seqs)], "seq_not_extracted_other_kinds": missing,
         "chain_links_verified_within_subset": links_ok, "chain_links_failed": links_bad,
         "chain_links_not_verifiable": unverifiable,
-        "chain_scope": ("partial: per-record digests and the adjacent links listed are recomputed here; the full chain and "
-                        "its final commitment are NOT verified by this extraction (non-view_sample records and the "
-                        "finish commitment were outside the authorized access)"),
+        "chain_scope": ("partial: per-record digests are recomputed; chain_links_verified_within_subset counts the "
+                        "successful checks, i.e. the check of seq 1 from the initial seed plus the links between "
+                        "consecutive extracted records; chain_links_not_verifiable lists the links that follow a "
+                        "non-extracted record; the full chain and its final commitment are NOT verified by this "
+                        "extraction (non-view_sample records and the finish commitment were outside the authorized "
+                        "access)"),
         "stored_value_consistency": dict(cons),
     })
     return out

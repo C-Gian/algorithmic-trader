@@ -45,7 +45,7 @@
    1349
   ],
   "chain_links_verified_within_subset": 2927,
-  "chain_scope": "partial: per-record digests and the adjacent links listed are recomputed here; the full chain and its final commitment are NOT verified by this extraction (non-view_sample records and the finish commitment were outside the authorized access)",
+  "chain_scope": "partial: per-record digests are recomputed; chain_links_verified_within_subset counts the successful checks, i.e. the check of seq 1 from the initial seed plus the links between consecutive extracted records; chain_links_not_verifiable lists the links that follow a non-extracted record; the full chain and its final commitment are NOT verified by this extraction (non-view_sample records and the finish commitment were outside the authorized access)",
   "digest_recomputed_equal": "2928/2928",
   "expected_rows": 2928,
   "generations": {

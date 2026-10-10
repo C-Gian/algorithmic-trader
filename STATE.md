@@ -707,7 +707,9 @@ Only the dossier, the JSON labels and the script strings were corrected, from th
 - **Recommendation: B.** Possible with declared limits, after the Director authorizes a single read-only extraction of the run's 2928 `view_sample` rows (or a GET export, which is a scope change). No prospective data is missing.
 - **Checks.** None beyond hash verification of the local exports; no suites. CI is Owner-operated: PENDING / NOT CHECKED.
 
-## MarketView +1h vs persistence — descriptive tabulation (base `11a74b6`; READY FOR DIRECTOR REVIEW — TABULATION ONLY; not accepted)
+## MarketView +1h vs persistence — descriptive tabulation (base `11a74b6`; Director descriptive closure at `ced7b2f`)
+
+**Director (as relayed by the Owner):** descriptive closure of the tabulation at `ced7b2f`, with a correction of the chain wording only. Counts and conclusions are unchanged. The executor checks below are distinct from the Director's independent review.
 
 [Summary](delivery/evidence/MARKETVIEW-PERSISTENCE-TABULATION/SUMMARY.md) · [tabulation.json](delivery/evidence/MARKETVIEW-PERSISTENCE-TABULATION/tabulation.json) · [samples.csv](delivery/evidence/MARKETVIEW-PERSISTENCE-TABULATION/samples.csv) · [script](delivery/evidence/MARKETVIEW-PERSISTENCE-TABULATION/tabulate_view_persistence.py). Run v0.5 only; no v0.6 equivalence. Method and product unchanged.
 - **Access.**
@@ -715,7 +717,7 @@ Only the dossier, the JSON labels and the script strings were corrected, from th
   - The local scenario journal and the report export were used for links and cross-checks. The raw export is outside Git.
 - **Integrity.**
   - 2928/2928 rows on the hourly grid, unique, digests recomputed equal.
-  - 2927 chain links verified inside the subset. The full chain and the finish commitment are not verified here; the app's 21/21 assurance is reused by provenance only.
+  - Executor chain checks: 2927 successful checks, made of 2926 links between extracted records and one check from the initial seed; one link is not verifiable. The full chain and the finish commitment are not verified here; the app's 21/21 assurance is reused by provenance only.
   - Report aggregates equal.
 - **Result (descriptive).**
   - 158/2928 samples are directional. All have an endpoint and persistence, with no FLAT, so the paired set is all 158.
@@ -724,3 +726,4 @@ Only the dossier, the JSON labels and the script strings were corrected, from th
   - Antecedent at +1h: already active 94, activated within +1h 38, not activated 26.
   - No significance test, no thresholds, no subgroup search. No economic or independent validation: Sep–Dec is exposed development.
 - **Checks.** Integrity/reconciliation in the script and byte-identical regeneration; no product suites. CI is Owner-operated: PENDING / NOT CHECKED.
+- **Documentary correction after closure.** Chain wording only, in SUMMARY, this STATE section, and the identical `chain_scope` string of the script and `tabulation.json`. No new extraction, data regeneration, product suite or Owner activity; counts and conclusions unchanged. CI is Owner-operated: PENDING / NOT CHECKED.
