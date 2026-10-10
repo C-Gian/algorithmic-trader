@@ -1,4 +1,4 @@
-# RP-001 — Persistenza direzionale 1h → 1h
+# HDP-001 — Persistenza direzionale 1h → 1h
 
 ## 1. Ipotesi e popolazione
 

@@ -5,8 +5,8 @@ Date: 2026-10-09. Status: DELIVERED — READY FOR DIRECTOR REVIEW — WP-015 ONL
 
 The read-only four R→N paths diagnosis of `eval-20261009T155751-be8b2b` was delivered at `cb356f2`, with Astra documentary corrections at `3c6af11`; see the STATE.
 
-**Registered protocol — not an active package.** [RP-001 — Persistenza direzionale 1h → 1h](delivery/RP-001-HOURLY-DIRECTIONAL-PERSISTENCE.md) is approved by the Director and registered, with its separate [decision](delivery/RP-001-DIRECTOR-CLOSURE.md) (operational convention: fixed bootstrap seed 0).
-- RP-001 execution is **INACTIVE**.
+**Registered protocol — not an active package.** [HDP-001 — Persistenza direzionale 1h → 1h](delivery/HDP-001-HOURLY-DIRECTIONAL-PERSISTENCE.md) is approved by the Director and registered, with its separate [decision](delivery/HDP-001-DIRECTOR-CLOSURE.md) (operational convention: fixed bootstrap seed 0).
+- HDP-001 execution is **INACTIVE**.
 - The verification window is not yet identified or authorized.
 - v0.6 stays frozen, and January–August 2026 stays protected.
 - This registration authorizes no computation, window selection, acquisition, Owner access or product change.
