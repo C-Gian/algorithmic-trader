@@ -821,3 +821,15 @@ Only the dossier, the JSON labels and the script strings were corrected, from th
 - **Checks.** Build/typecheck; new DB tests 2 passed and E2E 2 passed; regression E2E 7 passed (historical call detail, cockpit presentation, shell). Run on a disposable PostgreSQL; the Owner stack was not touched. Six synthetic screenshots.
 - **Limits.** Material changes, candidates and scenarios are not shown in the card. A pre-existing phone-width overflow of the cockpit method badge is left as is (no restyling authorized). No real live-session check. CI is Owner-operated: PENDING / NOT CHECKED.
 - **Correction (base `3a8f783`).** Past revisions in the live card are labelled "Entry available / closed / not verifiable at this revision", not "… now"; current availability stays in the banner. Historical panel unchanged. Build passed; history E2E 2 passed (old AVAILABLE revision readable after the terminal without any "now"); `test_adviser_e2e` 2 passed. Terminal screenshot updated. CI is Owner-operated: PENDING / NOT CHECKED.
+
+## Live cockpit — synthetic comprehension episode (base `e582f38`; evidence only, FOR DIRECTOR)
+
+[Note](delivery/evidence/LIVE-COMPREHENSION-EPISODE/NOTE.md) · three screenshots · [episode.json](delivery/evidence/LIVE-COMPREHENSION-EPISODE/episode.json) · [generator](delivery/evidence/LIVE-COMPREHENSION-EPISODE/generate_episode.py). This is the comprehension test authorized by Astra; no product change.
+- **Episode.** One real in-memory v0.6 live session over the existing MP-005 L1–L3 LONG tape, captured three times:
+  1. expectation UP, conditional, no call; A LONG confirmed, waiting for a local recovery;
+  2. call `call-AL-…-05a41e24819a` issued, entry AVAILABLE (r0);
+  3. the same call at r1, entry UNVERIFIED (`QUOTE_STALE`), thesis ongoing.
+  
+  Rendered through the real `live_status` and cockpit, labelled "Dimostrazione sintetica".
+- **Open point for the Director.** The availability closure is UNVERIFIED, not CLOSED, because no CLOSED state occurs in this tape. The other limits are in the note. Disposable PostgreSQL removed after use. CI is Owner-operated: PENDING / NOT CHECKED.
+
