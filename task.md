@@ -16,6 +16,11 @@ The read-only four R→N paths diagnosis of `eval-20261009T155751-be8b2b` was de
 - **Execution INACTIVE.** Acquisition and computation after the end need a separate executive assignment.
 - v0.6 stays frozen, and January–August 2026 stays protected.
 
+**A v0.6 operational evaluation — not an active package.** The [design](delivery/A-V06-OPERATIONAL-EVALUATION-DESIGN.md) and the [orchestrator decision](delivery/A-V06-OPERATIONAL-EVALUATION-CLOSURE.md) are approved (Astra, relayed by the Owner) and registered verbatim.
+- Window [2027-01-25T00:00Z, 2027-07-26T00:00Z) fixed. The pre-start freeze of method, implementation and profile identities (technical reference `b47b997`) is still to be completed and verified.
+- **Execution INACTIVE.** No future pack is acquired or certified by the registration. Acquisition, access and execution need a separate assignment.
+- v0.6 and HDP-001 unchanged; January–August 2026 stays protected.
+
 ## Authority
 
 - [MP-005 specification](delivery/MP-005-V06-INITIAL-RESPONSE-INCOMPATIBILITY.md) and [Director methodological closure](delivery/MP-005-DIRECTOR-CLOSURE.md): separate documents, registered from the relayed authoritative text.
