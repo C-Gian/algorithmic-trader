@@ -5,11 +5,16 @@ Date: 2026-10-09. Status: DELIVERED — READY FOR DIRECTOR REVIEW — WP-015 ONL
 
 The read-only four R→N paths diagnosis of `eval-20261009T155751-be8b2b` was delivered at `cb356f2`, with Astra documentary corrections at `3c6af11`; see the STATE.
 
-**Registered protocol — not an active package.** [HDP-001 — Persistenza direzionale 1h → 1h](delivery/HDP-001-HOURLY-DIRECTIONAL-PERSISTENCE.md) is approved by the Director and registered, with its separate [decision](delivery/HDP-001-DIRECTOR-CLOSURE.md) (operational convention: fixed bootstrap seed 0).
-- HDP-001 execution is **INACTIVE**.
-- The verification window is not yet identified or authorized.
+**HDP-001 — not an active package.** The [protocol](delivery/HDP-001-HOURLY-DIRECTIONAL-PERSISTENCE.md) and its [registration decision](delivery/HDP-001-DIRECTOR-CLOSURE.md) are approved and registered (bootstrap seed 0).
+- **Exploration closed.** The Director accepted the [exploration](delivery/evidence/HDP-001-EXPLORATION/SUMMARY.md) at `cf18dbd`, on Astra's independent review ([closure and freeze](delivery/HDP-001-EXPLORATION-CLOSURE.md)). It promotes no signal and shows no economic effectiveness.
+- **Verification frozen.**
+  - Constant reference UP.
+  - Window [2026-11-02T00:00Z, 2027-01-25T00:00Z) ([note](delivery/HDP-001-VERIFICATION-WINDOW-PROPOSAL.md)).
+  - Protocol and conventions: 168 h blocks, 10,000 resamples, `random.Random(0)`, type-7 percentiles.
+  - Boundary: the last cutoff is kept, and the endpoint equal to the end is not scored.
+  - No adaptation, extension, opportunistic stop or interim consultation. Any exposure that influences research decisions must be declared.
+- **Execution INACTIVE.** Acquisition and computation after the end need a separate executive assignment.
 - v0.6 stays frozen, and January–August 2026 stays protected.
-- This registration authorizes no computation, window selection, acquisition, Owner access or product change.
 
 ## Authority
 

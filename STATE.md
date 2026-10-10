@@ -1,6 +1,6 @@
 # Project State
 
-Updated: 2026-10-10 — HDP-001 exploration (authorized, exposed Sep–Dec 2025) delivered; verification INACTIVE. Earlier: HDP-001 verification window proposed (documentary only; not opened, execution INACTIVE). Earlier: HDP-001 hourly directional persistence protocol approved and registered; execution INACTIVE (see the last section). 2026-10-09 — WP-015 (MP-005 v0.6) implemented and delivered: READY FOR DIRECTOR REVIEW — WP-015 ONLY (see the last section). Earlier the same day: the Owner continuous v0.5 run `eval-20261009T155751-be8b2b` was accepted descriptively and its four R→N paths were diagnosed (cb356f2, corrected at 3c6af11). WP-014 (MP-004 v0.5) and its correction remain awaiting Director engineering review.
+Updated: 2026-10-10 — HDP-001 exploration closed (Director, `cf18dbd`); verification frozen; execution INACTIVE. Earlier: HDP-001 exploration (authorized, exposed Sep–Dec 2025) delivered. Earlier: HDP-001 verification window proposed (documentary only; not opened, execution INACTIVE). Earlier: HDP-001 hourly directional persistence protocol approved and registered; execution INACTIVE (see the last section). 2026-10-09 — WP-015 (MP-005 v0.6) implemented and delivered: READY FOR DIRECTOR REVIEW — WP-015 ONLY (see the last section). Earlier the same day: the Owner continuous v0.5 run `eval-20261009T155751-be8b2b` was accepted descriptively and its four R→N paths were diagnosed (cb356f2, corrected at 3c6af11). WP-014 (MP-004 v0.5) and its correction remain awaiting Director engineering review.
 
 **Current task: [task.md](task.md) — WP-015 MP-005 v0.6 implementation, delivered; awaiting Director engineering review and Owner-operated CI. No Owner run prepared.** [MP-005](delivery/MP-005-V06-INITIAL-RESPONSE-INCOMPATIBILITY.md) · [closure](delivery/MP-005-DIRECTOR-CLOSURE.md) · [authorization](delivery/WP-015-MP-005-IMPLEMENTATION-SPEC.md) · [evidence](delivery/evidence/WP-015-ENGINEERING-EVIDENCE.md). v0.5: [MP-004](delivery/MP-004-V05-RETURN-RESPONSE.md) · [closure](delivery/MP-004-DIRECTOR-CLOSURE.md) · [erratum](delivery/MP-004-ERRATUM-SECTION-6-RATIOS.md) · [evidence](delivery/evidence/WP-014-ENGINEERING-EVIDENCE.md). Sep–Dec 2025 is exposed development; Jan–Aug 2026 stays protected except the authorized tail.
 
@@ -781,3 +781,16 @@ Only the dossier, the JSON labels and the script strings were corrected, from th
   - Integrity: grid, uniqueness, outcome(t) = prediction(t+1h) on 2927/2927.
   - No product suites, E2E or Compose. CI is Owner-operated: PENDING / NOT CHECKED.
 - v0.6 frozen; January–August 2026 protected.
+
+## HDP-001 exploration closure and verification freeze — Director decision (10 October 2026)
+
+[Decision](delivery/HDP-001-EXPLORATION-CLOSURE.md), recorded verbatim in a separate document.
+- **Exploration closed.** Accepted at `cf18dbd`, on Astra's independent review. The executor evidence above stays as delivered. No signal promotion and no economic effectiveness shown.
+- **Verification frozen.**
+  - Constant reference UP.
+  - Window [2026-11-02T00:00Z, 2027-01-25T00:00Z).
+  - The HDP-001 protocol and its registered conventions: 168 h blocks, 10,000 resamples, `random.Random(0)`, type-7 percentiles.
+  - Boundary: the last cutoff is kept; the endpoint equal to the end is not scored.
+  - No adaptation, extension, opportunistic stop or interim consultation; exposures that influence research decisions must be declared.
+- **Execution INACTIVE.** Acquisition and computation after the window end need a separate executive assignment.
+- v0.6 frozen; January–August 2026 protected. Protocol and exploratory artifacts unchanged. CI is Owner-operated: PENDING / NOT CHECKED.
