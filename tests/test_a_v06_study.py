@@ -186,3 +186,23 @@ def test_unattested_runs_never_give_a_balance_or_zero_hours(monkeypatch, case):
     assert bal["complete_balance"] is None and bal["observed_balance"] is None
     assert bal["partial_subtotal"] is None  # no subtotal presented as a reconciled study result
     assert all(h["value"] is None and h["status"] == "NOT_ATTESTED" for h in hours)  # never abstention hours
+
+
+# -- input provisioning: acquisition plan of the registered study window ----------------------------------------------
+
+def test_study_window_acquisition_plan_and_reuse_of_local_parts(monkeypatch):
+    from algotrader.corpus import pack as pk
+
+    f, sp = _real(monkeypatch)
+    p = sp.studies[0].preset
+    lo, hi = p.warmup.start, p.tail.end
+    assert (lo, hi) == (Z("2026-12-21T00:00:00Z"), Z("2027-07-26T06:05:00Z"))  # initialization .. tail end, no margin
+    plan = pk.plan_slices([], lo, hi, f.acquisition_max_span_days)
+    months = ["2027-01-01", "2027-02-01", "2027-03-01", "2027-04-01", "2027-05-01", "2027-06-01", "2027-07-01"]
+    bounds = [lo] + [Z(m + "T00:00:00Z") for m in months] + [hi]
+    assert list(plan.acquisitions) == list(zip(bounds, bounds[1:])) and plan.slices == ()
+    # a local package already covering part of the range (e.g. the HDP-001 trade parts) is reused, never re-fetched
+    hdp = pk.LocalSource("hdp-part", Z("2026-12-01T00:00:00Z"), Z("2027-01-01T00:00:00Z"), False, 1, manifest=None)
+    reuse = pk.plan_slices([hdp], lo, hi, f.acquisition_max_span_days)
+    assert [(s.dataset_id, s.start, s.end) for s in reuse.slices] == [("hdp-part", lo, Z("2027-01-01T00:00:00Z"))]
+    assert reuse.acquisitions[0][0] == Z("2027-01-01T00:00:00Z") and reuse.acquisitions[-1][1] == hi

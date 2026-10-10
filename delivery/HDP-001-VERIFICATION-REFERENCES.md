@@ -214,3 +214,57 @@ A 7-day synthetic package took about 6 s, so a 12-week verification should take 
 - No real or verification-window data was used, and no real run has taken place.
 - C2 with a wrong instrument and C5–C7 failures were not provoked by a fixture: they are covered by code reading, not tests.
 - External provenance stays outside the tool.
+
+## 8. Input provisioning (technical path; no real data acquired)
+
+**Source availability (consulted 10 October 2026; no market-data request was made).**
+- **Official OKX API documentation**, <https://www.okx.com/docs-v5/en/> and <https://my.okx.com/docs-v5/en/>. The table of contents lists the endpoints the adapter uses:
+  - *Order Book Trading › Market Data › Get candlesticks history*, `GET /api/v5/market/history-candles`;
+  - *Public Data › REST API*: *Get mark price candlesticks history*, *Get index candlesticks history*, *Get funding rate history*.
+
+  The text of those sections (retention depth, rate limit, pagination) **could not be read**: the rendered page available to the executor stops before them. The retention depth per endpoint is therefore **not confirmed from the official text in this session**.
+- **Search-index excerpts** of the official domain state that *Get funding rate history* "can retrieve data from the last 3 months". This is not read in the section itself.
+- **Official historical-data page**, <https://www.okx.com/historical-data>. It lists downloadable datasets: candlestick (OHLC) "from July 2023 onwards", funding rate "from March 2022 onwards", trade history "from September 2021 onwards". This is a separate download product, not the REST endpoints the adapter uses; using it would be a source change and is not proposed.
+- **Project evidence (documented, not guaranteed).** On 2026-10-03 the Owner's real preparation obtained complete trade, mark and index 1m rows for 2025-08-28 → 2025-10-01 06:05, about 13 months back. The same preparation returned 0 funding rows in every window (`EMPTY_UNKNOWN`): [evidence](evidence/WP-008-R3-OWNER-SEPTEMBER-PREPARATION.md).
+- **Adapter limits** (`marketdata/okx.py`, `dataset.py`): public REST only, no key; `after`/`before` exclusive paging, newest first, `limit` ≤ 100 rows per page, ≤ 4 requests/s; `confirm=0` bars are never used; each dataset spans at most 31 days.
+
+**Documented vs guaranteed.** Recovery of 1m candles about 3 months (HDP-001) and 7 months (A v0.6) back is consistent with the project evidence above. It is **not guaranteed**: retention can change, and the official per-endpoint text was not read. Acquiring promptly after each window's end lowers the risk but is not a guarantee.
+
+**Series and exact coverage.** One series is needed: OKX BTC-USDT-SWAP trade 1m (`history-candles`, bar 1m, confirmed bars). Mark, index and funding are fetched with every dataset, because a dataset requests all four families, but HDP-001 never reads them.
+- **Range.** [2026-11-01T22:00Z, 2027-01-24T23:00Z), UTC half-open, whole minutes. The first prediction needs H(2026-11-01T23:00Z) and H(2026-11-02T00:00Z). The last scorable endpoint is H(2027-01-24T23:00Z).
+- **Excluded.** The boundary hour [2027-01-24T23:00Z, 2027-01-25T00:00Z) is not requested, and no margin is added.
+
+**Parts.** The existing UTC-month / 31-day split (`corpus.pack.split_requests`), with one dataset per part:
+
+```text
+uv run algotrader data fetch-okx --start 2026-11-01T22:00Z --end 2026-12-01T00:00Z
+uv run algotrader data fetch-okx --start 2026-12-01T00:00Z --end 2027-01-01T00:00Z
+uv run algotrader data fetch-okx --start 2027-01-01T00:00Z --end 2027-01-24T23:00Z
+uv run algotrader data verify <dataset_id>        # each; hashes, row counts, dataset identity
+uv run python scripts/hdp001_verify.py --assignment "<ref>" --out <new dir> <data root>/datasets/<id1> <id2> <id3>
+```
+
+Only under the separate executive assignment, after 2027-01-25. The `fetch-okx` end must be in the past.
+
+**Controls and artifacts** (existing tools, unchanged).
+- Each dataset is an immutable `marketdata.v1` package: raw pages, normalized Parquet, manifest, quality report, `dataset_id` derived from the raw content.
+- A re-fetch with different source content is a new dataset id (the manifest records `prior_versions`). Nothing is replaced silently.
+- Duplicates follow the marketdata contract:
+  - identical repeated rows are kept once (warning);
+  - conflicting rows keep neither value: the slot becomes `CONFLICTING_DUPLICATE` and the dataset quality INVALID, recorded and never hidden.
+- Gaps stay `MISSING` slots; nothing is interpolated.
+- The executor then attests the content minute by minute (C1–C9, §7), not file names or request success. Parts must be hour-aligned, contiguous, non-overlapping and exactly cover the range; otherwise the result is NOT_EVALUABLE.
+- **Delivered to the executor:** dataset ids, manifest hashes, requests, retrieval times, feed content identities and the hour register.
+
+**Synthetic checks run** (`tests/test_hdp001_verify.py`, 18 passed):
+- the three documented parts satisfy C3 and the 31-day span, and exclude the boundary hour;
+- identical source duplicates keep the hour COMPLETE (cells unchanged);
+- conflicting duplicates make exactly that hour an identified gap (`CONFLICTING_DUPLICATE`, the same masks as a missing minute, dataset quality recorded INVALID);
+- two contiguous parts equal one;
+- a missing minute, overlap, a non-hour-aligned split, a missing first hour, and tampered or corrupt packages, as already covered.
+
+**Residual.**
+- The official per-endpoint retention is unconfirmed (above).
+- The executive assignment and acquisition after 2027-01-25.
+- External provenance of the raw responses (§7).
+- Exposure declarations.

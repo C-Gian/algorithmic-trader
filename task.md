@@ -1,7 +1,19 @@
-# Current task — A v0.6 statistical completion (offline bootstrap)
+# Current task — Input provisioning for HDP-001 and A v0.6 (technical path; no real data)
+Date: 2026-10-10. Status: DELIVERED — READY FOR DIRECTOR REVIEW — INPUT PROVISIONING ONLY ([HDP-001 §8](delivery/HDP-001-VERIFICATION-REFERENCES.md) · [A v0.6 §10](delivery/A-V06-OPERATIONAL-EVALUATION-REFERENCES.md)). Funding certification limit for A reported (PRICE_NET_ONLY otherwise). Studies INACTIVE. Remote CI is Owner-operated: PENDING / NOT CHECKED.
+
+## Assignment (relayed by the Owner, 10 October 2026; expected base `9854f16`)
+
+Complete the technical input path of both studies without acquiring real data.
+- **Sources.** Official documentation for history, retention, paging and limits (URL, section, date); documented vs guaranteed availability. Report series that need prior collection or post-window recovery that is not documented.
+- **Coverage.** Exact intervals from the registered documents, with no margins.
+- **Path.** Reuse acquisition, `marketdata.v1`, pack composition, verification and reading. Document parts, order, identity, provenance, gaps, duplicates, overlaps, conflicts, delivery to the executors and immutable identities. Completeness is verified on content.
+- **Tests.** Synthetic: boundaries, gaps, conflicting overlaps, duplicates, identity and coverage delivery.
+- **Excluded.** Market-data requests, Owner data, credentials, acquisition, changes to windows, semantics, population or profiles, and to the `be44370` behaviour.
+
+## Previous task — A v0.6 statistical completion (offline bootstrap)
 Date: 2026-10-10. Status: DELIVERED — READY FOR DIRECTOR REVIEW — A V0.6 BOOTSTRAP TOOLING ONLY ([references §9](delivery/A-V06-OPERATIONAL-EVALUATION-REFERENCES.md)). **Decision registered; statistical implementation delivered, awaiting the Director's final review; studies INACTIVE.** The orchestrator decision, missing at delivery (`e52f237`), was then relayed and registered verbatim: [decision](delivery/A-V06-STATISTICAL-CONVENTIONS-DECISION.md). Remote CI is Owner-operated: PENDING / NOT CHECKED.
 
-## Assignment (relayed by the Owner, 10 October 2026; expected base `b2ebf20`)
+### Statistical completion assignment (relayed by the Owner, 10 October 2026; expected base `b2ebf20`)
 
 Register the orchestrator decision verbatim in a separate `delivery/` document (text not received) and complete the offline bootstrap with synthetic evidence only.
 - **Bootstrap.** The full UTC hourly grid; 168 h moving blocks; 10,000 resamples; one `random.Random(0)`; one `randrange(N-L+1)` per block, in resample -> block order; no wrap; truncated last block. The statistic is the sum of the resampled hourly values, with the registered 95% percentile convention. Zeros are only attested null contributions.

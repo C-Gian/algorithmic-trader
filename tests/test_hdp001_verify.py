@@ -183,8 +183,10 @@ def _fake(lo: datetime, hi: datetime, drop_trade=()) -> FakeOkx:
     return fake
 
 
-def _dataset(root: Path, lo: datetime, hi: datetime, **kw) -> Path:
-    r = md.acquire(client(_fake(W - 2 * H, W + 7 * H, **kw)), root, lo, hi)
+def _dataset(root: Path, lo: datetime, hi: datetime, page_hook=None, **kw) -> Path:
+    fake = _fake(W - 2 * H, W + 7 * H, **kw)
+    fake.page_hook = page_hook
+    r = md.acquire(client(fake), root, lo, hi)
     return md.dataset_path(root, r.manifest.dataset_id)
 
 
@@ -266,3 +268,47 @@ def test_verification_mode_guards(tmp_path):
         hv.run([], tmp_path / "b", hv.FROZEN, mode="VERIFICATION")  # an assignment reference is required
     with pytest.raises(SystemExit):
         hv.run([], ROOT / "delivery" / "evidence" / "HDP-001-EXPLORATION", CFG)  # never written
+
+
+# -- input provisioning: documented acquisition parts and source duplicates ------------------------------------------
+
+def test_documented_acquisition_parts_satisfy_the_executor_input_checks():
+    """The real acquisition plan: the existing UTC-month / 31-day split of the frozen required range, one
+    ``algotrader data fetch-okx`` dataset per part (references §4)."""
+    from algotrader.corpus.pack import split_requests
+
+    lo, hi = hv.required_minutes(hv.FROZEN)
+    parts = split_requests(lo, hi, md.MAX_SPAN.days)
+    assert parts == [(datetime(2026, 11, 1, 22, tzinfo=UTC), datetime(2026, 12, 1, tzinfo=UTC)),
+                     (datetime(2026, 12, 1, tzinfo=UTC), datetime(2027, 1, 1, tzinfo=UTC)),
+                     (datetime(2027, 1, 1, tzinfo=UTC), datetime(2027, 1, 24, 23, tzinfo=UTC))]
+    assert all(a.minute == 0 and b.minute == 0 and b - a <= md.MAX_SPAN for a, b in parts)  # C3 alignment, span
+    assert parts[0][0] == lo and parts[-1][1] == hi and all(parts[i][1] == parts[i + 1][0] for i in range(2))
+    assert hi <= hv.FROZEN.window_end - H  # the boundary endpoint hour is never requested
+
+
+@pytest.mark.parametrize("kind", ["identical", "conflicting"])
+def test_source_duplicates_follow_the_marketdata_contract(tmp_path, kind):
+    """Identical repeated rows are kept once (the hour stays COMPLETE); conflicting rows keep neither value, the slot
+    becomes CONFLICTING_DUPLICATE and its hour an identified gap (never a chosen value)."""
+    target = int((W + 2 * H + 30 * MIN).timestamp() * 1000)  # inside [t3 - 1h, t3)
+
+    def hook(family, page):
+        if family != Family.TRADE_CANDLES:
+            return page
+        out = []
+        for r in page:
+            out.append(r)
+            if int(r[0]) == target:
+                out.append(list(r) if kind == "identical" else [r[0], r[1], r[2], r[3], "99.5", *r[5:]])
+        return out
+
+    doc = hv.run([_dataset(tmp_path / "data", LO, HI, page_hook=hook)], tmp_path / "out", CFG, mode="SYNTHETIC")
+    assert doc["status"] == "COMPUTED" and doc["integrity"]["status"] == "ATTESTED_INTERNALLY"
+    if kind == "identical":
+        assert doc["paired"]["delta_exact"] == "1/6" and doc["absences"]["incomplete_hourly_bars"] == []
+    else:
+        (inc,) = doc["absences"]["incomplete_hourly_bars"]
+        assert inc["hour"] == [hv.iso(W + 2 * H), hv.iso(W + 3 * H)] and inc["reasons"] == {"CONFLICTING_DUPLICATE": 1}
+        assert doc["paired"]["delta_exact"] == "2/3"  # same masks as a missing minute: grid and masks kept
+        assert doc["inputs"]["datasets"][0]["quality_status"] == "invalid"  # recorded, never hidden

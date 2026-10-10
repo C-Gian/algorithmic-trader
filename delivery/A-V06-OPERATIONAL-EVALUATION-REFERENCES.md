@@ -405,3 +405,73 @@ The owner register stays descriptive (`owner_register_scope`). It is not an exha
 - Pre-execution controls: the Director's acceptance of the build and its equivalence evidence; the freeze completed before **2027-01-25T00:00Z** (design term unchanged).
 - A separate authorization for acquisition, the Owner launch, export, ledger and bootstrap.
 - The real run duration (about 217 days of data) is not measured.
+
+## 10. Input provisioning (technical path; no real data acquired)
+
+**Source availability (consulted 10 October 2026; no market-data request was made).**
+- **Official OKX API documentation**, <https://www.okx.com/docs-v5/en/> and <https://my.okx.com/docs-v5/en/>. The table of contents lists the endpoints the adapter uses:
+  - *Order Book Trading › Market Data › Get candlesticks history*, `GET /api/v5/market/history-candles`;
+  - *Public Data › REST API*: *Get mark price candlesticks history*, *Get index candlesticks history*, *Get funding rate history*.
+
+  The text of those sections (retention depth, rate limit, pagination) **could not be read**: the rendered page available to the executor stops before them. The retention depth per endpoint is therefore **not confirmed from the official text in this session**.
+- **Search-index excerpts** of the official domain state that *Get funding rate history* "can retrieve data from the last 3 months". This is not read in the section itself.
+- **Official historical-data page**, <https://www.okx.com/historical-data>. It lists downloadable datasets: candlestick (OHLC) "from July 2023 onwards", funding rate "from March 2022 onwards", trade history "from September 2021 onwards". This is a separate download product, not the REST endpoints the adapter uses; using it would be a source change and is not proposed.
+- **Project evidence (documented, not guaranteed).** On 2026-10-03 the Owner's real preparation obtained complete trade, mark and index 1m rows for 2025-08-28 → 2025-10-01 06:05, about 13 months back. The same preparation returned 0 funding rows in every window (`EMPTY_UNKNOWN`): [evidence](evidence/WP-008-R3-OWNER-SEPTEMBER-PREPARATION.md).
+- **Adapter limits** (`marketdata/okx.py`, `dataset.py`): public REST only, no key; `after`/`before` exclusive paging, newest first, `limit` ≤ 100 rows per page, ≤ 4 requests/s; `confirm=0` bars are never used; each dataset spans at most 31 days.
+
+**Documented vs guaranteed.** Recovery of 1m candles about 3 months (HDP-001) and 7 months (A v0.6) back is consistent with the project evidence above. It is **not guaranteed**: retention can change, and the official per-endpoint text was not read. Acquiring promptly after each window's end lowers the risk but is not a guarantee.
+
+**Series required by the registered profile** (§3, design §4).
+- **Trade 1m.** Setups, triggers, targets and the evaluator's price path.
+- **Mark and index 1m.** The expected base profile row needs `dislocation` enabled, which `engine_config` grants only when the pack has mark and index channels. Without them the profile becomes the "no mark/index" row of §3, an identity the design did not register as the base.
+- **Funding.** Optional. The result is PRICE_NET_ONLY unless the pack's funding capability is `AUTHORITATIVE_COMPLETE`.
+
+**Exact coverage.** The registered study preset: initialization 2026-12-21T00:00Z → evaluation [2027-01-25T00:00Z, 2027-07-26T00:00Z) → tail to 2027-07-26T06:05Z. Trade, mark and index cover [2026-12-21T00:00Z, 2027-07-26T06:05Z), UTC half-open whole minutes. Funding settlements are fetched over the same interval. Clock end = tail end + 0 allowance. Nothing is added.
+
+**Funding limit — reported, not resolved.**
+- The API funding history is consistent with a window of about 3 months (above). After the tail end, settlements from December 2026 to about April 2027 would no longer be retrievable through the adapter.
+- Certified funding would therefore need either collection during the window (preventive collection) or a different source; neither is started or proposed here.
+- With the registered design this does not block the study: the run stays PRICE_NET_ONLY (expected base row `7c868…0296` / `85504…615c`), as the design foresees.
+- If certified funding is wanted, that is a Director/Owner decision before the window starts (2027-01-25).
+
+**Acquisition plan** (existing pack job, `UTC_MONTH_AND_MAX_SPAN`). With no local package there are 8 parts:
+- [2026-12-21, 2027-01-01);
+- then each calendar month 2027-01 … 2027-06;
+- [2027-07-01, 2027-07-26T06:05).
+
+A compatible local package already covering part of the range, for example the HDP-001 December 2026 dataset, is reused and never re-fetched. If the source values changed between the two acquisitions, composition fails visibly on the conflict; it never chooses one silently.
+
+**Steps** (after 2027-07-26T06:05Z, only under the executive assignment; no real launch now):
+
+```text
+Historical Workbench → Prepare data → other presets → "A v0.6 operational evaluation — 2027-01-25 to 2027-07-26 …" → Prepare
+(pack job: reuse local parts, acquire missing parts, compose one immutable receipt-pinned pack; preparation report: Copy)
+Historical Workbench → Adviser evaluation → that pack → method v0.6 → Start   (a READY_WITH_LIMITATIONS pack needs acknowledgement)
+then the GET export, ledger and bootstrap of §8.7 / §9
+```
+
+**Controls and artifacts** (existing, unchanged).
+- Every source package is verified once through the receipt-pinned cache boundary.
+- Composition: identical overlapping slots collapse; a MISSING placeholder yields to valid evidence; conflicting values fail the job; a source rejection or API error is a failed part, never a trusted empty package.
+- The pack manifest records sources, slices, coverage counts per family and window, overlap facts, a provenance file and capability facts (funding `EMPTY_UNKNOWN` unless observed).
+- Pack identity is content-addressed. A new acquisition with different content gives a new pack, never a replaced one.
+- Completeness is counted per minute and per family in the manifest coverage, not inferred from file names or request success.
+- **Delivered to the executor:** `pack_id`, feed content identity, windows and clock end are pinned by the run (`engine_config`) and re-checked by the ledger.
+
+**Synthetic checks run.**
+- `tests/test_a_v06_study.py` (12 passed): the study window's exact acquisition plan (8 parts, no margin), and reuse of a local part.
+- `tests/test_a_v06_study_db.py` end-to-end (passed): the composed pack's id, feed content identity, requested start and tail end equal the run pins and the ledger.
+- `tests/test_pack.py` + `tests/test_pack_correction.py` (disposable PostgreSQL; 31 passed together with the end-to-end test) cover the composition path:
+  - boundary slices between contiguous parts and local reuse (`test_local_month_reused_only_boundary_slices_downloaded…`, `test_larger_covering_package_is_sliced…`);
+  - gaps and conflicting overlaps (`test_conflicts_fail_and_gap_placeholders_yield_to_valid_evidence`);
+  - equivalent packagings with identical semantics, overlaps collapsed (`test_equivalent_packagings_compose_identical_semantics`);
+  - source-boundary cutoff, honest capabilities, acknowledgement of gaps, crash/tamper recovery.
+
+**No product change.** `src/` is unchanged, so the candidate stays `be44370` with no re-examination needed. No study tool changed: the HDP-001 executor, ledger and bootstrap identities are unchanged; only tests were added.
+
+**Residual.**
+- The official per-endpoint retention is unconfirmed (above).
+- The funding decision, only if certified funding is wanted.
+- Acquisition after 2027-07-26T06:05Z and Owner preparation and launch, under a separate authorization.
+- Pre-execution controls, including exact-SHA CI reported by the Owner; design term 2027-01-25T00:00Z.
+- The real preparation and run duration are not measured.

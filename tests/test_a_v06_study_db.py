@@ -13,7 +13,7 @@ import importlib.util
 import os
 import shutil
 import sys
-from datetime import timedelta
+from datetime import datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -90,6 +90,12 @@ def test_study_window_end_to_end_prepared_launched_and_ledgered(database_url, tm
     assert adv["windows"]["evaluation"] == [sf.EV_START.isoformat(), sf.EV_END.isoformat()]
     assert adv["launch_pins"]["method"] == "v0.6" and adv["launch_pins"]["primary_is_60s"] is True
     assert rep["pack"]["evidence_classes"]["label"] == "REGISTERED_STUDY_WINDOW"
+    # identity and coverage of the composed pack reach the executor unchanged
+    assert rep["pack"]["pack_id"] == pack_id == adv["launch_pins"]["pack_id"] and rep["pack"]["status"] == "READY"
+    pack_doc = api.get(f"/api/corpus/packs/{pack_id}").json()["manifest"]
+    assert adv["launch_pins"]["feed_content_identity"] == pack_doc["feed"]["content_identity"]
+    z = lambda x: datetime.fromisoformat(str(x).replace("Z", "+00:00"))  # noqa: E731
+    assert (z(pack_doc["requested_start"]), z(pack_doc["tail_end"])) == (sf.INIT_START, sf.TAIL_END)
     months = adv["periods"]["months"]
     assert list(months) == ["2025-08", "2025-09"] and adv["periods"]["reconciliation"]["all_passed"]
 
@@ -97,6 +103,7 @@ def test_study_window_end_to_end_prepared_launched_and_ledgered(database_url, tm
     lg.export(lambda p, q: api.get(p, params=q).json(), eid, exp)
     doc = lg.run_ledger(exp, tmp_path / "ledger", mode="SYNTHETIC")
     assert doc["mode"] == "SYNTHETIC" and doc["identities"]["all_match"], doc["identities"]
+    assert (doc["pack_id"], doc["feed_content_identity"]) == (pack_id, adv["launch_pins"]["feed_content_identity"])
     assert doc["measure"] == "price_net" and doc["funding_outcomes"] == "PRICE_NET_ONLY"
     (c,) = doc["calls"]
     assert (c["call_id"], c["primary"], c["class"], c["value"], c["primary_status"]) == (
