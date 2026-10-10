@@ -150,6 +150,16 @@ v0.6 is v0.5 with ONE named addition ([MP-005](delivery/MP-005-V06-INITIAL-RESPO
 - **Reports and UI**: report v6 = report v5 + the `INITIAL_RESPONSE_INCOMPATIBLE` count as a **subset of X** (never added again), by base, direction and WAIT-open month, ratio over P (zero denominator undefined), with the declared loss of later C/R classifications (no counterfactual) in JSON, Markdown and Copy report for chat. The 20-owner RETURN convention is NOT_APPLICABLE. The Workbench and the live cockpit offer v0.6 with its status and purpose before Start; an ended entry attempt is shown as *entry attempt ended — scenario not invalidated*, distinct from an invalidated scenario; the read-only comparison adds the MP-005 limitation and the subset row (default pair v0.5/v0.6 when both exist).
 - **Limits**: synthetic fixtures only (the MP-005 §8/§9 rows checked literally through the pinned functions, reachable tapes on the MP-002 base path); no Owner run, replay on real data or economic comparison; usefulness unknown.
 
+## HDP-001 verification executor (offline study tool; study INACTIVE)
+
+`scripts/hdp001_verify.py` applies the frozen HDP-001 protocol to verified local `marketdata.v1` datasets.
+- **Construction.** It uses the existing causal feed and `temporal.v1` engine: hourly closes come only from COMPLETE 1h trade bars. UP is fixed.
+- **Checks and outputs.** Integrity checks C1–C9; any failure gives NOT_EVALUABLE. The 168 h moving-block bootstrap follows the registered procedure. It writes `results.json` and `hours.csv` into a new directory.
+- **Offline.** It does not download or use the database, the app or any service.
+- **Authorization.** It runs only under a separate executive assignment, after the window [2026-11-02, 2027-01-25).
+- **Evidence.** Synthetic tests only: `tests/test_hdp001_verify.py`. No real run.
+- **Details.** `delivery/HDP-001-VERIFICATION-REFERENCES.md` §7.
+
 ## Synthetic DEMO runs (Replay Lab → Synthetic Demo)
 
 - **Runs**: start (replay speed, optional DEMO fault injection), cancel, status, progress, elapsed time, heartbeat, attempt, failure text and recovery log.

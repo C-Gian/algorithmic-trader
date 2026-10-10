@@ -86,7 +86,7 @@ The samples.csv hash equals the input hash recorded in `results.json`. The explo
 
 The numerical equivalence observed on the exploration samples (outcome(t) = prediction(t+1h) on 2927/2927, 0 unavailable) is attributed only to that evidence: complete coverage of that run. It does not extend to cases with missing minutes.
 
-Its grid, mask, bootstrap and percentile code is the registered reference for the shared computation. A verification executor must be written under the executive assignment and must implement the frozen conventions without adding new ones.
+Its grid, mask, bootstrap and percentile code is the registered reference for the shared computation. The verification executor is a separate tool, [`scripts/hdp001_verify.py`](../scripts/hdp001_verify.py) (§7); the exploration script stays unchanged.
 
 ## 4. Future data and hashes (to register when they exist)
 
@@ -115,16 +115,102 @@ Its grid, mask, bootstrap and percentile code is the registered reference for th
 
 ## 6. Residual dependencies and what must be fixed before execution
 
-**Fixed before any computation, without changing the frozen rules:**
-- the concrete attestation checks for identity, temporal alignment, prices and masks that separate UNAVAILABLE gaps from a non-evaluable result (decision §1 gives the categories, not the checklist);
-- the coverage and concentration facts reported with the reading, for example where unavailable hours fall on the grid. Decision §1 says they limit the conclusion and sets no threshold; what is reported is not yet fixed;
-- the data route, chosen in the executive assignment (§4);
-- a verification executor (§3) and its review.
+**Prepared in the executor (§7), pending Director review:**
+- the concrete attestation checks for identity, instrument, price role, timestamps, grid, bar validity and aggregate construction, which separate UNAVAILABLE gaps from a NOT_EVALUABLE result;
+- the coverage and concentration facts reported with the reading: unavailable cutoffs per 168 h block, runs of consecutive unavailable cutoffs, and incomplete hourly bars with their reasons. There is no threshold.
+
+**Still to fix before any computation:**
+- the data route, chosen in the executive assignment (§4); the executor reads verified `marketdata.v1` datasets;
+- review of the executor and of its checks.
 
 **Registered when they exist:** dataset or pack identities, manifests, hashes, provenance and quality (§4).
 
 **Authorizations still needed:**
-- an executive assignment after 2027-01-25 covering acquisition, data registration, the executor and the computation;
+- an executive assignment after 2027-01-25 covering acquisition, data registration and the computation with the reviewed executor;
 - declarations in the exposure register.
 
 There is no consultation of outcomes during the window. v0.6 frozen; January–August 2026 protected. References registered; executive preparation still incomplete; execution INACTIVE.
+
+## 7. Verification executor — prepared, synthetic evidence only
+
+**Identity.**
+- Tool: [`scripts/hdp001_verify.py`](../scripts/hdp001_verify.py), `hdp001.verify.v1`; script SHA-256 (LF) `a4f0761071c6b77d6f649d6e29399ac6f4f8b4315ae42ce1afd51705f591acdc`.
+- Frozen configuration SHA-256 (canonical JSON) `32739a3c673c8b38ce48e2c418110888dff8b8b62cff850d03185184390239d4`. Contents: window [2026-11-02T00:00Z, 2027-01-25T00:00Z), L = 168, B = 10,000, seed 0, reference UP, BTC-USDT-SWAP trade, p = 0.025 / 0.975.
+- Tests: [`tests/test_hdp001_verify.py`](../tests/test_hdp001_verify.py).
+- Every run records the script hash, the git code version, the configuration hash and the hashes of the four authoritative sources. A VERIFICATION run refuses to start if any authoritative source differs from its pinned hash, if the configuration is not the frozen one, or if no assignment reference is given.
+
+**Command** (only under the separate executive assignment; it is not authorized now):
+
+```text
+uv run python scripts/hdp001_verify.py --assignment "<assignment reference>" --out <new empty directory> <dataset_dir> [<dataset_dir> ...]
+```
+
+**Input.**
+- Verified `marketdata.v1` dataset directories (for example from `algotrader data fetch-okx`, at most 31 days each), in any order.
+- They must start and end on whole UTC hours and be contiguous, without overlap.
+- Together they must cover exactly [2026-11-01T22:00Z, 2027-01-24T23:00Z).
+
+The tool downloads nothing, uses no service or database, and writes only `results.json` and `hours.csv` into a new directory. It never writes into the exploration directory and never updates the reference, the study status or the exposure register.
+
+**Construction.**
+- Each dataset goes through the existing causal feed (`build_feed`, modeled availability with zero delay) and the existing `temporal.v1` engine (modeled complete-prefix clock, seal-no-revision).
+- An hour is used only if its 1h trade aggregate is COMPLETE: all 60 minutes present and valid.
+- Prediction, outcome, flags, the paired set and the fixed UP reference follow protocol §2–§5 and the decision §1.
+- The boundary endpoint H(2027-01-25T00:00Z) is outside the required range and is never read.
+
+**Integrity checks.** Any failure gives NOT_EVALUABLE, and nothing is computed.
+
+| Check | Attests |
+|---|---|
+| C1 | `marketdata.verify` per dataset: manifest schema, file hashes and sizes, Parquet row counts, raw page hashes, dataset_id recomputed from raw pages. An unreadable artifact counts as a failure. |
+| C2 | Source okx; instrument BTC-USDT-SWAP SWAP in the request and in the instrument snapshot |
+| C3 | Hour-aligned, contiguous, non-overlapping datasets whose union is exactly the required range |
+| C4 | Feed and aggregation build without error; modeled zero-delay availability policy; exactly one `trade_bar_1m` channel for the instrument (mark, index and funding unused) |
+| C5 | Temporal counters: no late, misaligned or outside-coverage evidence |
+| C6 | Exactly one trade observation or quality event per minute slot of each dataset |
+| C7 | One sealed 1h trade record per hour, in order |
+| C8 | Recount from the trade events, independent of the aggregator. COMPLETE iff 60 valid minutes; the close equals the last minute's close; known at the hour end. INCOMPLETE has fewer valid minutes and keeps its reasons. Any other status inside the range is inconsistent. |
+| C9 | One hourly bar per required hour for the N cutoffs |
+
+**Scope of the checks.**
+- These checks attest **internal consistency** only.
+- A gap that passes them is an identified gap: an INCOMPLETE hour with recorded reasons (MISSING, INVALID_ROW, CONFLICTING_DUPLICATE, INCOMPLETE_REJECTED and so on). It becomes PREDICTION_UNAVAILABLE / OUTCOME_UNAVAILABLE, with grid and masks kept.
+- **Not attested by any hash**, and listed in every output as needing external provenance:
+  - the authenticity of the OKX responses;
+  - the agreement of the history-candle prices with the traded market;
+  - the absence of alteration before the hashes were first recorded.
+
+**Output.**
+- Mode and label. SYNTHETIC outputs say that they are not the verification and carry no reading.
+- Executor identity, sources, configuration, input identities: dataset_id, manifest hash, request, retrieval times, base URL, feed content identity, ordered event hash, temporal profile fingerprint.
+- The integrity checks, the population and its flags (counted separately), the paired table with exact accuracies and Delta.
+- The bootstrap, following the §2 procedure: block lengths, start range, zero-denominator count, the Delta* vector hash, the type-7 interval and its cross-check.
+- The absence distribution and the hour register hash.
+- The status: COMPUTED, INCONCLUSIVE_DURATION, INCONCLUSIVE_ZERO_DENOMINATOR, INCONCLUSIVE_NO_PAIRED_HOURS or NOT_EVALUABLE.
+- **VERIFICATION runs only.** The protocol §6 interval position, with the note that coverage and concentration limit the conclusion and that the reading is the Director's.
+
+**Synthetic evidence** (10 October 2026). `tests/test_hdp001_verify.py`: 15 passed. All values were hand-derived in the test, and the bootstrap draws were recomputed there independently. The cases are:
+- four paired cells with a FLAT outcome, a FLAT prediction with a FLAT outcome, and a majority-DOWN sample where UP stays fixed;
+- an incomplete hour masking exactly its dependent cutoffs;
+- the boundary endpoint never read, and the first prediction from prior history;
+- the registered draws, with masks kept;
+- N < 2L, and all-zero denominators;
+- the frozen-grid arithmetic (2016 cutoffs, 12 × 168 h, starts 0 … 1848) on synthetic hourly closes;
+- full offline runs through real `marketdata.v1` packages built from synthetic rows:
+  - complete;
+  - one internal minute missing with the final close present;
+  - two contiguous datasets, equal to one;
+- tampered, corrupt, partial, overlapping and non-hour-aligned inputs, all NOT_EVALUABLE;
+- no overwrite, and the VERIFICATION guards.
+
+Three temporary mutations were each detected and reverted:
+- an incomplete hour certified by its last close;
+- the reference re-estimated from the outcomes;
+- the boundary endpoint read.
+
+A 7-day synthetic package took about 6 s, so a 12-week verification should take about 1–2 minutes (estimate, not measured).
+
+**Not demonstrated.**
+- No real or verification-window data was used, and no real run has taken place.
+- C2 with a wrong instrument and C5–C7 failures were not provoked by a fixture: they are covered by code reading, not tests.
+- External provenance stays outside the tool.

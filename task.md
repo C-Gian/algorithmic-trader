@@ -1,7 +1,22 @@
-# Current task — Closure of the study references (documentary only)
+# Current task — HDP-001 verification executor, technical preparation
+Date: 2026-10-10. Status: DELIVERED — READY FOR DIRECTOR REVIEW — HDP-001 EXECUTOR ONLY. The executor is prepared only to the extent shown by synthetic tests ([references §7](delivery/HDP-001-VERIFICATION-REFERENCES.md)). **HDP-001 INACTIVE.** Remote CI is Owner-operated: PENDING / NOT CHECKED.
+
+## Assignment (relayed by the Owner, 10 October 2026; expected base `d5a666b`)
+
+Implement and document an offline HDP-001 verification executor, ready to apply the frozen protocol, verified only with isolated synthetic fixtures.
+- **Sources.** The protocol, the Director decision, the exploration closure and the references decision. The operational references are an index only. The temporal semantics and the exploration script are reused, not modified.
+- **Scope.** Existing formats and tools. Explicit offline path: no download, service, Owner DB or UI, and no adviser change.
+- **Samples.** The frozen window, 2016 cutoffs, the last one BOUNDARY_NOT_SCORED. Complete hours only, with no interpolation. UP fixed. No MarketView, scenario or call selection. FLAT and unavailability per the protocol, with grid and masks kept.
+- **Integrity.** Concrete checks; UNAVAILABLE vs NOT_EVALUABLE; no coverage percentage; internal vs external provenance declared.
+- **Computation.** Paired cells, accuracies, Delta; the registered bootstrap; duration and zero denominators per the protocol; no A v0.6 convention.
+- **Output.** Identities and hashes, coverage, masks, absence distribution, synthetic vs real distinguished, no overwrite, no automatic update of the reference, status or register.
+- **Tests.** Few discriminating synthetic cases with hand-derived expectations. The existing framework, no product suites, DB or E2E.
+- **Excluded.** Acquiring or consulting verification data or protected periods; running the real study. v0.6 frozen; A technical preparation not activated.
+
+## Previous task — Closure of the study references (documentary only)
 Date: 2026-10-10. Status: **Riferimenti registrati; preparazione esecutiva ancora incompleta; studi INACTIVE.** [Decision (verbatim)](delivery/HDP-001-A-V06-REFERENCES-DECISION.md) · [HDP-001 references](delivery/HDP-001-VERIFICATION-REFERENCES.md) · [A v0.6 references](delivery/A-V06-OPERATIONAL-EVALUATION-REFERENCES.md) · [exposure register](delivery/STUDY-EXPOSURE-REGISTER.md). Remote CI is Owner-operated: PENDING / NOT CHECKED.
 
-## Assignment (relayed by the Owner, 10 October 2026)
+### Study references closure assignment (relayed by the Owner, 10 October 2026)
 
 Base `aff2a3d`.
 - Register the authoritative decision verbatim in a separate addendum linked to the pinned HDP-001 and A v0.6 documents. Do not edit the pinned texts or replace the decision with a summary.
