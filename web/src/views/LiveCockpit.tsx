@@ -7,6 +7,7 @@ import { fmtNum, fmtTime, humanize } from "../lib/format";
 import { usePoll } from "../lib/usePoll";
 import { Icon } from "../ui/Icon";
 import { Badge, Button, Card, cx, Mono, Notice, Tone } from "../ui/primitives";
+import { HistoryKey, LiveCallHistory } from "./LiveCallHistory";
 import { useCopyFeedback } from "./replay/MarketReplay";
 
 // Home live cockpit (WP-009): the Owner starts/stops the local live adviser here. Every value comes from the committed
@@ -135,7 +136,7 @@ function DirectionPanel({ v }: { v: LiveView | null }) {
   );
 }
 
-function CallPanel({ v }: { v: LiveView | null }) {
+function CallPanel({ v, onHistory }: { v: LiveView | null; onHistory: (callId: string) => void }) {
   const c: CallView | null = v?.call ?? null;
   const mv = v?.market_view;
   if (!v) {
@@ -233,17 +234,21 @@ function CallPanel({ v }: { v: LiveView | null }) {
         <dt>Thesis</dt><dd><Badge tone={c.thesis_status === "ONGOING" ? "info" : "neutral"}>{THESIS_TEXT[c.thesis_status] ?? c.thesis_status}</Badge></dd>
       </dl>
       <p className="call-guidance" data-testid="live-guidance">{c.guidance}</p>
+      {v.run_id && (
+        <button type="button" className="link-btn" onClick={() => onHistory(c.call_id)} data-testid="live-call-history-open">
+          Show this call's recorded history (revision r{c.revision})</button>
+      )}
       <p className="muted small-text">Stop is guidance, not an order or guaranteed fill. Size, leverage and orders are yours.</p>
     </section>
   );
 }
 
-function Timeline({ st }: { st: LiveStatus }) {
+function Timeline({ st, onHistory }: { st: LiveStatus; onHistory: (callId: string) => void }) {
   const v = st.view;
-  const items = [
+  const items: { at: string; kind: string; text: string; alert: LiveStatus["alerts"][number] | null; callId?: string }[] = [
     ...st.alerts.map((a) => ({ at: a.created_at, kind: humanize(a.change_type), text: a.summary, alert: a })),
     ...(v?.recent_calls ?? []).map((c) => ({ at: c.terminal_at, kind: `${c.direction} ${c.family} ${THESIS_TEXT[c.terminal] ?? c.terminal}`,
-                                             text: reasonText(c.reason), alert: null })),
+                                             text: reasonText(c.reason), alert: null, callId: c.call_id })),
     ...(v?.notes ?? []).slice(-6).map((n) => ({ at: n.at, kind: humanize(n.event), text: "", alert: null })),
   ].sort((a, b) => (a.at < b.at ? 1 : -1)).slice(0, 14);
   if (!items.length) return <p className="muted small-text">No material change yet.</p>;
@@ -256,6 +261,10 @@ function Timeline({ st }: { st: LiveStatus }) {
           <span className="tl-text">{x.text}</span>
           {x.alert && !x.alert.acknowledged && (
             <button type="button" className="link-btn" onClick={() => void adviserApi.ack(x.alert!.alert_key)}>dismiss</button>
+          )}
+          {x.callId && v?.run_id && (
+            <button type="button" className="link-btn" onClick={() => onHistory(x.callId!)}
+                    data-testid="timeline-call-history-open">history</button>
           )}
         </li>
       ))}
@@ -287,6 +296,13 @@ export function LiveCockpit() {
     }
   };
   const copy = () => void runCopy(() => adviserApi.analysis());
+  // the history of one call, fixed to the run + call it was opened from (never re-pointed at a newer call/session)
+  const [history, setHistory] = useState<HistoryKey | null>(null);
+  const openHistory = (callId: string) => {
+    if (!v?.run_id) return;
+    setHistory({ runId: v.run_id, callId, sessionId: st?.session?.session_id ?? null });
+    window.setTimeout(() => document.querySelector("[data-testid=live-call-history]")?.scrollIntoView({ block: "nearest" }), 0);
+  };
   const newAlerts = (st?.alerts ?? []).filter((a) => !a.acknowledged);
   return (
     <section className="live-cockpit" data-testid="live-cockpit">
@@ -340,9 +356,13 @@ export function LiveCockpit() {
       <div className="live-grid">
         <aside className="live-side">
           <DirectionPanel v={v} />
-          <CallPanel v={v} />
+          <CallPanel v={v} onHistory={openHistory} />
         </aside>
         <div className="live-main">
+          {history && (
+            <LiveCallHistory key={`${history.runId}|${history.callId}`} sel={history} view={v}
+                             sessionId={st?.session?.session_id ?? null} onClose={() => setHistory(null)} />
+          )}
           <Card title="BTC price · last complete minutes" icon="market" testid="live-price"
                 eyebrow={v?.clock ? `as of ${fmtTime(v.clock)} · ${v.origin === "LIVE" ? "live receipts" : "reconstructed history"}` : "no data yet"}
                 actions={<Badge tone={v?.origin === "LIVE" ? "pos" : "pending"}>{v?.origin === "LIVE" ? "LIVE" : "NOT LIVE"}</Badge>}>
@@ -354,7 +374,7 @@ export function LiveCockpit() {
               are not majority votes: each has a stated role.</p>}
           </div>
           <Card title="What changed" icon="pulse" testid="live-changes">
-            {st ? <Timeline st={st} /> : null}
+            {st ? <Timeline st={st} onHistory={openHistory} /> : null}
           </Card>
         </div>
       </div>

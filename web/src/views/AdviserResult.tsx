@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { adviserApi, CallDetail, ENTRY_TEXT, EXPECTED_TEXT, reasonText, ROW_TEXT, scenarioPhrase, ScenarioState,
-  THESIS_TEXT } from "../adviser";
+import { adviserApi, CallDetail, ENTRY_TEXT, EXPECTED_TEXT, reasonText, RevisionRecord, ROW_TEXT, scenarioPhrase,
+  ScenarioState, THESIS_TEXT } from "../adviser";
 import { AdviserSection, ObsReplay, ResponseKey, ResponseTally } from "../api";
 import { fmtNum, fmtTime, humanize } from "../lib/format";
 import { Badge, Card, cx, Metric, Notice, Skeleton } from "../ui/primitives";
@@ -309,6 +309,37 @@ function MiniChart({ bars, call }: { bars: { t: string; c: string; h: string; l:
   );
 }
 
+/** The recorded guidance revisions of one call, in journal order (shared by the historical call detail and the live
+ *  call history). ``detail`` adds the other recorded values of each revision with full UTC times; every value shown
+ *  is the stored one, and absent fields read "not recorded" instead of being reconstructed. */
+export function RevisionList({ revisions, detail = false, testid = "call-revisions" }: {
+  revisions: RevisionRecord[]; detail?: boolean; testid?: string;
+}) {
+  const nr = "not recorded";
+  return (
+    <ol className={cx("change-timeline", detail && "is-detail")} data-testid={testid}>
+      {revisions.map((r) => (
+        <li key={r.revision} data-testid={detail ? "revision-row" : undefined} data-revision={detail ? r.revision : undefined}>
+          <span className="mono small-text">{detail ? `r${r.revision} · ${fmtTime(r.env.published_at)}` : fmtTime(r.env.published_at).slice(11, 16)}</span>
+          <span className="tl-kind">{r.thesis_status === "ONGOING" ? ENTRY_TEXT[r.entry_status] ?? r.entry_status : THESIS_TEXT[r.thesis_status] ?? r.thesis_status}</span>
+          <span className="tl-text" title={r.terminal_reason ?? r.entry_reasons.join(", ")}>{r.terminal_reason ? reasonText(r.terminal_reason) : r.entry_reasons.map(reasonText).join(", ")}</span>
+          {detail && (
+            <dl className="kv-grid small-text revision-values">
+              <dt>Recorded change</dt><dd className="mono">{r.changed?.length ? r.changed.join(", ") : nr}</dd>
+              <dt>Entry / thesis</dt><dd className="mono">{r.entry_status} / {r.thesis_status}</dd>
+              <dt>Entry reasons</dt><dd className="mono">{r.entry_reasons.length ? r.entry_reasons.join(", ") : "none recorded"}</dd>
+              <dt>Terminal reason</dt><dd className="mono">{r.terminal_reason ?? "none recorded"}</dd>
+              <dt>Admissible then</dt><dd className="mono">{r.current_admissible_bounds ? `${r.current_admissible_bounds[0]} – ${r.current_admissible_bounds[1]}` : "none recorded"}</dd>
+              <dt>Remaining then</dt><dd className="mono">{r.remaining_minutes != null ? `${r.remaining_minutes} min` : nr}</dd>
+              <dt>Guidance</dt><dd>{r.guidance || nr}</dd>
+            </dl>
+          )}
+        </li>
+      ))}
+    </ol>
+  );
+}
+
 function CallDetailPanel({ replayId, callId }: { replayId: string; callId: string }) {
   const [d, setD] = useState<CallDetail | null>(null);
   const [bars, setBars] = useState<{ t: string; o: string; h: string; l: string; c: string }[]>([]);
@@ -354,13 +385,7 @@ function CallDetailPanel({ replayId, callId }: { replayId: string; callId: strin
         ))}
       </ol>
       <div className="adv-section-title">Guidance revisions (the call itself)</div>
-      <ol className="change-timeline" data-testid="call-revisions">
-        {d.revisions.map((r) => (
-          <li key={r.revision}><span className="mono small-text">{fmtTime(r.env.published_at).slice(11, 16)}</span>
-            <span className="tl-kind">{r.thesis_status === "ONGOING" ? ENTRY_TEXT[r.entry_status] ?? r.entry_status : THESIS_TEXT[r.thesis_status] ?? r.thesis_status}</span>
-            <span className="tl-text" title={r.terminal_reason ?? r.entry_reasons.join(", ")}>{r.terminal_reason ? reasonText(r.terminal_reason) : r.entry_reasons.map(reasonText).join(", ")}</span></li>
-        ))}
-      </ol>
+      <RevisionList revisions={d.revisions} />
       <div className="hypo" data-testid="call-hypothetical">
         <div className="adv-section-title">Hypothetical evaluation (separate; not a fill)</div>
         <div className="small-table-wrap">

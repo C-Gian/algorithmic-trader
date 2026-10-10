@@ -206,6 +206,9 @@ export interface CallRecord {
   hard_deadline: string;
   premise: string;
   env: { factual_cursor: number; origin: string; published_at: string };
+  /** Entry/thesis status stored with the call record at issue. */
+  entry_status?: string;
+  thesis_status?: string;
   actionability: { gain_bps: string | null; risk_bps: string | null; cost_envelope_bps: string | null;
                    admissible_bounds: [string, string] | null; side_price: string | null; side_price_source: string | null };
   limiting_landmark: Record<string, string | null> | null;
@@ -221,6 +224,9 @@ export interface RevisionRecord {
   guidance: string;
   remaining_minutes: string | null;
   env: { published_at: string };
+  /** Further stored revision fields (semantic.v2 call_revision); shown as recorded, never reconstructed. */
+  changed?: string[];
+  current_admissible_bounds?: [string, string] | null;
 }
 
 export interface PathRecord {

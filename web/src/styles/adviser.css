@@ -121,3 +121,9 @@
   .live-method { flex: 1 1 100%; }
   .live-method .control { max-width: calc(100vw - 120px); }
 }
+
+/* Live call history: recorded revisions with their stored values (full UTC time on its own line) */
+.change-timeline.is-detail li { grid-template-columns: minmax(0, 1fr); gap: 2px; padding: 8px 0; border-top: 1px dashed var(--line, rgba(127, 127, 127, 0.35)); }
+.revision-values { margin: 4px 0 0; }
+.revision-values dt { color: var(--text-3); }
+.revision-values dd { margin: 0; }

@@ -1,7 +1,20 @@
-# Current task — WP-015: MP-005 implementation / candidate v0.6
-Date: 2026-10-09. Status: DELIVERED — READY FOR DIRECTOR REVIEW — WP-015 ONLY ([evidence](delivery/evidence/WP-015-ENGINEERING-EVIDENCE.md)). Remote CI is Owner-operated: PENDING / NOT CHECKED. No Owner launch is prepared and no further package is activated.
+# Current task — Live call history in the live cockpit (product, read-only consultation)
+Date: 2026-10-10. Status: DELIVERED — READY FOR DIRECTOR REVIEW — LIVE CALL HISTORY ONLY ([evidence](delivery/evidence/LIVE-CALL-HISTORY/SUMMARY.md)). Remote CI is Owner-operated: PENDING / NOT CHECKED. No Owner launch is prepared and no further package is activated.
 
-## Preceding record
+## Authorization (relayed by the Owner, 10 October 2026)
+
+After the read-only adviser user-path survey at `6710474` (the Owner's visual review was closed as not assessable from the available material, with no interface finding), the Director authorized making the already-recorded history of a single call consultable from the live cockpit:
+- identity = session/run + call, never mixing records; reuse of *Guidance revisions* where compatible; minimal presentation adaptation and reading of existing records only;
+- revisions in recorded order, explicit UTC times, stored values/changes/reasons only; current vs earlier revisions, no-revision/partial/missing/error, available/not-current/terminal kept distinct; no stale data under a new call/session, including out-of-order responses;
+- no reconstructed motivations, no implied Owner entry, no hypothetical economic path in live; read-only, no dedicated continuous polling;
+- stop at the boundary if new events, persistence or method semantics were needed. A minimal read-API adaptation was allowed but was not needed.
+
+Not authorized: general restyling, new infrastructure, kernel/rule/parameter/selection/evaluator/method-identity changes, persistence or migrations, live feed, Owner data or stack changes, acquisition or economic replay. v0.6 and HDP-001 stay frozen; studies stay INACTIVE.
+
+## Previous task — WP-015: MP-005 implementation / candidate v0.6
+Date: 2026-10-09. Status: DELIVERED — READY FOR DIRECTOR REVIEW — WP-015 ONLY ([evidence](delivery/evidence/WP-015-ENGINEERING-EVIDENCE.md)). Remote CI is Owner-operated: PENDING / NOT CHECKED.
+
+## Preceding record and studies (not active packages; execution INACTIVE)
 
 The read-only four R→N paths diagnosis of `eval-20261009T155751-be8b2b` was delivered at `cb356f2`, with Astra documentary corrections at `3c6af11`; see the STATE.
 
@@ -21,12 +34,12 @@ The read-only four R→N paths diagnosis of `eval-20261009T155751-be8b2b` was de
 - **Execution INACTIVE.** No future pack is acquired or certified by the registration. Acquisition, access and execution need a separate assignment.
 - v0.6 and HDP-001 unchanged; January–August 2026 stays protected.
 
-## Authority
+## WP-015 authority
 
 - [MP-005 specification](delivery/MP-005-V06-INITIAL-RESPONSE-INCOMPATIBILITY.md) and [Director methodological closure](delivery/MP-005-DIRECTOR-CLOSURE.md): separate documents, registered from the relayed authoritative text.
 - **Executive authorization**, recorded verbatim and separately in [WP-015-MP-005-IMPLEMENTATION-SPEC.md](delivery/WP-015-MP-005-IMPLEMENTATION-SPEC.md). The closure alone did not activate work. The authorization covers implementation and synthetic engineering checks only, not economic runs.
 
-## Assignment (summary; the verbatim text is authoritative)
+## WP-015 assignment (summary; the verbatim text is authoritative)
 
 1. **Registration.** Register spec, closure and authorization separately. Prepare the task, register and v0.6 identities. Keep every inherited numerical value and show only the new categorical elements. Preserve v0.2–v0.5 specifications, identities, outputs and checkpoints.
 2. **Scoped implementation.** Only the MP-005 check after the valid preparation of the single RETURN reference:
