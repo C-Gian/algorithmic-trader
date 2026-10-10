@@ -1,5 +1,9 @@
 # Current task — Input provisioning for HDP-001 and A v0.6 (technical path; no real data)
-Date: 2026-10-10. Status: DELIVERED — READY FOR DIRECTOR REVIEW — INPUT PROVISIONING ONLY ([HDP-001 §8](delivery/HDP-001-VERIFICATION-REFERENCES.md) · [A v0.6 §10](delivery/A-V06-OPERATIONAL-EVALUATION-REFERENCES.md)). Funding certification limit for A reported (PRICE_NET_ONLY otherwise). Studies INACTIVE. Remote CI is Owner-operated: PENDING / NOT CHECKED.
+Date: 2026-10-10. Status: **CLOSED by the orchestrator's disposition** ([HDP-001 §8.1](delivery/HDP-001-VERIFICATION-REFERENCES.md) · [A v0.6 §10.1](delivery/A-V06-OPERATIONAL-EVALUATION-REFERENCES.md)).
+- The preparatory cycle is closed within the documented limits.
+- Future source availability is not attested; the risk is accepted.
+- Funding not covered: PRICE_NET_ONLY, already admitted, so no funding decision is required.
+- Pre-execution conditions and a separate authorization remain. Studies INACTIVE. Remote CI is Owner-operated: PENDING / NOT CHECKED.
 
 ## Assignment (relayed by the Owner, 10 October 2026; expected base `9854f16`)
 

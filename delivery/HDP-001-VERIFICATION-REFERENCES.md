@@ -268,3 +268,33 @@ Only under the separate executive assignment, after 2027-01-25. The `fetch-okx` 
 - The executive assignment and acquisition after 2027-01-25.
 - External provenance of the raw responses (§7).
 - Exposure declarations.
+
+### 8.1 Orchestrator disposition on input provisioning (verbatim; registered 10 October 2026)
+
+Registered on base `6e55e509b2f6faa944c8c43b0e000bc28a717372`, after the executor's provisioning notes above, which are kept unchanged as delivered. The text below is the orchestrator's disposition, verbatim, as relayed by the Owner. Only this heading and sentence are editorial.
+
+```text
+Accetto il limite documentale e mantengo il recupero post-finestra previsto. Non autorizzo raccolta preventiva o cambio di fonte.
+
+È un’accettazione del rischio che lo studio possa risultare ineseguibile o incompleto, non una certificazione della disponibilità futura. Il recupero storico già riuscito sostiene la fattibilità, ma non garantisce che le stesse serie saranno recuperabili nel 2027.
+
+Possiamo quindi chiudere lo step distinguendo:
+
+- Percorso tecnico documentato e verificato sinteticamente, sulla base della review e delle evidenze dell’executor.
+- Disponibilità futura della fonte non attestata, da verificare quando sarà autorizzata l’acquisizione.
+- Funding non coperto: resta applicabile PRICE_NET_ONLY, senza interpretarlo come funding nullo o risultato netto completo.
+- Serie necessarie mancanti: applicare soltanto i trattamenti delle lacune già registrati; se non consentono una valutazione valida, dichiararla non valutabile. Nessuna sostituzione, modifica del profilo o spostamento della finestra impliciti.
+
+Direttore, registra questa disposizione nei riferimenti esistenti e chiudi autonomamente lo step. Non serve un altro incarico di ricerca documentale per tentare di ottenere una garanzia che la documentazione potrebbe comunque non offrire. Se emergerà una comunicazione ufficiale concreta di dismissione o riduzione dello storico, quella sarà una nuova evidenza da portarmi prima dell’acquisizione.
+
+Con questa chiusura termina il ciclo preparatorio dei due studi: non continuiamo ad aggiungere controlli o infrastruttura in assenza di un impedimento concreto. Restano le condizioni pre-esecuzione già elencate e l’autorizzazione separata.
+
+Entrambi gli studi restano INACTIVE; v0.6 e HDP-001 congelati. Nessuna acquisizione, consultazione di dati Owner o interrogazione CI.
+```
+
+**Status after the disposition.**
+- The preparatory cycle is closed within the documented limits.
+- Future source availability is not attested; the risk is accepted.
+- Missing required series get only the registered gap treatments, or the result is NOT_EVALUABLE.
+- The pre-execution conditions and a separate authorization remain.
+- HDP-001 INACTIVE.

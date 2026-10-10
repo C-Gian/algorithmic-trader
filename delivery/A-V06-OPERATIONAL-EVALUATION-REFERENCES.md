@@ -432,7 +432,7 @@ The owner register stays descriptive (`owner_register_scope`). It is not an exha
 - The API funding history is consistent with a window of about 3 months (above). After the tail end, settlements from December 2026 to about April 2027 would no longer be retrievable through the adapter.
 - Certified funding would therefore need either collection during the window (preventive collection) or a different source; neither is started or proposed here.
 - With the registered design this does not block the study: the run stays PRICE_NET_ONLY (expected base row `7c868…0296` / `85504…615c`), as the design foresees.
-- If certified funding is wanted, that is a Director/Owner decision before the window starts (2027-01-25).
+- PRICE_NET_ONLY is already admitted by the design and the disposition (§10.1); no new funding decision is required. Uncovered funding is never read as zero funding or as a complete net result.
 
 **Acquisition plan** (existing pack job, `UTC_MONTH_AND_MAX_SPAN`). With no local package there are 8 parts:
 - [2026-12-21, 2027-01-01);
@@ -471,7 +471,39 @@ then the GET export, ledger and bootstrap of §8.7 / §9
 
 **Residual.**
 - The official per-endpoint retention is unconfirmed (above).
-- The funding decision, only if certified funding is wanted.
+- Funding not covered: PRICE_NET_ONLY applies (§10.1); no preventive collection or source change is authorized.
 - Acquisition after 2027-07-26T06:05Z and Owner preparation and launch, under a separate authorization.
 - Pre-execution controls, including exact-SHA CI reported by the Owner; design term 2027-01-25T00:00Z.
 - The real preparation and run duration are not measured.
+
+### 10.1 Orchestrator disposition on input provisioning (verbatim; registered 10 October 2026)
+
+Registered on base `6e55e509b2f6faa944c8c43b0e000bc28a717372`, after the executor's provisioning notes above, which are kept unchanged as delivered. The text below is the orchestrator's disposition, verbatim, as relayed by the Owner. Only this heading and sentence are editorial.
+
+```text
+Accetto il limite documentale e mantengo il recupero post-finestra previsto. Non autorizzo raccolta preventiva o cambio di fonte.
+
+È un’accettazione del rischio che lo studio possa risultare ineseguibile o incompleto, non una certificazione della disponibilità futura. Il recupero storico già riuscito sostiene la fattibilità, ma non garantisce che le stesse serie saranno recuperabili nel 2027.
+
+Possiamo quindi chiudere lo step distinguendo:
+
+- Percorso tecnico documentato e verificato sinteticamente, sulla base della review e delle evidenze dell’executor.
+- Disponibilità futura della fonte non attestata, da verificare quando sarà autorizzata l’acquisizione.
+- Funding non coperto: resta applicabile PRICE_NET_ONLY, senza interpretarlo come funding nullo o risultato netto completo.
+- Serie necessarie mancanti: applicare soltanto i trattamenti delle lacune già registrati; se non consentono una valutazione valida, dichiararla non valutabile. Nessuna sostituzione, modifica del profilo o spostamento della finestra impliciti.
+
+Direttore, registra questa disposizione nei riferimenti esistenti e chiudi autonomamente lo step. Non serve un altro incarico di ricerca documentale per tentare di ottenere una garanzia che la documentazione potrebbe comunque non offrire. Se emergerà una comunicazione ufficiale concreta di dismissione o riduzione dello storico, quella sarà una nuova evidenza da portarmi prima dell’acquisizione.
+
+Con questa chiusura termina il ciclo preparatorio dei due studi: non continuiamo ad aggiungere controlli o infrastruttura in assenza di un impedimento concreto. Restano le condizioni pre-esecuzione già elencate e l’autorizzazione separata.
+
+Entrambi gli studi restano INACTIVE; v0.6 e HDP-001 congelati. Nessuna acquisizione, consultazione di dati Owner o interrogazione CI.
+```
+
+**Status after the disposition.**
+- The preparatory cycle is closed within the documented limits.
+- Future source availability is not attested; the risk is accepted.
+- Funding not covered: PRICE_NET_ONLY.
+- Missing required series get only the registered gap treatments, or the result is NOT_EVALUABLE.
+- No implicit substitution, profile change or window shift.
+- The pre-execution conditions and a separate authorization remain.
+- A v0.6 INACTIVE.
