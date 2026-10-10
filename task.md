@@ -1,7 +1,20 @@
-# Current task — Complete the references of the two frozen studies (documentary only)
-Date: 2026-10-10. Status: DELIVERED — READY FOR DIRECTOR REVIEW — STUDY REFERENCES ONLY. [HDP-001 verification references](delivery/HDP-001-VERIFICATION-REFERENCES.md) · [A v0.6 frozen references](delivery/A-V06-OPERATIONAL-EVALUATION-REFERENCES.md). Both studies' execution INACTIVE.
+# Current task — Closure of the study references (documentary only)
+Date: 2026-10-10. Status: **Riferimenti registrati; preparazione esecutiva ancora incompleta; studi INACTIVE.** [Decision (verbatim)](delivery/HDP-001-A-V06-REFERENCES-DECISION.md) · [HDP-001 references](delivery/HDP-001-VERIFICATION-REFERENCES.md) · [A v0.6 references](delivery/A-V06-OPERATIONAL-EVALUATION-REFERENCES.md) · [exposure register](delivery/STUDY-EXPOSURE-REGISTER.md). Remote CI is Owner-operated: PENDING / NOT CHECKED.
 
-## Authorization (Astra, relayed by the Owner, 10 October 2026)
+## Assignment (relayed by the Owner, 10 October 2026)
+
+Base `aff2a3d`.
+- Register the authoritative decision verbatim in a separate addendum linked to the pinned HDP-001 and A v0.6 documents. Do not edit the pinned texts or replace the decision with a summary.
+- Update the two operational addenda, separating what is resolved from residual dependencies.
+- Designate and create `delivery/STUDY-EXPOSURE-REGISTER.md` with a minimal structure. Columns: study, period, consultation date, material, subject, use in decisions, source. Documented exposures only; gaps stay explicit; never "no exposure" from missing information.
+- **Checks.** Text fidelity, links, state coherence; identities recomputed with the existing functions; pinned hashes unchanged; no re-run of the exploration.
+- **Operational points.** Close only those already determined by the designs. List the missing computation conventions without completing them.
+- **Excluded.** Acquisition, Owner extraction, implementation, running the studies, CI polling, pull/fetch. v0.6 and HDP-001 frozen; protected periods unchanged.
+
+## Previous task — Complete the references of the two frozen studies (documentary only)
+Date: 2026-10-10. Status: DELIVERED at `aff2a3d` (superseded by the closure above).
+
+### Study references authorization (Astra, relayed by the Owner, 10 October 2026)
 
 Make the artifacts, rules and residual dependencies of HDP-001 and of the A v0.6 operational evaluation identifiable. Documentary preparation only.
 - **HDP-001 (first priority).** Protocol and decisions, exploratory closure and constant UP, frozen window, script and conventions (168 h blocks, 10,000 resamples, `random.Random(0)`, type 7, masks, boundary), verifiable identities of reusable artifacts. Keep the exploratory script distinct from verification instructions; do not modify it.

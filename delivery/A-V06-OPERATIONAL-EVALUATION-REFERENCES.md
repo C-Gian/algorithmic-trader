@@ -1,12 +1,11 @@
 # A v0.6 operational evaluation — frozen references (executor addendum, not authoritative)
 
-**Operational addendum** prepared by the executor on base `7c16bc97ee13d6b6b2785d130b1626fd73008681` (Astra authorization relayed by the Owner, 10 October 2026: documentary preparation only).
-- **Authority.** The [design](A-V06-OPERATIONAL-EVALUATION-DESIGN.md) and the [orchestrator decision](A-V06-OPERATIONAL-EVALUATION-CLOSURE.md) are unchanged and prevail.
+**Operational addendum** prepared by the executor on base `7c16bc97ee13d6b6b2785d130b1626fd73008681` and updated on base `aff2a3d4747a71238c864129955a9f06fdbdb008` (Astra authorizations relayed by the Owner, 10 October 2026: documentary preparation only).
+- **Authority.** The [design](A-V06-OPERATIONAL-EVALUATION-DESIGN.md), the [orchestrator decision](A-V06-OPERATIONAL-EVALUATION-CLOSURE.md) and the [decision on the study references](HDP-001-A-V06-REFERENCES-DECISION.md) prevail. The first two are unchanged.
 - **Identities.** They come only from the project's existing functions (`adviser/methods.py` release `V06`, `adviser/identity.py` `historical_profile`, `EvaluatorV3.identity`). This addendum creates no new identity scheme.
-- **Not the freeze.** This addendum is not the pre-start freeze of design §2. Whether the identities below complete that freeze is a Director decision.
-- **Execution INACTIVE.**
+- **Status.** References registered; executive preparation still incomplete (§5–§7). Execution INACTIVE.
 
-Machine-readable output: [identities-b47b997.json](evidence/A-V06-REFERENCES/identities-b47b997.json), produced by [v06_identity.py](evidence/A-V06-REFERENCES/v06_identity.py) from `git archive b47b997 src delivery`. The same script on the base tree gives an identical document. It runs no adviser, evaluation or replay.
+Machine-readable output: [identities-b47b997.json](evidence/A-V06-REFERENCES/identities-b47b997.json), produced by [v06_identity.py](evidence/A-V06-REFERENCES/v06_identity.py) from `git archive b47b997 src delivery`. The same script gives an identical document on the trees of `7c16bc9` and `aff2a3d` (recomputed 10 October). It runs no adviser, evaluation or replay.
 
 | Document | SHA-256 (LF) | Commit |
 |---|---|---|
@@ -24,7 +23,7 @@ Machine-readable output: [identities-b47b997.json](evidence/A-V06-REFERENCES/ide
   - `delivery/`: 53 evidence and documentation files;
   - `README.md`, `STATE.md` and `task.md`;
   - one Owner-uploaded `source_notes/` file.
-- **The latest product commit is not the study build.** These later UI commits do not make the newest commit the study build (see §5, point 1).
+- **The latest product commit is not the study build.** These later UI commits do not make the newest commit the study build (see §5).
 
 ## 2. Method, parameters, implementation, evaluator — fixed now (at `b47b997` = base)
 
@@ -96,28 +95,63 @@ The evaluator identity does not depend on the tick (checked with ticks 0.1 and 1
 - **Composite identity.** `identity_sha256` is computed at launch. It includes the pins and `build`.
 - **Exports.** Identities of the per-call results export used for the bootstrap.
 
-## 5. Open points and authorizations still needed
+## 5. Behaviour freeze and executive build (decision of 10 October)
 
-1. **Study build (Director decision).** The composite identity includes `build` = `version.code_version()`: the git SHA of the running checkout, `-dirty` or `+image`. Two options exist:
-   - run at `b47b997` itself;
-   - run at a later commit whose behaviour-relevant tree is shown identical to `b47b997`. "Behaviour-relevant tree" means `src/`, `schemas/`, dependencies and Docker; that comparison is the git check of §1.
+The [decision](HDP-001-A-V06-REFERENCES-DECISION.md) §2 freezes the behaviour, not the inadequacy of the tools. This section only registers the dependency.
 
-   No rule chooses between them yet.
-2. **The existing tools cannot prepare this window.** Corpus presets require whole calendar months inside the logical target [2025-09-01, 2026-09-01) (`corpus/presets.py` `check_windows`). The Workbench therefore cannot prepare or launch [2027-01-25, 2027-07-26) with a 35-day initialization as the code stands. Two things follow:
-   - Any fix is a product change (presets file or rules) that needs separate authorization.
-   - Such a change would modify `src/` after `b47b997`. That conflicts with the second option of point 1 unless the freeze is defined over the adviser identity components only.
+**Frozen reference.**
+- `b47b997ee93513c7a358b49e961020705e4fbb85` stays the authoritative reference of the behaviour to evaluate.
+- Running the whole repository exactly at `b47b997` is not required.
 
-   This is not resolved here.
-3. **CI on `b47b997`** is not verified (design §2). Exact-SHA green CI, or the CI of the chosen build, must be reported by the Owner. It was not polled.
-4. **Computation conventions to register before computing.** These are not needed before the window start:
-   - the bootstrap draw order and the per-resample statistic. Design §6 fixes blocks, B, seed and percentiles; it does not fix the order of draws or the exact sum statistic.
-   - the hour a call is attributed to: the UTC hour that contains `issued_at` is the natural reading, but it is not explicit.
-5. **Access and execution.** Each needs a separate assignment (design §8):
-   - acquisition after the tail;
-   - Owner launch;
-   - access to per-call results with identities and times;
-   - checking that the existing report covers the owner register (design §3);
-   - a bootstrap computation.
-6. **Timing.** The freeze must be completed before 2027-01-25T00:00Z, or the window lapses (design §5).
+**Identities already verifiable.** §1 to §3 above:
+- rules manifest, register, implementation, evaluator, formats and tail;
+- the four pack-selected profile/evaluator rows.
 
-v0.6 and HDP-001 frozen; January–August 2026 protected; execution INACTIVE.
+They are identical at `b47b997`, `7c16bc9` and `aff2a3d`.
+
+**Executive build and equivalence checks — still to complete.**
+- **Build.** A distinct future executive build is admitted to prepare the approved window. It is **not yet identified**.
+- **Scope of equivalence with `b47b997`.** Every part that can change decisions or outcomes:
+  - construction and temporal availability of the inputs;
+  - initialization;
+  - boundaries;
+  - selection;
+  - management;
+  - costs;
+  - the evaluator.
+
+  Version names or the method module alone are not enough.
+- **Method.** A comparison of dependencies and of the relevant code, combined with targeted synthetic tests. Passing a few fixtures is not general equivalence.
+- **Differences.** Any difference able to change decisions or results needs an explicit decision.
+- **Workbench limit.** The Workbench limit (presets accept only whole months inside [2025-09-01, 2026-09-01); `corpus/presets.py` `check_windows`) and the technical preparation of the window stay **dependencies**.
+  - The technical preparation is a separate assignment and is not activated.
+  - The limit does not authorize changing the window, splitting it into monthly runs with resets, or using protected periods.
+
+**Deadline.** Design §5: the freeze must be completed before **2027-01-25T00:00Z**, otherwise the window lapses. There is no retrospective recovery and no automatic shift. The build and the equivalence checks must be resolved within that deadline.
+
+## 6. Operational points closed by the design (no new choice)
+
+| Point | Determined by |
+|---|---|
+| A call's result is attributed to the UTC grid hour [h, h+1h) containing its `issued_at` | Design §6 ("ora di emissione"), the window's half-open UTC hourly grid |
+| Hourly value = sum of the attributed results of A calls issued in that hour; hours without an A call = 0 | Design §6 |
+| Per-call result = PRIMARY path `price_net` under PRICE_NET_ONLY; `total_net` only with certified funding | Design §4; evaluator fields |
+| A NO_ENTRY call is no modeled operation and adds nothing to the sum, as in the existing report `sum_price_net` | Design §3; `report.py` |
+| Per-resample statistic = sum of the hourly values over the N = 4368 resampled grid hours, against abstention 0 | Design §4 and §6 |
+| B/C calls are reported separately, outside the primary sum | Design §2 |
+
+## 7. Still to fix or obtain before execution
+
+- **Bootstrap draw procedure.** Design §6 fixes the blocks, B, the seed, the uniform starts, no wrap, truncation and the percentiles. It does not fix the order and method of the draws from `random.Random(0)`, which reproducibility requires.
+- **Included entered paths with no determinable result** (UNRESOLVED / AMBIGUOUS / CENSORED). Design §3–4 forbid imputing zero or deleting them, and say they prevent a complete primary conclusion. How the bootstrap and the reported balance represent them must be fixed before computing.
+- **Executive build and equivalence checks** (§5).
+- **CI.** Green exact-SHA CI for `b47b997` and for the executive build, reported by the Owner. Not polled.
+- **Separate assignments** (design §8):
+  - acquisition after the tail;
+  - Owner launch;
+  - access to per-call results with identities and times;
+  - a check that the existing report covers the owner register (design §3);
+  - the bootstrap computation.
+- **Exposure declarations** in the common [study exposure register](STUDY-EXPOSURE-REGISTER.md).
+
+v0.6 and HDP-001 frozen; January–August 2026 protected. References registered; executive preparation still incomplete; execution INACTIVE.

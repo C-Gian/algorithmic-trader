@@ -1,6 +1,8 @@
 # HDP-001 — Verification references (executor addendum, not authoritative)
 
-**Operational addendum** prepared by the executor on base `7c16bc97ee13d6b6b2785d130b1626fd73008681` (Astra authorization relayed by the Owner, 10 October 2026: documentary preparation only). It adds no methodological decision. The authoritative texts below are unchanged, byte for byte; where this addendum and they differ, they prevail. **Execution INACTIVE.** No acquisition, Owner extraction or computation is authorized here.
+**Operational addendum** prepared by the executor on base `7c16bc97ee13d6b6b2785d130b1626fd73008681` and updated on base `aff2a3d4747a71238c864129955a9f06fdbdb008` (Astra authorizations relayed by the Owner, 10 October 2026: documentary preparation only). It adds no methodological decision.
+- **Authority.** The authoritative texts below are unchanged, byte for byte, and so is the [decision on the study references](HDP-001-A-V06-REFERENCES-DECISION.md). Where this addendum and they differ, they prevail.
+- **Status.** References registered; executive preparation still incomplete (§6). **Execution INACTIVE.** No acquisition, Owner extraction or computation is authorized here.
 
 ## 1. Authoritative documents and frozen artifacts
 
@@ -12,6 +14,7 @@ SHA-256 values are taken over the LF-normalized bytes (the Git content). Each fi
 | Director decision: registration, seed 0 | [HDP-001-DIRECTOR-CLOSURE.md](HDP-001-DIRECTOR-CLOSURE.md) | `7b5aaf2fdc3c7b01ed0c8f3c931f12b6583dca8a` | `195a11ccc876bf641db58053391b88ce0835f0b79486795ca43b18464e0203e1` |
 | Exploration closure and verification freeze | [HDP-001-EXPLORATION-CLOSURE.md](HDP-001-EXPLORATION-CLOSURE.md) | `c8e982e1b2fa1373491a138f4f81c852910e2e2f` | `b8c33cd32a887b38b9525b0f966c6cd9754cb25934df8492083846a201597d0e` |
 | Window proposal and Director clarifications (§5) | [HDP-001-VERIFICATION-WINDOW-PROPOSAL.md](HDP-001-VERIFICATION-WINDOW-PROPOSAL.md) | `cf18dbd04ef92e39f7c92955a6a67ed9b9b3a506` | `b110d48734a95456e64a22fc5f7bb21bb31c12deae6fc73301ab985f946058ec` |
+| Decision on the study references (verbatim) | [HDP-001-A-V06-REFERENCES-DECISION.md](HDP-001-A-V06-REFERENCES-DECISION.md) | this commit | `7b91a1b3e667965dba19cb8771285fd39c4f662d7c7c06882feae2795c77ffb8` |
 | Accepted exploration (Director, `cf18dbd`) | [SUMMARY.md](evidence/HDP-001-EXPLORATION/SUMMARY.md) | `cf18dbd04ef92e39f7c92955a6a67ed9b9b3a506` | `2f2d53ffe349ffebfed6da9b06f1ed9796139421f20a4b78eafae5c6b2f44533` |
 | Exploration script | [explore_hdp001.py](evidence/HDP-001-EXPLORATION/explore_hdp001.py) | `cf18dbd…` | `35fa53cc34688117a24b20c0e5941c2cfde36725d36295c439ea376f0f4c5059` |
 | Exploration results | [results.json](evidence/HDP-001-EXPLORATION/results.json) | `cf18dbd…` | `eef4ef4126829351279530c3afefd13dcedab7eebfc2f7b8af3a2db3ab0db1c8` |
@@ -65,6 +68,15 @@ The samples.csv hash equals the input hash recorded in `results.json`. The explo
 - **Reference.** It **recomputes the constant reference** from the phase outcomes (§4, exploration only). For the verification the reference is the frozen UP and must not be recomputed.
 - **Reading.** It assigns no §6 reading.
 
+**Construction difference** (registered as required by the decision §1). The exploration stays unchanged.
+
+| | Exploration (`samples.csv`, run v0.5) | Verification (decision §1) |
+|---|---|---|
+| Prediction | sign of the last two temporal.v1 COMPLETE, contiguous 1h closes | the same: both hours COMPLETE |
+| Outcome | close of the 1m bar ending exactly at t+1h minus the last 1m close known at t; the endpoint hour was not required to be COMPLETE | C_(t+1) − C_t, with **both hours COMPLETE**; the last minute's close alone does not certify an hour; no interpolation |
+
+The numerical equivalence observed on the exploration samples (outcome(t) = prediction(t+1h) on 2927/2927, 0 unavailable) is attributed only to that evidence: complete coverage of that run. It does not extend to cases with missing minutes.
+
 Its grid, mask, bootstrap and percentile code is the registered reference for the shared computation. A verification executor must be written under the executive assignment and must implement the frozen conventions without adding new ones.
 
 ## 4. Future data and hashes (to register when they exist)
@@ -75,22 +87,35 @@ Its grid, mask, bootstrap and percentile code is the registered reference for th
 - Dataset or pack identities, manifests and SHA-256 values, provenance, coverage and quality: recorded after acquisition, before any computation.
 - Verification hour register, results and bootstrap vector hash: produced only by the authorized run.
 
-## 5. Open points for the Director (not resolved here)
+## 5. Points resolved by the decision of 10 October
 
-1. **Operational C_t / completeness.** §2–3 require exact closes of complete, contiguous hourly bars; incomplete inputs or endpoints become UNAVAILABLE. In the exploration:
-   - the prediction used temporal.v1 COMPLETE 1h bars (all 60 minutes admitted valid);
-   - the outcome used the 1m close at exactly t+1h against the last 1m close known at t, without requiring the endpoint hour to be COMPLETE.
+[Decision](HDP-001-A-V06-REFERENCES-DECISION.md) §1. These are clarifications for faithful execution; the hypothesis is unchanged.
 
-   The two coincide on complete data (2927/2927 identity, 0 unavailable). They differ when minutes are missing. A rule for building C_t and its completeness from 1m bars is not registered for the verification.
-2. **"Integrità insufficiente" (§6).** No criterion separates masked missing hours from a "non valutabile" result.
-3. **Exposure register.** §7 and the closure require exposures influencing research decisions to be declared. No designated register or location exists (window proposal §3, gap 1).
+1. **Completeness.** Every hourly close used, for prediction or outcome, belongs to an hour that is complete under the existing temporal semantics: `algotrader.temporal.v1` COMPLETE, meaning every expected minute admitted valid. For retrospective historical data the existing semantics is the modeled complete-prefix clock with seal-no-revision. The UP reference uses no close.
+   - The last minute's close alone is not enough.
+   - No interpolation.
+2. **Reference and sample.**
+   - UP is fixed and never recomputed.
+   - Both predictors use the same evaluable observations: the paired set of protocol §5.
+   - No new minimum percentage.
+   - Reduced coverage or concentrated absences limit the conclusion even when the computation is correct.
+3. **Gaps vs non-evaluable.**
+   - An identified and correctly represented gap gives PREDICTION_UNAVAILABLE / OUTCOME_UNAVAILABLE (protocol §3); grid and masks are kept.
+   - If identity, temporal alignment, prices or masks cannot be attested, the result is **not evaluable**.
+4. **Exposure register.** Designated: [STUDY-EXPOSURE-REGISTER.md](STUDY-EXPOSURE-REGISTER.md), common to the studies.
 
-## 6. Still needed before execution
+## 6. Residual dependencies and what must be fixed before execution
 
-- An executive assignment, after 2027-01-25, covering:
-  - acquisition of the trade 1m range above;
-  - registration of the data identities;
-  - a verification executor and its review;
-  - the computation.
-- Decisions on points 1–3 above before any computation.
-- No consultation of outcomes during the window. v0.6 frozen; January–August 2026 protected.
+**Fixed before any computation, without changing the frozen rules:**
+- the concrete attestation checks for identity, temporal alignment, prices and masks that separate UNAVAILABLE gaps from a non-evaluable result (decision §1 gives the categories, not the checklist);
+- the coverage and concentration facts reported with the reading, for example where unavailable hours fall on the grid. Decision §1 says they limit the conclusion and sets no threshold; what is reported is not yet fixed;
+- the data route, chosen in the executive assignment (§4);
+- a verification executor (§3) and its review.
+
+**Registered when they exist:** dataset or pack identities, manifests, hashes, provenance and quality (§4).
+
+**Authorizations still needed:**
+- an executive assignment after 2027-01-25 covering acquisition, data registration, the executor and the computation;
+- declarations in the exposure register.
+
+There is no consultation of outcomes during the window. v0.6 frozen; January–August 2026 protected. References registered; executive preparation still incomplete; execution INACTIVE.
