@@ -1,0 +1,337 @@
+diff --git a/web/src/styles/adviser.css b/web/src/styles/adviser.css
+index 597a835..0e103ee 100644
+--- a/web/src/styles/adviser.css
++++ b/web/src/styles/adviser.css
+@@ -163,3 +163,42 @@
+ /* live main panel: the issued call's update kept apart from new-entry availability */
+ .proposal-group { border-top: 1px solid var(--line, rgba(127, 127, 127, 0.35)); padding-top: var(--s-2); display: flex; flex-direction: column; gap: var(--s-2); }
+ .proposal-group blockquote, .proposal-guidance blockquote { margin: 2px 0 0; padding-left: var(--s-2); border-left: 2px solid var(--line, rgba(127, 127, 127, 0.35)); overflow-wrap: anywhere; }
++/* ===== DRAFT (visual proposal only): decision area ===== */
++.decision { padding: var(--s-5); border-radius: var(--radius-lg); border: 1px solid var(--line-2); background: var(--surface-2); display: flex; flex-direction: column; gap: var(--s-3); }
++.decision-head { display: flex; justify-content: space-between; align-items: center; gap: var(--s-3); flex-wrap: wrap; }
++.decision-meta { display: flex; align-items: center; gap: var(--s-3); flex-wrap: wrap; }
++.decision-grid { display: grid; grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr); gap: var(--s-5); align-items: start; }
++.decision-call { display: flex; flex-direction: column; gap: var(--s-3); min-width: 0; }
++.persp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-4); }
++.persp-card { border: 1px solid var(--line-2); border-radius: var(--radius); padding: var(--s-4); background: var(--surface); display: flex; flex-direction: column; gap: var(--s-3); min-width: 0; }
++.persp-title { font-size: var(--fs-md); font-weight: 650; color: var(--text); }
++.persp-state { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-size: var(--fs-lg); font-weight: 700; line-height: 1.25; padding: 10px 14px; border-radius: var(--radius); border-left: 4px solid currentColor; }
++.persp-guidance { font-family: var(--font-display); font-size: var(--fs-lg); font-weight: 700; line-height: 1.3; padding: 10px 14px; border-radius: var(--radius); background: var(--surface-3); color: var(--text); border-left: 4px solid var(--line-3); }
++.sig-avail { color: var(--info); background: var(--info-soft); }
++.sig-attn { color: var(--warn); background: var(--warn-soft); }
++.sig-muted, .sig-done { color: var(--neutral); background: var(--neutral-soft); }
++.sig-tech { color: var(--warn); background: var(--warn-soft); border: 1px dashed var(--warn); }
++.sig-chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; font-size: var(--fs-sm); font-weight: 600; }
++.dir-chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 12px; border-radius: 999px; border: 1px solid currentColor; font-family: var(--font-display); font-weight: 700; font-size: var(--fs-lg); }
++.dir-long { color: var(--pos); }
++.dir-short { color: var(--neg); }
++.dir-chip.is-ended { color: var(--neutral); border-style: dashed; }
++.call-strip { display: flex; flex-direction: column; gap: var(--s-2); padding: var(--s-3) var(--s-4); border-radius: var(--radius); background: var(--surface-3); }
++.call-strip.is-none { border: 1px dashed var(--line-3); background: transparent; }
++.strip-head { display: flex; align-items: center; gap: var(--s-3); flex-wrap: wrap; }
++.strip-title { font-weight: 650; }
++.strip-levels { display: grid; grid-template-columns: repeat(5, minmax(0, auto)); gap: var(--s-2) var(--s-5); margin: 0; }
++.strip-levels dt { font-size: var(--fs-xs); color: var(--text-3); }
++.strip-levels dd { margin: 0; font-size: var(--fs-md); }
++.decision-market { border: 1px dashed var(--line-3); border-radius: var(--radius); padding: var(--s-4); display: flex; flex-direction: column; gap: var(--s-2); }
++.market-facts { grid-template-columns: minmax(0, 1fr); gap: 2px; }
++.market-facts dd { margin-bottom: 6px; }
++.live-board { display: flex; flex-direction: column; gap: var(--s-4); }
++.live-board-lower { display: grid; grid-template-columns: minmax(0, 3fr) minmax(320px, 2fr); gap: var(--s-4); align-items: start; }
++@media (max-width: 1100px) {
++  .decision-grid, .live-board-lower { grid-template-columns: 1fr; }
++}
++@media (max-width: 760px) {
++  .persp-grid { grid-template-columns: 1fr; }
++  .strip-levels { grid-template-columns: repeat(2, minmax(0, 1fr)); }
++}
+diff --git a/web/src/views/LiveCockpit.tsx b/web/src/views/LiveCockpit.tsx
+index dc6f2f5..060a7f3 100644
+--- a/web/src/views/LiveCockpit.tsx
++++ b/web/src/views/LiveCockpit.tsx
+@@ -258,20 +258,18 @@ export function LiveCockpit() {
+             : `The session is ${humanize(state).toLowerCase()}: the view below is not current and no entry is presented as usable now.`}
+         </Notice>
+       )}
+-      <div className="live-grid">
+-        <aside className="live-side">
+-          <ProposalPanel v={v} onHistory={openHistory} />
+-        </aside>
+-        <div className="live-main">
+-          {history && (
+-            <LiveCallHistory key={`${history.runId}|${history.callId}`} sel={history} view={v}
+-                             sessionId={st?.session?.session_id ?? null} onClose={() => setHistory(null)} />
+-          )}
+-          <Card title="BTC price · last complete minutes" icon="market" testid="live-price"
+-                eyebrow={v?.clock ? `as of ${fmtTime(v.clock)} · ${v.origin === "LIVE" ? "live receipts" : "reconstructed history"}` : "no data yet"}
+-                actions={<Badge tone={v?.origin === "LIVE" ? "pos" : "pending"}>{v?.origin === "LIVE" ? "LIVE" : "NOT LIVE"}</Badge>}>
+-            <PriceChart v={v} />
+-          </Card>
++      <ProposalPanel v={v} onHistory={openHistory} />
++      {history && (
++        <LiveCallHistory key={`${history.runId}|${history.callId}`} sel={history} view={v}
++                         sessionId={st?.session?.session_id ?? null} onClose={() => setHistory(null)} />
++      )}
++      <div className="live-board">
++        <Card title="BTC price · last complete minutes" icon="market" testid="live-price"
++              eyebrow={v?.clock ? `as of ${fmtTime(v.clock)} · ${v.origin === "LIVE" ? "live receipts" : "reconstructed history"}` : "no data yet"}
++              actions={<Badge tone={v?.origin === "LIVE" ? "pos" : "pending"}>{v?.origin === "LIVE" ? "LIVE" : "NOT LIVE"}</Badge>}>
++          <PriceChart v={v} />
++        </Card>
++        <div className="live-board-lower">
+           <div className="lens-grid" data-testid="live-lenses">
+             {(v?.lenses ?? []).map((l) => <LensCard key={l.lens} l={l} />)}
+             {!v && <p className="muted small-text">Lens results appear once the adviser has assessed the market. Several lenses
+diff --git a/web/src/views/LiveProposal.tsx b/web/src/views/LiveProposal.tsx
+index 39e0eda..28b114d 100644
+--- a/web/src/views/LiveProposal.tsx
++++ b/web/src/views/LiveProposal.tsx
+@@ -3,6 +3,7 @@ import { adviserApi, CallView, LiveView, reasonText, ScenarioState, ScenarioView
+ import { fmtLocal, fmtTime, humanize } from "../lib/format";
+ import { Icon } from "../ui/Icon";
+ import { Badge, cx, Tone } from "../ui/primitives";
++import type { IconName } from "../ui/Icon";
+ 
+ // Live cockpit main panel: "Che cosa propone il sistema adesso?". It shows only the authoritative backend state of the
+ // committed live view: entry availability is call.entry_status (already masked by the API for a non-current session),
+@@ -255,33 +256,17 @@ function EntryFacts({ c, available }: { c: CallView; available: boolean }) {
+ }
+ 
+ /** The perspective of someone already following the call: what the recorded system text says, in plain Italian. */
+-function CallUpdate({ c, v, unverified }: { c: CallView; v: LiveView; unverified: boolean }) {
++function CallUpdate({ c, v }: { c: CallView; v: LiveView }) {
+   const notCurrent = c.presentation === "NOT_CURRENT";
+   const r = notCurrent ? { kind: "NOT_CURRENT", text: "Sessione non corrente: l'ultimo testo salvato non è presentato come " +
+     "indicazione attuale (resta negli approfondimenti e nella cronologia)." } : readGuidance(c.guidance);
+   return (
+     <>
+-      <div className="proposal-state tone-neutral" data-testid="live-call-guidance" data-kind={r.kind}>{r.text}</div>
++      <div className="persp-guidance" data-testid="live-call-guidance" data-kind={r.kind}>{r.text}</div>
+       {!notCurrent && (
+         <div className="small-text muted" data-testid="live-call-guidance-basis">In base al testo registrato dal sistema alla
+           valutazione del {fmtLocal(v.clock)}; l'originale è negli approfondimenti.</div>
+       )}
+-      <div className="proposal-dir" data-testid="live-direction">
+-        <span className="call-dir" data-testid="live-call-direction">{c.direction}</span>
+-        <span>{c.direction === "LONG" ? "Indicazione di acquisto: il sistema si aspetta un rialzo del prezzo."
+-          : "Indicazione di vendita: il sistema si aspetta un ribasso del prezzo."}</span>
+-      </div>
+-      <dl className="call-geo proposal-facts">
+-        {unverified && (
+-          <dd className="proposal-group-note" data-testid="live-call-levels-note">Livelli della call già emessa: target e stop
+-            da soli non sono una proposta d'ingresso attuale.</dd>
+-        )}
+-        <dt>Target operativo</dt><dd className="mono" data-testid="live-target">{c.target}</dd>
+-        <dt>Stop indicato</dt><dd className="mono" data-testid="live-stop-guidance">{c.stop}</dd>
+-        <dt>Scadenza dell'indicazione</dt><dd data-testid="live-deadline">{fmtLocal(c.hard_deadline)}</dd>
+-        <dt>Orizzonte atteso</dt><dd>{c.expected_minutes ? `${c.expected_minutes[0]}–${c.expected_minutes[1]} min` : "non indicato"}</dd>
+-        <dt>Tesi</dt><dd data-testid="live-thesis">{THESIS_IT[c.thesis_status] ?? c.thesis_status}</dd>
+-      </dl>
+     </>
+   );
+ }
+@@ -304,9 +289,8 @@ function ConcludedCall({ v, t, expected }: { v: LiveView; t: LiveView["recent_ca
+   const reading = r ? (r.text ? readGuidance(r.text)
+     : { kind: "MISSING", text: "Testo registrato alla conclusione non disponibile: nessuna indicazione operativa è mostrata." }) : null;
+   return (
+-    <div className="proposal-group" data-testid="live-call-concluded" data-terminal={t.terminal}>
+-      <div className="adv-section-title" data-testid="live-section-following">{FOLLOWING}</div>
+-      <div className="proposal-state tone-neutral" data-testid="live-concluded-guidance" data-kind={reading?.kind ?? "LOADING"}>
++    <div className="stack-sm" data-testid="live-call-concluded" data-terminal={t.terminal}>
++      <div className="persp-guidance" data-testid="live-concluded-guidance" data-kind={reading?.kind ?? "LOADING"}>
+         {reading ? reading.text : "…"}</div>
+       <p data-testid="live-last-terminal">Ultima indicazione: {t.direction} {t.family},{" "}
+         {THESIS_IT[t.terminal] ?? t.terminal} ({fmtLocal(t.terminal_at)}).</p>
+@@ -330,6 +314,58 @@ function ConcludedCall({ v, t, expected }: { v: LiveView; t: LiveView["recent_ca
+   );
+ }
+ 
++const SIGNAL: Record<string, { cls: string; icon: IconName }> = {
++  AVAILABLE: { cls: "sig-avail", icon: "check" }, CLOSED: { cls: "sig-muted", icon: "pause" },
++  UNVERIFIED: { cls: "sig-attn", icon: "alert" }, UNKNOWN: { cls: "sig-attn", icon: "alert" },
++  TERMINAL: { cls: "sig-done", icon: "stop" }, WAITING: { cls: "sig-muted", icon: "clock" }, NO_VIEW: { cls: "sig-muted", icon: "clock" },
++};
++
++function DirChip({ dir, ended }: { dir: string; ended?: boolean }) {
++  return (
++    <span className={cx("dir-chip", dir === "LONG" ? "dir-long" : "dir-short", ended && "is-ended")} data-testid="live-call-direction">
++      {dir === "LONG" ? "▲" : "▼"} {dir}</span>
++  );
++}
++
++/** One strip with the call's identity and operational levels (shown once). */
++function CallStrip({ c, t, unverified }: { c: CallView | null; t: LiveView["recent_calls"][number] | undefined; unverified: boolean }) {
++  if (c) {
++    return (
++      <div className="call-strip" data-testid="live-call-identity">
++        <div className="strip-head">
++          <DirChip dir={c.direction} />
++          <span className="strip-title">Call {c.family} · {c.family_text}</span>
++          <span className="muted small-text">emessa {fmtLocal(c.issued_at)}</span>
++        </div>
++        <span className="small-text">{c.direction === "LONG" ? "Indicazione di acquisto: il sistema si aspetta un rialzo del prezzo."
++          : "Indicazione di vendita: il sistema si aspetta un ribasso del prezzo."}</span>
++        <dl className="strip-levels">
++          <div><dt>Target operativo</dt><dd className="mono" data-testid="live-target">{c.target}</dd></div>
++          <div><dt>Stop indicato</dt><dd className="mono" data-testid="live-stop-guidance">{c.stop}</dd></div>
++          <div><dt>Scadenza dell'indicazione</dt><dd data-testid="live-deadline">{fmtLocal(c.hard_deadline)}</dd></div>
++          <div><dt>Orizzonte atteso</dt><dd>{c.expected_minutes ? `${c.expected_minutes[0]}–${c.expected_minutes[1]} min` : "non indicato"}</dd></div>
++          <div><dt>Tesi</dt><dd data-testid="live-thesis">{THESIS_IT[c.thesis_status] ?? c.thesis_status}</dd></div>
++        </dl>
++        {unverified && <p className="small-text muted" data-testid="live-call-levels-note">Livelli della call già emessa: target e stop
++          da soli non sono una proposta d'ingresso attuale.</p>}
++      </div>
++    );
++  }
++  if (t) {
++    return (
++      <div className="call-strip is-ended" data-testid="live-call-identity">
++        <div className="strip-head">
++          <DirChip dir={t.direction} ended />
++          <span className="strip-title">Call {t.family}</span>
++          <span className="sig-chip sig-done"><Icon name="stop" size={13} /> Conclusa — {(THESIS_IT[t.terminal] ?? t.terminal).replace(/^conclusa — /, "")}</span>
++          <span className="muted small-text">{fmtLocal(t.terminal_at)}</span>
++        </div>
++      </div>
++    );
++  }
++  return <div className="call-strip is-none" data-testid="live-call-identity"><span className="muted">Nessuna call emessa in questo momento.</span></div>;
++}
++
+ export function ProposalPanel({ v, onHistory }: { v: LiveView | null; onHistory: (callId: string) => void }) {
+   const st = proposalState(v);
+   const mv = v?.market_view ?? null;
+@@ -339,65 +375,71 @@ export function ProposalPanel({ v, onHistory }: { v: LiveView | null; onHistory:
+   const p = mv?.principal ?? null;
+   const ps = p ? (v?.scenarios ?? []).find((s) => s.scenario_id === p.scenario_id) : undefined;
+   const lastTerminal = [...(v?.recent_calls ?? [])].sort((a, b) => (a.terminal_at < b.terminal_at ? 1 : -1))[0];
+-  const tone = c ? (c.direction === "LONG" ? "is-long" : "is-short") : "is-none";
+-  const twoSides = !!v && (!!c || !!lastTerminal);
++  const sig = SIGNAL[st.key] ?? SIGNAL.UNKNOWN;
++  const notCurrent = c?.presentation === "NOT_CURRENT" || (!!v?.stale_session && !c);
+   return (
+-    <section className={cx("call-panel proposal", tone)} data-testid="live-call" data-state={st.key}>
+-      <div className="eyebrow">Che cosa propone il sistema adesso</div>
+-      {twoSides && <p className="small-text muted" data-testid="live-perspectives-note">{PERSPECTIVES}</p>}
+-      {v && <div className="adv-section-title" data-testid="live-new-entry-title">{NO_POSITION}</div>}
+-      <div className={cx("proposal-state", `tone-${st.tone}`)} data-testid={c ? "live-entry" : v ? "live-no-trade" : "live-no-view"}>
+-        {st.text}
+-      </div>
+-      <div className="proposal-badges">
+-        {c?.presentation === "NOT_CURRENT" || (v?.stale_session && !c)
+-          ? <Badge tone="warn" testid="live-call-not-current">Sessione non corrente: disponibilità non verificabile</Badge>
+-          : c && <Badge tone={c.origin === "LIVE" ? "pos" : "pending"}>{c.origin === "LIVE" ? "Call live" : "Ricostruita — non operativa"}</Badge>}
+-      </div>
++    <section className="decision" data-testid="live-call" data-state={st.key}>
++      <header className="decision-head">
++        <div className="eyebrow">Che cosa propone il sistema adesso</div>
++        <div className="decision-meta">
++          {notCurrent && <span className="sig-chip sig-tech" data-testid="live-call-not-current"><Icon name="cpu" size={13} />
++            Sessione non corrente: disponibilità non verificabile</span>}
++          {c && !notCurrent && <Badge tone={c.origin === "LIVE" ? "info" : "pending"}>{c.origin === "LIVE" ? "Call live" : "Ricostruita — non operativa"}</Badge>}
++          {v && <span className="proposal-updated" data-testid="live-updated">Ultimo aggiornamento: {fmtLocal(v.clock)}</span>}
++        </div>
++      </header>
+       {!v && <p className="proposal-note">Avvia l'adviser live per valutare il mercato. Da fermo non viene monitorato nulla.</p>}
+-      {c && st.key === "UNVERIFIED" && (() => {
+-        const x = unverifiedExplanation(c);
+-        return (
+-          <div className="proposal-consequence" data-testid="live-entry-consequence" data-kind={x.kind}>
+-            <b>{x.title}</b><p>{x.body}</p>
++      {v && (
++        <div className="decision-grid">
++          <div className="decision-call">
++            <CallStrip c={c} t={c ? undefined : lastTerminal} unverified={st.key === "UNVERIFIED"} />
++            <p className="small-text muted" data-testid="live-perspectives-note">{PERSPECTIVES}</p>
++            <div className="persp-grid">
++              <article className="persp-card">
++                <div className="persp-title" data-testid="live-new-entry-title">{NO_POSITION}</div>
++                <div className={cx("persp-state", sig.cls)} data-testid={c ? "live-entry" : "live-no-trade"}>
++                  <Icon name={sig.icon} size={22} /> <span>{st.text}</span></div>
++                {c && st.key === "UNVERIFIED" && (() => {
++                  const x = unverifiedExplanation(c);
++                  return (
++                    <div className="proposal-consequence" data-testid="live-entry-consequence" data-kind={x.kind}>
++                      <b>{x.title}</b><p>{x.body}</p>
++                    </div>
++                  );
++                })()}
++                {c && <EntryFacts c={c} available={available} />}
++              </article>
++              <article className="persp-card" data-testid="live-call-update">
++                <div className="persp-title" data-testid="live-section-following">{FOLLOWING}</div>
++                {c ? <CallUpdate c={c} v={v} />
++                  : lastTerminal ? <ConcludedCall v={v} t={lastTerminal} expected={d} />
++                  : <p className="small-text muted">Nessuna call emessa da seguire in questo momento.</p>}
++              </article>
++            </div>
+           </div>
+-        );
+-      })()}
+-      {c && <EntryFacts c={c} available={available} />}
+-      {v && <div className="proposal-updated" data-testid="live-updated">Ultimo aggiornamento: {fmtLocal(v.clock)}</div>}
+-
+-      {c && v && (
+-        <div className="proposal-group" data-testid="live-call-update">
+-          <div className="adv-section-title" data-testid="live-section-following">{FOLLOWING}</div>
+-          <CallUpdate c={c} v={v} unverified={st.key === "UNVERIFIED"} />
+-        </div>
+-      )}
+-
+-      {v && !c && lastTerminal && <ConcludedCall v={v} t={lastTerminal} expected={d} />}
+-      {v && !c && lastTerminal && <div className="adv-section-title">Lettura attuale del mercato</div>}
+-      {!c && (
+-        <div className="proposal-dir" data-testid="live-direction">
+-          <Arrow d={d} />
+-          <span>Direzione attesa: <b data-testid="live-expected">{EXPECTED_IT[d] ?? d}</b>{mv?.conditional ? " (condizionale)" : ""}</span>
++          <aside className="decision-market" data-testid="live-market-reading">
++            <div className="persp-title">Lettura attuale del mercato</div>
++            <div className="proposal-dir market-dir" data-testid="live-direction">
++              <Arrow d={d} />
++              <span>Direzione attesa: <b data-testid="live-expected" className={d === "UP" ? "dir-long" : d === "DOWN" ? "dir-short" : undefined}>
++                {EXPECTED_IT[d] ?? d}</b>{mv?.conditional ? " (condizionale)" : ""}</span>
++            </div>
++            {mv && <div className="proposal-sub">{ROW_IT[mv.table_row] ?? humanize(mv.table_row)}</div>}
++            {p ? (
++              <dl className="call-geo proposal-facts market-facts" data-testid="live-scenario-levels">
++                <dt>Scenario</dt><dd>{p.direction} {p.family}</dd>
++                <dt>Condizione ancora necessaria</dt><dd data-testid="live-condition">{condition(p, ps) ?? "non indicata dal sistema"}</dd>
++                <dt>Destinazione dello scenario</dt>
++                <dd><span className="mono">{ps?.destination ?? p.destination ?? p.conditional_target ?? "non indicata"}</span> <span className="muted">(non è un target operativo)</span></dd>
++                <dt>Invalidazione dello scenario</dt>
++                <dd><span className="mono">{ps?.invalidation_level ?? p.invalidation_level ?? "non indicata"}</span> <span className="muted">(livello strutturale, non è uno stop)</span></dd>
++                <dt>Orizzonte atteso</dt><dd>{mv?.horizon_minutes ? `${mv.horizon_minutes[0]}–${mv.horizon_minutes[1]} min` : "non indicato"}</dd>
++              </dl>
++            ) : <p className="proposal-note">Nessuno scenario principale in questo momento.</p>}
++            <p className="muted small-text">Lettura qualitativa, non una probabilità. È una valutazione del mercato, non la call.</p>
++          </aside>
+         </div>
+       )}
+-      {v && !c && (
+-        <>
+-          {mv && <div className="proposal-sub">{ROW_IT[mv.table_row] ?? humanize(mv.table_row)}</div>}
+-          {p ? (
+-            <dl className="call-geo proposal-facts" data-testid="live-scenario-levels">
+-              <dt>Scenario</dt><dd>{p.direction} {p.family}</dd>
+-              <dt>Condizione ancora necessaria</dt><dd data-testid="live-condition">{condition(p, ps) ?? "non indicata dal sistema"}</dd>
+-              <dt>Destinazione dello scenario</dt>
+-              <dd><span className="mono">{ps?.destination ?? p.destination ?? p.conditional_target ?? "non indicata"}</span> <span className="muted">(non è un target operativo)</span></dd>
+-              <dt>Invalidazione dello scenario</dt>
+-              <dd><span className="mono">{ps?.invalidation_level ?? p.invalidation_level ?? "non indicata"}</span> <span className="muted">(livello strutturale, non è uno stop)</span></dd>
+-              <dt>Orizzonte atteso</dt><dd>{mv?.horizon_minutes ? `${mv.horizon_minutes[0]}–${mv.horizon_minutes[1]} min` : "non indicato"}</dd>
+-            </dl>
+-          ) : <p className="proposal-note">Nessuno scenario principale in questo momento.</p>}
+-        </>
+-      )}
+-
+       {v && (
+         <p className="proposal-note">È l'indicazione del sistema, non una tua operazione: l'app non sa se hai aperto posizioni.
+           Lo stop è un'indicazione, non un ordine.</p>
+@@ -444,7 +486,6 @@ export function ProposalPanel({ v, onHistory }: { v: LiveView | null; onHistory:
+                 Show this call's recorded history (revision r{c.revision})</button>
+             )}
+             <ScenarioCards v={v} />
+-            <p className="muted small-text">Lettura qualitativa, non una probabilità.</p>
+           </div>
+         </details>
+       )}

@@ -1112,3 +1112,16 @@ Registered verbatim in [HDP-001 references §8.1](delivery/HDP-001-VERIFICATION-
   - TARGET_REACHED is shown as "Target della call raggiunto: l'indicazione è conclusa.", with "100700.0 — raggiunto" and "La successiva aspettativa (rialzo) non prolunga questa call".
   - Checks: the generator's per-moment assertions (`*-prospettive.png`); `test_live_proposal_e2e` extended; cockpit E2E 10 passed; build passed.
   - Guided test only. CI is Owner-operated: PENDING / NOT CHECKED.
+
+## Live cockpit — desktop visual PROPOSAL (base `8759c85`; FOR GIAN'S AGREEMENT; not implemented)
+
+[Proposal](delivery/evidence/COCKPIT-VISUAL-PROPOSAL/PROPOSAL.md) · 6 states at 1440×1000, plus 1024 and 390 for state 5 · [draft patch](delivery/evidence/COCKPIT-VISUAL-PROPOSAL/draft-ui.patch), evidence only.
+- **Product.** No product change is active: the draft was applied locally, screenshotted, saved as a patch and reverted.
+- **Layout.** A full-width decision area containing:
+  - a call strip (direction chip, identity, levels shown once);
+  - two equal perspective cards;
+  - a separate, dashed "Lettura attuale del mercato";
+  - Approfondimenti collapsed; chart, lenses and timeline below.
+- **Colour map.** Existing tokens, each with a symbol and a text: green/red for direction only; blue ✓ available; grey ⏸ not available now; amber ⚠ not verifiable; grey ■ concluded; amber dashed cpu for a technical problem. The panel is never coloured by direction. Contrast ≥ 4.7:1.
+- **States.** Real v0.6 engine states from three independent synthetic sessions (LONG, mirrored SHORT, the call-updates episode).
+- **Next.** Implementation after Gian's agreement, in the same step. Semantics and approved texts unchanged. CI is Owner-operated: PENDING / NOT CHECKED. v0.6 and HDP-001 frozen; studies INACTIVE.

@@ -1,4 +1,16 @@
-# Current task — Clarity of a call's updates: two perspectives and plain-Italian guidance
+# Current task — Cockpit desktop arrangement: visual proposal first
+Date: 2026-10-10. Status: PROPOSAL DELIVERED — awaiting Gian's agreement ([proposal](delivery/evidence/COCKPIT-VISUAL-PROPOSAL/PROPOSAL.md)). No product change active; the implementation follows in this same step after the agreement. Studies INACTIVE. Remote CI is Owner-operated: PENDING / NOT CHECKED.
+
+## Assignment (Astra, relayed by the Owner, 10 October 2026; expected base `8759c85`)
+
+A complete cockpit arrangement step, whose first delivery is a visual proposal for Gian, not implemented.
+- **Distinctions.** The current market reading; the call's direction and identity; new-entry availability; the identified call's update or conclusion.
+- **Layout.** Better use of desktop space; main operational information grouped; reading and call kept apart; details progressive; no conflicting duplicates; the two approved perspectives; supported widths kept.
+- **Colours.** An explicit map: green LONG, red SHORT, a distinct colour and symbol for availability, distinguishable signals for attention, unverifiable, concluded and technical states, always with text. The whole panel is never coloured by direction; contrast is checked.
+- **Images.** Six synthetic states at a declared desktop viewport, labelled as a proposal.
+- **Excluded.** Method, API, persistence, Workbench, Owner data, real feed, CI.
+
+## Previous task — Clarity of a call's updates: two perspectives and plain-Italian guidance
 Date: 2026-10-10. Status: DELIVERED — READY FOR DIRECTOR REVIEW — COCKPIT CALL UPDATES ONLY ([note, second correction](delivery/evidence/LIVE-CALL-UPDATES-EPISODE/NOTE.md)). Guided test only. Studies INACTIVE. Remote CI is Owner-operated: PENDING / NOT CHECKED.
 
 ## Assignment (relayed by the Owner, 10 October 2026; expected base `a0d6029`)

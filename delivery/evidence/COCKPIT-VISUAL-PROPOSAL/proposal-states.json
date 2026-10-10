@@ -1,0 +1,119 @@
+{
+ "viewport": {
+  "width": 1440,
+  "height": 1000
+ },
+ "extra_widths": [
+  1024,
+  390
+ ],
+ "screenshots": [
+  "1-attesa-senza-call.png",
+  "2-long-disponibile.png",
+  "3-short-disponibile.png",
+  "4-non-verificabile.png",
+  "5-ingresso-chiuso-tesi-aperta.png",
+  "6-call-conclusa-nuova-aspettativa.png",
+  "5-ingresso-chiuso-tesi-aperta-1024.png",
+  "5-ingresso-chiuso-tesi-aperta-390.png"
+ ],
+ "states": [
+  {
+   "name": "1-attesa-senza-call",
+   "state": "WAITING",
+   "run_id": "live-20250828T0316-06b29f",
+   "clock": "2025-09-01 04:06:01.500000+00:00",
+   "call": null,
+   "recent": [],
+   "expected": "UP"
+  },
+  {
+   "name": "2-long-disponibile",
+   "state": "AVAILABLE",
+   "run_id": "live-20250828T0316-06b29f",
+   "clock": "2025-09-01 04:07:01.500000+00:00",
+   "call": {
+    "call_id": "call-AL-2025-09-01T04:07:01+00:00-05a41e24819a",
+    "direction": "LONG",
+    "family": "A",
+    "revision": 0,
+    "entry_status": "AVAILABLE",
+    "entry_reasons": [],
+    "thesis_status": "ONGOING"
+   },
+   "recent": [],
+   "expected": "UP"
+  },
+  {
+   "name": "3-short-disponibile",
+   "state": "AVAILABLE",
+   "run_id": "live-20250828T0316-0b6592",
+   "clock": "2025-09-01 04:07:01.500000+00:00",
+   "call": {
+    "call_id": "call-AS-2025-09-01T04:07:01+00:00-bf29ac4566ec",
+    "direction": "SHORT",
+    "family": "A",
+    "revision": 0,
+    "entry_status": "AVAILABLE",
+    "entry_reasons": [],
+    "thesis_status": "ONGOING"
+   },
+   "recent": [],
+   "expected": "DOWN"
+  },
+  {
+   "name": "4-non-verificabile",
+   "state": "UNVERIFIED",
+   "run_id": "live-20250828T0316-06b29f",
+   "clock": "2025-09-01 04:07:06+00:00",
+   "call": {
+    "call_id": "call-AL-2025-09-01T04:07:01+00:00-05a41e24819a",
+    "direction": "LONG",
+    "family": "A",
+    "revision": 1,
+    "entry_status": "UNVERIFIED",
+    "entry_reasons": [
+     "QUOTE_STALE"
+    ],
+    "thesis_status": "ONGOING"
+   },
+   "recent": [],
+   "expected": "UP"
+  },
+  {
+   "name": "5-ingresso-chiuso-tesi-aperta",
+   "state": "CLOSED",
+   "run_id": "live-20250828T0316-44125a",
+   "clock": "2025-09-01 04:08:01.500000+00:00",
+   "call": {
+    "call_id": "call-AL-2025-09-01T04:07:01+00:00-05a41e24819a",
+    "direction": "LONG",
+    "family": "A",
+    "revision": 1,
+    "entry_status": "CLOSED",
+    "entry_reasons": [
+     "PRICE_OUTSIDE_STRUCTURAL_AREA",
+     "REWARD_RISK_BELOW_MINIMUM"
+    ],
+    "thesis_status": "ONGOING"
+   },
+   "recent": [],
+   "expected": "UP"
+  },
+  {
+   "name": "6-call-conclusa-nuova-aspettativa",
+   "state": "WAITING",
+   "run_id": "live-20250828T0316-44125a",
+   "clock": "2025-09-01 04:10:01.500000+00:00",
+   "call": null,
+   "recent": [
+    {
+     "call_id": "call-AL-2025-09-01T04:07:01+00:00-05a41e24819a",
+     "terminal": "TARGET_REACHED",
+     "terminal_at": "2025-09-01T04:10:01+00:00"
+    }
+   ],
+   "expected": "UP"
+  }
+ ]
+}
