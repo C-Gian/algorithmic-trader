@@ -1,4 +1,16 @@
-# Current task — Input provisioning for HDP-001 and A v0.6 (technical path; no real data)
+# Current task — Comprehension of a call's updates (synthetic episode, live cockpit)
+Date: 2026-10-10. Status: DELIVERED — evidence for the Owner's interpretation ([note](delivery/evidence/LIVE-CALL-UPDATES-EPISODE/NOTE.md)). No UI correction made. Studies INACTIVE; v0.6 and HDP-001 frozen. Remote CI is Owner-operated: PENDING / NOT CHECKED.
+
+## Assignment (relayed by the Owner, 10 October 2026; expected base `2159ef6`)
+
+One coherent synthetic episode in the current cockpit, with three moments of the same call:
+1. entry AVAILABLE;
+2. entry CLOSED with the thesis still ONGOING;
+3. the call's conclusion through a real method transition.
+
+States come from the engine only. Deliver three labelled screenshots and a short note covering identities, times, revisions, statuses, reasons and recorded guidance, and what is visible versus details-only. Keep historical versus current in the third moment. No explanations that suggest answers, and no new holding or exit text. No UI correction before the Owner's interpretation. Only consistency checks.
+
+## Previous task — Input provisioning for HDP-001 and A v0.6 (technical path; no real data)
 Date: 2026-10-10. Status: **CLOSED by the orchestrator's disposition** ([HDP-001 §8.1](delivery/HDP-001-VERIFICATION-REFERENCES.md) · [A v0.6 §10.1](delivery/A-V06-OPERATIONAL-EVALUATION-REFERENCES.md)).
 - The preparatory cycle is closed within the documented limits.
 - Future source availability is not attested; the risk is accepted.

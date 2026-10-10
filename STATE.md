@@ -1079,3 +1079,14 @@ Registered verbatim in [HDP-001 references §8.1](delivery/HDP-001-VERIFICATION-
 - **Missing required series.** Only the registered gap treatments apply; otherwise the result is not evaluable. No implicit substitution, profile change or window shift.
 - **Residual.** The pre-execution conditions already listed (exact-SHA CI reported by the Owner, data and provenance, Director controls, design term 2027-01-25T00:00Z for A) and a separate authorization.
 - **Status.** Both studies INACTIVE; v0.6 and HDP-001 frozen. No code, test, artifact or pinned document changed. CI is Owner-operated: PENDING / NOT CHECKED.
+
+## Live cockpit — updates of one call (synthetic comprehension episode; base `2159ef6`; evidence only, FOR DIRECTOR)
+
+[Note](delivery/evidence/LIVE-CALL-UPDATES-EPISODE/NOTE.md) · three screenshots · [episode.json](delivery/evidence/LIVE-CALL-UPDATES-EPISODE/episode.json) · [generator](delivery/evidence/LIVE-CALL-UPDATES-EPISODE/generate_episode.py). No product or UI change; awaits the Owner's interpretation.
+- **Episode.** One real in-memory v0.6 live session and one call (`call-AL-2025-09-01T04:07:01+00:00-05a41e24819a`):
+  1. AVAILABLE r0;
+  2. CLOSED r1 (`PRICE_OUTSIDE_STRUCTURAL_AREA`, `REWARD_RISK_BELOW_MINIMUM`) with the thesis ONGOING, not UNVERIFIED;
+  3. TARGET_REACHED r3 (certified target contact), viewed with the call history opened from *What changed*.
+- **Fixture adaptation.** Three appended minutes and re-quotes every 4 s at the last close; no rule change.
+- **Observed, not changed.** The timeline's conclusion row shows a UTC time without a zone.
+- **Checks.** The generator's consistency assertions only; disposable PostgreSQL removed. CI is Owner-operated: PENDING / NOT CHECKED. v0.6 and HDP-001 frozen; studies INACTIVE.
