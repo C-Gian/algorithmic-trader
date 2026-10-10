@@ -1,0 +1,241 @@
+{
+ "assignment": null,
+ "attestation": {
+  "attested": true,
+  "checks": {
+   "clock_end_reached": true,
+   "exported_in_window_calls_equal_report_list": true,
+   "exported_primary_paths_equal_report_count": true,
+   "identities_match_registered": true,
+   "report_completion_complete": true,
+   "run_completed": true,
+   "same_evaluation_and_replay_in_every_export": true
+  },
+  "not_attestable": "completeness of the scenario/entry journal pages (no authoritative per-kind count on the GET surfaces): the owner register is descriptive, never a completeness proof",
+  "run_ids": {
+   "calls": "eval-20261010T182124-97adf4|obs-20261010T182124-e3d11a",
+   "evaluation": "eval-20261010T182124-97adf4|obs-20261010T182124-e3d11a",
+   "journal_entry_attempt": "eval-20261010T182124-97adf4|obs-20261010T182124-e3d11a",
+   "journal_scenario": "eval-20261010T182124-97adf4|obs-20261010T182124-e3d11a",
+   "manifest": "eval-20261010T182124-97adf4|obs-20261010T182124-e3d11a",
+   "report": "eval-20261010T182124-97adf4|obs-20261010T182124-e3d11a"
+  }
+ },
+ "balance": {
+  "complete_balance": "-0.0014",
+  "meaning": "sum of normalized one-unit PRIMARY results of the included A calls, net of the included costs; abstention = 0; not an account return, not compounded",
+  "observed_balance": "-0.0014",
+  "partial_subtotal": null,
+  "status": "COMPLETE"
+ },
+ "bootstrap": {
+  "computed_here": false,
+  "eligible": true,
+  "tool": "scripts/a_v06_study_bootstrap.py"
+ },
+ "build": "21619c3aa6562f344aefe56170dd1e1bcf415d3a-dirty",
+ "calls": [
+  {
+   "bounds": null,
+   "call_id": "call-AL-2025-09-01T04:03:00+00:00-33d5d0d48b6a",
+   "class": "DETERMINED",
+   "direction": "LONG",
+   "entered": true,
+   "entry_mode": "RETURN",
+   "exit_class": "GUIDANCE_RETIRED",
+   "family": "A",
+   "funding_status": "PRICE_NET_ONLY_TOTAL_NET_UNAVAILABLE",
+   "in_window": true,
+   "issue_hour": "2025-09-01T04:00:00Z",
+   "issued_at": "2025-09-01T04:03:00Z",
+   "measure": "price_net",
+   "primary": true,
+   "primary_status": "CLOSED",
+   "resolved_at": "2025-09-01T06:03:00Z",
+   "resolved_in_tail": true,
+   "scenario_id": "AL-2025-09-01T03:15:00+00:00-d49a8b5618ff",
+   "undetermined_reason": null,
+   "value": "-0.0014"
+  }
+ ],
+ "completion": "COMPLETE",
+ "evaluation_id": "eval-20261010T182124-97adf4",
+ "export": {
+  "access": "GET only",
+  "evaluation_id": "eval-20261010T182124-97adf4",
+  "files": {
+   "calls.json": "ea4196530c59721aa1be04c0de2d679cf46084262a5e42cf5a42244ad999a795",
+   "evaluation.json": "1093415a058c54f81ccacfb71d78f6094efafc1f258283f42e3c80c76bf8ad8e",
+   "journal-entry_attempt.json": "a4885559b284e3116e0f6942ce7a5efcb624969c1f5e24ad06d0e0b8ada47091",
+   "journal-scenario.json": "9575a2e30a1092c6c50c2751032cd5cf32fc7efe7d44a03b8885193397aee76f",
+   "report.json": "08bfe2d29784608c27c3cc7e6f8e566a704c9c9a6349a2e298c52b38cd7842f1"
+  },
+  "ledger_tool": "a-v06.study-ledger.v1",
+  "replay_id": "obs-20261010T182124-e3d11a"
+ },
+ "feed_content_identity": "feedcontent.v1:001e4756d3d61afbb843cd82e4ee2d5f725a614f5fb75c8e2cdc0d61fd6593ad",
+ "funding_outcomes": "PRICE_NET_ONLY",
+ "hours": [
+  {
+   "a_calls": 0,
+   "determined": 0,
+   "hour": "2025-08-31T22:00:00Z",
+   "no_operation": 0,
+   "status": "NO_CALL_ZERO",
+   "undetermined": 0,
+   "value": "0"
+  },
+  {
+   "a_calls": 0,
+   "determined": 0,
+   "hour": "2025-08-31T23:00:00Z",
+   "no_operation": 0,
+   "status": "NO_CALL_ZERO",
+   "undetermined": 0,
+   "value": "0"
+  },
+  {
+   "a_calls": 0,
+   "determined": 0,
+   "hour": "2025-09-01T00:00:00Z",
+   "no_operation": 0,
+   "status": "NO_CALL_ZERO",
+   "undetermined": 0,
+   "value": "0"
+  },
+  {
+   "a_calls": 0,
+   "determined": 0,
+   "hour": "2025-09-01T01:00:00Z",
+   "no_operation": 0,
+   "status": "NO_CALL_ZERO",
+   "undetermined": 0,
+   "value": "0"
+  },
+  {
+   "a_calls": 0,
+   "determined": 0,
+   "hour": "2025-09-01T02:00:00Z",
+   "no_operation": 0,
+   "status": "NO_CALL_ZERO",
+   "undetermined": 0,
+   "value": "0"
+  },
+  {
+   "a_calls": 0,
+   "determined": 0,
+   "hour": "2025-09-01T03:00:00Z",
+   "no_operation": 0,
+   "status": "NO_CALL_ZERO",
+   "undetermined": 0,
+   "value": "0"
+  },
+  {
+   "a_calls": 1,
+   "determined": 1,
+   "hour": "2025-09-01T04:00:00Z",
+   "no_operation": 0,
+   "status": "DETERMINED",
+   "undetermined": 0,
+   "value": "-0.0014"
+  }
+ ],
+ "identities": {
+  "all_match": true,
+  "checks": {
+   "capability_profile_sha256_is_a_registered_row": true,
+   "evaluator_sha256": true,
+   "implementation": true,
+   "model": true,
+   "primary_entry_delay_60s": true,
+   "register_sha256": true,
+   "rules_sha256": true
+  },
+  "note": "identity names and hashes only; behavioural equivalence of the executive build with b47b997 is a separate check (references \u00a78)",
+  "reference_commit": "b47b997ee93513c7a358b49e961020705e4fbb85",
+  "registered_identities_file": "delivery/evidence/A-V06-REFERENCES/identities-b47b997.json",
+  "registered_identities_sha256_lf": "fb0c1e1188557a1a2297e84be5f2004a559d3558dc73d0fa5ccfb971a1bb6268"
+ },
+ "identity_sha256": "7b3318148e3c756df99cd1a4cff4d1303b6b2513a1dac92feaa1cb7964cf40aa",
+ "label": "SYNTHETIC EXECUTION \u2014 engineering check of the study path; not the A v0.6 evaluation",
+ "ledger_script_sha256_lf": "08fd3e4a612ed0a96b48802a4d05d609c9221cb4dbec3a8778f379c1119ae929",
+ "ledger_tool": "a-v06.study-ledger.v2",
+ "measure": "price_net",
+ "mode": "SYNTHETIC",
+ "owner_register_scope": "descriptive only: the completeness of the scenario/entry journal pages is not attestable on the GET surfaces; not an exhaustive diagnosis of non-confirmations or non-issues, and separate from the attested primary calls and paths",
+ "owners": [
+  {
+   "born_at": "2025-09-01T03:30:00Z",
+   "calls": [
+    {
+     "call_id": "call-AL-2025-09-01T04:03:00+00:00-33d5d0d48b6a",
+     "issued_at": "2025-09-01T04:03:00Z",
+     "primary": true
+    }
+   ],
+   "class": "BORN_IN_WINDOW",
+   "confirmations": [
+    {
+     "at": "2025-09-01T04:01:00Z",
+     "in_window": true
+    }
+   ],
+   "direction": "LONG",
+   "entry_transitions": {
+    "ISSUE": 1,
+    "RESPONSE_REFERENCE": 1,
+    "WAIT_OPEN": 1
+   },
+   "not_confirmed_reason": null,
+   "not_issued_reason": null,
+   "open_at_window_end": true,
+   "owner_id": "AL-2025-09-01T03:15:00+00:00-d49a8b5618ff",
+   "status_at_start": null,
+   "terminal": {
+    "at": "2025-09-01T06:01:00Z",
+    "reason": "SCENARIO_PROGRESS_BELOW_HALF_SCALE",
+    "state": "STALLED"
+   },
+   "transitions": {
+    "ARM": 1,
+    "BIRTH": 1,
+    "CONFIRM": 1,
+    "OWNER_RELEASE": 1,
+    "REVISE": 1,
+    "TERMINAL": 1
+   }
+  }
+ ],
+ "pack_id": "pack-16307956045138a1e671e0dfb6a8c94e39e20e5e",
+ "population": {
+  "a_calls_outside_window": 0,
+  "bc_calls_reported_separately": 0,
+  "determined": 1,
+  "entered": 1,
+  "no_operation_no_entry": 0,
+  "primary_a_calls": 1,
+  "resolved_in_tail": 1,
+  "undetermined": 0,
+  "undetermined_by_reason": {}
+ },
+ "replay_id": "obs-20261010T182124-e3d11a",
+ "run_status": "completed",
+ "weekly": [
+  {
+   "a_calls_issued": 1,
+   "a_paths_entered": 1,
+   "block": 0,
+   "from": "2025-08-31T22:00:00Z",
+   "hours": 7
+  }
+ ],
+ "windows": {
+  "evaluation": [
+   "2025-08-31T22:00:00Z",
+   "2025-09-01T04:30:00Z"
+  ],
+  "hours": 7,
+  "tail_end": "2025-09-01T10:35:00Z",
+  "warmup_start": "2025-08-31T00:00:00Z"
+ }
+}

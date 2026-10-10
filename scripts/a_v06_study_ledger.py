@@ -13,9 +13,13 @@ design asks for, without recomputing any decision or outcome.
 Fixed by the design (§2-§7) and applied here: result = the PRIMARY path; NO_ENTRY is no modeled operation; hours without
 an A call are 0; an hour holding an included path without a determinable result (CENSORED / UNRESOLVED / AMBIGUOUS /
 missing terminal record / missing value) is NOT zero, it stays undetermined; B/C calls never enter the primary result.
-The moving-block bootstrap is NOT computed: its draw procedure and the representation of undetermined paths are still
-to be registered (design §3-§6; see delivery/A-V06-OPERATIONAL-EVALUATION-REFERENCES.md). No HDP-001 convention is
-used. Sums are normalized one-unit results, never an account return.
+Balance protections (v2): (1) identity or completeness not attested -> no complete balance, no subtotal presented as
+a reconciled study result, no hourly value; (2) attested population with at least one undetermined included PRIMARY
+path -> no complete balance, only an explicitly PARTIAL subtotal with no conclusion on the overall balance; (3) attested
+and all determinable -> observed balance. The moving-block bootstrap is a separate offline tool
+(scripts/a_v06_study_bootstrap.py) that accepts only case (3). The owner register is descriptive: the completeness of
+the journal pages cannot be attested on the GET surfaces. No HDP-001 convention is used. Sums are normalized one-unit
+results, never an account return.
 
 Usage (only under the separate executive assignment; the study is INACTIVE):
   uv run python scripts/a_v06_study_ledger.py export --api http://127.0.0.1:8000 --evaluation <id> --out <new dir>
@@ -38,18 +42,12 @@ from pathlib import Path
 
 from algotrader.adviser.report_periods import exact_sum
 
-LEDGER_ID = "a-v06.study-ledger.v1"
+LEDGER_ID = "a-v06.study-ledger.v2"  # v2: balance protections; bootstrap moved to a separate tool
 ROOT = Path(__file__).resolve().parents[1]
 REFERENCE_COMMIT = "b47b997ee93513c7a358b49e961020705e4fbb85"
 REGISTERED_IDENTITIES = ROOT / "delivery" / "evidence" / "A-V06-REFERENCES" / "identities-b47b997.json"
 HOUR = timedelta(hours=1)
 UNDETERMINED_STATUSES = ("CENSORED", "UNRESOLVED", "AMBIGUOUS")
-OPEN_REQUIREMENTS = (
-    "bootstrap draw procedure: order and method of the random.Random(0) draws (design §6 fixes blocks, B, seed, "
-    "uniform starts, no wrap, truncation and type-7 percentiles only)",
-    "representation, in the bootstrap and in the reported balance, of included entered paths without a determinable "
-    "result (design §3-§4 forbid imputing zero or deleting them)",
-)
 
 
 def _dt(s: str | None) -> datetime | None:
@@ -276,6 +274,22 @@ def build_ledger(report: dict, calls_doc: dict, scen: list[dict], ents: list[dic
                       "a_calls_issued": sum(1 for r in prim if r["issue_hour"] in block),
                       "a_paths_entered": sum(1 for r in prim if r["issue_hour"] in block and r["entered"])})
     determined_sum = str(exact_sum(det_all))
+    if not att["attested"]:
+        balance = {"status": "NOT_ATTESTED_IDENTITY_OR_COMPLETENESS", "observed_balance": None,
+                   "complete_balance": None, "partial_subtotal": None,
+                   "note": "identity or completeness not attested: no balance and no subtotal is a study result"}
+    elif und_all:
+        balance = {"status": "INCOMPLETE_UNDETERMINED_PATHS", "observed_balance": None, "complete_balance": None,
+                   "partial_subtotal": {"value": determined_sum, "label": "PARTIAL",
+                                        "covers": f"{len(det_all)} determined of {len(prim)} included A calls",
+                                        "excluded_undetermined": len(und_all),
+                                        "note": "determined paths only; no conclusion on the overall balance; "
+                                                "nothing imputed"}}
+    else:
+        balance = {"status": "COMPLETE", "observed_balance": determined_sum, "complete_balance": determined_sum,
+                   "partial_subtotal": None}
+    balance["meaning"] = ("sum of normalized one-unit PRIMARY results of the included A calls, net of the included "
+                          "costs; abstention = 0; not an account return, not compounded")
     return {
         "ledger_tool": LEDGER_ID, "mode": mode, "assignment": assignment,
         "label": ("SYNTHETIC EXECUTION — engineering check of the study path; not the A v0.6 evaluation"
@@ -296,18 +310,13 @@ def build_ledger(report: dict, calls_doc: dict, scen: list[dict], ents: list[dic
             "resolved_in_tail": sum(1 for r in prim if r["resolved_in_tail"]),
             "bc_calls_reported_separately": sum(1 for r in rows if r["family"] != "A"),
             "a_calls_outside_window": sum(1 for r in rows if r["family"] == "A" and not r["in_window"])},
-        "balance": {"determined_sum": determined_sum,
-                    "complete_balance": determined_sum if (att["attested"] and not und_all) else None,
-                    "status": ("NOT_ATTESTED_IDENTITY_OR_COMPLETENESS" if not att["attested"]
-                               else "COMPLETE" if not und_all else "INCOMPLETE_UNDETERMINED_PATHS"),
-                    "meaning": ("sum of normalized one-unit PRIMARY results of the included A calls, net of the "
-                                "included costs; abstention = 0; not an account return, not compounded"),
-                    "note": None if not und_all else ("the determined sum excludes undetermined included paths; it "
-                                                      "is not a complete balance and nothing was imputed")},
+        "balance": balance,
         "weekly": weeks,
-        "bootstrap": {"status": "NOT_COMPUTED_CONVENTIONS_OPEN", "open_requirements": list(OPEN_REQUIREMENTS),
-                      "fixed_by_design": "168 h moving blocks on the full window grid, 10,000 resamples, "
-                                         "random.Random(0), no wrap, truncated last block, type-7 95% interval"},
+        "bootstrap": {"computed_here": False, "tool": "scripts/a_v06_study_bootstrap.py",
+                      "eligible": balance["status"] == "COMPLETE"},
+        "owner_register_scope": ("descriptive only: the completeness of the scenario/entry journal pages is not "
+                                 "attestable on the GET surfaces; not an exhaustive diagnosis of non-confirmations "
+                                 "or non-issues, and separate from the attested primary calls and paths"),
         "calls": rows, "hours": hours, "owners": _owner_register(scen, ents, rows, es, ee),
     }
 

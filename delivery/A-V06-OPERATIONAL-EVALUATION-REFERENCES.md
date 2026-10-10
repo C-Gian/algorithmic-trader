@@ -331,3 +331,73 @@ The ledger now presents a COMPLETE balance or any hourly value only when every c
 - `tests/test_a_v06_study_db.py`: 3 passed on a disposable PostgreSQL, which was removed; the evidence was regenerated and is attested and COMPLETE.
 
 **Build.** `src/` is unchanged, so the executive build candidate is still `be44370`; only the ledger script hash changed. Studies INACTIVE.
+
+## 9. Statistical completion — offline bootstrap (base `b2ebf20`; synthetic evidence only; study INACTIVE)
+
+**Authoritative decision — NOT registered.** The assignment of 10 October 2026 asks to register "integralmente" the orchestrator decision "riportata sotto", but the relayed message contained no decision text. Nothing was invented or summarized in its place. The verbatim decision still has to be supplied and registered in a separate document linked to the design and to these references.
+
+The tools below implement the conventions that the assignment states explicitly (§9.2). Those conventions supersede the open items of §7 and §8.6(3) only once the decision is registered.
+
+### 9.1 Identities, product and tools kept separate
+
+| Kind | Item | Identity |
+|---|---|---|
+| Product | Behaviour reference | `b47b997ee93513c7a358b49e961020705e4fbb85` |
+| Product | Designated executive build candidate | `be44370f958a9b60f4b02e036102a23247f361d8`; `src/` unchanged since; no equivalence in general and no CI is certified |
+| Study tool | Ledger `a-v06.study-ledger.v2` | [`scripts/a_v06_study_ledger.py`](../scripts/a_v06_study_ledger.py), SHA-256 (LF) `08fd3e4a612ed0a96b48802a4d05d609c9221cb4dbec3a8778f379c1119ae929` |
+| Study tool | Bootstrap `a-v06.study-bootstrap.v1` | [`scripts/a_v06_study_bootstrap.py`](../scripts/a_v06_study_bootstrap.py), SHA-256 (LF) `5ca2ca827000fad690dcbd0c3bc07b333526f063ccd27a19fcb708f5ea7ed57a` |
+| Configuration | Frozen bootstrap configuration | L 168, B 10,000, seed 0, p 0.025 / 0.975; canonical SHA-256 `82341f37ea73dcdf650e462e594bd5931167db8b32ddf262843f2fc045068db0` |
+
+The tool commits are the delivery commits recorded in STATE. The study tools are not product code and are not part of the build candidate.
+
+### 9.2 Procedure implemented
+
+- **Grid.** The complete UTC hourly grid of the evaluation window (N = 4368 for the study), never compressed to the hours with calls.
+- **Values.** Each hour carries the ledger's attested value. A zero is only an attested null contribution (no A call, or NO_ENTRY only); it is never missing data or an unresolved path.
+- **Blocks.** Moving blocks of L = 168 h, k = ceil(N/L) (26 for the study), the last block truncated to N - L(k-1), no circular wrap.
+- **Draws.** One `random.Random(0)`, one `randrange(N - L + 1)` per block, in the order resample b = 0..9,999, then block j = 0..k-1.
+- **Statistic.** The exact sum of the resampled hourly values.
+- **Interval.** 95% percentile interval, Hyndman-Fan type 7, p = 0.025 / 0.975, h = (B - 1)p. It is reported separately from the observed balance, with no automatic verdict (design §7).
+- **Traceability.** The output records:
+  - ledger and hour-series hashes, the ledger tool and script hash, the evaluation and replay ids, the build and identity;
+  - the configuration and its hash, the procedure text and the percentile convention;
+  - block lengths and the start range;
+  - the resampled-statistics file and its SHA-256.
+
+  Outputs go to a new directory only. Runs are labelled SYNTHETIC or STUDY; a STUDY run needs the frozen configuration, the STUDY ledger of the registered window, and an assignment reference. The study status is never updated by the tools.
+
+### 9.3 Protections (ledger v2 + bootstrap)
+
+| Case | Ledger balance | Bootstrap |
+|---|---|---|
+| Identity or completeness not attested | `NOT_ATTESTED_IDENTITY_OR_COMPLETENESS`. No observed or complete balance, **no subtotal**, no hourly value. | `NOT_COMPUTED_NOT_ATTESTED` |
+| Attested, at least one included PRIMARY path undetermined | `INCOMPLETE_UNDETERMINED_PATHS`. No observed or complete balance; `partial_subtotal` labelled **PARTIAL** (determined paths only, count excluded, no conclusion on the overall balance). | `NOT_COMPUTED_UNDETERMINED_PATHS` |
+| Attested and all determinable | `COMPLETE`, with the observed balance | `COMPUTED`: interval separate from the observed balance, no verdict |
+
+Further refusals: a ledger version other than v2, a grid that is not the window's complete hourly grid, an hour without an attested value, hourly values that do not sum to the observed balance, and a grid shorter than one block.
+
+The owner register stays descriptive (`owner_register_scope`). It is not an exhaustive diagnosis of missing confirmations or issues, and it is separate from the attested primary calls and paths.
+
+### 9.4 Checks run
+
+- `tests/test_a_v06_study_bootstrap.py` (5 passed). Expected statistics are recomputed independently in the test: explicit slices, the test's own generator, Fraction type-7.
+  - A hand-specified 7-hour series with zeros in place gives lengths [3, 3, 1]. The statistics equal the expected ones and differ both from the transposed draw order and from a grid compressed to non-zero hours. The interval is exact, reproducible and never overwritten.
+  - Undetermined paths and an unattested ledger: no statistics and no interval.
+  - The frozen configuration on a synthetic 4368-hour window: 26 x 168 blocks, starts 0..4200, 10,000 statistics equal to the independent recomputation. A STUDY run refuses a non-frozen configuration, a missing assignment, and a synthetic ledger.
+  - A pure-fold study ledger through the bootstrap.
+- `tests/test_a_v06_study.py` (11 passed), adapted to the v2 balance. A failed attestation now blocks the subtotal too, and the undetermined case gives an explicit PARTIAL subtotal.
+- `tests/test_a_v06_study_db.py::...end_to_end...` (1 passed, disposable PostgreSQL, removed).
+- No product suite: `src/` unchanged.
+
+**Synthetic evidence**, built offline from the registered `synthetic-export/`, with no earlier output overwritten:
+- `synthetic-ledger-v2/`: attested, COMPLETE, -0.0014, 7 hours.
+- `synthetic-bootstrap/`: SYNTHETIC configuration L 3, B 1,000 (the 7-hour window is shorter than 168 h); COMPUTED; statistics hash `d7d877d7...`.
+
+### 9.5 Residual conditions
+
+- The verbatim orchestrator decision must be registered (§9 above).
+- Exact-SHA CI of the executive build, reported by the Owner.
+- Data and provenance: acquisition after 2027-07-26T06:05Z, then the pack registration.
+- Pre-execution controls: the Director's acceptance of the build and its equivalence evidence; the freeze completed before **2027-01-25T00:00Z** (design term unchanged).
+- A separate authorization for acquisition, the Owner launch, export, ledger and bootstrap.
+- The real run duration (about 217 days of data) is not measured.

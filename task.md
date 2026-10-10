@@ -1,9 +1,25 @@
-# Current task — A v0.6 continuous evaluation, technical preparation
+# Current task — A v0.6 statistical completion (offline bootstrap)
+Date: 2026-10-10. Status: DELIVERED — READY FOR DIRECTOR REVIEW — A V0.6 BOOTSTRAP TOOLING ONLY ([references §9](delivery/A-V06-OPERATIONAL-EVALUATION-REFERENCES.md)). **The orchestrator decision named in the assignment was not included in the relayed message and is NOT registered.** Studies INACTIVE. Remote CI is Owner-operated: PENDING / NOT CHECKED.
+
+## Assignment (relayed by the Owner, 10 October 2026; expected base `b2ebf20`)
+
+Register the orchestrator decision verbatim in a separate `delivery/` document (text not received) and complete the offline bootstrap with synthetic evidence only.
+- **Bootstrap.** The full UTC hourly grid; 168 h moving blocks; 10,000 resamples; one `random.Random(0)`; one `randrange(N-L+1)` per block, in resample -> block order; no wrap; truncated last block. The statistic is the sum of the resampled hourly values, with the registered 95% percentile convention. Zeros are only attested null contributions.
+- **Protections.**
+  - Not attested: no balance, no bootstrap, no reconciled subtotal.
+  - Undetermined included path: no balance, no bootstrap, an explicitly partial subtotal only.
+  - Attested and determinable: balance and bootstrap, with the interval separate and no verdict.
+
+  The owner journal stays descriptive.
+- **Identities.** Full SHAs of `b47b997` and `be44370` and the tool versions, with product and tool identities kept separate.
+- **Excluded.** `src/`, method, preset, evaluator, acquisition, Owner data, real evaluation, CI. The design term 2027-01-25T00:00Z is unchanged.
+
+## Previous task — A v0.6 continuous evaluation, technical preparation
 Date: 2026-10-10. Status: DELIVERED — READY FOR DIRECTOR REVIEW — A V0.6 STUDY PATH ONLY. **Technically ready** on synthetic evidence only; the **study is not launchable** ([references §8.6](delivery/A-V06-OPERATIONAL-EVALUATION-REFERENCES.md)). Studies INACTIVE. Remote CI is Owner-operated: PENDING / NOT CHECKED.
 
 **Review correction (base `2018634`).** The ledger gives no complete balance or hourly series without attested identity and completeness. It is a ledger-only change ([references §8.8](delivery/A-V06-OPERATIONAL-EVALUATION-REFERENCES.md)): method, preset, population and economic criteria are unchanged, and the bootstrap is not implemented.
 
-## Assignment (relayed by the Owner, 10 October 2026; expected base `77420cd`)
+### Study path assignment (relayed by the Owner, 10 October 2026; expected base `77420cd`)
 
 Make the full A v0.6 preparation, execution and reporting path technically executable, proven only with isolated synthetic data.
 - **Sources.** The design, the orchestrator decision, the references decision, the operational references and `identities-b47b997.json`. Authoritative sources prevail. `b47b997` is the frozen behaviour reference. Pinned documents are not modified.

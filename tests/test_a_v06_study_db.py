@@ -109,7 +109,7 @@ def test_study_window_end_to_end_prepared_launched_and_ledgered(database_url, tm
     assert all(h["value"] == "0" and h["status"] == "NO_CALL_ZERO" for k, h in by_hour.items()
                if k != "2025-09-01T04:00:00Z")
     assert doc["balance"] == {**doc["balance"], "status": "COMPLETE", "complete_balance": "-0.0014"}
-    assert doc["population"]["resolved_in_tail"] == 1 and doc["bootstrap"]["status"] == "NOT_COMPUTED_CONVENTIONS_OPEN"
+    assert doc["population"]["resolved_in_tail"] == 1 and doc["bootstrap"]["eligible"] is True
     (o,) = doc["owners"]
     assert (o["class"], o["born_at"], o["calls"][0]["call_id"], o["open_at_window_end"]) == (
         "BORN_IN_WINDOW", "2025-09-01T03:30:00Z", CALL, True)

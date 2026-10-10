@@ -1,0 +1,55 @@
+{
+ "assignment": null,
+ "block_lengths": [
+  3,
+  3,
+  1
+ ],
+ "blocks_per_resample": 3,
+ "config": {
+  "block_hours": 3,
+  "frozen": false,
+  "p_hi": "0.975",
+  "p_lo": "0.025",
+  "resamples": 1000,
+  "seed": 0,
+  "sha256": "bf755828891abe14a4343839cae23d340ebd4205a0ac4ba3f42e89bcc744f943"
+ },
+ "grid_hours": 7,
+ "input": {
+  "build": "21619c3aa6562f344aefe56170dd1e1bcf415d3a-dirty",
+  "evaluation_id": "eval-20261010T182124-97adf4",
+  "hours_csv_sha256": "0154e0df7a0cbf2a9c675b29724a32e8ea79b3ec6e19e4203bb6b9d48dd7bf96",
+  "identity_sha256": "7b3318148e3c756df99cd1a4cff4d1303b6b2513a1dac92feaa1cb7964cf40aa",
+  "ledger_json_sha256": "1569a9c6d7f81becde0ef436e8110d962b89705f7032ac2fe608dae4b778408e",
+  "ledger_mode": "SYNTHETIC",
+  "ledger_script_sha256_lf": "08fd3e4a612ed0a96b48802a4d05d609c9221cb4dbec3a8778f379c1119ae929",
+  "ledger_tool": "a-v06.study-ledger.v2",
+  "replay_id": "obs-20261010T182124-e3d11a",
+  "window": [
+   "2025-08-31T22:00:00Z",
+   "2025-09-01T04:30:00Z"
+  ]
+ },
+ "interval_95": [
+  "-0.0028000",
+  "0.000"
+ ],
+ "label": "SYNTHETIC EXECUTION \u2014 engineering check of the study bootstrap; not the A v0.6 evaluation",
+ "mode": "SYNTHETIC",
+ "note": "the interval represents uncertainty conditional on the observed history; it is reported separately from the observed balance and is not a verdict (design \u00a76-\u00a77)",
+ "observed_balance": "-0.0014",
+ "percentile_convention": "Hyndman-Fan type 7 (linear between order statistics, h = (B - 1) p), p = 0.025 / 0.975",
+ "procedure": "one random.Random(seed); for resample b = 0..B-1, for block j = 0..k-1: s = randrange(N - L + 1); block j covers grid hours s .. s + length_j - 1; lengths L except the last, truncated to N - L(k-1); no wrap; statistic = exact sum of the resampled hourly values",
+ "reading": "no automatic verdict of effectiveness or promotion (design \u00a77)",
+ "resampled_statistics_count": 1000,
+ "resampled_statistics_sha256": "d7d877d74f7c523107288a216fb18888b4eb694eae3755b920837ad65b99eba0",
+ "start_range": [
+  0,
+  4
+ ],
+ "status": "COMPUTED",
+ "tool": "a-v06.study-bootstrap.v1",
+ "tool_sha256_lf": "5ca2ca827000fad690dcbd0c3bc07b333526f063ccd27a19fcb708f5ea7ed57a",
+ "zero_hours": 6
+}

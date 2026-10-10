@@ -145,8 +145,10 @@ def test_an_included_path_without_result_is_never_zero(monkeypatch):
     hour = next(h for h in led["hours"] if h["hour"] == "2025-09-01T04:00:00Z")
     assert hour["value"] is None and hour["status"] == "CONTAINS_UNDETERMINED"
     assert led["balance"]["status"] == "INCOMPLETE_UNDETERMINED_PATHS" and led["balance"]["complete_balance"] is None
-    assert led["balance"]["determined_sum"] == "0" and Decimal(led["hours"][0]["value"]) == 0
-    assert led["bootstrap"]["status"] == "NOT_COMPUTED_CONVENTIONS_OPEN" and len(led["bootstrap"]["open_requirements"]) == 2
+    sub = led["balance"]["partial_subtotal"]
+    assert sub["label"] == "PARTIAL" and sub["value"] == "0" and sub["excluded_undetermined"] == 1
+    assert led["balance"]["observed_balance"] is None and Decimal(led["hours"][0]["value"]) == 0
+    assert led["bootstrap"]["eligible"] is False
 
 
 # -- attestation before a complete balance (review of 2018634) ------------------------------------------------------
@@ -159,6 +161,7 @@ def test_complete_valid_case_keeps_the_previous_results(monkeypatch):
     led = _ledger_of(monkeypatch, sf.EV_START, sf.EV_END)
     att, bal, hours = _att(led)
     assert att["attested"] and bal["status"] == "COMPLETE" and bal["complete_balance"] == "-0.0014"
+    assert bal["observed_balance"] == "-0.0014" and bal["partial_subtotal"] is None and led["bootstrap"]["eligible"]
     assert {h["hour"]: h["value"] for h in hours}["2025-09-01T04:00:00Z"] == "-0.0014"
     assert all(h["value"] == "0" for h in hours if h["hour"] != "2025-09-01T04:00:00Z")
 
@@ -180,5 +183,6 @@ def test_unattested_runs_never_give_a_balance_or_zero_hours(monkeypatch, case):
     led = _ledger_of(monkeypatch, sf.EV_START, sf.EV_END, mutate=mutate, match=match)
     att, bal, hours = _att(led)
     assert not att["attested"] and bal["status"] == "NOT_ATTESTED_IDENTITY_OR_COMPLETENESS"
-    assert bal["complete_balance"] is None
+    assert bal["complete_balance"] is None and bal["observed_balance"] is None
+    assert bal["partial_subtotal"] is None  # no subtotal presented as a reconciled study result
     assert all(h["value"] is None and h["status"] == "NOT_ATTESTED" for h in hours)  # never abstention hours
