@@ -1,0 +1,390 @@
+{
+ "antecedent": {
+  "annotation_activation_after_1h": 2,
+  "annotation_terminal_states": {
+   "DESTINATION_REACHED": 62,
+   "EXPIRED": 4,
+   "INVALIDATED": 46,
+   "STALLED": 8,
+   "TIME_EXPIRED": 24,
+   "WITHDRAWN": 14
+  },
+  "by_direction": {
+   "DOWN": {
+    "ACTIVATED_WITHIN_1H": 16,
+    "ALREADY_ACTIVE_AT_CUTOFF": 33,
+    "NOT_ACTIVATED_AT_1H": 16
+   },
+   "UP": {
+    "ACTIVATED_WITHIN_1H": 22,
+    "ALREADY_ACTIVE_AT_CUTOFF": 61,
+    "NOT_ACTIVATED_AT_1H": 10
+   }
+  },
+  "classes": {
+   "ACTIVATED_WITHIN_1H": 38,
+   "ALREADY_ACTIVE_AT_CUTOFF": 94,
+   "NOT_ACTIVATED_AT_1H": 26
+  },
+  "note": "class from the first CONFIRM published_at; activation after +1h and terminals are annotations and select nothing; no accuracy is computed by class",
+  "population": "directional samples (all, not only evaluable)",
+  "stored_flag_1h_vs_journal_class_mismatches": []
+ },
+ "evaluation_id": "eval-20261009T155751-be8b2b",
+ "inputs_sha256": {
+  "report.json": "1015d98cfe15206cb701c1543f4366d8371557f09d18e0d12d5bb1202dde39c5",
+  "sc_0.json": "a09c9c2f910269ab08e3ac7eb6374ce42ec048689ed97e698f02491e92b709cf",
+  "sc_1.json": "9e9a4640af77c92f20880a0e7112bf78936e4bb62103d95063fa839ed1ec0d96",
+  "view_samples.jsonl": "d6585a3b89f658fe6f3259bc8815c32f3328713c224f89ad1e012d9c20a931e6"
+ },
+ "integrity": {
+  "all_kind_view_sample": true,
+  "all_run_id": true,
+  "chain_links_failed": 0,
+  "chain_links_not_verifiable": [
+   1349
+  ],
+  "chain_links_verified_within_subset": 2927,
+  "chain_scope": "partial: per-record digests and the adjacent links listed are recomputed here; the full chain and its final commitment are NOT verified by this extraction (non-view_sample records and the finish commitment were outside the authorized access)",
+  "digest_recomputed_equal": "2928/2928",
+  "expected_rows": 2928,
+  "generations": {
+   "1": 2928
+  },
+  "record_id_equals_sample_prefix_time": true,
+  "rows": 2928,
+  "sample_times_equal_hourly_grid": true,
+  "seq_not_extracted_other_kinds": [
+   1345,
+   1346,
+   1347,
+   1348
+  ],
+  "seq_order_equals_time_order": true,
+  "seq_range": [
+   1,
+   2932
+  ],
+  "server_count": {
+   "distinct_record_id": 2928,
+   "distinct_seq": 2928,
+   "max_seq": 2932,
+   "min_seq": 1,
+   "rows": 2928
+  },
+  "stored_value_consistency": {
+   "next_persistence_equals_outcome": 2927,
+   "not_checkable": 1,
+   "outcome_equals_next_anchor_sign": 2927
+  },
+  "transaction": {
+   "isolation": "repeatable read",
+   "server_time": "2026-10-10T06:41:20.405776+00:00",
+   "server_version": "18.6 (Debian 18.6-1.pgdg13+2)",
+   "snapshot": "965478:965478:",
+   "transaction_read_only": "on"
+  },
+  "unique_record_id": true,
+  "unique_sample_time": true,
+  "unique_seq": true
+ },
+ "marketview_full_directional": {
+  "by_direction": {
+   "DOWN": {
+    "matching_sign": 32,
+    "n": 65,
+    "outcome_flat": 0
+   },
+   "UP": {
+    "matching_sign": 45,
+    "n": 93,
+    "outcome_flat": 0
+   }
+  },
+  "by_month": {
+   "2025-09": {
+    "matching_sign": 14,
+    "n": 37,
+    "outcome_flat": 0
+   },
+   "2025-10": {
+    "matching_sign": 24,
+    "n": 39,
+    "outcome_flat": 0
+   },
+   "2025-11": {
+    "matching_sign": 14,
+    "n": 30,
+    "outcome_flat": 0
+   },
+   "2025-12": {
+    "matching_sign": 25,
+    "n": 52,
+    "outcome_flat": 0
+   }
+  },
+  "coverage_directional_over_all_samples": "158/2928",
+  "matching_sign": 77,
+  "n": 158,
+  "opposite_sign": 81,
+  "outcome_flat": 0,
+  "population": "view UP/DOWN with +1h endpoint available"
+ },
+ "method": "btc.context-action.v0.5 (no v0.6 identity)",
+ "paired": {
+  "by_direction": {
+   "DOWN": {
+    "BOTH": 19,
+    "MV_ONLY": 13,
+    "NEITHER": 13,
+    "PERSISTENCE_ONLY": 20,
+    "n": 65
+   },
+   "UP": {
+    "BOTH": 22,
+    "MV_ONLY": 23,
+    "NEITHER": 23,
+    "PERSISTENCE_ONLY": 25,
+    "n": 93
+   }
+  },
+  "by_month": {
+   "2025-09": {
+    "BOTH": 5,
+    "MV_ONLY": 9,
+    "NEITHER": 7,
+    "PERSISTENCE_ONLY": 16,
+    "n": 37
+   },
+   "2025-10": {
+    "BOTH": 12,
+    "MV_ONLY": 12,
+    "NEITHER": 9,
+    "PERSISTENCE_ONLY": 6,
+    "n": 39
+   },
+   "2025-11": {
+    "BOTH": 9,
+    "MV_ONLY": 5,
+    "NEITHER": 9,
+    "PERSISTENCE_ONLY": 7,
+    "n": 30
+   },
+   "2025-12": {
+    "BOTH": 15,
+    "MV_ONLY": 10,
+    "NEITHER": 11,
+    "PERSISTENCE_ONLY": 16,
+    "n": 52
+   }
+  },
+  "by_view_persistence_agreement": {
+   "OPPOSITE_SIGN": {
+    "BOTH": 0,
+    "MV_ONLY": 36,
+    "NEITHER": 0,
+    "PERSISTENCE_ONLY": 45
+   },
+   "SAME_SIGN": {
+    "BOTH": 41,
+    "MV_ONLY": 0,
+    "NEITHER": 36,
+    "PERSISTENCE_ONLY": 0
+   }
+  },
+  "cells": {
+   "BOTH": {
+    "distinct_owners": 35,
+    "distinct_scenarios": 35,
+    "samples": 41
+   },
+   "MV_ONLY": {
+    "distinct_owners": 35,
+    "distinct_scenarios": 35,
+    "samples": 36
+   },
+   "NEITHER": {
+    "distinct_owners": 36,
+    "distinct_scenarios": 36,
+    "samples": 36
+   },
+   "PERSISTENCE_ONLY": {
+    "distinct_owners": 39,
+    "distinct_scenarios": 39,
+    "samples": 45
+   }
+  },
+  "excluded_from_ev": {
+   "outcome_flat": 0,
+   "persistence_flat": 0,
+   "persistence_missing": 0
+  },
+  "mv_matching": 77,
+  "n": 158,
+  "persistence_matching": 86,
+  "population": "view UP/DOWN, +1h endpoint UP/DOWN, persistence UP/DOWN (same sample)",
+  "view_persistence_opposite_sign": 81,
+  "view_persistence_same_sign": 77
+ },
+ "reconciliation": {
+  "anchor_missing": 0,
+  "by_month_view": {
+   "2025-09": {
+    "BALANCED": 159,
+    "DOWN": 10,
+    "UNCERTAIN": 524,
+    "UP": 27
+   },
+   "2025-10": {
+    "BALANCED": 163,
+    "DOWN": 21,
+    "UNCERTAIN": 542,
+    "UP": 18
+   },
+   "2025-11": {
+    "BALANCED": 159,
+    "DOWN": 15,
+    "UNCERTAIN": 531,
+    "UP": 15
+   },
+   "2025-12": {
+    "BALANCED": 174,
+    "DOWN": 19,
+    "UNCERTAIN": 518,
+    "UP": 33
+   }
+  },
+  "by_view": {
+   "BALANCED": 655,
+   "DOWN": 65,
+   "UNCERTAIN": 2115,
+   "UP": 93
+  },
+  "directional": 158,
+  "directional_endpoint_flat": 0,
+  "directional_endpoint_missing": 0,
+  "directional_persistence_flat": 0,
+  "directional_persistence_missing": 0,
+  "outcome_1h": {
+   "DOWN": 1457,
+   "UP": 1471
+  },
+  "persistence": {
+   "DOWN": 1457,
+   "UP": 1471
+  },
+  "samples": 2928
+ },
+ "replay_id": "obs-20261009T155751-0f255b",
+ "report_cross_check": {
+  "by_view": true,
+  "directional_matching_sign": true,
+  "directional_scored": true,
+  "endpoint_unavailable": true,
+  "samples": true
+ },
+ "reused_commitment": "app terminal validation of this run: assurance 21/21 PASSED (evaluation.json / report.json local GET exports, R->N diagnosis); per code its adviser checks include adviser_evaluation_chain (observe/reconcile.py -> adviser/reconcile.py). Not re-executed here; check names are not enumerated in those exports.",
+ "scenario_journal": {
+  "births": 571,
+  "confirms": 138,
+  "records": 2003,
+  "seq_first": 101,
+  "seq_last": 34418,
+  "terminals": 571
+ },
+ "scenario_owner_support": {
+  "by_month_direction": {
+   "2025-09 DOWN": {
+    "distinct_owners": 9,
+    "distinct_scenarios": 9,
+    "max_samples_one_scenario": 2,
+    "samples": 10
+   },
+   "2025-09 UP": {
+    "distinct_owners": 16,
+    "distinct_scenarios": 16,
+    "max_samples_one_scenario": 3,
+    "samples": 27
+   },
+   "2025-10 DOWN": {
+    "distinct_owners": 11,
+    "distinct_scenarios": 11,
+    "max_samples_one_scenario": 6,
+    "samples": 21
+   },
+   "2025-10 UP": {
+    "distinct_owners": 11,
+    "distinct_scenarios": 11,
+    "max_samples_one_scenario": 4,
+    "samples": 18
+   },
+   "2025-11 DOWN": {
+    "distinct_owners": 12,
+    "distinct_scenarios": 12,
+    "max_samples_one_scenario": 2,
+    "samples": 15
+   },
+   "2025-11 UP": {
+    "distinct_owners": 9,
+    "distinct_scenarios": 9,
+    "max_samples_one_scenario": 4,
+    "samples": 15
+   },
+   "2025-12 DOWN": {
+    "distinct_owners": 14,
+    "distinct_scenarios": 14,
+    "max_samples_one_scenario": 2,
+    "samples": 19
+   },
+   "2025-12 UP": {
+    "distinct_owners": 17,
+    "distinct_scenarios": 17,
+    "max_samples_one_scenario": 4,
+    "samples": 33
+   }
+  },
+  "directional_samples": 158,
+  "distinct_owners": 99,
+  "distinct_scenarios": 99,
+  "largest_scenario_shares": [
+   {
+    "samples": 6,
+    "scenario_id": "BS-2025-10-09T01:00:00+00:00-b159db3894ae"
+   },
+   {
+    "samples": 4,
+    "scenario_id": "AS-2025-10-22T03:30:00+00:00-f1526d79b1f5"
+   },
+   {
+    "samples": 4,
+    "scenario_id": "AL-2025-10-26T22:45:00+00:00-62f1b45c12a8"
+   },
+   {
+    "samples": 4,
+    "scenario_id": "AL-2025-11-21T17:45:00+00:00-465335375839"
+   },
+   {
+    "samples": 4,
+    "scenario_id": "AL-2025-12-19T07:45:00+00:00-74db00eb9ac3"
+   }
+  ],
+  "paired_distinct_owners": 99,
+  "paired_distinct_scenarios": 99,
+  "samples_per_owner_max": 6,
+  "samples_per_scenario": {
+   "distribution": {
+    "1": 61,
+    "2": 26,
+    "3": 5,
+    "4": 6,
+    "6": 1
+   },
+   "max": 6,
+   "median": 1,
+   "min": 1
+  },
+  "scenario_found_in_journal": 158,
+  "scenarios_with_multiple_owner_ids": [],
+  "with_scenario_id": 158
+ }
+}

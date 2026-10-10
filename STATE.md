@@ -706,3 +706,21 @@ Only the dossier, the JSON labels and the script strings were corrected, from th
 - **Finding.** Each hourly sample is a stored `view_sample` record with view, conditional flag, principal scenario, anchor, `outcome_1h/4h`, persistence (FLAT explicit) and activation flags. Those records sit only in `adviser_evaluation_records`: no GET surface or local export exposes them, and the report's persistence aggregate is unpaired. Activation time, owner and terminals can be derived through `scenario_id` from the local scenario journal. The stored flags alone mix already-active with newly activated cases.
 - **Recommendation: B.** Possible with declared limits, after the Director authorizes a single read-only extraction of the run's 2928 `view_sample` rows (or a GET export, which is a scope change). No prospective data is missing.
 - **Checks.** None beyond hash verification of the local exports; no suites. CI is Owner-operated: PENDING / NOT CHECKED.
+
+## MarketView +1h vs persistence — descriptive tabulation (base `11a74b6`; READY FOR DIRECTOR REVIEW — TABULATION ONLY; not accepted)
+
+[Summary](delivery/evidence/MARKETVIEW-PERSISTENCE-TABULATION/SUMMARY.md) · [tabulation.json](delivery/evidence/MARKETVIEW-PERSISTENCE-TABULATION/tabulation.json) · [samples.csv](delivery/evidence/MARKETVIEW-PERSISTENCE-TABULATION/samples.csv) · [script](delivery/evidence/MARKETVIEW-PERSISTENCE-TABULATION/tabulate_view_persistence.py). Run v0.5 only; no v0.6 equivalence. Method and product unchanged.
+- **Access.**
+  - One authorized REPEATABLE READ READ ONLY transaction on the run's `view_sample` rows, snapshot `965478:965478:`. The Owner started the DB container.
+  - The local scenario journal and the report export were used for links and cross-checks. The raw export is outside Git.
+- **Integrity.**
+  - 2928/2928 rows on the hourly grid, unique, digests recomputed equal.
+  - 2927 chain links verified inside the subset. The full chain and the finish commitment are not verified here; the app's 21/21 assurance is reused by provenance only.
+  - Report aggregates equal.
+- **Result (descriptive).**
+  - 158/2928 samples are directional. All have an endpoint and persistence, with no FLAT, so the paired set is all 158.
+  - Paired cells: both 41, MarketView only 36, persistence only 45, neither 36. MarketView matches 77/158, persistence 86/158.
+  - The samples come from 99 distinct scenarios (owner = scenario for A; no shared box for B/C), median 1 and max 6 samples per scenario.
+  - Antecedent at +1h: already active 94, activated within +1h 38, not activated 26.
+  - No significance test, no thresholds, no subgroup search. No economic or independent validation: Sep–Dec is exposed development.
+- **Checks.** Integrity/reconciliation in the script and byte-identical regeneration; no product suites. CI is Owner-operated: PENDING / NOT CHECKED.
