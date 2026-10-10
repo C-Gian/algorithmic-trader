@@ -1001,3 +1001,14 @@ Authorized by Astra (recorded in [task.md](task.md)). Two executor addenda; the 
   - separate assignments for acquisition after 2027-07-26T06:05Z, the Owner launch, the export, the ledger and the computation;
   - exposure declarations.
 - **Status.** Riferimenti registrati; preparazione esecutiva ancora incompleta; studi INACTIVE. v0.6 and HDP-001 frozen. CI is Owner-operated: PENDING / NOT CHECKED.
+- **Review correction (base `2018634`), ledger only.** `scripts/a_v06_study_ledger.py` now presents a COMPLETE balance or hourly values only when all of these attest:
+  - identities match the registered ones;
+  - the run is completed, with report completion COMPLETE and the clock end reached;
+  - the same evaluation and replay appear in every export;
+  - the exported in-window calls equal the report's own call list and count;
+  - the exported PRIMARY paths equal the report's count.
+
+  Otherwise the balance is `NOT_ATTESTED_IDENTITY_OR_COMPLETENESS`, with no complete balance and no hourly value (never abstention hours). This is distinct from `INCOMPLETE_UNDETERMINED_PATHS`.
+  - **Limit.** The completeness of the scenario/entry journal pages cannot be attested: no per-kind count is exposed on GET. The owner register is descriptive only. No API or persistence change.
+  - **Checks.** `tests/test_a_v06_study.py` 11 passed: 5 new cases plus the adapted ones. The DB end-to-end test was not re-run.
+  - **Build.** `src/` unchanged, so the build candidate is still `be44370`; the ledger script hash changed. Studies INACTIVE.

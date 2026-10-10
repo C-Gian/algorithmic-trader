@@ -90,7 +90,7 @@ def test_a_registered_study_window_may_not_overlap_development_or_protected(tmp_
 
 # -- ledger case separation over pure folds of the same tape ----------------------------------------------------------
 
-def _ledger_of(monkeypatch, es, ee, n=None):
+def _inputs(es, ee, n=None):
     r = run_pure(sf.DAY1, sf.tape(n), eval_start=es, eval_end=ee, method="v0.6")
     calls = {}
     for e in r.journal:
@@ -100,12 +100,24 @@ def _ledger_of(monkeypatch, es, ee, n=None):
         if x["kind"] == "path":
             calls[x["record"]["call_id"]]["hypothetical_paths"].append(x["record"])
     jr = lambda k: [{"record": e["record"]} for e in r.journal if e["kind"] == k]  # noqa: E731
-    rep = {"evaluation_id": "pure", "replay_id": "pure", "status": "completed",
+    inw = [c for c in calls.values() if es <= Z(c["call"]["issued_at"]) < ee]
+    prim = sum(1 for c in inw for p in c["hypothetical_paths"] if p["variant"] == "PRIMARY")
+    rep = {"evaluation_id": "eval-x", "replay_id": "obs-x", "status": "completed", "completion": "COMPLETE",
            "adviser": {"windows": {"evaluation": [es.isoformat(), ee.isoformat()], "warmup_start": sf.DAY1.isoformat(),
-                                   "tail_end": ee.isoformat()},
-                       "launch_pins": {"capability_profile": {"funding_outcomes": "PRICE_NET_ONLY"}}}}
-    monkeypatch.setattr(lg, "_check_identities", lambda p: {"all_match": None, "note": "pure fold: no launch pins"})
-    return lg.build_ledger(rep, {"calls": list(calls.values())}, jr("scenario"), jr("entry_attempt"), mode="SYNTHETIC")
+                                   "tail_end": ee.isoformat(), "clock_end_reached": True},
+                       "launch_pins": {"capability_profile": {"funding_outcomes": "PRICE_NET_ONLY"}},
+                       "calls": {"count": len(inw), "list": [{"call_id": c["call"]["call_id"]} for c in inw]},
+                       "outcomes": {"variants": {"PRIMARY": {"paths": prim}}}}}
+    return rep, {"replay_id": "obs-x", "calls": list(calls.values())}, jr("scenario"), jr("entry_attempt")
+
+
+def _ledger_of(monkeypatch, es, ee, n=None, mutate=None, match=True):
+    rep, calls, scen, ents = _inputs(es, ee, n)
+    if mutate:
+        mutate(rep, calls)
+    monkeypatch.setattr(lg, "_check_identities", lambda p: {"all_match": match})
+    return lg.build_ledger(rep, calls, scen, ents, mode="SYNTHETIC",
+                           run_ids={"report": rep["replay_id"], "calls": calls["replay_id"]})
 
 
 def test_warmup_confirmation_is_not_recovered(monkeypatch):
@@ -135,3 +147,38 @@ def test_an_included_path_without_result_is_never_zero(monkeypatch):
     assert led["balance"]["status"] == "INCOMPLETE_UNDETERMINED_PATHS" and led["balance"]["complete_balance"] is None
     assert led["balance"]["determined_sum"] == "0" and Decimal(led["hours"][0]["value"]) == 0
     assert led["bootstrap"]["status"] == "NOT_COMPUTED_CONVENTIONS_OPEN" and len(led["bootstrap"]["open_requirements"]) == 2
+
+
+# -- attestation before a complete balance (review of 2018634) ------------------------------------------------------
+
+def _att(led):
+    return led["attestation"], led["balance"], led["hours"]
+
+
+def test_complete_valid_case_keeps_the_previous_results(monkeypatch):
+    led = _ledger_of(monkeypatch, sf.EV_START, sf.EV_END)
+    att, bal, hours = _att(led)
+    assert att["attested"] and bal["status"] == "COMPLETE" and bal["complete_balance"] == "-0.0014"
+    assert {h["hour"]: h["value"] for h in hours}["2025-09-01T04:00:00Z"] == "-0.0014"
+    assert all(h["value"] == "0" for h in hours if h["hour"] != "2025-09-01T04:00:00Z")
+
+
+@pytest.mark.parametrize("case", ["identity_mismatch", "run_not_completed", "other_run_export", "call_list_incomplete"])
+def test_unattested_runs_never_give_a_balance_or_zero_hours(monkeypatch, case):
+    mutate, match = None, True
+    if case == "identity_mismatch":
+        match = False
+    elif case == "run_not_completed":
+        def mutate(rep, calls):
+            rep["status"], rep["completion"] = "paused", "INCOMPLETE"
+    elif case == "other_run_export":
+        def mutate(rep, calls):
+            calls["replay_id"] = "obs-other"
+    else:  # the export lost the call that the run's own report lists
+        def mutate(rep, calls):
+            calls["calls"] = []
+    led = _ledger_of(monkeypatch, sf.EV_START, sf.EV_END, mutate=mutate, match=match)
+    att, bal, hours = _att(led)
+    assert not att["attested"] and bal["status"] == "NOT_ATTESTED_IDENTITY_OR_COMPLETENESS"
+    assert bal["complete_balance"] is None
+    assert all(h["value"] is None and h["status"] == "NOT_ATTESTED" for h in hours)  # never abstention hours

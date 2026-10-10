@@ -214,8 +214,34 @@ def _check_identities(pins: dict) -> dict:
                      "separate check (references §8)")}
 
 
+def attest(report: dict, rows: list[dict], ident: dict, run_ids: dict[str, str | None]) -> dict:
+    """Checks that must hold before a complete balance or an hourly series is presented. They use only the existing
+    GET surfaces: report status/completion, the report's own in-window call list and PRIMARY path count, and the
+    evaluation/replay ids carried by every export. Not attestable here: that the journal export pages are complete
+    (no authoritative per-kind count is exposed), so the owner register is descriptive only."""
+    adv = report.get("adviser") or {}
+    rc = adv.get("calls") or {}
+    listed = sorted(c["call_id"] for c in rc.get("list", []))
+    exported = sorted(r["call_id"] for r in rows if r["in_window"])
+    prim_paths = ((adv.get("outcomes") or {}).get("variants") or {}).get("PRIMARY", {}).get("paths")
+    exported_paths = sum(1 for r in rows if r["in_window"] and r["primary_status"] is not None)
+    checks = {
+        "identities_match_registered": ident.get("all_match") is True,
+        "run_completed": report.get("status") == "completed",
+        "report_completion_complete": report.get("completion") == "COMPLETE",
+        "clock_end_reached": (adv.get("windows") or {}).get("clock_end_reached") is True,
+        "same_evaluation_and_replay_in_every_export": len({v for v in run_ids.values()}) == 1 and None not in
+        run_ids.values(),
+        "exported_in_window_calls_equal_report_list": bool(rc) and exported == listed and rc.get("count") == len(listed),
+        "exported_primary_paths_equal_report_count": prim_paths is not None and exported_paths == prim_paths,
+    }
+    return {"attested": all(checks.values()), "checks": checks, "run_ids": run_ids,
+            "not_attestable": ("completeness of the scenario/entry journal pages (no authoritative per-kind count on "
+                               "the GET surfaces): the owner register is descriptive, never a completeness proof")}
+
+
 def build_ledger(report: dict, calls_doc: dict, scen: list[dict], ents: list[dict], *, mode: str,
-                 assignment: str | None = None) -> dict:
+                 assignment: str | None = None, run_ids: dict[str, str | None] | None = None) -> dict:
     adv = report["adviser"]
     w = adv["windows"]
     es, ee = _dt(w["evaluation"][0]), _dt(w["evaluation"][1])
@@ -223,6 +249,9 @@ def build_ledger(report: dict, calls_doc: dict, scen: list[dict], ents: list[dic
     funding = pins["capability_profile"]["funding_outcomes"]
     measure = "total_net" if funding == "AUTHORITATIVE_IF_COVERED" else "price_net"
     rows = [_call_row(e, es, ee, measure) for e in calls_doc["calls"]]
+    ident = _check_identities(pins)
+    att = attest(report, rows, ident, run_ids or {"report": report.get("replay_id"),
+                                                  "calls": calls_doc.get("replay_id")})
     prim = [r for r in rows if r["primary"]]
     hours, t = [], es
     by_hour: dict[str, list[dict]] = defaultdict(list)
@@ -232,11 +261,11 @@ def build_ledger(report: dict, calls_doc: dict, scen: list[dict], ents: list[dic
         rs = by_hour.get(iso(t), [])
         det = [r["value"] for r in rs if r["class"] == "DETERMINED"]
         und = [r for r in rs if r["class"] == "UNDETERMINED"]
-        value = None if und else str(exact_sum(det))
+        value = None if (und or not att["attested"]) else str(exact_sum(det))
         hours.append({"hour": iso(t), "a_calls": len(rs), "determined": len(det),
                       "no_operation": sum(1 for r in rs if r["class"] == "NO_OPERATION"), "undetermined": len(und),
-                      "value": value, "status": ("NO_CALL_ZERO" if not rs else "CONTAINS_UNDETERMINED" if und
-                                                  else "DETERMINED")})
+                      "value": value, "status": ("NOT_ATTESTED" if not att["attested"] else "NO_CALL_ZERO" if not rs
+                                                  else "CONTAINS_UNDETERMINED" if und else "DETERMINED")})
         t += HOUR
     det_all = [r["value"] for r in prim if r["class"] == "DETERMINED"]
     und_all = [r for r in prim if r["class"] == "UNDETERMINED"]
@@ -257,7 +286,7 @@ def build_ledger(report: dict, calls_doc: dict, scen: list[dict], ents: list[dic
                     "tail_end": iso(_dt(w["tail_end"])), "hours": len(hours)},
         "build": pins.get("build"), "pack_id": pins.get("pack_id"), "feed_content_identity": pins.get(
             "feed_content_identity"), "identity_sha256": pins.get("identity_sha256"),
-        "identities": _check_identities(pins), "funding_outcomes": funding, "measure": measure,
+        "identities": ident, "attestation": att, "funding_outcomes": funding, "measure": measure,
         "population": {
             "primary_a_calls": len(prim), "determined": len(det_all),
             "no_operation_no_entry": sum(1 for r in prim if r["class"] == "NO_OPERATION"),
@@ -268,8 +297,9 @@ def build_ledger(report: dict, calls_doc: dict, scen: list[dict], ents: list[dic
             "bc_calls_reported_separately": sum(1 for r in rows if r["family"] != "A"),
             "a_calls_outside_window": sum(1 for r in rows if r["family"] == "A" and not r["in_window"])},
         "balance": {"determined_sum": determined_sum,
-                    "complete_balance": determined_sum if not und_all else None,
-                    "status": "COMPLETE" if not und_all else "INCOMPLETE_UNDETERMINED_PATHS",
+                    "complete_balance": determined_sum if (att["attested"] and not und_all) else None,
+                    "status": ("NOT_ATTESTED_IDENTITY_OR_COMPLETENESS" if not att["attested"]
+                               else "COMPLETE" if not und_all else "INCOMPLETE_UNDETERMINED_PATHS"),
                     "meaning": ("sum of normalized one-unit PRIMARY results of the included A calls, net of the "
                                 "included costs; abstention = 0; not an account return, not compounded"),
                     "note": None if not und_all else ("the determined sum excludes undetermined included paths; it "
@@ -291,8 +321,15 @@ def run_ledger(export_dir: Path, out: Path, mode: str = "SYNTHETIC", assignment:
         if hashlib.sha256((export_dir / name).read_bytes()).hexdigest() != h:
             raise SystemExit(f"export file {name} differs from its recorded SHA-256")
     load = lambda n: json.loads((export_dir / n).read_text(encoding="utf-8"))  # noqa: E731
-    doc = build_ledger(load("report.json"), load("calls.json"), load("journal-scenario.json")["records"],
-                       load("journal-entry_attempt.json")["records"], mode=mode, assignment=assignment)
+    ev, rp, cl = load("evaluation.json"), load("report.json"), load("calls.json")
+    js, je = load("journal-scenario.json"), load("journal-entry_attempt.json")
+    run_ids = {"manifest": f"{man.get('evaluation_id')}|{man.get('replay_id')}",
+               "evaluation": f"{ev.get('evaluation_id')}|{(ev.get('replay') or {}).get('replay_id')}",
+               "report": f"{rp.get('evaluation_id')}|{rp.get('replay_id')}",
+               "calls": f"{man.get('evaluation_id')}|{cl.get('replay_id')}",
+               "journal_scenario": f"{man.get('evaluation_id')}|{js.get('run_id')}",
+               "journal_entry_attempt": f"{man.get('evaluation_id')}|{je.get('run_id')}"}
+    doc = build_ledger(rp, cl, js["records"], je["records"], mode=mode, assignment=assignment, run_ids=run_ids)
     doc["export"] = man
     doc["ledger_script_sha256_lf"] = sha_lf(Path(__file__))
     for name, rows, cols in (("calls.csv", doc["calls"], ["call_id", "family", "direction", "issued_at", "issue_hour",
