@@ -1,6 +1,6 @@
 # Project State
 
-Updated: 2026-10-09 — WP-015 (MP-005 v0.6) implemented and delivered: READY FOR DIRECTOR REVIEW — WP-015 ONLY (see the last section). Earlier the same day: the Owner continuous v0.5 run `eval-20261009T155751-be8b2b` was accepted descriptively and its four R→N paths were diagnosed (cb356f2, corrected at 3c6af11). WP-014 (MP-004 v0.5) and its correction remain awaiting Director engineering review.
+Updated: 2026-10-10 — RP-001 hourly directional persistence protocol approved and registered; execution INACTIVE (see the last section). 2026-10-09 — WP-015 (MP-005 v0.6) implemented and delivered: READY FOR DIRECTOR REVIEW — WP-015 ONLY (see the last section). Earlier the same day: the Owner continuous v0.5 run `eval-20261009T155751-be8b2b` was accepted descriptively and its four R→N paths were diagnosed (cb356f2, corrected at 3c6af11). WP-014 (MP-004 v0.5) and its correction remain awaiting Director engineering review.
 
 **Current task: [task.md](task.md) — WP-015 MP-005 v0.6 implementation, delivered; awaiting Director engineering review and Owner-operated CI. No Owner run prepared.** [MP-005](delivery/MP-005-V06-INITIAL-RESPONSE-INCOMPATIBILITY.md) · [closure](delivery/MP-005-DIRECTOR-CLOSURE.md) · [authorization](delivery/WP-015-MP-005-IMPLEMENTATION-SPEC.md) · [evidence](delivery/evidence/WP-015-ENGINEERING-EVIDENCE.md). v0.5: [MP-004](delivery/MP-004-V05-RETURN-RESPONSE.md) · [closure](delivery/MP-004-DIRECTOR-CLOSURE.md) · [erratum](delivery/MP-004-ERRATUM-SECTION-6-RATIOS.md) · [evidence](delivery/evidence/WP-014-ENGINEERING-EVIDENCE.md). Sep–Dec 2025 is exposed development; Jan–Aug 2026 stays protected except the authorized tail.
 
@@ -727,3 +727,16 @@ Only the dossier, the JSON labels and the script strings were corrected, from th
   - No significance test, no thresholds, no subgroup search. No economic or independent validation: Sep–Dec is exposed development.
 - **Checks.** Integrity/reconciliation in the script and byte-identical regeneration; no product suites. CI is Owner-operated: PENDING / NOT CHECKED.
 - **Documentary correction after closure.** Chain wording only, in SUMMARY, this STATE section, and the identical `chain_scope` string of the script and `tabulation.json`. No new extraction, data regeneration, product suite or Owner activity; counts and conclusions unchanged. CI is Owner-operated: PENDING / NOT CHECKED.
+
+## RP-001 hourly directional persistence — protocol approved and registered (10 October 2026)
+
+- **Registered texts.** [Protocol](delivery/RP-001-HOURLY-DIRECTIONAL-PERSISTENCE.md) and the separate [Director decision](delivery/RP-001-DIRECTOR-CLOSURE.md), both verbatim from the relayed authoritative text. The decision approves the protocol for methodological registration only. It adds one operational convention, a fixed bootstrap seed 0, which changes neither the hypothesis nor the reading criterion.
+- **Status.**
+  - Protocol approved and registered.
+  - RP-001 execution: **INACTIVE**.
+  - The verification window is not yet identified or authorized.
+  - v0.6 stays frozen.
+  - January–August 2026 stays protected.
+- **Not authorized.** No exploratory computation, window selection or opening, acquisition, DB/Owner access or product change. The decision notes that the 2928 already-extracted samples suffice for the exploratory tabulation, without a new certification of prices or original availability.
+- **Identifier note (unresolved, for the Director).** The identifier RP-001 is already used by the historical first-trader research ([research/first_trader/RP-001-FIRST-TRADER-FORMALIZATION.md](research/first_trader/RP-001-FIRST-TRADER-FORMALIZATION.md); "RP-001 findings" in FOUNDATION §3). The new files have distinct names and nothing was overwritten. References to the new protocol should name it in full ("RP-001 — Persistenza direzionale 1h → 1h").
+- **Executor checks.** Documentary fidelity and links only. No product suites. CI is Owner-operated: PENDING / NOT CHECKED.
