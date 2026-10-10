@@ -1,0 +1,127 @@
+{
+ "bootstrap": {
+  "block_hours": 168,
+  "block_lengths": [
+   168,
+   168,
+   168,
+   168,
+   168,
+   168,
+   168,
+   168,
+   168,
+   168,
+   168,
+   168,
+   168,
+   168,
+   168,
+   168,
+   168,
+   72
+  ],
+  "blocks_per_resample": 18,
+  "circular": false,
+  "cross_check_statistics_quantiles_inclusive": {
+   "max_abs_difference": 1.734723475976807e-18,
+   "values": [
+    -0.040983606557377046,
+    0.014685792349726775
+   ]
+  },
+  "deltas_sha256": "adf224eab5c1721757b899f9d60120387cd7470aec77b5fbb423ef8f2808488a",
+  "generator": "Python stdlib random.Random(seed) - Mersenne Twister MT19937; randrange(N-L+1) per block",
+  "interval_95": [
+   -0.040983606557377046,
+   0.014685792349726777
+  ],
+  "percentile_convention": "Hyndman-Fan type 7 (linear), p = 0.025 / 0.975",
+  "resamples": 10000,
+  "seed": 0,
+  "start_range": [
+   0,
+   2760
+  ],
+  "status": "COMPUTED",
+  "zero_denominator_resamples": 0
+ },
+ "constant_reference": {
+  "note": "exploratory performance of the reference is measured on the sample used to choose it",
+  "reference": "UP",
+  "rule_applied": "more UP",
+  "usable_outcomes_down": 1456,
+  "usable_outcomes_flat": 0,
+  "usable_outcomes_up": 1471
+ },
+ "environment": {
+  "implementation": "CPython",
+  "libraries": "standard library only (csv, random, statistics, fractions, hashlib, json)",
+  "python": "3.14.7"
+ },
+ "input": {
+  "fields_read": [
+   "s_sample_time",
+   "s_persistence",
+   "s_outcome_1h"
+  ],
+  "path": "delivery/evidence/MARKETVIEW-PERSISTENCE-TABULATION/samples.csv",
+  "sha256_lf_normalized": "8f04588f873f6f6cf73d48544135ddf4d1733210088aa6f06331f53e0da90953",
+  "sha256_raw": "8f04588f873f6f6cf73d48544135ddf4d1733210088aa6f06331f53e0da90953"
+ },
+ "integrity": {
+  "expected_cutoffs": 2928,
+  "outcome_t_equals_prediction_t_plus_1h": {
+   "different": 0,
+   "equal": 2927
+  },
+  "rows": 2928,
+  "times_equal_phase_grid": true,
+  "unique_times": true
+ },
+ "paired": {
+  "accuracy_constant": "1471/2927",
+  "accuracy_constant_decimal": 0.5025623505295524,
+  "accuracy_persistence": "1433/2927",
+  "accuracy_persistence_decimal": 0.4895797745131534,
+  "cells": {
+   "BOTH": 724,
+   "CONSTANT_ONLY": 747,
+   "NEITHER": 747,
+   "PERSISTENCE_ONLY": 709
+  },
+  "constant_hits": 1471,
+  "delta_decimal": -0.012982576016399043,
+  "delta_exact": "-38/2927",
+  "n": 2927,
+  "persistence_hits": 1433
+ },
+ "phase": [
+  "2025-09-01T00:00:00Z",
+  "2026-01-01T00:00:00Z"
+ ],
+ "population": {
+  "boundary_not_scored": 1,
+  "flags_recorded_separately_even_if_concurrent": {
+   "BOUNDARY_NOT_SCORED": 1,
+   "OUTCOME_UNAVAILABLE": 0,
+   "PREDICTION_FLAT": 0,
+   "PREDICTION_UNAVAILABLE": 0
+  },
+  "outcome_unavailable": 0,
+  "paired": 2927,
+  "paired_outcome_flat": 0,
+  "planned_cutoffs": 2928,
+  "prediction_flat": 0,
+  "prediction_unavailable": 0,
+  "reconciliation": {
+   "excluded hours with exactly one flag": 1,
+   "hours excluded": 1,
+   "planned = paired + hours excluded (any flag)": true
+  },
+  "usable_outcomes": 2927,
+  "with_directional_prediction": 2928
+ },
+ "protocol": "HDP-001 (delivery/HDP-001-HOURLY-DIRECTIONAL-PERSISTENCE.md), exploration phase only",
+ "reading": "exploration on already exposed development data; the protocol's \u00a76 categories apply to the verification only and none is assigned; no signal promotion, profitability or target conclusion"
+}

@@ -70,4 +70,10 @@ Base `7b5aaf2`. Protocol: [HDP-001](HDP-001-HOURLY-DIRECTIONAL-PERSISTENCE.md) �
 - Jan 1 06:05 → Aug 31 2026: gaps 1–3 and 5 in §3.
 - Sep 1–24 2026 (576 h, 3.4 weeks): gaps 1, 4 and 5 in §3, and too short for more than three weekly blocks.
 
+## 5. Director clarifications (recorded 2026-10-10, with the exploration authorization)
+
+- Failing to certify non-exposure does not show that the protected periods are contaminated.
+- Any live use observed must be declared. If it influences research decisions, it is relevant exposure.
+- The candidate window stays [2026-11-02T00:00Z, 2027-01-25T00:00Z). It is not acquired or activated; the final freeze follows the review of the exploration and comes before the start.
+
 HDP-001 execution stays INACTIVE; this proposal does not authorize opening the window. v0.6 stays frozen; January–August 2026 stays protected.

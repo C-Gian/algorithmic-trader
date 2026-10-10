@@ -1,6 +1,6 @@
 # Project State
 
-Updated: 2026-10-10 — HDP-001 verification window proposed (documentary only; not opened, execution INACTIVE). Earlier: HDP-001 hourly directional persistence protocol approved and registered; execution INACTIVE (see the last section). 2026-10-09 — WP-015 (MP-005 v0.6) implemented and delivered: READY FOR DIRECTOR REVIEW — WP-015 ONLY (see the last section). Earlier the same day: the Owner continuous v0.5 run `eval-20261009T155751-be8b2b` was accepted descriptively and its four R→N paths were diagnosed (cb356f2, corrected at 3c6af11). WP-014 (MP-004 v0.5) and its correction remain awaiting Director engineering review.
+Updated: 2026-10-10 — HDP-001 exploration (authorized, exposed Sep–Dec 2025) delivered; verification INACTIVE. Earlier: HDP-001 verification window proposed (documentary only; not opened, execution INACTIVE). Earlier: HDP-001 hourly directional persistence protocol approved and registered; execution INACTIVE (see the last section). 2026-10-09 — WP-015 (MP-005 v0.6) implemented and delivered: READY FOR DIRECTOR REVIEW — WP-015 ONLY (see the last section). Earlier the same day: the Owner continuous v0.5 run `eval-20261009T155751-be8b2b` was accepted descriptively and its four R→N paths were diagnosed (cb356f2, corrected at 3c6af11). WP-014 (MP-004 v0.5) and its correction remain awaiting Director engineering review.
 
 **Current task: [task.md](task.md) — WP-015 MP-005 v0.6 implementation, delivered; awaiting Director engineering review and Owner-operated CI. No Owner run prepared.** [MP-005](delivery/MP-005-V06-INITIAL-RESPONSE-INCOMPATIBILITY.md) · [closure](delivery/MP-005-DIRECTOR-CLOSURE.md) · [authorization](delivery/WP-015-MP-005-IMPLEMENTATION-SPEC.md) · [evidence](delivery/evidence/WP-015-ENGINEERING-EVIDENCE.md). v0.5: [MP-004](delivery/MP-004-V05-RETURN-RESPONSE.md) · [closure](delivery/MP-004-DIRECTOR-CLOSURE.md) · [erratum](delivery/MP-004-ERRATUM-SECTION-6-RATIOS.md) · [evidence](delivery/evidence/WP-014-ENGINEERING-EVIDENCE.md). Sep–Dec 2025 is exposed development; Jan–Aug 2026 stays protected except the authorized tail.
 
@@ -760,3 +760,24 @@ Only the dossier, the JSON labels and the script strings were corrected, from th
   - No interim look. Data are fetched only after the end, under a separate authorization.
   - Duration: 12 non-overlapping weekly blocks, against the protocol floor of 2; chosen without results or power calculation.
 - **Status.** HDP-001 execution INACTIVE; window not opened or authorized; v0.6 frozen; January–August 2026 protected. CI is Owner-operated: PENDING / NOT CHECKED.
+
+## HDP-001 exploration — executor evidence (base `3ee1278`; READY FOR DIRECTOR REVIEW — HDP-001 EXPLORATION ONLY; not accepted)
+
+[Summary](delivery/evidence/HDP-001-EXPLORATION/SUMMARY.md) · [results.json](delivery/evidence/HDP-001-EXPLORATION/results.json) · [hours.csv](delivery/evidence/HDP-001-EXPLORATION/hours.csv) · [script](delivery/evidence/HDP-001-EXPLORATION/explore_hdp001.py).
+- **Authorized vs inactive.**
+  - The Director authorized the exploration phase only.
+  - The **verification stays INACTIVE**. The candidate window [2026-11-02T00:00Z, 2027-01-25T00:00Z) is not acquired or activated; the final freeze follows the review of the exploration, before the start.
+  - The window note records the two Director clarifications: non-certification is not contamination, and live use must be declared.
+- **Input.** Only the 2928 rows of `MARKETVIEW-PERSISTENCE-TABULATION/samples.csv` (sha256 `8f04588f…`), reading the persistence and +1h outcome fields; no MarketView field. No Owner, DB, cache, acquisition or replay.
+- **Exploration on exposed data.**
+  - Population: 2928 cutoffs, with 1 BOUNDARY_NOT_SCORED (2025-12-31T23:00); no FLAT and no unavailability; 2927 paired.
+  - Constant reference: UP (1471 UP vs 1456 DOWN).
+  - Cells: both 724, persistence only 709, constant only 747, neither 747.
+  - Accuracy: persistence 1433/2927, constant 1471/2927; Delta −38/2927 = −0.0130.
+  - Moving-block bootstrap (168 h, 10,000 resamples, seed 0, `random.Random`, type-7 percentiles), 95% interval [−0.0410, +0.0147].
+  - No §6 category is assigned (verification only); no signal promotion or profitability conclusion.
+- **Checks.**
+  - Two runs byte-identical; independent recount of the cells; percentile cross-check against `statistics.quantiles`.
+  - Integrity: grid, uniqueness, outcome(t) = prediction(t+1h) on 2927/2927.
+  - No product suites, E2E or Compose. CI is Owner-operated: PENDING / NOT CHECKED.
+- v0.6 frozen; January–August 2026 protected.
