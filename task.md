@@ -1,7 +1,20 @@
-# Current task — Cockpit: clarity of the operational state (live cockpit only)
-Date: 2026-10-10. Status: DELIVERED — READY FOR DIRECTOR REVIEW — COCKPIT CLARITY ONLY ([evidence](delivery/evidence/LIVE-PROPOSAL-CLARITY/NOTE.md)). Remote CI is Owner-operated: PENDING / NOT CHECKED. No Owner launch is prepared and no further package is activated.
+# Current task — Historical alerts vs current availability (live cockpit banner and timeline only)
+Date: 2026-10-10. Status: DELIVERED — READY FOR DIRECTOR REVIEW — HISTORICAL ALERTS PRESENTATION ONLY ([evidence](delivery/evidence/LIVE-HISTORICAL-ALERTS/NOTE.md)). Remote CI is Owner-operated: PENDING / NOT CHECKED. No further package is activated.
 
 ## Authorization (Astra, relayed by the Owner, 10 October 2026)
+
+Presentation correction of historical alerts in the banner and timeline only. First verify the defect reported at `f62aa63`: during UNVERIFIED and CLOSED, earlier guidance such as "Entry still valid now" and "entry available inside …" remains. Then correct it.
+- Each alert is a recorded event with local date, time and an identifiable time zone. The main message is a past-tense description based on the recorded type.
+- The original text stays in the details, labelled "Testo registrato a quell'ora". Any entry band is qualified as relative to the historical event, never as usable now.
+- Current availability is read in the main panel, which keeps reading the authoritative state. A missing time shows "Orario non registrato", never the load time.
+- No record rewrite, frontend availability inference or new alert expiry. Existing dismiss/acknowledgement commands are kept.
+- **Verification.** Reuse `test_live_continuity_e2e`: banner and timeline during UNVERIFIED and CLOSED, before and after reload. The original text stays consultable, and the current panel equals the backend. The v0.2 fixture is allowed, documented as crossing the shared components; do not extend the test to certify v0.6.
+- **Excluded.** The transitional "Stopped / Loading…", method, API, persistence, Workbench, Owner data, real feed, economic replay and CI polling. v0.6 and HDP-001 frozen; evaluations INACTIVE.
+
+## Previous task — Cockpit: clarity of the operational state (live cockpit only)
+Date: 2026-10-10. Status: DELIVERED — READY FOR DIRECTOR REVIEW — COCKPIT CLARITY ONLY ([evidence](delivery/evidence/LIVE-PROPOSAL-CLARITY/NOTE.md)). Remote CI is Owner-operated: PENDING / NOT CHECKED. No Owner launch is prepared and no further package is activated.
+
+### Cockpit clarity authorization (Astra, relayed by the Owner, 10 October 2026)
 
 Live cockpit only; Workbench excluded. The main panel must answer "Che cosa propone il sistema adesso?":
 - **States.** "In attesa — nessun ingresso proposto" / "Ingresso disponibile secondo il sistema" / "Ingresso non più disponibile" / "Non è possibile confermare la disponibilità dell'ingresso". Terminal and non-current keep the existing protections.

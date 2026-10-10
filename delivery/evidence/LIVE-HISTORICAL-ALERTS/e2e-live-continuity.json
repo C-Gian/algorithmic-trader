@@ -1,0 +1,221 @@
+{
+  "1_available": {
+    "call_id": "call-AL-2025-09-01T05:21:01+00:00-5e9629dcc808",
+    "revision": 2,
+    "entry_status": "AVAILABLE",
+    "entry_reasons": [],
+    "admissible_bounds": [
+      "100238.3",
+      "100245.7"
+    ]
+  },
+  "2_interrupted": {
+    "call_id": "call-AL-2025-09-01T05:21:01+00:00-5e9629dcc808",
+    "revision": 3,
+    "entry_status": "UNVERIFIED",
+    "entry_reasons": [
+      "QUOTE_STALE"
+    ],
+    "thesis_status": "ONGOING"
+  },
+  "2_alerts_unverified": {
+    "backend_entry_status": "UNVERIFIED",
+    "panel_state": "UNVERIFIED",
+    "banner_title": "4 avvisi registrati non ancora letti",
+    "banner": [
+      [
+        "10/10/2026, 18:16:26 CEST",
+        "ENTRY_UNVERIFIED"
+      ],
+      [
+        "10/10/2026, 18:16:25 CEST",
+        "ENTRY_REOPENED"
+      ],
+      [
+        "10/10/2026, 18:16:25 CEST",
+        "ENTRY_UNVERIFIED"
+      ]
+    ],
+    "timeline": [
+      [
+        "10/10/2026, 18:16:26 CEST",
+        "ENTRY_UNVERIFIED"
+      ],
+      [
+        "10/10/2026, 18:16:25 CEST",
+        "ENTRY_UNVERIFIED"
+      ],
+      [
+        "10/10/2026, 18:16:25 CEST",
+        "ENTRY_REOPENED"
+      ],
+      [
+        "10/10/2026, 18:16:25 CEST",
+        "NEW_CALL"
+      ]
+    ]
+  },
+  "3_after_reload": {
+    "rendered_states": [
+      "NO_VIEW",
+      "UNVERIFIED"
+    ],
+    "alerts": {
+      "backend_entry_status": "UNVERIFIED",
+      "panel_state": "UNVERIFIED",
+      "banner_title": "4 avvisi registrati non ancora letti",
+      "banner": [
+        [
+          "10/10/2026, 18:16:26 CEST",
+          "ENTRY_UNVERIFIED"
+        ],
+        [
+          "10/10/2026, 18:16:25 CEST",
+          "ENTRY_REOPENED"
+        ],
+        [
+          "10/10/2026, 18:16:25 CEST",
+          "ENTRY_UNVERIFIED"
+        ]
+      ],
+      "timeline": [
+        [
+          "10/10/2026, 18:16:26 CEST",
+          "ENTRY_UNVERIFIED"
+        ],
+        [
+          "10/10/2026, 18:16:25 CEST",
+          "ENTRY_UNVERIFIED"
+        ],
+        [
+          "10/10/2026, 18:16:25 CEST",
+          "ENTRY_REOPENED"
+        ],
+        [
+          "10/10/2026, 18:16:25 CEST",
+          "NEW_CALL"
+        ]
+      ]
+    },
+    "alerts_banner": "4 avvisi registrati non ancora letti\n\nSono eventi passati, mostrati con l'ora in cui sono stati registrati. La disponibilit\u00e0 attuale dell'ingresso si legge nel riquadro principale \u00abChe cosa propone il sistema adesso\u00bb, che riporta lo stato attuale del sistema.\n\n10/10/2026, 18:16:26 CEST\nIl sistema ha segnalato che la disponibilit\u00e0 dell'ingresso non era confermabile.\nTesto registrato a quell'ora\n10/10/2026, 18:16:25 CEST\nIl sistema ha segnalato che l'ingresso era di nuovo disponibile.\nTesto registrato a quell'ora\n10/10/2026, 18:16:25 CEST\nIl sistema ha segnalato che la disponibilit\u00e0 dell'ingresso non era confermabile.\nTesto registrato a quell'ora",
+    "api_alerts": [
+      [
+        "ENTRY_UNVERIFIED",
+        "2026-10-10T16:16:26.315584+00:00",
+        "Thesis ongoing; current entry cannot be verified (no fresh quote). Do not treat as ready now."
+      ],
+      [
+        "ENTRY_REOPENED",
+        "2026-10-10T16:16:25.645719+00:00",
+        "Entry still valid now inside the admissible part of 100238.3\u2013100245.7; stop 100226.5, target 100798.5, hard deadline 2025-09-01T09:21:01+00:00."
+      ],
+      [
+        "ENTRY_UNVERIFIED",
+        "2026-10-10T16:16:25.645719+00:00",
+        "Thesis ongoing; current entry cannot be verified (no fresh quote). Do not treat as ready now."
+      ],
+      [
+        "NEW_CALL",
+        "2026-10-10T16:16:25.520086+00:00",
+        "New LONG call (A): entry available inside 100238.3\u2013100245.7, target 100798.5, stop 100226.5"
+      ]
+    ]
+  },
+  "4_resumed": {
+    "call_id": "call-AL-2025-09-01T05:21:01+00:00-5e9629dcc808",
+    "revision": 4,
+    "entry_status": "CLOSED",
+    "entry_reasons": [
+      "PRICE_OUTSIDE_STRUCTURAL_AREA"
+    ],
+    "thesis_status": "ONGOING"
+  },
+  "4_alerts_closed": {
+    "backend_entry_status": "CLOSED",
+    "panel_state": "CLOSED",
+    "banner_title": "4 avvisi registrati non ancora letti",
+    "banner": [
+      [
+        "10/10/2026, 18:16:26 CEST",
+        "ENTRY_UNVERIFIED"
+      ],
+      [
+        "10/10/2026, 18:16:25 CEST",
+        "ENTRY_REOPENED"
+      ],
+      [
+        "10/10/2026, 18:16:25 CEST",
+        "ENTRY_UNVERIFIED"
+      ]
+    ],
+    "timeline": [
+      [
+        "10/10/2026, 18:16:26 CEST",
+        "ENTRY_UNVERIFIED"
+      ],
+      [
+        "10/10/2026, 18:16:25 CEST",
+        "ENTRY_UNVERIFIED"
+      ],
+      [
+        "10/10/2026, 18:16:25 CEST",
+        "ENTRY_REOPENED"
+      ],
+      [
+        "10/10/2026, 18:16:25 CEST",
+        "NEW_CALL"
+      ]
+    ]
+  },
+  "rendered_states_since_reload": [
+    "NO_VIEW",
+    "UNVERIFIED",
+    "CLOSED"
+  ],
+  "5_closed_after_reload": {
+    "backend_entry_status": "CLOSED",
+    "panel_state": "CLOSED",
+    "banner_title": "4 avvisi registrati non ancora letti",
+    "banner": [
+      [
+        "10/10/2026, 18:16:26 CEST",
+        "ENTRY_UNVERIFIED"
+      ],
+      [
+        "10/10/2026, 18:16:25 CEST",
+        "ENTRY_REOPENED"
+      ],
+      [
+        "10/10/2026, 18:16:25 CEST",
+        "ENTRY_UNVERIFIED"
+      ]
+    ],
+    "timeline": [
+      [
+        "10/10/2026, 18:16:26 CEST",
+        "ENTRY_UNVERIFIED"
+      ],
+      [
+        "10/10/2026, 18:16:25 CEST",
+        "ENTRY_UNVERIFIED"
+      ],
+      [
+        "10/10/2026, 18:16:25 CEST",
+        "ENTRY_REOPENED"
+      ],
+      [
+        "10/10/2026, 18:16:25 CEST",
+        "NEW_CALL"
+      ]
+    ]
+  },
+  "6_missing_time": [
+    "Orario non registrato",
+    "Orario non registrato",
+    "Orario non registrato",
+    "Orario non registrato",
+    "Orario non registrato",
+    "Orario non registrato",
+    "Orario non registrato"
+  ]
+}

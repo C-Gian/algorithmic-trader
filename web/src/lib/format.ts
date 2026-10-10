@@ -58,3 +58,9 @@ export function fmtLocal(iso: string | null | undefined): string {
   const d = new Date(iso.replace(/(\.\d{3})\d+/, "$1"));
   return Number.isNaN(d.getTime()) ? iso : LOCAL_TIME.format(d);
 }
+
+/** The recorded time of a stored event in local time with its zone; never substitutes the page's own clock. */
+export function fmtRecorded(iso: string | null | undefined): string {
+  const d = iso ? new Date(iso.replace(/(\.\d{3})\d+/, "$1")) : null;
+  return d && !Number.isNaN(d.getTime()) ? LOCAL_TIME.format(d) : "Orario non registrato";
+}

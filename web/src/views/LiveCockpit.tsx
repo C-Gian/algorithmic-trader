@@ -3,7 +3,7 @@ import {
   AdviserMethod, adviserApi, Lens, LiveStatus, LiveView, METHOD_STATUS, METHOD_TEXT,
   METHODS, reasonText, THESIS_TEXT,
 } from "../adviser";
-import { fmtNum, fmtTime, humanize } from "../lib/format";
+import { fmtNum, fmtRecorded, fmtTime, humanize } from "../lib/format";
 import { usePoll } from "../lib/usePoll";
 import { Icon } from "../ui/Icon";
 import { Badge, Button, Card, cx, Mono, Notice, Tone } from "../ui/primitives";
@@ -106,6 +106,34 @@ function LensCard({ l }: { l: Lens }) {
   );
 }
 
+// A stored alert is a past event: its headline describes, in the past tense, what the recorded change type was; the
+// guidance text frozen at that revision stays readable only as history. Current availability is never read from here.
+const ALERT_EVENT_IT: Record<string, string> = {
+  NEW_CALL: "Il sistema ha emesso una nuova call.",
+  ENTRY_REOPENED: "Il sistema ha segnalato che l'ingresso era di nuovo disponibile.",
+  ENTRY_WITHDRAWN: "Il sistema ha segnalato che l'ingresso non era più disponibile.",
+  ENTRY_UNVERIFIED: "Il sistema ha segnalato che la disponibilità dell'ingresso non era confermabile.",
+  TERMINAL: "Il sistema ha segnalato la conclusione della call.",
+};
+const CURRENT_IS_IN_PANEL = "La disponibilità attuale dell'ingresso si legge nel riquadro principale «Che cosa propone il "
+  + "sistema adesso», che riporta lo stato attuale del sistema.";
+
+function HistoricalAlert({ a }: { a: LiveStatus["alerts"][number] }) {
+  return (
+    <div className="hist-alert" data-testid="historical-alert" data-change-type={a.change_type} data-alert-key={a.alert_key}>
+      <span className="hist-alert-time mono small-text" data-testid="alert-time">{fmtRecorded(a.created_at)}</span>
+      <span className="hist-alert-event" data-testid="alert-event">
+        {ALERT_EVENT_IT[a.change_type] ?? `Il sistema ha registrato un cambiamento (${humanize(a.change_type)}).`}</span>
+      <details className="hist-alert-recorded" data-testid="alert-recorded">
+        <summary>Testo registrato a quell'ora</summary>
+        <p className="hist-alert-text" data-testid="alert-recorded-text">{a.summary}</p>
+        <p className="muted small-text" data-testid="alert-recorded-note">Fasce d'ingresso, livelli e scadenze in questo
+          testo si riferiscono a quell'evento passato: non indicano un ingresso utilizzabile adesso.</p>
+      </details>
+    </div>
+  );
+}
+
 function Timeline({ st, onHistory }: { st: LiveStatus; onHistory: (callId: string) => void }) {
   const v = st.view;
   const items: { at: string; kind: string; text: string; alert: LiveStatus["alerts"][number] | null; callId?: string }[] = [
@@ -116,22 +144,32 @@ function Timeline({ st, onHistory }: { st: LiveStatus; onHistory: (callId: strin
   ].sort((a, b) => (a.at < b.at ? 1 : -1)).slice(0, 14);
   if (!items.length) return <p className="muted small-text">No material change yet.</p>;
   return (
-    <ol className="change-timeline" data-testid="live-timeline">
-      {items.map((x, i) => (
-        <li key={i} className={x.alert && !x.alert.acknowledged ? "is-new" : undefined}>
-          <span className="mono small-text">{fmtTime(x.at).slice(11, 19)}</span>
-          <span className="tl-kind">{x.kind}</span>
-          <span className="tl-text">{x.text}</span>
-          {x.alert && !x.alert.acknowledged && (
-            <button type="button" className="link-btn" onClick={() => void adviserApi.ack(x.alert!.alert_key)}>dismiss</button>
-          )}
-          {x.callId && v?.run_id && (
-            <button type="button" className="link-btn" onClick={() => onHistory(x.callId!)}
-                    data-testid="timeline-call-history-open">history</button>
-          )}
-        </li>
-      ))}
-    </ol>
+    <>
+      {items.some((x) => x.alert) && (
+        <p className="muted small-text alerts-pointer" data-testid="timeline-current-pointer">Gli avvisi sono eventi registrati nel passato.
+          {" "}{CURRENT_IS_IN_PANEL}</p>
+      )}
+      <ol className="change-timeline" data-testid="live-timeline">
+        {items.map((x, i) => (
+          <li key={i} className={cx(x.alert && "tl-alert", x.alert && !x.alert.acknowledged && "is-new")}>
+            {x.alert ? <HistoricalAlert a={x.alert} /> : (
+              <>
+                <span className="mono small-text">{fmtTime(x.at).slice(11, 19)}</span>
+                <span className="tl-kind">{x.kind}</span>
+                <span className="tl-text">{x.text}</span>
+              </>
+            )}
+            {x.alert && !x.alert.acknowledged && (
+              <button type="button" className="link-btn" onClick={() => void adviserApi.ack(x.alert!.alert_key)}>dismiss</button>
+            )}
+            {x.callId && v?.run_id && (
+              <button type="button" className="link-btn" onClick={() => onHistory(x.callId!)}
+                      data-testid="timeline-call-history-open">history</button>
+            )}
+          </li>
+        ))}
+      </ol>
+    </>
   );
 }
 
@@ -206,8 +244,12 @@ export function LiveCockpit() {
       </div>
       {error && <Notice tone="neg" title="Could not change the live adviser">{error}</Notice>}
       {newAlerts.length > 0 && (
-        <Notice tone="info" icon="pulse" title={`${newAlerts.length} new change${newAlerts.length > 1 ? "s" : ""}`} testid="live-alerts">
-          {newAlerts.slice(0, 3).map((a) => <div key={a.alert_key}>{humanize(a.change_type)} — {a.summary}</div>)}
+        <Notice tone="info" icon="pulse" testid="live-alerts"
+                title={newAlerts.length > 1 ? `${newAlerts.length} avvisi registrati non ancora letti`
+                  : "1 avviso registrato non ancora letto"}>
+          <p className="small-text alerts-pointer" data-testid="alerts-current-pointer">Sono eventi passati, mostrati con l'ora in cui
+            sono stati registrati. {CURRENT_IS_IN_PANEL}</p>
+          {newAlerts.slice(0, 3).map((a) => <HistoricalAlert key={a.alert_key} a={a} />)}
         </Notice>
       )}
       {v?.stale_session && (
