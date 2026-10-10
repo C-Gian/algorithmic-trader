@@ -698,3 +698,11 @@ Only the dossier, the JSON labels and the script strings were corrected, from th
 - The v0.5/v0.6 comparison limitation `V06_MP005_INITIAL_RESPONSE_INCOMPATIBILITY_DELTA` no longer claims that an ended child frees the slot or changes later selections/outcomes (WAIT_RESPONSE does not hold the slot; MP-005 neither ends a call nor releases the structural owner). It keeps the C/R loss and the statement that the new counts show no informational or economic improvement. JSON and Markdown/Copy carry the same constant.
 - Kernel, method, register, identities and contracts unchanged. New targeted regression; fails on the base text.
 - Checks: pure report/comparison tests only (48 + 6 passed). No full suite, E2E, DB or Compose. CI Owner-operated: PENDING / NOT CHECKED. [Evidence §8](delivery/evidence/WP-015-ENGINEERING-EVIDENCE.md).
+
+## MarketView +1h vs persistence — feasibility check (base `b47b997`; READY FOR DIRECTOR REVIEW — FEASIBILITY ONLY; not accepted)
+
+[Evidence](delivery/evidence/MARKETVIEW-PERSISTENCE-FEASIBILITY.md). The comparison result was not computed. Method v0.6 frozen; no product, schema or method change.
+- **Access.** Repository code and the existing local GET exports of `eval-20261009T155751-be8b2b` only (hashes equal the R→N dossier inputs). No app GET call, DB access, price-cache copy, replay or network.
+- **Finding.** Each hourly sample is a stored `view_sample` record with view, conditional flag, principal scenario, anchor, `outcome_1h/4h`, persistence (FLAT explicit) and activation flags. Those records sit only in `adviser_evaluation_records`: no GET surface or local export exposes them, and the report's persistence aggregate is unpaired. Activation time, owner and terminals can be derived through `scenario_id` from the local scenario journal. The stored flags alone mix already-active with newly activated cases.
+- **Recommendation: B.** Possible with declared limits, after the Director authorizes a single read-only extraction of the run's 2928 `view_sample` rows (or a GET export, which is a scope change). No prospective data is missing.
+- **Checks.** None beyond hash verification of the local exports; no suites. CI is Owner-operated: PENDING / NOT CHECKED.
