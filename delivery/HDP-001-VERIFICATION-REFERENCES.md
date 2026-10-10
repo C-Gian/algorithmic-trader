@@ -45,6 +45,15 @@ The samples.csv hash equals the input hash recorded in `results.json`. The explo
 - Statistic per resample: Delta* = (persistence hits − constant hits) / paired count over the resampled grid. A zero paired count is counted, and the result is then inconclusive.
 - Percentiles: p = 0.025 and 0.975, type 7.
 
+**Bootstrap draw procedure of the verification executor.** Registered on 10 October 2026, before any synthetic execution of the executor. It applies the exploration procedure above unchanged; no A v0.6 convention is used.
+1. `rng = random.Random(0)` is created once, before the first resample. No other code draws from it.
+2. The grid is the N planned cutoffs in time order. Every hour is kept, with its masks; the resample is never compressed to evaluable hours.
+3. With k = ⌈N / L⌉, the block lengths are L for blocks 0 … k−2 and N − L·(k−1) for block k−1 (the truncated last block; with N = 2016 it is 168).
+4. For resample b = 0 … 9999, and within it block j = 0 … k−1, one draw `s = rng.randrange(N − L + 1)` gives the block hours s … s + length_j − 1. Every block lies inside the window; there is no circular wrap.
+5. Delta*_b = (Σ persistence_correct − Σ constant_correct) / Σ paired over the resampled hours, with the constant reference fixed at UP. If Σ paired = 0, the resample is counted and the interval is not computed (inconclusive). The block length is never adapted.
+6. If N < 2L, nothing is drawn and the result is inconclusive (protocol §5).
+7. The interval uses Hyndman–Fan type 7 on the sorted Delta* values, at p = 0.025 and 0.975, with h = (B − 1)·p.
+
 **Derived from the frozen window (arithmetic only).**
 
 | Item | Value |
