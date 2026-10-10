@@ -1,7 +1,19 @@
-# Current task — Historical alerts vs current availability (live cockpit banner and timeline only)
-Date: 2026-10-10. Status: DELIVERED — READY FOR DIRECTOR REVIEW — HISTORICAL ALERTS PRESENTATION ONLY ([evidence](delivery/evidence/LIVE-HISTORICAL-ALERTS/NOTE.md)). Remote CI is Owner-operated: PENDING / NOT CHECKED. No further package is activated.
+# Current task — Complete the references of the two frozen studies (documentary only)
+Date: 2026-10-10. Status: DELIVERED — READY FOR DIRECTOR REVIEW — STUDY REFERENCES ONLY. [HDP-001 verification references](delivery/HDP-001-VERIFICATION-REFERENCES.md) · [A v0.6 frozen references](delivery/A-V06-OPERATIONAL-EVALUATION-REFERENCES.md). Both studies' execution INACTIVE.
 
 ## Authorization (Astra, relayed by the Owner, 10 October 2026)
+
+Make the artifacts, rules and residual dependencies of HDP-001 and of the A v0.6 operational evaluation identifiable. Documentary preparation only.
+- **HDP-001 (first priority).** Protocol and decisions, exploratory closure and constant UP, frozen window, script and conventions (168 h blocks, 10,000 resamples, `random.Random(0)`, type 7, masks, boundary), verifiable identities of reusable artifacts. Keep the exploratory script distinct from verification instructions; do not modify it.
+- **A v0.6.** From the design and closure, identify method, parameters, implementation, evaluator and profile through existing identities and functions. Verify `b47b997` and record full SHAs and hashes. Later UI changes do not make the newest commit the study build. Identities that depend on future data or a non-existent pack are declared for later registration; no invented hashes, no new identity system.
+- **Per study.** Separate what is fixed and verified now, future data/hashes, and checks/authorizations still needed. An executor must understand what to use without the chats.
+- **Mode.** Update existing documents and STATE/task only as needed; no general dossier or duplicated specifications. Authoritative text stays recognizable; operational additions are separate and labelled; pinned documents are not rewritten. Report any missing convention or conflict touching method, window, population, outcome or frozen reference; do not resolve it implicitly.
+- **Excluded.** Acquisition, Owner extraction, running the studies, opening protected periods, CI polling, pull/fetch. v0.6 and HDP-001 frozen.
+
+## Previous task — Historical alerts vs current availability (live cockpit banner and timeline only)
+Date: 2026-10-10. Status: DELIVERED — READY FOR DIRECTOR REVIEW — HISTORICAL ALERTS PRESENTATION ONLY ([evidence](delivery/evidence/LIVE-HISTORICAL-ALERTS/NOTE.md)). Remote CI is Owner-operated: PENDING / NOT CHECKED. No further package is activated.
+
+### Historical alerts authorization (Astra, relayed by the Owner, 10 October 2026)
 
 Presentation correction of historical alerts in the banner and timeline only. First verify the defect reported at `f62aa63`: during UNVERIFIED and CLOSED, earlier guidance such as "Entry still valid now" and "entry available inside …" remains. Then correct it.
 - Each alert is a recorded event with local date, time and an identifiable time zone. The main message is a past-tense description based on the recorded type.

@@ -1,0 +1,225 @@
+{
+ "evaluator_identity": {
+  "AUTHORITATIVE_IF_COVERED": {
+   "primary_profile": {
+    "adequacy_envelope_bps": "14",
+    "allowance_per_leg": "0.0002",
+    "boundary_alignment": "UTC_CEIL_MINUTE",
+    "entry_delay_seconds": 60,
+    "exit_delay_seconds": 60,
+    "exit_mode": "GUIDANCE",
+    "fee_per_leg": "0.0005",
+    "funding": "AUTHORITATIVE_IF_COVERED",
+    "notional_unit": "N0=1 abstract USDT reporting unit; q=N0/E constant; not a human size",
+    "opening_condition": "PREOPEN_EVIDENCE_PLUS_OWN_OPEN_GEOMETRY_NO_FUTURE_HLC",
+    "profile_id": "mp002.evaluation.primary.v1"
+   },
+   "sha256": "16bc0242e9127d743edcf825fb3c00326f3ba37818bab402a3b824c7f7d2dade",
+   "tick_independent": true
+  },
+  "PRICE_NET_ONLY": {
+   "primary_profile": {
+    "adequacy_envelope_bps": "14",
+    "allowance_per_leg": "0.0002",
+    "boundary_alignment": "UTC_CEIL_MINUTE",
+    "entry_delay_seconds": 60,
+    "exit_delay_seconds": 60,
+    "exit_mode": "GUIDANCE",
+    "fee_per_leg": "0.0005",
+    "funding": "PRICE_NET_ONLY",
+    "notional_unit": "N0=1 abstract USDT reporting unit; q=N0/E constant; not a human size",
+    "opening_condition": "PREOPEN_EVIDENCE_PLUS_OWN_OPEN_GEOMETRY_NO_FUTURE_HLC",
+    "profile_id": "mp002.evaluation.primary.v1"
+   },
+   "sha256": "85504d5843e144d0b86a0ee3e693c064f4d7f64e7928c1e54fb9c9e9f308615c",
+   "tick_independent": true
+  }
+ },
+ "exit_delay_seconds": 60,
+ "historical_profiles": {
+  "dislocation=False,funding_covered=False": {
+   "profile": {
+    "calendar": "NONE_UNKNOWN",
+    "dislocation": "NOT_COVERED",
+    "execution": "HISTORICAL_BASE",
+    "funding_outcomes": "PRICE_NET_ONLY",
+    "horizon_inputs": "R2_COMPLETE_MINUTE_DERIVED_UTC_HORIZONS",
+    "incident_tape": "NOT_COVERED",
+    "late_policy": "temporal.seal-no-revision.v1",
+    "origin": "HISTORICAL_MODELED"
+   },
+   "sha256": "a57826169e54f2c52d97a22860e8235f457dc1d3194674b0432bf212583f7fab"
+  },
+  "dislocation=False,funding_covered=True": {
+   "profile": {
+    "calendar": "NONE_UNKNOWN",
+    "dislocation": "NOT_COVERED",
+    "execution": "HISTORICAL_BASE",
+    "funding_outcomes": "AUTHORITATIVE_IF_COVERED",
+    "horizon_inputs": "R2_COMPLETE_MINUTE_DERIVED_UTC_HORIZONS",
+    "incident_tape": "NOT_COVERED",
+    "late_policy": "temporal.seal-no-revision.v1",
+    "origin": "HISTORICAL_MODELED"
+   },
+   "sha256": "3ffbe4fe4a9ff8c9badb8d5b9ffd4e242f645e3c0167a78c9da7c5c882287a9f"
+  },
+  "dislocation=True,funding_covered=False": {
+   "profile": {
+    "calendar": "NONE_UNKNOWN",
+    "dislocation": "ENABLE_WHERE_SUPPORTED",
+    "execution": "HISTORICAL_BASE",
+    "funding_outcomes": "PRICE_NET_ONLY",
+    "horizon_inputs": "R2_COMPLETE_MINUTE_DERIVED_UTC_HORIZONS",
+    "incident_tape": "NOT_COVERED",
+    "late_policy": "temporal.seal-no-revision.v1",
+    "origin": "HISTORICAL_MODELED"
+   },
+   "sha256": "7c86833734da7258f62f8f7569b2a74253867e4b82e5b537907749f910220296"
+  },
+  "dislocation=True,funding_covered=True": {
+   "profile": {
+    "calendar": "NONE_UNKNOWN",
+    "dislocation": "ENABLE_WHERE_SUPPORTED",
+    "execution": "HISTORICAL_BASE",
+    "funding_outcomes": "AUTHORITATIVE_IF_COVERED",
+    "horizon_inputs": "R2_COMPLETE_MINUTE_DERIVED_UTC_HORIZONS",
+    "incident_tape": "NOT_COVERED",
+    "late_policy": "temporal.seal-no-revision.v1",
+    "origin": "HISTORICAL_MODELED"
+   },
+   "sha256": "b3bde17d388a72011f350e7a665a23e2029817d360864bed208486a85c56b64e"
+  }
+ },
+ "packaged_vs_delivery": {
+  "MP-001-INTEGRATED-METHOD-PROPOSAL.md": {
+   "delivery_sha256_lf": "1ca01b416b9ec3562a74bab4687cdc71a6ebf30036596dba48780e32e4f1471d",
+   "identical": true,
+   "packaged_sha256_lf": "1ca01b416b9ec3562a74bab4687cdc71a6ebf30036596dba48780e32e4f1471d"
+  },
+  "MP-001-PARAMETERS.json": {
+   "delivery_sha256_lf": "49a11c74a0a52603348c643264b95d7530ebc03e91afca5571b6eaf22c3f0690",
+   "identical": true,
+   "packaged_sha256_lf": "49a11c74a0a52603348c643264b95d7530ebc03e91afca5571b6eaf22c3f0690"
+  },
+  "MP-002-DIRECTOR-DISPOSITION.md": {
+   "delivery_sha256_lf": "e4c7ff2389b85ec75797d6eb41e9673bc232a2581376f873d12e95743b08b5b5",
+   "identical": true,
+   "packaged_sha256_lf": "e4c7ff2389b85ec75797d6eb41e9673bc232a2581376f873d12e95743b08b5b5"
+  },
+  "MP-002-PARAMETERS.json": {
+   "delivery_sha256_lf": "c94e5d81d859b8e7607169236ac9dd6949bf7b87ba6074837dc800a7c257711d",
+   "identical": true,
+   "packaged_sha256_lf": "c94e5d81d859b8e7607169236ac9dd6949bf7b87ba6074837dc800a7c257711d"
+  },
+  "MP-002-SCENARIO-CONFIRMATION-ENTRY-PROPOSAL.md": {
+   "delivery_sha256_lf": "558afdb9c80e07f98f352effb899587e18d01fb9577a10ef812471772027fdca",
+   "identical": true,
+   "packaged_sha256_lf": "558afdb9c80e07f98f352effb899587e18d01fb9577a10ef812471772027fdca"
+  },
+  "MP-003-A-REACTION-ANCHOR-DISPOSITION.md": {
+   "delivery_sha256_lf": "11ef1dedc8d8b850e85f69d0a3b852099b14cabdfad4a6c080758ece26e467e7",
+   "identical": true,
+   "packaged_sha256_lf": "11ef1dedc8d8b850e85f69d0a3b852099b14cabdfad4a6c080758ece26e467e7"
+  },
+  "MP-003-PARAMETERS.json": {
+   "delivery_sha256_lf": "dac72701b165641eee9cfd276e77785b9b0cc14a2a8261a28d6d4841ec11c562",
+   "identical": true,
+   "packaged_sha256_lf": "dac72701b165641eee9cfd276e77785b9b0cc14a2a8261a28d6d4841ec11c562"
+  },
+  "MP-004-DIRECTOR-CLOSURE.md": {
+   "delivery_sha256_lf": "77be8677e335972bf6f6ceb1026b33561fa79dad78fdf31c5927885e8c6d91b0",
+   "identical": true,
+   "packaged_sha256_lf": "77be8677e335972bf6f6ceb1026b33561fa79dad78fdf31c5927885e8c6d91b0"
+  },
+  "MP-004-PARAMETERS.json": {
+   "delivery_sha256_lf": "d454939ac60a0138652bf0754474f4436132fd10daebd66c81c4dc965e5cc079",
+   "identical": true,
+   "packaged_sha256_lf": "d454939ac60a0138652bf0754474f4436132fd10daebd66c81c4dc965e5cc079"
+  },
+  "MP-004-V05-RETURN-RESPONSE.md": {
+   "delivery_sha256_lf": "ddb09102cf31e31336dcfb440aea20dad01381b0e0dd769c206b212e39103c51",
+   "identical": true,
+   "packaged_sha256_lf": "ddb09102cf31e31336dcfb440aea20dad01381b0e0dd769c206b212e39103c51"
+  },
+  "MP-005-DIRECTOR-CLOSURE.md": {
+   "delivery_sha256_lf": "fa9928030b1929ef6e1a478ad1bdd14cb79c887b63409935084fa888a3d67fd4",
+   "identical": true,
+   "packaged_sha256_lf": "fa9928030b1929ef6e1a478ad1bdd14cb79c887b63409935084fa888a3d67fd4"
+  },
+  "MP-005-PARAMETERS.json": {
+   "delivery_sha256_lf": "c623a612dc724a1b2a733518e8ebc1925fe276fb48d02ed8a8508eb068582959",
+   "identical": true,
+   "packaged_sha256_lf": "c623a612dc724a1b2a733518e8ebc1925fe276fb48d02ed8a8508eb068582959"
+  },
+  "MP-005-V06-INITIAL-RESPONSE-INCOMPATIBILITY.md": {
+   "delivery_sha256_lf": "e4744fa13cf773f39dc247500b682f26c917876a2e117315252fd1de7089ed3e",
+   "identical": true,
+   "packaged_sha256_lf": "e4744fa13cf773f39dc247500b682f26c917876a2e117315252fd1de7089ed3e"
+  }
+ },
+ "primary_entry_delay_seconds": 60,
+ "register_canonical_sha256": "98ef101e4c23fbdfee80b2e1f0adf61eea92aeb8665db777bb8582b0ae4c5bda",
+ "register_file_sha256_lf": "c623a612dc724a1b2a733518e8ebc1925fe276fb48d02ed8a8508eb068582959",
+ "register_model": [
+  "btc.context-action.v0.6",
+  "mp005.rules.v0.6"
+ ],
+ "release": {
+  "core_state_format": "algotrader.adviser-state.v6",
+  "deep_version": "10",
+  "engine_format": "observe.stream.v7",
+  "evaluator_implementation": "adviser.evaluator.v3",
+  "evaluator_state_format": "algotrader.adviser-evaluation-state.v2",
+  "implementation": "adviser.core.v6",
+  "key": "v0.6",
+  "model": "btc.context-action.v0.6",
+  "reconciliation_version": "9",
+  "report_version": "adviser.report.v6",
+  "rules_version": "mp005.rules.v0.6",
+  "runtime_format": "algotrader.adviser-runtime.v6"
+ },
+ "rules_manifest": [
+  {
+   "file": "MP-005-V06-INITIAL-RESPONSE-INCOMPATIBILITY.md",
+   "role": "DELTA",
+   "sha256_lf": "e4744fa13cf773f39dc247500b682f26c917876a2e117315252fd1de7089ed3e"
+  },
+  {
+   "file": "MP-005-DIRECTOR-CLOSURE.md",
+   "role": "DELTA_DIRECTOR_CLOSURE",
+   "sha256_lf": "fa9928030b1929ef6e1a478ad1bdd14cb79c887b63409935084fa888a3d67fd4"
+  },
+  {
+   "file": "MP-004-V05-RETURN-RESPONSE.md",
+   "role": "INHERITED_MP004_RULES",
+   "sha256_lf": "ddb09102cf31e31336dcfb440aea20dad01381b0e0dd769c206b212e39103c51"
+  },
+  {
+   "file": "MP-004-DIRECTOR-CLOSURE.md",
+   "role": "INHERITED_MP004_CLOSURE",
+   "sha256_lf": "77be8677e335972bf6f6ceb1026b33561fa79dad78fdf31c5927885e8c6d91b0"
+  },
+  {
+   "file": "MP-003-A-REACTION-ANCHOR-DISPOSITION.md",
+   "role": "INHERITED_MP003_RULES",
+   "sha256_lf": "11ef1dedc8d8b850e85f69d0a3b852099b14cabdfad4a6c080758ece26e467e7"
+  },
+  {
+   "file": "MP-002-SCENARIO-CONFIRMATION-ENTRY-PROPOSAL.md",
+   "role": "INHERITED_MP002_RULES",
+   "sha256_lf": "558afdb9c80e07f98f352effb899587e18d01fb9577a10ef812471772027fdca"
+  },
+  {
+   "file": "MP-002-DIRECTOR-DISPOSITION.md",
+   "role": "INHERITED_MP002_DISPOSITION",
+   "sha256_lf": "e4c7ff2389b85ec75797d6eb41e9673bc232a2581376f873d12e95743b08b5b5"
+  },
+  {
+   "file": "MP-001-INTEGRATED-METHOD-PROPOSAL.md",
+   "role": "INHERITED_MP001_RULES",
+   "sha256_lf": "1ca01b416b9ec3562a74bab4687cdc71a6ebf30036596dba48780e32e4f1471d"
+  }
+ ],
+ "rules_sha256": "57bf2309990d5085326f62fae9e6a88808b1de566a837995341910692e832e66",
+ "tree": "git archive b47b997ee93513c7a358b49e961020705e4fbb85 src delivery"
+}
