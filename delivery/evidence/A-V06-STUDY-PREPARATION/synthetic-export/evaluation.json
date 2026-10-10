@@ -3,8 +3,8 @@
   "acquisition": {
    "bytes_fetched": 800455,
    "downloaded_children": 2,
-   "elapsed_seconds": 3.514305,
-   "job_id": "pack-job-20261010T175046-ae566c",
+   "elapsed_seconds": 3.501618,
+   "job_id": "pack-job-20261010T182120-03109c",
    "outcome": "prepared"
   },
   "base_url": "https://www.okx.com",
@@ -12,9 +12,9 @@
   "bytes_on_disk": 1146602,
   "chunk_id": "study-fixture-v1",
   "chunk_label": "Study fixture",
-  "dataset_id": "pack-82683f8d12fd7162f5b80fcace39ef6bfea9abdd",
+  "dataset_id": "pack-16307956045138a1e671e0dfb6a8c94e39e20e5e",
   "end": "2025-09-01T10:35:00Z",
-  "manifest_sha256": "93be34ed1d41ea3781a54c3286b2af83ad8407c1abaa698d851e538e23d326a7",
+  "manifest_sha256": "b276fbed0fd5de7328ec224bf825f591c88617bad6b6e9991d62d7e14aa26d86",
   "pack": {
    "acknowledged_limitations": false,
    "boundaries": {
@@ -200,8 +200,8 @@
    },
    "feed": {
     "availability_policy_id": "feed.modeled.v1(bar+PT0S,funding+PT0S)",
-    "cache_id": "fc-9da2b576a5348729b144aad4d85113e9a81d688b",
-    "cache_manifest_sha256": "376badb96ae13ce741ecce8c852a3840839ac264bdc1096dbcaa58deab038254",
+    "cache_id": "fc-de9103be82e37f1c7d0302f73d34f71c1d7a1c9e",
+    "cache_manifest_sha256": "61a81f70b1c79f191de2739ac63b4c617ce6cdd49ac79eac1396dc5fb52f5b46",
     "content_identity": "feedcontent.v1:001e4756d3d61afbb843cd82e4ee2d5f725a614f5fb75c8e2cdc0d61fd6593ad",
     "event_count": 6225,
     "event_counts": {
@@ -252,7 +252,7 @@
     "funding completeness unproven: future outcome reporting is PRICE_NET_ONLY (TOTAL_NET_UNAVAILABLE)",
     "instrument definition is a retrieval-time snapshot assumed for the whole window (approximation)"
    ],
-   "manifest_sha256": "93be34ed1d41ea3781a54c3286b2af83ad8407c1abaa698d851e538e23d326a7",
+   "manifest_sha256": "b276fbed0fd5de7328ec224bf825f591c88617bad6b6e9991d62d7e14aa26d86",
    "method": "btc.context-action.v0.2",
    "overlap": {
     "conflicts": 0,
@@ -262,7 +262,7 @@
     "provenance_file": null,
     "provenance_sha256": null
    },
-   "pack_id": "pack-82683f8d12fd7162f5b80fcace39ef6bfea9abdd",
+   "pack_id": "pack-16307956045138a1e671e0dfb6a8c94e39e20e5e",
    "preset": {
     "adviser_implemented": false,
     "automatic_prepare": false,
@@ -291,23 +291,23 @@
    "rules_version": "mp001.rules.v0.2",
    "sources": [
     {
-     "cache_id": "fc-7400f460abe7ed79c6f1c73655105cf55716bf54",
-     "cache_manifest_sha256": "de779a293b27d0d6228d502c321637c1344cdf81c93c7d94b29f2dc203cf459c",
+     "cache_id": "fc-fa6b93c676f7d805d1f4ab328cf3d215f16d9ded",
+     "cache_manifest_sha256": "60f8fcceb9ae784d31a540c6f87ff8a42974d5a43c1e72cbc5ce0a0464732fca",
      "dataset_id": "okx-btc-usdt-swap-1m-20250831T0000-20250901T0000-0cbc1e2f14ea",
      "end": "2025-09-01T00:00:00Z",
      "request_end": "2025-09-01T00:00:00Z",
      "request_start": "2025-08-31T00:00:00Z",
-     "source_manifest_sha256": "f4b34248fc4ce988a573da164870fd2c0c88f51834a5a8134c13023a200147fc",
+     "source_manifest_sha256": "60a4b1ced333af544b92588d4d968fd209afea5fc5505f4c4f29f9c7d5d73345",
      "start": "2025-08-31T00:00:00Z"
     },
     {
-     "cache_id": "fc-c0be5f29825a770338a5d4e774cb28305cf59ccc",
-     "cache_manifest_sha256": "f1ac7e2f62e1b7e3b5a461f8c042bffeff5a763ac08f9a70971ff64bec977d7d",
+     "cache_id": "fc-ef3ce5f85f3420e7bb40d20f8be4e4bb1ebb18f2",
+     "cache_manifest_sha256": "1b2438f6b7e1ad1b4d2846ff66f28b5ebcd38861596c98cc9624c6a4c1edd7fd",
      "dataset_id": "okx-btc-usdt-swap-1m-20250901T0000-20250901T1035-5521f0c468b1",
      "end": "2025-09-01T10:35:00Z",
      "request_end": "2025-09-01T10:35:00Z",
      "request_start": "2025-09-01T00:00:00Z",
-     "source_manifest_sha256": "17425379d86212513de6951969fd03ac59395f4075f914865e9d0d9dbd28b206",
+     "source_manifest_sha256": "2dbd4890f813e3ff568b65f9fc9c90b2d8fc3eb0c9a5352a95c50ecadd4f8180",
      "start": "2025-09-01T00:00:00Z"
     }
    ],
@@ -364,10 +364,10 @@
    "source_package_bytes": 800455,
    "total_bytes": 1146602
   },
-  "verified_at": "2026-10-10T17:50:49.797524+00:00"
+  "verified_at": "2026-10-10T18:21:23.753118+00:00"
  },
- "created_at": "2026-10-10T17:50:49.965946+00:00",
- "evaluation_id": "eval-20261010T175049-b90adb",
+ "created_at": "2026-10-10T18:21:24.002414+00:00",
+ "evaluation_id": "eval-20261010T182124-97adf4",
  "method": {
   "economic_usefulness": "UNVALIDATED",
   "label": "Candidate v0.6 \u2014 RETURN reference ends early when its confirmation is already impossible",
@@ -673,7 +673,7 @@
    },
    "identity": {
     "capability_profile_sha256": "7c86833734da7258f62f8f7569b2a74253867e4b82e5b537907749f910220296",
-    "identity_sha256": "06ed29baa09ec512c0750bbab2e9a56a69e15d421322bdb38822be5b0d832500",
+    "identity_sha256": "7b3318148e3c756df99cd1a4cff4d1303b6b2513a1dac92feaa1cb7964cf40aa",
     "implementation": "adviser.core.v6",
     "model": "btc.context-action.v0.6",
     "register_sha256": "98ef101e4c23fbdfee80b2e1f0adf61eea92aeb8665db777bb8582b0ae4c5bda",
@@ -729,8 +729,8 @@
   },
   "cancel_requested": false,
   "clock_policy": "Event-driven replay clock: one step applies exactly one causal feed delivery, in the accepted feed.v1 total order; replay/information time becomes that delivery's available_time. Pacing (events/s) is operational only and never changes order, state or digests.",
-  "code_version": "77420cdb8b95c62ba10431d547252241519cbd14-dirty",
-  "code_version_label": "77420cdb8b95c62ba10431d547252241519cbd14 with uncommitted local changes",
+  "code_version": "21619c3aa6562f344aefe56170dd1e1bcf415d3a-dirty",
+  "code_version_label": "21619c3aa6562f344aefe56170dd1e1bcf415d3a with uncommitted local changes",
   "configured": true,
   "control": {
    "paused": false,
@@ -740,13 +740,13 @@
   },
   "control_log": [
    {
-    "at": "2026-10-10T17:50:50.029518+00:00",
+    "at": "2026-10-10T18:21:24.061276+00:00",
     "command": "start",
     "paused": false,
     "speed": 0.0
    }
   ],
-  "created_at": "2026-10-10T17:50:49.965946+00:00",
+  "created_at": "2026-10-10T18:21:24.002414+00:00",
   "error": null,
   "feed": {
    "content_identity": "feedcontent.v1:001e4756d3d61afbb843cd82e4ee2d5f725a614f5fb75c8e2cdc0d61fd6593ad",
@@ -762,7 +762,7 @@
    "schema_revision": 1,
    "schema_version": "algotrader.feed.v1"
   },
-  "finished_at": "2026-10-10T17:50:54.583597+00:00",
+  "finished_at": "2026-10-10T18:21:28.396866+00:00",
   "freshness_policy": {
    "bar_max_age": "PT2M",
    "funding_max_age": null,
@@ -832,11 +832,11 @@
      "cache_bytes_read": 346147,
      "cache_partitions_read": 2,
      "cache_reused": true,
-     "checkpoint_adviser_bytes": 8991,
+     "checkpoint_adviser_bytes": 8990,
      "checkpoint_state_bytes": 19098,
      "checkpoint_temporal_bytes": 40792,
      "checkpoints_committed": 13,
-     "cpu_seconds": 10.266,
+     "cpu_seconds": 9.688,
      "deliveries_loaded_for_finalize": 0,
      "delivery_rows_written": 0,
      "evaluation_records_committed": 11,
@@ -846,17 +846,17 @@
      "feed_events": 6225,
      "journal_entries_committed": 82,
      "max_checkpoint_gap_events": 500,
-     "max_control_gap_seconds": 0.251,
-     "max_rss_bytes": 150540288,
+     "max_control_gap_seconds": 0.25,
+     "max_rss_bytes": 149889024,
      "max_rss_source": "Windows PeakWorkingSetSize (process lifetime peak)",
      "output_bytes": 1227564,
      "pacing_sleep_seconds": 0.0,
-     "pid": 14544,
+     "pid": 1104,
      "prefix_restore_events": 0,
      "preparation": {},
      "professional_dispatches": 2075,
      "ranges_committed": 13,
-     "recorded_at": "2026-10-10T17:50:54.628590+00:00",
+     "recorded_at": "2026-10-10T18:21:28.440813+00:00",
      "restore_fallbacks": 0,
      "restore_suffix_events": 0,
      "snapshots_built": 14,
@@ -876,7 +876,7 @@
     "done": 7,
     "fraction": 1.0,
     "last_progress_age_seconds": null,
-    "last_progress_at": "2026-10-10T17:50:54.574361+00:00",
+    "last_progress_at": "2026-10-10T18:21:28.388784+00:00",
     "noninterruptible_units": null,
     "progress_seq": 33,
     "stage": "hash artifacts",
@@ -887,20 +887,20 @@
    },
    "status": "completed",
    "supervisor": {
-    "child_checked_at": "2026-10-10 17:50:54.444097+00",
+    "child_checked_at": "2026-10-10 18:21:28.373268+00",
     "child_pid": null,
-    "claimed_at": "2026-10-10T17:50:50.071517+00:00",
+    "claimed_at": "2026-10-10T18:21:24.092406+00:00",
     "generation": 1,
     "heartbeat_interval": 2.0,
     "isolated_compute": false,
     "lease_seconds": 5,
-    "supervisor_pid": 14544,
+    "supervisor_pid": 1104,
     "worker_id": "observe:s"
    },
    "suspension": null,
    "timeline": {
     "active_complete": true,
-    "active_seconds_total": 4.392,
+    "active_seconds_total": 4.185,
     "current": null,
     "definitions": {
      "active_seconds": "compute-process monotonic time of the span minus its declared waits; null when the span was interrupted and could not be measured (never reported as zero)",
@@ -917,12 +917,12 @@
       "spans": 1,
       "state": "done",
       "unmeasured_spans": 0,
-      "waiting_seconds": 0.105543,
-      "wall_seconds": 0.105543
+      "waiting_seconds": 0.089965,
+      "wall_seconds": 0.089965
      },
      {
       "active_complete": true,
-      "active_seconds": 0.104,
+      "active_seconds": 0.091,
       "interrupted_spans": 0,
       "label": "Preparing source",
       "phase": "PREPARING_SOURCE",
@@ -930,7 +930,7 @@
       "state": "done",
       "unmeasured_spans": 0,
       "waiting_seconds": 0.0,
-      "wall_seconds": 0.108889
+      "wall_seconds": 0.094199
      },
      {
       "active_complete": true,
@@ -958,7 +958,7 @@
      },
      {
       "active_complete": true,
-      "active_seconds": 0.019,
+      "active_seconds": 0.023,
       "interrupted_spans": 0,
       "label": "Initializing",
       "phase": "INITIALIZING",
@@ -966,11 +966,11 @@
       "state": "done",
       "unmeasured_spans": 0,
       "waiting_seconds": 0.0,
-      "wall_seconds": 0.022592
+      "wall_seconds": 0.026627
      },
      {
       "active_complete": true,
-      "active_seconds": 3.954,
+      "active_seconds": 3.76,
       "interrupted_spans": 0,
       "label": "Replaying",
       "phase": "REPLAYING",
@@ -978,11 +978,11 @@
       "state": "done",
       "unmeasured_spans": 0,
       "waiting_seconds": 0.0,
-      "wall_seconds": 3.957962
+      "wall_seconds": 3.764341
      },
      {
       "active_complete": true,
-      "active_seconds": 0.046,
+      "active_seconds": 0.04,
       "interrupted_spans": 0,
       "label": "Finalizing",
       "phase": "FINALIZING",
@@ -990,11 +990,11 @@
       "state": "done",
       "unmeasured_spans": 0,
       "waiting_seconds": 0.0,
-      "wall_seconds": 0.054167
+      "wall_seconds": 0.046507
      },
      {
       "active_complete": true,
-      "active_seconds": 0.178,
+      "active_seconds": 0.177,
       "interrupted_spans": 0,
       "label": "Validating",
       "phase": "VALIDATING",
@@ -1002,11 +1002,11 @@
       "state": "done",
       "unmeasured_spans": 0,
       "waiting_seconds": 0.0,
-      "wall_seconds": 0.182307
+      "wall_seconds": 0.179596
      },
      {
       "active_complete": true,
-      "active_seconds": 0.091,
+      "active_seconds": 0.094,
       "interrupted_spans": 0,
       "label": "Generating report",
       "phase": "GENERATING_REPORT",
@@ -1014,22 +1014,22 @@
       "state": "done",
       "unmeasured_spans": 0,
       "waiting_seconds": 0.0,
-      "wall_seconds": 0.09479
+      "wall_seconds": 0.098009
      }
     ],
     "unmeasured_spans": 0,
-    "waiting_seconds_total": 0.105543
+    "waiting_seconds_total": 0.089965
    },
-   "wall_seconds": 4.617651
+   "wall_seconds": 4.394452
   },
   "progress": {
    "applied_events": 6225,
    "committed_events": 6225,
    "computed_events": 6225,
-   "elapsed_seconds": 4.515594,
+   "elapsed_seconds": 4.307674,
    "eta_basis": "replay ETA applies only while REPLAYING; see the current-phase ETA",
    "eta_seconds": null,
-   "heartbeat_age_seconds": 0.212197,
+   "heartbeat_age_seconds": 0.206135,
    "information_time": "2025-09-01T10:35:00+00:00",
    "last_event_id": "okx/BTC-USDT/index_bar_1m#obs@2025-09-01T10:34:00Z",
    "snapshot_digest": "51f7ef8565709ba3d3ef2c246beb13ae93488880828dc1010e08788fd3b5363e",
@@ -1037,7 +1037,7 @@
    "total_events": 6225
   },
   "recovery_log": [],
-  "replay_id": "obs-20261010T175049-10e017",
+  "replay_id": "obs-20261010T182124-e3d11a",
   "run_type": "adviser_evaluation",
   "run_type_label": "Adviser evaluation",
   "runtime_detail": "replay cursor 6,225/6,225 and terminal artifacts published (operational completion); assurance passed is reported separately",
@@ -1092,7 +1092,7 @@
    "notes": [
     "preset study-fixture-v1 \u00b7 2 source slice(s) \u00b7 corpus.compose.slot-dedup-no-merge.v1"
    ],
-   "source_id": "pack-82683f8d12fd7162f5b80fcace39ef6bfea9abdd",
+   "source_id": "pack-16307956045138a1e671e0dfb6a8c94e39e20e5e",
    "source_schema": "algotrader.corpus-pack.v1",
    "source_status": "ready",
    "warnings": [
@@ -1100,7 +1100,7 @@
     "instrument definition is a retrieval-time snapshot assumed for the whole window (approximation)"
    ]
   },
-  "started_at": "2026-10-10T17:50:50.068003+00:00",
+  "started_at": "2026-10-10T18:21:24.089192+00:00",
   "status": "completed",
   "temporal": {
    "clock_end": "2025-09-01T10:35:00+00:00",
@@ -1838,8 +1838,8 @@
   },
   "validation_passed": true,
   "verification": {
-   "checked_at": "2026-10-10T17:50:50.168335Z",
-   "method": "pack pack-82683f8d12fd7162f5b80fcace39ef6bfea9abdd: manifest SHA-256 equals its publication receipt and re-hashes to its id; feed cache fc-9da2b576a5348729b144aad4d85113e9a81d688b reused under its trusted receipt; partitions SHA-256-verified when read",
+   "checked_at": "2026-10-10T18:21:24.189601Z",
+   "method": "pack pack-16307956045138a1e671e0dfb6a8c94e39e20e5e: manifest SHA-256 equals its publication receipt and re-hashes to its id; feed cache fc-de9103be82e37f1c7d0302f73d34f71c1d7a1c9e reused under its trusted receipt; partitions SHA-256-verified when read",
    "problems": [],
    "verified": true
   }

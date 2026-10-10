@@ -3,7 +3,7 @@
  "records": [
   {
    "clock_time": "2025-09-01T03:30:00+00:00",
-   "digest": "cb9540d84b475eaffea42d8d9c6bed0ff59f8c2710633602242790646e1ce091",
+   "digest": "f629d2b4983d829a9657ddb2d37ad012deacd920b1ce0fcceca4957b20f479c8",
    "kind": "scenario",
    "origin": "HISTORICAL_MODELED",
    "record": {
@@ -69,7 +69,7 @@
       "AL-2025-09-01T03:15:00+00:00-d49a8b5618ff"
      ],
      "method": {
-      "build": "77420cdb8b95c62ba10431d547252241519cbd14-dirty",
+      "build": "21619c3aa6562f344aefe56170dd1e1bcf415d3a-dirty",
       "implementation": "adviser.core.v6",
       "model": "btc.context-action.v0.6",
       "profile_sha256": "7c86833734da7258f62f8f7569b2a74253867e4b82e5b537907749f910220296",
@@ -122,7 +122,7 @@
   },
   {
    "clock_time": "2025-09-01T03:45:00+00:00",
-   "digest": "e14f1b6d3dac84cfef4f9d5bb08278be60c250917c2d212924836352a7b61358",
+   "digest": "ffea3b5c1d8c4595beb975ca743c7dadfa4c81cd9038684bfce9900088b2a98f",
    "kind": "scenario",
    "origin": "HISTORICAL_MODELED",
    "record": {
@@ -188,7 +188,7 @@
       "AL-2025-09-01T03:15:00+00:00-d49a8b5618ff"
      ],
      "method": {
-      "build": "77420cdb8b95c62ba10431d547252241519cbd14-dirty",
+      "build": "21619c3aa6562f344aefe56170dd1e1bcf415d3a-dirty",
       "implementation": "adviser.core.v6",
       "model": "btc.context-action.v0.6",
       "profile_sha256": "7c86833734da7258f62f8f7569b2a74253867e4b82e5b537907749f910220296",
@@ -241,7 +241,7 @@
   },
   {
    "clock_time": "2025-09-01T04:00:00+00:00",
-   "digest": "436ed25643cf94d2efe6f058c0868ad140609803b25d584049ba68433ac2e925",
+   "digest": "90e920e0e70fcd0cc16a816c1090ebf7b677d81b8cfcb57e5440874c608d1088",
    "kind": "scenario",
    "origin": "HISTORICAL_MODELED",
    "record": {
@@ -307,7 +307,7 @@
       "AL-2025-09-01T03:15:00+00:00-d49a8b5618ff"
      ],
      "method": {
-      "build": "77420cdb8b95c62ba10431d547252241519cbd14-dirty",
+      "build": "21619c3aa6562f344aefe56170dd1e1bcf415d3a-dirty",
       "implementation": "adviser.core.v6",
       "model": "btc.context-action.v0.6",
       "profile_sha256": "7c86833734da7258f62f8f7569b2a74253867e4b82e5b537907749f910220296",
@@ -372,7 +372,7 @@
   },
   {
    "clock_time": "2025-09-01T04:01:00+00:00",
-   "digest": "506a9392444a1df80a8e45d2991559b04c1c5f5fb89db3c5c24c3beb291922a4",
+   "digest": "83e866f66383096ca8fd1eecdbfc1d8380cccccb9a3beb4f3be77c246f30dda2",
    "kind": "scenario",
    "origin": "HISTORICAL_MODELED",
    "record": {
@@ -438,7 +438,7 @@
       "AL-2025-09-01T03:15:00+00:00-d49a8b5618ff"
      ],
      "method": {
-      "build": "77420cdb8b95c62ba10431d547252241519cbd14-dirty",
+      "build": "21619c3aa6562f344aefe56170dd1e1bcf415d3a-dirty",
       "implementation": "adviser.core.v6",
       "model": "btc.context-action.v0.6",
       "profile_sha256": "7c86833734da7258f62f8f7569b2a74253867e4b82e5b537907749f910220296",
@@ -503,7 +503,7 @@
   },
   {
    "clock_time": "2025-09-01T05:30:00+00:00",
-   "digest": "5e4e96a3863367362be49f5566ca6f29f5e4ed4f89d6474ffaf36d40220328de",
+   "digest": "083c90fd7e20203b55e519e1b0ee3303062d74913b65690b645f49c611234ef5",
    "kind": "scenario",
    "origin": "HISTORICAL_MODELED",
    "record": {
@@ -569,7 +569,7 @@
       "AL-2025-09-01T03:15:00+00:00-d49a8b5618ff"
      ],
      "method": {
-      "build": "77420cdb8b95c62ba10431d547252241519cbd14-dirty",
+      "build": "21619c3aa6562f344aefe56170dd1e1bcf415d3a-dirty",
       "implementation": "adviser.core.v6",
       "model": "btc.context-action.v0.6",
       "profile_sha256": "7c86833734da7258f62f8f7569b2a74253867e4b82e5b537907749f910220296",
@@ -634,7 +634,7 @@
   },
   {
    "clock_time": "2025-09-01T06:01:00+00:00",
-   "digest": "ad8f5a8a7f96d73f566395ca67be5514803cc105a3efeaa2201b9120dccbeee8",
+   "digest": "b9d51035321b3caf58b14b26dd42409dcd041416c705319dc78aa4096037303f",
    "kind": "scenario",
    "origin": "HISTORICAL_MODELED",
    "record": {
@@ -700,7 +700,7 @@
       "AL-2025-09-01T03:15:00+00:00-d49a8b5618ff"
      ],
      "method": {
-      "build": "77420cdb8b95c62ba10431d547252241519cbd14-dirty",
+      "build": "21619c3aa6562f344aefe56170dd1e1bcf415d3a-dirty",
       "implementation": "adviser.core.v6",
       "model": "btc.context-action.v0.6",
       "profile_sha256": "7c86833734da7258f62f8f7569b2a74253867e4b82e5b537907749f910220296",
@@ -764,5 +764,5 @@
    "subject": "AL-2025-09-01T03:15:00+00:00-d49a8b5618ff"
   }
  ],
- "run_id": "obs-20261010T175049-10e017"
+ "run_id": "obs-20261010T182124-e3d11a"
 }

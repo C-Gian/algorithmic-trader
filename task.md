@@ -1,6 +1,8 @@
 # Current task — A v0.6 continuous evaluation, technical preparation
 Date: 2026-10-10. Status: DELIVERED — READY FOR DIRECTOR REVIEW — A V0.6 STUDY PATH ONLY. **Technically ready** on synthetic evidence only; the **study is not launchable** ([references §8.6](delivery/A-V06-OPERATIONAL-EVALUATION-REFERENCES.md)). Studies INACTIVE. Remote CI is Owner-operated: PENDING / NOT CHECKED.
 
+**Review correction (base `2018634`).** The ledger gives no complete balance or hourly series without attested identity and completeness. It is a ledger-only change ([references §8.8](delivery/A-V06-OPERATIONAL-EVALUATION-REFERENCES.md)): method, preset, population and economic criteria are unchanged, and the bootstrap is not implemented.
+
 ## Assignment (relayed by the Owner, 10 October 2026; expected base `77420cd`)
 
 Make the full A v0.6 preparation, execution and reporting path technically executable, proven only with isolated synthetic data.

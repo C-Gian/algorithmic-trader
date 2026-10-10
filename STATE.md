@@ -1010,5 +1010,5 @@ Authorized by Astra (recorded in [task.md](task.md)). Two executor addenda; the 
 
   Otherwise the balance is `NOT_ATTESTED_IDENTITY_OR_COMPLETENESS`, with no complete balance and no hourly value (never abstention hours). This is distinct from `INCOMPLETE_UNDETERMINED_PATHS`.
   - **Limit.** The completeness of the scenario/entry journal pages cannot be attested: no per-kind count is exposed on GET. The owner register is descriptive only. No API or persistence change.
-  - **Checks.** `tests/test_a_v06_study.py` 11 passed: 5 new cases plus the adapted ones. The DB end-to-end test was not re-run.
+  - **Checks.** `tests/test_a_v06_study.py` 11 passed: 5 new cases plus the adapted ones. `tests/test_a_v06_study_db.py` 3 passed (disposable PostgreSQL, removed); the synthetic export and ledger evidence were regenerated, attested and COMPLETE. See [references §8.8](delivery/A-V06-OPERATIONAL-EVALUATION-REFERENCES.md).
   - **Build.** `src/` unchanged, so the build candidate is still `be44370`; the ledger script hash changed. Studies INACTIVE.

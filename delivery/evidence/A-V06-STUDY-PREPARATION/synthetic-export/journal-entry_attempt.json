@@ -3,7 +3,7 @@
  "records": [
   {
    "clock_time": "2025-09-01T04:01:00+00:00",
-   "digest": "f23dcdc383239d51be72d8512d470b03f0b94563f754afc1a04d27d453c557b9",
+   "digest": "5de8c3e19e46b72046801353f7d167ad4dda7d8b9532a82f36e5b5d83375391a",
    "kind": "entry_attempt",
    "origin": "HISTORICAL_MODELED",
    "record": {
@@ -81,7 +81,7 @@
       "AL-2025-09-01T03:15:00+00:00-d49a8b5618ff"
      ],
      "method": {
-      "build": "77420cdb8b95c62ba10431d547252241519cbd14-dirty",
+      "build": "21619c3aa6562f344aefe56170dd1e1bcf415d3a-dirty",
       "implementation": "adviser.core.v6",
       "model": "btc.context-action.v0.6",
       "profile_sha256": "7c86833734da7258f62f8f7569b2a74253867e4b82e5b537907749f910220296",
@@ -143,7 +143,7 @@
   },
   {
    "clock_time": "2025-09-01T04:02:00+00:00",
-   "digest": "933a8f76c81007e5ca8328ef98570ef2b49fca61aed30f0890c0172c945a7a14",
+   "digest": "273ddab2214de14d6647b8ad651f841ba68fff01d6e89b7cadab84fc3e0f3922",
    "kind": "entry_attempt",
    "origin": "HISTORICAL_MODELED",
    "record": {
@@ -212,7 +212,7 @@
       "AL-2025-09-01T03:15:00+00:00-d49a8b5618ff"
      ],
      "method": {
-      "build": "77420cdb8b95c62ba10431d547252241519cbd14-dirty",
+      "build": "21619c3aa6562f344aefe56170dd1e1bcf415d3a-dirty",
       "implementation": "adviser.core.v6",
       "model": "btc.context-action.v0.6",
       "profile_sha256": "7c86833734da7258f62f8f7569b2a74253867e4b82e5b537907749f910220296",
@@ -274,7 +274,7 @@
   },
   {
    "clock_time": "2025-09-01T04:03:00+00:00",
-   "digest": "1b09bfd7dae2673751ed84f41fb87f2f7e6d8fd8834fd2c5d57b7905daf1ffa7",
+   "digest": "ec8648a0beca54c7bf5eb039a5a501fc53ec57c59c95a104594e1591bd94d97b",
    "kind": "entry_attempt",
    "origin": "HISTORICAL_MODELED",
    "record": {
@@ -345,7 +345,7 @@
       "AL-2025-09-01T03:15:00+00:00-d49a8b5618ff"
      ],
      "method": {
-      "build": "77420cdb8b95c62ba10431d547252241519cbd14-dirty",
+      "build": "21619c3aa6562f344aefe56170dd1e1bcf415d3a-dirty",
       "implementation": "adviser.core.v6",
       "model": "btc.context-action.v0.6",
       "profile_sha256": "7c86833734da7258f62f8f7569b2a74253867e4b82e5b537907749f910220296",
@@ -405,5 +405,5 @@
    "subject": "AL-2025-09-01T03:15:00+00:00-d49a8b5618ff#entry"
   }
  ],
- "run_id": "obs-20261010T175049-10e017"
+ "run_id": "obs-20261010T182124-e3d11a"
 }

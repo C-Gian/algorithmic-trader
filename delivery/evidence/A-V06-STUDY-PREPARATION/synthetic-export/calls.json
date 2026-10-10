@@ -52,7 +52,7 @@
       ],
       "lineage": [],
       "method": {
-       "build": "77420cdb8b95c62ba10431d547252241519cbd14-dirty",
+       "build": "21619c3aa6562f344aefe56170dd1e1bcf415d3a-dirty",
        "implementation": "adviser.core.v6",
        "model": "btc.context-action.v0.6",
        "profile_sha256": "7c86833734da7258f62f8f7569b2a74253867e4b82e5b537907749f910220296",
@@ -143,7 +143,7 @@
       "AL-2025-09-01T03:15:00+00:00-d49a8b5618ff"
      ],
      "method": {
-      "build": "77420cdb8b95c62ba10431d547252241519cbd14-dirty",
+      "build": "21619c3aa6562f344aefe56170dd1e1bcf415d3a-dirty",
       "implementation": "adviser.core.v6",
       "model": "btc.context-action.v0.6",
       "profile_sha256": "7c86833734da7258f62f8f7569b2a74253867e4b82e5b537907749f910220296",
@@ -458,7 +458,7 @@
        "call-AL-2025-09-01T04:03:00+00:00-33d5d0d48b6a"
       ],
       "method": {
-       "build": "77420cdb8b95c62ba10431d547252241519cbd14-dirty",
+       "build": "21619c3aa6562f344aefe56170dd1e1bcf415d3a-dirty",
        "implementation": "adviser.core.v6",
        "model": "btc.context-action.v0.6",
        "profile_sha256": "7c86833734da7258f62f8f7569b2a74253867e4b82e5b537907749f910220296",
@@ -488,5 +488,5 @@
  "cutoff": null,
  "hypothetical_paths_withheld_at_cutoff": 0,
  "note": "hypothetical paths are normalized one-unit simulations, not fills or account results",
- "replay_id": "obs-20261010T175049-10e017"
+ "replay_id": "obs-20261010T182124-e3d11a"
 }

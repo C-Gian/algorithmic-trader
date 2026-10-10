@@ -185,7 +185,7 @@ Prepared on base `77420cd`. The path is **technically ready** only to the extent
 | `corpus/pack_api.py` | `GET /api/corpus/presets` also lists the registered study presets, so the Workbench shows them under its other presets. No UI code changed. |
 | `evaluation/api.py` | A study-window pack admits only the run its study registers (adviser evaluation, method v0.6). Observation-only and every other method are refused (409). |
 
-**Study tool (not product).** [`scripts/a_v06_study_ledger.py`](../scripts/a_v06_study_ledger.py) (`a-v06.study-ledger.v1`, SHA-256 LF `4df40f18…f245`).
+**Study tool (not product).** [`scripts/a_v06_study_ledger.py`](../scripts/a_v06_study_ledger.py) (`a-v06.study-ledger.v1`, SHA-256 LF `400c6c72…210a` after the review correction of §8.8).
 - `export` copies one evaluation GET-only into a new directory with file hashes.
 - `ledger`, offline, produces:
   - an identity check against `identities-b47b997.json`;
@@ -194,7 +194,8 @@ Prepared on base `77420cd`. The path is **technically ready** only to the extent
   - UTC issue-hour attribution: hours without an A call are 0, and an hour holding an undetermined included path has no value;
   - NO_ENTRY kept apart from entered-but-undetermined paths;
   - weekly issue and entry counts, and the A owner register;
-  - a balance that stays INCOMPLETE when any included path is undetermined.
+  - a balance that stays INCOMPLETE when any included path is undetermined;
+  - no balance and no hourly value at all unless identity and completeness are attested (§8.8).
 - The bootstrap is **not computed** (§8.6).
 
 ### 8.3 Diff map against `b47b997`
@@ -256,7 +257,7 @@ Product tree since `b47b997`:
 - **Regression on the touched paths.** pack/preset (`test_pack`, `test_pack_correction`), WP-013 continuity (`test_wp013_continuous`, `_db`), evaluation launch (`test_evaluation`), MP-005 v0.6 (`test_mp005_db`, `test_mp005_versions`), the new study tests and the HDP-001 executor tests: **167 passed** (15 min 46 s, disposable PostgreSQL 18.6). `algotrader schema`: all baselines match. No full suite or E2E was run.
 - **Synthetic artifacts.**
   - `synthetic-export/` and `synthetic-ledger/`: one study-window run, labelled SYNTHETIC.
-  - The build recorded there is `77420cd…-dirty`: the uncommitted candidate tree, whose `src/` equals the delivery commit.
+  - Regenerated after the §8.8 correction. The build recorded there is `21619c3…-dirty`: the evidence files were being rewritten during the run; `src/` equals `be44370`.
 
 ### 8.5 Identities registered now
 
@@ -308,3 +309,25 @@ Historical Workbench → Adviser evaluation → that pack → method v0.6 → St
 uv run python scripts/a_v06_study_ledger.py export --api http://127.0.0.1:8000 --evaluation <evaluation id> --out <new dir>
 uv run python scripts/a_v06_study_ledger.py ledger --export <that dir> --out <new dir> --assignment "<assignment reference>"
 ```
+
+### 8.8 Review correction — ledger attestation (base `2018634`)
+
+The ledger now presents a COMPLETE balance or any hourly value only when every check of `attest` passes:
+- the identities match `identities-b47b997.json`;
+- the run is completed, with report completion COMPLETE and the clock end reached;
+- the same evaluation and replay ids appear in the export manifest, evaluation, report, calls and both journal exports;
+- the exported in-window calls equal the report's own in-window call list and count;
+- the exported PRIMARY paths equal the report's PRIMARY path count.
+
+**If any check fails.** The balance status is `NOT_ATTESTED_IDENTITY_OR_COMPLETENESS`. There is no complete balance, and every hour has no value with status `NOT_ATTESTED`. Possibly missing calls are therefore never shown as abstention hours. This is separate from `INCOMPLETE_UNDETERMINED_PATHS` (included paths without a result).
+
+**Limit of the GET surfaces.**
+- No authoritative per-kind count of journal records is exposed, so the completeness of the scenario/entry journal pages cannot be attested.
+- The owner register stays descriptive and is never a completeness proof.
+- Neither the API nor persistence was changed.
+
+**Checks.**
+- `tests/test_a_v06_study.py`: 11 passed. They cover identity mismatch, a run not completed, an export of another run, an incomplete call list, and the complete valid case keeping the earlier results.
+- `tests/test_a_v06_study_db.py`: 3 passed on a disposable PostgreSQL, which was removed; the evidence was regenerated and is attested and COMPLETE.
+
+**Build.** `src/` is unchanged, so the executive build candidate is still `be44370`; only the ledger script hash changed. Studies INACTIVE.
