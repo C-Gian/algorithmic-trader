@@ -1,4 +1,14 @@
-# Current task — Clarity of a call's updates (live cockpit main panel)
+# Current task — Clarity of a call's updates: two perspectives and plain-Italian guidance
+Date: 2026-10-10. Status: DELIVERED — READY FOR DIRECTOR REVIEW — COCKPIT CALL UPDATES ONLY ([note, second correction](delivery/evidence/LIVE-CALL-UPDATES-EPISODE/NOTE.md)). Guided test only. Studies INACTIVE. Remote CI is Owner-operated: PENDING / NOT CHECKED.
+
+## Assignment (relayed by the Owner, 10 October 2026; expected base `a0d6029`)
+
+- **Two perspectives.** Two hypothetical sections of equal legibility: "Se non hai ancora aperto un'operazione" (authoritative availability; CLOSED = "Ingresso non disponibile adesso") and "Se hai già aperto un'operazione su questa call".
+- **Guidance.** The second section shows in plain Italian what the recorded guidance says. The CLOSED hold text becomes "Il sistema indica di mantenere l'operazione con stop 99.700 e target 100.700.". Hold or exit is never derived from ONGOING, the direction or the levels. Translate only recognised texts with their own values; declare unknown or missing ones; keep the original in the details.
+- **TARGET_REACHED.** The target is reached and the indication concluded; the later expectation does not extend the call; no close order unless recorded.
+- **Excluded.** Method, API, persistence, Workbench, layout and palette.
+
+## Previous task — Clarity of a call's updates (live cockpit main panel)
 Date: 2026-10-10. Status: DELIVERED — READY FOR DIRECTOR REVIEW — COCKPIT CALL UPDATES ONLY ([note, correction section](delivery/evidence/LIVE-CALL-UPDATES-EPISODE/NOTE.md)). Guided test only, not a general usability or effectiveness validation. Studies INACTIVE. Remote CI is Owner-operated: PENDING / NOT CHECKED.
 
 ## Assignment (relayed by the Owner, 10 October 2026; expected base `3b10e1a`)

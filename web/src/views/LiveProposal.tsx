@@ -75,7 +75,7 @@ export function proposalState(v: LiveView | null): { key: string; text: string; 
   if (c.entry_status === "AVAILABLE" && c.presentation !== "NOT_CURRENT") {
     return { key: "AVAILABLE", text: "Ingresso disponibile secondo il sistema", tone: "pos" };
   }
-  if (c.entry_status === "CLOSED") return { key: "CLOSED", text: "Ingresso non più disponibile", tone: "neg" };
+  if (c.entry_status === "CLOSED") return { key: "CLOSED", text: "Ingresso non disponibile adesso", tone: "neg" };
   if (c.entry_status === "UNVERIFIED" || c.entry_status === "AVAILABLE") {
     return { key: "UNVERIFIED", text: "Non è possibile confermare la disponibilità dell'ingresso", tone: "warn" };
   }
@@ -190,6 +190,56 @@ export function unverifiedExplanation(c: CallView): { title: string; body: strin
           "non considerarlo disponibile." };
 }
 
+const IT_NUM = new Intl.NumberFormat("it-IT", { maximumFractionDigits: 8 });
+function itNum(x: string): string {
+  const n = Number(x);
+  return Number.isFinite(n) ? IT_NUM.format(n) : x;
+}
+
+export type GuidanceKind = "HOLD" | "ENTRY_VALID" | "ENTRY_UNVERIFIED" | "TARGET_REACHED" | "EXIT" | "UNKNOWN" | "MISSING";
+
+/** Plain Italian for the system texts the engine actually writes (``_entry_guidance``/``_terminal_guidance``), with the
+ * values taken from the recognised text. Anything else is declared unrecognised: no operational instruction is shown,
+ * and nothing is ever derived from the thesis, the expected direction or the levels. */
+export function readGuidance(g: string | null | undefined): { kind: GuidanceKind; text: string } {
+  if (!g) return { kind: "MISSING", text: "Il sistema non ha registrato un testo per questa call: nessuna indicazione è mostrata." };
+  let m = g.match(/^Thesis ongoing but new entry is closed now \(([^)]*)\)\. If following this call: hold with stop (\S+), target (\S+)\.$/);
+  if (m) return { kind: "HOLD", text: `Il sistema indica di mantenere l'operazione con stop ${itNum(m[2])} e target ${itNum(m[3])}.` };
+  m = g.match(/^Entry still valid now inside the admissible part of (\S+)–(\S+); stop (\S+), target (\S+), hard deadline (\S+)\.$/);
+  if (m) {
+    return { kind: "ENTRY_VALID", text: `Il testo del sistema riguarda l'ingresso: valido ora nella parte ammessa di ${itNum(m[1])}–${itNum(m[2])}, ` +
+      `con stop ${itNum(m[3])}, target ${itNum(m[4])} e scadenza ${fmtLocal(m[5])}. Non contiene un'indicazione specifica per chi ha già aperto.` };
+  }
+  if (g === "Thesis ongoing; current entry cannot be verified (no fresh quote). Do not treat as ready now.") {
+    return { kind: "ENTRY_UNVERIFIED", text: "Il testo del sistema riguarda l'ingresso: tesi in corso, ma l'ingresso attuale non è " +
+      "verificabile (nessuna quotazione aggiornata) e non va considerato pronto ora. Non contiene un'indicazione specifica per chi ha già aperto." };
+  }
+  if (g === "Target reached: the call's guidance is complete.") {
+    return { kind: "TARGET_REACHED", text: "Target della call raggiunto: l'indicazione è conclusa." };
+  }
+  if (g === "Invalidation level touched: the thesis is invalid; exit guidance if following this call.") {
+    return { kind: "EXIT", text: "Livello di invalidazione toccato: la tesi non è più valida; per chi segue questa call il sistema indica l'uscita." };
+  }
+  if (g === "Hard deadline reached: exit guidance if following this call.") {
+    return { kind: "EXIT", text: "Scadenza raggiunta: per chi segue questa call il sistema indica l'uscita." };
+  }
+  if (g === "Cannot be assessed any more (data gap/ambiguity): exit guidance if following this call; no safety is assumed for unseen intervals.") {
+    return { kind: "EXIT", text: "Non più valutabile (lacuna o ambiguità nei dati): per chi segue questa call il sistema indica l'uscita; " +
+      "nessuna sicurezza è presunta per gli intervalli non osservati." };
+  }
+  m = g.match(/^Thesis retired \(([^)]*)\): exit guidance if following this call\. This is guidance withdrawal, not a statement about any position\.$/);
+  if (m) {
+    return { kind: "EXIT", text: `Tesi ritirata (${m[1]}): per chi segue questa call il sistema indica l'uscita. ` +
+      "È il ritiro dell'indicazione, non un'affermazione su una posizione." };
+  }
+  return { kind: "UNKNOWN", text: "Testo del sistema non riconosciuto: nessuna indicazione operativa è mostrata. " +
+    "Il testo originale è negli approfondimenti." };
+}
+
+const PERSPECTIVES = "Due prospettive ipotetiche: l'app non sa se hai aperto un'operazione.";
+const NO_POSITION = "Se non hai ancora aperto un'operazione";
+const FOLLOWING = "Se hai già aperto un'operazione su questa call";
+
 function EntryFacts({ c, available }: { c: CallView; available: boolean }) {
   const reasons = c.entry_reasons.length ? c.entry_reasons.map(reasonIt).join("; ") : "nessun motivo registrato";
   return (
@@ -204,10 +254,23 @@ function EntryFacts({ c, available }: { c: CallView; available: boolean }) {
   );
 }
 
-/** The issued call's own levels and the system text recorded for it (verbatim; never derived from the thesis). */
+/** The perspective of someone already following the call: what the recorded system text says, in plain Italian. */
 function CallUpdate({ c, v, unverified }: { c: CallView; v: LiveView; unverified: boolean }) {
+  const notCurrent = c.presentation === "NOT_CURRENT";
+  const r = notCurrent ? { kind: "NOT_CURRENT", text: "Sessione non corrente: l'ultimo testo salvato non è presentato come " +
+    "indicazione attuale (resta negli approfondimenti e nella cronologia)." } : readGuidance(c.guidance);
   return (
     <>
+      <div className="proposal-state tone-neutral" data-testid="live-call-guidance" data-kind={r.kind}>{r.text}</div>
+      {!notCurrent && (
+        <div className="small-text muted" data-testid="live-call-guidance-basis">In base al testo registrato dal sistema alla
+          valutazione del {fmtLocal(v.clock)}; l'originale è negli approfondimenti.</div>
+      )}
+      <div className="proposal-dir" data-testid="live-direction">
+        <span className="call-dir" data-testid="live-call-direction">{c.direction}</span>
+        <span>{c.direction === "LONG" ? "Indicazione di acquisto: il sistema si aspetta un rialzo del prezzo."
+          : "Indicazione di vendita: il sistema si aspetta un ribasso del prezzo."}</span>
+      </div>
       <dl className="call-geo proposal-facts">
         {unverified && (
           <dd className="proposal-group-note" data-testid="live-call-levels-note">Livelli della call già emessa: target e stop
@@ -219,24 +282,13 @@ function CallUpdate({ c, v, unverified }: { c: CallView; v: LiveView; unverified
         <dt>Orizzonte atteso</dt><dd>{c.expected_minutes ? `${c.expected_minutes[0]}–${c.expected_minutes[1]} min` : "non indicato"}</dd>
         <dt>Tesi</dt><dd data-testid="live-thesis">{THESIS_IT[c.thesis_status] ?? c.thesis_status}</dd>
       </dl>
-      <div className="proposal-guidance" data-testid="live-call-guidance">
-        {c.presentation === "NOT_CURRENT" ? (
-          <p className="small-text">Testo del sistema per questa call: l'ultimo testo salvato non è mostrato come attuale
-            perché la sessione non è corrente (resta negli approfondimenti e nella cronologia).</p>
-        ) : c.guidance ? (
-          <>
-            <div className="small-text muted">Testo del sistema per questa call, alla valutazione del {fmtLocal(v.clock)} —
-              originale, non tradotto:</div>
-            <blockquote className="mono small-text" data-testid="live-call-guidance-text">{c.guidance}</blockquote>
-          </>
-        ) : <p className="small-text">Il sistema non ha registrato un testo per questa call.</p>}
-      </div>
     </>
   );
 }
 
-/** A terminated call: its recorded conclusion, reason and closing text, fetched read-only from the call's history. */
-function ConcludedCall({ v, t }: { v: LiveView; t: LiveView["recent_calls"][number] }) {
+/** A terminated call, for someone who was following it: its recorded conclusion (read-only call API), never extended by
+ * the current market reading and never turned into an instruction the recorded text does not give. */
+function ConcludedCall({ v, t, expected }: { v: LiveView; t: LiveView["recent_calls"][number]; expected: string }) {
   const key = `${v.run_id}|${t.call_id}|${t.terminal_at}`;
   const [rec, setRec] = useState<{ key: string; target: string | null; text: string | null; at: string | null } | null>(null);
   useEffect(() => {
@@ -249,26 +301,31 @@ function ConcludedCall({ v, t }: { v: LiveView; t: LiveView["recent_calls"][numb
     return () => { live = false; };
   }, [key]);  // eslint-disable-line react-hooks/exhaustive-deps
   const r = rec?.key === key ? rec : null;  // never shown under another call or run
+  const reading = r ? (r.text ? readGuidance(r.text)
+    : { kind: "MISSING", text: "Testo registrato alla conclusione non disponibile: nessuna indicazione operativa è mostrata." }) : null;
   return (
     <div className="proposal-group" data-testid="live-call-concluded" data-terminal={t.terminal}>
-      <div className="adv-section-title">Aggiornamento della call già emessa</div>
+      <div className="adv-section-title" data-testid="live-section-following">{FOLLOWING}</div>
+      <div className="proposal-state tone-neutral" data-testid="live-concluded-guidance" data-kind={reading?.kind ?? "LOADING"}>
+        {reading ? reading.text : "…"}</div>
       <p data-testid="live-last-terminal">Ultima indicazione: {t.direction} {t.family},{" "}
         {THESIS_IT[t.terminal] ?? t.terminal} ({fmtLocal(t.terminal_at)}).</p>
       <dl className="call-geo proposal-facts">
         <dt>Motivo registrato</dt><dd data-testid="live-concluded-reason">{reasonIt(t.reason)}</dd>
         {t.terminal === "TARGET_REACHED" && (
           <><dt>Target operativo della call</dt>
-            <dd className="mono" data-testid="live-concluded-target">{r ? (r.target ?? "non disponibile") : "…"}</dd></>
+            <dd className="mono" data-testid="live-concluded-target">{r ? (r.target ? `${r.target} — raggiunto` : "non disponibile") : "…"}</dd></>
         )}
       </dl>
-      {r && (r.text ? (
-        <>
-          <div className="small-text muted">Testo registrato alla conclusione ({fmtLocal(r.at)}) — originale, non tradotto:</div>
-          <blockquote className="mono small-text" data-testid="live-concluded-text">{r.text}</blockquote>
-        </>
-      ) : <p className="small-text" data-testid="live-concluded-text-missing">Testo registrato alla conclusione non disponibile.</p>)}
-      <p className="small-text" data-testid="live-concluded-separation">La lettura attuale del mercato qui sotto è una
-        valutazione nuova: non estende la call conclusa.</p>
+      <p className="small-text" data-testid="live-concluded-separation">
+        {expected !== "UNAVAILABLE" ? `La successiva aspettativa (${(EXPECTED_IT[expected] ?? expected).toLowerCase()}) non prolunga questa call: ` +
+          "è una valutazione nuova del mercato." : "La lettura attuale del mercato non prolunga questa call: è una valutazione nuova."}</p>
+      {r?.text && (
+        <details className="more" data-testid="live-concluded-original">
+          <summary><Icon name="chevron" size={14} className="summary-chevron" /> Testo originale registrato ({fmtLocal(r.at)})</summary>
+          <div className="more-body"><span className="mono small-text" data-testid="live-concluded-text">{r.text}</span></div>
+        </details>
+      )}
     </div>
   );
 }
@@ -283,10 +340,12 @@ export function ProposalPanel({ v, onHistory }: { v: LiveView | null; onHistory:
   const ps = p ? (v?.scenarios ?? []).find((s) => s.scenario_id === p.scenario_id) : undefined;
   const lastTerminal = [...(v?.recent_calls ?? [])].sort((a, b) => (a.terminal_at < b.terminal_at ? 1 : -1))[0];
   const tone = c ? (c.direction === "LONG" ? "is-long" : "is-short") : "is-none";
+  const twoSides = !!v && (!!c || !!lastTerminal);
   return (
     <section className={cx("call-panel proposal", tone)} data-testid="live-call" data-state={st.key}>
       <div className="eyebrow">Che cosa propone il sistema adesso</div>
-      {v && <div className="adv-section-title" data-testid="live-new-entry-title">Disponibilità di un nuovo ingresso</div>}
+      {twoSides && <p className="small-text muted" data-testid="live-perspectives-note">{PERSPECTIVES}</p>}
+      {v && <div className="adv-section-title" data-testid="live-new-entry-title">{NO_POSITION}</div>}
       <div className={cx("proposal-state", `tone-${st.tone}`)} data-testid={c ? "live-entry" : v ? "live-no-trade" : "live-no-view"}>
         {st.text}
       </div>
@@ -304,9 +363,17 @@ export function ProposalPanel({ v, onHistory }: { v: LiveView | null; onHistory:
           </div>
         );
       })()}
+      {c && <EntryFacts c={c} available={available} />}
       {v && <div className="proposal-updated" data-testid="live-updated">Ultimo aggiornamento: {fmtLocal(v.clock)}</div>}
 
-      {v && !c && lastTerminal && <ConcludedCall v={v} t={lastTerminal} />}
+      {c && v && (
+        <div className="proposal-group" data-testid="live-call-update">
+          <div className="adv-section-title" data-testid="live-section-following">{FOLLOWING}</div>
+          <CallUpdate c={c} v={v} unverified={st.key === "UNVERIFIED"} />
+        </div>
+      )}
+
+      {v && !c && lastTerminal && <ConcludedCall v={v} t={lastTerminal} expected={d} />}
       {v && !c && lastTerminal && <div className="adv-section-title">Lettura attuale del mercato</div>}
       {!c && (
         <div className="proposal-dir" data-testid="live-direction">
@@ -329,19 +396,6 @@ export function ProposalPanel({ v, onHistory }: { v: LiveView | null; onHistory:
             </dl>
           ) : <p className="proposal-note">Nessuno scenario principale in questo momento.</p>}
         </>
-      )}
-
-      {c && <EntryFacts c={c} available={available} />}
-      {c && v && (
-        <div className="proposal-group" data-testid="live-call-update">
-          <div className="adv-section-title">Aggiornamento della call già emessa</div>
-          <div className="proposal-dir" data-testid="live-direction">
-            <span className="call-dir" data-testid="live-call-direction">{c.direction}</span>
-            <span>{c.direction === "LONG" ? "Indicazione di acquisto: il sistema si aspetta un rialzo del prezzo."
-              : "Indicazione di vendita: il sistema si aspetta un ribasso del prezzo."}</span>
-          </div>
-          <CallUpdate c={c} v={v} unverified={st.key === "UNVERIFIED"} />
-        </div>
       )}
 
       {v && (

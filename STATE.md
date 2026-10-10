@@ -1104,3 +1104,11 @@ Registered verbatim in [HDP-001 references §8.1](delivery/HDP-001-VERIFICATION-
   - Episode regenerated with per-moment assertions (`*-dopo-correzione.png`); the guided-test screenshots are kept.
   - `test_live_proposal_e2e` extended. Cockpit E2E 10 passed (disposable PostgreSQL, removed). Build and typecheck passed.
 - **Limits.** The recorded texts stay in English (the CLOSED one contains "hold" as recorded). The text time is the evaluation time. The timeline row time is unchanged. CI is Owner-operated: PENDING / NOT CHECKED. v0.6 and HDP-001 frozen; studies INACTIVE.
+- **Second correction (base `a0d6029`), after the repeated guided test.**
+  - The panel now has two hypothetical perspectives of equal legibility:
+    - "Se non hai ancora aperto un'operazione": authoritative availability; CLOSED = "Ingresso non disponibile adesso";
+    - "Se hai già aperto un'operazione su questa call": a plain-Italian translation of **recognised** engine texts only, with values from the text (CLOSED hold text → "Il sistema indica di mantenere l'operazione con stop 99.700 e target 100.700.").
+  - Unknown or missing texts are declared and never rebuilt; the original stays in the details.
+  - TARGET_REACHED is shown as "Target della call raggiunto: l'indicazione è conclusa.", with "100700.0 — raggiunto" and "La successiva aspettativa (rialzo) non prolunga questa call".
+  - Checks: the generator's per-moment assertions (`*-prospettive.png`); `test_live_proposal_e2e` extended; cockpit E2E 10 passed; build passed.
+  - Guided test only. CI is Owner-operated: PENDING / NOT CHECKED.

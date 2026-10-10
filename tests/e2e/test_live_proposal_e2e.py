@@ -137,26 +137,51 @@ def test_main_panel_states_follow_only_the_authoritative_backend_state(stack, br
 
     # CLOSED: no usable band; the recorded reason in plain Italian; last band kept only as history in the details
     show(with_call(entry="CLOSED", entry_reasons=["PRICE_OUTSIDE_STRUCTURAL_AREA"]), "CLOSED")
-    expect(page.get_by_test_id("live-entry")).to_have_text("Ingresso non più disponibile")
+    expect(page.get_by_test_id("live-entry")).to_have_text("Ingresso non disponibile adesso")
     expect(page.get_by_test_id("live-admissible")).to_have_count(0)
     expect(page.get_by_test_id("live-entry-reasons")).to_have_text("prezzo fuori dall'area d'ingresso")
     expect(page.locator(".band-admissible")).to_have_count(0)
     expect(page.get_by_test_id("live-call-technical")).to_contain_text("non utilizzabile ora")
     expect(page.get_by_test_id("live-entry-consequence")).to_have_count(0)  # CLOSED unchanged
     expect(page.get_by_test_id("live-call-levels-note")).to_have_count(0)
-    # the issued call's update is a separate group; its recorded system text is shown verbatim, nothing is derived
-    expect(page.get_by_test_id("live-new-entry-title")).to_have_text("Disponibilità di un nuovo ingresso")
-    expect(page.get_by_test_id("live-call-update")).to_contain_text("Aggiornamento della call già emessa")
-    expect(page.get_by_test_id("live-call-guidance-text")).to_have_text("guidance now c1")
-    expect(page.get_by_test_id("live-call-guidance")).to_contain_text("originale, non tradotto")
-    for word in ("mantieni", "Mantieni", "mantenere", "esci", "Esci", "uscire", "chiudi la posizione"):
-        expect(panel).not_to_contain_text(word)  # neither CLOSED nor ONGOING becomes a hold/exit instruction
+    # two hypothetical perspectives of equal standing; the follower side shows only what a RECOGNISED system text says
+    expect(page.get_by_test_id("live-perspectives-note")).to_contain_text("l'app non sa se hai aperto")
+    expect(page.get_by_test_id("live-new-entry-title")).to_have_text("Se non hai ancora aperto un'operazione")
+    expect(page.get_by_test_id("live-section-following")).to_have_text("Se hai già aperto un'operazione su questa call")
+    follow = page.get_by_test_id("live-call-guidance")
+    # thesis ONGOING with an unrecognised text: nothing is derived (no hold/exit), the limit is declared
+    expect(follow).to_have_attribute("data-kind", "UNKNOWN")
+    expect(follow).to_contain_text("nessuna indicazione operativa")
+    expect(page.get_by_test_id("live-guidance")).to_have_text("guidance now c1")  # the original stays in the details
+    for word in ("mantenere", "mantieni", "uscita", "esci", "chiudi"):
+        expect(panel).not_to_contain_text(word)
+    # CLOSED with the engine's explicit hold text: translated with the values of that text
+    show(with_call(entry="CLOSED", entry_reasons=["PRICE_OUTSIDE_STRUCTURAL_AREA"], guidance=(
+        "Thesis ongoing but new entry is closed now (PRICE_OUTSIDE_STRUCTURAL_AREA). If following this call: hold with "
+        "stop 99700.0, target 100700.0.")), "CLOSED")
+    expect(follow).to_have_attribute("data-kind", "HOLD")
+    expect(follow).to_have_text("Il sistema indica di mantenere l'operazione con stop 99.700 e target 100.700.")
+    expect(page.get_by_test_id("live-entry")).to_have_text("Ingresso non disponibile adesso")  # not "lost for good"
+    expect(page.get_by_test_id("live-call-guidance-basis")).to_contain_text("l'originale è negli approfondimenti")
+    # a missing text: declared, never rebuilt from the thesis or the levels
     show(with_call(entry="CLOSED", entry_reasons=["PRICE_OUTSIDE_STRUCTURAL_AREA"], guidance=""), "CLOSED")
-    expect(page.get_by_test_id("live-call-guidance")).to_have_text("Il sistema non ha registrato un testo per questa call.")
+    expect(follow).to_have_attribute("data-kind", "MISSING")
+    for word in ("mantenere", "uscita"):
+        expect(panel).not_to_contain_text(word)
+    # AVAILABLE with the engine's entry text: about the entry only, nothing for someone already in
+    show(with_call(guidance="Entry still valid now inside the admissible part of 96–99; stop 90, target 120, hard "
+                            "deadline 2026-10-10T12:00:00+00:00."), "AVAILABLE")
+    expect(follow).to_have_attribute("data-kind", "ENTRY_VALID")
+    expect(follow).to_contain_text("Non contiene un'indicazione specifica per chi ha già aperto")
+    expect(page.get_by_test_id("live-admissible")).to_have_text("96 – 99")
+    for word in ("mantenere", "uscita"):
+        expect(panel).not_to_contain_text(word)
 
     # UNVERIFIED
-    show(with_call(entry="UNVERIFIED", entry_reasons=["QUOTE_STALE"], admissible_bounds=None), "UNVERIFIED")
+    show(with_call(entry="UNVERIFIED", entry_reasons=["QUOTE_STALE"], admissible_bounds=None, guidance=(
+        "Thesis ongoing; current entry cannot be verified (no fresh quote). Do not treat as ready now.")), "UNVERIFIED")
     expect(page.get_by_test_id("live-entry")).to_have_text("Non è possibile confermare la disponibilità dell'ingresso")
+    expect(page.get_by_test_id("live-call-guidance")).to_have_attribute("data-kind", "ENTRY_UNVERIFIED")
     expect(page.get_by_test_id("live-entry-reasons")).to_have_text("quotazione non aggiornata")
     expect(page.get_by_test_id("live-admissible")).to_have_count(0)
     # the practical consequence: no usable entry now, wait for the system to confirm it again; levels belong to the call
@@ -192,12 +217,14 @@ def test_main_panel_states_follow_only_the_authoritative_backend_state(stack, br
     expect(page.get_by_test_id("live-entry")).to_have_count(0)
     concluded = page.get_by_test_id("live-call-concluded")
     expect(concluded).to_have_attribute("data-terminal", "TARGET_REACHED")
-    expect(concluded).to_contain_text("Aggiornamento della call già emessa")
+    expect(concluded.get_by_test_id("live-section-following")).to_have_text("Se hai già aperto un'operazione su questa call")
     expect(page.get_by_test_id("live-concluded-reason")).to_have_text("motivo registrato: R")
     # the call's history is not stored here: its closing text and target are declared missing, never rebuilt
-    expect(page.get_by_test_id("live-concluded-text-missing")).to_have_text("Testo registrato alla conclusione non disponibile.")
+    expect(page.get_by_test_id("live-concluded-guidance")).to_have_attribute("data-kind", "MISSING")
     expect(page.get_by_test_id("live-concluded-target")).to_have_text("non disponibile")
-    expect(page.get_by_test_id("live-concluded-separation")).to_contain_text("non estende la call conclusa")
+    expect(page.get_by_test_id("live-concluded-separation")).to_contain_text("non prolunga questa call")
+    for word in ("mantenere", "chiudi"):
+        expect(panel).not_to_contain_text(word)  # the conclusion is never turned into a hold/close order
     expect(panel).to_contain_text("Lettura attuale del mercato")
 
     # a non-current session through the real presentation boundary (saved entry was AVAILABLE)
@@ -210,8 +237,8 @@ def test_main_panel_states_follow_only_the_authoritative_backend_state(stack, br
     expect(cons).to_have_attribute("data-kind", "NOT_CURRENT")
     expect(cons).to_contain_text("la sessione live non è corrente")
     expect(cons).not_to_contain_text("quotazione")  # never promises that waiting for a quote is enough
-    expect(page.get_by_test_id("live-call-guidance")).to_contain_text("non è mostrato come attuale")
-    expect(page.get_by_test_id("live-call-guidance-text")).to_have_count(0)  # a saved text is never shown as current
+    expect(page.get_by_test_id("live-call-guidance")).to_have_attribute("data-kind", "NOT_CURRENT")
+    expect(page.get_by_test_id("live-call-guidance")).to_contain_text("non è presentato come indicazione attuale")
 
     # an unrecognised status is never presented as available
     show(with_call(entry="SOMETHING_NEW"), "UNKNOWN")

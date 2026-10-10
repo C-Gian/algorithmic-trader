@@ -189,7 +189,12 @@ def persist_journal(url: str, run_id: str, journal: list[dict]) -> None:
               e["origin"], e["subject"], e["digest"], e["chain"], Jsonb(e["record"]), 1) for e in journal])
 
 
-FORBIDDEN = ("mantieni", "Mantieni", "mantenere", "esci", "Esci", "uscire", "chiudi la posizione")
+FORBIDDEN = ("mantieni", "Mantieni", "esci", "Esci", "uscire", "uscita", "chiudi la posizione")  # "mantenere" only when recorded
+FOLLOWER = (  # plain Italian of the RECOGNISED recorded texts at each moment
+    "Il testo del sistema riguarda l'ingresso: valido ora nella parte ammessa di 99.900–100.049,9, con stop 99.700, "
+    "target 100.700 e scadenza 01/09/2025, 10:02:01 CEST. Non contiene un'indicazione specifica per chi ha già aperto.",
+    "Il sistema indica di mantenere l'operazione con stop 99.700 e target 100.700.",
+    "Target della call raggiunto: l'indicazione è conclusa.")
 
 
 def screenshots(bodies: list[str], run_id: str, journal: list[dict], cid: str, guidance: list[str],
@@ -210,7 +215,7 @@ def screenshots(bodies: list[str], run_id: str, journal: list[dict], cid: str, g
     try:
         with sync_playwright() as p:
             b = p.chromium.launch()
-            page = b.new_context(viewport={"width": 1280, "height": 1000}).new_page()
+            page = b.new_context(viewport={"width": 1280, "height": 1000}, timezone_id="Europe/Rome").new_page()
             page.route("**/api/adviser/live", lambda r: r.fulfill(status=200, body=current["body"],
                                                                   headers={"content-type": "application/json"}))
             page.goto(f"{stack.base}/#market")
@@ -236,24 +241,27 @@ def screenshots(bodies: list[str], run_id: str, journal: list[dict], cid: str, g
                            "details_only": det.locator(".more-body").text_content() if det.count() else None,
                            "alerts_banner": (page.get_by_test_id("live-alerts").inner_text()
                                              if page.get_by_test_id("live-alerts").count() else None),
-                           "call_guidance_shown": (page.get_by_test_id("live-call-guidance-text").inner_text()
-                                                   if page.get_by_test_id("live-call-guidance-text").count() else None),
+                           "follower_side": (page.get_by_test_id("live-call-guidance").inner_text()
+                                             if page.get_by_test_id("live-call-guidance").count() else None),
                            "concluded": (page.get_by_test_id("live-call-concluded").inner_text()
                                          if page.get_by_test_id("live-call-concluded").count() else None)}
 
             for n, (body, state, fname) in enumerate(zip(bodies[:2], ("AVAILABLE", "CLOSED"),
-                                                         ("1-ingresso-disponibile-dopo-correzione.png",
-                                                          "2-ingresso-chiuso-tesi-aperta-dopo-correzione.png")),
+                                                         ("1-ingresso-disponibile-prospettive.png",
+                                                          "2-ingresso-chiuso-tesi-aperta-prospettive.png")),
                                                      start=1):
                 current["body"] = body
                 expect(panel).to_have_attribute("data-state", state, timeout=15_000)
-                expect(page.get_by_test_id("live-call-guidance-text")).to_have_text(guidance[n - 1])  # verbatim
+                expect(page.get_by_test_id("live-guidance")).to_have_text(guidance[n - 1])  # original, in the details
+                expect(page.get_by_test_id("live-call-guidance")).to_have_text(FOLLOWER[n - 1])  # recognised text only
                 texts(n)
                 shot(fname)
             current["body"] = bodies[2]
             expect(page.get_by_test_id("live-last-terminal")).to_be_visible(timeout=15_000)
-            expect(page.get_by_test_id("live-concluded-text")).to_have_text(guidance[2], timeout=15_000)
-            expect(page.get_by_test_id("live-concluded-target")).to_have_text(target)  # the call's operational target
+            expect(page.get_by_test_id("live-concluded-guidance")).to_have_text(FOLLOWER[2], timeout=15_000)
+            expect(page.get_by_test_id("live-concluded-text")).to_have_text(guidance[2])  # original, collapsed
+            expect(page.get_by_test_id("live-concluded-target")).to_have_text(f"{target} — raggiunto")
+            expect(page.get_by_test_id("live-concluded-separation")).to_contain_text("(rialzo) non prolunga questa call")
             expect(page.get_by_test_id("live-call-concluded")).to_have_attribute("data-terminal", "TARGET_REACHED")
             expect(page.get_by_test_id("live-scenario-levels")).to_contain_text("(non è un target operativo)")
             texts(3)
@@ -261,7 +269,7 @@ def screenshots(bodies: list[str], run_id: str, journal: list[dict], cid: str, g
             card = page.get_by_test_id("live-call-history")
             expect(card.get_by_test_id("history-revisions")).to_be_visible(timeout=15_000)
             seen[3]["history_card"] = card.inner_text()
-            shot("3-conclusione-storico-della-call-dopo-correzione.png")
+            shot("3-conclusione-storico-della-call-prospettive.png")
             b.close()
     finally:
         stack.stop()
@@ -278,7 +286,7 @@ def main() -> None:
     guidance = [views[0]["view"]["call"]["guidance"], views[1]["view"]["call"]["guidance"], revs[-1]["guidance"]]
     assert guidance[1] == revs[0]["guidance"] and revs[-1]["thesis_status"] == "TARGET_REACHED"
     facts["rendered"] = screenshots(bodies, facts["run_id"], journal, facts["call_id"], guidance, facts["target"])
-    (OUT / "episode-dopo-correzione.json").write_text(json.dumps(facts, indent=1, default=str, ensure_ascii=False) + "\n",
+    (OUT / "episode-prospettive.json").write_text(json.dumps(facts, indent=1, default=str, ensure_ascii=False) + "\n",
                                       encoding="utf-8")
     print(json.dumps({k: facts[k] for k in ("run_id", "call_id")}, indent=1))
 
