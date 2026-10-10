@@ -1,5 +1,39 @@
-# Current task — Cockpit desktop arrangement: visual proposal first
-Date: 2026-10-10. Status: PROPOSAL DELIVERED — awaiting Gian's agreement ([proposal](delivery/evidence/COCKPIT-VISUAL-PROPOSAL/PROPOSAL.md)). No product change active; the implementation follows in this same step after the agreement. Studies INACTIVE. Remote CI is Owner-operated: PENDING / NOT CHECKED.
+# Current task — Cockpit desktop arrangement: SECOND visual proposal
+Date: 2026-10-10. Status: SECOND PROPOSAL DELIVERED — awaiting Gian's choice ([proposal](delivery/evidence/COCKPIT-VISUAL-PROPOSAL-2/PROPOSAL.md)). The first proposal was not approved and is not implemented. No product change active; after Gian's choice the implementation follows in this same step, with no intermediate Astra step. Studies INACTIVE. Remote CI is Owner-operated: PENDING / NOT CHECKED.
+
+## Assignment (relayed by the Owner, 10 October 2026; expected base `4a918dc`)
+
+- **Owner feedback.**
+  - The colours looked essentially unchanged.
+  - Chart on the left, decision panel on the right.
+  - Smaller chart, wider panel.
+  - Candles, possibly a second useful chart.
+- **Layout.**
+  - Keep apart the market reading, the call identity, the new entry and the call update.
+  - Group the operational information; put technical details and history progressively below.
+  - No equal-height cards with large gaps.
+  - Check the supported widths.
+- **Chart.**
+  - Reuse an existing component for OHLC candles if it can show them with the data the cockpit already has, keeping levels and times. Otherwise state the exact limit.
+  - No new chart engine, endpoint or data transformation.
+  - Name a reusable second chart only if one answers a distinct, useful question. Do not add it.
+- **Colours, whole cockpit.**
+  - Green/red for LONG/SHORT and rising/falling.
+  - Blue for availability or a ready technical state, with labels that distinguish the two.
+  - Amber for attention and non-verifiability.
+  - Neutral for waiting, closed entry, history and conclusion.
+  - Technical badges must not stay green; also check buttons, alerts and the timeline.
+  - Always with text and symbols.
+  - In the chart, explain how levels, direction and entry state are distinguished; candles may be green/red; check contrast.
+- **Delivery.**
+  - The same six synthetic states, new desktop images, and CLOSED also at 1024 and 390.
+  - A first-vs-second comparison, the colour map, the candle findings and a second-chart candidate.
+  - Independent sessions are not presented as one sequence; everything is marked as an inactive proposal.
+  - Product files restored; evidence and documentation only.
+- **Excluded.** Semantics and guidance, method, API, persistence, Workbench, real feed, Owner data, economic tests, CI queries.
+
+## Previous task — Cockpit desktop arrangement: visual proposal first
+Date: 2026-10-10. Status: PROPOSAL DELIVERED — NOT APPROVED by Gian ([proposal](delivery/evidence/COCKPIT-VISUAL-PROPOSAL/PROPOSAL.md)); not implemented.
 
 ## Assignment (Astra, relayed by the Owner, 10 October 2026; expected base `8759c85`)
 

@@ -1113,7 +1113,7 @@ Registered verbatim in [HDP-001 references §8.1](delivery/HDP-001-VERIFICATION-
   - Checks: the generator's per-moment assertions (`*-prospettive.png`); `test_live_proposal_e2e` extended; cockpit E2E 10 passed; build passed.
   - Guided test only. CI is Owner-operated: PENDING / NOT CHECKED.
 
-## Live cockpit — desktop visual PROPOSAL (base `8759c85`; FOR GIAN'S AGREEMENT; not implemented)
+## Live cockpit — desktop visual PROPOSAL (base `8759c85`; NOT APPROVED by Gian; not implemented)
 
 [Proposal](delivery/evidence/COCKPIT-VISUAL-PROPOSAL/PROPOSAL.md) · 6 states at 1440×1000, plus 1024 and 390 for state 5 · [draft patch](delivery/evidence/COCKPIT-VISUAL-PROPOSAL/draft-ui.patch), evidence only.
 - **Product.** No product change is active: the draft was applied locally, screenshotted, saved as a patch and reverted.
@@ -1125,3 +1125,34 @@ Registered verbatim in [HDP-001 references §8.1](delivery/HDP-001-VERIFICATION-
 - **Colour map.** Existing tokens, each with a symbol and a text: green/red for direction only; blue ✓ available; grey ⏸ not available now; amber ⚠ not verifiable; grey ■ concluded; amber dashed cpu for a technical problem. The panel is never coloured by direction. Contrast ≥ 4.7:1.
 - **States.** Real v0.6 engine states from three independent synthetic sessions (LONG, mirrored SHORT, the call-updates episode).
 - **Next.** Implementation after Gian's agreement, in the same step. Semantics and approved texts unchanged. CI is Owner-operated: PENDING / NOT CHECKED. v0.6 and HDP-001 frozen; studies INACTIVE.
+
+## Live cockpit — SECOND desktop visual PROPOSAL (base `4a918dc`; FOR GIAN'S CHOICE; not implemented)
+
+[Proposal](delivery/evidence/COCKPIT-VISUAL-PROPOSAL-2/PROPOSAL.md) · 6 states at 1440×1000, plus 1024 and 390 for state 5 · [draft patch](delivery/evidence/COCKPIT-VISUAL-PROPOSAL-2/draft-ui.patch), evidence only.
+- **Feedback addressed.** Gian did not approve the first proposal:
+  - the colours looked unchanged;
+  - he wants the chart left and smaller, and the decision panel right and wider;
+  - he suggested candles and possibly a second chart.
+- **Product.** No product change is active. The draft was applied locally, screenshotted, saved as a patch (it applies cleanly to the base) and reverted; `web/src` was restored and the original UI rebuilt.
+- **Layout.**
+  - Left column (≈ 5/12): the chart, then "Lettura attuale del mercato" (dashed).
+  - Right column (≈ 7/12): the decision panel, with:
+    - the call strip (filled ▲/▼ chip, identity, levels shown once);
+    - two full-width perspective rows, so there are no equal-height cards;
+    - Approfondimenti.
+  - Below: What changed and lenses, then Technical details.
+  - At 1100 px and below, the panel comes first. At 760 px and below, everything is stacked.
+- **Colours, whole cockpit.**
+  - Filled blue ✓ for an available entry; filled amber ⚠ for not verifiable; grey surface for waiting, closed (⏸) and concluded (■).
+  - Green/red only for direction (filled chip, ▲/▼) and candles.
+  - Technical badges (LIVE, READY, LIVE QUOTED, Dati LIVE, Origine: call live) are blue with cpu.
+  - Stop button neutral; errors and failures amber; the alerts notice and the timeline neutral.
+  - Contrast: 26 pairs pass (`contrast.py`, `contrast.json`).
+- **Candles.**
+  - `MarketChart` cannot be reused as is: it needs `TradedBar[]` (a data mapping) and has no level overlays.
+  - The proposal draws candles inside the cockpit's existing `PriceChart`, from the `chart.minutes` o/h/l/c it already receives, keeping levels, bands and the AVAILABLE-only band rule. It adds time ticks and a legend.
+  - Target and stop become light labelled lines, and support/resistance grey dashed, so green/red mean only the candle's move. This change is explicit in the legend and the proposal.
+- **Second chart.** Not implemented. The candidate is the 15-minute context: `chart.m15` is already sent (96 bars) and not shown. No existing component takes that shape without a transformation.
+- **States.** Real v0.6 engine states from three independent synthetic sessions, as in the first proposal.
+- **Checks.** Typecheck and build of the draft passed; per-state generator assertions passed; the original UI was rebuilt after the restore. The E2E suite was not run against the draft, since it is not a product change.
+- **Next.** Implementation after Gian's choice, in the same step. CI is Owner-operated: PENDING / NOT CHECKED. v0.6 and HDP-001 frozen; studies INACTIVE.

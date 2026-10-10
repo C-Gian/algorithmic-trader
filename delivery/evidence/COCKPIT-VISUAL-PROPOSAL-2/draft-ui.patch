@@ -1,0 +1,710 @@
+diff --git a/web/src/styles/adviser.css b/web/src/styles/adviser.css
+index 597a835..6cb5b7b 100644
+--- a/web/src/styles/adviser.css
++++ b/web/src/styles/adviser.css
+@@ -163,3 +163,100 @@
+ /* live main panel: the issued call's update kept apart from new-entry availability */
+ .proposal-group { border-top: 1px solid var(--line, rgba(127, 127, 127, 0.35)); padding-top: var(--s-2); display: flex; flex-direction: column; gap: var(--s-2); }
+ .proposal-group blockquote, .proposal-guidance blockquote { margin: 2px 0 0; padding-left: var(--s-2); border-left: 2px solid var(--line, rgba(127, 127, 127, 0.35)); overflow-wrap: anywhere; }
++/* ===== DRAFT 2 (visual proposal only): chart left, decision right ===== */
++.cockpit-main { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: var(--s-4); align-items: start; }
++.cockpit-chart { min-width: 0; display: flex; flex-direction: column; gap: var(--s-4); }
++.cockpit-decision { min-width: 0; }
++.cockpit-lower { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: var(--s-4); align-items: start; }
++.cockpit-lower .lens-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
++.tech-label { font-size: var(--fs-2xs); text-transform: uppercase; letter-spacing: .06em; color: var(--text-3); }
++
++/* decision panel */
++.decision { padding: var(--s-5); border-radius: var(--radius-lg); border: 1px solid var(--line-2); background: var(--surface-2); display: flex; flex-direction: column; gap: var(--s-4); }
++.decision-head { display: flex; justify-content: space-between; align-items: center; gap: var(--s-3); flex-wrap: wrap; }
++.decision-meta { display: flex; align-items: center; gap: var(--s-3); flex-wrap: wrap; }
++.call-strip { display: flex; flex-direction: column; gap: var(--s-3); padding: var(--s-4); border-radius: var(--radius); background: var(--surface-3); border: 1px solid var(--line-2); }
++.call-strip.is-ended { background: transparent; border-style: dashed; border-color: var(--line-3); }
++.call-strip.is-none { background: transparent; border: none; padding: 0; }
++.strip-head { display: flex; align-items: center; gap: var(--s-4); }
++.strip-id { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
++.strip-title { font-weight: 650; font-size: var(--fs-lg); display: inline-flex; align-items: center; gap: var(--s-2); flex-wrap: wrap; }
++.strip-sub { color: var(--text-2); }
++.strip-levels { display: grid; grid-template-columns: repeat(5, minmax(0, auto)); gap: var(--s-2) var(--s-5); margin: 0; justify-content: start; }
++.strip-levels dt { font-size: var(--fs-xs); color: var(--text-3); }
++.strip-levels dd { margin: 0; font-size: var(--fs-md); color: var(--text); }
++/* direction: a FILLED chip, green or red, always with the arrow and the word */
++.dir-chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 8px; font-family: var(--font-display); font-weight: 800; font-size: var(--fs-xl); letter-spacing: .02em; flex: none; }
++.dir-chip.dir-long { background: var(--pos); color: #07140e; }
++.dir-chip.dir-short { background: var(--neg); color: #1a0706; }
++.dir-chip.is-ended { background: transparent; color: var(--neutral); border: 2px dashed var(--neutral); }
++.dir-long { color: var(--pos); }
++.dir-short { color: var(--neg); }
++/* the two perspectives: full-width rows (title | content), never two equal-height cards */
++.persp-row { display: grid; grid-template-columns: 190px minmax(0, 1fr); gap: var(--s-4); padding-top: var(--s-4); border-top: 1px solid var(--line-2); align-items: start; }
++.persp-title { font-size: var(--fs-md); font-weight: 700; color: var(--text); line-height: 1.35; }
++.persp-body { display: flex; flex-direction: column; gap: var(--s-2); min-width: 0; }
++.persp-state { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-size: var(--fs-xl); font-weight: 750; line-height: 1.25; padding: 12px 16px; border-radius: var(--radius); }
++.persp-guidance { font-family: var(--font-display); font-size: var(--fs-lg); font-weight: 600; line-height: 1.35; padding: 12px 16px; border-radius: var(--radius); background: var(--surface-3); color: var(--text); border: 1px solid var(--line-3); }
++.persp-facts { margin: 0; }
++.persp-consequence { margin: 0; }
++/* signal fills: the state is the strongest colour on the panel, always icon + words */
++.sig-avail { background: var(--info); color: #06121a; }
++.sig-attn { background: var(--warn); color: #1c0f04; }
++.sig-muted { background: var(--surface-3); color: var(--text-2); border: 1px solid var(--line-3); }
++.sig-tech { color: var(--warn); background: var(--warn-soft); border: 1px dashed var(--warn); }
++.sig-chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; font-size: var(--fs-sm); font-weight: 600; font-family: var(--font-ui); }
++/* market reading: dashed, unfilled, compact facts in columns */
++.decision-market { border: 1px dashed var(--line-3); border-radius: var(--radius-lg); padding: var(--s-4); display: flex; flex-direction: column; gap: var(--s-2); }
++.market-head { display: flex; align-items: baseline; gap: var(--s-3); flex-wrap: wrap; }
++.market-dir { flex-wrap: wrap; }
++.market-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-2) var(--s-4); margin: 0; }
++.market-facts dt { font-size: var(--fs-xs); color: var(--text-3); }
++.market-facts dd { margin: 0; font-size: var(--fs-sm); }
++.market-facts .span-all { grid-column: 1 / -1; }
++/* timeline: direction with its arrow; new items marked by weight, not by colour */
++.tl-dir { font-weight: 700; }
++.change-timeline li.is-new .tl-kind, .change-timeline li.tl-alert.is-new .hist-alert-event { color: var(--text); }
++.change-timeline li.tl-alert.is-new .hist-alert-event::before { content: "● nuovo · "; color: var(--text-3); font-weight: 600; }
++/* chart: candles + neutral, labelled levels */
++.live-chart.is-candles .candle .wick { stroke-width: 1; }
++.live-chart.is-candles .candle.up .wick, .live-chart.is-candles .candle.up .body { stroke: var(--pos); fill: var(--surface); stroke-width: 1.2; }
++.live-chart.is-candles .candle.down .wick, .live-chart.is-candles .candle.down .body { stroke: var(--neg); fill: rgba(240, 116, 112, 0.7); }
++.live-chart.is-candles .lvl text { font-size: 10.5px; fill: var(--text-2); }
++.live-chart.is-candles .lvl-target line, .live-chart.is-candles .lvl-stop line { stroke: var(--text); stroke-width: 1.4; stroke-dasharray: none; }
++.live-chart.is-candles .lvl-target text, .live-chart.is-candles .lvl-stop text { fill: var(--text); font-weight: 600; }
++.live-chart.is-candles .lvl-res line, .live-chart.is-candles .lvl-sup line { stroke: var(--neutral); stroke-dasharray: 5 4; }
++.live-chart.is-candles .lvl-box line { stroke: var(--pending); stroke-dasharray: 2 3; }
++.live-chart.is-candles .lvl .leader { stroke: var(--line-3); stroke-dasharray: none; }
++.live-chart.is-candles .band-area { fill: rgba(205, 178, 122, 0.10); }
++.live-chart.is-candles .band-admissible { fill: rgba(108, 182, 224, 0.22); stroke: var(--info); stroke-width: 1; }
++.live-chart.is-candles .band-label { font-size: 11px; fill: var(--info); font-weight: 600; }
++.live-chart.is-candles .last-tag line { stroke: var(--text-3); stroke-dasharray: 1 3; }
++.live-chart.is-candles .axis { stroke: var(--line-3); }
++.live-chart.is-candles .tick { font-size: 11px; fill: var(--text-3); font-family: var(--font-mono); }
++.chart-legend { list-style: none; margin: var(--s-2) 0 0; padding: 0; display: flex; flex-direction: column; gap: 3px; font-size: var(--fs-xs); color: var(--text-3); }
++.chart-legend li { display: block; }
++.chart-legend li > span[aria-hidden] { vertical-align: middle; margin-right: 6px; }
++.lg-k { width: 7px; height: 12px; display: inline-block; border-radius: 1px; }
++.lg-up { border: 1.5px solid var(--pos); background: var(--surface); }
++.lg-down { background: var(--neg); }
++.lg-line { width: 18px; height: 0; display: inline-block; }
++.lg-solid { border-top: 2px solid var(--text); }
++.lg-dash { border-top: 2px dashed var(--neutral); }
++.lg-band { width: 18px; height: 10px; display: inline-block; border-radius: 2px; }
++.lg-area { background: rgba(205, 178, 122, 0.25); }
++.lg-adm { background: rgba(108, 182, 224, 0.35); border: 1px solid var(--info); }
++@media (max-width: 1100px) {
++  .cockpit-main, .cockpit-lower { grid-template-columns: 1fr; }
++  .cockpit-decision { order: 1; }
++  .cockpit-chart { order: 2; display: grid; grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); align-items: start; }
++}
++@media (max-width: 760px) {
++  .persp-row { grid-template-columns: 1fr; gap: var(--s-2); }
++  .strip-levels { grid-template-columns: repeat(2, minmax(0, 1fr)); }
++  .market-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
++  .strip-head { align-items: flex-start; flex-direction: column; gap: var(--s-2); }
++  .decision { padding: var(--s-4); }
++  .cockpit-chart { display: flex; }
++}
++
+diff --git a/web/src/views/LiveCockpit.tsx b/web/src/views/LiveCockpit.tsx
+index dc6f2f5..71c3eed 100644
+--- a/web/src/views/LiveCockpit.tsx
++++ b/web/src/views/LiveCockpit.tsx
+@@ -8,76 +8,136 @@ import { usePoll } from "../lib/usePoll";
+ import { Icon } from "../ui/Icon";
+ import { Badge, Button, Card, cx, Mono, Notice, Tone } from "../ui/primitives";
+ import { HistoryKey, LiveCallHistory } from "./LiveCallHistory";
+-import { ProposalPanel } from "./LiveProposal";
++import { MarketReading, ProposalPanel } from "./LiveProposal";
+ import { useCopyFeedback } from "./replay/MarketReplay";
+ 
+ // Home live cockpit (WP-009): the Owner starts/stops the local live adviser here. Every value comes from the committed
+ // live session view (/api/adviser/live); nothing is computed in the browser. Stopped means nothing is monitored and no
+ // alert is produced. Advice is for a human decision only: no orders, size, leverage or account.
+ 
++// DRAFT colour map: blue = a ready technical state (labelled "Sessione"), amber = attention, grey = waiting/stopped;
++// green/red are kept for direction and candles only.
+ const STATE_TONE: Record<string, Tone> = {
+-  LIVE: "pos", WARMING_UP: "info", RECONSTRUCTING: "info", STARTING: "info", DISCONNECTED: "warn", UNRESPONSIVE: "neg",
+-  STOPPED: "neutral", FAILED: "neg",
++  LIVE: "info", WARMING_UP: "neutral", RECONSTRUCTING: "neutral", STARTING: "neutral", DISCONNECTED: "warn", UNRESPONSIVE: "warn",
++  STOPPED: "neutral", FAILED: "warn",
+ };
+ const STATE_TEXT: Record<string, string> = {
+   LIVE: "Live", WARMING_UP: "Warming up", RECONSTRUCTING: "Catching up", STARTING: "Starting",
+   DISCONNECTED: "Disconnected", UNRESPONSIVE: "Not responding", STOPPED: "Stopped", FAILED: "Failed",
+ };
+ 
++const HM = new Intl.DateTimeFormat("it-IT", { hour: "2-digit", minute: "2-digit" });
++
++// DRAFT (visual proposal only): the same component and the same view.chart.minutes fields (o/h/l/c/t), drawn as candles.
++// Candle colour = that minute's own move; levels are neutral lines told apart by pattern and label, never by green/red.
+ function PriceChart({ v }: { v: LiveView | null }) {
+   const bars = v?.chart?.minutes ?? [];
+   const call = v?.call ?? null;
+   const lv = v?.levels ?? {};
+-  const W = 720;
+-  const H = 260;
++  const W = 440;
++  const H = 300;
++  const PL = 4;
++  const PR = 134;
+   const shapes = useMemo(() => {
+     if (bars.length < 2) return null;
+-    const closes = bars.map((b) => Number(b.c));
+-    const lines: { y: number; label: string; cls: string }[] = [];
++    const raw: { y: number; label: string; cls: string }[] = [];
+     const add = (val: string | null | undefined, label: string, cls: string) => {
+-      if (val) lines.push({ y: Number(val), label, cls });
++      if (val) raw.push({ y: Number(val), label, cls });
+     };
+-    add(lv.nearest_resistance_near_edge, "resistance", "lvl-res");
+-    add(lv.nearest_support_near_edge, "support", "lvl-sup");
+-    add(lv.box_low, "box low", "lvl-box");
+-    add(lv.box_up, "box high", "lvl-box");
+     if (call) {
+       add(call.target, "target", "lvl-target");
+       add(call.stop, "stop", "lvl-stop");
+     }
++    add(lv.nearest_resistance_near_edge, "resistenza", "lvl-res");
++    add(lv.nearest_support_near_edge, "supporto", "lvl-sup");
++    add(lv.box_low, "box min", "lvl-box");
++    add(lv.box_up, "box max", "lvl-box");
++    // coincident levels share one label ("target · resistenza") instead of overprinting
++    const lines: { y: number; label: string; cls: string }[] = [];
++    for (const l of raw) {
++      const same = lines.find((x) => x.y === l.y);
++      if (same) same.label = `${same.label} · ${l.label}`;
++      else lines.push({ ...l });
++    }
+     const all = [...bars.flatMap((b) => [Number(b.h), Number(b.l)]), ...lines.map((l) => l.y),
+                  ...(call ? call.structural_area.map(Number) : [])];
+     const lo = Math.min(...all);
+     const hi = Math.max(...all);
+     const pad = (hi - lo) * 0.06 || 1;
+-    const y = (p: number) => H - 16 - ((p - (lo - pad)) / (hi - lo + 2 * pad)) * (H - 32);
+-    const x = (i: number) => 8 + (i / (bars.length - 1)) * (W - 90);
+-    const path = closes.map((c, i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${y(c).toFixed(1)}`).join(" ");
++    const top = 10;
++    const bottom = H - 26;
++    const y = (p: number) => bottom - ((p - (lo - pad)) / (hi - lo + 2 * pad)) * (bottom - top);
++    const step = (W - PL - PR) / bars.length;
++    const x = (i: number) => PL + step * (i + 0.5);
++    const bw = Math.max(1, Math.min(9, step * 0.62));
++    const candles = bars.map((b, i) => {
++      const o = Number(b.o);
++      const c = Number(b.c);
++      return { x: x(i), hi: y(Number(b.h)), lo: y(Number(b.l)), top: y(Math.max(o, c)), bot: y(Math.min(o, c)),
++               up: c >= o, t: b.t };
++    });
+     const area = call ? { y1: y(Number(call.structural_area[1])), y2: y(Number(call.structural_area[0])) } : null;
+     // the admissible band is drawn only while the backend says the entry is AVAILABLE (never as a usable-looking past level)
+     const adm = call?.admissible_bounds && call.entry_status === "AVAILABLE" && call.presentation !== "NOT_CURRENT" ? { y1: y(Number(call.admissible_bounds[1])), y2: y(Number(call.admissible_bounds[0])) } : null;
+-    return { path, lines: lines.map((l) => ({ ...l, py: y(l.y) })), area, adm, last: { x: x(closes.length - 1), y: y(closes[closes.length - 1]) } };
++    // labels pushed apart so two close levels stay readable; each label keeps a leader to its own line
++    const placed = lines.map((l) => ({ ...l, py: y(l.y), ty: y(l.y) })).sort((a, b) => a.py - b.py);
++    for (let i = 1; i < placed.length; i++) {
++      placed[i].ty = Math.max(placed[i].ty, placed[i - 1].ty + 13 + 12 * (placed[i - 1].label.split(" · ").length - 1));
++    }
++    const ticks = [0, Math.floor((bars.length - 1) / 2), bars.length - 1].map((i) => ({ x: x(i), t: HM.format(new Date(bars[i].t)) }));
++    const lastC = Number(bars[bars.length - 1].c);
++    return { candles, lines: placed, area, adm, bw, ticks, last: { y: y(lastC), c: lastC }, bottom };
+   }, [bars, call, lv]);
+   if (!shapes) {
+     return <div className="chart-empty" data-testid="live-chart-empty">No live price yet — start the adviser to load the
+       latest complete minutes.</div>;
+   }
++  const xr = W - PR;
+   return (
+-    <svg viewBox={`0 0 ${W} ${H}`} className="live-chart" role="img" aria-label="BTC traded price, last complete minutes"
+-         data-testid="live-chart">
+-      {shapes.area && <rect x={8} width={W - 90} y={shapes.area.y1} height={Math.max(1, shapes.area.y2 - shapes.area.y1)}
+-                            className="band-area"><title>structural entry area</title></rect>}
+-      {shapes.adm && <rect x={8} width={W - 90} y={shapes.adm.y1} height={Math.max(1, shapes.adm.y2 - shapes.adm.y1)}
+-                           className="band-admissible"><title>admissible now</title></rect>}
+-      {shapes.lines.map((l) => (
+-        <g key={l.label + l.y} className={cx("lvl", l.cls)}>
+-          <line x1={8} x2={W - 90} y1={l.py} y2={l.py} />
+-          <text x={W - 84} y={l.py + 4}>{l.label} {fmtNum(l.y, 1)}</text>
++    <>
++      <svg viewBox={`0 0 ${W} ${H}`} className="live-chart is-candles" role="img"
++           aria-label="BTC traded price, last complete minutes, as 1-minute candles" data-testid="live-chart">
++        {shapes.area && <rect x={PL} width={xr - PL} y={shapes.area.y1} height={Math.max(1, shapes.area.y2 - shapes.area.y1)}
++                              className="band-area"><title>area strutturale della call (storico)</title></rect>}
++        {shapes.adm && (
++          <g className="band-admissible-g">
++            <rect x={PL} width={xr - PL} y={shapes.adm.y1} height={Math.max(2, shapes.adm.y2 - shapes.adm.y1)}
++                  className="band-admissible"><title>fascia d'ingresso ammessa ora</title></rect>
++            <text x={PL + 4} y={shapes.adm.y1 - 4} className="band-label">fascia ammessa ora</text>
++          </g>
++        )}
++        {shapes.candles.map((k, i) => (
++          <g key={i} className={cx("candle", k.up ? "up" : "down")}>
++            <line className="wick" x1={k.x} x2={k.x} y1={k.hi} y2={k.lo} />
++            <rect className="body" x={k.x - shapes.bw / 2} width={shapes.bw} y={k.top} height={Math.max(1, k.bot - k.top)} />
++          </g>
++        ))}
++        {shapes.lines.map((l) => (
++          <g key={l.label + l.y} className={cx("lvl", l.cls)}>
++            <line x1={PL} x2={xr} y1={l.py} y2={l.py} />
++            {Math.abs(l.ty - l.py) > 1 && <line className="leader" x1={xr} x2={xr + 6} y1={l.py} y2={l.ty} />}
++            <text x={xr + 8} y={l.ty + 4}>{l.label.split(" · ").map((n, i) => (
++              <tspan key={n} x={xr + 8} dy={i ? 12 : 0}>{i ? `= ${n}` : `${n} ${fmtNum(l.y, 1)}`}</tspan>))}</text>
++          </g>
++        ))}
++        <g className="last-tag">
++          <line x1={PL} x2={xr} y1={shapes.last.y} y2={shapes.last.y} />
+         </g>
+-      ))}
+-      <path d={shapes.path} className="price-line" />
+-      <circle cx={shapes.last.x} cy={shapes.last.y} r={3} className="price-dot" />
+-    </svg>
++        <line x1={PL} x2={xr} y1={shapes.bottom} y2={shapes.bottom} className="axis" />
++        {shapes.ticks.map((t, i) => (
++          <text key={i} x={t.x} y={shapes.bottom + 16} className="tick" textAnchor={i === 0 ? "start" : i === 2 ? "end" : "middle"}>{t.t}</text>
++        ))}
++      </svg>
++      <ul className="chart-legend" data-testid="live-chart-legend">
++        <li><span className="lg-k lg-up" aria-hidden /> <span className="lg-k lg-down" aria-hidden /> candela a 1 minuto: verde vuota
++          = chiusura sopra l'apertura, rossa piena = sotto (movimento di quel minuto, non la direzione della call)</li>
++        <li><span className="lg-line lg-solid" aria-hidden /> target e stop della call (linee piene, con etichetta)</li>
++        <li><span className="lg-line lg-dash" aria-hidden /> supporto / resistenza / box (tratteggio)</li>
++        <li><span className="lg-band lg-area" aria-hidden /> area strutturale della call</li>
++        {shapes.adm && <li><span className="lg-band lg-adm" aria-hidden /> fascia d'ingresso ammessa ora (solo mentre l'ingresso è disponibile)</li>}
++        <li>Asse orizzontale: ora locale dei minuti completi.</li>
++      </ul>
++    </>
+   );
+ }
+ 
+@@ -91,13 +151,13 @@ function lensText(l: Lens): string {
+ 
+ function LensCard({ l }: { l: Lens }) {
+   const st = String(l.status);
+-  const tone: Tone = st === "READY" || st === "LIVE_QUOTED" || st === "HISTORICAL_BASE" ? "pos"
+-    : st === "UNAVAILABLE" || st === "STALE" ? "warn" : st === "LIMITED" || st.includes("UNKNOWN") || st === "NOT_COVERED" ? "pending" : "info";
++  const tone: Tone = st === "READY" || st === "LIVE_QUOTED" || st === "HISTORICAL_BASE" ? "info"
++    : st === "UNAVAILABLE" || st === "STALE" ? "warn" : st === "LIMITED" || st.includes("UNKNOWN") || st === "NOT_COVERED" ? "pending" : "neutral";
+   return (
+     <div className="lens-card" data-testid={`lens-${l.lens}`}>
+       <div className="lens-top">
+         <span className="lens-name">{l.name}</span>
+-        <Badge tone={tone}>{humanize(st)}</Badge>
++        <Badge tone={tone} icon={tone === "info" ? "cpu" : undefined}>{humanize(st)}</Badge>
+       </div>
+       <div className="lens-result">{lensText(l)}</div>
+       <div className="lens-role">{l.role}</div>
+@@ -136,10 +196,10 @@ function HistoricalAlert({ a }: { a: LiveStatus["alerts"][number] }) {
+ 
+ function Timeline({ st, onHistory }: { st: LiveStatus; onHistory: (callId: string) => void }) {
+   const v = st.view;
+-  const items: { at: string; kind: string; text: string; alert: LiveStatus["alerts"][number] | null; callId?: string }[] = [
++  const items: { at: string; kind: string; text: string; alert: LiveStatus["alerts"][number] | null; callId?: string; dir?: string }[] = [
+     ...st.alerts.map((a) => ({ at: a.created_at, kind: humanize(a.change_type), text: a.summary, alert: a })),
+-    ...(v?.recent_calls ?? []).map((c) => ({ at: c.terminal_at, kind: `${c.direction} ${c.family} ${THESIS_TEXT[c.terminal] ?? c.terminal}`,
+-                                             text: reasonText(c.reason), alert: null, callId: c.call_id })),
++    ...(v?.recent_calls ?? []).map((c) => ({ at: c.terminal_at, kind: `${c.family} ${THESIS_TEXT[c.terminal] ?? c.terminal}`,
++                                             text: reasonText(c.reason), alert: null, callId: c.call_id, dir: c.direction })),
+     ...(v?.notes ?? []).slice(-6).map((n) => ({ at: n.at, kind: humanize(n.event), text: "", alert: null })),
+   ].sort((a, b) => (a.at < b.at ? 1 : -1)).slice(0, 14);
+   if (!items.length) return <p className="muted small-text">No material change yet.</p>;
+@@ -155,7 +215,8 @@ function Timeline({ st, onHistory }: { st: LiveStatus; onHistory: (callId: strin
+             {x.alert ? <HistoricalAlert a={x.alert} /> : (
+               <>
+                 <span className="mono small-text">{fmtTime(x.at).slice(11, 19)}</span>
+-                <span className="tl-kind">{x.kind}</span>
++                <span className="tl-kind">{x.dir && <span className={cx("tl-dir", x.dir === "LONG" ? "dir-long" : "dir-short")}>
++                  {x.dir === "LONG" ? "▲" : "▼"} {x.dir}</span>} {x.kind}</span>
+                 <span className="tl-text">{x.text}</span>
+               </>
+             )}
+@@ -209,17 +270,18 @@ export function LiveCockpit() {
+     <section className="live-cockpit" data-testid="live-cockpit">
+       <div className="live-bar">
+         <div className="live-bar-main">
++          <span className="tech-label">Sessione</span>
+           <Badge tone={STATE_TONE[state] ?? "neutral"} dot testid="live-state">{STATE_TEXT[state] ?? humanize(state)}</Badge>
+           <span className="live-msg" data-testid="live-message">{st?.message ?? "Loading…"}</span>
+           {v?.last_receipt && <span className="muted small-text mono">last receipt {fmtTime(v.last_receipt)}</span>}
+-          {st?.session && <Badge tone="info" testid="live-session-method">{METHOD_TEXT[st.session.method ?? "v0.2"] ?? st.session.method}</Badge>}
++          {st?.session && <Badge tone="neutral" testid="live-session-method">{METHOD_TEXT[st.session.method ?? "v0.2"] ?? st.session.method}</Badge>}
+         </div>
+         <div className="live-bar-actions">
+           {running ? (
+             <>
+               <Button variant="secondary" icon="refresh" onClick={() => act(adviserApi.reassess)} disabled={busy}
+                       data-testid="live-reassess" title="Run the current assessment now (never rewrites history)">Reassess now</Button>
+-              <Button variant="danger" icon="stop" onClick={() => act(adviserApi.stop)} disabled={busy || !!st?.session?.stop_requested}
++              <Button variant="secondary" icon="stop" onClick={() => act(adviserApi.stop)} disabled={busy || !!st?.session?.stop_requested}
+                       data-testid="live-stop-button">{st?.session?.stop_requested ? "Stopping…" : "Stop live adviser"}</Button>
+             </>
+           ) : (
+@@ -242,9 +304,9 @@ export function LiveCockpit() {
+               : "Copy analysis for chat"}</Button>
+         </div>
+       </div>
+-      {error && <Notice tone="neg" title="Could not change the live adviser">{error}</Notice>}
++      {error && <Notice tone="warn" title="Could not change the live adviser">{error}</Notice>}
+       {newAlerts.length > 0 && (
+-        <Notice tone="info" icon="pulse" testid="live-alerts"
++        <Notice tone="neutral" icon="pulse" testid="live-alerts"
+                 title={newAlerts.length > 1 ? `${newAlerts.length} avvisi registrati non ancora letti`
+                   : "1 avviso registrato non ancora letto"}>
+           <p className="small-text alerts-pointer" data-testid="alerts-current-pointer">Sono eventi passati, mostrati con l'ora in cui
+@@ -258,28 +320,31 @@ export function LiveCockpit() {
+             : `The session is ${humanize(state).toLowerCase()}: the view below is not current and no entry is presented as usable now.`}
+         </Notice>
+       )}
+-      <div className="live-grid">
+-        <aside className="live-side">
+-          <ProposalPanel v={v} onHistory={openHistory} />
+-        </aside>
+-        <div className="live-main">
+-          {history && (
+-            <LiveCallHistory key={`${history.runId}|${history.callId}`} sel={history} view={v}
+-                             sessionId={st?.session?.session_id ?? null} onClose={() => setHistory(null)} />
+-          )}
++      <div className="cockpit-main">
++        <div className="cockpit-chart">
+           <Card title="BTC price · last complete minutes" icon="market" testid="live-price"
+                 eyebrow={v?.clock ? `as of ${fmtTime(v.clock)} · ${v.origin === "LIVE" ? "live receipts" : "reconstructed history"}` : "no data yet"}
+-                actions={<Badge tone={v?.origin === "LIVE" ? "pos" : "pending"}>{v?.origin === "LIVE" ? "LIVE" : "NOT LIVE"}</Badge>}>
++                actions={<Badge tone={v?.origin === "LIVE" ? "info" : "pending"} icon="cpu">{v?.origin === "LIVE" ? "Dati LIVE" : "NOT LIVE"}</Badge>}>
+             <PriceChart v={v} />
+           </Card>
+-          <div className="lens-grid" data-testid="live-lenses">
+-            {(v?.lenses ?? []).map((l) => <LensCard key={l.lens} l={l} />)}
+-            {!v && <p className="muted small-text">Lens results appear once the adviser has assessed the market. Several lenses
+-              are not majority votes: each has a stated role.</p>}
+-          </div>
+-          <Card title="What changed" icon="pulse" testid="live-changes">
+-            {st ? <Timeline st={st} onHistory={openHistory} /> : null}
+-          </Card>
++          <MarketReading v={v} />
++        </div>
++        <div className="cockpit-decision">
++          <ProposalPanel v={v} onHistory={openHistory} />
++        </div>
++      </div>
++      {history && (
++        <LiveCallHistory key={`${history.runId}|${history.callId}`} sel={history} view={v}
++                         sessionId={st?.session?.session_id ?? null} onClose={() => setHistory(null)} />
++      )}
++      <div className="cockpit-lower">
++        <Card title="What changed" icon="pulse" testid="live-changes">
++          {st ? <Timeline st={st} onHistory={openHistory} /> : null}
++        </Card>
++        <div className="lens-grid" data-testid="live-lenses">
++          {(v?.lenses ?? []).map((l) => <LensCard key={l.lens} l={l} />)}
++          {!v && <p className="muted small-text">Lens results appear once the adviser has assessed the market. Several lenses
++            are not majority votes: each has a stated role.</p>}
+         </div>
+       </div>
+       <details className="more" data-testid="live-technical">
+@@ -297,7 +362,7 @@ export function LiveCockpit() {
+             </div>
+           )}
+           <ul className="check-list">
+-            {(v?.readiness ?? []).map((r) => <li key={r.name}><span className="mono">{r.name}</span> <Badge tone={r.status === "READY" ? "pos" : "warn"}>{r.status}</Badge> <span className="muted">{r.latest_ref ?? ""}</span></li>)}
++            {(v?.readiness ?? []).map((r) => <li key={r.name}><span className="mono">{r.name}</span> <Badge tone={r.status === "READY" ? "info" : "warn"}>{r.status}</Badge> <span className="muted">{r.latest_ref ?? ""}</span></li>)}
+           </ul>
+           {(v?.attempts ?? []).length > 0 && (
+             <ul className="check-list" data-testid="live-attempts">
+diff --git a/web/src/views/LiveProposal.tsx b/web/src/views/LiveProposal.tsx
+index 39e0eda..f9fd320 100644
+--- a/web/src/views/LiveProposal.tsx
++++ b/web/src/views/LiveProposal.tsx
+@@ -3,6 +3,7 @@ import { adviserApi, CallView, LiveView, reasonText, ScenarioState, ScenarioView
+ import { fmtLocal, fmtTime, humanize } from "../lib/format";
+ import { Icon } from "../ui/Icon";
+ import { Badge, cx, Tone } from "../ui/primitives";
++import type { IconName } from "../ui/Icon";
+ 
+ // Live cockpit main panel: "Che cosa propone il sistema adesso?". It shows only the authoritative backend state of the
+ // committed live view: entry availability is call.entry_status (already masked by the API for a non-current session),
+@@ -107,7 +108,7 @@ function ScenarioCards({ v }: { v: LiveView }) {
+     <>
+       {mv?.principal && (
+         <div className="call-scenario" data-testid="live-scenario">
+-          <Badge tone={mv.principal.direction === "LONG" ? "pos" : "neg"}>{mv.principal.direction} {mv.principal.family}{" "}
++          <Badge tone={mv.principal.direction === "LONG" ? "pos" : "neg"}>{mv.principal.direction === "LONG" ? "▲" : "▼"} {mv.principal.direction} {mv.principal.family}{" "}
+             {(mv.principal.status ?? "ARMED").toLowerCase()}</Badge>
+           <span className="small-text">{mv.principal.antecedent}</span>
+         </div>
+@@ -138,7 +139,7 @@ function ScenarioCards({ v }: { v: LiveView }) {
+       ))}
+       {(v.scenarios ?? []).filter((s) => s.waiting).map((s) => (
+         <div className="call-waiting" key={s.scenario_id} data-testid="live-waiting">
+-          <Badge tone="info">{s.direction} {s.family} confirmed — {s.waiting!.phase === "WAIT_RESPONSE"
++          <Badge tone="neutral" icon="clock">{s.direction} {s.family} confirmed — {s.waiting!.phase === "WAIT_RESPONSE"
+             ? "waiting for a local recovery" : "waiting for a usable price"}</Badge>
+           <p className="small-text">{s.waiting!.text} This is not a call: do not treat it as “enter now”.</p>
+           {s.waiting!.response && (
+@@ -255,33 +256,17 @@ function EntryFacts({ c, available }: { c: CallView; available: boolean }) {
+ }
+ 
+ /** The perspective of someone already following the call: what the recorded system text says, in plain Italian. */
+-function CallUpdate({ c, v, unverified }: { c: CallView; v: LiveView; unverified: boolean }) {
++function CallUpdate({ c, v }: { c: CallView; v: LiveView }) {
+   const notCurrent = c.presentation === "NOT_CURRENT";
+   const r = notCurrent ? { kind: "NOT_CURRENT", text: "Sessione non corrente: l'ultimo testo salvato non è presentato come " +
+     "indicazione attuale (resta negli approfondimenti e nella cronologia)." } : readGuidance(c.guidance);
+   return (
+     <>
+-      <div className="proposal-state tone-neutral" data-testid="live-call-guidance" data-kind={r.kind}>{r.text}</div>
++      <div className="persp-guidance" data-testid="live-call-guidance" data-kind={r.kind}>{r.text}</div>
+       {!notCurrent && (
+         <div className="small-text muted" data-testid="live-call-guidance-basis">In base al testo registrato dal sistema alla
+           valutazione del {fmtLocal(v.clock)}; l'originale è negli approfondimenti.</div>
+       )}
+-      <div className="proposal-dir" data-testid="live-direction">
+-        <span className="call-dir" data-testid="live-call-direction">{c.direction}</span>
+-        <span>{c.direction === "LONG" ? "Indicazione di acquisto: il sistema si aspetta un rialzo del prezzo."
+-          : "Indicazione di vendita: il sistema si aspetta un ribasso del prezzo."}</span>
+-      </div>
+-      <dl className="call-geo proposal-facts">
+-        {unverified && (
+-          <dd className="proposal-group-note" data-testid="live-call-levels-note">Livelli della call già emessa: target e stop
+-            da soli non sono una proposta d'ingresso attuale.</dd>
+-        )}
+-        <dt>Target operativo</dt><dd className="mono" data-testid="live-target">{c.target}</dd>
+-        <dt>Stop indicato</dt><dd className="mono" data-testid="live-stop-guidance">{c.stop}</dd>
+-        <dt>Scadenza dell'indicazione</dt><dd data-testid="live-deadline">{fmtLocal(c.hard_deadline)}</dd>
+-        <dt>Orizzonte atteso</dt><dd>{c.expected_minutes ? `${c.expected_minutes[0]}–${c.expected_minutes[1]} min` : "non indicato"}</dd>
+-        <dt>Tesi</dt><dd data-testid="live-thesis">{THESIS_IT[c.thesis_status] ?? c.thesis_status}</dd>
+-      </dl>
+     </>
+   );
+ }
+@@ -304,13 +289,12 @@ function ConcludedCall({ v, t, expected }: { v: LiveView; t: LiveView["recent_ca
+   const reading = r ? (r.text ? readGuidance(r.text)
+     : { kind: "MISSING", text: "Testo registrato alla conclusione non disponibile: nessuna indicazione operativa è mostrata." }) : null;
+   return (
+-    <div className="proposal-group" data-testid="live-call-concluded" data-terminal={t.terminal}>
+-      <div className="adv-section-title" data-testid="live-section-following">{FOLLOWING}</div>
+-      <div className="proposal-state tone-neutral" data-testid="live-concluded-guidance" data-kind={reading?.kind ?? "LOADING"}>
++    <div className="stack-sm" data-testid="live-call-concluded" data-terminal={t.terminal}>
++      <div className="persp-guidance" data-testid="live-concluded-guidance" data-kind={reading?.kind ?? "LOADING"}>
+         {reading ? reading.text : "…"}</div>
+       <p data-testid="live-last-terminal">Ultima indicazione: {t.direction} {t.family},{" "}
+         {THESIS_IT[t.terminal] ?? t.terminal} ({fmtLocal(t.terminal_at)}).</p>
+-      <dl className="call-geo proposal-facts">
++      <dl className="call-geo proposal-facts persp-facts">
+         <dt>Motivo registrato</dt><dd data-testid="live-concluded-reason">{reasonIt(t.reason)}</dd>
+         {t.terminal === "TARGET_REACHED" && (
+           <><dt>Target operativo della call</dt>
+@@ -330,74 +314,153 @@ function ConcludedCall({ v, t, expected }: { v: LiveView; t: LiveView["recent_ca
+   );
+ }
+ 
++// DRAFT colour map (visual proposal only): blue = new entry available, amber = attention / not verifiable,
++// grey = waiting, closed entry, history and conclusion; green/red only for the call direction. Always icon + text.
++const SIGNAL: Record<string, { cls: string; icon: IconName }> = {
++  AVAILABLE: { cls: "sig-avail", icon: "check" }, CLOSED: { cls: "sig-muted", icon: "pause" },
++  UNVERIFIED: { cls: "sig-attn", icon: "alert" }, UNKNOWN: { cls: "sig-attn", icon: "alert" },
++  TERMINAL: { cls: "sig-muted", icon: "stop" }, WAITING: { cls: "sig-muted", icon: "clock" }, NO_VIEW: { cls: "sig-muted", icon: "clock" },
++};
++
++function DirChip({ dir, ended }: { dir: string; ended?: boolean }) {
++  return (
++    <span className={cx("dir-chip", dir === "LONG" ? "dir-long" : "dir-short", ended && "is-ended")} data-testid="live-call-direction">
++      {dir === "LONG" ? "▲" : "▼"} {dir}</span>
++  );
++}
++
++/** One strip with the call's identity and its operational levels (shown once). */
++function CallStrip({ c, t, unverified }: { c: CallView | null; t: LiveView["recent_calls"][number] | undefined; unverified: boolean }) {
++  if (c) {
++    return (
++      <div className="call-strip" data-testid="live-call-identity">
++        <div className="strip-head">
++          <DirChip dir={c.direction} />
++          <div className="strip-id">
++            <span className="strip-title">Call {c.family} · {c.family_text}</span>
++            <span className="small-text strip-sub">{c.direction === "LONG" ? "Indicazione di acquisto: il sistema si aspetta un rialzo del prezzo."
++              : "Indicazione di vendita: il sistema si aspetta un ribasso del prezzo."} Emessa {fmtLocal(c.issued_at)}.</span>
++          </div>
++        </div>
++        <dl className="strip-levels">
++          <div><dt>Target operativo</dt><dd className="mono" data-testid="live-target">{c.target}</dd></div>
++          <div><dt>Stop indicato</dt><dd className="mono" data-testid="live-stop-guidance">{c.stop}</dd></div>
++          <div><dt>Scadenza dell'indicazione</dt><dd data-testid="live-deadline">{fmtLocal(c.hard_deadline)}</dd></div>
++          <div><dt>Orizzonte atteso</dt><dd>{c.expected_minutes ? `${c.expected_minutes[0]}–${c.expected_minutes[1]} min` : "non indicato"}</dd></div>
++          <div><dt>Tesi</dt><dd data-testid="live-thesis">{THESIS_IT[c.thesis_status] ?? c.thesis_status}</dd></div>
++        </dl>
++        {unverified && <p className="small-text muted" data-testid="live-call-levels-note">Livelli della call già emessa: target e stop
++          da soli non sono una proposta d'ingresso attuale.</p>}
++      </div>
++    );
++  }
++  if (t) {
++    return (
++      <div className="call-strip is-ended" data-testid="live-call-identity">
++        <div className="strip-head">
++          <DirChip dir={t.direction} ended />
++          <div className="strip-id">
++            <span className="strip-title">Call {t.family} <span className="sig-chip sig-muted"><Icon name="stop" size={13} />
++              Conclusa — {(THESIS_IT[t.terminal] ?? t.terminal).replace(/^conclusa — /, "")}</span></span>
++            <span className="small-text strip-sub">Ultima call, conclusa {fmtLocal(t.terminal_at)}. Non è più un'indicazione attiva.</span>
++          </div>
++        </div>
++      </div>
++    );
++  }
++  return (
++    <div className="call-strip is-none" data-testid="live-call-identity">
++      <span className="sig-chip sig-muted"><Icon name="clock" size={13} /> Nessuna call emessa in questo momento</span>
++    </div>
++  );
++}
++
++/** DRAFT: the current market reading, shown under the chart (a market assessment, never the call). */
++export function MarketReading({ v }: { v: LiveView | null }) {
++  if (!v) return null;
++  const mv = v.market_view ?? null;
++  const d = mv?.expected_direction ?? "UNAVAILABLE";
++  const p = mv?.principal ?? null;
++  const ps = p ? (v.scenarios ?? []).find((s) => s.scenario_id === p.scenario_id) : undefined;
++  return (
++    <section className="decision-market" data-testid="live-market-reading">
++            <div className="market-head">
++              <span className="persp-title">Lettura attuale del mercato</span>
++              <span className="muted small-text">È una valutazione del mercato, non la call: non dice se entrare.</span>
++            </div>
++            <div className="proposal-dir market-dir" data-testid="live-direction">
++              <Arrow d={d} />
++              <span>Direzione attesa: <b data-testid="live-expected" className={d === "UP" ? "dir-long" : d === "DOWN" ? "dir-short" : undefined}>
++                {EXPECTED_IT[d] ?? d}</b>{mv?.conditional ? " (condizionale)" : ""}</span>
++              {mv && <span className="muted small-text">· {ROW_IT[mv.table_row] ?? humanize(mv.table_row)}</span>}
++            </div>
++            {p ? (
++              <dl className="market-facts" data-testid="live-scenario-levels">
++                <div><dt>Scenario</dt><dd>{p.direction} {p.family}</dd></div>
++                <div><dt>Destinazione dello scenario</dt>
++                  <dd><span className="mono">{ps?.destination ?? p.destination ?? p.conditional_target ?? "non indicata"}</span> <span className="muted">(non è un target operativo)</span></dd></div>
++                <div><dt>Invalidazione dello scenario</dt>
++                  <dd><span className="mono">{ps?.invalidation_level ?? p.invalidation_level ?? "non indicata"}</span> <span className="muted">(livello strutturale, non è uno stop)</span></dd></div>
++                <div><dt>Orizzonte atteso</dt><dd>{mv?.horizon_minutes ? `${mv.horizon_minutes[0]}–${mv.horizon_minutes[1]} min` : "non indicato"}</dd></div>
++                <div className="span-all"><dt>Condizione ancora necessaria</dt><dd data-testid="live-condition">{condition(p, ps) ?? "non indicata dal sistema"}</dd></div>
++              </dl>
++            ) : <p className="proposal-note">Nessuno scenario principale in questo momento.</p>}
++      <p className="muted small-text">Lettura qualitativa, non una probabilità.</p>
++          </section>
++  );
++}
++
+ export function ProposalPanel({ v, onHistory }: { v: LiveView | null; onHistory: (callId: string) => void }) {
+   const st = proposalState(v);
+   const mv = v?.market_view ?? null;
+   const c = v?.call ?? null;
+   const available = st.key === "AVAILABLE";
+   const d = mv?.expected_direction ?? "UNAVAILABLE";
+-  const p = mv?.principal ?? null;
+-  const ps = p ? (v?.scenarios ?? []).find((s) => s.scenario_id === p.scenario_id) : undefined;
+   const lastTerminal = [...(v?.recent_calls ?? [])].sort((a, b) => (a.terminal_at < b.terminal_at ? 1 : -1))[0];
+-  const tone = c ? (c.direction === "LONG" ? "is-long" : "is-short") : "is-none";
+-  const twoSides = !!v && (!!c || !!lastTerminal);
++  const sig = SIGNAL[st.key] ?? SIGNAL.UNKNOWN;
++  const notCurrent = c?.presentation === "NOT_CURRENT" || (!!v?.stale_session && !c);
+   return (
+-    <section className={cx("call-panel proposal", tone)} data-testid="live-call" data-state={st.key}>
+-      <div className="eyebrow">Che cosa propone il sistema adesso</div>
+-      {twoSides && <p className="small-text muted" data-testid="live-perspectives-note">{PERSPECTIVES}</p>}
+-      {v && <div className="adv-section-title" data-testid="live-new-entry-title">{NO_POSITION}</div>}
+-      <div className={cx("proposal-state", `tone-${st.tone}`)} data-testid={c ? "live-entry" : v ? "live-no-trade" : "live-no-view"}>
+-        {st.text}
+-      </div>
+-      <div className="proposal-badges">
+-        {c?.presentation === "NOT_CURRENT" || (v?.stale_session && !c)
+-          ? <Badge tone="warn" testid="live-call-not-current">Sessione non corrente: disponibilità non verificabile</Badge>
+-          : c && <Badge tone={c.origin === "LIVE" ? "pos" : "pending"}>{c.origin === "LIVE" ? "Call live" : "Ricostruita — non operativa"}</Badge>}
+-      </div>
+-      {!v && <p className="proposal-note">Avvia l'adviser live per valutare il mercato. Da fermo non viene monitorato nulla.</p>}
+-      {c && st.key === "UNVERIFIED" && (() => {
+-        const x = unverifiedExplanation(c);
+-        return (
+-          <div className="proposal-consequence" data-testid="live-entry-consequence" data-kind={x.kind}>
+-            <b>{x.title}</b><p>{x.body}</p>
+-          </div>
+-        );
+-      })()}
+-      {c && <EntryFacts c={c} available={available} />}
+-      {v && <div className="proposal-updated" data-testid="live-updated">Ultimo aggiornamento: {fmtLocal(v.clock)}</div>}
+-
+-      {c && v && (
+-        <div className="proposal-group" data-testid="live-call-update">
+-          <div className="adv-section-title" data-testid="live-section-following">{FOLLOWING}</div>
+-          <CallUpdate c={c} v={v} unverified={st.key === "UNVERIFIED"} />
+-        </div>
+-      )}
+-
+-      {v && !c && lastTerminal && <ConcludedCall v={v} t={lastTerminal} expected={d} />}
+-      {v && !c && lastTerminal && <div className="adv-section-title">Lettura attuale del mercato</div>}
+-      {!c && (
+-        <div className="proposal-dir" data-testid="live-direction">
+-          <Arrow d={d} />
+-          <span>Direzione attesa: <b data-testid="live-expected">{EXPECTED_IT[d] ?? d}</b>{mv?.conditional ? " (condizionale)" : ""}</span>
++    <section className="decision" data-testid="live-call" data-state={st.key}>
++      <header className="decision-head">
++        <div className="eyebrow">Che cosa propone il sistema adesso</div>
++        <div className="decision-meta">
++          {notCurrent && <span className="sig-chip sig-tech" data-testid="live-call-not-current"><Icon name="cpu" size={13} />
++            Sessione non corrente: disponibilità non verificabile</span>}
++          {c && !notCurrent && <Badge tone={c.origin === "LIVE" ? "info" : "pending"} icon="cpu">{c.origin === "LIVE" ? "Origine: call live" : "Ricostruita — non operativa"}</Badge>}
++          {v && <span className="proposal-updated" data-testid="live-updated">Ultimo aggiornamento: {fmtLocal(v.clock)}</span>}
+         </div>
+-      )}
+-      {v && !c && (
++      </header>
++      {!v && <p className="proposal-note">Avvia l'adviser live per valutare il mercato. Da fermo non viene monitorato nulla.</p>}
++      {v && (
+         <>
+-          {mv && <div className="proposal-sub">{ROW_IT[mv.table_row] ?? humanize(mv.table_row)}</div>}
+-          {p ? (
+-            <dl className="call-geo proposal-facts" data-testid="live-scenario-levels">
+-              <dt>Scenario</dt><dd>{p.direction} {p.family}</dd>
+-              <dt>Condizione ancora necessaria</dt><dd data-testid="live-condition">{condition(p, ps) ?? "non indicata dal sistema"}</dd>
+-              <dt>Destinazione dello scenario</dt>
+-              <dd><span className="mono">{ps?.destination ?? p.destination ?? p.conditional_target ?? "non indicata"}</span> <span className="muted">(non è un target operativo)</span></dd>
+-              <dt>Invalidazione dello scenario</dt>
+-              <dd><span className="mono">{ps?.invalidation_level ?? p.invalidation_level ?? "non indicata"}</span> <span className="muted">(livello strutturale, non è uno stop)</span></dd>
+-              <dt>Orizzonte atteso</dt><dd>{mv?.horizon_minutes ? `${mv.horizon_minutes[0]}–${mv.horizon_minutes[1]} min` : "non indicato"}</dd>
+-            </dl>
+-          ) : <p className="proposal-note">Nessuno scenario principale in questo momento.</p>}
++          <CallStrip c={c} t={c ? undefined : lastTerminal} unverified={st.key === "UNVERIFIED"} />
++          <p className="small-text muted" data-testid="live-perspectives-note">{PERSPECTIVES}</p>
++          <div className="persp-row">
++            <div className="persp-title" data-testid="live-new-entry-title">{NO_POSITION}</div>
++            <div className="persp-body">
++              <div className={cx("persp-state", sig.cls)} data-testid={c ? "live-entry" : "live-no-trade"}>
++                <Icon name={sig.icon} size={20} /> <span>{st.text}</span></div>
++              {c && st.key === "UNVERIFIED" && (() => {
++                const x = unverifiedExplanation(c);
++                return (
++                  <div className="proposal-consequence persp-consequence" data-testid="live-entry-consequence" data-kind={x.kind}>
++                    <b>{x.title}</b><p>{x.body}</p>
++                  </div>
++                );
++              })()}
++              {c && <EntryFacts c={c} available={available} />}
++            </div>
++          </div>
++          <div className="persp-row" data-testid="live-call-update">
++            <div className="persp-title" data-testid="live-section-following">{FOLLOWING}</div>
++            <div className="persp-body">
++              {c ? <CallUpdate c={c} v={v} />
++                : lastTerminal ? <ConcludedCall v={v} t={lastTerminal} expected={d} />
++                : <p className="small-text muted">Nessuna call emessa da seguire in questo momento.</p>}
++            </div>
++          </div>
+         </>
+       )}
+-
+       {v && (
+         <p className="proposal-note">È l'indicazione del sistema, non una tua operazione: l'app non sa se hai aperto posizioni.
+           Lo stop è un'indicazione, non un ordine.</p>
+@@ -444,7 +507,6 @@ export function ProposalPanel({ v, onHistory }: { v: LiveView | null; onHistory:
+                 Show this call's recorded history (revision r{c.revision})</button>
+             )}
+             <ScenarioCards v={v} />
+-            <p className="muted small-text">Lettura qualitativa, non una probabilità.</p>
+           </div>
+         </details>
+       )}

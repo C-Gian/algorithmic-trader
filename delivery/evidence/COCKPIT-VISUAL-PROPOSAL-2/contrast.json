@@ -1,0 +1,236 @@
+[
+ {
+  "pair": "Ingresso disponibile: ink on blue fill",
+  "fg": "#06121a",
+  "bg": "#6cb6e0",
+  "kind": "text",
+  "ratio": 8.48,
+  "required": 4.5,
+  "pass": true
+ },
+ {
+  "pair": "Non verificabile: ink on amber fill",
+  "fg": "#1c0f04",
+  "bg": "#f19a55",
+  "kind": "text",
+  "ratio": 8.48,
+  "required": 4.5,
+  "pass": true
+ },
+ {
+  "pair": "Neutral state (attesa / chiuso / conclusa): text-2 on surface-3",
+  "fg": "#b1b9c7",
+  "bg": "#1b2230",
+  "kind": "text",
+  "ratio": 8.07,
+  "required": 4.5,
+  "pass": true
+ },
+ {
+  "pair": "LONG chip: ink on green fill",
+  "fg": "#07140e",
+  "bg": "#43c890",
+  "kind": "text",
+  "ratio": 8.88,
+  "required": 4.5,
+  "pass": true
+ },
+ {
+  "pair": "SHORT chip: ink on red fill",
+  "fg": "#1a0706",
+  "bg": "#f07470",
+  "kind": "text",
+  "ratio": 6.91,
+  "required": 4.5,
+  "pass": true
+ },
+ {
+  "pair": "Concluded chip: grey on panel",
+  "fg": "#9aa4b5",
+  "bg": "#151b25",
+  "kind": "text",
+  "ratio": 6.87,
+  "required": 4.5,
+  "pass": true
+ },
+ {
+  "pair": "Recognised guidance: text on surface-3",
+  "fg": "#e9ecf2",
+  "bg": "#1b2230",
+  "kind": "text",
+  "ratio": 13.46,
+  "required": 4.5,
+  "pass": true
+ },
+ {
+  "pair": "Technical badge: blue on its soft tint over the panel",
+  "fg": "#6cb6e0",
+  "bg": "#1f2e3b",
+  "kind": "text",
+  "ratio": 6.22,
+  "required": 4.5,
+  "pass": true
+ },
+ {
+  "pair": "Technical badge: blue on its soft tint over a card",
+  "fg": "#6cb6e0",
+  "bg": "#1c2935",
+  "kind": "text",
+  "ratio": 6.63,
+  "required": 4.5,
+  "pass": true
+ },
+ {
+  "pair": "Session-not-current chip: amber on its soft tint",
+  "fg": "#f19a55",
+  "bg": "#2f2a2b",
+  "kind": "text",
+  "ratio": 6.38,
+  "required": 4.5,
+  "pass": true
+ },
+ {
+  "pair": "Neutral notice (alerts): text-2 on neutral tint over the page",
+  "fg": "#b1b9c7",
+  "bg": "#181c22",
+  "kind": "text",
+  "ratio": 8.66,
+  "required": 4.5,
+  "pass": true
+ },
+ {
+  "pair": "Timeline LONG: green on card",
+  "fg": "#43c890",
+  "bg": "#11161e",
+  "kind": "text",
+  "ratio": 8.56,
+  "required": 4.5,
+  "pass": true
+ },
+ {
+  "pair": "Timeline SHORT: red on card",
+  "fg": "#f07470",
+  "bg": "#11161e",
+  "kind": "text",
+  "ratio": 6.43,
+  "required": 4.5,
+  "pass": true
+ },
+ {
+  "pair": "Market reading expected direction Rialzo: green on page",
+  "fg": "#43c890",
+  "bg": "#0a0d12",
+  "kind": "text",
+  "ratio": 9.18,
+  "required": 4.5,
+  "pass": true
+ },
+ {
+  "pair": "Market reading expected direction Ribasso: red on page",
+  "fg": "#f07470",
+  "bg": "#0a0d12",
+  "kind": "text",
+  "ratio": 6.89,
+  "required": 4.5,
+  "pass": true
+ },
+ {
+  "pair": "Secondary notes: text-3 on panel",
+  "fg": "#7c8697",
+  "bg": "#151b25",
+  "kind": "text",
+  "ratio": 4.7,
+  "required": 4.5,
+  "pass": true
+ },
+ {
+  "pair": "Chart legend / ticks: text-3 on card",
+  "fg": "#7c8697",
+  "bg": "#11161e",
+  "kind": "text",
+  "ratio": 4.94,
+  "required": 4.5,
+  "pass": true
+ },
+ {
+  "pair": "Chart label 'fascia ammessa ora': blue on card",
+  "fg": "#6cb6e0",
+  "bg": "#11161e",
+  "kind": "text",
+  "ratio": 8.13,
+  "required": 4.5,
+  "pass": true
+ },
+ {
+  "pair": "Chart: rising candle (green) on card",
+  "fg": "#43c890",
+  "bg": "#11161e",
+  "kind": "graphic",
+  "ratio": 8.56,
+  "required": 3.0,
+  "pass": true
+ },
+ {
+  "pair": "Chart: falling candle (red) on card",
+  "fg": "#f07470",
+  "bg": "#11161e",
+  "kind": "graphic",
+  "ratio": 6.43,
+  "required": 3.0,
+  "pass": true
+ },
+ {
+  "pair": "Chart: target/stop line (text colour) on card",
+  "fg": "#e9ecf2",
+  "bg": "#11161e",
+  "kind": "graphic",
+  "ratio": 15.33,
+  "required": 3.0,
+  "pass": true
+ },
+ {
+  "pair": "Chart: support/resistance dashed (neutral) on card",
+  "fg": "#9aa4b5",
+  "bg": "#11161e",
+  "kind": "graphic",
+  "ratio": 7.22,
+  "required": 3.0,
+  "pass": true
+ },
+ {
+  "pair": "Chart: box dotted (pending) on card",
+  "fg": "#8ea3c7",
+  "bg": "#11161e",
+  "kind": "graphic",
+  "ratio": 7.1,
+  "required": 3.0,
+  "pass": true
+ },
+ {
+  "pair": "Chart: admissible band edge (blue) on card",
+  "fg": "#6cb6e0",
+  "bg": "#11161e",
+  "kind": "graphic",
+  "ratio": 8.13,
+  "required": 3.0,
+  "pass": true
+ },
+ {
+  "pair": "Chart: rising candle on the admissible band",
+  "fg": "#43c890",
+  "bg": "#253949",
+  "kind": "graphic",
+  "ratio": 5.63,
+  "required": 3.0,
+  "pass": true
+ },
+ {
+  "pair": "Chart: falling candle on the structural-area tint",
+  "fg": "#f07470",
+  "bg": "#242627",
+  "kind": "graphic",
+  "ratio": 5.38,
+  "required": 3.0,
+  "pass": true
+ }
+]
