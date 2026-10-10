@@ -265,7 +265,7 @@ Product tree since `b47b997`:
 | Frozen behaviour reference | `b47b997ee93513c7a358b49e961020705e4fbb85` (unchanged) |
 | Method, parameters, implementation, evaluator, profile | §2–§3 above, unchanged and re-checked by the ledger against `identities-b47b997.json` |
 | Study preset | `a-v06-operational-evaluation-2027-v1`, preset identity `861455dfd8f993cdb08c6c0191f1cb64bccdfb9408060c67e1cf525e325919ca`; file `d3592119c393a54e93be875a28ddaedd53fdcf574419aadb8dbd4242dbb3db43` |
-| Executive build | **not yet identified.** The candidate is the delivery commit recorded in STATE; its `src/` differs from `b47b997` only by §8.2. |
+| Executive build | **not yet accepted or identified as final.** The candidate is `be44370f958a9b60f4b02e036102a23247f361d8`. Its `src/` differs from `b47b997` only by §8.2, and the comparisons ran on the identical `src/` tree. Later commits whose `src/` and dependencies equal this one carry the same behaviour, but each still needs its own CI and identification. |
 | Synthetic inputs (engineering only) | Fixture comparison pack `pack-d7656fe07cd850f0a4fc5ab89c36e57933a93dc6`; study fixture pack `pack-82683f8d12fd7162f5b80fcace39ef6bfea9abdd`, feed `feedcontent.v1:001e4756…93ad` |
 | Future pack, run pins, composite identity | To be registered when they exist (§4); nothing is certified now |
 

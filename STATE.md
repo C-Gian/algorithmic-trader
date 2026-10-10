@@ -993,6 +993,7 @@ Authorized by Astra (recorded in [task.md](task.md)). Two executor addenda; the 
     - the call issued in the window resolves in the tail;
     - the ledger keeps warmup confirmations, post-boundary non-issue and undetermined paths apart, with no imputation and a balance left INCOMPLETE when needed.
 - **Regression and schema.** pack/preset (`test_pack`, `test_pack_correction`), WP-013 continuity (`test_wp013_continuous`, `_db`), evaluation launch (`test_evaluation`), MP-005 v0.6 (`test_mp005_db`, `test_mp005_versions`), the new study tests and the HDP-001 executor tests: **167 passed** (15 min 46 s, disposable PostgreSQL 18.6). `algotrader schema`: all baselines match. No full suite or E2E.
+- **Executive build candidate** `be44370f958a9b60f4b02e036102a23247f361d8` (`src/` = `b47b997` + the four study-path items). It is not accepted or final.
 - **Technically ready vs launchable.** The path is technically ready on synthetic evidence. The study is **not launchable**. It needs:
   - the Director's acceptance of the executive build and of its equivalence evidence, before 2027-01-25T00:00Z;
   - exact-SHA CI;
