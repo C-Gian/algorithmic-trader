@@ -1,0 +1,2 @@
+# Captured source responses must stay byte-exact (hashes recorded in PROVENANCE.json).
+tests/fixtures/** -text
