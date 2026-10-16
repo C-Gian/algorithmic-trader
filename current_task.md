@@ -1,23 +1,27 @@
 # Incarico corrente — UI-001
 
-**Stato: DRAFT — specifica in preparazione; link Figma ricevuto; contenuto e accesso effettivo di Claude ancora da verificare.**
+**Stato: READY — implementazione autorizzata con verifica iniziale dell'accesso Figma nell'ambiente di Claude.**
 
 Macro-obiettivo autorizzato: dashboard fedele al Figma approvato, con stati simulati coerenti e fornitore dati separato. Disposizione Astra trasmessa dall'Owner il 16 ottobre 2026.
-Responsabile: Director. Esecutore futuro: Claude Code.
-Base precedente: 671d8d5176c19af13ec7b1cfe755867577724aa5; usare la successiva registrazione documentale contenente questo task.
-La macrofase è autorizzata; il DRAFT indica contenuto Figma e accessi ancora da verificare, non una richiesta di nuova approvazione ad Astra. È consentita una verifica di sola lettura a Claude sul link indicato: identificare strumenti disponibili, leggere il nodo e riferire pagine/frame, asset e limite concreto se bloccato. Non installare integrazioni, modificare il design o iniziare codice in questa verifica.
+Responsabile del task/review: Director. Esecutore: Claude Code.
+Base minima: commit che contiene questo READY e docs/ui/FIGMA-REFERENCE.md; Gian sincronizza il checkout al commit completo comunicato dal Director. Nessun pull dell'esecutore.
+Macrofase autorizzata: non chiedere nuova approvazione ad Astra per avvio o correzioni ordinarie.
 
-## 1. Materiale necessario e verifica accesso
+## 1. Design disponibile e verifica iniziale obbligatoria
 
-- Link Figma fornito dall'Owner il 16 ottobre 2026: https://www.figma.com/design/ys2HFfjS2OdaLLTsfhPp9A/Untitled?node-id=0-1
-- File key: ys2HFfjS2OdaLLTsfhPp9A. Nodo richiesto: 0:1. Il link identifica un file design; non prova quali frame contenga o che il nodo sia la dashboard approvata.
-- Verifica Director: il lettore web non ha accesso al contenuto. Integrazione Figma individuata ma non installata/collegata al momento del controllo; proposta all'Owner. Nessun contenuto Figma letto e nessuna fedeltà verificata.
-- Pagina/frame/versione approvata: da identificare nel progetto; chiedere ulteriori preferenze solo se ci sono alternative sostanziali.
-- Accesso effettivo di Claude: NON VERIFICATO. Una connessione disponibile al Director non prova quella dell'esecutore.
-- Il Director non ha visionato lo screenshot citato da Astra in questa chat. Non inventare layout, componenti, font, asset o interazioni dal solo riferimento allo screenshot.
-- Prima di implementare verificare che Claude possa leggere layout, componenti, asset e stati tramite strumenti effettivamente disponibili nel suo ambiente; se il link è soltanto un sito pubblicato e non il file sorgente Figma, dichiarare la differenza.
-- Se accesso diretto impossibile, raccogliere esportazione del progetto/codice disponibile e riferimenti dei frame approvati. Non dichiarare equivalenza o fedeltà al Figma completo sulla base di una sola immagine.
-- Design approvato vincolante: niente restyling autonomo. Eventuali incompatibilità funzionali si isolano al Director prima di implementare quel punto.
+Figma: https://www.figma.com/design/ys2HFfjS2OdaLLTsfhPp9A/Untitled?node-id=2-9260
+File key ys2HFfjS2OdaLLTsfhPp9A. Dashboard 2:9260.
+Leggere [riferimento Figma](docs/ui/FIGMA-REFERENCE.md): mappa nodi, anteprime, stile, interazioni e correzioni semantiche definite dal Director. Non è un nuovo design da inventare.
+
+Il Director ha letto il progetto tramite l'integrazione Figma, con metadata, screenshot e contesti completi dei sottoalberi; accesso riuscito qui. Quello di Claude non è ancora verificato e va accertato prima del codice UI.
+
+Fase A, nello stesso task:
+1. Verificare identità repo/branch/base e modifiche locali secondo AGENTS.
+2. Verificare quali strumenti Figma sono effettivamente disponibili; leggere dashboard e componenti del file fornito con contesto e screenshot. Non basta aprire l'URL o vedere il titolo.
+3. Registrare nella consegna metodo, nodi letti e risultato. Se l'accesso funziona, proseguire direttamente con l'implementazione: non attendere un nuovo permesso.
+4. Se impossibile ottenere il contesto completo, segnare BLOCKED con errore/capacità mancante. Non ridisegnare da una sola immagine, non installare integrazioni e non modificare il Figma. La documentazione locale è supporto, non prova dell'accesso al progetto completo.
+
+Fase B: dashboard e simulazioni secondo il resto del mandato. Nessuna delega della strategia all'esecutore.
 
 ## 2. Risultato concreto e soluzione proporzionata
 
@@ -38,13 +42,15 @@ Contratto versionato in TypeScript, indipendente dal rendering e non equivalente
 | Chart | timeframe 45m/1D, candele OHLCV esplicite per ciascuna scala, serie già preparate con nome/unità/parametri illustrativi, livelli con origine OBSERVATION/ORIGINAL_PLAN/CURRENT_PLAN/POSITION e validità; nessuna elaborazione indicatori nei componenti |
 | Observation | famiglia STRUCTURE/LEVELS/MOVING_AVERAGES/VOLUME/VOLATILITY/FIBONACCI, disponibilità, scala e tempo, valore se presente, testo semplice, spiegazione e limiti; nessun voto o probabilità inventati |
 | Expectation | descrizione e direzione UP/DOWN/UNCERTAIN, alternative/controindicazioni, updatedAt; può esistere anche senza call |
-| Call | id, direzione LONG/SHORT, stato PROPOSED/AVAILABLE/EXPIRED/WITHDRAWN/COMPLETED, condizioni e validità; non rappresenta ordine né posizione |
+| Call | id, direzione LONG/SHORT, stato PROPOSED/AVAILABLE/ACTIVE/EXPIRED/WITHDRAWN/COMPLETED, condizioni e validità; non rappresenta ordine né posizione |
 | Plan | callId, versione, piano originario immutabile e corrente, ingresso/condizioni, target anche multipli se visibili, stop/invalidazione, scadenza, ragione; cambi con prima/dopo/orario; null quando non esiste un piano |
 | Order | id, callId opzionale, scopo ENTRY/PROTECTION/EXIT, side BUY/SELL, quantità richiesta/eseguita, tipo illustrativo, stato REQUESTED/ACCEPTED/PARTIALLY_FILLED/FILLED/CANCELLED/REJECTED, prezzo/trigger se pertinente; accettato non significa eseguito |
 | Fill | id, orderId, timestamp, side, quantità/prezzo e commissione con valuta; unica fonte degli eseguiti simulati |
 | Position | id, LONG/SHORT, quantità residua, prezzo medio di ingresso, riferimento di valutazione e tempo, protezioni effettivamente simulate, titolarità gestione BOT/MANUAL; null quando nessun eseguito ha aperto esposizione |
 | Account/results | valuta, saldo iniziale, saldo contabile simulato, equity, P&L realizzato lordo, costi effettivamente addebitati, P&L realizzato netto, P&L non realizzato lordo e costi di uscita non inclusi; margine/disponibile null se non simulati |
 | History | id evento, tipo, timestamp, collegamenti a call/ordine/posizione/piano, testo, cambi prima/dopo; eventi passati non presentati come call corrente |
+
+ACTIVE indica call seguita dopo l'ingresso; non permette un secondo ingresso. La scadenza della call non chiude da sola la posizione. Freschezza e disponibilità sono qualificabili anche per posizione/protezioni/valutazione: lastKnown con orario è distinto da current; P&L attuale null durante disconnessione. Il provider espone scadenze e transizioni già predeterminate, senza decisioni dal mercato.
 
 Si può affinare la forma dei tipi per aderire al Figma senza fondere i significati. Parametri di medie, percentuali, capitale, leva e Spot/futures nelle fixture sono esempi esplicitamente etichettati, non decisioni operative. Nessun calcolo o regola di DESIGN-001 si attiva per popolare questi modelli.
 
@@ -54,7 +60,7 @@ Provider separato: caricamento scenario, snapshot e comandi simulati. I componen
 
 Un percorso LONG e una variante SHORT speculare, con checkpoint riutilizzati; non dieci simulatori indipendenti. Poche decine di candele per scala, già preparate per visualizzazione; niente mesi di minuti, warmup analitico o motore di mercato. Entrambe le scale devono riflettere lo stesso percorso nei periodi sovrapposti. Un breve contesto giornaliero sintetico può precedere il segmento intraday senza fingere copertura intraday assente.
 
-Checkpoint: attesa con aspettativa ma nessuna call; opportunità senza posizione; ordine accettato ancora non eseguito; eseguito e posizione LONG; protezione aggiornata; uscita parziale; chiusura; variante posizione SHORT. Dati non aggiornati e disconnessione sono alterazioni controllate degli stessi checkpoint, preservando ultimo valore noto e relativo orario.
+Checkpoint: attesa con aspettativa ma nessuna call; opportunità senza posizione; ordine accettato ancora non eseguito; eseguito e posizione LONG; protezione aggiornata; uscita parziale; chiusura; variante posizione SHORT. Dati non aggiornati e disconnessione sono alterazioni controllate degli stessi checkpoint, preservando ultimo valore noto e relativo orario. Includere anche ordine rifiutato senza fill/fee, posizione manuale e bot fermo come nella tavola Figma; riutilizzare lo stesso percorso, senza una nuova contabilità per ogni scheda.
 
 Esempio contabile vincolante per il percorso LONG, tutti valori fittizi in USDT:
 - saldo iniziale 10.000; ingresso 0,01 BTC a 60.000; fee ingresso 0,60;
@@ -85,7 +91,9 @@ Selezione checkpoint e reset riproducibili; orologio deterministico. Nessuna per
 - Comandi duplicati o click rapidi non duplicano eseguiti. Reimpostare scenario azzera il ramo precedente, etichettato reset della simulazione.
 Le transizioni sono convenzioni di questa UI simulata: non approvano un protocollo exchange reale.
 
-## 6. Verifiche e consegna future
+## 6. Verifiche e consegna
+
+Percorso di prova Owner da documentare: avvio → posizione LONG e dettagli → stop totale senza chiusura → ripresa con conferma → gestione manuale/ritorno automatico → parziale → chiusura → reset → attesa/ordine pendente/rifiutato/SHORT → dati vecchi e ripristino. Ogni azione è simulata. Il selettore scenario è esplicitamente distinto dai comandi ordinari.
 
 Criteri: fedeltà al riferimento Figma identificato; avvio locale documentato; scenari riproducibili; riconciliazione contabile; distinzioni call/ordine/posizione; dati mancanti/stale chiari; componenti sostituibili tramite provider senza riscrittura.
 
@@ -93,7 +101,7 @@ Controlli mirati su contabilità LONG/SHORT, pendente senza posizione, stop dist
 
 Consegna di Claude: commit, file, avvio su Windows con prerequisiti verificati, controlli eseguiti, immagini dei principali stati, differenze residue dal design e funzionalità realmente interattive/simulate/non costruite. Director effettua review e distingue verifiche proprie da quelle dichiarate; Gian prova il percorso concreto, senza chiamarlo validazione di trading.
 
-Pubblicazione esecutore: da attivare esplicitamente passando questo task a READY. Nel DRAFT non implementare o pubblicare codice. Nessun pull dell'esecutore: Gian sincronizza il checkout al commit READY indicato.
+Pubblicazione esecutore AUTORIZZATA: commit e push dei soli file pertinenti su main nel checkout della nuova repository assegnato dall'Owner, dopo le verifiche mirate. Nessun force push. Non sovrascrivere modifiche locali o concorrenti; in quel caso isolare la divergenza. Aggiornare README con avvio Windows, STATE con stato effettivo e lo spazio consegna del task passando a DELIVERED, mai ACCEPTED. Nessun pull dell'esecutore: Gian sincronizza il checkout al commit READY indicato.
 
 ## 7. Esclusioni ed escalation
 
@@ -103,8 +111,8 @@ Director risolve dettagli ordinari, fedeltà UI e correzioni. Astra solo a fine 
 
 ## Spazio dell'esecutore
 
-Implementazione non attiva: accesso Figma da verificare, task DRAFT. La sola verifica di lettura descritta sopra è consentita; non dichiarare accesso dal semplice riconoscimento dell'URL.
+Da compilare: esito gate Figma, avanzamento, blocchi o consegna. READY → IN_PROGRESS/BLOCKED/DELIVERED secondo AGENTS. Non dichiarare accesso dal semplice riconoscimento dell'URL.
 
 ## Review del Director
 
-Disposizione recepita e specifica iniziale registrata. Nessun codice implementato o test applicativo eseguito; nessuna fedeltà visiva dichiarata prima di vedere il progetto.
+Progetto Figma letto dal Director il 16 ottobre con metadata, screenshot e contesti dei sottoalberi. Riferimento visivo e correzioni documentati. Nessun codice implementato o test applicativo eseguito dal Director; nessuna fedeltà dell'app ancora dimostrata. Accesso diretto dell'esecutore ancora da attestare nella fase A.

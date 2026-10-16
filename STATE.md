@@ -4,26 +4,32 @@ Aggiornato: 2026-10-16. Responsabile: Director.
 
 ## Fatto
 
-- Fondazione funzionale a 16d8461d7db66e4ba9a2ebe96ada68935641040c e tre utilità isolate con provenienza/test.
-- Astra autorizza l'intera macrofase UI Figma con modelli di presentazione e dati simulati, prima del collegamento dell'algoritmo.
-- DESIGN-001 conservato in [docs/research/DESIGN-001.md](docs/research/DESIGN-001.md) come proposta NON APPROVATA e NON ATTIVA.
-- Contratti minimi, scenari contabili e interazioni simulate specificati in current_task.md (UI-001).
+- Fondazione funzionale e tre utilità isolate, senza importazione del vecchio trader.
+- Macrofase UI Figma con dati simulati autorizzata da Astra.
+- DESIGN-001 conservato NON APPROVATO e NON ATTIVO.
+- Figma fornito dall'Owner e letto dal Director: dashboard, otto stati, tre conferme e componenti locali.
+- Contesti dei sottoalberi e screenshot verificati; mappa, stile, anteprime e correzioni in [FIGMA-REFERENCE](docs/ui/FIGMA-REFERENCE.md).
+- Contratti, fixture riconciliate, interazioni, verifiche e consegna definiti nel task UI-001.
 
 ## Incarico corrente
 
-**UI-001 — DRAFT.** Link Figma ricevuto: [progetto](https://www.figma.com/design/ys2HFfjS2OdaLLTsfhPp9A/Untitled?node-id=0-1). Contenuto e accesso effettivo di Claude non ancora verificati. Il lettore web non apre il file; integrazione Figma proposta, non ancora confermata. Il Director non ha visto in questa chat lo screenshot citato da Astra. Nessuna nuova approvazione strategica necessaria per procedere entro il mandato; la specifica visiva deve essere completata sul materiale effettivo.
+**UI-001 — READY.** Claude deve prima verificare accesso effettivo al progetto Figma nel proprio ambiente. L'accesso del Director è verificato; quello dell'esecutore ancora no. Se il gate riesce, procede direttamente con implementazione/review di consegna; se non riesce segnala BLOCKED con motivo preciso, senza ricostruire arbitrariamente la UI.
 
-Prossimo passo: verificare contenuto del progetto tramite accesso Figma effettivo e accesso di sola lettura dell'esecutore; poi completare il riferimento visivo e rendere READY il task prima dell'implementazione.
+Frontend React/TypeScript/Vite con provider simulato separato. Nessun backend/DB/auth/connettore. Commit/push pertinenti dell'esecutore autorizzati nel task; Gian sincronizza il checkout prima dell'incarico.
 
-## Che cosa esiste e che cosa manca
+## Che cosa esiste realmente
 
-Esistono documentazione e tre utilità Python. Non ancora presenti dashboard, nuovi modelli implementati, algoritmo o collegamenti. Le cifre e transizioni nel task sono esempi/convenzioni di presentazione simulata, non parametri di strategia o protocollo exchange approvati.
+Documentazione, riferimento Figma e tre utilità Python. Nessuna dashboard implementata, nuovo algoritmo, conto collegato o esecutore exchange. Le anteprime sono Figma, non screenshot di un'app realizzata. Nessuna verifica applicativa o prova Owner ancora effettuata.
 
-I 14 test delle utilità sono evidenza della migrazione, non rieseguiti per questo aggiornamento documentale. Nessuna prova applicativa o visiva ancora effettuata.
+I 14 test delle utilità appartengono alla migrazione, non sono stati rieseguiti per documentazione/design. Review visiva dell'app ancora da fare.
+
+## Decisioni ordinarie esplicitate
+
+Correggere le etichette “Start” ereditate erroneamente dalle varianti Figma e le larghezze che ne troncano il testo; preservare stile/layout. Rendere esplicita simulazione locale e assenza connessione exchange/Telegram. Le fixture lineari LONG/SHORT del task sono esempi, non approvazione del prodotto futures o dei parametri del mockup.
 
 ## Vincoli
 
-Banner previsto: “SIMULAZIONE LOCALE — nessun collegamento exchange”.
-Nessuna acquisizione, backtest, algoritmo decisionale, accesso Owner/exchange, ordine esterno o apertura protetta autorizzata.
-Vecchi studi INACTIVE e separati; [esposizioni](docs/research/EXPOSURES.md) invariate.
+Banner: “SIMULAZIONE LOCALE — nessun collegamento exchange”.
+Nessuna acquisizione, backtest, algoritmo decisionale, accesso Owner/exchange, ordine esterno o apertura protetta.
+Vecchi studi INACTIVE; [esposizioni](docs/research/EXPOSURES.md) invariate.
 [PRODUCT-CONTEXT](docs/functional/PRODUCT-CONTEXT.md) unico riferimento funzionale.
