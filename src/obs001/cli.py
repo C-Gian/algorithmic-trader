@@ -44,7 +44,7 @@ def cmd_acquire(conv, data_dir: Path) -> int:
     log(f"acquisizione in {data_dir}")
     manifest = acquire_all(conv, data_dir)
     for f in manifest["files"]:
-        log(f"  {f['file']}: {f['cache']} · {f['size']} byte · sha256 {f['sha256'][:16]}… · checksum OK")
+        log(f"  {f['file']}: {f['cache']} | {f['size']} byte | sha256 {f['sha256'][:16]}... | checksum OK")
     for e in manifest["errors"]:
         log(f"  ERRORE {e['month']}: {e['error']}")
     meta = manifest["instrumentMetadata"]
@@ -67,10 +67,10 @@ def cmd_check(conv, data_dir: Path):
         return None, None
     (paths(data_dir)["manifests"] / "input.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
     t = manifest["totals"]
-    log(f"  minuti input {t['input']} · inizializzazione {t['initialization']} · studio {t['study']}")
+    log(f"  minuti input {t['input']} | inizializzazione {t['initialization']} | studio {t['study']}")
     for f in manifest["files"]:
         a = [k for k in ("duplicatesIdentical", "duplicatesDiscordantMinutes", "outOfOrder", "outsideMonth", "corruptRows") if f[k]]
-        log(f"  {f['month']}: righe {f['rows']} · validi {f['coverage']['valid']}/{f['coverage']['expected']} · anomalie {', '.join(f'{k}={f[k]}' for k in a) or 'nessuna'}")
+        log(f"  {f['month']}: righe {f['rows']} | validi {f['coverage']['valid']}/{f['coverage']['expected']} | anomalie {', '.join(f'{k}={f[k]}' for k in a) or 'nessuna'}")
     log(f"  inputHash {manifest['inputHash']}")
     return store, manifest
 
@@ -99,7 +99,7 @@ def cmd_process(conv, data_dir: Path, store=None, manifest=None, argv=None) -> P
     if bundle_path.exists():
         existing = sha256_bytes(bundle_path.read_bytes())
         if existing == out_hash:
-            log(f"  bundle già presente e identico ({out_hash[:16]}…): nessuna sovrascrittura")
+            log(f"  bundle già presente e identico ({out_hash[:16]}...): nessuna sovrascrittura")
         else:
             k = 2
             while (paths(data_dir)["runs"] / f"{run_id}-r{k}").exists():
@@ -124,7 +124,7 @@ def cmd_process(conv, data_dir: Path, store=None, manifest=None, argv=None) -> P
         "command": " ".join(argv or sys.argv),
     }
     (run_dir / "run-manifest.json").write_text(json.dumps(run_manifest, indent=2), encoding="utf-8")
-    log(f"  bundle {bundle_path} · {len(body) / 1e6:.1f} MB · sha256 {out_hash[:16]}… · {timings}")
+    log(f"  bundle {bundle_path} | {len(body) / 1e6:.1f} MB | sha256 {out_hash[:16]}... | {timings}")
     return run_dir
 
 
@@ -149,7 +149,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     conv = load_conventions()
     data_dir = args.data_dir.resolve()
-    log(f"OBS-001 · convenzioni {conv.raw['id']} hash {conv.hash} · motore {ENGINE_VERSION} · Python {platform.python_version()}")
+    log(f"OBS-001 | convenzioni {conv.raw['id']} hash {conv.hash} | motore {ENGINE_VERSION} | Python {platform.python_version()}")
     try:
         if args.command == "acquire":
             return cmd_acquire(conv, data_dir)
