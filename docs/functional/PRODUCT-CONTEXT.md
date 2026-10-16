@@ -1,6 +1,6 @@
 # Algorithmic Trader — prodotto, decisioni e contesto completo
 
-Versione documentale: 1.2 — 16 ottobre 2026. Responsabile della sintesi: Astra.
+Versione documentale: 1.3 — 16 ottobre 2026. Responsabile della sintesi: Astra.
 
 Questo è il documento funzionale centrale del **nuovo** progetto di Gian. È scritto per poter essere consegnato da solo a una nuova chat: spiega obiettivo, organizzazione, requisiti, ragioni delle scelte, limiti e questioni ancora aperte. Non è una specifica matematica dell'algoritmo, una dichiarazione di efficacia o un'autorizzazione a operare con denaro reale.
 
@@ -20,7 +20,7 @@ Il progetto può durare anni. Gian accetta studio e sviluppo progressivi, ma vuo
 
 La repository nuova è `C-Gian/algorithmic-trader`. La precedente è `C-Gian/algorithmic-trader-archive`.
 
-Al momento di questa registrazione, nella nuova repository esistono soltanto documentazione e tre piccole utilità tecniche recuperate e riviste: calcolo di intervalli temporali, arrotondamento a passi espliciti e impronte dei file. Hanno test isolati. **Non esistono ancora un nuovo algoritmo, un'app funzionante, un collegamento al conto o un esecutore di ordini.**
+Aggiornamento 16 ottobre: oltre alle tre utilità tecniche recuperate (intervalli temporali, arrotondamento e impronte), esiste la dashboard locale React/TypeScript con provider simulato separato e scenari deterministici. La macrofase UI, comprese correzioni e navigazione superiore richiesta dall'Owner, è conclusa con review Director e riscontro positivo di Gian. **Non esistono ancora un motore osservativo reale consegnato, una strategia, un collegamento al conto o un esecutore di ordini.** È ora autorizzata la costruzione del primo motore osservativo e studio storico circoscritto, non ancora una capacità implementata.
 
 Il vecchio motore non viene importato implicitamente. Il nuovo progetto non è una v0.8 e non eredita le soglie, gli scenari A/B/C, i profili di costo, le scadenze o la struttura delle prove precedenti. Il nuovo nome della repository non rende però sconosciuti i dati già studiati.
 
@@ -238,7 +238,7 @@ Per la demo Binance devono essere verificati prodotto disponibile, accesso API, 
 
 ## 22. Dati e provenienza
 
-Binance è la preferenza iniziale per l'esecuzione perché Gian conosce la demo. Il prodotto preciso, il contratto che permette LONG/SHORT e la fonte coerente per lo storico sono decisioni ancora da chiudere. TradingView è un possibile riferimento visivo, non automaticamente una fonte autorizzata per tutti i dati o il gestore della posizione.
+Binance è la preferenza iniziale per l'esecuzione perché Gian conosce la demo. Il prodotto e il conto operativi che permettono LONG/SHORT restano decisioni da chiudere. Per il solo studio OBS-001 è invece autorizzata la fonte candidata Binance Vision BTCUSDT perpetual USDⓈ-M, prezzo negoziato1m e intervalli circoscritti in §31; non equivale a scelta operativa. TradingView è un possibile riferimento visivo, non automaticamente una fonte autorizzata per tutti i dati o il gestore della posizione.
 
 I vecchi dati OKX restano dati OKX. Non vengono rinominati Binance e non provano le stesse condizioni di esecuzione. Dove possibile vogliamo studiare dati pertinenti alla sede e allo strumento da usare, dichiarando eventuali differenze.
 
@@ -334,11 +334,21 @@ Il prompt ordinario può essere semplicemente: «Leggi AGENTS.md e current_task.
 
 ## 31. Macropercorso del nuovo progetto
 
-**Priorità aggiornata il 16 ottobre 2026:** Gian sceglie di costruire prima la dashboard approvata in Figma, alimentata da modelli di presentazione e pochi scenari deterministici simulati, e collegare successivamente l'algoritmo. Astra autorizza al Director questa macrofase completa: specifica, incarichi a Claude, implementazione, review, correzioni e prova Owner. Link al progetto e accesso effettivo dell'esecutore devono essere verificati; nessun restyling autonomo. Nessun backend, database, autenticazione o connettore costruito soltanto per alimentare questa UI.
+**Macrofase UI conclusa il 16 ottobre 2026. Mandato UI storico:** Gian sceglie di costruire prima la dashboard approvata in Figma, alimentata da modelli di presentazione e pochi scenari deterministici simulati, e collegare successivamente l'algoritmo. Astra autorizza al Director questa macrofase completa: specifica, incarichi a Claude, implementazione, review, correzioni e prova Owner. Link al progetto e accesso effettivo dell'esecutore devono essere verificati; nessun restyling autonomo. Nessun backend, database, autenticazione o connettore costruito soltanto per alimentare questa UI.
 
 L'app deve mostrare “SIMULAZIONE LOCALE — nessun collegamento exchange”. Call, ordini, eseguiti e posizione restano distinti; parametri, importi e prodotto nel mockup sono esempi. Il fornitore di dati simulati è separato dai componenti, che non deducono segnali o decisioni. Le sezioni non costruite sono dichiarate. I comandi possono produrre solo transizioni locali simulate e coerenti con i requisiti funzionali. Chiusura macrofase: dashboard avviabile sul PC, fedele al Figma, stati navigabili/coerenti, controlli comprensibili e dati sostituibili senza riscrivere la presentazione.
 
-DESIGN-001 è conservato in docs/research/DESIGN-001.md come proposta non approvata: nessun motore delle osservazioni, finestra storica o convenzione numerica attivato. Non sono autorizzati acquisizioni, backtest, algoritmo decisionale, accesso Owner/exchange, ordini esterni o apertura protetta. La sequenza generale sotto descrive le capacità future; il prossimo incremento operativo è la UI simulata appena autorizzata.
+**Mandato corrente di Astra, 16 ottobre: osservazioni calcolate e primo studio storico nell'app.** Autorizzata l'intera macrofase: specifica ex ante, calcoli sintetici discriminanti, acquisizione pubblica circoscritta, elaborazione reale, integrazione nella dashboard esistente, prima tabulazione e prova Owner. Il Director gestisce autonomamente incarichi, review e correzioni ordinarie; torna ad Astra alla conclusione o per conflitto sostanziale. Non fermarsi al solo motore sintetico.
+
+DESIGN-001 è **approvato parzialmente per le definizioni osservative §§5–6**, come versione iniziale non ottimizzata: aggregati45m/1D UTC, TR/media20TR, SMA20/50, pivot2+2 confermati, livelli, volume relativo e Fibonacci con disponibilità/versioni. Warmup per misura e dipendenze effettive, mai blocco globale54barre. Etichette UI coerenti coi calcoli. Esclusi modello economico, barriere2A, prossimità come decisione, R2/R3 e verifica protetta. Dettagli eseguibili nel task OBS-001.
+
+Unica fonte candidata per questo studio: Binance Vision BTCUSDT perpetual USDⓈ-M, prezzo negoziato1m; inizializzazione [2025-06-01,2025-09-01), studio [2025-09-01,2026-01-01) UTC. Nessun dato successivo per completare esiti. Download pubblico gratuito e metadati consentiti, file locali fuori Git, controlli di provenienza/copertura; nessun account/chiave/vecchio stack. Buchi e duplicati non producono prezzi inventati; nessun sostituto spot/OKX. Non approva prodotto operativo, conto, leva o accessibilità reale.
+
+Domanda descrittiva unica: tutte le chiusure45m, confronto entro la medesima struttura crescente/decrescente fra giornaliero concorde, contrario, misto o indisponibile; anche riepilogo della sola struttura45m. Esiti24h: variazione finale ed escursioni alto/basso normalizzate con volatilità all'origine. Popolazione completa, stati misti/assenti e censure finali conservati, numerosità/distribuzioni mensili, niente successo trade, significatività, causalità o ricerca di combinazioni favorevoli. Finestre sovrapposte non indipendenti.
+
+Stessa dashboard e provider separato, selezione temporale e avanzamento sincronizzati45m/1D; distinguere informazioni a t dal seguito retrospettivo. Nello storico nessuna call, posizione o saldo fittizi; la simulazione resta ambiente separato. Pipeline locale batch senza servizi permanenti/DB/live non necessari.
+
+Chiusura: Gian vede prezzi reali e osservazioni causali, passato immutabile, acquisizione/calcolo riproducibili, confronto previsto con limiti/casi contrari e prova d'uso. Un risultato non favorevole è accettabile. **Non autorizzati strategia di ingresso, ordini exchange, valutazione economica, apertura2026protetto o vecchi studi.** La sequenza generale seguente resta orientamento futuro, non autorizzazione addizionale.
 
 1. **Fondazione funzionale e organizzativa:** rendere esplicite decisioni, limiti e ruoli. È lo scopo di questa registrazione.
 2. **Dashboard Figma con dati simulati:** realizzare e provare la UI approvata, con modelli distinti e provider sostituibile, entro la macrofase autorizzata sopra.
@@ -355,7 +365,7 @@ Non fissiamo qui una durata fittizia o una promessa di successo. Ogni macrofase 
 | Decisione aperta | Perché serve | Responsabilità |
 |---|---|---|
 | Strumento Binance preciso e fattibilità demo | LONG/SHORT, costi e protezioni dipendono dal prodotto | Director verifica fatti; Astra decide conflitti; Owner approva accessi |
-| Date e fonte del nuovo storico | Evitare dati inadeguati o periodi già esposti chiamati nuovi | Director propone nel perimetro; Astra/Owner autorizzano |
+| Dati per prove successive a OBS-001 | Per OBS-001 fonte e date circoscritte sono autorizzate in §31; nessuna apertura implicita ulteriore | Director propone nel perimetro; Astra/Owner autorizzano |
 | Definizione dei movimenti studiati | Separare studio retrospettivo da trade realmente riconoscibile | Astra/Director |
 | Regole concrete dei segnali e delle combinazioni | Le famiglie non sono ancora un algoritmo | Astra/Director |
 | Origine e disponibilità delle barre 45m/1D | Evitare disallineamenti e informazioni future | Director, prima dell'incarico tecnico |
@@ -376,12 +386,13 @@ Parla a Gian in modo semplice. Ricorda che vuole partecipare alla strategia, che
 
 Mantieni i ruoli: Astra direzione, Director ragionamento e gestione operativa, Claude esecuzione tecnica. Non chiedere ad Astra ogni microdecisione e non delegare all'esecutore la scelta del metodo. Non creare un nuovo documento per ogni dubbio se basta chiudere una decisione nella macrofase corrente.
 
-Il lavoro corrente segue la priorità UI Figma simulata della sezione 31 e deve essere definito nel task unico prima di Claude. Non avviare spontaneamente backtest, acquisizioni o trading. Se il testo non contiene una soglia o una regola, non significa che sia lecito inventarla.
+Il lavoro corrente segue il mandato osservativo/storico circoscritto della sezione31 e il task unico OBS-001. L'acquisizione pubblica e l'elaborazione descritte sono autorizzate; non richiedere una seconda approvazione ordinaria. Nessuna acquisizione aggiuntiva, strategia, valutazione economica o trading per implicazione. Se il testo non contiene una soglia o una regola, non significa che sia lecito inventarla.
 
 ## 34. Storia delle revisioni
 
 | Versione | Data | Variazione |
 |---|---|---|
+| 1.3 | 2026-10-16 | UI conclusa; Astra autorizza motore osservativo, acquisizione pubblica giugno–dicembre2025, studio descrittivo24h e stessa app; DESIGN-001 approvato solo §§5–6 con warmup per misura, limiti operativi invariati |
 | 1.2 | 2026-10-16 | Richiesta Owner: navigazione superiore al posto della sidebar; spazio recuperato per il contenuto, controlli simulati distinti |
 | 1.1 | 2026-10-16 | Disposizione Astra: priorità alla UI Figma con provider/scenari simulati; DESIGN-001 non approvato; limiti invariati sui dati e sull'operatività |
 | 1.0 | 2026-10-16 | Prima sintesi funzionale autonoma del nuovo progetto; separazione da archivio, decisioni aperte esplicite, organizzazione dei ruoli e del task unico |

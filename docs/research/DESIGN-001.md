@@ -1,9 +1,26 @@
-# DESIGN-001 — proposta di ricerca non approvata
+# DESIGN-001 — approvazione parziale delle definizioni osservative
 
-**NON APPROVATA — NON ATTIVA.** Conservazione disposta da Astra il 16 ottobre 2026.
-Provenienza: current_task.md al commit 671d8d5176c19af13ec7b1cfe755867577724aa5.
-La priorità corrente è la dashboard Figma con modelli di presentazione e dati simulati.
-Il testo originale segue per tracciabilità: riferimenti a incarichi, review, finestre, convenzioni e incrementi futuri sono storici e non costituiscono autorizzazione. Non attivare motore delle osservazioni, analisi storiche o alcuna parte di questa proposta.
+**APPROVAZIONE PARZIALE — SOLO SEZIONI 5–6, nei limiti sotto.**
+Disposizione Astra trasmessa dall'Owner il 16 ottobre 2026, dopo chiusura UI a baa1e762703f7dfd01f870061dba2a1c691326ce.
+Provenienza del testo originale: current_task.md al commit 671d8d5176c19af13ec7b1cfe755867577724aa5.
+
+| Parte | Stato corrente |
+|---|---|
+| §5 aggregazione 45m/1D UTC, completezza e disponibilità causale | APPROVATA per OBS-001/v1, con disponibilità per singola misura |
+| §6 TR e A=media20 TR, SMA20/50, pivot 2+2, livelli, volume relativo, Fibonacci, eventi/versioni e null distinti da zero | APPROVATA come prima definizione esplicita, non ottima/validata |
+| §6 warmup globale 54 barre | SUPERATO: SMA20=20, SMA50=50, A=21, pendenza SMA20 a lag4=24, distanza medie=50, incrocio=51, rapporto volume=21 barre complete contigue; pivot/ancore dipendono dai pattern realmente confermati |
+| §6 prossimità +/-0,25A | Non autorizzata come criterio decisionale o classificazione dello studio; al più descrizione geometrica |
+| §§3–4 fonte/finestre originarie | NON ATTIVATE. Sostituite soltanto per OBS-001 dal mandato dati specifico sotto |
+| §§7–8 barriere2A, orizzonti aggiuntivi, R2/R3, sottogruppi medie/volume/Fibonacci e coorte principale00:00 | NON ATTIVATI. Domanda e tabelle OBS-001 sono quelle registrate nel task prima degli esiti |
+| §9 modello economico | NON APPROVATO / NON ATTIVO |
+| §§10–13 vecchio incremento solo sintetico, HTML separato, fixture70giorni e gate successivi | Proposte storiche, non mandato corrente. OBS-001 usa la dashboard esistente e completa anche dati/studio autorizzati |
+| Verifica protetta e vecchi studi | NON APERTI / INACTIVE |
+
+**Dati OBS-001 autorizzati separatamente da Astra:** candidata Binance Vision, BTCUSDT perpetual USDⓈ-M, klines di prezzo negoziato1m. Inizializzazione [2025-06-01,2025-09-01), studio [2025-09-01,2026-01-01) UTC; nessun tail successivo. Sette mesi, download pubblico gratuito, file fuori Git, controlli essenziali di provenienza/copertura. Nessun account/chiave o stack Owner.
+
+Studio principale: tutte le chiusure45m, struttura45m confrontata entro lo stesso verso in relazione alla struttura1D; seguito24h con variazione finale ed escursioni alto/basso normalizzate con A45m all'origine; mesi, distribuzioni, indisponibilità e censura conservate. Non è strategia, studio economico o autorizzazione operativa.
+
+**current_task.md OBS-001 è la specifica eseguibile e chiude le ambiguità prima del codice.** Le restanti sezioni originali qui sotto rimangono per tracciabilità; diciture DRAFT, richieste di approvazione e finestre originarie sono storiche, non nuove autorizzazioni né blocchi ai microstep già autorizzati.
 
 ---
 

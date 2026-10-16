@@ -4,20 +4,24 @@ Aggiornato: 2026-10-16. Responsabile: Director.
 
 ## Fatto
 
-**Macrofase UI simulata CONCLUSA.** UI-001, R1 e UI-002 accettati; Gian conferma il nuovo layout e la prova d'uso con “si controllato e sembra tutto ok!” il 16 ottobre. Non è una verifica esaustiva di ogni transizione né una validazione finanziaria.
+Macrofase UI simulata CONCLUSA e approvata dall'Owner; chiusura a baa1e762703f7dfd01f870061dba2a1c691326ce. Dashboard React/TypeScript esistente, provider simulato separato, navbar superiore e conferme revisionate. Nessun motore reale ancora consegnato.
 
-Codice consegnato: 9c5f315ca84b4700a4dea1b7de618306331723a5. Dashboard locale React/TypeScript, provider simulato separato, scenari deterministici, contratti di presentazione, call/ordini/posizione distinti, conferme vincolate al contesto e gestione feed non corrente. Navigazione superiore approvata dall'Owner; pannello scenari richiudibile.
+Astra ha autorizzato la macrofase completa “osservazioni calcolate e primo studio storico nell'app”. **DESIGN-001 approvato solo per definizioni osservative §§5–6**, con warmup per singola misura corretto nel task; resto non attivato.
 
-UI-002 verificato indipendentemente: installazione pulita, 16 test UI, typecheck/build e audit senza filtri a zero; codice e due immagini esaminati. Test completi fase A e prove Chrome a tre larghezze sono evidenze di Claude; nessuna prova browser indipendente del Director. Review e consegne in current_task.md e storia Git.
+## Incarico corrente
 
-## Prossimo passo
+**OBS-001 — READY.** Specifica eseguibile e convenzioni ex ante nel task unico: pipeline batch Python → bundle locale → provider storico nella dashboard; sei famiglie calcolate causalmente, revisione snapshot preservata e seguito retrospettivo separato.
 
-Gian vuole iniziare l'algoritmo. **Attesa disposizione Astra per la nuova macrofase**, come previsto a chiusura UI. Nessun incarico esecutivo nuovo. Il Director ha gli obiettivi funzionali, ma DESIGN-001 resta NON APPROVATO/INATTIVO e non autorizza l'implementazione.
+Mandato completo a Claude: esempi sintetici mirati, acquisizione pubblica sette mesi, controlli input, elaborazione reale, UI e tabelle/lettura dei risultati. Nessun arresto al solo sintetico o nuova autorizzazione ordinaria fra microstep.
 
-Il passaggio deve definire obiettivo e risultato concreto del primo incremento algoritmico, perimetro di studio/implementazione e criteri di chiusura. Il Director tradurrà il mandato nel task unico prima di Claude.
+Fonte candidata Binance Vision BTCUSDT perpetual USDⓈ-M, klines negoziate1m. Inizializzazione [2025-06-01,2025-09-01), studio [2025-09-01,2026-01-01) UTC, senza tail. File fuori Git; nessun account/chiave o stack Owner. Checksum settembre raggiunto dal Director; ZIP, copertura e calcoli reali non ancora verificati.
 
-## Limiti e vincoli
+## Studio e chiusura
 
-UI alimentata esclusivamente da dati fittizi locali; nessun algoritmo decisionale o collegamento exchange. Parametri/prodotto/importi di esempio non sono decisioni di trading.
-Nessuna acquisizione, backtest, accesso Owner/exchange, operazione esterna o apertura protetta autorizzata. Studi precedenti INACTIVE.
-README documenta avvio, simulazioni, differenze Figma e immagini storiche. PRODUCT-CONTEXT unico riferimento funzionale.
+Tutte le chiusure45m: confronto entro stessa struttura45m UP/DOWN fra giornaliero concorde/contrario/misto/assente; riepilogo sola45m, mesi e distribuzioni final/up/down24h in A45m all'origine. Popolazione completa e censure, nessuna indipendenza delle righe presunta.
+
+Chiusura richiede storico reale/observe nell'app, riproducibilità/causalità, confronto previsto e prova Gian con review Director. Risultati contrari o insufficienti sono validi.
+
+## Vincoli
+
+Nessuna strategia di ingresso, ordine exchange, valutazione economica, capitale/leva, acquisizione fuori mandato, apertura2026protetto o riattivazione vecchi studi. Nello storico niente call/posizioni/saldi fittizi. Simulazione locale separata. PRODUCT-CONTEXT aggiornato al mandato.

@@ -1,224 +1,217 @@
-# Incarico corrente — UI-002 manutenzione strumenti e navigazione superiore
+# Incarico corrente — OBS-001 osservazioni calcolate e primo studio nell'app
 
-**Stato: ACCEPTED — fasi A e B revisionate; riscontro positivo Owner ricevuto il 16 ottobre 2026. Macrofase UI conclusa entro il perimetro simulato. Nessuna implementazione successiva assegnata.** Incarico del Director entro la macrofase UI Figma autorizzata da Astra.
-Esecutore: Claude Code. Review: Director.
-Base: b751526476ed9dd3800ce249127ad0814ff43d07 e questa registrazione del task.
-La review tecnica di UI-001/R1 è PASS, conservata nella storia di current_task.md al commit b8153351b1ad639fe1141dcbf86f34c1b7d023f1. Il 16 ottobre Gian riferisce di aver eseguito npm ci e npm run dev e che l'app sembra funzionare. È confermato l'avvio sul PC Owner; non è una dichiarazione di verifica completa di ogni transizione. Richiede esplicitamente di eliminare la barra sinistra e spostare la navigazione in alto per recuperare spazio.
+**Stato: READY.** Macrofase completa autorizzata dalla disposizione Astra trasmessa da Gian il 16 ottobre 2026, dopo la chiusura UI al commit baa1e762703f7dfd01f870061dba2a1c691326ce.
+Responsabile specifica e review: Director. Esecutore: Claude Code.
+Questo task è la registrazione ex ante delle convenzioni **OBS-001/v1**: completare tutti i microstep, dal sintetico all'acquisizione, elaborazione reale, integrazione e prima tabulazione. Nessuna ulteriore autorizzazione ordinaria fra i microstep. Non fermarsi a un motore sintetico. La consegna UI accettata resta nella storia Git a baa1e76.
 
-## 1. Obiettivo
+## 1. Risultato richiesto e autorità
 
-Rimuovere gli advisory riprodotti sugli strumenti frontend/test con un aggiornamento circoscritto. Fase A: preservare dashboard, provider, scenari, contabilità, comandi e stile durante la manutenzione. Fase B: applicare esclusivamente la modifica di layout autorizzata dall'Owner nella sezione 7. Nessun nuovo algoritmo.
+Gian deve vedere nella dashboard esistente prezzi storici reali BTCUSDT perpetual USDⓈ-M e sei famiglie di osservazioni calcolate solo da informazioni disponibili al tempo scelto. Deve poter avanzare, cambiare 45m/1D e consultare separatamente il seguito retrospettivo a 24 ore e il confronto descrittivo mensile previsto sotto.
 
-npm audit --json sulla base segnala @vitest/mocker, tinypool, vite e vitest (1 moderate, 1 high, 2 critical). Il Director ha verificato le fonti dei manutentori, non solo il riepilogo npm. Le versioni correnti sono vite 6.3.5 e vitest 3.1.4.
+DESIGN-001 è approvato **solo per le definizioni osservative delle sezioni 5–6**, con chiarimenti vincolanti di questo task. Non sono attivati il resto del documento, warmup globale 54 barre, modello economico, barriere 2A, prossimità come criterio decisionale, R2/R3, orizzonti 3h/72h, coorte principale limitata alle 00:00, incroci SMA come ulteriore raggruppamento o finestre protette. Nessuna strategia, aspettativa predittiva, ingresso, ordine o conto generati.
 
-## 2. Decisioni e target
+AGENTS resta valido: un solo task; dettagli tecnici reversibili risolvibili dall'esecutore; cambi di convenzioni o gruppi al Director prima di procedere. Non riattivare vecchi studi o codice del vecchio motore.
 
-- Aggiornare vite a **6.4.4**, rimanendo sulla major 6.
-- Aggiornare vitest a **4.1.11**, con relativi pacchetti @vitest/* coerenti. La major cambia perché la correzione di mocker non è prevista sulla 3.x.
-- Entrambi i target risultano pubblicati nel registry consultato dal Director. Vitest 4.1.11 dichiara peer Vite ^6/^7/^8, Node ^20/^22/>=24 e dipende da @vitest/mocker 4.1.11.
-- Verificare risoluzione effettiva di @vitest/mocker e tinypool: niente copie vulnerabili residue usate dai test. Tinypool può sparire dal grafo; non aggiungerlo come dipendenza inutile.
-- Versioni dirette esatte e lockfile aggiornato. Niente “audit fix --force”, override arbitrari di major transitive, disattivazione controlli o aggiornamento globale npm.
-- Non aggiornare React, TypeScript, font, icone, jsdom o plugin React salvo incompatibilità specifica dimostrata. Se è necessario un piccolo adeguamento di config/import test per Vitest 4, farlo e motivarlo.
-- Verificare engines/prerequisiti rispetto ai pacchetti effettivi e aggiornare README se la precedente formulazione “20.19 o successivo” include release Node non supportate. Preferenza pratica per la versione 24 già usata dall'Owner; non installare Node sul PC.
+## 2. Soluzione tecnica proporzionata e riproducibilità
 
-Fonti:
-- https://github.com/vitejs/vite/security/advisories/GHSA-fx2h-pf6j-xcff (Windows; correzione nel ramo 6 da 6.4.3)
-- https://github.com/vitejs/vite/security/advisories/GHSA-p9ff-h696-f583
-- https://github.com/vitest-dev/vitest/security/advisories/GHSA-5xrq-8626-4rwp
-- https://github.com/vitest-dev/vitest/security/advisories/GHSA-82fw-gwwq-j7x9 (mocker: fix 4.1.11; 3.x non mantenuta per questo fix)
-- https://github.com/tinylibs/tinypool/security/advisories/GHSA-85c8-ppgw-ccpr
-- https://github.com/tinylibs/tinypool/security/advisories/GHSA-5gmw-xhrv-c9v3
+Scelta Director: pipeline batch Python, preferibilmente sola libreria standard (CSV/ZIP/hash/HTTP/statistiche/JSON), in un piccolo modulo nuovo sotto src/; test mirati sotto tests/. Usare Python già presente, minimo 3.11, registrare versione effettiva; non installare runtime sul PC senza istruzione. Riusare le tre utilità locali solo se pertinenti e dopo lettura; nessuna suite pregressa generale. Nessun pandas, TA framework, DB, Docker, servizio permanente, streaming o secondo frontend necessari.
 
-Non selezionare Vitest 3.2.7 solo perché suggerito da npm fixAvailable: non risolve tutti gli advisory verificati dalle fonti.
+Dashboard React/TypeScript/Vite esistente: aggiungere provider storico e adattare in modo esplicito il contratto di presentazione, oggi vincolato a simulated=true e serie illustrative. Usare un discriminante reale di modalità/datasource, non cast o flag fittizi per forzare dati storici nel contratto simulato. Componenti consumano osservazioni e serie preparate: nessun calcolo del motore nel rendering, nessuna deduzione di segnali di trading.
 
-## 3. esbuild e npm
+Percorso: ZIP/CSV locali → minuti validati → aggregati → eventi/snapshot causali → bundle JSON versionato leggibile dalla stessa app; esiti e riepiloghi in sezione separata del bundle. Il caricamento locale può avvenire con file picker “Apri studio storico”; niente server dati. File system API privilegiata non necessaria. Metadati e validazione del formato in import: errori leggibili, nessun fallback silenzioso alle fixture.
 
-L'avviso “install scripts not yet covered by allowScripts: esbuild@0.25.12 (postinstall: node install.js)” è distinto dagli advisory. Con la policy attuale eseguire installazione, test e build; se funzionano non serve silenziarlo né approvare tutti gli script.
+Cartella dati scelta: directory sorella del checkout, es. C:\Projects\algorithmic-trader-data\OBS-001; ricavare dal percorso del checkout o permettere --data-dir. Non esplorare altre directory dell'Owner, vecchi dataset, account, processi o stack. Verificare che output/raw non entrino nel working tree; aggiungere .gitignore per incidenti plausibili. Nessuna cancellazione di file dell'Owner.
 
-Non modificare configurazione npm globale/utente o impostazioni del PC Owner. Se la nuova installazione fallisce per esbuild, isolare l'errore, la versione risolta e il minimo rimedio locale prima di cambiare policy; consultare il Director se è richiesta un'autorizzazione diversa. Niente rimedi preventivi indiscriminati.
+CLI con comandi espliciti per acquisire, controllare, elaborare e riepilogare; un comando orchestratore riproduce la catena autorizzata. Elaborazione offline possibile dopo acquisizione; niente aggiornamenti automatici dello storico all'avvio UI. Pubblicare codice, configurazione congelata e piccole fixture sintetiche; ZIP, CSV reali e bundle temporali restano locali fuori Git.
 
-Il README deve distinguere un avviso non bloccante da un errore che impedisce build/avvio, senza dire che qualunque avviso si può ignorare.
+Ogni run conserva: versione schema, OBS-001/v1, hash della configurazione di convenzioni, commit software, versione runtime, manifest degli input, hash output, tempi e comandi. Prima di calcolare esiti creare manifest/config e registrarne hash e commit del task nella consegna. Non serve fermarsi o richiedere conferma. Timestamp di esecuzione e manifest globale del dataset sono metadati run, non devono far risultare diversi gli snapshot dello stesso prefisso in test causali.
 
-## 4. Perimetro e verifiche
+Performance: leggere minuti una volta, calcoli incrementali/finestre limitate; niente ricalcolo dell'intero storico a ogni clic. Riportare durata e dimensioni effettive, ottimizzare solo un collo di bottiglia osservato. Un avanzamento per stadi e messaggio di errore bastano; niente infrastruttura di job.
 
-Aree: dashboard/package.json, package-lock.json; config e import test solo se richiesti dalla migrazione; README, STATE e consegna nel task. Non toccare comportamento/fixture/stile per far passare i test.
+## 3. Fonte, intervalli, autorizzazione pubblica e controlli
 
-Verifiche proporzionate a un cambio del runner e bundler:
-1. Installazione pulita coerente col lockfile; versioni effettivamente risolte.
-2. Tutti i **45 test attuali della sola dashboard**, perché cambia il runner comune. Niente suite Python/vecchio progetto/CI.
-3. Typecheck/build.
-4. npm audit --json: i quattro rilievi noti devono essere risolti nel grafo effettivo. Se emergono nuove segnalazioni, riportare ID, catena e condizioni prima di allargare il lavoro; non dichiarare “zero” filtrando via tutte le devDependencies.
-5. Breve smoke della build tramite preview su 127.0.0.1:4173: caricamento asset locali, scenario iniziale, una conferma e assenza errori. Un confronto visuale prima/dopo è sufficiente se non ci sono regressioni. Non rigenerare venti immagini o ripetere il gate Figma.
+Unica fonte candidata autorizzata: Binance Vision, percorso
+https://data.binance.vision/data/futures/um/monthly/klines/BTCUSDT/1m/BTCUSDT-1m-YYYY-MM.zip
+con file gemello .zip.CHECKSUM. Scaricare **solo sette mesi: giugno–dicembre 2025**, senza dati aggiuntivi.
 
-Niente API/UI server di Vitest, esposizione LAN o servizi aggiuntivi. Chiudere i processi di preview avviati per il task identificando quelli propri; non terminare processi dell'Owner.
+- Inizializzazione input: [2025-06-01T00:00:00Z, 2025-09-01T00:00:00Z).
+- Studio/origini: [2025-09-01T00:00:00Z, 2026-01-01T00:00:00Z).
+- Input totale: [2025-06-01, 2026-01-01) UTC; **nessun tail nel 2026**, neppure il vecchio tail 06:05.
+- Consentiti metadati pubblici dello strumento e documentazione della fonte; nessun login/API key. Verificare symbol=BTCUSDT, base BTC, quote/margin USDT, contractType PERPETUAL, segmento UM e prezzo negoziato klines. Salvare risposta pubblica pertinente e data; metadati correnti non certificano condizioni storiche di esecuzione. Se l'endpoint pubblico è geobloccato o identità non verificabile, riportare errore preciso e documentazione alternativa ufficiale; nessun aggiramento o sostituto silenzioso.
+- Vietati spot, continuousKlines al posto della serie dello strumento, mark/index, funding, order book e dati del vecchio stack. Nessuna scansione di simboli o download automatico di tutto il catalogo.
+- Download seriali con timeout, pochi tentativi limitati su errori transitori e riuso della cache se checksum coerente; nessun loop infinito o aggiramento di rate limit. ZIP prima in file temporaneo, verifica hash prima di promuoverlo. Estrarre solo CSV atteso senza path traversal.
+- Manifest per file: URL esatto, scaricato_alle UTC, dimensioni, SHA256 locale, checksum fornitore e risultato, simbolo/mercato/priceType, colonne, unità temporale, prima/ultima apertura, righe, copertura e anomalie. Se cache remota cambia, conservare la versione precedente e distinguere i run; non sovrascrivere risultati storici sotto lo stesso ID.
 
-## 5. Consegna
+Il Director ha consultato il repository ufficiale e i termini il 16 ottobre:
+https://github.com/binance/binance-public-data
+https://github.com/binance/binance-public-data/blob/master/TERMS_AND_CONDITIONS.md
+https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-usd-s-m-futures/api/rest-api/market-data
+Il checksum di settembre è stato raggiunto via HTTP 200 nell'ambiente Director:
+c296ba45c215934e9750ca82846c7b5d14be661649d8e4423eac834cf57330dc.
+Non è un pin eterno né una verifica dei prezzi: confrontare il file realmente scaricato col checksum al momento del run e registrare eventuale variazione. Nessun ZIP reale o esito è stato elaborato dal Director prima di questo protocollo.
 
-Commit/push su main autorizzati per questi file. Nessun pull/fetch (anche --dry-run), reset, stash o force push. All'inizio controllare repo/branch/base e modifiche locali senza sovrascrivere altro lavoro.
+Termini osservati: uso personale di ricerca non produttiva, attribuzione e condizioni sui derivati distinte dalla licenza del codice. Conservare localmente copia/hash/data dei termini. Nell'app e nel report indicare “Fonte: Binance Vision”; nessuna associazione commerciale. Dati e bundle non redistribuiti. Se si pubblica il breve report aggregato o screenshot reali richiesti, applicare esplicitamente CC BY-NC-SA 4.0 a quei soli derivati con attribuzione e link fonte/termini, senza cambiare la licenza del codice. Non dichiarare che la MIT del repository Binance sia licenza del dataset. Nessun uso commerciale o operativo autorizzato.
 
-Riportare versioni prima/dopo, catene eliminate, eventuali adeguamenti e motivi, esiti dei controlli, avviso esbuild effettivo ed eventuali rilievi residui. Aggiornare STATE; READY → IN_PROGRESS/BLOCKED/DELIVERED, mai ACCEPTED. Il Director revisiona; nessuna nuova autorizzazione strategica necessaria per il lavoro specificato.
+Parsing: campi futures 12 come documentazione ufficiale, eventuale singola intestazione riconosciuta per nome, non scartare automaticamente la prima riga numerica. Timestamp verificati in millisecondi per questi file futures, openTime multiplo 60.000 e closeTime=openTime+59.999; rappresentazione interna barra [open,open+60s), available_at=open+60s. Unità anomala/schema diverso = errore diagnosticato, non euristica che faccia passare date fuori perimetro. Prezzi finiti positivi, H>=max(O,C), L<=min(O,C), H>=L; volumi non negativi, scambi interi non negativi. Conservare volume base, quote, scambi e campi taker senza inferirne flusso netto.
 
-## 6. Prova Owner e limiti
+Verificare ordine, apertura univoca, cadenza 1m e confini file. Duplicati identici possono essere collassati soltanto contando e registrando le righe originali; duplicati discordanti rendono il minuto INVALID senza scegliere un prezzo. Righe corrotte non interpolabili: log e minuto mancante/invalidato. Buchi non riempiti. Ordinamento deterministico dichiarato, anomalie riportate. Copertura teorica: 308.160 minuti (214 giorni); 132.480 inizializzazione, 175.680 studio. Conteggi teorici non sostituiscono l'ispezione.
 
-La prova della UI può procedere già sulla build b751526 con:
-npm ci
-npm run build
-npm run preview
-Aprire http://127.0.0.1:4173. È una prova locale della build senza HMR o server API test, non un'autorizzazione a esporre il servizio.
+File assente/checksum errato/strumento errato bloccano l'acquisizione affidabile: consegnare BLOCKED preciso, non proclamare studio completo. Se file validi contengono buchi, proseguire con disponibilità/esiti mancanti espliciti: la popolazione temporale non scompare. Classificare copertura effettiva senza nascondere le anomalie.
 
-Percorso breve: stato iniziale → Stop totale e conferma (la posizione rimane aperta) → Start e conferma → Gestione manuale → Riprendi automatico e spunta → Uscita parziale → Chiudi posizione; osservare saldo 10.005,793 e netto +5,793. Poi reset e, dal pannello simulazione, attesa/pendente/rifiutato/SHORT/feed disconnesso. Owner può riferire problemi con parole semplici; non deve leggere log.
+## 4. Clock, aggregazione e contratto causale
 
-Nessun dato reale, algoritmo, acquisizione, backtest, accesso exchange/stack Owner, ordine esterno o apertura protetta. DESIGN-001 resta non approvato e inattivo.
+Barre 45m ancorate a 00:00 UTC, 32 al giorno; giornaliera [00:00,00:00 successiva) UTC. OHLC primo/max/min/ultimo; volumi base/quote e scambi sommati. Requisiti: 45 minuti esatti per 45m, 1.440 per 1D, tutti validi. Una barra incompleta ha stato INCOMPLETE e motivi/counts; non produrre OHLC definitivo da una copertura parziale fingendola completa.
 
+Snapshot alle chiusure 45m t: usa solo barre con end<=t; prezzo origine C_t è la chiusura della barra [t-45m,t). A mezzanotte calcolare entrambe le scale chiuse PRIMA dello snapshot. Il giorno in formazione è escluso dalle osservazioni e, per semplicità, dal grafico storico 1D. Non etichettare chiusure secondo il fuso locale: UTC sempre visibile. 00:00 del primo settembre è un'origine valida costruita anche con inizializzazione; t=2026-01-01 escluso dalle origini ma valido come endpoint dell'esito dell'origine 2025-12-31T00:00.
 
-## 7. Fase B — navigazione superiore richiesta da Gian
+Gap: ogni scala ha propri segmenti continui. Barra INCOMPLETE azzera finestre dipendenti e sequenze pivot/ancore correnti di quella scala, conservando eventi precedenti. Ripartire da nuove barre consecutive senza ponti sul gap. Un gap 45m non azzera retroattivamente il giorno precedente valido; un giorno incompleto impedisce la continuità 1D. Livelli giornalieri validi già pubblicati conservano la storia; per “giorno precedente” usare esattamente il giorno UTC precedente, mai il più recente giorno valido lontano senza dichiararlo.
 
-Disposizione Owner del 16 ottobre 2026: eliminare la nav bar a sinistra e crearne una in alto, recuperando la larghezza del contenuto principale. È una modifica esplicitamente autorizzata rispetto al layout Figma; non richiede nuova approvazione né modifica del file Figma. Il resto del riferimento visivo rimane valido.
+Ogni osservazione/evento ha identità stabile (strumento, scala, tempo, tipo), versione, event_time, available_at, inputRef e null+reason quando mancante (INSUFFICIENT_HISTORY, INCOMPLETE_INPUT, ZERO_DENOMINATOR, NO_CONFIRMED_PIVOTS, AMBIGUOUS_PIVOT, ecc.). Zero noto resta zero. Ragioni per singola misura, non un unico ready globale.
 
-Eseguire dopo la fase A nello stesso incarico UI-002. Se il checkout contiene lavoro in corso sulla fase A, conservarlo: nessun reset o sovrascrittura. Documentare separatamente gli esiti delle due fasi.
+event_time del pivot = fine della barra candidata; available_at = fine della seconda barra destra. Conservare anche openTime della candidata per disegno sul grafico. L'app può disegnare il pivot sulla candela originaria SOLO dopo available_at, spiegando entrambi i tempi. Il presente clock assume disponibilità logica alla chiusura, non prova latenza zero dal vivo.
 
-### Layout e comportamento attesi
+Snapshot immutabili; revisioni sono nuovi eventi/versioni con available_at e prima/dopo. Un evento futuro non aggiunge retroattivamente validTo o informazioni di sostituzione nello snapshot passato. Nessun ID/hash del futuro nei payload comparati per causalità. Manifest di run separato. Elaborazione sequenziale delle osservazioni; esiti calcolati da modulo distinto che non è input dell'osservatore.
 
-- Rimuovere completamente la colonna laterale e la larghezza/margine riservati. La dashboard usa tutta la larghezza utile della finestra, conservando padding e spaziatura coerenti. Mantenere grafico a sinistra e call/posizione a destra alle larghezze desktop previste; niente colonne vuote o grande limite di larghezza che annulli il guadagno.
-- Inserire in alto una barra orizzontale compatta con identità del prodotto e le stesse destinazioni esistenti: Dashboard, Storico, Conto, Ricerca/Backtest, Impostazioni (usare le etichette attuali). Conservare destinazione, stato selezionato, scroll/viste e messaggi “Non disponibile in questa versione”. Non costruire nuove sezioni.
-- Riorganizzare l'header esistente per evitare duplicazioni di logo, navigazione, stato e comandi. Banner “SIMULAZIONE LOCALE — nessun collegamento exchange” sempre evidente, senza coprire il contenuto. Modalità, feed, bot e comandi operativi restano comprensibili e distinti dalla navigazione.
-- Trasferire i controlli della simulazione in un pannello richiudibile raggiungibile dall'alto con un pulsante esplicito “Scenari simulati”. Il pannello parte chiuso, mostra chiaramente la propria natura locale e contiene gli stessi checkpoint, feed e reset. Non mescolare questi selettori ai comandi di trading e non eliminare scenari. Evitare una seconda colonna permanente che ricrei l'ingombro rimosso.
-- Su finestre più strette permettere un adattamento compatto della navigazione senza sovrapposizioni, tagli o scorrimento orizzontale dell'intera pagina. Nessun obbligo di nuova UI mobile completa.
-- Conservare colori, tipografia, icone e schede del riferimento. Niente restyling generale, nuovi grafici, nuovi valori o dipendenze soltanto per questa modifica.
+## 5. Dizionario osservativo OBS-001/v1 e disponibilità per misura
 
-### Conferme e accessibilità
+Applicare indipendentemente a 45m e 1D. Prezzi e rapporti in doppia precisione, senza arrotondare prima dei confronti; parità numerica esatta dopo parsing dello stesso valore, nessuna epsilon di trading. Unità A in USDT/BTC. Mediana di 20 = media dei due valori centrali. Ogni scheda mostra parametri, formula sintetica, dato e tempo effettivo.
 
-La correzione R1-A resta vincolante: a dialogo di conferma aperto anche la nuova navbar e il pannello scenari sono inerti; Tab resta nel dialogo, Esc/Annulla e ripristino focus funzionano. Il pannello scenari è utilizzabile da tastiera, ha nome/stato aperto accessibili e non introduce una trappola del focus. Non cambiare provider, token di conferma, contabilità o semantica dei comandi per adattarli al layout.
+### 5.1 Volatilità
 
-### Verifiche e consegna della fase B
+TR_i=max(H_i-L_i, |H_i-C_(i-1)|, |L_i-C_(i-1)|). Primo TR non calcolabile senza precedente completa contigua.
+A_i=media aritmetica degli ultimi 20 TR: **21 barre contigue complete**. Non ATR di Wilder. A=0 è una volatilità nota zero; i rapporti che la usano sono null/ZERO_DENOMINATOR. A/C disponibile se C valido (può valere zero se A=0). Conservare TR singolo appena esiste il precedente; non attendere A per mostrarlo.
 
-- Typecheck/build dopo la modifica; test UI mirati a navigazione esistente, apertura/chiusura scenari e isolamento del fondo durante le conferme, comprese regressioni R1 pertinenti. Non rieseguire ulteriormente l'intera suite o i conti immutati per il solo spostamento.
-- Prova browser a 1680, 1366 e 900 px: nessuna colonna sinistra residua, spazio recuperato, contenuto e comandi non sovrapposti, navigazione/scenari accessibili e conferme isolate. Verificare Storico/Conto e una destinazione non disponibile; una transizione di scenario e feed, reset, una conferma annullata e una confermata.
-- Due screenshot aggiornati della dashboard da inizio pagina (1680/1366) e uno con pannello scenari aperto sono sufficienti; aggiungerne altri solo per un difetto concreto. Nessun nuovo gate Figma o rigenerazione generale.
-- README: indicare dove si trovano ora navigazione e selettore scenari. Consegna: differenza autorizzata dal Figma, file, esiti reali e limiti. Nessuna prova browser dell'esecutore attribuita al Director.
-- Pubblicazione e vincoli della sezione 5 valgono anche per i componenti/layout, CSS, test pertinenti e istruzioni di questa fase. Nessuna operazione esterna.
+### 5.2 Medie
 
-Criterio di chiusura UI-002: manutenzione verificata e navbar superiore funzionante, spazio sinistro recuperato, controlli simulati ancora disponibili, nessuna regressione delle conferme. DELIVERED alla consegna; review del Director e riscontro Owner sul nuovo layout prima della chiusura macrofase.
+SMA20 media ultime 20 chiusure, SMA50 ultime 50: disponibili rispettivamente con **20 e 50 barre complete contigue**.
+Distanza (SMA20-SMA50)/A: 50 barre e A>0.
+Pendenza (SMA20_i-SMA20_(i-4))/A_i: **24 barre**, entrambe le SMA20 e A corrente>0; non serve SMA50.
+Posizione (C-SMA20)/A: **21 barre**, A>0.
+Incrocio sul segno della distanza: precedente<=0 e corrente>0 oppure precedente>=0 e corrente<0; zero mantenuto non è nuovo incrocio. Richiede entrambi i valori disponibili, quindi almeno **51 barre** e denominatori validi. Nessun bridge su dati assenti.
+Non esiste warmup globale 54. Serie UI “SMA20 / SMA50”, non “EMA20/50” o curve illustrative delle fixture. Parametri 20/50/4 sono iniziali, non ottimizzati.
+
+### 5.3 Pivot e struttura
+
+Cinque barre contigue complete: pivot high candidata i se H_i strettamente maggiore dei due H a sinistra e dei due a destra; low speculare strettamente minore. Conferma a fine i+2; mai anticipata. Registrare candidati, conferme e scarti (parità/non estremo/ambiguità) con motivi, senza una macchina di pattern aggiuntiva.
+Se stessa barra soddisfa high e low, registrare DUAL_AMBIGUOUS, esclusa da sequenza swing e confronti di struttura; non trasformarla in due swing ordinati arbitrariamente.
+Struttura dagli ultimi **due pivot high confermati non ambigui e due pivot low confermati non ambigui** del segmento, NON solo dalla sequenza alternata Fibonacci:
+- UP se ultimo high>precedente high E ultimo low>precedente low;
+- DOWN se entrambi <;
+- MIXED negli altri casi, incluse parità;
+- UNAVAILABLE se mancano due di ciascun tipo o barra corrente invalida.
+Conservare i quattro riferimenti. Non richiede A o SMA, non ha conteggio fisso di warmup. Nessun pivot artificiale alle estremità dei file o a fine studio.
+
+### 5.4 Livelli
+
+Ultimo pivot high/low confermato non ambiguo della scala e high/low del giorno UTC precedente completo (per entrambe le scale). Ogni livello disponibile indipendentemente; non nascondere pivot high se manca low. Per lo snapshot a mezzanotte il “giorno precedente” è quello appena terminato.
+Distanza firmata (C-L)/A quando A>0; livello resta visibile anche senza distanza. Livello, origine e available_at conservati.
+Fascia +/-0,25A ammessa solo come descrizione geometrica opzionale, **non classificazione dello studio o criterio decisionale**; non aggiungere badge di qualità.
+Attraversamento solo contro la stessa identità di livello già disponibile nello snapshot precedente: lato cambia da Cprev<=L a C>L o da Cprev>=L a C<L; permanenza sullo zero non è attraversamento. Salvare L, A allora disponibile (anche null), tempi e ID; nuovo livello non produce un falso attraversamento alla pubblicazione. Non riattivare automaticamente vecchi livelli superati come nuovi.
+
+### 5.5 Volume
+
+V_i / mediana(V_(i-20)...V_(i-1)): **21 barre complete contigue**, barra corrente esclusa dal denominatore, mediana>0. V corrente=0 con mediana>0 è un rapporto noto zero; mediana zero o finestra incompleta = null. Volume base BTC, quote USDT e scambi osservabili appena chiusa barra completa. Nessun badge “acquisto” o flusso netto dedotto.
+Rapporto non corretto per stagionalità intraday: dichiararlo nella scheda e nei limiti del report. Non aggiungere raggruppamenti per volume o fascia oraria alla domanda principale.
+
+### 5.6 Fibonacci e versioni
+
+Sequenza alternata di pivot confermati non ambigui: primo append; stesso tipo sostituisce terminale solo se estremo strettamente più esteso (high maggiore, low minore); altrimenti conservare il precedente; tipo opposto append. Ogni append/sostituzione ha nuova versione e tempo, conserva precedente. Ordine di elaborazione per available_at; non esistono due estremi ordinabili della stessa candidata ambigua.
+Ancore = ultimi due opposti in ordine temporale P0,P1. u=(C-P0)/(P1-P0), r=1-u anche per gamba decrescente. Ritracciamenti r=0,382; 0,5; 0,618; 0,786: prezzo=P1-r*(P1-P0). Proiezioni u=1,272; 1,618: prezzo=P0+u*(P1-P0).
+Registrare ancore/prezzi/tempi/versione, u, r continuo e distanze firmate (C-livello)/A quando A>0. Ancore assenti o uguali: null con motivo; nessuna dipendenza da SMA, A necessario solo alle distanze. 50% esplicitamente convenzione, non rapporto Fibonacci. Non limitare il dato alla vecchia coppia 61,8/38,2 delle fixture né trasformare livelli in target.
+Cambi successivi non riscrivono ancore o r degli snapshot precedenti.
+
+## 6. Domanda e convenzioni descrittive congelate prima degli esiti
+
+Domanda unica: per TUTTE le chiusure 45m del periodo, quale seguito nelle successive 24h accompagna una struttura 45m crescente/decrescente quando quella 1D concorda, contrasta o è mista/non disponibile?
+
+Popolazione: griglia t in [2025-09-01T00:00Z, 2026-01-01T00:00Z), passo 45m, **3.904 origini teoriche**, nessuna eliminata per indicatori assenti o futuro incompleto. Un record per origine, mese determinato da t UTC. Record includono anche struttura 45m MIXED e UNAVAILABLE. La barra con close=inizio studio può provenire dall'inizializzazione: convenzione deliberata. Non registrare le origini di inizializzazione come studio.
+
+Campi gruppo ex ante:
+- s45 e s1d ciascuno UP/DOWN/MIXED/UNAVAILABLE.
+- Solo per s45 UP/DOWN: dailyRelation=CONCORDANT se stesso verso, OPPOSITE se verso opposto, MIXED se s1d MIXED, UNAVAILABLE se s1d mancante. **MIXED e UNAVAILABLE restano separati**; per s45 misto/assente dailyRelation=NOT_APPLICABLE.
+- Il principale confronto è **entro ciascuno stesso verso s45**, fra i quattro stati dailyRelation, mai UP concorde contro DOWN contrario.
+- Riepilogo base per sola s45, incluse MIXED e UNAVAILABLE, indipendente dal giornaliero. Matrice conteggi s45×s1d con celle zero esplicite per tutti i mesi e totale. Le altre quattro famiglie sono consultabili/registrate, non usate per screening, gruppi o combinazioni.
+
+Prezzo p=C_t e scala a=A45m_t congelati all'origine. Orizzonte esatto 24h=32 barre 45m, minuti futuri [t,t+24h). Nessuna volatilità futura nel denominatore:
+- final=(C_(t+24h)-p)/a;
+- up=max(0, max(high futuri 1m)-p)/a;
+- down=max(0, p-min(low futuri 1m))/a.
+up e down sono ampiezze non negative, NON profitto/perdita di un trade; final resta firmato nel verso del prezzo anche per s45 DOWN. Non invertire segni tra gruppi. Un confronto manuale con massimi/minimi delle 32 barre complete deve coincidere.
+
+p assente ⇒ misure null con motivo; A assente o <=0 ⇒ normalizzate null, non zero. Conservare separatamente status origine, volatilità e copertura futura; nessuna priorità di una ragione che nasconda gli altri problemi.
+Future COMPLETE solo se tutti i 1.440 minuti validi sono presenti e t+24h<=2026-01-01T00:00Z. Se manca futuro per fine intervallo: RIGHT_CENSORED; se buco interno: GAP; se entrambi: entrambi i flag. Nessun prezzo finale portato avanti, nessuna escursione parziale presentata come completa. Mostrare durata disponibile e motivi; le tre misure principali a 24h restano null se incomplete. Nessun download nel 2026. Il close dell'ultimo minuto 2025 chiude a 2026-01-01T00:00Z ed è utilizzabile per un endpoint, non è input 2026 aggiuntivo.
+Con copertura teorica integra: **31 origini right-censored**, 3.873 con orizzonte completo prima degli altri controlli. Questi sono conteggi di controllo, non risultati.
+
+Riepiloghi fissi per settembre, ottobre, novembre, dicembre e totale:
+1. copertura/pop orizzonti, indisponibilità e relativi motivi, disponibilità per singola misura/famiglia;
+2. sola s45: ciascuno dei quattro stati;
+3. UP e DOWN separati per i quattro dailyRelation; n totali, n origine valida, n A valida, n future completo, n misure disponibili e n mancanti con flag;
+4. per final/up/down sulle righe disponibili: media, minimo, P10, P25, mediana, P75, P90, massimo. Quantili a interpolazione lineare h=(n-1)*q; se n=1 stesso valore, se n=0 null. Pesi uguali per origine; totale pooled, non media delle medie mensili. Arrotondamento solo in tabella, output numerico non arrotondato.
+Nessuna soglia trade riuscito, percentuale di successo, barriera2A, significatività/p-value, intervalli d'inferenza o ranking “miglior gruppo”. Nessuna scelta ex post di orario, mese, lato o subset per migliorare risultati.
+
+Origini adiacenti hanno finestre fortemente sovrapposte, non prove indipendenti. Riportare limite in UI/tabelle. Differenze tra gruppi giornalieri possono riflettere altri fattori: non attribuire causalità né contributo incrementale automatico alla scala 1D. Quattro mesi sono sviluppo già esposto, non holdout nuovo. Risultato nullo, contrario o insufficiente è una consegna valida.
+
+Lettura risultati obbligatoria: riportare se mediana/media e dispersione cambiano entro stesso verso, se i mesi concordano o si contraddicono e dove i gruppi sono vuoti/scarsi; nessuna generalizzazione da un singolo caso. Mostrare esempi contrari senza scegliere solo grafici favorevoli: per ciascun verso con dati scegliere deterministically la riga con final più opposto al verso (tie: origine più antica), oltre a una prima origine disponibile del periodo. I criteri esempi sono retrospettivi dichiarati, non un nuovo test.
+
+## 7. Integrazione nella dashboard esistente
+
+Conservare navbar superiore e stile approvato. Aggiungere scelta distinta “Simulazione locale” / “Studio storico”; il pannello “Scenari simulati” esiste solo nel primo ambiente. Cambio ambiente smonta conferme, richieste e provider precedenti, senza trasferire bot/ordini. Default iniziale dichiarato; dopo apertura bundle valido portare allo storico. Nessun bundle importato ⇒ istruzione “Apri studio storico”, non prezzi finti sotto etichetta storico.
+
+Banner nello storico: **STORICO REALE — studio osservativo locale — nessun collegamento exchange**. Nell'ambiente fixture conservare esattamente il banner di simulazione. “Binance Vision · BTCUSDT perpetual USDⓈ-M · prezzo negoziato · UTC”, intervallo/cutoff e qualità input sempre identificabili. Nessuno stato “connesso demo”, feed live fresco o “0 s fa” dal clock reale.
+
+Nello storico:
+- selettore data/ora UTC sulle origini dello studio, slider o elenco indicizzato, precedente/successiva chiusura 45m, 45m/1D; impostazione iniziale prima origine studio. Disabilitare oltre i confini; una lacuna resta selezionabile con motivo.
+- grafico/pannelli sincronizzati sullo stesso cutoff t; grafico mostra soltanto barre terminate entro t e livelli/eventi available_at<=t. Si può usare un tratto precedente da inizializzazione; non è oggetto delle tabelle studio. Niente giorno completo futuro o serie oltre cutoff; buchi resi come buchi.
+- sei famiglie consultabili alle due scale, valori effettivi, formule/parametri e motivi di indisponibilità; nessuna label EMA con dati SMA, nessuna linea di fixture. Nessuna frase predittiva precompilata “il bot pensa / call LONG”.
+- riquadro call sostituito contestualmente da “Osservazioni al [t]” (struttura45m/1D, relazione e disponibilità); nessun falso WAIT che faccia credere a una decisione algoritmica. Area posizione/conto/ordini non alimentata: dichiarare “Non previsti nello studio osservativo”. Nessun saldo 10.000, fee o posizione sintetici mescolati ai prezzi reali. Start/Stop, modalità esecuzione e uscite non operativi nello storico: nascondere o spiegare chiaramente non disponibili.
+- comando distinto **“Mostra seguito retrospettivo 24h”**: evidenza visiva e cutoff origine t mantenuto. Estendere lo stesso grafico fino a min(t+24h, fineinput) con futuro marcato come retrospettivo; pannelli osservativi RESTANO allo snapshot t. Separata scheda esiti final/up/down e stato orizzonte, con etichetta a posteriori. Ritorno “Solo informazioni al momento” rimuove il futuro. Non anticipare nella vista causale valori delle tabelle/esiti o titoli che li rivelano.
+- riepilogo mensile/totale raggiungibile tramite la voce Ricerca / Backtest esistente, ora etichettata coerentemente “Studio osservativo” nell'ambiente storico. Niente seconda app o dashboard di ricerca separata. Mostrare tabelle principali, legenda, numerosità, casi mancanti, avviso sovrapposizione e limiti; link alla lettura del report locale. Storico temporale delle revisioni filtrato per available_at, distinto dal seguito del prezzo.
+- i dati futuri possono essere nel bundle locale e leggibili nel sorgente: non si promette una modalità cieca sicura né accesso a periodi protetti.
+
+I componenti condivisi possono essere adattati con discriminanti e proprietà pertinenti; non duplicare l'intero albero. Conservare il percorso fixture come demo isolata se semplice; non ampliarlo. Nessun nuovo restyling/gate Figma necessario: sono adattamenti funzionali al nuovo dato.
+
+## 8. Sequenza di esecuzione autonoma e verifiche proporzionate
+
+1. Verifica checkout/base e prerequisiti, leggi parti pertinenti; configura convenzioni v1 e relativo hash PRIMA degli esiti. Progetta contratti minimi e layout storico secondo task, senza delegare scelte di studio al codice.
+2. Motore con pochi esempi sintetici discriminanti e riscontri numerici manuali: aggregation, formule, indipendenza disponibilità, pivot/ancore, gap e snapshot causali. Non produrre 70 giorni sintetici per abitudine: quella proposta DESIGN-001 non è attivata.
+3. Acquisisci sette mesi autorizzati, verifica checksum/identità/copertura, registra manifest. Se accesso impossibile consegna blocco preciso; completa lavoro non dipendente ma non spacciare sintetico per conclusione macrofase.
+4. Elabora osservazioni reali, poi esiti/tabelle congelati. Registra durate/counts, riesegui solo per bug identificati. Nessuna ricerca parametri o iterazione per ottenere esiti favorevoli.
+5. Collega bundle all'app, verifica principali stati, prepara lettura risultati e istruzioni di prova Owner. Consegna intero percorso, non chiedere approvazione al solo punto 2.
+
+Test mirati richiesti, con esempi calcolabili:
+- 45 minuti esatti, gap e confini UTC/mezzanotte; aggregati 45m/1D coerenti dagli stessi minuti.
+- A media TR20 con precedente; SMA20/50, pendenza a 24 barre, indipendenza da pivot; rapporto volume con corrente esclusa; denominatori zero noti distinti da rapporti mancanti.
+- pivot rivelato esattamente i+2, parità e dual, duehigh/duelow e stato misto; stesso tipo non più esteso, sostituzione ancora versionata e gamba DOWN Fibonacci.
+- stesso prefisso, due futuri diversi: snapshot fino al cutoff identici; provare anche aggiornamenti pivot, gap futuro e confine giorno. Confrontare elaborazione batch e prefisso troncato sullo stesso cutoff, non solo funzione mockata.
+- esiti 24h con endpoint esatto e segni, high/low intraminuto, zeroA, gap e ultima giornata censurata; tutte le 3.904 righe della griglia conservate; somme delle partizioni riconciliate; quantili con piccolo campione noto.
+- integrazione UI: import valido/errato, cutoff sincronizzato 45m/1D e avanzamento, futuro solo su toggle esplicito, ritorno causale, dati null leggibili e nessun saldo/call/ordine fittizio nello storico. Cambio ambiente invalida eventuale conferma.
+- build/typecheck e test pertinenti del frontend; regressioni conferme R1 solo se toccato shell/provider. Non ripetere automaticamente i 50 test simulazione o suite generali Python, niente CI/polling.
+- prova browser sul bundle reale: prima origine, mezzanotte, esempio pivot/ancora, una fine censurata, riepilogo mesi e toggle seguito. Screenshot essenziali 1366 o 1680 della vista causale, seguito distinto e tabella; non venti immagini. Chiudere solo processi propri, nessun processo Owner.
+
+Bug: descrivere trigger, formula prima/dopo, test discriminante e impatto sulle tabelle; bump patch versione e rigenerare run. Non cambiare definizione s45/s1d, soglie o popolazione per correggere un risultato sgradito. Se specifica contraddittoria coinvolge obiettivi/metodo chiedere Director; niente nuova richiesta ordinaria ad Astra.
+
+Esempi numerici di controllo prefissati (sintetici, non prezzi BTC): barre complete C_i=100+i, O_i=C_i, H_i=C_i+1, L_i=C_i-1 per i=1..51, V_i=i; dal secondo TR=2. A a i=20 assente, a i=21 vale 2; SMA20 a i=20 vale 110,5; a i=24 vale 114,5 e pendenza=2; SMA50 a i=50 vale 125,5, SMA20=140,5 e distanza=7,5; posizione a i=21 vale 4,75. Volume relativo a i=21 =21/mediana(1..20)=2. Queste barre non generano automaticamente struttura: dipende dai pivot, e può restare indisponibile.
+Ancore 100→120: r=0,382 a 112,36 e u=1,272 a 125,44; ancore 120→100: r=0,382 a 107,64 e u=1,272 a 94,56. Esito con p=100, a=2, close24h=102, massimo futuro106 e minimo97: final=1, up=3, down=1,5. Realizzare finestre valide per il controllo esito; non inventare campi mancanti per soddisfare la formula.
+
+## 9. Consegna, pubblicazione e prova Owner
+
+Commit/push ordinari su main autorizzati per codice, test pertinenti, istruzioni, schema/config e report breve. Prima pubblicazione verificare assenza di raw/bundle/prezzi minuto reali in Git. Report aggregato piccolo docs/research/OBS-001-results.md: configurazione/run/inputhash, copertura, tabelle prefissate, lettura con mesi discordi e casi contrari, attribuzione/licenza dei soli derivati come sopra. File pesanti ed esempi temporali reali fuori Git; non allegare mesi di dati in markdown.
+
+Aggiornare README con prerequisiti effettivi e comandi Windows completi: acquisizione autorizzata, generazione bundle, apertura nell'app e ripetizione offline. Documentare funzionante/simulato/assente. Specificare percorso locale esatto di input/output e sintesi per il Director senza esporre segreti.
+Consegna nel task e STATE: commit e file, convenzioni/hash, fonte e qualità effettive, misure disponibili/mancanti, conteggi conciliati, tempi, test/browser realmente svolti, risultati e limiti. Passare a DELIVERED, mai ACCEPTED. Nessun pull/fetch, anche dry-run; sincronizzazione checkout a cura di Gian. Se base divergente, non sovrascrivere.
+
+Prova Gian dopo review: avviare stessa dashboard, aprire bundle generato, selezionare una data UTC, avanzare 45m, passare 1D, consultare le sei famiglie, vedere perché un pivot diventa noto dopo, aprire seguito retrospettivo e tornare alla vista causale, consultare mese e caso contrario. Non presentare questa prova come trading validato.
+
+Criterio di chiusura macrofase: storico reale nell'app, osservazioni causali e revisioni preservate, percorso riproducibile, confronto descrittivo previsto con casi incompleti/contrari, prova Owner e review Director. Non è richiesto un risultato favorevole. Tornare ad Astra solo a conclusione o conflitto sostanziale.
+
+## 10. Esclusioni
+
+Nessuna strategia di ingresso/uscita, ordine exchange, conto operativo, capitale/leva, valutazione economica, costo/fee/funding, acquisizione extra sette mesi, dati successivi al 2025, apertura del 2026 protetto o riattivazione vecchi studi. Fonte per ricerca non approva esecuzione reale né accesso Owner. Nessuna ricerca automatica di combinazioni.
 
 ## Spazio dell'esecutore
 
-Claude Code, 16 ottobre 2026. Base `1afa204` su `main`, checkout pulito, nessun lavoro precedente di UI-002 trovato. Nessun pull o fetch.
+Da compilare con avanzamento e consegna completa.
 
-### Fase A — manutenzione degli strumenti
+## Review del Director
 
-**Processo dell'Owner.** All'avvio era attivo un `vite` di sviluppo (`npm run dev`, PID 10720, avviato alle 18:34) che non era mio. Teneva bloccato `esbuild.exe` in `node_modules`. Non l'ho chiuso: ho preparato l'aggiornamento in una copia esterna della cartella `dashboard`. Gian l'ha poi chiuso; da quel momento tutte le installazioni e i controlli sotto sono stati eseguiti nel checkout.
-
-**Versioni.**
-
-| Pacchetto | Prima | Dopo |
-|---|---|---|
-| vite | 6.3.5 | **6.4.4** (esatta) |
-| vitest | 3.1.4 | **4.1.11** (esatta) |
-| @vitest/mocker | 3.1.4 | 4.1.11 (unica copia) |
-| tinypool | 1.1.1 | assente dal grafo |
-| vite-node | 3.1.4 | assente dal grafo |
-| esbuild | 0.25.12 | 0.25.12 (invariato, via vite) |
-
-- Comando: `npm install --save-exact --save-dev vite@6.4.4 vitest@4.1.11`. Gli altri @vitest/* risolti sono tutti 4.1.11. @vitejs/plugin-react 4.4.1 usa la stessa vite 6.4.4 (deduplicata).
-- React, TypeScript, font, icone, jsdom e plugin React non sono cambiati.
-- Nessun override, nessun `audit fix`, nessuna modifica alla configurazione di npm.
-- Nessun adeguamento a configurazione o test: Vitest 4 esegue i test esistenti con `vite.config.ts` invariato.
-
-**Prerequisiti Node.** Gli `engines` dichiarati da tutti i pacchetti del lockfile sono stati incrociati. Restrittivi sono vite (`^18 || ^20 || >=22`) e vitest (`^20 || ^22 || >=24`); l'intersezione è `^20.0.0 || ^22.0.0 || >=24.0.0`. La precedente formula `>=20.19` includeva Node 21 e 23, non supportati: ho corretto `engines` in `package.json` e nel lockfile. Il README indica Node 24 come scelta consigliata e verificata. Le serie 20 e 22 sono dichiarate ma non provate. Node 20 è fuori supporto dall'aprile 2026: lo cito solo come compatibilità dichiarata.
-
-**Controlli** (Node 24.14.1, npm 11.19.0):
-1. `npm ci` pulito coerente con il lockfile: 153 pacchetti, `found 0 vulnerabilities`.
-2. `npm audit --json`: 0 in ogni gravità, su 203 dipendenze, devDependencies comprese, senza filtri. Prima erano 4: @vitest/mocker, tinypool, vite, vitest (1 moderata, 1 alta, 2 critiche).
-3. `npm test`: **45/45** con Vitest 4.1.11, nessun avviso o deprecazione nell'output.
-4. `npm run build` (tsc + vite 6.4.4) riuscito.
-5. Smoke della build con `vite preview` su 127.0.0.1:4173, eseguito con Chrome headless prima e dopo l'aggiornamento:
-   - 8 richieste, tutte locali, nessuna in errore;
-   - 5 font caricati e nessuna immagine rotta;
-   - scenario iniziale «5 · Protezione aggiornata»;
-   - conferma «Stop totale» → bot fermo, posizione invariata;
-   - nessun errore in console.
-   Lo screenshot a pagina intera a 1680 px è **identico byte per byte** a quello dello stesso controllo eseguito prima dell'aggiornamento.
-
-**Avviso npm effettivo** (`npm ci`, invariato):
-```
-npm warn install-scripts 1 package has install scripts not yet covered by allowScripts:
-npm warn install-scripts   esbuild@0.25.12 (postinstall: node install.js)
-```
-Non è bloccante: installazione, test, build e preview riescono senza approvare lo script. Resta anche la deprecazione `whatwg-encoding@3.1.1`, che arriva da jsdom, rimasto invariato come da mandato. Il README ora distingue l'avviso da un errore che blocca.
-
-Fase A pubblicata nel commit `b9282a1`.
-
-### Fase B — navigazione superiore (differenza dal Figma autorizzata dall'Owner)
-
-**Cosa è cambiato**
-- **Barra laterale rimossa** del tutto: componente `Sidebar.tsx`, colonna da 212 px e stili relativi. Il contenuto usa tutta la larghezza della finestra, con padding 32 px (16 px sotto i 1024 px) e nessun limite di larghezza. A 1680 px grafico e call passano da circa 826+554 px a 943+649 px, cioè +212 px. A 1366 px diventano 755+523 px. Grafico a sinistra e call a destra sono conservati alle larghezze desktop.
-- **Nuovo `TopBar.tsx`,** fisso in alto con:
-  - il banner «SIMULAZIONE LOCALE — nessun collegamento exchange», sempre visibile;
-  - il marchio orbit.;
-  - le stesse destinazioni con le stesse etichette, icone e comportamento (Dashboard, Ricerca / Backtest, Storico, Conto, Impostazioni), stato selezionato con `aria-current`;
-  - il collegamento «Guida ai segnali», che prima stava nella barra laterale;
-  - a destra, il pulsante «Scenari simulati».
-  L'altezza della parte fissa è misurata, così Storico, Conto e Segnali non finiscono sotto la barra.
-- **Pannello «Scenari simulati».** Parte chiuso. È una fascia richiudibile sotto la barra, non una colonna, con bordo tratteggiato ambra e titolo «PANNELLO DI SIMULAZIONE · LOCALE». Contiene gli stessi checkpoint (tutti), feed e reset. Il pulsante ha `aria-expanded` e `aria-controls`; il pannello è una regione con nome. Si chiude con «Chiudi», con Esc o col pulsante, e il focus torna al pulsante. Non intrappola il focus. Accanto al pulsante, sopra i 1280 px, compare in piccolo il checkpoint e il feed correnti.
-- **Header.** Tolte le briciole «Workspace / Dashboard · SIMULAZIONE», che duplicavano navigazione e banner. Restano a destra orologio simulato e aggiornamento; prezzo, feed, bot, Start/Stop e modalità sono invariati e separati dalla navigazione.
-- **Elementi della barra laterale non riportati,** per evitare duplicazioni:
-  - il riquadro «Prima il contesto.», di cui resta il collegamento alla guida;
-  - il badge «SIMULAZIONE · FONDI FITTIZI» e la nota sull'ambiente, già coperti dal banner;
-  - il profilo «Il mio workspace», privo di funzione.
-- **Invariati:** provider, token di conferma, contabilità, comandi, colori, tipografia, icone e schede. Nessuna nuova dipendenza.
-- **Sotto i 1024 px** la navigazione va su una propria riga sotto marchio e pulsante scenari; da 1024 a 1279 px resta su una riga e il riepilogo dello scenario si nasconde.
-
-**File:** `dashboard/src/ui/components/TopBar.tsx` (nuovo), `Sidebar.tsx` (eliminato), `App.tsx`, `Header.tsx`, `AccountSection.tsx` (rimosso il margine fisso di scorrimento), `styles.css`, `src/ui/TopBar.test.tsx` (nuovo), `src/ui/ConfirmDialog.test.tsx` (la riproduzione R1-A apre prima il pannello scenari), README e tre immagini.
-
-**Controlli dell'esecutore**
-- `tsc -b` e build riusciti.
-- Test dell'interfaccia: **16/16**. Sono 5 di `App.test`, 6 di R1 e 5 nuovi:
-  - nessuna barra laterale, cinque destinazioni e Dashboard selezionata;
-  - Storico e Conto scorrono alla sezione; Impostazioni non disponibile, poi ritorno;
-  - pannello chiuso all'avvio, poi aperto con checkpoint, feed e reset funzionanti;
-  - Esc dal pannello;
-  - con il pannello aperto e una conferma aperta, barra e pannello sono dentro il fondo `inert`/`aria-hidden`; Tab resta nel dialogo; Esc chiude solo il dialogo e riporta il focus; dopo l'annullamento una conferma viene applicata una volta.
-  Come da mandato, non ho rieseguito i test del provider e della contabilità, che non sono stati toccati.
-- **Browser:** Chrome locale headless sulla build servita da `vite preview` (127.0.0.1:4173), nessun errore in console.
-  - A 1680, 1366 e 900 px: nessuna barra laterale residua, nessuno scorrimento orizzontale della pagina, nessuna sovrapposizione fra gli elementi di barra e header, nessuna etichetta tagliata.
-  - Storico e Conto: la sezione arriva sotto la barra fissa (inizio a 118 e 104 px, barra alta 88 px).
-  - Impostazioni: «Non disponibile in questa versione» con `aria-current`, poi «Torna alla dashboard».
-  - Pannello aperto da tastiera (Invio, poi Tab sul select); cambio a «3 · pendente», feed disconnesso, reset fino a «5» con feed regolare.
-  - Con il pannello aperto, «Stop totale»: fondo inerte, pulsante scenari e navigazione non cliccabili, Tab ciclico nel dialogo. Annulla riporta il focus su «Stop totale» e lascia il bot attivo; la conferma successiva lo ferma.
-- **Immagini:** aggiornate `01-dashboard-L5-1680` e `02-dashboard-L5-1366`, riprese dall'inizio della pagina con viewport alta quanto il documento; nuova `r2-scenari-aperti-1366`. Le altre immagini della cartella restano quelle di R1 con la vecchia barra laterale, come dichiarato nel README.
-
-**Limiti**
-- Con il pannello aperto la parte fissa cresce di circa 100 px a 1366 e di circa 170 px a 900, fino a circa 300 px in tutto: va chiuso dopo l'uso.
-- Non c'è una UI mobile dedicata.
-- La prova Owner del nuovo layout e la review del Director sono ancora da fare.
-
-**Processi.** Ho chiuso solo i miei `vite preview` (PID 16208 e 19788), rimasti attivi dopo l'arresto del task, dopo averne controllato la riga di comando. Il `npm run dev` dell'Owner non è stato toccato: l'ha chiuso Gian.
-
-## Review del Director — 16 ottobre 2026
-
-**Esito UI-002: ACCEPTED tecnicamente.** Base esaminata: 9c5f315ca84b4700a4dea1b7de618306331723a5, preceduta dalla fase A b9282a183c7f86783f9c24a9ee8967aeb113bed1. Nessuna ulteriore implementazione assegnata.
-
-Evidenze indipendenti del Director:
-- Confronto con 1afa204: solo strumenti, layout/UI, test pertinenti, istruzioni e immagini; provider, contratti, fixture e contabilità invariati.
-- Installazione pulita npm ci nella copia separata di review riuscita.
-- Versioni effettive: vite 6.4.4, vitest e @vitest/mocker 4.1.11; tinypool assente dal grafo interrogato.
-- npm audit --json senza filtri: vulnerabilities vuoto, totale 0 su 203 dipendenze al momento del controllo. Non è garanzia di assenza futura di advisory.
-- Rieseguiti i 16 test pertinenti: TopBar, ConfirmDialog e App, tutti passati. Typecheck/build riusciti con Vite 6.4.4.
-- Lettura di TopBar, App, Header e CSS: nessuna colonna laterale, barra sticky, fascia scenari chiusa inizialmente, navigazione preservata, offset di scorrimento misurato, barra e pannello dentro il fondo inerte delle conferme.
-- Esaminate le immagini consegnate 02-dashboard-L5-1366 e r2-scenari-aperti-1366: spazio orizzontale recuperato, schede/stile conservati, simulazione riconoscibile e pannello distinto.
-- I 45 test della fase A, l'identità byte per byte degli screenshot prima/dopo e le prove Chrome a tre larghezze sono evidenze dell'esecutore, non prove browser del Director. La review browser indipendente non è stata eseguita; resta il limite ambientale Chromium già dichiarato.
-- L'avviso allowScripts di esbuild non è stato riprodotto nell'ambiente Director; mantenuta la qualificazione specifica della prova Windows dell'esecutore.
-
-La maggiore altezza sticky quando il pannello è aperto è compatibile con il pannello richiudibile richiesto. Nessuna UI telefono dedicata richiesta. Differenza dal Figma autorizzata esplicitamente dall'Owner; nessun nuovo gate necessario.
-
-Gian aveva confermato l'avvio della versione precedente con npm ci / npm run dev. **Riscontro Owner sul nuovo layout ancora mancante; macrofase aperta.** Prova concreta: aprire la nuova versione, usare Storico/Conto, aprire e chiudere Scenari simulati, cambiare checkpoint e tornare al LONG iniziale, verificare Stop totale distinto da chiusura. Non attribuire una verifica completa delle transizioni alla precedente frase “sembra ok”.
-
-Nessuna nuova autorizzazione su algoritmo, dati, exchange, operazioni esterne o periodi protetti. Nessun task successivo autorizzato da questo ACCEPTED.
-
-## Chiusura macrofase UI — riscontro Owner
-
-Il 16 ottobre 2026 Gian conferma: “si controllato e sembra tutto ok!” dopo la richiesta di verificare il nuovo layout e i controlli principali. Il Director registra il riscontro d'uso positivo, senza attribuire all'Owner test automatici o una verifica esaustiva non descritta. UI-001, R1 e UI-002 costituiscono la consegna della macrofase UI locale simulata, ora conclusa.
-
-Dashboard avviabile sul PC Owner, navigazione superiore approvata, scenari e interazioni disponibili, provider separato; limiti e parti simulate nel README e nelle consegne. Nessuna validazione di strategia o esecuzione exchange.
-
-Gian chiede ora di concentrarsi sull'algoritmo. Passaggio ad Astra previsto dal mandato a fine macrofase: serve la disposizione per il primo percorso algoritmico. Gli obiettivi funzionali sono disponibili in PRODUCT-CONTEXT; DESIGN-001 resta proposta NON APPROVATA/INATTIVA, non diventa esecutivo per questa chiusura. Nessun incarico di codice algoritmo, acquisizione o backtest assegnato a Claude. Il Director definirà il prossimo current_task dopo la disposizione Astra.
+Specifica documentale ex ante, lettura di DESIGN-001, contratto UI e documenti di autorità. Fonte ufficiale consultata e checksum settembre raggiungibile; nessun download ZIP, calcolo reale o esito storico esaminato prima della registrazione. Review di codice, risultati e prova Owner da svolgere dopo consegna.

@@ -15,3 +15,9 @@ Fonte documentale: [registro storico](https://github.com/C-Gian/algorithmic-trad
 | 25 gennaio → 26 luglio 2027 | Finestra A v0.6 registrata, studio INACTIVE; warmup dal 21 dicembre 2026 e tail secondo il vecchio disegno. Nessuna attività attivata qui. |
 
 Una repository nuova non cancella conoscenza o esposizioni pregresse. Non qualificare altri anni come “mai visti” solo perché non compaiono in questa tabella: il registro storico dichiara lacune. Anche i dati di letteratura hanno un'esposizione distinta dai dati esaminati dal progetto. Le scelte della nuova ricerca verranno definite separatamente.
+
+## Mandato corrente OBS-001 — 16 ottobre 2026
+
+Astra autorizza ora, per questo solo studio osservativo descrittivo, acquisizione pubblica e lettura Binance Vision BTCUSDT perpetual USDⓈ-M, klines negoziate1m: inizializzazione [2025-06-01,2025-09-01), studio [2025-09-01,2026-01-01) UTC. Perimetro input totale giugno–dicembre2025, senza tail nel2026. Fonte diversa non rende settembre–dicembre nuovo o indipendente dalle esposizioni già registrate.
+
+Questa è registrazione di autorizzazione, **non prova di acquisizione o copertura effettiva**: l'esecutore aggiungerà data/run/manifest alla consegna dopo i controlli. Nessun accesso al vecchio stack o riuso dei suoi dataset. Gennaio–agosto2026 rimane protetto; il precedente tail del1gennaio non è utilizzabile in OBS-001. HDP-001 e A restano INACTIVE. Nessuna estensione implicita ad altre date, simboli, fonti o studio economico.
