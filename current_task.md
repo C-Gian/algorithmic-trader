@@ -1,6 +1,8 @@
 # Incarico corrente — UI-001
 
-**Stato: DELIVERED — consegna dell'esecutore in attesa di review del Director (vedi «Spazio dell'esecutore»).**
+**Stato: READY — correzioni UI-001/R1 richieste dalla review del Director sul commit 939c866fb847fcc489979d99b2080e0c96bedca7.**
+
+Priorità esecutiva corrente: applicare soltanto UI-001/R1 nella sezione Review del Director in fondo. La specifica e la consegna iniziali restano per contesto; non ripetere il gate Figma già superato o ricostruire la dashboard. La lettura del design è necessaria solo per le parti visive da correggere.
 
 Macro-obiettivo autorizzato: dashboard fedele al Figma approvato, con stati simulati coerenti e fornitore dati separato. Disposizione Astra trasmessa dall'Owner il 16 ottobre 2026.
 Responsabile del task/review: Director. Esecutore: Claude Code.
@@ -155,6 +157,74 @@ Nessuna suite Python o CI eseguita.
 
 **Limiti:** nessuna persistenza; nessun dato dopo le 17:45 CEST dello scenario (le uscite successive usano l'ultimo prezzo un minuto dopo). La prova Owner e la review del Director non sono ancora avvenute.
 
-## Review del Director
+## Review del Director — 16 ottobre 2026
 
-Progetto Figma letto dal Director il 16 ottobre con metadata, screenshot e contesti dei sottoalberi. Riferimento visivo e correzioni documentati. Nessun codice implementato o test applicativo eseguito dal Director; nessuna fedeltà dell'app ancora dimostrata. Accesso diretto dell'esecutore ancora da attestare nella fase A.
+**Esito: consegna non ancora ACCEPTED; correzioni ordinarie UI-001/R1 pronte all'esecuzione.** Il lavoro principale è presente e i conti dell'esempio tornano. Non serve escalation ad Astra.
+
+### Evidenze indipendenti del Director
+
+Base esaminata: 939c866fb847fcc489979d99b2080e0c96bedca7, main verificato a quella revisione.
+- Lettura di codice dei contratti/provider, contabilità, comandi, snapshot, fixture e componenti pertinenti; ispezione del lockfile/config.
+- Copia di review separata dal PC Owner; installazione pulita npm ci riuscita; **28 test originali rieseguiti e passati**, typecheck/build riusciti.
+- Primo tentativo dei test effettuato prima di completare la copia degli SVG: fallimento di import nella copia di review, non difetto del repository. Dopo aver completato i 52 asset, tutti i test sono passati.
+- Confronto visuale delle immagini consegnate: dashboard 1680 e 1366, disconnessione e dialogo stop con il riferimento Figma. Sono screenshot dell'esecutore, non acquisizioni da un browser avviato dal Director.
+- Due sonde indipendenti temporanee con Vitest/Testing Library (non pubblicate come modifica di prodotto) riproducono R1-A e qualificano R1-B sotto.
+- Tentativo di prova browser indipendente non completato: nell'ambiente del Director manca l'eseguibile Chromium di Playwright. Non installato un browser per aggirare il limite; nessuna prova browser o percorso completo dichiarati come propri.
+- Installazione locale non ha riprodotto l'avviso esbuild riferito da Claude: lockfile esbuild 0.25.12, Vite 6.3.5. Visti soltanto avviso ambientale npm http-proxy e deprecazione whatwg-encoding. Non è verificata l'affermazione generica “si può ignorare esbuild”; se compare di nuovo, consegnare testo esatto e comando, senza aggiornamenti indiscriminati.
+
+### R1-A — Conferma applicata a un altro contesto
+
+Riproduzione in Testing Library:
+1. Snapshot iniziale long-5-protection, apertura “Chiudi posizione”.
+2. Cambio checkpoint a short-4-open mentre la conferma è aperta.
+3. Il dialogo resta identico e dice LONG aperta / uscita SELL.
+4. Conferma: il provider crea invece un ordine EXIT BUY sulla posizione SHORT corrente.
+
+Risultato osservato dalla sonda:
+dialogStillSame=true, dialogSaysLong=true, currentSide=SHORT, requestedSide=BUY.
+
+Il dialogo non isola il focus né rende inerte il fondo, e la conferma non è invalidata dai cambi del provider. La sonda ha applicato il cambio tramite evento sul select; non è stata eseguita una prova reale di navigazione Tab dal Director. Non limitare la correzione a coprire quel solo evento.
+
+**Comportamento richiesto:** una conferma autorizza esclusivamente il contesto mostrato. Cambio scenario/reset, lato/identità/quantità posizione, piano pertinente, modalità/bot o freschezza che cambino le conseguenze devono invalidarla prima dell'esecuzione, oppure richiedere nuova anteprima e nuova conferma. Non applicare silenziosamente a una posizione diversa il consenso vecchio. Isolare focus e interazione del fondo durante il dialogo; Escape/Annulla restano disponibili; ripristinare il focus in modo sensato. Gestire anche un aggiornamento del provider durante il dialogo, non solo il click sul selettore.
+
+Criterio: stessa sequenza della riproduzione non produce un ordine nel nuovo scenario finché non viene mostrata e approvata una nuova conferma corretta. Test discriminante su scenario diverso e su variazione pertinente nello stesso scenario. Non modificare i valori contabili delle fixture.
+
+### R1-B — Protezioni e gestione dichiarate correnti con feed non disponibile
+
+Sonda: long-5-protection → DISCONNECTED → preview TAKE_MANUAL.
+Lo snapshot marca correttamente le protezioni LAST_KNOWN, ma la conferma dice “Stop 60.200 e target 62.000 USDT già presenti restano attivi su 0,01000 BTC”, senza limite di verifica. Analoga costruzione di testo condivisa da altri dialoghi. Alcuni badge della posizione mantengono “Gestione automatica” senza indicare la sospensione dovuta al feed.
+
+**Comportamento richiesto:** STALE/DISCONNECTED conserva ultimo stato noto e relativo orario, senza confermare attualità di posizione/protezioni. Nei dialoghi e badge indicare esplicitamente “ultimi noti / non verificabili ora” e sospensione delle azioni automatiche. Stop totale e rilascio manuale possono ancora agire sullo stato locale, con conseguenze qualificate; non devono attestare che un ordine protettivo sia appena stato verificato.
+
+Per questa UI simulata il Director fissa la convenzione mancante: START e ripresa/presa automatica (RESUME_AUTOMATIC, e MODE_CALL_AND_EXECUTION se richiede una presa in gestione) restano bloccati con spiegazione finché il feed non è regolare. Non è riconciliazione exchange reale. La ripresa NON avviene automaticamente al ritorno del feed: l'Owner la richiede e conferma dove previsto. Un bot che era già RUNNING conserva lo stato logico ma le sue azioni risultano sospese durante il problema feed.
+
+Conservare la convenzione approvata nel mandato: richiesta esplicita di uscita con feed non aggiornato resta REQUESTED senza eseguito; il ripristino può completare quella richiesta Owner, senza riattivare autonomamente il bot e senza scambiarla per un nuovo ingresso.
+
+Criteri: una prova su feed STALE e una su DISCONNECTED coprono testi, blocco ripresa e successiva ripresa esplicita a feed regolare; nessuna perdita di posizione o protezioni memorizzate.
+
+### R1-C — Icona deformata nel riquadro aggiornamento della call
+
+Nei due screenshot dashboard consegnati l'icona history del riquadro aggiornamento è stirata verticalmente. Codice: .update-box è un flex container senza allineamento trasversale; Icon rende img senza dimensioni CSS esplicite e il default stretch può allungarla all'altezza del testo. L'asset originale history è 16×16; il riferimento Figma lo usa quadrato.
+
+**Comportamento richiesto:** mantenere la misura/proporzione naturale dell'SVG nel suo slot (ad esempio allineamento del figlio/flex appropriato); non modificare o sostituire l'asset né imporre 100%×100%. Controllare gli altri slot statici toccati dallo stesso stile. Le quattro varianti d'icona non presenti nel design restano una differenza dichiarata, non richiedono un nuovo sistema di icone.
+
+Criterio: rilevazione browser di geometria 16×16 per history nel riquadro e screenshot della parte corretta; anteprima dashboard 1366 da inizio pagina senza artefatti di acquisizione da scroll. Non serve rigenerare venti immagini se il resto non cambia.
+
+### Convenzioni accettabili entro la sola simulazione
+
+Approvate come convenzioni locali, non strategia: uscita alla successiva chiusura 45m predeterminata; ritardo visivo prima del fill; medie illustrative; rami dei comandi Owner che non riapplicano azioni automatiche già presenti; richiesta uscita sospesa e completata al ripristino. Fee e quantità parziale corrispondono alle fixture prescritte.
+
+Il fallback oltre l'ultimo dato rimane soltanto una convenzione sintetica: esplicitarlo nelle istruzioni d'uso/nel testo pertinente (“oltre il segmento: prezzo fittizio mantenuto”), non venderlo come modello di esecuzione o aggiornamento di mercato osservato. Nessun nuovo dato, motore o simulatore necessario.
+
+### Mandato di correzione e consegna
+
+- Stesso task UI-001; base di implementazione 939c866 e questa registrazione di review.
+- Modificare soltanto aree pertinenti a R1-A/B/C e istruzioni/evidenze necessarie. Niente restyling, strategia, acquisizioni, backend o nuove integrazioni.
+- Test mirati nuovi/regressioni su conferme e feed, controllo tipi/build e prova browser/visiva delle parti corrette. La contabilità non cambia: rieseguire i suoi test soltanto se viene toccata o emerge un effetto concreto.
+- Commit/push su main autorizzati come nel mandato; nessun pull dell'esecutore. Aggiornare consegna e STATE con i risultati effettivi, passare a DELIVERED; il Director decide ACCEPTED.
+- Riportare eventuale avviso esbuild esatto se riproducibile; nessun “audit fix” o upgrade generale richiesto.
+- La prova Owner resta da svolgere e la macrofase non è chiusa. Nessuna richiesta ad Astra per queste correzioni ordinarie.
+
+### Review successiva
+
+In attesa della consegna R1.

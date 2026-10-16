@@ -4,27 +4,25 @@ Aggiornato: 2026-10-16. Responsabile: Director.
 
 ## Fatto
 
-- Fondazione funzionale e tre utilità isolate, senza importazione del vecchio trader.
-- Macrofase UI Figma con dati simulati autorizzata da Astra.
-- DESIGN-001 conservato NON APPROVATO e NON ATTIVO.
-- Figma fornito dall'Owner e letto dal Director: dashboard, otto stati, tre conferme e componenti locali.
-- Contesti dei sottoalberi e screenshot verificati; mappa, stile, anteprime e correzioni in [FIGMA-REFERENCE](docs/ui/FIGMA-REFERENCE.md).
-- Contratti, fixture riconciliate, interazioni, verifiche e consegna definiti nel task UI-001.
-- UI-001 eseguito da Claude: accesso Figma verificato nel proprio ambiente; dashboard locale in `dashboard/` con provider simulato separato e contratto TypeScript versionato.
+- Fondazione funzionale, tre utilità isolate; DESIGN-001 NON APPROVATO e NON ATTIVO.
+- UI-001 consegnato da Claude a 939c866fb847fcc489979d99b2080e0c96bedca7: dashboard locale React/TypeScript/Vite, provider simulato separato e scenari LONG/SHORT. Nessun dato reale o collegamento exchange.
+- Figma letto dal Director; accesso dell'esecutore dichiarato riuscito con nodi/metodo nella consegna. Riferimento e immagini in docs/ui.
+- Review indipendente del Director: installazione pulita, 28 test originali e build riusciti; lettura del codice e confronto di quattro immagini dell'esecutore con Figma.
+- Due sonde temporanee riproducono conferma obsoleta su scenario diverso e testi non qualificati delle protezioni durante disconnessione. Individuata anche icona history deformata nei riquadri aggiornamento.
 
 ## Incarico corrente
 
-**UI-001 — DELIVERED**, in attesa di review del Director e della prova d'uso dell'Owner (percorso nel task). Avvio su Windows nel [README](README.md).
+**UI-001/R1 — READY per correzioni ordinarie.** Mandato e riproduzioni in current_task.md. Consegna iniziale non ancora ACCEPTED.
 
-## Che cosa esiste realmente
+Correggere conferme legate al contesto/focus, testi e ripresa con feed non disponibile, proporzioni icona; controlli mirati e nuova consegna. Commit/push pertinenti autorizzati. Gian sincronizza il checkout alla versione del task prima di Claude.
 
-Documentazione, riferimento Figma, tre utilità Python e una dashboard React/TypeScript/Vite **solo simulata**: percorso LONG con 10 checkpoint, variante SHORT con 2, alterazioni controllate del feed, conferme operative e contabilità riconciliata con l'esempio del task. Nessun algoritmo, dato reale, backend, conto collegato o esecutore exchange. Screenshot dell'app in [docs/ui/app-screenshots](docs/ui/app-screenshots/).
+## Verifiche e limiti
 
-Verifiche dell'esecutore: 28 test Vitest (contabilità, checkpoint, percorso Owner, duplicati, disconnessione, dialoghi), typecheck e build, prova nel browser headless. Review del Director e prova dell'Owner ancora da fare. I 14 test Python delle utilità non sono stati rieseguiti (codice non toccato).
+Il Director ha rieseguito i test/build nella propria copia. Non ha completato la prova browser indipendente perché manca Chromium nell'ambiente; le immagini esaminate e il percorso browser completo sono evidenze di Claude. Prova d'uso Owner ancora mancante.
 
-## Decisioni ordinarie esplicitate
+Avviso esbuild riferito dall'esecutore non riprodotto nell'installazione del Director; non qualificato automaticamente come innocuo. Eventuale testo esatto da riportare se ricompare.
 
-Correggere le etichette “Start” ereditate erroneamente dalle varianti Figma e le larghezze che ne troncano il testo; preservare stile/layout. Rendere esplicita simulazione locale e assenza connessione exchange/Telegram. Le fixture lineari LONG/SHORT del task sono esempi, non approvazione del prodotto futures o dei parametri del mockup.
+Convenzioni di uscita/medie illustrate approvate soltanto come simulazione; nessun protocollo exchange o strategia approvato. Il modello di contabilità delle fixture resta invariato.
 
 ## Vincoli
 
