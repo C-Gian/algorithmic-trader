@@ -1,6 +1,6 @@
 # Algorithmic Trader — prodotto, decisioni e contesto completo
 
-Versione documentale: 1.0 — 16 ottobre 2026. Responsabile della sintesi: Astra.
+Versione documentale: 1.1 — 16 ottobre 2026. Responsabile della sintesi: Astra.
 
 Questo è il documento funzionale centrale del **nuovo** progetto di Gian. È scritto per poter essere consegnato da solo a una nuova chat: spiega obiettivo, organizzazione, requisiti, ragioni delle scelte, limiti e questioni ancora aperte. Non è una specifica matematica dell'algoritmo, una dichiarazione di efficacia o un'autorizzazione a operare con denaro reale.
 
@@ -332,14 +332,19 @@ Il prompt ordinario può essere semplicemente: «Leggi AGENTS.md e current_task.
 
 ## 31. Macropercorso del nuovo progetto
 
-Questa è la direzione del lavoro, non l'autorizzazione ad avviare tutte le fasi.
+**Priorità aggiornata il 16 ottobre 2026:** Gian sceglie di costruire prima la dashboard approvata in Figma, alimentata da modelli di presentazione e pochi scenari deterministici simulati, e collegare successivamente l'algoritmo. Astra autorizza al Director questa macrofase completa: specifica, incarichi a Claude, implementazione, review, correzioni e prova Owner. Link al progetto e accesso effettivo dell'esecutore devono essere verificati; nessun restyling autonomo. Nessun backend, database, autenticazione o connettore costruito soltanto per alimentare questa UI.
+
+L'app deve mostrare “SIMULAZIONE LOCALE — nessun collegamento exchange”. Call, ordini, eseguiti e posizione restano distinti; parametri, importi e prodotto nel mockup sono esempi. Il fornitore di dati simulati è separato dai componenti, che non deducono segnali o decisioni. Le sezioni non costruite sono dichiarate. I comandi possono produrre solo transizioni locali simulate e coerenti con i requisiti funzionali. Chiusura macrofase: dashboard avviabile sul PC, fedele al Figma, stati navigabili/coerenti, controlli comprensibili e dati sostituibili senza riscrivere la presentazione.
+
+DESIGN-001 è conservato in docs/research/DESIGN-001.md come proposta non approvata: nessun motore delle osservazioni, finestra storica o convenzione numerica attivato. Non sono autorizzati acquisizioni, backtest, algoritmo decisionale, accesso Owner/exchange, ordini esterni o apertura protetta. La sequenza generale sotto descrive le capacità future; il prossimo incremento operativo è la UI simulata appena autorizzata.
 
 1. **Fondazione funzionale e organizzativa:** rendere esplicite decisioni, limiti e ruoli. È lo scopo di questa registrazione.
-2. **Disegno della ricerca e del primo percorso operativo:** Director e Astra chiudono definizioni osservabili, contributi dei segnali, dati, divisione sviluppo/verifica e modello di costo proporzionato. Gian decide i vincoli personali necessari. Nessun incarico aperto a Claude per “trovare la strategia migliore”.
-3. **Studio e prima traduzione eseguibile:** raccogliere conoscenza nel perimetro autorizzato, formulare un candidato completo e implementarlo con esempi discriminanti. Non ottimizzare combinazioni senza limite.
-4. **Percorso integrato visibile nell'app:** analisi, call, aggiornamenti, storia e conto simulato devono avere significati coerenti. Gian prova incrementi utili; il design Figma serve a questa esperienza.
-5. **Verifica storica separata e demo:** valutare strategia, costi, gestione e collegamento nei rispettivi ambienti. La demo non sostituisce lo storico e lo storico non prova la gestione reale degli ordini.
-6. **Eventuale reale:** decisione separata dell'Owner sulla base delle evidenze, con capitale e limiti espliciti. Nessuna promozione automatica.
+2. **Dashboard Figma con dati simulati:** realizzare e provare la UI approvata, con modelli distinti e provider sostituibile, entro la macrofase autorizzata sopra.
+3. **Disegno della ricerca e del primo percorso operativo:** Director e Astra chiudono definizioni osservabili, contributi dei segnali, dati, divisione sviluppo/verifica e modello di costo proporzionato. Gian decide i vincoli personali necessari. Nessun incarico aperto a Claude per “trovare la strategia migliore”.
+4. **Studio e prima traduzione eseguibile:** raccogliere conoscenza nel perimetro autorizzato, formulare un candidato completo e implementarlo con esempi discriminanti. Non ottimizzare combinazioni senza limite.
+5. **Percorso integrato visibile nell'app:** analisi, call, aggiornamenti, storia e conto simulato devono avere significati coerenti. Gian prova incrementi utili; il design Figma serve a questa esperienza.
+6. **Verifica storica separata e demo:** valutare strategia, costi, gestione e collegamento nei rispettivi ambienti. La demo non sostituisce lo storico e lo storico non prova la gestione reale degli ordini.
+7. **Eventuale reale:** decisione separata dell'Owner sulla base delle evidenze, con capitale e limiti espliciti. Nessuna promozione automatica.
 
 Non fissiamo qui una durata fittizia o una promessa di successo. Ogni macrofase deve finire con un risultato utilizzabile, un'incertezza ridotta o un blocco preciso, non soltanto con un altro elenco di possibili studi.
 
@@ -369,12 +374,13 @@ Parla a Gian in modo semplice. Ricorda che vuole partecipare alla strategia, che
 
 Mantieni i ruoli: Astra direzione, Director ragionamento e gestione operativa, Claude esecuzione tecnica. Non chiedere ad Astra ogni microdecisione e non delegare all'esecutore la scelta del metodo. Non creare un nuovo documento per ogni dubbio se basta chiudere una decisione nella macrofase corrente.
 
-Il primo lavoro dopo questa registrazione deve essere un incarico completo deciso dal team, non l'avvio spontaneo di backtest, acquisizioni o trading. Se il testo non contiene una soglia o una regola, non significa che sia lecito inventarla.
+Il lavoro corrente segue la priorità UI Figma simulata della sezione 31 e deve essere definito nel task unico prima di Claude. Non avviare spontaneamente backtest, acquisizioni o trading. Se il testo non contiene una soglia o una regola, non significa che sia lecito inventarla.
 
 ## 34. Storia delle revisioni
 
 | Versione | Data | Variazione |
 |---|---|---|
+| 1.1 | 2026-10-16 | Disposizione Astra: priorità alla UI Figma con provider/scenari simulati; DESIGN-001 non approvato; limiti invariati sui dati e sull'operatività |
 | 1.0 | 2026-10-16 | Prima sintesi funzionale autonoma del nuovo progetto; separazione da archivio, decisioni aperte esplicite, organizzazione dei ruoli e del task unico |
 
 Per approfondire senza cambiare l'autorità di questo documento: indice delle fonti `docs/references/SOURCES.md`, memoria delle esposizioni `docs/research/EXPOSURES.md`, provenienza del recupero `docs/provenance/RECOVERY.md`. Non serve leggerli per comprendere l'obiettivo e il modo di lavorare descritti qui.
