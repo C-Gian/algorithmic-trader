@@ -1,6 +1,6 @@
 # Incarico corrente — UI-002 manutenzione strumenti e navigazione superiore
 
-**Stato: ACCEPTED tecnicamente dal Director — fasi A e B revisionate. Nessuna implementazione successiva assegnata; riscontro Owner sul nuovo layout ancora atteso prima della chiusura macrofase.** Incarico del Director entro la macrofase UI Figma autorizzata da Astra.
+**Stato: ACCEPTED — fasi A e B revisionate; riscontro positivo Owner ricevuto il 16 ottobre 2026. Macrofase UI conclusa entro il perimetro simulato. Nessuna implementazione successiva assegnata.** Incarico del Director entro la macrofase UI Figma autorizzata da Astra.
 Esecutore: Claude Code. Review: Director.
 Base: b751526476ed9dd3800ce249127ad0814ff43d07 e questa registrazione del task.
 La review tecnica di UI-001/R1 è PASS, conservata nella storia di current_task.md al commit b8153351b1ad639fe1141dcbf86f34c1b7d023f1. Il 16 ottobre Gian riferisce di aver eseguito npm ci e npm run dev e che l'app sembra funzionare. È confermato l'avvio sul PC Owner; non è una dichiarazione di verifica completa di ogni transizione. Richiede esplicitamente di eliminare la barra sinistra e spostare la navigazione in alto per recuperare spazio.
@@ -214,3 +214,11 @@ La maggiore altezza sticky quando il pannello è aperto è compatibile con il pa
 Gian aveva confermato l'avvio della versione precedente con npm ci / npm run dev. **Riscontro Owner sul nuovo layout ancora mancante; macrofase aperta.** Prova concreta: aprire la nuova versione, usare Storico/Conto, aprire e chiudere Scenari simulati, cambiare checkpoint e tornare al LONG iniziale, verificare Stop totale distinto da chiusura. Non attribuire una verifica completa delle transizioni alla precedente frase “sembra ok”.
 
 Nessuna nuova autorizzazione su algoritmo, dati, exchange, operazioni esterne o periodi protetti. Nessun task successivo autorizzato da questo ACCEPTED.
+
+## Chiusura macrofase UI — riscontro Owner
+
+Il 16 ottobre 2026 Gian conferma: “si controllato e sembra tutto ok!” dopo la richiesta di verificare il nuovo layout e i controlli principali. Il Director registra il riscontro d'uso positivo, senza attribuire all'Owner test automatici o una verifica esaustiva non descritta. UI-001, R1 e UI-002 costituiscono la consegna della macrofase UI locale simulata, ora conclusa.
+
+Dashboard avviabile sul PC Owner, navigazione superiore approvata, scenari e interazioni disponibili, provider separato; limiti e parti simulate nel README e nelle consegne. Nessuna validazione di strategia o esecuzione exchange.
+
+Gian chiede ora di concentrarsi sull'algoritmo. Passaggio ad Astra previsto dal mandato a fine macrofase: serve la disposizione per il primo percorso algoritmico. Gli obiettivi funzionali sono disponibili in PRODUCT-CONTEXT; DESIGN-001 resta proposta NON APPROVATA/INATTIVA, non diventa esecutivo per questa chiusura. Nessun incarico di codice algoritmo, acquisizione o backtest assegnato a Claude. Il Director definirà il prossimo current_task dopo la disposizione Astra.

@@ -4,23 +4,20 @@ Aggiornato: 2026-10-16. Responsabile: Director.
 
 ## Fatto
 
-UI-001 e R1-A/B/C approvati tecnicamente. UI-002 fasi A e B consegnate a b9282a1 e 9c5f315ca84b4700a4dea1b7de618306331723a5, ora **ACCEPTED tecnicamente dal Director**.
+**Macrofase UI simulata CONCLUSA.** UI-001, R1 e UI-002 accettati; Gian conferma il nuovo layout e la prova d'uso con “si controllato e sembra tutto ok!” il 16 ottobre. Non è una verifica esaustiva di ogni transizione né una validazione finanziaria.
 
-Strumenti: Vite 6.4.4, Vitest/mocker 4.1.11, tinypool rimosso. Navigazione superiore al posto della sidebar, contenuto più largo e pannello scenari richiudibile. Differenza dal Figma richiesta e autorizzata da Gian. Provider, contratti, contabilità e semantica dei comandi invariati.
+Codice consegnato: 9c5f315ca84b4700a4dea1b7de618306331723a5. Dashboard locale React/TypeScript, provider simulato separato, scenari deterministici, contratti di presentazione, call/ordini/posizione distinti, conferme vincolate al contesto e gestione feed non corrente. Navigazione superiore approvata dall'Owner; pannello scenari richiudibile.
 
-Review indipendente UI-002: installazione pulita, 16 test UI e typecheck/build riusciti; audit senza filtri a zero su 203 dipendenze; versioni risolte controllate; lettura codice e due immagini dell'esecutore. I 45 test fase A e le prove Chrome a 1680/1366/900 sono evidenze di Claude, non prove browser del Director. Review completa in current_task.md.
+UI-002 verificato indipendentemente: installazione pulita, 16 test UI, typecheck/build e audit senza filtri a zero; codice e due immagini esaminati. Test completi fase A e prove Chrome a tre larghezze sono evidenze di Claude; nessuna prova browser indipendente del Director. Review e consegne in current_task.md e storia Git.
 
-## Mancante e prossimo passo
+## Prossimo passo
 
-Gian ha confermato l'avvio della versione precedente tramite npm ci / npm run dev. Atteso il suo riscontro sulla nuova navigazione e sui controlli principali. **Macrofase UI ancora aperta.** Nessun nuovo incarico esecutivo; niente ulteriori rifiniture automatiche.
+Gian vuole iniziare l'algoritmo. **Attesa disposizione Astra per la nuova macrofase**, come previsto a chiusura UI. Nessun incarico esecutivo nuovo. Il Director ha gli obiettivi funzionali, ma DESIGN-001 resta NON APPROVATO/INATTIVO e non autorizza l'implementazione.
 
-Avvio nuovo layout: dashboard/, npm ci, npm run dev, http://127.0.0.1:5173. Provare Storico/Conto, apertura/chiusura Scenari simulati e Stop totale senza chiudere la posizione.
+Il passaggio deve definire obiettivo e risultato concreto del primo incremento algoritmico, perimetro di studio/implementazione e criteri di chiusura. Il Director tradurrà il mandato nel task unico prima di Claude.
 
-## Limiti
+## Limiti e vincoli
 
-Tutto è simulato e locale. Pannello aperto aumenta l'altezza della barra fissa; richiudibile. Nessuna UI telefono dedicata. Screenshot 01/02/r2 attuali, altri storici con sidebar dichiarati nel README.
-Avviso allowScripts esbuild distinto dagli advisory: prove Windows dell'esecutore funzionanti senza approvare lo script, nessuna modifica globale npm. Browser indipendente Director non eseguito per limite Chromium già dichiarato.
-
-## Vincoli
-
-Banner permanente di simulazione locale. Nessun dato reale, algoritmo, acquisizione, backtest, accesso Owner/exchange, ordine esterno o apertura protetta. DESIGN-001 NON APPROVATO/INATTIVO; studi precedenti INACTIVE. PRODUCT-CONTEXT unico riferimento funzionale.
+UI alimentata esclusivamente da dati fittizi locali; nessun algoritmo decisionale o collegamento exchange. Parametri/prodotto/importi di esempio non sono decisioni di trading.
+Nessuna acquisizione, backtest, accesso Owner/exchange, operazione esterna o apertura protetta autorizzata. Studi precedenti INACTIVE.
+README documenta avvio, simulazioni, differenze Figma e immagini storiche. PRODUCT-CONTEXT unico riferimento funzionale.
