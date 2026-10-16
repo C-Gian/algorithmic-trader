@@ -1,6 +1,6 @@
 # Algorithmic Trader — prodotto, decisioni e contesto completo
 
-Versione documentale: 1.1 — 16 ottobre 2026. Responsabile della sintesi: Astra.
+Versione documentale: 1.2 — 16 ottobre 2026. Responsabile della sintesi: Astra.
 
 Questo è il documento funzionale centrale del **nuovo** progetto di Gian. È scritto per poter essere consegnato da solo a una nuova chat: spiega obiettivo, organizzazione, requisiti, ragioni delle scelte, limiti e questioni ancora aperte. Non è una specifica matematica dell'algoritmo, una dichiarazione di efficacia o un'autorizzazione a operare con denaro reale.
 
@@ -272,6 +272,8 @@ Conto, ordini, eseguiti, operazioni concluse, costi e risultati hanno viste cons
 
 Gian ha proposto Figma AI per il design e successiva implementazione con Claude. I valori di un mockup sono esempi, non parametri approvati. Il design non deve precedere il chiarimento del significato dei campi o diventare una lunga rifinitura scollegata dall'algoritmo.
 
+Aggiornamento Owner del 16 ottobre 2026 dopo il primo avvio locale: eliminare la barra di navigazione sinistra e spostare le destinazioni in una barra superiore per recuperare larghezza nel contenuto principale. Questa modifica è autorizzata rispetto al layout Figma; schede, stile e semantica operativa restano il riferimento. I controlli degli scenari locali devono restare accessibili e chiaramente separati dai comandi operativi, senza occupare una colonna laterale permanente.
+
 ## 25. Linguaggio, colori e aggiornamenti
 
 Lingua principale: italiano semplice. Dire «il mercato osservato è in equilibrio» non equivale a prevedere lateralità. Dire «nessun ingresso» non equivale a dire che non esiste un'analisi.
@@ -380,6 +382,7 @@ Il lavoro corrente segue la priorità UI Figma simulata della sezione 31 e deve 
 
 | Versione | Data | Variazione |
 |---|---|---|
+| 1.2 | 2026-10-16 | Richiesta Owner: navigazione superiore al posto della sidebar; spazio recuperato per il contenuto, controlli simulati distinti |
 | 1.1 | 2026-10-16 | Disposizione Astra: priorità alla UI Figma con provider/scenari simulati; DESIGN-001 non approvato; limiti invariati sui dati e sull'operatività |
 | 1.0 | 2026-10-16 | Prima sintesi funzionale autonoma del nuovo progetto; separazione da archivio, decisioni aperte esplicite, organizzazione dei ruoli e del task unico |
 

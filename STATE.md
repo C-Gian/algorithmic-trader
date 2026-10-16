@@ -10,9 +10,9 @@ Review R1 completa conservata nella storia di current_task.md al commit b8153351
 
 ## Incarico corrente
 
-**UI-002 — READY:** aggiornamento circoscritto Vite/Vitest per gli advisory confermati. Target vite 6.4.4 e vitest 4.1.11; nessun cambio di strategia, UI o contabilità. Mandato, verifiche e pubblicazione in current_task.md.
+**UI-002 — READY, aggiornato su richiesta Owner:** fase A manutenzione circoscritta Vite/Vitest; fase B rimozione sidebar, navigazione superiore e pannello scenari richiudibile. Mandato unico e verifiche in current_task.md. Nessuna modifica di strategia, provider o contabilità.
 
-Nessuna ulteriore implementazione funzionale richiesta per R1. Prova d'uso Owner ancora mancante; macrofase UI non chiusa. L'Owner può provare già la build b751526 in preview locale su 127.0.0.1:4173, mentre procede la manutenzione.
+R1 approvato tecnicamente. Gian conferma npm ci e npm run dev sul proprio PC: l'app sembra funzionare. Non è attestata la verifica completa delle transizioni. Richiesta esplicita di spostare la navigazione in alto per recuperare spazio: deroga autorizzata al layout Figma, resto dello stile conservato. Macrofase aperta fino a review e riscontro sul nuovo layout.
 
 ## Dipendenze e limiti
 

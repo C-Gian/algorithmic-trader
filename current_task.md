@@ -1,13 +1,13 @@
-# Incarico corrente — UI-002 manutenzione strumenti
+# Incarico corrente — UI-002 manutenzione strumenti e navigazione superiore
 
 **Stato: READY.** Incarico del Director entro la macrofase UI Figma autorizzata da Astra.
 Esecutore: Claude Code. Review: Director.
 Base: b751526476ed9dd3800ce249127ad0814ff43d07 e questa registrazione del task.
-La review tecnica di UI-001/R1 è PASS, conservata nella storia di current_task.md al commit b8153351b1ad639fe1141dcbf86f34c1b7d023f1. La prova d'uso Owner rimane da svolgere; non la inventare né dichiarare chiusa la macrofase.
+La review tecnica di UI-001/R1 è PASS, conservata nella storia di current_task.md al commit b8153351b1ad639fe1141dcbf86f34c1b7d023f1. Il 16 ottobre Gian riferisce di aver eseguito npm ci e npm run dev e che l'app sembra funzionare. È confermato l'avvio sul PC Owner; non è una dichiarazione di verifica completa di ogni transizione. Richiede esplicitamente di eliminare la barra sinistra e spostare la navigazione in alto per recuperare spazio.
 
 ## 1. Obiettivo
 
-Rimuovere gli advisory riprodotti sugli strumenti frontend/test con un aggiornamento circoscritto. Preservare dashboard, provider, scenari, contabilità, comandi e stile. Nessun nuovo algoritmo o design.
+Rimuovere gli advisory riprodotti sugli strumenti frontend/test con un aggiornamento circoscritto. Fase A: preservare dashboard, provider, scenari, contabilità, comandi e stile durante la manutenzione. Fase B: applicare esclusivamente la modifica di layout autorizzata dall'Owner nella sezione 7. Nessun nuovo algoritmo.
 
 npm audit --json sulla base segnala @vitest/mocker, tinypool, vite e vitest (1 moderate, 1 high, 2 critical). Il Director ha verificato le fonti dei manutentori, non solo il riepilogo npm. Le versioni correnti sono vite 6.3.5 e vitest 3.1.4.
 
@@ -70,10 +70,40 @@ Percorso breve: stato iniziale → Stop totale e conferma (la posizione rimane a
 
 Nessun dato reale, algoritmo, acquisizione, backtest, accesso exchange/stack Owner, ordine esterno o apertura protetta. DESIGN-001 resta non approvato e inattivo.
 
+
+## 7. Fase B — navigazione superiore richiesta da Gian
+
+Disposizione Owner del 16 ottobre 2026: eliminare la nav bar a sinistra e crearne una in alto, recuperando la larghezza del contenuto principale. È una modifica esplicitamente autorizzata rispetto al layout Figma; non richiede nuova approvazione né modifica del file Figma. Il resto del riferimento visivo rimane valido.
+
+Eseguire dopo la fase A nello stesso incarico UI-002. Se il checkout contiene lavoro in corso sulla fase A, conservarlo: nessun reset o sovrascrittura. Documentare separatamente gli esiti delle due fasi.
+
+### Layout e comportamento attesi
+
+- Rimuovere completamente la colonna laterale e la larghezza/margine riservati. La dashboard usa tutta la larghezza utile della finestra, conservando padding e spaziatura coerenti. Mantenere grafico a sinistra e call/posizione a destra alle larghezze desktop previste; niente colonne vuote o grande limite di larghezza che annulli il guadagno.
+- Inserire in alto una barra orizzontale compatta con identità del prodotto e le stesse destinazioni esistenti: Dashboard, Storico, Conto, Ricerca/Backtest, Impostazioni (usare le etichette attuali). Conservare destinazione, stato selezionato, scroll/viste e messaggi “Non disponibile in questa versione”. Non costruire nuove sezioni.
+- Riorganizzare l'header esistente per evitare duplicazioni di logo, navigazione, stato e comandi. Banner “SIMULAZIONE LOCALE — nessun collegamento exchange” sempre evidente, senza coprire il contenuto. Modalità, feed, bot e comandi operativi restano comprensibili e distinti dalla navigazione.
+- Trasferire i controlli della simulazione in un pannello richiudibile raggiungibile dall'alto con un pulsante esplicito “Scenari simulati”. Il pannello parte chiuso, mostra chiaramente la propria natura locale e contiene gli stessi checkpoint, feed e reset. Non mescolare questi selettori ai comandi di trading e non eliminare scenari. Evitare una seconda colonna permanente che ricrei l'ingombro rimosso.
+- Su finestre più strette permettere un adattamento compatto della navigazione senza sovrapposizioni, tagli o scorrimento orizzontale dell'intera pagina. Nessun obbligo di nuova UI mobile completa.
+- Conservare colori, tipografia, icone e schede del riferimento. Niente restyling generale, nuovi grafici, nuovi valori o dipendenze soltanto per questa modifica.
+
+### Conferme e accessibilità
+
+La correzione R1-A resta vincolante: a dialogo di conferma aperto anche la nuova navbar e il pannello scenari sono inerti; Tab resta nel dialogo, Esc/Annulla e ripristino focus funzionano. Il pannello scenari è utilizzabile da tastiera, ha nome/stato aperto accessibili e non introduce una trappola del focus. Non cambiare provider, token di conferma, contabilità o semantica dei comandi per adattarli al layout.
+
+### Verifiche e consegna della fase B
+
+- Typecheck/build dopo la modifica; test UI mirati a navigazione esistente, apertura/chiusura scenari e isolamento del fondo durante le conferme, comprese regressioni R1 pertinenti. Non rieseguire ulteriormente l'intera suite o i conti immutati per il solo spostamento.
+- Prova browser a 1680, 1366 e 900 px: nessuna colonna sinistra residua, spazio recuperato, contenuto e comandi non sovrapposti, navigazione/scenari accessibili e conferme isolate. Verificare Storico/Conto e una destinazione non disponibile; una transizione di scenario e feed, reset, una conferma annullata e una confermata.
+- Due screenshot aggiornati della dashboard da inizio pagina (1680/1366) e uno con pannello scenari aperto sono sufficienti; aggiungerne altri solo per un difetto concreto. Nessun nuovo gate Figma o rigenerazione generale.
+- README: indicare dove si trovano ora navigazione e selettore scenari. Consegna: differenza autorizzata dal Figma, file, esiti reali e limiti. Nessuna prova browser dell'esecutore attribuita al Director.
+- Pubblicazione e vincoli della sezione 5 valgono anche per i componenti/layout, CSS, test pertinenti e istruzioni di questa fase. Nessuna operazione esterna.
+
+Criterio di chiusura UI-002: manutenzione verificata e navbar superiore funzionante, spazio sinistro recuperato, controlli simulati ancora disponibili, nessuna regressione delle conferme. DELIVERED alla consegna; review del Director e riscontro Owner sul nuovo layout prima della chiusura macrofase.
+
 ## Spazio dell'esecutore
 
 Da compilare.
 
 ## Review del Director
 
-Da effettuare dopo la consegna. Review UI-001/R1 già PASS tecnico; prova Owner e chiusura macrofase ancora pendenti.
+Da effettuare dopo la consegna. Review UI-001/R1 già PASS tecnico; avvio Owner confermato. Review della nuova navigazione e verifica delle interazioni principali ancora pendenti; macrofase aperta.
