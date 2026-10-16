@@ -86,7 +86,8 @@ def cmd_process(conv, data_dir: Path, store=None, manifest=None, argv=None) -> P
     timings["check_s"] = round(time.perf_counter() - t0, 3)
     sw = software_ref()
     run_id = f"OBS-001-v1-e{ENGINE_VERSION}-{manifest['inputHash'][:10]}-{conv.hash[:10]}"
-    run_ref = {"runId": run_id, "inputHash": manifest["inputHash"], "softwareCommit": sw["commit"], "softwareDirty": sw["dirty"]}
+    # Il bundle dipende solo da input, convenzioni e versione del motore: il commit sta nel manifest del run.
+    run_ref = {"runId": run_id, "inputHash": manifest["inputHash"], "engineVersion": ENGINE_VERSION}
     log(f"elaborazione {run_id} (commit {sw['commit']}{' con modifiche locali' if sw['dirty'] else ''})")
     t1 = time.perf_counter()
     chain = run_chain(store, conv)
@@ -123,7 +124,10 @@ def cmd_process(conv, data_dir: Path, store=None, manifest=None, argv=None) -> P
         "checks": chain["summary"]["checks"], "timings": timings, "startedAt": started, "finishedAt": now_utc(),
         "command": " ".join(argv or sys.argv),
     }
-    (run_dir / "run-manifest.json").write_text(json.dumps(run_manifest, indent=2), encoding="utf-8")
+    body_manifest = json.dumps(run_manifest, indent=2)
+    stamp = run_manifest["finishedAt"].replace("-", "").replace(":", "")
+    (run_dir / f"run-manifest-{stamp}.json").write_text(body_manifest, encoding="utf-8")  # storia delle esecuzioni
+    (run_dir / "run-manifest.json").write_text(body_manifest, encoding="utf-8")
     log(f"  bundle {bundle_path} | {len(body) / 1e6:.1f} MB | sha256 {out_hash[:16]}... | {timings}")
     return run_dir
 

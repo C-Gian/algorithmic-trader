@@ -5,5 +5,6 @@ validati -> barre 45m/1D -> osservazioni causali per barra -> esiti 24h separati
 bundle JSON letto dalla dashboard. Nessuna strategia, ordine o valutazione economica.
 """
 
-ENGINE_VERSION = "1.0.0"
+# 1.0.1: il commit del software resta nel manifest del run, non nel bundle (calcoli invariati).
+ENGINE_VERSION = "1.0.1"
 BUNDLE_SCHEMA = "obs001.bundle/1"

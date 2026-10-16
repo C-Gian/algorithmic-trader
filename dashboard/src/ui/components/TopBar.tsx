@@ -2,8 +2,11 @@
  * Navigazione superiore (UI-002, richiesta dell'Owner: sostituisce la barra laterale del Figma).
  * Contiene il banner di simulazione, le stesse destinazioni della barra laterale e il pulsante
  * del pannello «Scenari simulati», che parte chiuso e resta separato dai comandi di trading.
+ * OBS-001: scelta distinta dell'ambiente «Simulazione locale» / «Studio storico»; il pannello
+ * scenari esiste solo nella simulazione.
  */
 import { useEffect, useRef, useState } from 'react';
+import type { Environment } from '../../contract/historical';
 import type { FeedCondition, SimulationControls } from '../../contract/provider';
 import type { IconName } from '../icons';
 import { Icon } from './primitives';
@@ -26,14 +29,29 @@ const FEED_OPTIONS: { id: FeedCondition; label: string }[] = [
 
 const PANEL_ID = 'scenari-simulati';
 
+export const BANNER: Record<Environment, string> = {
+  SIMULATION: 'SIMULAZIONE LOCALE — nessun collegamento exchange',
+  HISTORICAL: 'STORICO REALE — studio osservativo locale — nessun collegamento exchange',
+};
+
+const ENVIRONMENTS: { id: Environment; label: string }[] = [
+  { id: 'SIMULATION', label: 'Simulazione locale' },
+  { id: 'HISTORICAL', label: 'Studio storico' },
+];
+
 export function TopBar({
   active,
   onNavigate,
+  environment,
+  onEnvironmentChange,
   controls,
 }: {
   active: NavTarget;
   onNavigate: (target: NavTarget) => void;
-  controls: SimulationControls;
+  environment: Environment;
+  onEnvironmentChange: (env: Environment) => void;
+  /** Solo nella simulazione locale: controlli del pannello «Scenari simulati». */
+  controls?: SimulationControls;
 }) {
   const [open, setOpen] = useState(false);
   const toggleRef = useRef<HTMLButtonElement>(null);
@@ -53,18 +71,20 @@ export function TopBar({
     toggleRef.current?.focus();
   };
 
-  const checkpoints = controls.listCheckpoints();
-  const currentId = controls.currentCheckpointId();
+  const checkpoints = controls?.listCheckpoints() ?? [];
+  const currentId = controls?.currentCheckpointId() ?? '';
   const current = checkpoints.find((c) => c.id === currentId);
   const scenarios = [...new Set(checkpoints.map((c) => c.scenarioId))];
-  const feed = controls.feedCondition();
+  const feed = controls?.feedCondition() ?? 'OK';
   const feedLabel = FEED_OPTIONS.find((o) => o.id === feed)?.label ?? feed;
+  const historical = environment === 'HISTORICAL';
+  const nav = NAV.map((item) => (historical && item.id === 'research' ? { ...item, label: 'Studio osservativo' } : item));
 
   return (
     <div className="topbar-wrap" ref={barRef}>
-      <div className="sim-banner" role="status">
+      <div className={`sim-banner${historical ? ' is-historical' : ''}`} role="status">
         <Icon name="shieldCheck13" />
-        SIMULAZIONE LOCALE — nessun collegamento exchange
+        {BANNER[environment]}
       </div>
 
       <div className="topbar">
@@ -78,7 +98,7 @@ export function TopBar({
         </div>
 
         <nav className="topnav" aria-label="Navigazione">
-          {NAV.map((item) => (
+          {nav.map((item) => (
             <button
               key={item.id}
               type="button"
@@ -96,6 +116,15 @@ export function TopBar({
         </nav>
 
         <div className="topbar-sim">
+          <div className="env-switch" role="group" aria-label="Ambiente">
+            {ENVIRONMENTS.map((e) => (
+              <button key={e.id} type="button" aria-pressed={environment === e.id} onClick={() => environment !== e.id && onEnvironmentChange(e.id)}>
+                {e.label}
+              </button>
+            ))}
+          </div>
+          {controls && (
+            <>
           <span className="scn-current" aria-hidden="true">
             {current?.label} · feed {feedLabel.toLowerCase()}
           </span>
@@ -111,10 +140,12 @@ export function TopBar({
             Scenari simulati
             <span aria-hidden="true">{open ? '▴' : '▾'}</span>
           </button>
+            </>
+          )}
         </div>
       </div>
 
-      {open && (
+      {controls && open && (
         <section
           id={PANEL_ID}
           className="simpanel simpanel-strip"

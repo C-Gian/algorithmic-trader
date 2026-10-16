@@ -271,6 +271,40 @@ button.badge { border: 0; cursor: pointer; font: inherit; font-size: 11px; }
 .ack input { margin: 2px 0 0; accent-color: var(--accent); }
 .unavailable { display: flex; flex-direction: column; gap: 12px; padding: 32px; align-items: flex-start; }
 
+/* ------------------------------------------------------------ Ambiente e studio storico (OBS-001) */
+.sim-banner.is-historical { background: var(--accent-bg); color: var(--accent); border-bottom-color: #34507a; }
+.env-switch { display: flex; gap: 2px; padding: 3px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-deep); }
+.env-switch button { padding: 6px 10px; border: 0; border-radius: 6px; background: transparent; color: var(--text-2); font-size: 12px; cursor: pointer; white-space: nowrap; }
+.env-switch button[aria-pressed='true'] { background: var(--accent-bg); color: var(--accent); font-weight: 600; }
+.env-switch button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.hist-source { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 12px; color: var(--text-2); }
+.cutoff-row { align-items: flex-end; }
+.cutoff-field { display: flex; flex-direction: column; gap: 3px; font-size: 11px; color: var(--text-2); }
+.cutoff-field input, .cutoff-field select {
+  min-height: 40px; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--inner); color: var(--text); font: inherit; font-size: 13px; color-scheme: dark;
+}
+.cutoff-slider { flex: 1 1 260px; min-width: 200px; accent-color: var(--accent); }
+.file-pick { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
+.file-pick label.btn { cursor: pointer; }
+.file-pick label.btn:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+.retro-card { border-color: #5a4a30; }
+.fam-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.fam-card { gap: 12px; }
+.fam-formula { font-size: 11px; color: var(--text-2); }
+.fam-scales { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.fam-scale { display: flex; flex-direction: column; gap: 8px; min-width: 0; padding: 12px; border-radius: 8px; background: var(--inner); }
+.fam-rows { display: flex; flex-direction: column; gap: 6px; }
+.fam-row { display: flex; flex-direction: column; gap: 1px; }
+.fam-k { font-size: 11px; color: var(--text-3); }
+.fam-v { font-family: var(--mono); font-size: 12px; overflow-wrap: anywhere; }
+.table-scroll { overflow-x: auto; }
+.data-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.data-table th { text-align: right; font-weight: 500; font-size: 11px; color: var(--text-3); padding: 6px 8px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+.data-table td { text-align: right; padding: 6px 8px; border-bottom: 1px solid var(--grid); font-family: var(--mono); white-space: nowrap; }
+.data-table th:first-child, .data-table td:first-child { text-align: left; font-family: var(--font); }
+.data-table tr.is-sparse td { color: var(--text-2); }
+.data-table tr.is-empty td { color: var(--text-3); }
+
 /* ------------------------------------------------------------ Toast */
 .toast { position: fixed; right: 24px; bottom: 24px; z-index: 60; max-width: 360px; padding: 12px 14px; border-radius: 8px; border: 1px solid var(--border); background: var(--raised); font-size: 12px; }
 
@@ -284,6 +318,7 @@ button.badge { border: 0; cursor: pointer; font: inherit; font-size: 11px; }
 }
 @media (max-width: 1279px) {
   .scn-current { display: none; }
+  .fam-grid { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 1023px) {
   .content, .header, .topbar, .simpanel-strip { padding-left: 16px; padding-right: 16px; }

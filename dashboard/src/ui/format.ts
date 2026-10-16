@@ -13,6 +13,17 @@ export const fmtHm = (iso: string) => hmFmt.format(new Date(iso));
 export const fmtDate = (iso: string) => dateFmt.format(new Date(iso)).replace('.', '');
 export const fmtDay = (iso: string) => dayFmt.format(new Date(iso)).replace('.', '');
 
+/* UTC esplicito per lo studio storico: le chiusure non seguono il fuso locale. */
+const utcDateTime = new Intl.DateTimeFormat('it-IT', { timeZone: 'UTC', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
+const utcHm = new Intl.DateTimeFormat('it-IT', { timeZone: 'UTC', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
+const utcDay = new Intl.DateTimeFormat('it-IT', { timeZone: 'UTC', day: '2-digit', month: 'short' });
+export const fmtHmUtc = (iso: string) => utcHm.format(new Date(iso));
+export const fmtDayUtc = (iso: string) => utcDay.format(new Date(iso)).replace('.', '');
+/** «01 set 2025, 00:45 UTC» da millisecondi epoch. */
+export const fmtUtc = (ms: number) => `${utcDateTime.format(new Date(ms)).replace('.', '')} UTC`;
+/** «2025-09-01T00:45Z»: forma compatta e non ambigua. */
+export const isoMinute = (ms: number) => new Date(ms).toISOString().slice(0, 16) + 'Z';
+
 /** CEST/CET (Europe/Rome). */
 export function tzAbbr(iso: string): string {
   const name = zoneFmt.formatToParts(new Date(iso)).find((p) => p.type === 'timeZoneName')?.value ?? '';

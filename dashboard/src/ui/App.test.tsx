@@ -9,7 +9,7 @@ window.scrollTo = () => {};
 
 function setup(checkpoint = 'long-5-protection') {
   const provider = new SimulatedProvider({ exitDelayMs: 0, initialCheckpointId: checkpoint });
-  render(<App provider={provider} controls={provider} />);
+  render(<App createSimulation={() => provider} />);
   return provider;
 }
 

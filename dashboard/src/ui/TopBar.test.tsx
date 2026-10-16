@@ -19,7 +19,7 @@ afterEach(cleanup);
 
 function setup(checkpoint = 'long-5-protection') {
   const provider = new SimulatedProvider({ exitDelayMs: 0, initialCheckpointId: checkpoint });
-  const view = render(<App provider={provider} controls={provider} />);
+  const view = render(<App createSimulation={() => provider} />);
   return { provider, shell: view.container.querySelector('.app') as HTMLElement, container: view.container };
 }
 

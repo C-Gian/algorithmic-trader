@@ -1,11 +1,39 @@
 /**
  * Grafico a candele e volumi in SVG. Solo geometria: candele, serie e livelli arrivano
  * già preparati dal provider. Le misure di riferimento (778 × 412) seguono il nodo Figma 2:9366.
+ * Usato sia dalla simulazione sia dallo studio storico (etichette UTC, buchi, seguito retrospettivo).
  */
 import { useEffect, useRef, useState } from 'react';
-import type { Candle, Level, PreparedSeries, Timeframe } from '../../contract/types';
+import type { Candle, Timeframe } from '../../contract/types';
 import { formatNumber, formatPrice } from '../../lib/numbers';
-import { fmtDay, fmtHm } from '../format';
+import { fmtDay, fmtDayUtc, fmtHm, fmtHmUtc } from '../format';
+
+/** Candela del grafico: `gap` = barra incompleta resa come buco; `retrospective` = oltre il cutoff. */
+export type ChartCandle = Candle & { readonly gap?: boolean; readonly retrospective?: boolean };
+
+export interface ChartSeries {
+  readonly id: string;
+  readonly name: string;
+  readonly points: readonly { readonly time: string; readonly value: number }[];
+}
+
+export interface ChartLevel {
+  readonly id: string;
+  readonly kind: string;
+  readonly origin: string;
+  readonly label: string;
+  readonly price: { readonly amount: number };
+  readonly validTo: string | null;
+  readonly overlay: 'PLAN' | 'LEVELS' | 'FIBONACCI';
+  readonly freshness?: string;
+}
+
+/** Marcatore di un pivot sulla candela candidata, mostrato solo dopo la sua disponibilità. */
+export interface ChartMarker {
+  readonly time: string;
+  readonly kind: 'HIGH' | 'LOW';
+  readonly title: string;
+}
 
 const H = 412;
 const PAD_L = 12;
@@ -23,6 +51,10 @@ const LEVEL_COLOR: Record<string, string> = {
   RESISTANCE: '#edc078',
   SUPPORT: '#edc078',
   FIBONACCI: '#8cbbff',
+  PIVOT_HIGH: '#72dab0',
+  PIVOT_LOW: '#ff9395',
+  DAY_HIGH: '#edc078',
+  DAY_LOW: '#edc078',
 };
 
 export interface ChartOverlays {
@@ -72,15 +104,27 @@ export function CandleChart({
   overlays,
   lastPrice,
   lastPriceCurrent,
+  utc = false,
+  markers = [],
+  dataLabel = 'simulate',
 }: {
   timeframe: Timeframe;
-  candles: readonly Candle[];
-  series: readonly PreparedSeries[];
-  levels: readonly Level[];
+  candles: readonly ChartCandle[];
+  series: readonly ChartSeries[];
+  levels: readonly ChartLevel[];
   overlays: ChartOverlays;
   lastPrice: number;
   lastPriceCurrent: boolean;
+  /** Etichette temporali in UTC (studio storico) invece che nel fuso locale. */
+  utc?: boolean;
+  markers?: readonly ChartMarker[];
+  /** Natura delle candele nell'etichetta accessibile: «simulate» o «storiche». */
+  dataLabel?: 'simulate' | 'storiche';
 }) {
+  const hm = utc ? fmtHmUtc : fmtHm;
+  const day = utc ? fmtDayUtc : fmtDay;
+  const drawn = candles.filter((c) => !c.gap);
+  const cutoffIdx = candles.findIndex((c) => c.retrospective);
   const boxRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(778);
 
@@ -106,7 +150,7 @@ export function CandleChart({
   const seriesPoints = visibleSeries.map((s) => s.points.filter((p) => !startTime || p.time >= startTime));
 
   const values = [
-    ...candles.flatMap((c) => [c.high, c.low]),
+    ...drawn.flatMap((c) => [c.high, c.low]),
     ...visibleLevels.map((l) => l.price.amount),
     ...seriesPoints.flatMap((pts) => pts.map((p) => p.value)),
     lastPrice,
@@ -122,7 +166,7 @@ export function CandleChart({
   const ticks: number[] = [];
   for (let t = Math.ceil(min / tickStep) * tickStep; t <= max; t += tickStep) ticks.push(t);
 
-  const maxVol = Math.max(...candles.map((c) => c.volume), 1);
+  const maxVol = Math.max(...drawn.map((c) => c.volume), 1);
   const timeLabelEvery = Math.max(1, Math.round(n / 6));
 
   const left = visibleLevels
@@ -136,7 +180,7 @@ export function CandleChart({
 
   return (
     <div className="chart-box" ref={boxRef}>
-      <svg width={width} height={H} role="img" aria-label={`Grafico ${timeframe} con ${candles.length} candele simulate`}>
+      <svg width={width} height={H} role="img" aria-label={`Grafico ${timeframe} con ${candles.length} candele ${dataLabel}`}>
         {ticks.map((t) => (
           <g key={t}>
             <rect x={PAD_L} y={y(t)} width={plotRight - PAD_L} height={1} fill={COLORS.grid} />
@@ -152,7 +196,7 @@ export function CandleChart({
             <g key={`t-${c.openTime}`}>
               <rect x={cx(i)} y={26} width={1} height={322} fill={COLORS.grid} />
               <text x={cx(i) - 14} y={400} fill={COLORS.text3} fontSize={10} fontFamily="IBM Plex Mono">
-                {timeframe === '45m' ? fmtHm(c.openTime) : fmtDay(c.openTime)}
+                {timeframe === '45m' ? hm(c.openTime) : day(c.openTime)}
               </text>
             </g>
           ) : null,
@@ -167,6 +211,7 @@ export function CandleChart({
               Vol. BTC
             </text>
             {candles.map((c, i) => {
+              if (c.gap) return null;
               const h = Math.max(2, (c.volume / maxVol) * VOL_MAX);
               return (
                 <rect
@@ -176,25 +221,55 @@ export function CandleChart({
                   width={bodyW}
                   height={h}
                   fill={c.close >= c.open ? COLORS.up : COLORS.down}
-                  opacity={0.35}
+                  opacity={c.retrospective ? 0.15 : 0.35}
                 />
               );
             })}
           </>
         )}
 
+        {cutoffIdx > 0 && (
+          <g>
+            <rect x={(cx(cutoffIdx - 1) + cx(cutoffIdx)) / 2} y={26} width={1} height={322} fill={COLORS.slow} />
+            <text x={(cx(cutoffIdx - 1) + cx(cutoffIdx)) / 2 + 5} y={36} fill={COLORS.slow} fontSize={10} fontFamily="IBM Plex Mono">
+              cutoff t · seguito a posteriori →
+            </text>
+          </g>
+        )}
+
         {candles.map((c, i) => {
+          if (c.gap) {
+            return (
+              <g key={c.openTime}>
+                <title>{`${timeframe === '45m' ? hm(c.openTime) : day(c.openTime)} · barra incompleta: nessun OHLC (buco)`}</title>
+                <rect x={cx(i) - bodyW / 2} y={Y_TOP} width={bodyW} height={Y_BOTTOM - Y_TOP} fill="none" stroke={COLORS.grid} strokeDasharray="2 3" />
+              </g>
+            );
+          }
           const color = c.close >= c.open ? COLORS.up : COLORS.down;
           const top = y(Math.max(c.open, c.close));
           const bodyH = Math.max(1, Math.abs(y(c.open) - y(c.close)));
           return (
-            <g key={c.openTime} opacity={c.partial ? 0.55 : 1}>
+            <g key={c.openTime} opacity={c.partial ? 0.55 : c.retrospective ? 0.4 : 1}>
               <title>
-                {`${timeframe === '45m' ? fmtHm(c.openTime) : fmtDay(c.openTime)}${c.partial ? ' (in formazione)' : ''} · A ${formatPrice(c.open)} · Max ${formatPrice(c.high)} · Min ${formatPrice(c.low)} · C ${formatPrice(c.close)} · Vol ${formatNumber(c.volume, 1)} BTC`}
+                {`${timeframe === '45m' ? hm(c.openTime) : day(c.openTime)}${c.partial ? ' (in formazione)' : ''}${c.retrospective ? ' (a posteriori, oltre il cutoff)' : ''} · A ${formatPrice(c.open)} · Max ${formatPrice(c.high)} · Min ${formatPrice(c.low)} · C ${formatPrice(c.close)} · Vol ${formatNumber(c.volume, 1)} BTC`}
               </title>
               <rect x={cx(i) - 0.5} y={y(c.high)} width={1} height={Math.max(1, y(c.low) - y(c.high))} fill={color} />
               <rect x={cx(i) - bodyW / 2} y={top} width={bodyW} height={bodyH} rx={1} fill={color} />
             </g>
+          );
+        })}
+
+        {markers.map((m) => {
+          const i = candles.findIndex((c) => c.openTime === m.time);
+          if (i < 0 || candles[i].gap) return null;
+          const c = candles[i];
+          const yy = m.kind === 'HIGH' ? y(c.high) - 7 : y(c.low) + 7;
+          const d = m.kind === 'HIGH' ? `M${cx(i) - 4},${yy - 4} L${cx(i) + 4},${yy - 4} L${cx(i)},${yy + 1} Z` : `M${cx(i) - 4},${yy + 4} L${cx(i) + 4},${yy + 4} L${cx(i)},${yy - 1} Z`;
+          return (
+            <path key={`m-${m.kind}-${m.time}`} d={d} fill={m.kind === 'HIGH' ? COLORS.up : COLORS.down}>
+              <title>{m.title}</title>
+            </path>
           );
         })}
 

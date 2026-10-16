@@ -106,6 +106,11 @@ export class SimulatedProvider implements DashboardProvider, SimulationControls 
     return true;
   }
 
+  /** Ferma il completamento differito delle uscite quando l'ambiente viene smontato. */
+  dispose(): void {
+    this.clearTimer();
+  }
+
   /* ----------------------------------------------------- SimulationControls */
 
   listCheckpoints(): readonly CheckpointInfo[] {

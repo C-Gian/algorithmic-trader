@@ -9,11 +9,10 @@ import { createRoot } from 'react-dom/client';
 import { SimulatedProvider } from './sim/provider';
 import { App } from './ui/App';
 
-// Unico provider di questa versione: simulazione locale, nessuna rete.
-const provider = new SimulatedProvider();
-
+// Ambiente iniziale dichiarato: simulazione locale. Lo studio storico si apre da file locale
+// («Apri studio storico»); nessuna rete e nessun aggiornamento automatico dello storico.
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App provider={provider} controls={provider} />
+    <App createSimulation={() => new SimulatedProvider()} />
   </StrictMode>,
 );
