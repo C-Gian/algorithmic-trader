@@ -1,6 +1,6 @@
 # Incarico corrente — UI-002 manutenzione strumenti e navigazione superiore
 
-**Stato: READY.** Incarico del Director entro la macrofase UI Figma autorizzata da Astra.
+**Stato: IN_PROGRESS — fase A consegnata (vedi Spazio dell'esecutore), fase B in corso.** Incarico del Director entro la macrofase UI Figma autorizzata da Astra.
 Esecutore: Claude Code. Review: Director.
 Base: b751526476ed9dd3800ce249127ad0814ff43d07 e questa registrazione del task.
 La review tecnica di UI-001/R1 è PASS, conservata nella storia di current_task.md al commit b8153351b1ad639fe1141dcbf86f34c1b7d023f1. Il 16 ottobre Gian riferisce di aver eseguito npm ci e npm run dev e che l'app sembra funzionare. È confermato l'avvio sul PC Owner; non è una dichiarazione di verifica completa di ogni transizione. Richiede esplicitamente di eliminare la barra sinistra e spostare la navigazione in alto per recuperare spazio.
@@ -102,7 +102,49 @@ Criterio di chiusura UI-002: manutenzione verificata e navbar superiore funziona
 
 ## Spazio dell'esecutore
 
-Da compilare.
+Claude Code, 16 ottobre 2026. Base `1afa204` su `main`, checkout pulito, nessun lavoro precedente di UI-002 trovato. Nessun pull o fetch.
+
+### Fase A — manutenzione degli strumenti
+
+**Processo dell'Owner.** All'avvio era attivo un `vite` di sviluppo (`npm run dev`, PID 10720, avviato alle 18:34) che non era mio. Teneva bloccato `esbuild.exe` in `node_modules`. Non l'ho chiuso: ho preparato l'aggiornamento in una copia esterna della cartella `dashboard`. Gian l'ha poi chiuso; da quel momento tutte le installazioni e i controlli sotto sono stati eseguiti nel checkout.
+
+**Versioni.**
+
+| Pacchetto | Prima | Dopo |
+|---|---|---|
+| vite | 6.3.5 | **6.4.4** (esatta) |
+| vitest | 3.1.4 | **4.1.11** (esatta) |
+| @vitest/mocker | 3.1.4 | 4.1.11 (unica copia) |
+| tinypool | 1.1.1 | assente dal grafo |
+| vite-node | 3.1.4 | assente dal grafo |
+| esbuild | 0.25.12 | 0.25.12 (invariato, via vite) |
+
+- Comando: `npm install --save-exact --save-dev vite@6.4.4 vitest@4.1.11`. Gli altri @vitest/* risolti sono tutti 4.1.11. @vitejs/plugin-react 4.4.1 usa la stessa vite 6.4.4 (deduplicata).
+- React, TypeScript, font, icone, jsdom e plugin React non sono cambiati.
+- Nessun override, nessun `audit fix`, nessuna modifica alla configurazione di npm.
+- Nessun adeguamento a configurazione o test: Vitest 4 esegue i test esistenti con `vite.config.ts` invariato.
+
+**Prerequisiti Node.** Gli `engines` dichiarati da tutti i pacchetti del lockfile sono stati incrociati. Restrittivi sono vite (`^18 || ^20 || >=22`) e vitest (`^20 || ^22 || >=24`); l'intersezione è `^20.0.0 || ^22.0.0 || >=24.0.0`. La precedente formula `>=20.19` includeva Node 21 e 23, non supportati: ho corretto `engines` in `package.json` e nel lockfile. Il README indica Node 24 come scelta consigliata e verificata. Le serie 20 e 22 sono dichiarate ma non provate. Node 20 è fuori supporto dall'aprile 2026: lo cito solo come compatibilità dichiarata.
+
+**Controlli** (Node 24.14.1, npm 11.19.0):
+1. `npm ci` pulito coerente con il lockfile: 153 pacchetti, `found 0 vulnerabilities`.
+2. `npm audit --json`: 0 in ogni gravità, su 203 dipendenze, devDependencies comprese, senza filtri. Prima erano 4: @vitest/mocker, tinypool, vite, vitest (1 moderata, 1 alta, 2 critiche).
+3. `npm test`: **45/45** con Vitest 4.1.11, nessun avviso o deprecazione nell'output.
+4. `npm run build` (tsc + vite 6.4.4) riuscito.
+5. Smoke della build con `vite preview` su 127.0.0.1:4173, eseguito con Chrome headless prima e dopo l'aggiornamento:
+   - 8 richieste, tutte locali, nessuna in errore;
+   - 5 font caricati e nessuna immagine rotta;
+   - scenario iniziale «5 · Protezione aggiornata»;
+   - conferma «Stop totale» → bot fermo, posizione invariata;
+   - nessun errore in console.
+   Lo screenshot a pagina intera a 1680 px è **identico byte per byte** a quello dello stesso controllo eseguito prima dell'aggiornamento.
+
+**Avviso npm effettivo** (`npm ci`, invariato):
+```
+npm warn install-scripts 1 package has install scripts not yet covered by allowScripts:
+npm warn install-scripts   esbuild@0.25.12 (postinstall: node install.js)
+```
+Non è bloccante: installazione, test, build e preview riescono senza approvare lo script. Resta anche la deprecazione `whatwg-encoding@3.1.1`, che arriva da jsdom, rimasto invariato come da mandato. Il README ora distingue l'avviso da un errore che blocca.
 
 ## Review del Director
 

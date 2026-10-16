@@ -20,7 +20,7 @@ Non creare una seconda foundation o un altro file di task parallelo. Il document
 
 Interfaccia React/TypeScript/Vite in [`dashboard/`](dashboard/), fedele al [riferimento Figma](docs/ui/FIGMA-REFERENCE.md). Tutti i dati sono fittizi e generati localmente: nessun backend, database, rete prezzi o exchange. Banner fisso: **SIMULAZIONE LOCALE — nessun collegamento exchange**.
 
-**Avvio su Windows** (prerequisito: Node.js 20.19 o successivo; verificato con Node 24.14.1 e npm 11.19.0):
+**Avvio su Windows.** Serve Node.js 24 (consigliato; verificato con Node 24.14.1 e npm 11.19.0). Gli strumenti dichiarano compatibili anche le serie 20 e 22, non la 21 né la 23; queste versioni non sono state provate.
 
 ```powershell
 cd C:\Projects\algorithmic-trader\dashboard
@@ -28,7 +28,9 @@ npm ci
 npm run dev
 ```
 
-Durante `npm ci`, npm 11 può mostrare `npm warn install-scripts … esbuild@0.25.12 (postinstall: node install.js)` e un riepilogo di `npm audit`. Nella prova su Windows test, build e avvio funzionano senza approvare lo script. Non è stato applicato nessun aggiornamento delle dipendenze.
+Durante `npm ci`, npm 11 mostra un **avviso** non bloccante: `npm warn install-scripts … esbuild@0.25.12 (postinstall: node install.js)`. Significa che npm non ha eseguito lo script di installazione di esbuild. Nella prova su Windows `npm ci`, test, build e avvio riescono comunque, quindi non serve approvare lo script né cambiare impostazioni di npm.
+
+Diverso è un **errore**: `npm ci` termina con `npm error`, oppure `npm run dev` o `npm run build` si fermano (per esempio con un messaggio su esbuild). In quel caso non approvare script a caso: copia il messaggio e segnalalo.
 
 Aprire http://127.0.0.1:5173 nel browser. Fermare con Ctrl+C. Altri comandi, sempre dalla cartella `dashboard`: `npm test` (test mirati), `npm run build` (typecheck + build), `npm run preview` (build servita su http://127.0.0.1:4173).
 
