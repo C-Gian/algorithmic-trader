@@ -1,6 +1,6 @@
 # Incarico corrente — UI-002 manutenzione strumenti e navigazione superiore
 
-**Stato: IN_PROGRESS — fase A consegnata (vedi Spazio dell'esecutore), fase B in corso.** Incarico del Director entro la macrofase UI Figma autorizzata da Astra.
+**Stato: DELIVERED — fasi A e B consegnate da Claude Code (vedi Spazio dell'esecutore); in attesa di review del Director e riscontro Owner sul layout.** Incarico del Director entro la macrofase UI Figma autorizzata da Astra.
 Esecutore: Claude Code. Review: Director.
 Base: b751526476ed9dd3800ce249127ad0814ff43d07 e questa registrazione del task.
 La review tecnica di UI-001/R1 è PASS, conservata nella storia di current_task.md al commit b8153351b1ad639fe1141dcbf86f34c1b7d023f1. Il 16 ottobre Gian riferisce di aver eseguito npm ci e npm run dev e che l'app sembra funzionare. È confermato l'avvio sul PC Owner; non è una dichiarazione di verifica completa di ogni transizione. Richiede esplicitamente di eliminare la barra sinistra e spostare la navigazione in alto per recuperare spazio.
@@ -145,6 +145,54 @@ npm warn install-scripts 1 package has install scripts not yet covered by allowS
 npm warn install-scripts   esbuild@0.25.12 (postinstall: node install.js)
 ```
 Non è bloccante: installazione, test, build e preview riescono senza approvare lo script. Resta anche la deprecazione `whatwg-encoding@3.1.1`, che arriva da jsdom, rimasto invariato come da mandato. Il README ora distingue l'avviso da un errore che blocca.
+
+Fase A pubblicata nel commit `b9282a1`.
+
+### Fase B — navigazione superiore (differenza dal Figma autorizzata dall'Owner)
+
+**Cosa è cambiato**
+- **Barra laterale rimossa** del tutto: componente `Sidebar.tsx`, colonna da 212 px e stili relativi. Il contenuto usa tutta la larghezza della finestra, con padding 32 px (16 px sotto i 1024 px) e nessun limite di larghezza. A 1680 px grafico e call passano da circa 826+554 px a 943+649 px, cioè +212 px. A 1366 px diventano 755+523 px. Grafico a sinistra e call a destra sono conservati alle larghezze desktop.
+- **Nuovo `TopBar.tsx`,** fisso in alto con:
+  - il banner «SIMULAZIONE LOCALE — nessun collegamento exchange», sempre visibile;
+  - il marchio orbit.;
+  - le stesse destinazioni con le stesse etichette, icone e comportamento (Dashboard, Ricerca / Backtest, Storico, Conto, Impostazioni), stato selezionato con `aria-current`;
+  - il collegamento «Guida ai segnali», che prima stava nella barra laterale;
+  - a destra, il pulsante «Scenari simulati».
+  L'altezza della parte fissa è misurata, così Storico, Conto e Segnali non finiscono sotto la barra.
+- **Pannello «Scenari simulati».** Parte chiuso. È una fascia richiudibile sotto la barra, non una colonna, con bordo tratteggiato ambra e titolo «PANNELLO DI SIMULAZIONE · LOCALE». Contiene gli stessi checkpoint (tutti), feed e reset. Il pulsante ha `aria-expanded` e `aria-controls`; il pannello è una regione con nome. Si chiude con «Chiudi», con Esc o col pulsante, e il focus torna al pulsante. Non intrappola il focus. Accanto al pulsante, sopra i 1280 px, compare in piccolo il checkpoint e il feed correnti.
+- **Header.** Tolte le briciole «Workspace / Dashboard · SIMULAZIONE», che duplicavano navigazione e banner. Restano a destra orologio simulato e aggiornamento; prezzo, feed, bot, Start/Stop e modalità sono invariati e separati dalla navigazione.
+- **Elementi della barra laterale non riportati,** per evitare duplicazioni:
+  - il riquadro «Prima il contesto.», di cui resta il collegamento alla guida;
+  - il badge «SIMULAZIONE · FONDI FITTIZI» e la nota sull'ambiente, già coperti dal banner;
+  - il profilo «Il mio workspace», privo di funzione.
+- **Invariati:** provider, token di conferma, contabilità, comandi, colori, tipografia, icone e schede. Nessuna nuova dipendenza.
+- **Sotto i 1024 px** la navigazione va su una propria riga sotto marchio e pulsante scenari; da 1024 a 1279 px resta su una riga e il riepilogo dello scenario si nasconde.
+
+**File:** `dashboard/src/ui/components/TopBar.tsx` (nuovo), `Sidebar.tsx` (eliminato), `App.tsx`, `Header.tsx`, `AccountSection.tsx` (rimosso il margine fisso di scorrimento), `styles.css`, `src/ui/TopBar.test.tsx` (nuovo), `src/ui/ConfirmDialog.test.tsx` (la riproduzione R1-A apre prima il pannello scenari), README e tre immagini.
+
+**Controlli dell'esecutore**
+- `tsc -b` e build riusciti.
+- Test dell'interfaccia: **16/16**. Sono 5 di `App.test`, 6 di R1 e 5 nuovi:
+  - nessuna barra laterale, cinque destinazioni e Dashboard selezionata;
+  - Storico e Conto scorrono alla sezione; Impostazioni non disponibile, poi ritorno;
+  - pannello chiuso all'avvio, poi aperto con checkpoint, feed e reset funzionanti;
+  - Esc dal pannello;
+  - con il pannello aperto e una conferma aperta, barra e pannello sono dentro il fondo `inert`/`aria-hidden`; Tab resta nel dialogo; Esc chiude solo il dialogo e riporta il focus; dopo l'annullamento una conferma viene applicata una volta.
+  Come da mandato, non ho rieseguito i test del provider e della contabilità, che non sono stati toccati.
+- **Browser:** Chrome locale headless sulla build servita da `vite preview` (127.0.0.1:4173), nessun errore in console.
+  - A 1680, 1366 e 900 px: nessuna barra laterale residua, nessuno scorrimento orizzontale della pagina, nessuna sovrapposizione fra gli elementi di barra e header, nessuna etichetta tagliata.
+  - Storico e Conto: la sezione arriva sotto la barra fissa (inizio a 118 e 104 px, barra alta 88 px).
+  - Impostazioni: «Non disponibile in questa versione» con `aria-current`, poi «Torna alla dashboard».
+  - Pannello aperto da tastiera (Invio, poi Tab sul select); cambio a «3 · pendente», feed disconnesso, reset fino a «5» con feed regolare.
+  - Con il pannello aperto, «Stop totale»: fondo inerte, pulsante scenari e navigazione non cliccabili, Tab ciclico nel dialogo. Annulla riporta il focus su «Stop totale» e lascia il bot attivo; la conferma successiva lo ferma.
+- **Immagini:** aggiornate `01-dashboard-L5-1680` e `02-dashboard-L5-1366`, riprese dall'inizio della pagina con viewport alta quanto il documento; nuova `r2-scenari-aperti-1366`. Le altre immagini della cartella restano quelle di R1 con la vecchia barra laterale, come dichiarato nel README.
+
+**Limiti**
+- Con il pannello aperto la parte fissa cresce di circa 100 px a 1366 e di circa 170 px a 900, fino a circa 300 px in tutto: va chiuso dopo l'uso.
+- Non c'è una UI mobile dedicata.
+- La prova Owner del nuovo layout e la review del Director sono ancora da fare.
+
+**Processi.** Ho chiuso solo i miei `vite preview` (PID 16208 e 19788), rimasti attivi dopo l'arresto del task, dopo averne controllato la riga di comando. Il `npm run dev` dell'Owner non è stato toccato: l'ha chiuso Gian.
 
 ## Review del Director
 

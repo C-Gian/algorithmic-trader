@@ -6,10 +6,9 @@ import { ChartCard } from './components/ChartCard';
 import { ConfirmDialog } from './components/ConfirmDialog';
 import { Header } from './components/Header';
 import { PositionCard } from './components/PositionCard';
-import { Sidebar, type NavTarget } from './components/Sidebar';
 import { SignalsSection } from './components/SignalsSection';
+import { TopBar, type NavTarget } from './components/TopBar';
 import { Unavailable } from './components/Unavailable';
-import { Icon } from './components/primitives';
 import { DashboardContext, useDashboardState } from './useDashboard';
 
 const SCROLL_TARGET: Partial<Record<NavTarget, string>> = { history: 'storico', account: 'conto', signals: 'segnali' };
@@ -36,14 +35,8 @@ export function App({ provider, controls }: { provider: DashboardProvider; contr
   return (
     <DashboardContext.Provider value={api}>
       <div className="app" ref={shellRef}>
-        <div className="sidebar-col">
-          <Sidebar active={view} onNavigate={navigate} controls={controls} />
-        </div>
+        <TopBar active={view} onNavigate={navigate} controls={controls} />
         <div className="main">
-          <div className="sim-banner" role="status">
-            <Icon name="shieldCheck13" />
-            SIMULAZIONE LOCALE — nessun collegamento exchange
-          </div>
           {view === 'dashboard' ? (
             <>
               <Header />

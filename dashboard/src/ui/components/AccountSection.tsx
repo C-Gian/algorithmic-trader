@@ -118,7 +118,7 @@ export function AccountSection() {
         </div>
       </section>
 
-      <div className="account-row" id="storico" style={{ scrollMarginTop: 48 }}>
+      <div className="account-row" id="storico">
         <div className="col-left">
           <div className="card table-card">
             <div className="card-head">

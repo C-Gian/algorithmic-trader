@@ -19,13 +19,7 @@ export function Header() {
 
   return (
     <header className="header">
-      <div className="header-row">
-        <div className="crumbs">
-          <span>Workspace</span>
-          <span>/</span>
-          <strong>Dashboard</strong>
-          <Badge tone="accent">SIMULAZIONE</Badge>
-        </div>
+      <div className="header-row header-row-time">
         <div className="sys-time">
           <span className="mono">
             {fmtDate(now)} · {fmtTime(now)} {tzAbbr(now)} · orologio simulato

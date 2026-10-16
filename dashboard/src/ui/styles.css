@@ -41,64 +41,66 @@ p { margin: 0; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
 /* ------------------------------------------------------------ Layout */
-.app { display: grid; grid-template-columns: 212px minmax(0, 1fr); min-height: 100vh; }
-.sidebar-col { background: var(--surface); border-right: 1px solid var(--border); min-width: 0; }
-.main { min-width: 0; display: flex; flex-direction: column; }
+/* UI-002: niente colonna laterale; il contenuto usa tutta la larghezza della finestra. */
+.app { min-height: 100vh; display: flex; flex-direction: column; }
+.main { min-width: 0; display: flex; flex-direction: column; flex: 1; }
 .content { display: flex; flex-direction: column; gap: 24px; padding: 24px 32px 32px; }
 .row-market { display: flex; gap: 24px; align-items: flex-start; }
 .row-market > .card-chart { flex: 826 1 0; min-width: 0; }
 .row-market > .card-call { flex: 554 1 0; min-width: 0; }
+#storico, #conto, #segnali { scroll-margin-top: calc(var(--sticky-h, 96px) + 16px); }
 
-/* ------------------------------------------------------------ Banner */
+/* ------------------------------------------------------------ Barra superiore */
+.topbar-wrap { position: sticky; top: 0; z-index: 20; }
 .sim-banner {
-  position: sticky; top: 0; z-index: 20; display: flex; align-items: center; justify-content: center; gap: 8px;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
   padding: 7px 16px; background: var(--warn-bg); color: var(--warn); border-bottom: 1px solid #5a4a30;
   font-size: 12px; font-weight: 600; letter-spacing: 0.04em;
 }
-
-/* ------------------------------------------------------------ Sidebar */
-.sidebar {
-  position: sticky; top: 0; height: 100vh; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; gap: 32px;
-  padding: 28px 16px;
+.topbar {
+  display: flex; align-items: center; gap: 12px 24px; flex-wrap: wrap; padding: 8px 32px;
+  background: var(--surface); border-bottom: 1px solid var(--border);
 }
-.brand { display: flex; align-items: center; gap: 10px; padding: 0 8px; }
+.brand { display: flex; align-items: center; gap: 10px; flex: none; }
 .brand-mark { width: 32px; height: 32px; border-radius: 8px; background: var(--accent-bg); display: flex; align-items: center; justify-content: center; }
 .brand-name { font-size: 21px; }
-.nav { display: flex; flex-direction: column; gap: 8px; }
-.nav-caption { font-size: 10px; font-weight: 600; color: var(--text-3); }
+.topnav { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; flex: 1 1 auto; min-width: 0; }
 .nav-item {
-  display: flex; align-items: center; gap: 10px; padding: 13px 12px; border-radius: 8px; border: 0; background: transparent;
-  color: var(--text-2); font-size: 13px; text-align: left; cursor: pointer; width: 100%;
+  display: flex; align-items: center; gap: 8px; padding: 9px 12px; border-radius: 8px; border: 0; background: transparent;
+  color: var(--text-2); font-size: 13px; cursor: pointer; white-space: nowrap;
 }
 .nav-item:hover { background: var(--raised); }
 .nav-item.is-active { background: var(--accent-bg); color: var(--accent); font-weight: 600; }
-.guide { display: flex; flex-direction: column; gap: 10px; padding: 14px; border-radius: 8px; border: 1px solid var(--border); background: var(--inner); }
-.guide > .icon { align-self: flex-start; }
-.guide-title { font-weight: 600; }
-.guide-text { font-size: 12px; color: var(--text-2); }
+.topnav-guide { margin-left: 8px; white-space: nowrap; }
 .link { background: none; border: 0; padding: 0; color: var(--accent); font-size: 12px; cursor: pointer; text-align: left; }
 .link:hover { text-decoration: underline; }
-.sidebar-spacer { flex: 1 0 24px; }
-.env { display: flex; flex-direction: column; gap: 12px; }
-.env-sep { height: 1px; background: var(--border); }
-.env-note { font-size: 11px; color: var(--text-2); }
-.profile { display: flex; align-items: center; gap: 10px; }
-.avatar { width: 30px; height: 30px; border-radius: 100px; background: var(--raised); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; }
-.profile-name { font-size: 12px; font-weight: 600; }
-.profile-sub { font-size: 11px; color: var(--text-3); }
+.topbar-sim { display: flex; align-items: center; gap: 12px; flex: none; margin-left: auto; }
+.scn-current { font-size: 11px; color: var(--text-3); white-space: nowrap; }
+.scn-toggle {
+  display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; border: 1px dashed #5a4a30;
+  background: #1b1913; color: var(--warn); font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap;
+}
+.scn-toggle.is-open { background: var(--warn-bg); }
 
-/* Pannello di simulazione: volutamente distinto dai comandi ordinari. */
-.simpanel { display: flex; flex-direction: column; gap: 10px; padding: 14px; border-radius: 8px; border: 1px dashed #5a4a30; background: #1b1913; }
-.simpanel-title { display: flex; align-items: center; justify-content: space-between; font-size: 10px; font-weight: 600; letter-spacing: 0.06em; color: var(--warn); }
-.simpanel label { display: flex; flex-direction: column; gap: 4px; font-size: 11px; color: var(--text-2); }
+/* Pannello di simulazione: volutamente distinto dai comandi ordinari; fascia richiudibile sotto la barra. */
+.simpanel { display: flex; gap: 10px; padding: 14px; border: 1px dashed #5a4a30; background: #1b1913; }
+.simpanel-strip {
+  flex-direction: row; flex-wrap: wrap; align-items: flex-start; gap: 16px 28px; padding: 14px 32px;
+  border-width: 0 0 1px; box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
+}
+.simpanel-intro { display: flex; flex-direction: column; gap: 4px; flex: 0 1 220px; }
+.simpanel-title { font-size: 10px; font-weight: 600; letter-spacing: 0.06em; color: var(--warn); }
+.simpanel-field { display: flex; flex-direction: column; gap: 4px; font-size: 11px; color: var(--text-2); }
+.simpanel-field:first-of-type { flex: 0 1 300px; min-width: 220px; }
 .simpanel select {
   width: 100%; padding: 7px 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--inner); color: var(--text); font: inherit; font-size: 12px;
 }
-.simpanel-desc { font-size: 11px; color: var(--text-3); }
-.seg { display: flex; flex-direction: column; gap: 4px; }
-.seg button { padding: 6px 8px; text-align: left; border-radius: 6px; border: 1px solid var(--border); background: var(--inner); color: var(--text-2); font-size: 11px; cursor: pointer; }
+.simpanel-desc { font-size: 11px; color: var(--text-3); max-width: 300px; }
+.seg { display: flex; flex-wrap: wrap; gap: 4px; }
+.seg button { padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--inner); color: var(--text-2); font-size: 11px; cursor: pointer; }
 .seg button[aria-pressed='true'] { background: var(--warn-bg); color: var(--warn); border-color: #5a4a30; }
-.sim-reset { padding: 7px 8px; border-radius: 6px; border: 1px solid #5a4a30; background: transparent; color: var(--warn); font-size: 12px; font-weight: 600; cursor: pointer; }
+.sim-reset { align-self: flex-start; padding: 7px 10px; border-radius: 6px; border: 1px solid #5a4a30; background: transparent; color: var(--warn); font-size: 12px; font-weight: 600; cursor: pointer; }
+.simpanel-close { margin-left: auto; align-self: center; min-height: 32px; padding: 6px 12px; }
 
 /* ------------------------------------------------------------ Primitive */
 .badge {
@@ -125,7 +127,7 @@ button.badge { border: 0; cursor: pointer; font: inherit; font-size: 11px; }
 .btn-secondary:disabled, .btn-danger:disabled, .btn-primary:disabled { background: var(--raised); color: var(--text-3); border-color: var(--border); }
 .btn-danger:disabled .icon, .btn-primary:disabled .icon { opacity: 0.45; }
 .content:focus { outline: none; }
-.btn:focus-visible, .nav-item:focus-visible, .link:focus-visible, button.badge:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.btn:focus-visible, .nav-item:focus-visible, .link:focus-visible, button.badge:focus-visible, .scn-toggle:focus-visible, .seg button:focus-visible, .sim-reset:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; }
 .sep { height: 1px; background: var(--border); width: 100%; flex: none; }
@@ -136,10 +138,9 @@ button.badge { border: 0; cursor: pointer; font: inherit; font-size: 11px; }
 .notice.tone-neutral .notice-title { color: var(--text-2); }
 
 /* ------------------------------------------------------------ Header */
-.header { display: flex; flex-direction: column; gap: 18px; padding: 24px 32px 20px; background: var(--surface); border-bottom: 1px solid var(--border); }
+.header { display: flex; flex-direction: column; gap: 18px; padding: 16px 32px 20px; background: var(--surface); border-bottom: 1px solid var(--border); }
 .header-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
-.crumbs { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--text-3); }
-.crumbs strong { color: var(--text); font-weight: 400; }
+.header-row-time { justify-content: flex-end; }
 .sys-time { display: flex; gap: 18px; font-size: 12px; color: var(--text-2); flex-wrap: wrap; }
 .quote { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
 .btc-mark { width: 44px; height: 44px; border-radius: 100px; background: var(--raised); display: flex; align-items: center; justify-content: center; font-size: 26px; }
@@ -281,12 +282,14 @@ button.badge { border: 0; cursor: pointer; font: inherit; font-size: 11px; }
   .account-row { flex-direction: column; align-items: stretch; }
   .account-row > .col-left, .account-row > .col-right { flex: none; }
 }
+@media (max-width: 1279px) {
+  .scn-current { display: none; }
+}
 @media (max-width: 1023px) {
-  .app { grid-template-columns: minmax(0, 1fr); }
-  .sidebar-col { border-right: 0; border-bottom: 1px solid var(--border); }
-  .sidebar { position: static; height: auto; gap: 20px; }
-  .sidebar-spacer { display: none; }
-  .content, .header { padding-left: 16px; padding-right: 16px; }
+  .content, .header, .topbar, .simpanel-strip { padding-left: 16px; padding-right: 16px; }
+  .topbar { gap: 8px 16px; }
+  .topnav { order: 3; flex-basis: 100%; }
+  .topnav-guide { margin-left: 4px; }
 }
 @media (max-width: 719px) {
   .signals-grid { grid-template-columns: minmax(0, 1fr); }

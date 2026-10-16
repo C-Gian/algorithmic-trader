@@ -21,6 +21,8 @@ const exitOrders = (p: SimulatedProvider) => p.getSnapshot().orders.filter((o) =
 describe('R1-A · conferma aperta e cambi di contesto', () => {
   it('riproduzione della review: cambio a SHORT con «Chiudi posizione» aperto non crea ordini', () => {
     const { provider } = setup();
+    // Dal layout UI-002 i selettori sono nel pannello «Scenari simulati», chiuso all'avvio.
+    fireEvent.click(screen.getByRole('button', { name: /Scenari simulati/ }));
     fireEvent.click(screen.getAllByRole('button', { name: 'Chiudi posizione' })[0]);
     const dialog = screen.getByRole('dialog');
     expect(within(dialog).getByText('BTC / USDT · LONG aperta')).toBeTruthy();

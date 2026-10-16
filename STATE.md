@@ -10,7 +10,7 @@ Review R1 completa conservata nella storia di current_task.md al commit b8153351
 
 ## Incarico corrente
 
-**UI-002 — IN_PROGRESS (fase A consegnata da Claude: vite 6.4.4, vitest 4.1.11, npm audit 0, 45 test e build ok; fase B in corso), aggiornato su richiesta Owner:** fase A manutenzione circoscritta Vite/Vitest; fase B rimozione sidebar, navigazione superiore e pannello scenari richiudibile. Mandato unico e verifiche in current_task.md. Nessuna modifica di strategia, provider o contabilità.
+**UI-002 — DELIVERED da Claude, in attesa di review Director e riscontro Owner. Fase A: vite 6.4.4, vitest 4.1.11, npm audit 0, 45 test e build ok. Fase B: barra laterale rimossa, navigazione in alto, pannello «Scenari simulati» richiudibile; 16 test UI e prova Chrome dell'esecutore. Mandato originale:** fase A manutenzione circoscritta Vite/Vitest; fase B rimozione sidebar, navigazione superiore e pannello scenari richiudibile. Mandato unico e verifiche in current_task.md. Nessuna modifica di strategia, provider o contabilità.
 
 R1 approvato tecnicamente. Gian conferma npm ci e npm run dev sul proprio PC: l'app sembra funzionare. Non è attestata la verifica completa delle transizioni. Richiesta esplicita di spostare la navigazione in alto per recuperare spazio: deroga autorizzata al layout Figma, resto dello stile conservato. Macrofase aperta fino a review e riscontro sul nuovo layout.
 

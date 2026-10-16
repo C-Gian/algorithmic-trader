@@ -34,7 +34,9 @@ Diverso è un **errore**: `npm ci` termina con `npm error`, oppure `npm run dev`
 
 Aprire http://127.0.0.1:5173 nel browser. Fermare con Ctrl+C. Altri comandi, sempre dalla cartella `dashboard`: `npm test` (test mirati), `npm run build` (typecheck + build), `npm run preview` (build servita su http://127.0.0.1:4173).
 
-Il **pannello di simulazione** nella barra laterale sceglie il checkpoint dello scenario (LONG o variante SHORT), altera il feed simulato (regolare / non aggiornato / disconnesso) e reimposta tutto. È separato dai comandi ordinari (Stop totale, Start, Solo call / Call + esecuzione, Gestione manuale, Uscita parziale, Chiudi posizione), che chiedono conferma e producono solo esiti simulati predeterminati. Ricaricare la pagina torna al checkpoint iniziale «5 · Protezione aggiornata».
+**Dove si trova cosa (layout UI-002).** Non c'è più la barra a sinistra: la navigazione è nella barra in alto, sotto il banner di simulazione, e resta visibile anche scorrendo. Le voci sono Dashboard, Ricerca / Backtest, Storico, Conto, Impostazioni e «Guida ai segnali». Storico e Conto portano alle rispettive sezioni della dashboard; Ricerca / Backtest e Impostazioni mostrano «Non disponibile in questa versione». A destra della barra il pulsante **«Scenari simulati»** apre e chiude il pannello di simulazione, che all'avvio è chiuso. Si chiude con «Chiudi», con Esc o ripremendo il pulsante.
+
+Il **pannello di simulazione** sceglie il checkpoint dello scenario (LONG o variante SHORT), altera il feed simulato (regolare / non aggiornato / disconnesso) e reimposta tutto. È separato dai comandi ordinari (Stop totale, Start, Solo call / Call + esecuzione, Gestione manuale, Uscita parziale, Chiudi posizione), che chiedono conferma e producono solo esiti simulati predeterminati. Ricaricare la pagina torna al checkpoint iniziale «5 · Protezione aggiornata».
 
 Regole della simulazione da conoscere durante la prova:
 - **Una conferma vale solo per ciò che mostra.** Se lo stato cambia mentre il dialogo è aperto (checkpoint, reset, feed, un eseguito, bot o modalità), il dialogo si chiude senza eseguire nulla e va riaperto. Finché il dialogo è aperto, il resto della pagina non si può usare.
@@ -43,7 +45,7 @@ Regole della simulazione da conoscere durante la prova:
   - le azioni automatiche del bot sono sospese;
   - Start e ritorno alla gestione automatica restano bloccati e, quando il feed torna regolare, vanno richiesti e confermati di nuovo;
   - Stop totale, gestione manuale e richieste d'uscita restano possibili; un'uscita richiesta resta in attesa e si completa al ritorno del feed.
-- **Esecuzione delle uscite:** avviene alla chiusura della candela 45m successiva dello scenario. **Oltre il segmento dello scenario il prezzo fittizio viene mantenuto** (ultima chiusura, un minuto dopo). È una convenzione sintetica, non un prezzo di mercato osservato. Screenshot dei principali stati in [docs/ui/app-screenshots](docs/ui/app-screenshots/).
+- **Esecuzione delle uscite:** avviene alla chiusura della candela 45m successiva dello scenario. **Oltre il segmento dello scenario il prezzo fittizio viene mantenuto** (ultima chiusura, un minuto dopo). È una convenzione sintetica, non un prezzo di mercato osservato. Screenshot in [docs/ui/app-screenshots](docs/ui/app-screenshots/): `01`, `02` e `r2-scenari-aperti-1366` mostrano il layout attuale; le altre immagini documentano gli stati con la vecchia barra laterale.
 
 ## Come lavoriamo
 
