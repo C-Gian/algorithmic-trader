@@ -1,6 +1,6 @@
 # Incarico corrente — OBS-001 osservazioni calcolate e primo studio nell'app
 
-**Stato: READY.** Macrofase completa autorizzata dalla disposizione Astra trasmessa da Gian il 16 ottobre 2026, dopo la chiusura UI al commit baa1e762703f7dfd01f870061dba2a1c691326ce.
+**Stato: IN_PROGRESS — motore e convenzioni registrati, acquisizione in corso (vedi Spazio dell'esecutore).** Macrofase completa autorizzata dalla disposizione Astra trasmessa da Gian il 16 ottobre 2026, dopo la chiusura UI al commit baa1e762703f7dfd01f870061dba2a1c691326ce.
 Responsabile specifica e review: Director. Esecutore: Claude Code.
 Questo task è la registrazione ex ante delle convenzioni **OBS-001/v1**: completare tutti i microstep, dal sintetico all'acquisizione, elaborazione reale, integrazione e prima tabulazione. Nessuna ulteriore autorizzazione ordinaria fra i microstep. Non fermarsi a un motore sintetico. La consegna UI accettata resta nella storia Git a baa1e76.
 
@@ -210,7 +210,15 @@ Nessuna strategia di ingresso/uscita, ordine exchange, conto operativo, capitale
 
 ## Spazio dell'esecutore
 
-Da compilare con avanzamento e consegna completa.
+### Avanzamento — registrazione prima di acquisizione ed esiti (Claude Code, 16 ottobre 2026)
+
+**Stato: IN_PROGRESS.**
+- **Base e ambiente.** Base `413c6d0` su `main`, checkout pulito, nessun pull o fetch.
+- **Python.** Nel PATH non c'è `python`: ci sono solo gli alias di Windows Store, che non funzionano. Sono già presenti interpreti gestiti da `uv`. Uso **Python 3.12.14** (`python3.12`); il motore è verificato anche su 3.11.16. Non ho installato nulla.
+- **Convenzioni congelate.** `config/OBS-001-v1.json`, id `OBS-001/v1`, scritte dal task al commit `413c6d076077412b09b85760101658ab07f76dfd`.
+  - Hash canonico SHA256, calcolato su JSON con chiavi ordinate e indipendente dai fine riga: `3c4eb884d0b6752bfb31e7d9ae159a1414d75cadc90f9abcc9379d5825002387`.
+  - Motore `obs001` versione 1.0.0, schema bundle `obs001.bundle/1`.
+- **Test sintetici.** Motore pubblicato con 30 test sintetici prima di qualunque download o esito reale. Acquisizione ed elaborazione reale avverranno dal commit che contiene questa nota.
 
 ## Review del Director
 

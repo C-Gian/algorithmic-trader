@@ -1,0 +1,57 @@
+{
+  "id": "OBS-001/v1",
+  "description": "Convenzioni ex ante di OBS-001 (current_task.md al commit 413c6d076077412b09b85760101658ab07f76dfd). Non modificare in funzione dei risultati.",
+  "source": {
+    "name": "Binance Vision",
+    "urlTemplate": "https://data.binance.vision/data/futures/um/monthly/klines/BTCUSDT/1m/BTCUSDT-1m-{month}.zip",
+    "checksumSuffix": ".CHECKSUM",
+    "symbol": "BTCUSDT",
+    "segment": "USDS-M futures (um)",
+    "contractType": "PERPETUAL",
+    "baseAsset": "BTC",
+    "quoteAsset": "USDT",
+    "marginAsset": "USDT",
+    "priceType": "TRADE_KLINES",
+    "interval": "1m",
+    "metadataUrl": "https://fapi.binance.com/fapi/v1/exchangeInfo",
+    "termsUrl": "https://raw.githubusercontent.com/binance/binance-public-data/master/TERMS_AND_CONDITIONS.md",
+    "attribution": "Fonte: Binance Vision",
+    "months": ["2025-06", "2025-07", "2025-08", "2025-09", "2025-10", "2025-11", "2025-12"]
+  },
+  "periods": {
+    "inputStart": "2025-06-01T00:00:00Z",
+    "studyStart": "2025-09-01T00:00:00Z",
+    "end": "2026-01-01T00:00:00Z"
+  },
+  "clock": {
+    "barMinutes": 45,
+    "barsPerDay": 32,
+    "dayMinutes": 1440,
+    "anchor": "00:00 UTC"
+  },
+  "volatility": { "trWindow": 20, "requiredBars": 21, "kind": "SIMPLE_MEAN_TR_NOT_WILDER" },
+  "averages": {
+    "fast": 20,
+    "slow": 50,
+    "slopeLag": 4,
+    "requiredBars": { "sma20": 20, "sma50": 50, "distance": 50, "slope": 24, "position": 21, "cross": 51 }
+  },
+  "pivots": { "left": 2, "right": 2, "strict": true, "structurePivotsPerType": 2 },
+  "levels": { "geometricBandA": 0.25, "bandIsClassification": false },
+  "volume": { "medianWindow": 20, "requiredBars": 21, "seasonalAdjustment": false },
+  "fibonacci": { "retracements": [0.382, 0.5, 0.618, 0.786], "projections": [1.272, 1.618] },
+  "study": {
+    "originStepMinutes": 45,
+    "horizonMinutes": 1440,
+    "horizonBars45m": 32,
+    "theoreticalOrigins": 3904,
+    "theoreticalRightCensored": 31,
+    "normalizer": "A45m at origin",
+    "measures": ["final", "up", "down"],
+    "quantiles": [0.1, 0.25, 0.5, 0.75, 0.9],
+    "quantileMethod": "linear, h=(n-1)*q",
+    "months": ["2025-09", "2025-10", "2025-11", "2025-12"],
+    "structureStates": ["UP", "DOWN", "MIXED", "UNAVAILABLE"],
+    "dailyRelations": ["CONCORDANT", "OPPOSITE", "MIXED", "UNAVAILABLE"]
+  }
+}

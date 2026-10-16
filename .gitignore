@@ -1,0 +1,13 @@
+# Python
+__pycache__/
+*.pyc
+
+# OBS-001: dati reali, ZIP, CSV e bundle restano fuori Git (cartella sorella algorithmic-trader-data).
+# Queste regole coprono soltanto incidenti plausibili, come un --data-dir dentro il checkout.
+algorithmic-trader-data/
+OBS-001-data/
+*.zip
+*.zip.CHECKSUM
+*.zip.part
+BTCUSDT-1m-*.csv
+obs001-bundle*.json
