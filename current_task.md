@@ -1,6 +1,6 @@
 # Incarico corrente — UI-002 manutenzione strumenti e navigazione superiore
 
-**Stato: DELIVERED — fasi A e B consegnate da Claude Code (vedi Spazio dell'esecutore); in attesa di review del Director e riscontro Owner sul layout.** Incarico del Director entro la macrofase UI Figma autorizzata da Astra.
+**Stato: ACCEPTED tecnicamente dal Director — fasi A e B revisionate. Nessuna implementazione successiva assegnata; riscontro Owner sul nuovo layout ancora atteso prima della chiusura macrofase.** Incarico del Director entro la macrofase UI Figma autorizzata da Astra.
 Esecutore: Claude Code. Review: Director.
 Base: b751526476ed9dd3800ce249127ad0814ff43d07 e questa registrazione del task.
 La review tecnica di UI-001/R1 è PASS, conservata nella storia di current_task.md al commit b8153351b1ad639fe1141dcbf86f34c1b7d023f1. Il 16 ottobre Gian riferisce di aver eseguito npm ci e npm run dev e che l'app sembra funzionare. È confermato l'avvio sul PC Owner; non è una dichiarazione di verifica completa di ogni transizione. Richiede esplicitamente di eliminare la barra sinistra e spostare la navigazione in alto per recuperare spazio.
@@ -194,6 +194,23 @@ Fase A pubblicata nel commit `b9282a1`.
 
 **Processi.** Ho chiuso solo i miei `vite preview` (PID 16208 e 19788), rimasti attivi dopo l'arresto del task, dopo averne controllato la riga di comando. Il `npm run dev` dell'Owner non è stato toccato: l'ha chiuso Gian.
 
-## Review del Director
+## Review del Director — 16 ottobre 2026
 
-Da effettuare dopo la consegna. Review UI-001/R1 già PASS tecnico; avvio Owner confermato. Review della nuova navigazione e verifica delle interazioni principali ancora pendenti; macrofase aperta.
+**Esito UI-002: ACCEPTED tecnicamente.** Base esaminata: 9c5f315ca84b4700a4dea1b7de618306331723a5, preceduta dalla fase A b9282a183c7f86783f9c24a9ee8967aeb113bed1. Nessuna ulteriore implementazione assegnata.
+
+Evidenze indipendenti del Director:
+- Confronto con 1afa204: solo strumenti, layout/UI, test pertinenti, istruzioni e immagini; provider, contratti, fixture e contabilità invariati.
+- Installazione pulita npm ci nella copia separata di review riuscita.
+- Versioni effettive: vite 6.4.4, vitest e @vitest/mocker 4.1.11; tinypool assente dal grafo interrogato.
+- npm audit --json senza filtri: vulnerabilities vuoto, totale 0 su 203 dipendenze al momento del controllo. Non è garanzia di assenza futura di advisory.
+- Rieseguiti i 16 test pertinenti: TopBar, ConfirmDialog e App, tutti passati. Typecheck/build riusciti con Vite 6.4.4.
+- Lettura di TopBar, App, Header e CSS: nessuna colonna laterale, barra sticky, fascia scenari chiusa inizialmente, navigazione preservata, offset di scorrimento misurato, barra e pannello dentro il fondo inerte delle conferme.
+- Esaminate le immagini consegnate 02-dashboard-L5-1366 e r2-scenari-aperti-1366: spazio orizzontale recuperato, schede/stile conservati, simulazione riconoscibile e pannello distinto.
+- I 45 test della fase A, l'identità byte per byte degli screenshot prima/dopo e le prove Chrome a tre larghezze sono evidenze dell'esecutore, non prove browser del Director. La review browser indipendente non è stata eseguita; resta il limite ambientale Chromium già dichiarato.
+- L'avviso allowScripts di esbuild non è stato riprodotto nell'ambiente Director; mantenuta la qualificazione specifica della prova Windows dell'esecutore.
+
+La maggiore altezza sticky quando il pannello è aperto è compatibile con il pannello richiudibile richiesto. Nessuna UI telefono dedicata richiesta. Differenza dal Figma autorizzata esplicitamente dall'Owner; nessun nuovo gate necessario.
+
+Gian aveva confermato l'avvio della versione precedente con npm ci / npm run dev. **Riscontro Owner sul nuovo layout ancora mancante; macrofase aperta.** Prova concreta: aprire la nuova versione, usare Storico/Conto, aprire e chiudere Scenari simulati, cambiare checkpoint e tornare al LONG iniziale, verificare Stop totale distinto da chiusura. Non attribuire una verifica completa delle transizioni alla precedente frase “sembra ok”.
+
+Nessuna nuova autorizzazione su algoritmo, dati, exchange, operazioni esterne o periodi protetti. Nessun task successivo autorizzato da questo ACCEPTED.

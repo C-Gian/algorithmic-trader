@@ -4,25 +4,23 @@ Aggiornato: 2026-10-16. Responsabile: Director.
 
 ## Fatto
 
-Dashboard locale UI-001 consegnata a 939c866 e corretta a b751526476ed9dd3800ce249127ad0814ff43d07. **R1-A/B/C: review tecnica Director PASS.** Rieseguiti 40 test pertinenti e build; esaminate tre immagini aggiornate. I cinque test della contabilità immutata erano passati nella review precedente; 45 test completi e prova Chrome sono evidenze dell'esecutore.
+UI-001 e R1-A/B/C approvati tecnicamente. UI-002 fasi A e B consegnate a b9282a1 e 9c5f315ca84b4700a4dea1b7de618306331723a5, ora **ACCEPTED tecnicamente dal Director**.
 
-Review R1 completa conservata nella storia di current_task.md al commit b8153351b1ad639fe1141dcbf86f34c1b7d023f1.
+Strumenti: Vite 6.4.4, Vitest/mocker 4.1.11, tinypool rimosso. Navigazione superiore al posto della sidebar, contenuto più largo e pannello scenari richiudibile. Differenza dal Figma richiesta e autorizzata da Gian. Provider, contratti, contabilità e semantica dei comandi invariati.
 
-## Incarico corrente
+Review indipendente UI-002: installazione pulita, 16 test UI e typecheck/build riusciti; audit senza filtri a zero su 203 dipendenze; versioni risolte controllate; lettura codice e due immagini dell'esecutore. I 45 test fase A e le prove Chrome a 1680/1366/900 sono evidenze di Claude, non prove browser del Director. Review completa in current_task.md.
 
-**UI-002 — DELIVERED da Claude, in attesa di review Director e riscontro Owner. Fase A: vite 6.4.4, vitest 4.1.11, npm audit 0, 45 test e build ok. Fase B: barra laterale rimossa, navigazione in alto, pannello «Scenari simulati» richiudibile; 16 test UI e prova Chrome dell'esecutore. Mandato originale:** fase A manutenzione circoscritta Vite/Vitest; fase B rimozione sidebar, navigazione superiore e pannello scenari richiudibile. Mandato unico e verifiche in current_task.md. Nessuna modifica di strategia, provider o contabilità.
+## Mancante e prossimo passo
 
-R1 approvato tecnicamente. Gian conferma npm ci e npm run dev sul proprio PC: l'app sembra funzionare. Non è attestata la verifica completa delle transizioni. Richiesta esplicita di spostare la navigazione in alto per recuperare spazio: deroga autorizzata al layout Figma, resto dello stile conservato. Macrofase aperta fino a review e riscontro sul nuovo layout.
+Gian ha confermato l'avvio della versione precedente tramite npm ci / npm run dev. Atteso il suo riscontro sulla nuova navigazione e sui controlli principali. **Macrofase UI ancora aperta.** Nessun nuovo incarico esecutivo; niente ulteriori rifiniture automatiche.
 
-## Dipendenze e limiti
+Avvio nuovo layout: dashboard/, npm ci, npm run dev, http://127.0.0.1:5173. Provare Storico/Conto, apertura/chiusura Scenari simulati e Stop totale senza chiudere la posizione.
 
-npm audit riprodotto dal Director: quattro pacchetti segnalati (@vitest/mocker, tinypool, vite, vitest). Fonti primarie e versioni registry consultate. Non liquidare i rilievi come innocui perché devDependencies.
+## Limiti
 
-Avviso npm allowScripts di esbuild distinto dalle vulnerabilità. Nessuna approvazione globale di script necessaria se build/test funzionano; in caso di errore serve diagnosi specifica.
-
-La prova browser del Director non è stata completata per mancanza Chromium. Il confronto visivo usa immagini dell'esecutore. Nessuna validazione finanziaria.
+Tutto è simulato e locale. Pannello aperto aumenta l'altezza della barra fissa; richiudibile. Nessuna UI telefono dedicata. Screenshot 01/02/r2 attuali, altri storici con sidebar dichiarati nel README.
+Avviso allowScripts esbuild distinto dagli advisory: prove Windows dell'esecutore funzionanti senza approvare lo script, nessuna modifica globale npm. Browser indipendente Director non eseguito per limite Chromium già dichiarato.
 
 ## Vincoli
 
-Banner permanente di simulazione locale. Nessun dato reale, algoritmo, acquisizione, backtest, accesso Owner/exchange, ordine esterno o apertura protetta.
-DESIGN-001 NON APPROVATO/INATTIVO; vecchi studi INACTIVE. PRODUCT-CONTEXT unico riferimento funzionale.
+Banner permanente di simulazione locale. Nessun dato reale, algoritmo, acquisizione, backtest, accesso Owner/exchange, ordine esterno o apertura protetta. DESIGN-001 NON APPROVATO/INATTIVO; studi precedenti INACTIVE. PRODUCT-CONTEXT unico riferimento funzionale.
