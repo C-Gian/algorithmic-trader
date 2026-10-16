@@ -2,7 +2,11 @@
 
 Nuovo progetto BTC di Gian: analisi continua, opportunità motivate e futura gestione automatica, inizialmente in demo.
 
-**Stato attuale:** fondazione documentale, tre utilità Python isolate e una dashboard locale **solo simulata** (UI-001). Non sono presenti algoritmo, collegamento exchange o ordini reali. Nessuna operatività reale autorizzata.
+**Stato attuale:**
+- fondazione documentale e tre utilità Python isolate;
+- una dashboard locale con due ambienti: la **simulazione locale** (UI-001/UI-002) e lo **studio storico** OBS-001 su prezzi reali BTCUSDT perpetual di Binance Vision, con osservazioni calcolate e un confronto descrittivo.
+
+Non sono presenti strategia, collegamento exchange o ordini reali. Nessuna operatività reale autorizzata.
 
 ## Da dove partire
 
@@ -46,6 +50,58 @@ Regole della simulazione da conoscere durante la prova:
   - Start e ritorno alla gestione automatica restano bloccati e, quando il feed torna regolare, vanno richiesti e confermati di nuovo;
   - Stop totale, gestione manuale e richieste d'uscita restano possibili; un'uscita richiesta resta in attesa e si completa al ritorno del feed.
 - **Esecuzione delle uscite:** avviene alla chiusura della candela 45m successiva dello scenario. **Oltre il segmento dello scenario il prezzo fittizio viene mantenuto** (ultima chiusura, un minuto dopo). È una convenzione sintetica, non un prezzo di mercato osservato. Screenshot in [docs/ui/app-screenshots](docs/ui/app-screenshots/): `01`, `02` e `r2-scenari-aperti-1366` mostrano il layout attuale; le altre immagini documentano gli stati con la vecchia barra laterale.
+
+## Studio storico OBS-001 (dati reali, solo osservazione)
+
+Pipeline Python a sola libreria standard in [`src/obs001`](src/obs001), con convenzioni congelate in [`config/OBS-001-v1.json`](config/OBS-001-v1.json). Lavora così:
+1. legge sette ZIP mensili pubblici di Binance Vision (BTCUSDT perpetual USDⓈ-M, klines 1m, da giugno a dicembre 2025);
+2. calcola osservazioni causali a 45m e 1D;
+3. calcola il seguito a 24h in un modulo separato;
+4. scrive un bundle JSON che la dashboard apre da file.
+
+Risultati e lettura sono in [docs/research/OBS-001-results.md](docs/research/OBS-001-results.md).
+
+**Prerequisiti.** Python 3.11 o successivo, senza pacchetti esterni. Su questo PC `python` non è nel PATH, ma `uv` ha già installato `python3.12` (verificato con 3.12.14; il motore passa i test anche con 3.11.16). Il primo passo richiede connessione internet, gli altri no.
+
+**Comandi** (PowerShell, dalla radice del repository):
+
+```powershell
+cd C:\Projects\algorithmic-trader
+$env:PYTHONPATH = "src"
+python3.12 -m obs001 all          # acquisisce, controlla ed elabora (circa 25 secondi)
+# oppure i passi separati:
+python3.12 -m obs001 acquire      # scarica i 7 ZIP, verifica i checksum, salva metadati e termini
+python3.12 -m obs001 check        # controlla hash, schema e copertura dei minuti
+python3.12 -m obs001 process      # elaborazione offline: osservazioni, esiti, tabelle, bundle
+python3.12 -m obs001 summarize    # rigenera summary.md dall'ultimo bundle
+```
+
+**Ripetizione offline.** Dopo il primo `acquire`, `check` e `process` funzionano senza rete. Un nuovo `acquire` riusa gli ZIP locali se il checksum coincide. A parità di input, convenzioni e motore il bundle esce identico byte per byte e non viene sovrascritto. I test sintetici del motore si eseguono con:
+
+```powershell
+python3.12 -m unittest discover -s tests -p "test_obs001_*.py"
+```
+
+**Dove finiscono i file** (fuori da Git, cartella accanto al repository; si può cambiare con `--data-dir`):
+
+| Cartella | Contenuto |
+|---|---|
+| `C:\Projects\algorithmic-trader-data\OBS-001\raw\` | ZIP e `.CHECKSUM` |
+| `...\meta\` | metadati dello strumento e copia dei termini |
+| `...\manifests\` | manifest di acquisizione e degli input, con copie datate |
+| `...\runs\OBS-001-v1-e1.0.1-40a13e10ac-3c4eb884d0\` | `obs001-bundle.json`, `run-manifest.json`, `summary.md` |
+
+**Aprire lo studio nella dashboard.** Avviare la dashboard come sopra. Nella barra in alto scegliere **«Studio storico»**, premere **«Apri studio storico»** e selezionare `obs001-bundle.json` dalla cartella del run. Il banner diventa **STORICO REALE — studio osservativo locale — nessun collegamento exchange**.
+
+Che cosa trovi nello storico:
+- **Cutoff.** Si sceglie una chiusura 45m (giorno e ora in UTC, frecce o slider). Grafico, osservazioni, livelli, pivot e revisioni mostrano solo ciò che era noto a quel momento.
+- **Seguito a 24 ore.** «Mostra seguito retrospettivo 24h» lo rivela, marcato come a posteriori; «Solo informazioni al momento» lo nasconde.
+- **Riepilogo.** Le tabelle mensili e totali sono nella voce **«Studio osservativo»**. Gli esempi si aprono nella vista causale.
+- **Cosa non c'è.** Posizione, conto, ordini e comandi non esistono in questo ambiente.
+
+Senza bundle l'ambiente chiede di aprirne uno e non mostra prezzi. **«Simulazione locale»** riporta alla demo con un provider nuovo.
+
+Funziona davvero: acquisizione, controlli, osservazioni ed esiti su dati reali. È simulato soltanto l'ambiente demo. Non esistono strategia, segnali operativi, valutazione economica, dati successivi al 2025 o collegamenti live.
 
 ## Come lavoriamo
 

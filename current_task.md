@@ -1,6 +1,6 @@
 # Incarico corrente — OBS-001 osservazioni calcolate e primo studio nell'app
 
-**Stato: IN_PROGRESS — motore e convenzioni registrati, acquisizione in corso (vedi Spazio dell'esecutore).** Macrofase completa autorizzata dalla disposizione Astra trasmessa da Gian il 16 ottobre 2026, dopo la chiusura UI al commit baa1e762703f7dfd01f870061dba2a1c691326ce.
+**Stato: DELIVERED — OBS-001 consegnato da Claude Code (vedi Spazio dell'esecutore); in attesa di review del Director e prova di Gian.** Macrofase completa autorizzata dalla disposizione Astra trasmessa da Gian il 16 ottobre 2026, dopo la chiusura UI al commit baa1e762703f7dfd01f870061dba2a1c691326ce.
 Responsabile specifica e review: Director. Esecutore: Claude Code.
 Questo task è la registrazione ex ante delle convenzioni **OBS-001/v1**: completare tutti i microstep, dal sintetico all'acquisizione, elaborazione reale, integrazione e prima tabulazione. Nessuna ulteriore autorizzazione ordinaria fra i microstep. Non fermarsi a un motore sintetico. La consegna UI accettata resta nella storia Git a baa1e76.
 
@@ -212,13 +212,119 @@ Nessuna strategia di ingresso/uscita, ordine exchange, conto operativo, capitale
 
 ### Avanzamento — registrazione prima di acquisizione ed esiti (Claude Code, 16 ottobre 2026)
 
-**Stato: IN_PROGRESS.**
+**Stato allora: IN_PROGRESS.**
 - **Base e ambiente.** Base `413c6d0` su `main`, checkout pulito, nessun pull o fetch.
 - **Python.** Nel PATH non c'è `python`: ci sono solo gli alias di Windows Store, che non funzionano. Sono già presenti interpreti gestiti da `uv`. Uso **Python 3.12.14** (`python3.12`); il motore è verificato anche su 3.11.16. Non ho installato nulla.
 - **Convenzioni congelate.** `config/OBS-001-v1.json`, id `OBS-001/v1`, scritte dal task al commit `413c6d076077412b09b85760101658ab07f76dfd`.
   - Hash canonico SHA256, calcolato su JSON con chiavi ordinate e indipendente dai fine riga: `3c4eb884d0b6752bfb31e7d9ae159a1414d75cadc90f9abcc9379d5825002387`.
   - Motore `obs001` versione 1.0.0, schema bundle `obs001.bundle/1`.
 - **Test sintetici.** Motore pubblicato con 30 test sintetici prima di qualunque download o esito reale. Acquisizione ed elaborazione reale avverranno dal commit che contiene questa nota.
+
+Questa registrazione è nel commit `cdbc474`, pubblicato prima di qualunque download.
+
+### Consegna OBS-001 (Claude Code, 16 ottobre 2026) — DELIVERED
+
+**Commit**
+- `cdbc474`: motore, convenzioni e 30 test sintetici, prima dei dati.
+- `09fd3ac`: separatori ASCII nei log della CLI.
+- `c51ddac`: ambiente storico nella dashboard e motore 1.0.1.
+- Il commit della consegna è quello che aggiorna questo file.
+
+Tutti su `main`, senza pull, fetch o force push.
+
+**File**
+- `config/OBS-001-v1.json`
+- `src/obs001/`: conventions, minutes, aggregate, observe, outcomes, summary, pipeline, acquire, inputs, bundle, cli, fixture
+- `tests/test_obs001_observations.py`, `tests/test_obs001_pipeline.py`, `tests/obs001_helpers.py`
+- `.gitignore`
+- Contratto: `dashboard/src/contract/historical.ts`
+- Provider storico: `dashboard/src/historical/` (loadBundle, study, fixture sintetica)
+- Viste: `dashboard/src/ui/historical/`
+- Modifiche condivise: App, TopBar, CandleChart, format, styles, `sim/provider.ts` (`dispose`), `main.tsx`
+- Report `docs/research/OBS-001-results.md` e tre immagini in `docs/research/OBS-001-screens/`
+- README e STATE
+
+**Fonte e qualità effettive**
+- **Download.** Binance Vision, `futures/um/monthly/klines/BTCUSDT/1m`, da 2025-06 a 2025-12. Scaricati il 16 ottobre 2026 alle 17:22 UTC, in serie, con timeout e file temporaneo. Tutti e 7 coincidono col `.CHECKSUM`; settembre `c296ba45…` è uguale al valore registrato dal Director.
+- **Identità dello strumento.** Verificata con `fapi/v1/exchangeInfo` pubblico, senza chiave: BTCUSDT, PERPETUAL, BTC/USDT, margine USDT, TRADING. La risposta è salvata con hash.
+- **Termini.** Copiati in locale, SHA256 `99c4921d…`.
+- **Parsing.** Intestazione riconosciuta per nome in tutti i file; millisecondi; minuto e chiusura coerenti.
+- **Copertura.** 308.160 minuti validi su 308.160 (132.480 di inizializzazione e 175.680 di studio). Zero mancanti, invalidi, duplicati, righe fuori ordine, fuori mese o corrotte.
+- **Hash.** Input hash `40a13e10acaa4b8de14ac9cbaef23aabdfe085c4fe6c260aa718939ef1bc351f`; convenzioni `3c4eb884…2387`.
+- **Dove sono i file.** Locali, fuori Git, in `C:\Projects\algorithmic-trader-data\OBS-001\`: ZIP, manifest con copie datate, meta e run.
+
+**Elaborazione**
+- **Run finale.** `OBS-001-v1-e1.0.1-40a13e10ac-3c4eb884d0` dal commit pulito `c51ddac`. Bundle da 27,4 MB, SHA256 `71b18a2f5801c1582469ef80497f63fe314385cb08e2839076f5563687cf02a8`.
+- **Tempi.** Controllo 2,6 s, catena 1,1 s, totale 4,3 s, acquisizione 19,5 s. Nessuna ottimizzazione necessaria.
+- **Conteggi.** 6.848 barre 45m e 214 da 1D, tutte complete; 5.332 eventi 45m e 241 da 1D; 3.904 origini.
+- **Riproducibilità.** Il run 1.0.0 (`09fd3ac`) e un secondo `process` hanno dato bundle identici (lo stesso SHA256 `e8313db6…`), senza sovrascrittura.
+- **Versione 1.0.1, non un bug di calcolo.** Il bundle 1.0.0 conteneva il commit del software. Rigenerarlo da un altro commit avrebbe prodotto, con lo stesso ID di run, un file diverso a calcoli invariati. Il commit ora sta solo nel manifest del run e i manifest datati sono conservati.
+  - Il bundle 1.0.1 differisce dall'1.0.0 solo nei campi `engineVersion` e `run`: osservazioni, eventi, esiti e riepiloghi sono identici, confrontati sezione per sezione.
+  - Il run 1.0.0 resta in locale come storia.
+
+**Misure disponibili e mancanti**
+- Su tutte le 3.904 origini sono disponibili le misure per singola chiave alle due scale: TR, A, SMA20/50, distanza, pendenza, posizione, incrocio, struttura, volume relativo, ancore Fibonacci, livelli pivot e del giorno precedente. Mancanti 0, perché il warmup di giugno–agosto le copre già dal 1 settembre.
+- Struttura 45m: UP 1.099, DOWN 1.077, MIXED 1.728, UNAVAILABLE 0. Struttura 1D: mai UNAVAILABLE.
+- **Seguito 24h.** 3.873 origini complete, 31 censurate a destra, 0 con lacuna, 0 con origine o A non valida.
+- **Riconciliazione.** Partizioni s45, matrice, relazioni e mesi riconciliate dal codice; un errore di somma interromperebbe il run.
+
+**Risultati.** Tabelle complete e lettura in `docs/research/OBS-001-results.md`. In breve:
+- entro lo stesso verso s45, le differenze di mediana di `final` fra 1D concorde, contraria e mista sono piccole rispetto alla dispersione;
+- il loro segno cambia da un mese all'altro;
+- ci sono celle scarse: UP concorde n=12 in ottobre e n=6 in novembre; DOWN contraria n=17 in ottobre e n=12 in novembre;
+- i casi più contrari superano 20 A.
+
+Nessun comportamento coerente emerge in quattro mesi; non è attribuita alcuna causalità e non c'è un contributo 1D dichiarato. Le convenzioni e i gruppi non sono stati cambiati dopo aver visto i risultati.
+
+**Verifiche effettive dell'esecutore**
+- **Python.** 30 test sintetici `test_obs001_*`, verdi su 3.12.14 e 3.11.16:
+  - aggregazione 45m/1D e mezzanotte;
+  - parsing: intestazione, duplicati, microsecondi, righe fuori mese;
+  - esempio numerico prefissato completo: TR, A, SMA20/50, pendenza, distanza, posizione, volume, incrocio a 51 barre;
+  - denominatori zero distinti dai valori mancanti;
+  - pivot a i+2, parità, candela ambigua, struttura UP/DOWN/MIXED e parità;
+  - Fibonacci: KEEP, REPLACE versionato, gamba discendente con i prezzi prefissati, ancore uguali;
+  - azzeramento per lacuna e attraversamenti solo contro un livello già noto;
+  - causalità: stesso prefisso con due futuri diversi (uno con una lacuna) e prefisso troncato danno snapshot identici, anche a mezzanotte e fra una candidata e la sua conferma;
+  - esiti: esempio prefissato (final 1, up 3, down 1,5), massimi e minimi intra-minuto, A=0, censura e GAP, ultimo minuto del 2025 come endpoint;
+  - griglia completa sintetica: 3.904 righe, 31 censurate, partizioni riconciliate;
+  - quantili lineari.
+  Non ho eseguito i 14 test delle utilità preesistenti, perché non le ho toccate.
+- **Riscontro indipendente sul bundle reale.** Ricalcolo ingenuo di A, SMA, distanza e volume su 592 record, di tutti i pivot confermati e di 300 esiti: zero differenze.
+- **Frontend.** 61 test Vitest: i 50 precedenti più 11 dello storico. Coprono import valido ed errato, assenza di prezzi senza bundle, cutoff sincronizzato fra 45m e 1D, avanzamento, seguito solo su comando e ritorno, fine censurata, lacuna 1D leggibile, eventi con available_at ≤ t, assenza di saldo, call, ordini e comandi nello storico, riepilogo ed esempio, cambio d'ambiente che invalida una conferma aperta e crea un provider nuovo.
+  - Ho rieseguito tutta la suite perché ho toccato shell e provider: le regressioni R1 e della barra superiore restano verdi.
+  - Typecheck e build riusciti.
+- **Browser.** Chrome headless sulla build servita da `vite preview` e bundle reale 1.0.1, aperto col selettore di file in 0,3 s. Verificati:
+  - banner dei due ambienti;
+  - senza bundle nessun prezzo e nessun pannello scenari;
+  - prima origine 1 settembre 2025 00:00 UTC, con il giorno 1D chiuso alla stessa mezzanotte;
+  - avanzamento di 45m;
+  - pivot HIGH sulla candela 2025-09-01T23:15Z: assente a 01:30−45m su grafico e pannelli, presente alle 01:30;
+  - Fibonacci con ancore e versione;
+  - mezzanotte dell'11 settembre e grafico 1D a 60 giorni chiusi;
+  - seguito: 64→96 candele, scheda a posteriori, osservazioni ferme a t, ritorno;
+  - ultima origine censurata (45 minuti su 1.440 disponibili);
+  - riepilogo di ottobre e caso contrario aperto nella vista causale senza seguito;
+  - ritorno alla simulazione con stato iniziale.
+  Nessun errore in console e nessuna richiesta di rete esterna.
+- **Immagini.** Tre a 1366 px in `docs/research/OBS-001-screens/` (vista causale, seguito, riepilogo), sotto CC BY-NC-SA 4.0 come i soli derivati.
+
+**Scelte tecniche e limiti**
+- **Ambienti.** Il discriminante è `Environment` (SIMULATION/HISTORICAL) con un contratto storico separato. Lo shell è comune e l'ambiente simulato viene smontato al cambio. Il default iniziale è la simulazione; dopo un bundle valido l'app passa allo storico.
+- **Interpretazione dell'esecutore.** Dopo una barra INCOMPLETE ripartono con il segmento anche i livelli «ultimo pivot», come sequenze e ancore. Sui dati reali non ha effetto.
+- **Fixture.** Quella sintetica per i test UI pesa 467 KB, è prodotta dallo stesso motore e contrassegnata `synthetic`.
+- **Dati futuri.** Sono nel bundle locale e leggibili: non c'è una modalità «cieca».
+- **Censura a destra.** Il seguito retrospettivo arriva al massimo alla fine dell'input; il 2026 non è mai stato scaricato.
+- **Processi.** Ho chiuso solo i miei `vite preview` (PID 12412 e precedenti), dopo averne controllato la riga di comando. Un `vite` di sviluppo (`npm run dev`, PID 10204 a fine lavoro) non era mio ed è rimasto acceso.
+- **Restano da fare.** Prova di Gian e review del Director.
+
+**Prova di Gian** (dopo la review; non è una validazione di trading). Istruzioni nel README, sezione OBS-001:
+1. Avviare la dashboard (`npm ci` e `npm run dev` in `dashboard`) e aprire http://127.0.0.1:5173.
+2. In alto scegliere «Studio storico», premere «Apri studio storico» e scegliere `C:\Projects\algorithmic-trader-data\OBS-001\runs\OBS-001-v1-e1.0.1-40a13e10ac-3c4eb884d0\obs001-bundle.json`.
+3. Impostare un giorno e un'ora UTC, poi avanzare con «Chiusura successiva →». Passare a 1D e tornare a 45m.
+4. Scorrere le sei famiglie. Andare al 2 settembre 2025 alle 01:30 UTC e confrontarlo con le 00:45: il pivot sulla candela delle 23:15 compare solo alle 01:30. Il triangolo sul grafico spiega i due orari.
+5. Premere «Mostra seguito retrospettivo 24h», leggere la scheda a posteriori e tornare con «Solo informazioni al momento».
+6. Aprire «Studio osservativo», scegliere un mese e aprire un «caso contrario».
 
 ## Review del Director
 

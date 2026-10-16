@@ -4,17 +4,30 @@ Aggiornato: 2026-10-16. Responsabile: Director.
 
 ## Fatto
 
-Macrofase UI simulata CONCLUSA e approvata dall'Owner; chiusura a baa1e762703f7dfd01f870061dba2a1c691326ce. Dashboard React/TypeScript esistente, provider simulato separato, navbar superiore e conferme revisionate. Nessun motore reale ancora consegnato.
+Macrofase UI simulata CONCLUSA e approvata dall'Owner; chiusura a baa1e762703f7dfd01f870061dba2a1c691326ce. Dashboard React/TypeScript esistente, provider simulato separato, navbar superiore e conferme revisionate.
 
 Astra ha autorizzato la macrofase completa “osservazioni calcolate e primo studio storico nell'app”. **DESIGN-001 approvato solo per definizioni osservative §§5–6**, con warmup per singola misura corretto nel task; resto non attivato.
 
 ## Incarico corrente
 
-**OBS-001 — READY.** Specifica eseguibile e convenzioni ex ante nel task unico: pipeline batch Python → bundle locale → provider storico nella dashboard; sei famiglie calcolate causalmente, revisione snapshot preservata e seguito retrospettivo separato.
+**OBS-001 — DELIVERED da Claude, in attesa di review del Director e prova di Gian.** Consegna completa nel task. Sintesi:
+- **Motore Python** a sola libreria standard (`src/obs001`). Convenzioni congelate in `config/OBS-001-v1.json` (hash `3c4eb884…2387`), registrate e pubblicate prima di dati ed esiti.
+- **Dati reali.** Sette ZIP Binance Vision, BTCUSDT perpetual klines 1m da giugno a dicembre 2025. Checksum e identità dello strumento verificati; 308.160/308.160 minuti validi, nessuna anomalia. File fuori Git in `C:\Projects\algorithmic-trader-data\OBS-001`.
+- **Run.** `OBS-001-v1-e1.0.1-40a13e10ac-3c4eb884d0`: 3.904 origini, 31 censurate, partizioni riconciliate, bundle riproducibile.
+- **Dashboard.** Ambiente «Studio storico» distinto dalla simulazione:
+  - vista causale al cutoff t;
+  - sei famiglie a 45m e 1D;
+  - revisioni per available_at;
+  - seguito 24h solo su comando;
+  - riepilogo sotto «Studio osservativo».
+  Nessun conto, call o ordine nello storico.
+- **Risultati.** Nel report `docs/research/OBS-001-results.md`. Entro lo stesso verso 45m, le differenze fra 1D concorde, contraria e mista sono piccole rispetto alla dispersione e cambiano segno fra i mesi; alcune celle sono scarse. Nessuna conclusione causale.
 
-Mandato completo a Claude: esempi sintetici mirati, acquisizione pubblica sette mesi, controlli input, elaborazione reale, UI e tabelle/lettura dei risultati. Nessun arresto al solo sintetico o nuova autorizzazione ordinaria fra microstep.
-
-Fonte candidata Binance Vision BTCUSDT perpetual USDⓈ-M, klines negoziate1m. Inizializzazione [2025-06-01,2025-09-01), studio [2025-09-01,2026-01-01) UTC, senza tail. File fuori Git; nessun account/chiave o stack Owner. Checksum settembre raggiunto dal Director; ZIP, copertura e calcoli reali non ancora verificati.
+Verifiche dichiarate dall'esecutore, non ancora riesaminate:
+- 30 test sintetici del motore;
+- riscontro indipendente sul bundle reale;
+- 61 test frontend, typecheck e build;
+- prova in Chrome headless sul bundle reale.
 
 ## Studio e chiusura
 
