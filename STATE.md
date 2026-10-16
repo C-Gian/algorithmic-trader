@@ -10,18 +10,17 @@ Aggiornato: 2026-10-16. Responsabile: Director.
 - Figma fornito dall'Owner e letto dal Director: dashboard, otto stati, tre conferme e componenti locali.
 - Contesti dei sottoalberi e screenshot verificati; mappa, stile, anteprime e correzioni in [FIGMA-REFERENCE](docs/ui/FIGMA-REFERENCE.md).
 - Contratti, fixture riconciliate, interazioni, verifiche e consegna definiti nel task UI-001.
+- UI-001 eseguito da Claude: accesso Figma verificato nel proprio ambiente; dashboard locale in `dashboard/` con provider simulato separato e contratto TypeScript versionato.
 
 ## Incarico corrente
 
-**UI-001 — READY.** Claude deve prima verificare accesso effettivo al progetto Figma nel proprio ambiente. L'accesso del Director è verificato; quello dell'esecutore ancora no. Se il gate riesce, procede direttamente con implementazione/review di consegna; se non riesce segnala BLOCKED con motivo preciso, senza ricostruire arbitrariamente la UI.
-
-Frontend React/TypeScript/Vite con provider simulato separato. Nessun backend/DB/auth/connettore. Commit/push pertinenti dell'esecutore autorizzati nel task; Gian sincronizza il checkout prima dell'incarico.
+**UI-001 — DELIVERED**, in attesa di review del Director e della prova d'uso dell'Owner (percorso nel task). Avvio su Windows nel [README](README.md).
 
 ## Che cosa esiste realmente
 
-Documentazione, riferimento Figma e tre utilità Python. Nessuna dashboard implementata, nuovo algoritmo, conto collegato o esecutore exchange. Le anteprime sono Figma, non screenshot di un'app realizzata. Nessuna verifica applicativa o prova Owner ancora effettuata.
+Documentazione, riferimento Figma, tre utilità Python e una dashboard React/TypeScript/Vite **solo simulata**: percorso LONG con 10 checkpoint, variante SHORT con 2, alterazioni controllate del feed, conferme operative e contabilità riconciliata con l'esempio del task. Nessun algoritmo, dato reale, backend, conto collegato o esecutore exchange. Screenshot dell'app in [docs/ui/app-screenshots](docs/ui/app-screenshots/).
 
-I 14 test delle utilità appartengono alla migrazione, non sono stati rieseguiti per documentazione/design. Review visiva dell'app ancora da fare.
+Verifiche dell'esecutore: 28 test Vitest (contabilità, checkpoint, percorso Owner, duplicati, disconnessione, dialoghi), typecheck e build, prova nel browser headless. Review del Director e prova dell'Owner ancora da fare. I 14 test Python delle utilità non sono stati rieseguiti (codice non toccato).
 
 ## Decisioni ordinarie esplicitate
 

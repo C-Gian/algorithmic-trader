@@ -1,6 +1,6 @@
 # Incarico corrente — UI-001
 
-**Stato: READY — implementazione autorizzata con verifica iniziale dell'accesso Figma nell'ambiente di Claude.**
+**Stato: DELIVERED — consegna dell'esecutore in attesa di review del Director (vedi «Spazio dell'esecutore»).**
 
 Macro-obiettivo autorizzato: dashboard fedele al Figma approvato, con stati simulati coerenti e fornitore dati separato. Disposizione Astra trasmessa dall'Owner il 16 ottobre 2026.
 Responsabile del task/review: Director. Esecutore: Claude Code.
@@ -111,7 +111,49 @@ Director risolve dettagli ordinari, fedeltà UI e correzioni. Astra solo a fine 
 
 ## Spazio dell'esecutore
 
-Da compilare: esito gate Figma, avanzamento, blocchi o consegna. READY → IN_PROGRESS/BLOCKED/DELIVERED secondo AGENTS. Non dichiarare accesso dal semplice riconoscimento dell'URL.
+Consegna Claude Code, 16 ottobre 2026. Base 96846887, checkout pulito su `main`. Il commit della consegna è quello che aggiorna questo file (vedi `git log`).
+
+**Gate Figma — superato.** Il plugin Figma MCP era installato ma non autorizzato. L'Owner ha completato l'OAuth nel browser durante la sessione: nessuna installazione nuova, Figma non modificato. Account con piano Starter e seat View. Metodo: `create_session`, poi `get_design_context` con screenshot su 2:9260 (risposta sparsa, solo metadata) e quindi sui sottoalberi 2:9261, 2:9302, 2:9347, 2:9549, 2:9595, 2:9641, 3:154, 3:210, 3:267, 3:342, 3:416, 3:473, 2:9828, 2:9953, 2:10283, 3:2. Tutti hanno restituito codice di riferimento completo e screenshot. Per 2:9953 l'output è stato troncato dopo l'ultima scheda; il testo delle otto schede è comunque completo. Le 52 icone statiche sono state scaricate dagli asset Figma in `dashboard/src/assets/icons` e sono servite in locale.
+
+**Cosa è stato costruito** (`dashboard/`, React 18 + TypeScript + Vite 6, CSS proprio, nessuna libreria grafica):
+- Contratto versionato in `src/contract/` (Context, Chart, Observation, Expectation, Call, Plan, Order, Fill, Position, Account/results, History). Usa `Maybe` con motivo e ultimi valori noti con orario.
+- Provider separato in `src/sim/`:
+  - eventi predeterminati e comandi con idempotenza per `requestId`;
+  - contabilità in un'unica funzione (`accounting.ts`);
+  - percorso LONG con i checkpoint 1, 2, 3, 3b (rifiuto), 4, 5, 5b (manuale), 5c (bot fermo), 6 (parziale), 7 (chiusa);
+  - variante SHORT speculare con i checkpoint S1 (proposta in Solo call) e S2 (posizione);
+  - alterazioni del feed (non aggiornato o disconnesso) su qualunque checkpoint;
+  - reset al checkpoint iniziale «5».
+- UI fedele ai nodi letti, con le correzioni di FIGMA-REFERENCE: etichette corrette, banner fisso, feed simulato, contratto lineare d'esempio, nessuna operazione del mockup senza eseguiti.
+  - Grafico SVG disegnato dai dati: 45m/1D, zoom, overlay. Le scale coincidono nei periodi sovrapposti.
+  - Dettagli dei segnali in un dialogo; sei conferme (stop, start, manuale, ripresa con spunta obbligatoria, parziale, chiusura).
+  - Storico e Conto portano alle sezioni della dashboard; Ricerca/Backtest e Impostazioni mostrano «Non disponibile in questa versione».
+
+**Riconciliazione:** il percorso Owner, partendo da «5», arriva a saldo/equity 10.005,793, realizzato lordo +7, costi 1,207 e netto +5,793. SHORT: +10 non realizzato, saldo 9.999,40, equity 10.009,40.
+
+**Controlli eseguiti dall'esecutore:**
+- 28 test Vitest: contabilità LONG/SHORT; ordine pendente e ordine rifiutato senza posizione né costi; stop distinto dalla chiusura; conferme e annullamenti; doppio comando; disconnessione e ripristino; coincidenza 45m/1D; dialoghi via Testing Library.
+- `npm ci`, typecheck e build superati.
+- Percorso Owner ripetuto nel browser headless (Chrome locale) senza errori in console.
+- Screenshot in `docs/ui/app-screenshots/`: 1680 e 1366 px, attesa, pendente, rifiutato, manuale, bot fermo, chiusa, SHORT, dati vecchi, disconnessione, tutti i dialoghi, 1D.
+
+Nessuna suite Python o CI eseguita.
+
+**Scelte tecniche rilevanti (convenzioni della UI simulata):**
+- Un'uscita richiesta viene eseguita alla chiusura della candela 45m successiva dello scenario. Commissione di fixture: 0,1% del nozionale. Parziale fissa a 0,004 BTC.
+- I rami creati dai comandi dell'Owner non ripetono le azioni automatiche del bot già scritte nello scenario.
+- Le osservazioni sono gruppi datati (12:30, 13:15, 16:15) e non vengono ricalcolate a ogni tick.
+- Le «medie» sono curve illustrative ricavate da punti di ancoraggio, non calcolate dai prezzi.
+- Con feed non aggiornato una chiusura resta REQUESTED e il ripristino la completa; la richiesta può essere ritirata.
+
+**Differenze residue dal design:**
+- Mancano alcune varianti d'icona che non esistono nel Figma, quindi gli stati corrispondenti sono senza icona: «Solo call» attivo, «Call + esecuzione» inattivo, badge disconnesso e bot fermo.
+- Pannello di simulazione aggiunto nella sidebar.
+- «Timeline e notifiche» al posto di «Timeline & Telegram».
+- Metriche del conto rinominate per il modello lineare.
+- Il pulsante 45m non ha il simbolo «⌄»: non esiste un menu.
+
+**Limiti:** nessuna persistenza; nessun dato dopo le 17:45 CEST dello scenario (le uscite successive usano l'ultimo prezzo un minuto dopo). La prova Owner e la review del Director non sono ancora avvenute.
 
 ## Review del Director
 

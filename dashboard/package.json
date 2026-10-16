@@ -1,0 +1,34 @@
+{
+  "name": "orbit-dashboard",
+  "private": true,
+  "version": "0.1.0",
+  "description": "UI-001 — dashboard locale con provider simulato. Nessun collegamento exchange.",
+  "type": "module",
+  "engines": {
+    "node": ">=20.19"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "typecheck": "tsc -b",
+    "preview": "vite preview",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@fontsource/ibm-plex-mono": "5.1.0",
+    "@fontsource/inter": "5.1.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "devDependencies": {
+    "@testing-library/dom": "10.4.0",
+    "@testing-library/react": "16.3.0",
+    "@types/react": "18.3.23",
+    "@types/react-dom": "18.3.7",
+    "@vitejs/plugin-react": "4.4.1",
+    "jsdom": "26.1.0",
+    "typescript": "5.8.3",
+    "vite": "6.3.5",
+    "vitest": "3.1.4"
+  }
+}
