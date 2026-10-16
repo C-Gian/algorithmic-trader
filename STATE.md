@@ -4,33 +4,18 @@ Aggiornato: 2026-10-16. Responsabile: Director.
 
 ## Fatto
 
-- Fondazione funzionale, tre utilità isolate; DESIGN-001 NON APPROVATO e NON ATTIVO.
-- UI-001 consegnato da Claude a 939c866fb847fcc489979d99b2080e0c96bedca7: dashboard locale React/TypeScript/Vite, provider simulato separato e scenari LONG/SHORT. Nessun dato reale o collegamento exchange.
-- Figma letto dal Director; accesso dell'esecutore dichiarato riuscito con nodi/metodo nella consegna. Riferimento e immagini in docs/ui.
-- Review indipendente del Director: installazione pulita, 28 test originali e build riusciti; lettura del codice e confronto di quattro immagini dell'esecutore con Figma.
-- Due sonde temporanee riproducono conferma obsoleta su scenario diverso e testi non qualificati delle protezioni durante disconnessione. Individuata anche icona history deformata nei riquadri aggiornamento.
-- Correzioni R1-A/B/C consegnate da Claude (commit che aggiorna questo file). Conferme legate all'impronta del contesto e dialogo isolato. Con feed non regolare: ultimi noti, Start e ripresa bloccati, badge di sospensione. Icona history alla misura naturale.
+Dashboard locale simulata UI-001 consegnata a 939c866 e corretta a b751526476ed9dd3800ce249127ad0814ff43d07. Director: review tecnica R1-A/B/C PASS; 40 test pertinenti e build rieseguiti con successo, tre immagini aggiornate esaminate. La contabilità non è cambiata; i suoi cinque test erano passati nella review precedente. I 45 test completi e la prova Chrome sono evidenze dell'esecutore, non prove browser indipendenti del Director.
 
-## Incarico corrente
+## Incarico e prossimi passi
 
-**UI-001/R1 — DELIVERED**, in attesa di review del Director. Consegna e verifiche nella sezione «Consegna R1» di current_task.md. Non ACCEPTED.
+UI-001 resta DELIVERED nel complesso: R1 tecnicamente accettato, prova Owner ancora da svolgere. Decisione Director: manutenzione circoscritta degli strumenti Vite/Vitest, senza cambi alla UI/strategia. Incarico successivo da registrare nel task unico.
 
-## Verifiche e limiti
+Prova Owner già possibile con build locale e preview su 127.0.0.1:4173. Nessun algoritmo, dato reale o collegamento exchange.
 
-Il Director ha rieseguito i test/build nella propria copia. Non ha completato la prova browser indipendente perché manca Chromium nell'ambiente; le immagini esaminate e il percorso browser completo sono evidenze di Claude. Prova d'uso Owner ancora mancante.
+## Dipendenze
 
-Verifiche R1 dichiarate da Claude, non ancora riesaminate dal Director:
-- 45 test Vitest: 28 originali e 17 nuovi. I 6 nuovi test UI falliscono sul codice di 939c866.
-- Typecheck e build.
-- Prova in Chrome locale headless sulla build: geometria di 423 icone, isolamento del dialogo, invalidazione delle conferme, feed STALE e DISCONNECTED, percorso Owner fino a 10.005,793.
-
-Avviso esbuild riprodotto da Claude con `npm ci` (npm 11.19.0, Node 24.14.1): `npm warn install-scripts 1 package has install scripts not yet covered by allowScripts: esbuild@0.25.12 (postinstall: node install.js)`. Senza approvare lo script, test e build riescono su questo PC Windows; il risultato non è generalizzato ad altri ambienti. Lo stesso `npm ci` riporta 4 vulnerabilità `npm audit`: vite ≤ 6.4.2, tinypool e @vitest/mocker. Nessun aggiornamento eseguito: decide il Director.
-
-Convenzioni di uscita/medie illustrate approvate soltanto come simulazione; nessun protocollo exchange o strategia approvato. Il modello di contabilità delle fixture resta invariato.
+npm audit riprodotto dal Director: quattro pacchetti segnalati; target verificati vite 6.4.4 e vitest 4.1.11. Avviso esbuild allowScripts distinto dagli advisory: nessuna approvazione globale di script richiesta per una build che funziona. Dettagli e fonti nella review del task.
 
 ## Vincoli
 
-Banner: “SIMULAZIONE LOCALE — nessun collegamento exchange”.
-Nessuna acquisizione, backtest, algoritmo decisionale, accesso Owner/exchange, ordine esterno o apertura protetta.
-Vecchi studi INACTIVE; [esposizioni](docs/research/EXPOSURES.md) invariate.
-[PRODUCT-CONTEXT](docs/functional/PRODUCT-CONTEXT.md) unico riferimento funzionale.
+DESIGN-001 NON APPROVATO e NON ATTIVO. Vecchi studi INACTIVE. Nessuna acquisizione, backtest, algoritmo, accesso Owner/exchange, ordine esterno o apertura protetta. PRODUCT-CONTEXT unico riferimento funzionale. Macro fase UI non ancora chiusa.

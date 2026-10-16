@@ -1,6 +1,6 @@
 # Incarico corrente — UI-001
 
-**Stato: DELIVERED — correzioni UI-001/R1 consegnate da Claude Code (sezione «Consegna R1» in fondo); in attesa di review del Director. Review richiesta sul commit 939c866fb847fcc489979d99b2080e0c96bedca7.**
+**Stato: DELIVERED — correzioni R1 accettate tecnicamente dal Director; prova Owner e chiusura della macrofase ancora da completare.**
 
 Priorità esecutiva corrente: applicare soltanto UI-001/R1 nella sezione Review del Director in fondo. La specifica e la consegna iniziali restano per contesto; non ripetere il gate Figma già superato o ricostruire la dashboard. La lettura del design è necessaria solo per le parti visive da correggere.
 
@@ -310,3 +310,31 @@ Senza approvazione dello script, test, build e preview funzionano su questo PC; 
 - La prova Owner non è stata svolta; la review del Director su R1 è da fare.
 - La verifica dell'inerzia in jsdom controlla gli attributi; il blocco effettivo dell'interazione è verificato solo nel browser headless.
 - Il server `vite preview` avviato da me è rimasto attivo dopo l'arresto del task in background. L'ho chiuso dopo averne verificato la riga di comando (PID 8212).
+
+## Review R1 del Director — 16 ottobre 2026
+
+**R1-A, R1-B e R1-C: PASS tecnico sul commit b751526476ed9dd3800ce249127ad0814ff43d07.**
+
+Verifiche indipendenti: lettura dei diff di provider/contratto/conferme/comandi/componenti e CSS; rieseguiti 40 test pertinenti (confirmation 11, provider 18, ConfirmDialog 6, App 5), tutti passati; typecheck/build riusciti. I 5 test della contabilità immutata non sono stati rieseguiti in R1: erano passati nella review precedente. I 45 test completi e la prova Chrome rimangono evidenze dichiarate da Claude.
+
+Esaminate le immagini consegnate aggiornate r1-update-box-history, r1-dlg-manual-disconnected e dashboard 1366: icona nuovamente quadrata, dialogo qualificato, ripresa dall'inizio senza il precedente artefatto di scorrimento. Non è una prova browser indipendente del Director; rimane il limite Chromium dichiarato nella review iniziale.
+
+La conferma ora è legata al contesto tramite provider e invalidata nella UI; il fondo è inert e il focus confinato. Feed non regolare qualifica ultimi noti e blocca Start/ripresa secondo il mandato. Nessuna nuova richiesta funzionale R1.
+
+**Dipendenze:** npm audit --json riprodotto dal Director: 4 pacchetti segnalati (1 moderate, 1 high, 2 critical): @vitest/mocker, tinypool, vite e vitest. La gravità su vitest include problemi propri e propagati, non soltanto mocker. Non sono vulnerabilità del codice trading, ma non vanno eliminate come “solo sviluppo”. Consultati gli avvisi primari dei manutentori:
+- https://github.com/vitejs/vite/security/advisories/GHSA-fx2h-pf6j-xcff
+- https://github.com/vitejs/vite/security/advisories/GHSA-p9ff-h696-f583
+- https://github.com/vitest-dev/vitest/security/advisories/GHSA-5xrq-8626-4rwp
+- https://github.com/vitest-dev/vitest/security/advisories/GHSA-82fw-gwwq-j7x9
+- https://github.com/tinylibs/tinypool/security/advisories/GHSA-85c8-ppgw-ccpr
+- https://github.com/tinylibs/tinypool/security/advisories/GHSA-5gmw-xhrv-c9v3
+
+Decisione ordinaria Director: aggiornamento circoscritto Vite/Vitest e dipendenze correlate. Target verificati nel registry: vite 6.4.4; vitest 4.1.11, che dichiara compatibilità peer con Vite ^6/^7/^8 e dipende da @vitest/mocker 4.1.11. Non seguire ciecamente audit fixAvailable 3.2.7: la fonte del manutentore dice che il fix mocker è in 4.1.11 e non pianifica backport 3.x.
+
+**esbuild:** l'avviso allowScripts riportato dall'esecutore è una richiesta di policy sugli script di installazione, distinta dalle quattro vulnerabilità. Per la prova Owner non occorre approvare globalmente script se installazione/build riescono. Nessuna modifica automatica di policy npm o installazione globale. In caso di errore reale di esbuild acquisire errore specifico e definire rimedio limitato al pacchetto/versione, senza cancellare l'avviso alla cieca.
+
+**Prova Owner:** autorizzata e utile già sulla build b751526. Preferire npm run build e npm run preview, che servono la build locale su 127.0.0.1:4173, senza HMR o server API di Vitest. Non esporre in LAN. L'aggiornamento degli strumenti procede separatamente; nessun esito economico è validato dalla prova.
+
+Macro fase non chiusa prima di prova Owner e manutenzione delle dipendenze. Il task non viene dichiarato ACCEPTED nel complesso sulla sola base dei test.
+
+Nota di processo: l'esecutore riferisce git fetch --dry-run e successiva chiusura del proprio server; queste azioni non sono state osservate dal Director. Il divieto fetch vale anche per dry-run; non richiede una nuova modifica del codice o un'ulteriore escalation.
