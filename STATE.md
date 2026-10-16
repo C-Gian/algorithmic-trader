@@ -4,18 +4,25 @@ Aggiornato: 2026-10-16. Responsabile: Director.
 
 ## Fatto
 
-Dashboard locale simulata UI-001 consegnata a 939c866 e corretta a b751526476ed9dd3800ce249127ad0814ff43d07. Director: review tecnica R1-A/B/C PASS; 40 test pertinenti e build rieseguiti con successo, tre immagini aggiornate esaminate. La contabilità non è cambiata; i suoi cinque test erano passati nella review precedente. I 45 test completi e la prova Chrome sono evidenze dell'esecutore, non prove browser indipendenti del Director.
+Dashboard locale UI-001 consegnata a 939c866 e corretta a b751526476ed9dd3800ce249127ad0814ff43d07. **R1-A/B/C: review tecnica Director PASS.** Rieseguiti 40 test pertinenti e build; esaminate tre immagini aggiornate. I cinque test della contabilità immutata erano passati nella review precedente; 45 test completi e prova Chrome sono evidenze dell'esecutore.
 
-## Incarico e prossimi passi
+Review R1 completa conservata nella storia di current_task.md al commit b8153351b1ad639fe1141dcbf86f34c1b7d023f1.
 
-UI-001 resta DELIVERED nel complesso: R1 tecnicamente accettato, prova Owner ancora da svolgere. Decisione Director: manutenzione circoscritta degli strumenti Vite/Vitest, senza cambi alla UI/strategia. Incarico successivo da registrare nel task unico.
+## Incarico corrente
 
-Prova Owner già possibile con build locale e preview su 127.0.0.1:4173. Nessun algoritmo, dato reale o collegamento exchange.
+**UI-002 — READY:** aggiornamento circoscritto Vite/Vitest per gli advisory confermati. Target vite 6.4.4 e vitest 4.1.11; nessun cambio di strategia, UI o contabilità. Mandato, verifiche e pubblicazione in current_task.md.
 
-## Dipendenze
+Nessuna ulteriore implementazione funzionale richiesta per R1. Prova d'uso Owner ancora mancante; macrofase UI non chiusa. L'Owner può provare già la build b751526 in preview locale su 127.0.0.1:4173, mentre procede la manutenzione.
 
-npm audit riprodotto dal Director: quattro pacchetti segnalati; target verificati vite 6.4.4 e vitest 4.1.11. Avviso esbuild allowScripts distinto dagli advisory: nessuna approvazione globale di script richiesta per una build che funziona. Dettagli e fonti nella review del task.
+## Dipendenze e limiti
+
+npm audit riprodotto dal Director: quattro pacchetti segnalati (@vitest/mocker, tinypool, vite, vitest). Fonti primarie e versioni registry consultate. Non liquidare i rilievi come innocui perché devDependencies.
+
+Avviso npm allowScripts di esbuild distinto dalle vulnerabilità. Nessuna approvazione globale di script necessaria se build/test funzionano; in caso di errore serve diagnosi specifica.
+
+La prova browser del Director non è stata completata per mancanza Chromium. Il confronto visivo usa immagini dell'esecutore. Nessuna validazione finanziaria.
 
 ## Vincoli
 
-DESIGN-001 NON APPROVATO e NON ATTIVO. Vecchi studi INACTIVE. Nessuna acquisizione, backtest, algoritmo, accesso Owner/exchange, ordine esterno o apertura protetta. PRODUCT-CONTEXT unico riferimento funzionale. Macro fase UI non ancora chiusa.
+Banner permanente di simulazione locale. Nessun dato reale, algoritmo, acquisizione, backtest, accesso Owner/exchange, ordine esterno o apertura protetta.
+DESIGN-001 NON APPROVATO/INATTIVO; vecchi studi INACTIVE. PRODUCT-CONTEXT unico riferimento funzionale.
