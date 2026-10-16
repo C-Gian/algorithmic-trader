@@ -1,15 +1,17 @@
 # Incarico corrente — UI-001
 
-**Stato: DRAFT — specifica in preparazione; manca il progetto Figma e la verifica dell'accesso di Claude.**
+**Stato: DRAFT — specifica in preparazione; link Figma ricevuto; contenuto e accesso effettivo di Claude ancora da verificare.**
 
 Macro-obiettivo autorizzato: dashboard fedele al Figma approvato, con stati simulati coerenti e fornitore dati separato. Disposizione Astra trasmessa dall'Owner il 16 ottobre 2026.
 Responsabile: Director. Esecutore futuro: Claude Code.
 Base precedente: 671d8d5176c19af13ec7b1cfe755867577724aa5; usare la successiva registrazione documentale contenente questo task.
-La macrofase è autorizzata; il DRAFT indica input visivi indispensabili ancora mancanti, non una richiesta di nuova approvazione ad Astra.
+La macrofase è autorizzata; il DRAFT indica contenuto Figma e accessi ancora da verificare, non una richiesta di nuova approvazione ad Astra. È consentita una verifica di sola lettura a Claude sul link indicato: identificare strumenti disponibili, leggere il nodo e riferire pagine/frame, asset e limite concreto se bloccato. Non installare integrazioni, modificare il design o iniziare codice in questa verifica.
 
 ## 1. Materiale necessario e verifica accesso
 
-- Link al progetto/file Figma approvato: IN ATTESA DELL'OWNER.
+- Link Figma fornito dall'Owner il 16 ottobre 2026: https://www.figma.com/design/ys2HFfjS2OdaLLTsfhPp9A/Untitled?node-id=0-1
+- File key: ys2HFfjS2OdaLLTsfhPp9A. Nodo richiesto: 0:1. Il link identifica un file design; non prova quali frame contenga o che il nodo sia la dashboard approvata.
+- Verifica Director: il lettore web non ha accesso al contenuto. Integrazione Figma individuata ma non installata/collegata al momento del controllo; proposta all'Owner. Nessun contenuto Figma letto e nessuna fedeltà verificata.
 - Pagina/frame/versione approvata: da identificare nel progetto; chiedere ulteriori preferenze solo se ci sono alternative sostanziali.
 - Accesso effettivo di Claude: NON VERIFICATO. Una connessione disponibile al Director non prova quella dell'esecutore.
 - Il Director non ha visionato lo screenshot citato da Astra in questa chat. Non inventare layout, componenti, font, asset o interazioni dal solo riferimento allo screenshot.
@@ -101,7 +103,7 @@ Director risolve dettagli ordinari, fedeltà UI e correzioni. Astra solo a fine 
 
 ## Spazio dell'esecutore
 
-Non attivo: accesso Figma da verificare, task DRAFT.
+Implementazione non attiva: accesso Figma da verificare, task DRAFT. La sola verifica di lettura descritta sopra è consentita; non dichiarare accesso dal semplice riconoscimento dell'URL.
 
 ## Review del Director
 

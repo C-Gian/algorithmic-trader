@@ -11,9 +11,9 @@ Aggiornato: 2026-10-16. Responsabile: Director.
 
 ## Incarico corrente
 
-**UI-001 — DRAFT.** Manca il link al progetto Figma approvato; accesso effettivo di Claude non ancora verificato. Il Director non ha visto in questa chat lo screenshot citato da Astra. Nessuna nuova approvazione strategica necessaria per procedere entro il mandato; la specifica visiva deve essere completata sul materiale effettivo.
+**UI-001 — DRAFT.** Link Figma ricevuto: [progetto](https://www.figma.com/design/ys2HFfjS2OdaLLTsfhPp9A/Untitled?node-id=0-1). Contenuto e accesso effettivo di Claude non ancora verificati. Il lettore web non apre il file; integrazione Figma proposta, non ancora confermata. Il Director non ha visto in questa chat lo screenshot citato da Astra. Nessuna nuova approvazione strategica necessaria per procedere entro il mandato; la specifica visiva deve essere completata sul materiale effettivo.
 
-Prossimo passo: Gian fornisce il progetto Figma; Director verifica il riferimento, organizza la verifica di accesso dell'esecutore e rende READY il task completo prima dell'implementazione.
+Prossimo passo: verificare contenuto del progetto tramite accesso Figma effettivo e accesso di sola lettura dell'esecutore; poi completare il riferimento visivo e rendere READY il task prima dell'implementazione.
 
 ## Che cosa esiste e che cosa manca
 
