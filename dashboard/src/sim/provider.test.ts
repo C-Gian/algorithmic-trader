@@ -4,10 +4,16 @@ import { SimulatedProvider } from './provider';
 
 const make = (checkpoint = 'long-5-protection') => new SimulatedProvider({ exitDelayMs: 0, initialCheckpointId: checkpoint });
 
+/** Opzioni di invio che approvano l'anteprima corrente (impronta del contesto mostrato). */
+function approve(p: SimulatedProvider, action: ActionId, acknowledged = false) {
+  const preview = p.preview({ action });
+  return preview.kind === 'CONFIRM' ? { acknowledged, contextToken: preview.confirmation.contextToken } : { acknowledged };
+}
+
 let seq = 0;
 function run(p: SimulatedProvider, action: ActionId, acknowledged = false) {
   const preview = p.preview({ action });
-  const result = p.dispatch({ action }, `req-${++seq}`, { acknowledged });
+  const result = p.dispatch({ action }, `req-${++seq}`, approve(p, action, acknowledged));
   return { preview, result };
 }
 
@@ -146,7 +152,7 @@ describe('percorso di prova dell’Owner', () => {
     expect(protections(s)).toHaveLength(2);
 
     // la ripresa richiede la spunta esplicita di presa in gestione
-    const noAck = p.dispatch({ action: 'RESUME_AUTOMATIC' }, 'resume-no-ack');
+    const noAck = p.dispatch({ action: 'RESUME_AUTOMATIC' }, 'resume-no-ack', approve(p, 'RESUME_AUTOMATIC'));
     expect(noAck.status).toBe('REJECTED');
     expect(run(p, 'RESUME_AUTOMATIC', true).result.status).toBe('APPLIED');
     s = p.getSnapshot();
@@ -180,7 +186,7 @@ describe('percorso di prova dell’Owner', () => {
     const p = make('long-3-pending');
     const preview = p.preview({ action: 'STOP_TOTAL' });
     expect(preview.kind).toBe('CONFIRM');
-    p.dispatch({ action: 'STOP_TOTAL' }, 'stop-1');
+    p.dispatch({ action: 'STOP_TOTAL' }, 'stop-1', approve(p, 'STOP_TOTAL'));
     const s = p.getSnapshot();
     expect(s.orders.find((o) => o.purpose === 'ENTRY')?.status).toBe('CANCELLED');
     expect(s.fills).toHaveLength(0);
@@ -191,7 +197,7 @@ describe('percorso di prova dell’Owner', () => {
     const preview = p.preview({ action: 'MODE_CALL_ONLY' });
     expect(preview.kind).toBe('CONFIRM');
     if (preview.kind === 'CONFIRM') expect(preview.confirmation.consequences.join(' ')).toContain('verrà annullato');
-    p.dispatch({ action: 'MODE_CALL_ONLY' }, 'mode-1');
+    p.dispatch({ action: 'MODE_CALL_ONLY' }, 'mode-1', approve(p, 'MODE_CALL_ONLY'));
     expect(p.getSnapshot().orders.find((o) => o.purpose === 'ENTRY')?.status).toBe('CANCELLED');
   });
 
@@ -207,9 +213,10 @@ describe('percorso di prova dell’Owner', () => {
 
   it('comandi duplicati o click rapidi non duplicano gli eseguiti', () => {
     const p = make();
-    expect(p.dispatch({ action: 'CLOSE_POSITION' }, 'same').status).toBe('APPLIED');
-    expect(p.dispatch({ action: 'CLOSE_POSITION' }, 'same').status).toBe('DUPLICATE');
-    expect(p.dispatch({ action: 'CLOSE_POSITION' }, 'other').status).toBe('REJECTED');
+    const approved = approve(p, 'CLOSE_POSITION');
+    expect(p.dispatch({ action: 'CLOSE_POSITION' }, 'same', approved).status).toBe('APPLIED');
+    expect(p.dispatch({ action: 'CLOSE_POSITION' }, 'same', approved).status).toBe('DUPLICATE');
+    expect(p.dispatch({ action: 'CLOSE_POSITION' }, 'other', approved).status).toBe('REJECTED');
     p.completePendingExit();
     p.completePendingExit();
     const s = p.getSnapshot();
@@ -245,7 +252,7 @@ describe('dati non aggiornati e disconnessione', () => {
   it('la chiusura senza feed resta una richiesta; il ripristino la completa', () => {
     const p = make();
     p.setFeedCondition('STALE');
-    expect(p.dispatch({ action: 'CLOSE_POSITION' }, 'close-stale').status).toBe('APPLIED');
+    expect(p.dispatch({ action: 'CLOSE_POSITION' }, 'close-stale', approve(p, 'CLOSE_POSITION')).status).toBe('APPLIED');
     expect(p.completePendingExit()).toBe(false);
     let s = p.getSnapshot();
     expect(s.orders.find((o) => o.purpose === 'EXIT')?.status).toBe('REQUESTED');
@@ -262,7 +269,7 @@ describe('dati non aggiornati e disconnessione', () => {
   it('una richiesta in attesa può essere ritirata senza eseguiti', () => {
     const p = make();
     p.setFeedCondition('DISCONNECTED');
-    p.dispatch({ action: 'CLOSE_POSITION' }, 'c1');
+    p.dispatch({ action: 'CLOSE_POSITION' }, 'c1', approve(p, 'CLOSE_POSITION'));
     p.dispatch({ action: 'CANCEL_EXIT_REQUEST' }, 'c2');
     p.setFeedCondition('OK');
     expect(p.completePendingExit()).toBe(false);

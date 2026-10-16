@@ -65,10 +65,12 @@ export function Header() {
           ) : (
             <Badge tone="warning">{feed.status === 'STALE' ? 'Feed simulato · dati non aggiornati' : 'Feed simulato · disconnesso'}</Badge>
           )}
-          {bot.status === 'RUNNING' ? (
+          {bot.status === 'RUNNING' && feedOk ? (
             <Badge tone="positive" icon="activity">
               Bot attivo
             </Badge>
+          ) : bot.status === 'RUNNING' ? (
+            <Badge tone="warning">Bot attivo · azioni automatiche sospese</Badge>
           ) : (
             <Badge tone="warning">Bot fermo</Badge>
           )}
@@ -108,7 +110,7 @@ export function Header() {
         </div>
         <p className="mode-desc">
           {modeDesc}
-          {!feedOk && ' · Nuovi ingressi bloccati: feed non aggiornato'}
+          {!feedOk && ' · Feed non regolare: azioni automatiche sospese, nuovi ingressi, Start e ripresa automatica bloccati'}
           {bot.status === 'STOPPED' && ' · Bot fermo: nessuna azione automatica'}
         </p>
       </div>

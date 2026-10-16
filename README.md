@@ -28,9 +28,20 @@ npm ci
 npm run dev
 ```
 
+Durante `npm ci`, npm 11 può mostrare `npm warn install-scripts … esbuild@0.25.12 (postinstall: node install.js)` e un riepilogo di `npm audit`. Nella prova su Windows test, build e avvio funzionano senza approvare lo script. Non è stato applicato nessun aggiornamento delle dipendenze.
+
 Aprire http://127.0.0.1:5173 nel browser. Fermare con Ctrl+C. Altri comandi, sempre dalla cartella `dashboard`: `npm test` (test mirati), `npm run build` (typecheck + build), `npm run preview` (build servita su http://127.0.0.1:4173).
 
-Il **pannello di simulazione** nella barra laterale sceglie il checkpoint dello scenario (LONG o variante SHORT), altera il feed simulato (regolare / non aggiornato / disconnesso) e reimposta tutto. È separato dai comandi ordinari (Stop totale, Start, Solo call / Call + esecuzione, Gestione manuale, Uscita parziale, Chiudi posizione), che chiedono conferma e producono solo esiti simulati predeterminati. Ricaricare la pagina torna al checkpoint iniziale «5 · Protezione aggiornata». Screenshot dei principali stati in [docs/ui/app-screenshots](docs/ui/app-screenshots/).
+Il **pannello di simulazione** nella barra laterale sceglie il checkpoint dello scenario (LONG o variante SHORT), altera il feed simulato (regolare / non aggiornato / disconnesso) e reimposta tutto. È separato dai comandi ordinari (Stop totale, Start, Solo call / Call + esecuzione, Gestione manuale, Uscita parziale, Chiudi posizione), che chiedono conferma e producono solo esiti simulati predeterminati. Ricaricare la pagina torna al checkpoint iniziale «5 · Protezione aggiornata».
+
+Regole della simulazione da conoscere durante la prova:
+- **Una conferma vale solo per ciò che mostra.** Se lo stato cambia mentre il dialogo è aperto (checkpoint, reset, feed, un eseguito, bot o modalità), il dialogo si chiude senza eseguire nulla e va riaperto. Finché il dialogo è aperto, il resto della pagina non si può usare.
+- **Con feed «Non aggiornato» o «Disconnesso»:**
+  - posizione e protezioni sono **ultime note**, con il loro orario;
+  - le azioni automatiche del bot sono sospese;
+  - Start e ritorno alla gestione automatica restano bloccati e, quando il feed torna regolare, vanno richiesti e confermati di nuovo;
+  - Stop totale, gestione manuale e richieste d'uscita restano possibili; un'uscita richiesta resta in attesa e si completa al ritorno del feed.
+- **Esecuzione delle uscite:** avviene alla chiusura della candela 45m successiva dello scenario. **Oltre il segmento dello scenario il prezzo fittizio viene mantenuto** (ultima chiusura, un minuto dopo). È una convenzione sintetica, non un prezzo di mercato osservato. Screenshot dei principali stati in [docs/ui/app-screenshots](docs/ui/app-screenshots/).
 
 ## Come lavoriamo
 

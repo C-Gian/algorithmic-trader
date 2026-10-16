@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import type { DashboardProvider, SimulationControls } from '../contract/provider';
 import { AccountSection } from './components/AccountSection';
 import { CallCard } from './components/CallCard';
@@ -17,6 +17,7 @@ const SCROLL_TARGET: Partial<Record<NavTarget, string>> = { history: 'storico', 
 export function App({ provider, controls }: { provider: DashboardProvider; controls: SimulationControls }) {
   const api = useDashboardState(provider);
   const [view, setView] = useState<'dashboard' | 'research' | 'settings'>('dashboard');
+  const shellRef = useRef<HTMLDivElement>(null);
 
   const navigate = useCallback((target: NavTarget) => {
     if (target === 'research' || target === 'settings') {
@@ -34,7 +35,7 @@ export function App({ provider, controls }: { provider: DashboardProvider; contr
 
   return (
     <DashboardContext.Provider value={api}>
-      <div className="app">
+      <div className="app" ref={shellRef}>
         <div className="sidebar-col">
           <Sidebar active={view} onNavigate={navigate} controls={controls} />
         </div>
@@ -46,7 +47,7 @@ export function App({ provider, controls }: { provider: DashboardProvider; contr
           {view === 'dashboard' ? (
             <>
               <Header />
-              <main className="content">
+              <main className="content" id="main-content" tabIndex={-1}>
                 <div className="row-market">
                   <ChartCard />
                   <CallCard />
@@ -62,7 +63,13 @@ export function App({ provider, controls }: { provider: DashboardProvider; contr
         </div>
       </div>
       {api.confirmation && (
-        <ConfirmDialog key={api.confirmation.requestId} preview={api.confirmation.preview} onConfirm={api.confirm} onCancel={api.cancel} />
+        <ConfirmDialog
+          key={api.confirmation.requestId}
+          preview={api.confirmation.preview}
+          onConfirm={api.confirm}
+          onCancel={api.cancel}
+          background={shellRef}
+        />
       )}
       {api.toast && (
         <div className="toast" role="status">

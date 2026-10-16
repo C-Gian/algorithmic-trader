@@ -243,7 +243,8 @@ export function priceAt(market: ScenarioMarket, t: number): number | null {
 /**
  * Convenzione della UI simulata: un'uscita richiesta all'istante t viene eseguita alla
  * chiusura della successiva candela 45m dello scenario, al suo prezzo di chiusura.
- * Oltre la fine dei dati: un minuto dopo, all'ultimo prezzo noto.
+ * Oltre la fine dei dati: un minuto dopo, all'ultimo prezzo noto (prezzo fittizio
+ * mantenuto, vedi `isBeyondSegment`).
  */
 export function nextExecutionTick(market: ScenarioMarket, t: number): { at: number; price: number } {
   for (let k = 0; k < market.intraday.length; k++) {
@@ -251,6 +252,11 @@ export function nextExecutionTick(market: ScenarioMarket, t: number): { at: numb
     if (closeAt > t) return { at: closeAt, price: market.intraday[k][3] };
   }
   return { at: t + 60_000, price: market.intraday[market.intraday.length - 1][3] };
+}
+
+/** Vero quando un'uscita richiesta in t cadrebbe oltre l'ultima candela dello scenario. */
+export function isBeyondSegment(market: ScenarioMarket, t: number): boolean {
+  return candleCloseTime(market.intraday.length - 1) <= t;
 }
 
 function pushHistory(
@@ -558,7 +564,9 @@ export function applyEvent(state: SimState, ev: SimEvent): SimState {
           ev.origin,
           released ? 'Gestione manuale confermata' : 'Modalità: Solo call',
           released
-            ? `Il bot osserva e non modifica più le uscite. Stop e target esistenti restano attivi su ${formatBtc(pos!.qty)}.`
+            ? s.feed.status === 'OK'
+              ? `Il bot osserva e non modifica più le uscite. Stop e target esistenti restano attivi su ${formatBtc(pos!.qty)}.`
+              : `Il bot non modifica più le uscite. Stop e target ultimi noti restano memorizzati su ${formatBtc(pos!.qty)}, non verificabili con il feed non regolare.`
             : 'Nessun nuovo ordine simulato verrà inviato.',
           { notification: SIMULATED_NOTICE(ev.at) },
         );

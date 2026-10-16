@@ -20,6 +20,11 @@ export interface ConfirmationPreview {
   readonly confirmTone: 'primary' | 'danger';
   /** Se presente, la conferma richiede una spunta esplicita con questo testo. */
   readonly acknowledgement: string | null;
+  /**
+   * Impronta del contesto mostrato (scenario, posizione, piano, protezioni, modalità,
+   * bot, feed e testo della conferma). Il consenso vale solo per questa impronta.
+   */
+  readonly contextToken: string;
 }
 
 export type CommandPreview =
@@ -30,7 +35,14 @@ export type CommandPreview =
 export type CommandResult =
   | { readonly status: 'APPLIED'; readonly message: string }
   | { readonly status: 'DUPLICATE'; readonly message: string }
-  | { readonly status: 'REJECTED'; readonly message: string };
+  | { readonly status: 'REJECTED'; readonly message: string }
+  /** Il contesto è cambiato dopo l'anteprima: nessun effetto, serve una nuova conferma. */
+  | { readonly status: 'CONTEXT_CHANGED'; readonly message: string };
+
+export interface DispatchOptions {
+  readonly acknowledged?: boolean;
+  readonly contextToken?: string;
+}
 
 /** Fonte dei dati della dashboard. Un'implementazione futura può sostituire quella simulata. */
 export interface DashboardProvider {
@@ -39,9 +51,11 @@ export interface DashboardProvider {
   preview(intent: Intent): CommandPreview;
   /**
    * `requestId` rende idempotente il comando: lo stesso id applicato due volte
-   * (doppio click, invio ripetuto) produce un solo effetto.
+   * (doppio click, invio ripetuto) produce un solo effetto. Un comando che richiede
+   * conferma va accompagnato dal `contextToken` dell'anteprima approvata: se il contesto
+   * nel frattempo è cambiato il comando non viene applicato.
    */
-  dispatch(intent: Intent, requestId: string, options?: { acknowledged?: boolean }): CommandResult;
+  dispatch(intent: Intent, requestId: string, options?: DispatchOptions): CommandResult;
 }
 
 /** Comandi riservati al pannello di simulazione, distinti dai comandi ordinari. */

@@ -32,9 +32,17 @@ export function PositionCard() {
           <>
             <Badge tone={position.side === 'LONG' ? 'positive' : 'negative'}>{position.side === 'LONG' ? '↗' : '↘'} {position.side} · APERTA</Badge>
             {position.management === 'BOT' ? (
-              <Badge tone={context.bot.status === 'RUNNING' ? 'accent' : 'warning'} icon={context.bot.status === 'RUNNING' ? 'bot13Blue' : undefined}>
-                {context.bot.status === 'RUNNING' ? 'Gestione automatica' : 'Gestione automatica sospesa · bot fermo'}
-              </Badge>
+              context.bot.status !== 'RUNNING' ? (
+                <Badge tone="warning">Gestione automatica sospesa · bot fermo</Badge>
+              ) : feedOk ? (
+                <Badge tone="accent" icon="bot13Blue">
+                  Gestione automatica
+                </Badge>
+              ) : (
+                <Badge tone="warning">
+                  Gestione automatica sospesa · {context.feed.status === 'STALE' ? 'feed non aggiornato' : 'feed disconnesso'}
+                </Badge>
+              )
             ) : (
               <Badge tone="accent">Gestione manuale</Badge>
             )}
@@ -52,7 +60,13 @@ export function PositionCard() {
   const actionButtons = (
     <div className="actions">
       {position?.management === 'MANUAL' ? (
-        <Button variant="primary" icon="bot16Dark" onClick={() => request('RESUME_AUTOMATIC')}>
+        <Button
+          variant="primary"
+          icon="bot16Dark"
+          disabled={!actions.RESUME_AUTOMATIC.enabled}
+          reason={actions.RESUME_AUTOMATIC.reason}
+          onClick={() => request('RESUME_AUTOMATIC')}
+        >
           Riprendi automatico
         </Button>
       ) : (
@@ -112,7 +126,11 @@ export function PositionCard() {
     <section className="card card-position" aria-label="Posizione">
       {header}
       <div className="metrics">
-        <Metric label="Quantità in posizione" value={formatBtc(position.qty.amount)} sub={`Aperta alle ${fmtHm(position.openedAt)} ${tzAbbr(position.openedAt)}`} />
+        <Metric
+          label="Quantità in posizione"
+          value={formatBtc(position.qty.amount)}
+          sub={`Aperta alle ${fmtHm(position.openedAt)} ${tzAbbr(position.openedAt)}${feedOk ? '' : ` · ultima nota alle ${fmtTime(context.feed.observedAt)}`}`}
+        />
         <Metric label="Ingresso eseguito" value={formatNumber(avg, 2)} sub={`USDT / BTC · valore ${formatNumber(notional, 2)} USDT`} />
         <Metric
           label="Stop attuale"

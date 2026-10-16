@@ -123,9 +123,15 @@ export function AccountSection() {
           <div className="card table-card">
             <div className="card-head">
               <p className="table-title">Ordini simulati</p>
-              <Badge tone="accent">
-                {activeProtections} {activeProtections === 1 ? 'protezione attiva' : 'protezioni attive'} · simulate
-              </Badge>
+              {context.feed.status === 'OK' ? (
+                <Badge tone="accent">
+                  {activeProtections} {activeProtections === 1 ? 'protezione attiva' : 'protezioni attive'} · simulate
+                </Badge>
+              ) : (
+                <Badge tone="warning">
+                  {activeProtections} {activeProtections === 1 ? 'protezione' : 'protezioni'} · ultime note, non verificabili ora
+                </Badge>
+              )}
             </div>
             {orders.length === 0 ? (
               <p className="empty">Nessun ordine simulato in questo momento.</p>

@@ -1,6 +1,6 @@
 # Incarico corrente — UI-001
 
-**Stato: READY — correzioni UI-001/R1 richieste dalla review del Director sul commit 939c866fb847fcc489979d99b2080e0c96bedca7.**
+**Stato: DELIVERED — correzioni UI-001/R1 consegnate da Claude Code (sezione «Consegna R1» in fondo); in attesa di review del Director. Review richiesta sul commit 939c866fb847fcc489979d99b2080e0c96bedca7.**
 
 Priorità esecutiva corrente: applicare soltanto UI-001/R1 nella sezione Review del Director in fondo. La specifica e la consegna iniziali restano per contesto; non ripetere il gate Figma già superato o ricostruire la dashboard. La lettura del design è necessaria solo per le parti visive da correggere.
 
@@ -227,4 +227,86 @@ Il fallback oltre l'ultimo dato rimane soltanto una convenzione sintetica: espli
 
 ### Review successiva
 
-In attesa della consegna R1.
+In attesa della review del Director sulla consegna R1 qui sotto.
+
+## Consegna R1 dell'esecutore — 16 ottobre 2026
+
+Claude Code. Base `51f1e37`, checkout pulito su `main`, nessun pull. Il commit della consegna è quello che aggiorna questo file. Gate Figma non ripetuto. Per R1-C ho riletto soltanto il codice di riferimento già ottenuto per il nodo 2:9591 «Aggiornamento call»: `items-start`, icona `history` 16×16.
+
+### R1-A — Conferma legata al contesto mostrato
+
+- **Impronta del contesto.** Contratto: `ConfirmationPreview.contextToken` e `DispatchOptions.contextToken`, più il nuovo esito `CONTEXT_CHANGED`. Il provider calcola l'impronta da tre elementi:
+  - il testo dell'anteprima;
+  - i fatti da cui dipendono le conseguenze (`consequenceFacts`): checkpoint; lato, quantità e prezzo medio della posizione; gestione; modalità; bot; feed con orario; call e versione del piano con i livelli correnti; protezioni; ingressi pendenti; uscita in attesa;
+  - un'epoca che cresce a ogni cambio di checkpoint o reset, così anche un reset allo stesso stato invalida la conferma.
+- **Regola all'invio.** Un comando che richiede conferma, inviato senza impronta, viene rifiutato. Con un'impronta diversa da quella corrente l'esito è `CONTEXT_CHANGED` e non c'è alcun effetto.
+- **Interfaccia.** A ogni aggiornamento dello snapshot (cambio scenario, reset, feed, eseguito, bot), se la conferma aperta non corrisponde più all'anteprima corrente, il dialogo si chiude senza eseguire nulla. Un avviso spiega di riaprire il comando. Nessuna conferma viene trasferita a un contesto diverso.
+- **Dialogo isolato.** Il fondo riceve `inert` e `aria-hidden`; Tab e Maiusc+Tab restano confinati nel dialogo. Escape e Annulla funzionano. Alla chiusura il focus torna al comando che ha aperto il dialogo; se quel comando non è più utilizzabile, va al contenuto principale.
+
+### R1-B — Feed non regolare
+
+- **Testi qualificati.** Con STALE o DISCONNECTED, riepiloghi e conseguenze dei dialoghi (stop totale, manuale, parziale, chiusura) dicono «ultimi noti alle …, non verificabili ora» e indicano la sospensione delle azioni automatiche. Il manuale e lo stop totale agiscono solo sullo stato locale. Nessun testo dice più «restano attivi» o «possono chiudere la posizione». La voce di cronologia del passaggio a manuale è qualificata allo stesso modo.
+- **Badge.** Posizione: «Gestione automatica sospesa · feed non aggiornato/disconnesso». Header: «Bot attivo · azioni automatiche sospese». Conto: «N protezioni · ultime note, non verificabili ora». La quantità in posizione riporta l'orario dell'ultima nota.
+- **Convenzione del Director applicata:**
+  - START, RESUME_AUTOMATIC e MODE_CALL_AND_EXECUTION (quando comporta una presa in gestione) sono disabilitati, con la spiegazione nel tooltip e nella riga della modalità;
+  - al ritorno del feed nulla riparte da solo: Start e ripresa vanno richiesti e confermati;
+  - il bot RUNNING conserva lo stato logico;
+  - l'uscita richiesta senza feed resta REQUESTED e si completa al ripristino, senza riattivare il bot.
+- **Segmento fittizio.** Nei dialoghi d'uscita, quando l'esecuzione cadrebbe oltre l'ultima candela, compare il testo «oltre il segmento dello scenario il prezzo fittizio viene mantenuto … non è un prezzo di mercato osservato». La regola è scritta anche nel README.
+
+### R1-C — Icona nel riquadro aggiornamento
+
+`.update-box` usa ora `align-items: flex-start`, come il Figma. L'asset non è stato modificato né sostituito e non c'è dimensionamento forzato. Lo stesso stile serve anche l'icona `clock` dell'aspettativa, che risulta corretta. Le quattro varianti d'icona assenti dal Figma restano una differenza dichiarata.
+
+### Controlli eseguiti dall'esecutore
+
+**Test Vitest: 45 verdi** (28 originali più 17 nuovi):
+- `src/sim/confirmation.test.ts` (11 test):
+  - cambio a SHORT con conferma LONG: nessun ordine; la nuova anteprima agisce su BUY;
+  - reset;
+  - quantità cambiata da un eseguito;
+  - feed e bot cambiati nello stesso scenario;
+  - comando senza impronta;
+  - per STALE e per DISCONNECTED: testi, blocchi, ripresa esplicita dopo il ripristino, protezioni e quantità invariate, Start, uscita REQUESTED completata senza riattivare il bot.
+- `src/ui/ConfirmDialog.test.tsx` (6 test):
+  - la riproduzione della review tramite il select;
+  - aggiornamento del provider a dialogo aperto;
+  - eseguito a dialogo aperto;
+  - inert e aria-hidden, Tab, Escape e ripristino del focus;
+  - badge con feed disconnesso;
+  - ripresa bloccata con STALE e poi esplicita.
+- **Discriminazione:** gli stessi 6 test UI eseguiti sul codice di 939c866 falliscono tutti e 6.
+- I test esistenti sono stati adattati solo per passare l'impronta. I valori contabili attesi non sono cambiati.
+
+**Installazione e build:** `npm ci`, `npm test` e `npm run build` (typecheck incluso) riusciti dopo l'installazione pulita.
+
+**Browser:** Chrome locale headless con playwright-core dalla mia cartella temporanea, sulla build servita da `vite preview`.
+- **Geometria delle icone.** Icona `history` nel riquadro: 16×16, naturale 16×16. Controllati 11 checkpoint a 1680 px, 2 a 1366 px e 1 a 900 px: nessuna delle 423 icone visibili ha una misura resa diversa da quella naturale.
+- **Dialogo.** Fondo `inert`; il select del pannello non è raggiungibile né cliccabile; Tab ciclico solo nel dialogo; dopo Escape il focus torna a «Stop totale».
+- **Invalidazione da eseguito.** Uscita parziale richiesta, poi «Stop totale» aperto: all'eseguito il dialogo si chiude con l'avviso, il bot resta attivo e la quantità passa a 0,00600.
+- **Feed disconnesso:**
+  - testi del dialogo manuale e dello stop totale verificati;
+  - ripresa e Start disabilitati con la spiegazione;
+  - con feed non aggiornato la ripresa resta bloccata;
+  - con feed regolare la posizione resta in manuale fino alla ripresa confermata con spunta.
+- **Percorso Owner** ripetuto senza errori in console: saldo 10.005,793 e netto +5,793.
+
+**Immagini** in `docs/ui/app-screenshots/`:
+- rigenerate le immagini esistenti, perché quasi tutte mostravano il riquadro con l'icona deformata;
+- `01` e `02` (1366 px) sono riprese dall'inizio con viewport alta quanto la pagina, senza cattura a scorrimento;
+- nuove: `r1-update-box-history`, `r1-context-changed`, `r1-dlg-manual-disconnected`, `r1-dlg-stop-disconnected`, `r1-manual-disconnected-resume-blocked`.
+
+**Avviso esbuild,** riprodotto con `npm ci` (Node 24.14.1, npm 11.19.0) nella cartella `dashboard`:
+```
+npm warn install-scripts 1 package has install scripts not yet covered by allowScripts:
+npm warn install-scripts   esbuild@0.25.12 (postinstall: node install.js)
+npm warn install-scripts
+npm warn install-scripts Run `npm install-scripts ls` to review, or `npm install-scripts approve <pkg>` to allow.
+```
+Senza approvazione dello script, test, build e preview funzionano su questo PC; non lo generalizzo ad altri ambienti. Lo stesso comando mostra la deprecazione `whatwg-encoding@3.1.1` e «4 vulnerabilities (1 moderate, 1 high, 2 critical)». Secondo `npm audit` riguardano vite ≤ 6.4.2 (fra cui bypass di `server.fs.deny` su Windows), tinypool e @vitest/mocker, che sono dipendenze di sviluppo. Non ho eseguito «audit fix» né aggiornamenti: decide il Director.
+
+### Limiti e note
+
+- La prova Owner non è stata svolta; la review del Director su R1 è da fare.
+- La verifica dell'inerzia in jsdom controlla gli attributi; il blocco effettivo dell'interazione è verificato solo nel browser headless.
+- Il server `vite preview` avviato da me è rimasto attivo dopo l'arresto del task in background. L'ho chiuso dopo averne verificato la riga di comando (PID 8212).

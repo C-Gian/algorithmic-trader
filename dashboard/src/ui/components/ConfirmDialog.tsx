@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type RefObject } from 'react';
 import type { ConfirmationPreview } from '../../contract/provider';
 import type { Tone } from '../../contract/types';
 import type { IconName } from '../icons';
@@ -13,30 +13,71 @@ const SYMBOL: Record<ConfirmationPreview['icon'], { icon: IconName; tone: Tone }
   mode: { icon: 'eye', tone: 'neutral' },
 };
 
+const FOCUSABLE = 'button:not([disabled]), input:not([disabled]), select:not([disabled]), [href], [tabindex]:not([tabindex="-1"])';
+
 const NOTICE_ICON: Partial<Record<Tone, IconName>> = { accent: 'info17', warning: 'triangleAlert17', negative: 'circleAlert17Red' };
 
-/** Conferma operativa (nodi Figma 2:10298, 2:10335, 2:10372): un solo dialogo alla volta. */
+/**
+ * Conferma operativa (nodi Figma 2:10298, 2:10335, 2:10372): un solo dialogo alla volta.
+ * Finché è aperto il resto della pagina è inerte e il focus resta nel dialogo; alla chiusura
+ * torna al comando che l'ha aperto, se ancora utilizzabile.
+ */
 export function ConfirmDialog({
   preview,
   onConfirm,
   onCancel,
+  background,
 }: {
   preview: ConfirmationPreview;
   onConfirm: (acknowledged: boolean) => void;
   onCancel: () => void;
+  /** Contenuto della pagina da rendere inerte durante il dialogo. */
+  background: RefObject<HTMLElement>;
 }) {
   const [ack, setAck] = useState(false);
   const [busy, setBusy] = useState(false);
   const cancelRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
   const symbol = SYMBOL[preview.icon];
   const needsAck = preview.acknowledgement !== null;
 
   useEffect(() => {
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const page = background.current;
+    page?.setAttribute('inert', '');
+    page?.setAttribute('aria-hidden', 'true');
     cancelRef.current?.focus();
+    return () => {
+      page?.removeAttribute('inert');
+      page?.removeAttribute('aria-hidden');
+      const usable = opener && opener.isConnected && !(opener as HTMLButtonElement).disabled;
+      if (usable) opener.focus();
+      else page?.querySelector<HTMLElement>('#main-content')?.focus();
+    };
+  }, [background]);
+
+  useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onCancel();
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [onCancel]);
+
+  /** Tab e Maiusc+Tab ciclano dentro il dialogo (oltre a `inert`, utile dove non è supportato). */
+  const trapTab = (e: ReactKeyboardEvent) => {
+    if (e.key !== 'Tab' || !dialogRef.current) return;
+    const items = [...dialogRef.current.querySelectorAll<HTMLElement>(FOCUSABLE)];
+    if (items.length === 0) return;
+    const first = items[0];
+    const last = items[items.length - 1];
+    const active = document.activeElement;
+    if (e.shiftKey && (active === first || !dialogRef.current.contains(active))) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && (active === last || !dialogRef.current.contains(active))) {
+      e.preventDefault();
+      first.focus();
+    }
+  };
 
   const confirm = () => {
     if (busy) return;
@@ -46,7 +87,15 @@ export function ConfirmDialog({
 
   return (
     <div className="overlay" onClick={onCancel}>
-      <div className="dialog" role="dialog" aria-modal="true" aria-labelledby="confirm-title" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="confirm-title"
+        ref={dialogRef}
+        onKeyDown={trapTab}
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="dialog-identity">
           <span className={`action-symbol tone-${symbol.tone}`}>
             <Icon name={symbol.icon} />
