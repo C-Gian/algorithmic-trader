@@ -46,18 +46,26 @@ function stats(x: unknown, w: string): void {
 
 function period(t: unknown, w: string): void {
   if (!isObj(t)) return fail(`${w}: tabella assente.`);
-  for (const k of ['start', 'end', 'closes', 'validCloses', 'legs', 'episodes', 'calls']) if (!isInt(t[k])) fail(`${w}: conteggio «${k}» non valido.`);
+  for (const k of ['start', 'end', 'closes', 'evaluatedCloses', 'notEvaluatedCloses', 'validCloses', 'legs', 'episodes', 'calls']) if (!isInt(t[k])) fail(`${w}: conteggio «${k}» non valido.`);
+  const cov = obj(t, 'coverage', w);
+  if (typeof cov.complete !== 'boolean' || typeof cov.evaluated !== 'boolean' || !isInt(cov.evaluatedUntil) || !(cov.haltedAt === null || isInt(cov.haltedAt)) || !isInt(cov.unresolvedTrades)) {
+    fail(`${w}: copertura del periodo incompleta.`);
+  }
   const req = obj(t, 'requests', w);
   for (const k of ['FILLED', 'REJECTED_PRICE', 'CANCELLED_NO_QUOTE']) if (!isInt(req[k])) fail(`${w}: richieste «${k}» non valide.`);
   for (const k of ['legsByOutcome', 'episodesByTermination']) for (const [kk, v] of Object.entries(obj(t, k, w))) if (!isInt(v)) fail(`${w}: «${k}.${kk}» non valido.`);
   const dd = obj(t, 'drawdown', w);
-  if (!isNumOrNull(dd.maxDrawdown)) fail(`${w}: drawdown non valido.`);
+  if (!isNumOrNull(dd.maxDrawdown) || typeof dd.missing !== 'boolean') fail(`${w}: drawdown non valido.`);
+  if ('partialMaxDrawdown' in dd && (!isInt(dd.partialUntil) || !isNumOrNull(dd.partialMaxDrawdown))) fail(`${w}: drawdown parziale non valido.`);
   const tr = obj(t, 'trades', w);
-  for (const k of ['n', 'long', 'short', 'maxLosingStreak', 'protectionUpdates', 'tradesWithProtectionUpdate', 'bothTouched', 'gapExits', 'fundingAmbiguousTrades', 'fundingMissingTrades']) {
+  for (const k of ['n', 'closed', 'unresolved', 'long', 'short', 'maxLosingStreak', 'protectionUpdates', 'tradesWithProtectionUpdate', 'bothTouched', 'gapExits', 'fundingAmbiguousTrades', 'fundingMissingTrades']) {
     if (!isInt(tr[k])) fail(`${w}: operazioni «${k}» non valido.`);
   }
   nums(tr, ['pricePnLRef', 'slippage', 'fees', 'funding', 'net', 'netBps', 'stressNet', 'positiveShare', 'payoff', 'profitFactor'], `${w}, operazioni`, true);
   if (!isNum(tr.exposureShare)) fail(`${w}: esposizione non valida.`);
+  const cs = obj(tr, 'closedSubset', w);
+  if (!isInt(cs.trades) || !isNumOrNull(cs.net) || !isStr(cs.label)) fail(`${w}: parte nota delle operazioni incompleta.`);
+  if ((tr.unresolved as number) > 0 && tr.net !== null) fail(`${w}: netto completo presente nonostante operazioni irrisolte.`);
   const ex = obj(tr, 'exits', w);
   for (const r of EXITS) if (!isInt(ex[r])) fail(`${w}: uscite «${r}» non valide.`);
   const pt = obj(tr, 'perTrade', w);
@@ -67,16 +75,21 @@ function period(t: unknown, w: string): void {
 
 function trade(t: unknown, w: string): void {
   if (!isObj(t) || !isStr(t.id) || !isStr(t.episodeId) || !SIDES.includes(t.side as string) || (t.d !== 1 && t.d !== -1)) return fail(`${w}: identità incompleta.`);
-  if (t.exit === null || t.status === 'UNRESOLVED_DATA_GAP') {
-    if (!isInt(t.entryTime)) fail(`${w}: operazione irrisolta senza ingresso.`);
-    return;
-  }
   for (const k of ['callTime', 'entryTime']) if (!isInt(t[k])) fail(`${w}: tempo «${k}» non valido.`);
-  nums(t, ['Eref', 'E', 'q', 'N0', 'S0', 'T', 'R0', 'G0', 'pricePnL', 'pricePnLRef', 'slippageCost', 'feeEntry', 'feeExit', 'durationMin', 'riskInitial'], w);
-  nums(t, ['net', 'netBps'], w, true);
-  const ex = obj(t, 'exit', w);
-  if (!EXITS.includes(ex.reason as string) || !isInt(ex.minute) || !isInt(ex.accountingTime)) fail(`${w}: uscita incompleta.`);
-  nums(ex, ['Xref', 'X'], `${w}, uscita`);
+  nums(t, ['Eref', 'E', 'q', 'N0', 'S0', 'T', 'R0', 'G0', 'feeEntry', 'riskInitial'], w);
+  if (t.status !== undefined || t.exit === null) {
+    // Percorso irrisolto: fatti noti fino alla lacuna, nessun risultato completo.
+    if (t.status !== 'UNRESOLVED_DATA_GAP' || t.exit !== null) fail(`${w}: stato dell'operazione non riconosciuto.`);
+    if (!isObj(t.gap) || !isInt(t.gap.at) || !isStr(t.gap.reason)) fail(`${w}: operazione irrisolta senza momento della lacuna.`);
+    if (!isNum(t.durationUntilGapMin)) fail(`${w}: durata fino alla lacuna assente.`);
+    for (const k of ['pricePnL', 'pricePnLRef', 'slippageCost', 'feeExit', 'net', 'netBps', 'durationMin']) if (t[k] !== null) fail(`${w}: operazione irrisolta con «${k}» valorizzato.`);
+  } else {
+    nums(t, ['pricePnL', 'pricePnLRef', 'slippageCost', 'feeExit', 'durationMin'], w);
+    nums(t, ['net', 'netBps'], w, true);
+    const ex = obj(t, 'exit', w);
+    if (!EXITS.includes(ex.reason as string) || !isInt(ex.minute) || !isInt(ex.accountingTime)) fail(`${w}: uscita incompleta.`);
+    nums(ex, ['Xref', 'X'], `${w}, uscita`);
+  }
   arr(t, 'stops', w).forEach((s, i) => {
     if (!isObj(s) || !isInt(s.decidedAt) || !isInt(s.effectiveAt)) return fail(`${w}: aggiornamento protezione ${i + 1} incompleto.`);
     nums(s, ['from', 'to', 'pivot'], `${w}, protezione ${i + 1}`);
@@ -167,6 +180,13 @@ export function parseBacktest(text: string): BacktestBundle {
   const tables = obj(summary, 'tables', 'Risultati');
   for (const p of periods) period(tables[String(p)], `Risultati, periodo ${String(p)}`);
   const months = obj(summary, 'months', 'Risultati');
+  const halted = summary.halted;
+  if (!(halted === null || (isObj(halted) && isInt(halted.at) && isStr(halted.reason)))) fail('Risultati: interruzione della finestra non valida.');
+  const rec = obj(summary, 'reconciliation', 'Riconciliazione');
+  if (typeof rec.knownPartReconciled !== 'boolean' || typeof rec.windowComplete !== 'boolean' || !isInt(rec.closedTrades) || !isInt(rec.unresolvedTrades) || !isNumOrNull(rec.knownPartNet) || !isInt(rec.evaluatedCloses) || !isInt(rec.notEvaluatedCloses)) {
+    fail('Riconciliazione incompleta.');
+  }
+  if ((halted === null) !== (rec.windowComplete === true)) fail('Riconciliazione incoerente con l’interruzione della finestra.');
   for (const [m, t] of Object.entries(months)) {
     period(t, `Risultati, mese ${m}`);
     const cf = obj(t as Obj, 'cashflowByTimestamp', `Risultati, mese ${m}`);

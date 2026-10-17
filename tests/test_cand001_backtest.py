@@ -54,7 +54,8 @@ class Reconciliation(unittest.TestCase):
         res = run_window(CAND, trend_store(START, END, 5), WINDOW, [], {})
         summ = summarize(res, CAND, "DEV")
         rec = summ["reconciliation"]
-        self.assertTrue(rec["reconciled"])
+        self.assertTrue(rec["knownPartReconciled"])  # R1-B: conti della parte nota e completezza separati
+        self.assertTrue(rec["windowComplete"])
         total = summ["tables"]["DEV"]
         self.assertEqual(total["closes"], 20 * 32)
         self.assertEqual(sum(total["requests"].values()), total["calls"])

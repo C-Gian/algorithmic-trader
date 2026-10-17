@@ -5,5 +5,7 @@ decisionale (decision.py) e il ledger di esecuzione/costi (execution.py) sono mo
 le decisioni non ricevono esiti economici, funding o minuti futuri.
 """
 
-ENGINE_VERSION = "1.0.0"
-BUNDLE_SCHEMA = "cand001.bundle/1"
+# 1.0.1 (review CAND-001/R1): funding non certificato blocca il run economico; percorsi irrisolti
+# conservano i fatti noti e rendono mancanti i risultati completi. Candidato e config invariati.
+ENGINE_VERSION = "1.0.1"
+BUNDLE_SCHEMA = "cand001.bundle/2"

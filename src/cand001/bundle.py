@@ -139,7 +139,9 @@ def results_markdown(summary: dict, n0: float) -> str:
     def row(label, fn):
         L.append(f"| {label} | " + " | ".join(fn(tables[c]) for c in cols) + " |")
 
-    row("Chiusure 45m (valide)", lambda t: f"{t['closes']} ({t['validCloses']})")
+    row("Copertura", lambda t: "completa" if t["coverage"]["complete"] else ("interrotta" if t["coverage"]["evaluated"] else "non valutata"))
+    row("Chiusure 45m valutate / teoriche (dati validi)", lambda t: f"{t['evaluatedCloses']} / {t['closes']} ({t['validCloses']})")
+    row("Operazioni irrisolte (lacuna con posizione aperta)", lambda t: str(t["trades"]["unresolved"]))
     row("Gambe considerate", lambda t: str(t["legs"]))
     row("Episodi riconosciuti", lambda t: str(t["episodes"]))
     row("Call (LONG/SHORT)", lambda t: f"{t['calls']} ({t['callsLong']}/{t['callsShort']})")
@@ -158,6 +160,7 @@ def results_markdown(summary: dict, n0: float) -> str:
     row("Funding", lambda t: _f(t["trades"]["funding"]))
     row("**Netto modellato**", lambda t: f"**{_f(t['trades']['net'])}**")
     row("Netto in punti base di N0", lambda t: _f(t["trades"]["netBps"], 0))
+    row("Parte nota: netto delle sole operazioni concluse", lambda t: f"{_f(t['trades']['closedSubset']['net'])} ({t['trades']['closedSubset']['trades']})")
     row("Intervallo ambiguità funding", lambda t: f"{_f(t['trades']['ambiguityLow'], 3)} / +{_f(t['trades']['ambiguityHigh'], 3)}")
     row("Sensibilità target-first (stesso minuto)", lambda t: _f(t["trades"]["targetFirstDelta"]))
     row("Netto stress (fee 10 bp, slippage 10 bp)", lambda t: _f(t["trades"]["stressNet"]))
@@ -181,6 +184,9 @@ def results_markdown(summary: dict, n0: float) -> str:
     L.append("|---|---:|---:|---:|---:|---:|---:|---|")
     for m, t in summary["months"].items():
         ex = t["trades"]["exits"]
+        if not t["coverage"]["evaluated"]:
+            L.append(f"| {m} | non valutato (finestra interrotta) | — | — | — | — | — | — |")
+            continue
         L.append(f"| {m} | {t['validCloses']}/{t['closes']} | {t['episodes']} | {t['calls']} | {t['trades']['n']} | {_f(t['trades']['net'])} | "
                  f"{_f(t['cashflowByTimestamp']['net'])} | {ex['STOP']}/{ex['TARGET']}/{ex['EXIT_STRUCTURE']}/{ex['TIME_EXIT']}/{ex['END_OF_SEGMENT']} |")
     L.append("\n### Motivi delle gambe e degli episodi (totale)\n")

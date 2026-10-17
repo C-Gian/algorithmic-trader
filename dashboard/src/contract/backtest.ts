@@ -1,12 +1,13 @@
 /**
- * Contratto del backtest di sviluppo CAND-001 (bundle `cand001.bundle/1`).
+ * Contratto del backtest di sviluppo CAND-001 (bundle `cand001.bundle/2`).
  * Distinto dal bundle osservativo OBS-001 e dalla simulazione: esecuzioni modellate su prezzi
  * storici, nozionale normalizzato fisso, nessun conto o saldo personale. Tempi in ms epoch UTC.
  */
 import type { Measure, Ms } from './historical';
 
 export const BACKTEST_KIND = 'CAND001_BUNDLE' as const;
-export const BACKTEST_SCHEMA = 'cand001.bundle/1' as const;
+/** /2 (motore 1.0.1, review R1): operazioni irrisolte, copertura dei periodi, riconciliazione separata. */
+export const BACKTEST_SCHEMA = 'cand001.bundle/2' as const;
 
 export type Side = 'LONG' | 'SHORT';
 
@@ -124,8 +125,16 @@ export interface BtExit {
   readonly bothTouched: boolean;
 }
 
+/**
+ * Operazione modellata. Con `status: 'UNRESOLVED_DATA_GAP'` il percorso è irrisolto: `exit` è null,
+ * prezzo d'uscita, PnL, netto e stress sono null; restano ingresso, fee d'ingresso, protezioni,
+ * funding valutabile fino alla lacuna e il momento della lacuna (`gap`).
+ */
 export interface BtTrade {
   readonly id: string;
+  readonly status?: 'UNRESOLVED_DATA_GAP';
+  readonly gap?: { readonly at: Ms; readonly reason: string };
+  readonly durationUntilGapMin?: number;
   readonly episodeId: string;
   readonly side: Side;
   readonly d: 1 | -1;
@@ -140,18 +149,18 @@ export interface BtTrade {
   readonly R0: number;
   readonly G0: number;
   readonly stops: readonly BtStop[];
-  readonly exit: BtExit;
-  readonly pricePnL: number;
-  readonly pricePnLRef: number;
-  readonly slippageCost: number;
+  readonly exit: BtExit | null;
+  readonly pricePnL: number | null;
+  readonly pricePnLRef: number | null;
+  readonly slippageCost: number | null;
   readonly feeEntry: number;
-  readonly feeExit: number;
+  readonly feeExit: number | null;
   readonly funding: { readonly events: readonly BtFundingEvent[]; readonly total: number | null; readonly missing: boolean; readonly ambiguous: boolean };
   readonly net: number | null;
   readonly netRange: readonly [number, number] | null;
   readonly stress: { readonly fee: number; readonly slippage: number; readonly net: number | null };
   readonly targetFirst?: { readonly Xref: number; readonly net: number | null; readonly delta: number | null };
-  readonly durationMin: number;
+  readonly durationMin: number | null;
   readonly riskInitial: number;
   readonly netBps: number | null;
 }
@@ -199,6 +208,10 @@ export interface BtStats {
 
 export interface BtTradeStats {
   readonly n: number;
+  readonly closed: number;
+  readonly unresolved: number;
+  /** Parte nota: somme delle sole operazioni concluse, dichiarate parziali. */
+  readonly closedSubset: { readonly trades: number; readonly net: number | null; readonly label: string };
   readonly long: number;
   readonly short: number;
   readonly pricePnLRef: number | null;
@@ -224,17 +237,28 @@ export interface BtTradeStats {
   readonly concentration: { readonly top5AbsShare: number | null; readonly best5PositiveShare: number | null; readonly worst5NegativeShare: number | null };
 }
 
+export interface BtCoverage {
+  readonly complete: boolean;
+  readonly evaluated: boolean;
+  readonly evaluatedUntil: Ms;
+  readonly haltedAt: Ms | null;
+  readonly unresolvedTrades: number;
+}
+
 export interface BtPeriod {
   readonly start: Ms;
   readonly end: Ms;
+  readonly coverage: BtCoverage;
   readonly closes: number;
+  readonly evaluatedCloses: number;
+  readonly notEvaluatedCloses: number;
   readonly validCloses: number;
   readonly legs: number;
   readonly episodes: number;
   readonly calls: number;
   readonly requests: Readonly<Record<string, number>>;
   readonly trades: BtTradeStats;
-  readonly drawdown: { readonly maxDrawdown: number | null; readonly missing: boolean };
+  readonly drawdown: { readonly maxDrawdown: number | null; readonly missing: boolean; readonly partialUntil?: Ms; readonly partialMaxDrawdown?: number | null };
   readonly legsByOutcome: Readonly<Record<string, number>>;
   readonly episodesByTermination: Readonly<Record<string, number>>;
 }
@@ -288,7 +312,16 @@ export interface BacktestBundle {
     readonly tables: Readonly<Record<string, BtPeriod>>;
     readonly months: Readonly<Record<string, BtPeriod & { readonly cashflowByTimestamp: { readonly net: number | null } }>>;
     readonly examples: Readonly<Record<Side, Readonly<Record<ExampleCategory, ExampleRef | null>>>>;
-    readonly halted: unknown;
+    readonly halted: { readonly at: Ms; readonly reason: string; readonly positionId: string | null } | null;
+    readonly reconciliation: {
+      readonly knownPartReconciled: boolean;
+      readonly windowComplete: boolean;
+      readonly closedTrades: number;
+      readonly unresolvedTrades: number;
+      readonly knownPartNet: number | null;
+      readonly evaluatedCloses: number;
+      readonly notEvaluatedCloses: number;
+    };
   };
   readonly trades: readonly BtTrade[];
   readonly requests: readonly BtRequest[];

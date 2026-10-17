@@ -32,7 +32,7 @@ export function LedgerView({ study, onOpen }: { study: BacktestStudy; onOpen: (i
                   <td>{isoMinute(t.entryTime).replace('T', ' ')}</td>
                   <td>{t.side}</td>
                   <td>{t.exit ? EXIT_TEXT[t.exit.reason] : 'percorso irrisolto'}</td>
-                  <td>{t.exit ? formatNumber(t.durationMin, 0) : '—'}</td>
+                  <td>{t.durationMin != null ? formatNumber(t.durationMin, 0) : '—'}</td>
                   <td className={t.net != null && t.net < 0 ? 't-neg' : 't-pos'}>{usdt(t.net)}</td>
                   <td>{bps(t.netBps)}</td>
                   <td>{t.stops?.length ?? 0}</td>

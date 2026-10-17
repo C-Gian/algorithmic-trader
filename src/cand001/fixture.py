@@ -12,7 +12,7 @@ import random
 import sys
 from pathlib import Path
 
-from obs001.minutes import MinuteStore
+from obs001.minutes import MISSING, MinuteStore
 
 from . import ENGINE_VERSION
 from .backtest import run_window
@@ -42,23 +42,30 @@ def synthetic_store(start: int, end: int, seed: int) -> MinuteStore:
     return st
 
 
-def build(seed: int = 7) -> dict:
+def build(seed: int = 7, gap_in_trade: int | None = None) -> dict:
+    """gap_in_trade=k: toglie un minuto 5 minuti dopo l'ingresso della k-esima operazione del percorso
+    senza lacune, così il motore produce davvero una finestra interrotta (UNRESOLVED_DATA_GAP)."""
     cand = load_candidate()
     start, end = T0 - 10 * DAY, T0 + 20 * DAY
     store = synthetic_store(start, end, seed)
+    if gap_in_trade is not None:
+        clean = run_window(cand, synthetic_store(start, end, seed), (T0, end), [], {})
+        gap_at = clean["ledger"].trades[gap_in_trade]["entryTime"] + 5 * MIN
+        store.status[store.index(gap_at)] = MISSING
     res = run_window(cand, store, (T0, end), [], {})
     summary = summarize(res, cand, "DEV")
     quality = {"trade": {"months": [], "totals": store.counts(), "initialization": store.counts(start, T0)},
                "funding": {"files": [], "series": {"events": 0, "anomalies": [], "certified": True}},
                "mark": {"files": [], "pointsNeeded": 0, "pointsAvailable": 0, "missingForTau": []}, "identity": {"ok": False, "reason": "fixture"}}
-    run_ref = {"runId": "SYNTHETIC-CAND-FIXTURE", "inputHash": None, "engineVersion": ENGINE_VERSION,
+    run_ref = {"runId": "SYNTHETIC-CAND-FIXTURE" + ("-HALT" if gap_in_trade is not None else ""), "inputHash": None, "engineVersion": ENGINE_VERSION,
                "candidateVersion": cand.raw["candidateVersion"], "configHash": cand.hash, "synthetic": True}
     return build_bundle(cand, res, summary, quality, run_ref, "DEV")
 
 
 def main() -> int:
     out = Path(sys.argv[1])
-    out.write_text(json.dumps(build(), ensure_ascii=False, separators=(",", ":"), allow_nan=False), encoding="utf-8")
+    gap = int(sys.argv[2]) if len(sys.argv) > 2 else None
+    out.write_text(json.dumps(build(gap_in_trade=gap), ensure_ascii=False, separators=(",", ":"), allow_nan=False), encoding="utf-8")
     print(f"{out} {out.stat().st_size} byte")
     return 0
 

@@ -172,32 +172,65 @@ def parse_funding(text: str, name: str) -> tuple[list[dict], dict]:
     return out, stats
 
 
-def check_funding_series(events: list[dict], start: int, end: int) -> dict:
-    """Ordine, unicità e distanze coerenti con l'intervallo dichiarato (jitter fino a 60s)."""
+class FundingNotCertified(RuntimeError):
+    """Serie funding non certificabile: il run economico si ferma prima del ledger (review CAND-001/R1-A)."""
+
+    def __init__(self, message: str, report: dict):
+        super().__init__(message)
+        self.report = report
+
+
+def check_funding_series(events: list[dict], start: int, end: int, file_stats: list[dict] | None = None) -> dict:
+    """Certificazione della serie funding sulla finestra [start, end).
+
+    Non certificata se: vuota; righe corrotte/non finite o eventi fuori mese nei file; timestamp
+    duplicati (identici o discordanti); distanze fra eventi consecutivi diverse dall'intervallo
+    dichiarato oltre la tolleranza di 60 s; copertura ai confini più lunga di un intervallo dichiarato.
+    Nessun calendario, tasso o prezzo viene inventato: un tratto non certificabile blocca il netto.
+    """
     anomalies = []
+    for st in file_stats or []:
+        if st.get("corrupt"):
+            anomalies.append({"kind": "CORRUPT_ROWS", "file": st.get("name"), "count": st["corrupt"]})
+        if st.get("outsideMonth"):
+            anomalies.append({"kind": "OUTSIDE_MONTH", "file": st.get("name"), "count": st["outsideMonth"]})
+    if not events:
+        anomalies.append({"kind": "EMPTY", "start": start, "end": end})
     taus = [e["tau"] for e in events]
     if taus != sorted(taus):
         anomalies.append({"kind": "NOT_ORDERED"})
-    if len(set(taus)) != len(taus):
-        anomalies.append({"kind": "DUPLICATE_TIMESTAMP", "count": len(taus) - len(set(taus))})
-    ev = sorted(events, key=lambda e: e["tau"])
+    by_tau: dict[int, list[dict]] = {}
+    for e in events:
+        by_tau.setdefault(e["tau"], []).append(e)
+    for tau, group in sorted(by_tau.items()):
+        if len(group) > 1:
+            same = all((g["rate"], g["intervalHours"]) == (group[0]["rate"], group[0]["intervalHours"]) for g in group)
+            anomalies.append({"kind": "DUPLICATE_TIMESTAMP" if same else "CONFLICTING_DUPLICATE", "tau": tau, "count": len(group)})
+    ev = [group[0] for _, group in sorted(by_tau.items())]
     for a, b in zip(ev, ev[1:]):
         expected = a["intervalHours"] * 3_600_000
         delta = b["tau"] - a["tau"]
         if abs(delta - expected) > MS_MIN:
             anomalies.append({"kind": "INTERVAL_MISMATCH", "from": a["tau"], "to": b["tau"], "deltaMs": delta, "declaredHours": a["intervalHours"]})
+    if ev:
+        if ev[0]["tau"] - start > ev[0]["intervalHours"] * 3_600_000 + MS_MIN:
+            anomalies.append({"kind": "START_COVERAGE", "start": start, "firstTau": ev[0]["tau"], "declaredHours": ev[0]["intervalHours"]})
+        if end - ev[-1]["tau"] > ev[-1]["intervalHours"] * 3_600_000 + MS_MIN:
+            anomalies.append({"kind": "END_COVERAGE", "end": end, "lastTau": ev[-1]["tau"], "declaredHours": ev[-1]["intervalHours"]})
     first_gap = ev[0]["tau"] - start if ev else None
     last_gap = end - ev[-1]["tau"] if ev else None
     intervals = sorted({e["intervalHours"] for e in ev})
     return {"events": len(ev), "intervalsHours": intervals, "jitterMaxMs": max(e["tau"] % MS_MIN for e in ev) if ev else None,
             "firstTau": ev[0]["tau"] if ev else None, "lastTau": ev[-1]["tau"] if ev else None, "startGapMs": first_gap, "endGapMs": last_gap,
-            "anomalies": anomalies, "certified": not anomalies}
+            "window": [start, end], "toleranceMs": MS_MIN, "anomalies": anomalies, "certified": not anomalies}
 
 
-def load_costs(cand: Candidate, data_dir: Path, phase: str) -> tuple[list[dict], dict[int, float], dict]:
+def load_costs(cand: Candidate, data_dir: Path, phase: str, months: list[str] | None = None,
+               window: tuple[int, int] | None = None) -> tuple[list[dict], dict[int, float], dict]:
+    """Funding e mark della fase. months/window restringono il caricamento (solo test sintetici)."""
     d = dirs(data_dir)
-    start, end = cand.window(phase)
-    months = phase_months(cand, phase)
+    start, end = window or cand.window(phase)
+    months = {"funding": months, "mark": months} if months else phase_months(cand, phase)
     fman = json.loads((d["manifests"] / "acquisition-funding.json").read_text(encoding="utf-8"))
     mman = json.loads((d["manifests"] / "acquisition-mark.json").read_text(encoding="utf-8"))
     funding, freport = [], []
@@ -213,10 +246,10 @@ def load_costs(cand: Candidate, data_dir: Path, phase: str) -> tuple[list[dict],
         lo, hi = month_bounds(month)
         outside = [e for e in events if not (lo <= e["tau"] < hi)]
         stats["outsideMonth"] = len(outside)
-        funding.extend(e for e in events if lo <= e["tau"] < hi)
+        funding.extend(e for e in events if lo <= e["tau"] < hi and start <= e["tau"] < end)
         f = next(x for x in fman["files"] if x["month"] == month)
         freport.append({"month": month, "file": path.name, "sha256": f["sha256"], "downloadedAt": f.get("downloadedAt"), **stats})
-    series = check_funding_series(funding, start, end)
+    series = check_funding_series(funding, start, end, file_stats=freport)
     # Mark: stessi controlli di schema/tempi/OHLC dei minuti; si conservano solo i close necessari.
     mstore = MinuteStore(start, end)
     mreport = []
@@ -238,6 +271,20 @@ def load_costs(cand: Candidate, data_dir: Path, phase: str) -> tuple[list[dict],
             missing.append(e["tau"])
     report = {"funding": {"files": freport, "series": series}, "mark": {"files": mreport, "pointsNeeded": len(funding),
               "pointsAvailable": len(mark), "missingForTau": missing}}
+    return funding, mark, report
+
+
+def economic_inputs(cand: Candidate, data_dir: Path, phase: str, months: list[str] | None = None,
+                    window: tuple[int, int] | None = None) -> tuple[list[dict], dict[int, float], dict]:
+    """Costi per il ledger, solo se la serie funding è certificata; altrimenti FundingNotCertified."""
+    funding, mark, report = load_costs(cand, data_dir, phase, months, window)
+    series = report["funding"]["series"]
+    if not series["certified"]:
+        kinds = ", ".join(sorted({a["kind"] for a in series["anomalies"]}))
+        first = series["anomalies"][0]
+        raise FundingNotCertified(
+            f"serie funding non certificata per [{series['window'][0]}, {series['window'][1]}): {kinds}; primo problema {first}. "
+            "Run economico fermato prima del ledger: nessun netto completo.", report)
     return funding, mark, report
 
 

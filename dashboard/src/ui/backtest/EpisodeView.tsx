@@ -61,7 +61,9 @@ function Episode({ study, ep, initialCursor, onBack }: { study: BacktestStudy; e
   const abstained = terminated && terminated.code !== 'CLOSED' ? terminated : null;
   const callKnown = ep.call && ep.call.t <= cursor ? ep.call : null;
   const entryKnown = tr && known(tr.entryTime) ? tr : null;
-  const exitKnown = tr && known(tr.exit.accountingTime) ? tr : null;
+  const exit = tr?.exit ?? null;
+  const exitKnown = exit && known(exit.accountingTime) ? exit : null;
+  const gapKnown = tr?.gap && known(tr.gap.at) ? tr.gap : null;
   const snap = study.snapshotAt(ep.id, cursor);
 
   const raw = study.candles(ep.id, scale, cursor, retro);
@@ -70,7 +72,10 @@ function Episode({ study, ep, initialCursor, onBack }: { study: BacktestStudy; e
   const markers: ChartMarker[] = scale === '45m'
     ? study.pivots(ep.id, cursor).map((p) => ({ time: iso(p.candidateOpen), kind: p.kind, title: `Pivot ${p.kind} sulla candela ${isoMinute(p.candidateOpen)}, noto alla chiusura ${isoMinute(p.availableAt)}` }))
     : [];
+  // R1-C: prezzo corrente solo se una candela completa della scala termina esattamente al momento;
+  // altrimenti ultimo noto della stessa scala, separato e dichiarato non corrente.
   const lastCausal = raw.filter((c) => !c.retrospective && !c.gap).at(-1);
+  const currentPrice = lastCausal && lastCausal.end === cursor ? lastCausal.close : null;
   const side = ep.side === 'LONG' ? 'rialzo' : 'ribasso';
   const plan = ep.plan;
 
@@ -118,6 +123,14 @@ function Episode({ study, ep, initialCursor, onBack }: { study: BacktestStudy; e
               </Button>
             )}
           </div>
+          {currentPrice === null && (
+            <Notice tone="warning" title={`Prezzo al momento non disponibile sulla scala ${scale}`}>
+              Nessuna candela {scale} completa termina alle {fmtUtc(cursor)}: nessun prezzo corrente sul grafico.{' '}
+              {lastCausal
+                ? `Ultimo noto della stessa scala: ${px(lastCausal.close)} USDT, chiusura alle ${fmtUtc(lastCausal.end)} (non corrente).`
+                : 'Nessuna candela completa nel tratto entro il momento consultato: prezzo non disponibile.'}
+            </Notice>
+          )}
           <CandleChart
             timeframe={scale}
             candles={candles}
@@ -127,7 +140,7 @@ function Episode({ study, ep, initialCursor, onBack }: { study: BacktestStudy; e
             ]}
             levels={planLevels(study.levels(ep, cursor, retro))}
             overlays={overlays}
-            lastPrice={lastCausal?.close ?? null}
+            lastPrice={currentPrice}
             lastPriceCurrent
             utc
             markers={markers}
@@ -188,14 +201,20 @@ function Episode({ study, ep, initialCursor, onBack }: { study: BacktestStudy; e
               {isoMinute(s.effectiveAt)}. Lo stop non viene mai allargato.
             </Step>
           ))}
-          {exitKnown && (
-            <Step title="Uscita modellata" tone={exitKnown.net != null && exitKnown.net < 0 ? 'negative' : 'positive'}>
-              Per {EXIT_TEXT[exitKnown.exit.reason]} alle {isoMinute(exitKnown.exit.minute)}: riferimento {px(exitKnown.exit.Xref)}, prezzo modellato {px(exitKnown.exit.X)}
-              {exitKnown.exit.gap ? ' (apertura già oltre il livello)' : ''}
-              {exitKnown.exit.bothTouched ? ' · stop e target toccati nello stesso minuto: si assume prima lo stop' : ''}.
+          {exitKnown && tr && (
+            <Step title="Uscita modellata" tone={tr.net != null && tr.net < 0 ? 'negative' : 'positive'}>
+              Per {EXIT_TEXT[exitKnown.reason]} alle {isoMinute(exitKnown.minute)}: riferimento {px(exitKnown.Xref)}, prezzo modellato {px(exitKnown.X)}
+              {exitKnown.gap ? ' (apertura già oltre il livello)' : ''}
+              {exitKnown.bothTouched ? ' · stop e target toccati nello stesso minuto: si assume prima lo stop' : ''}.
             </Step>
           )}
-          {!retro && tr && !exitKnown && (
+          {gapKnown && (
+            <Step title="Percorso irrisolto" tone="warning">
+              Alle {isoMinute(gapKnown.at)} manca il minuto negoziato mentre la posizione era aperta: stop o target potrebbero essere stati toccati senza che si
+              possa saperlo. La valutazione della finestra si interrompe qui; nessuna uscita, prezzo o risultato viene inventato.
+            </Step>
+          )}
+          {!retro && tr && !exitKnown && !gapKnown && (
             <Notice tone="neutral" title="Seguito non mostrato">
               Ingresso, gestione, uscita e costi successivi al momento consultato si vedono con «Mostra seguito modellato».
             </Notice>
@@ -230,18 +249,24 @@ function Result({ tr }: { tr: BtTrade }) {
     <section className="card card-position retro-card" aria-label="Risultato modellato dell'operazione">
       <div className="card-head">
         <p className="section-title">Risultato modellato dell’operazione</p>
-        <Badge tone="warning">A POSTERIORI</Badge>
+        <Badge tone="warning">{tr.exit ? 'A POSTERIORI' : 'A POSTERIORI · PERCORSO IRRISOLTO'}</Badge>
       </div>
+      {!tr.exit && (
+        <Notice tone="warning" title="Risultato non disponibile">
+          Lacuna nei dati alle {tr.gap ? isoMinute(tr.gap.at) : '—'} con posizione aperta: uscita, PnL e netto restano mancanti. Sono mostrati solo i fatti noti
+          fino alla lacuna (ingresso, fee d’ingresso, funding valutabile).
+        </Notice>
+      )}
       <div className="metrics">
         <div className="metric"><p className="metric-label">Netto modellato</p><p className={`metric-value ${tr.net != null && tr.net < 0 ? 't-neg' : 't-pos'}`}>{usdt(tr.net)}</p><p className="metric-sub">{bps(tr.netBps)} di N0</p></div>
         <div className="metric"><p className="metric-label">PnL ai prezzi di riferimento</p><p className="metric-value">{usdt(tr.pricePnLRef)}</p><p className="metric-sub">senza slippage</p></div>
         <div className="metric"><p className="metric-label">Slippage assunto</p><p className="metric-value">{usdt(tr.slippageCost)}</p><p className="metric-sub">3 bp per lato, già nei prezzi</p></div>
-        <div className="metric"><p className="metric-label">Fee assunte</p><p className="metric-value">{usdt(-(tr.feeEntry + tr.feeExit))}</p><p className="metric-sub">5 bp per lato</p></div>
+        <div className="metric"><p className="metric-label">Fee assunte</p><p className="metric-value">{usdt(tr.feeExit == null ? -tr.feeEntry : -(tr.feeEntry + tr.feeExit))}</p><p className="metric-sub">{tr.feeExit == null ? 'solo ingresso: uscita non avvenuta' : '5 bp per lato'}</p></div>
         <div className="metric"><p className="metric-label">Funding storico</p><p className="metric-value">{usdt(tr.funding.total)}</p><p className="metric-sub">{counted.length} eventi · mark 1m{tr.funding.ambiguous ? ' · ambiguo ai confini' : ''}</p></div>
         <div className="metric"><p className="metric-label">Netto con costi di stress</p><p className="metric-value">{usdt(tr.stress.net)}</p><p className="metric-sub">10 bp fee + 10 bp slippage, stesso percorso</p></div>
       </div>
       <p className="footnote">
-        Durata {formatNumber(tr.durationMin, 0)} minuti. Netto = PnL ai prezzi modellati − fee + funding. Non include margine, leva, liquidazioni o un conto reale.
+        {tr.durationMin != null ? `Durata ${formatNumber(tr.durationMin, 0)} minuti.` : `In posizione per ${formatNumber(tr.durationUntilGapMin ?? 0, 0)} minuti fino alla lacuna.`} Netto = PnL ai prezzi modellati − fee + funding. Non include margine, leva, liquidazioni o un conto reale.
         {tr.targetFirst ? ` Alternativa target-first nello stesso minuto: ${usdt(tr.targetFirst.net)}.` : ''}
         {tr.netRange && tr.netRange[0] !== tr.netRange[1] ? ` Intervallo per ambiguità del funding: ${usdt(tr.netRange[0])} … ${usdt(tr.netRange[1])}.` : ''}
       </p>

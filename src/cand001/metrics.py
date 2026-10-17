@@ -32,7 +32,13 @@ def _sum(values):
     return None if any(v is None for v in vals) else math.fsum(vals)
 
 
-def drawdown(curve: list[tuple[int, float | None]], start: int, end: int) -> dict:
+def drawdown(curve: list[tuple[int, float | None]], start: int, end: int, halted_at: int | None = None) -> dict:
+    """Drawdown sulle chiusure 1m. Con finestra interrotta prima della fine del periodo il valore
+    completo manca; si riporta solo il prefisso noto, con la sua copertura esplicita."""
+    if halted_at is not None and halted_at < end:
+        part = drawdown([(t, v) for t, v in curve if t < halted_at], start, min(end, halted_at - 1)) if halted_at > start else None
+        return {"maxDrawdown": None, "missing": True, "partialUntil": halted_at,
+                "partialMaxDrawdown": part["maxDrawdown"] if part else None}
     before = [v for t, v in curve if t < start]
     base = before[-1] if before else 0.0
     pts = [v for t, v in curve if start <= t <= end]
@@ -59,10 +65,10 @@ def trade_stats(trades: list[dict], n0: float) -> dict:
     abs_sum = math.fsum(abs(x) for x in known)
     pos_sum, neg_sum = math.fsum(wins), math.fsum(-x for x in losses)
     top = sorted(known, key=lambda x: -abs(x))[:5]
-    return {
+    out = {
         "n": len(trades), "closed": len(closed), "unresolved": len(trades) - len(closed),
         "long": sum(t["d"] == 1 for t in trades), "short": sum(t["d"] == -1 for t in trades),
-        "netMissing": sum(x is None for x in nets),
+        "netMissing": sum(x is None for x in nets) + (len(trades) - len(closed)),
         "pricePnLRef": _sum(t["pricePnLRef"] for t in closed), "slippage": _sum(t["slippageCost"] for t in closed),
         "pricePnL": _sum(t["pricePnL"] for t in closed), "fees": _sum(t["feeEntry"] + t["feeExit"] for t in closed),
         "funding": _sum(t["funding"]["total"] for t in closed), "net": _sum(nets) if closed else 0.0,
@@ -93,7 +99,17 @@ def trade_stats(trades: list[dict], n0: float) -> dict:
         "fundingAmbiguousTrades": sum(1 for t in closed if t["funding"]["ambiguous"]),
         "fundingMissingTrades": sum(1 for t in closed if t["funding"]["missing"]),
         "exposureMin": math.fsum(t["durationMin"] for t in closed),
+        "perTradeSubset": "solo operazioni concluse",
     }
+    # Parte nota: somme delle sole operazioni concluse, con nome e copertura espliciti.
+    out["closedSubset"] = {"trades": len(closed), "net": out["net"], "netBps": out["netBps"], "pricePnLRef": out["pricePnLRef"],
+                           "fees": out["fees"], "funding": out["funding"], "stressNet": out["stressNet"], "label": "solo operazioni concluse (parziale)"}
+    if len(closed) < len(trades):
+        # R1-B: un trade irrisolto rende mancante ogni risultato completo dell'aggregato, mai zero.
+        for k in ("net", "netBps", "stressNet", "pricePnLRef", "slippage", "pricePnL", "fees", "funding",
+                  "ambiguityLow", "ambiguityHigh", "targetFirstDelta"):
+            out[k] = None
+    return out
 
 
 def period_table(res: dict, start: int, end: int, cand) -> dict:
@@ -121,13 +137,25 @@ def period_table(res: dict, start: int, end: int, cand) -> dict:
         if start <= dec["t"] < end:
             states[dec["state"]] = states.get(dec["state"], 0) + 1
     stats = trade_stats(trades, n0)
-    stats["exposureShare"] = stats["exposureMin"] * 60_000 / ((min(end, res["window"][1]) - max(start, res["window"][0])) or 1)
+    ps, pe = max(start, res["window"][0]), min(end, res["window"][1])
+    halted_at = led.halted["at"] if led.halted else None
+    evaluated_until = pe if halted_at is None or halted_at >= pe else max(ps, halted_at)
+    coverage = {"complete": (halted_at is None or halted_at >= pe) and stats["unresolved"] == 0, "evaluated": evaluated_until > ps,
+                "evaluatedUntil": evaluated_until, "haltedAt": halted_at, "unresolvedTrades": stats["unresolved"]}
+    if not coverage["complete"]:
+        # Periodo interrotto o non valutato: nessun risultato completo; resta la sola parte nota (closedSubset).
+        for k in ("net", "netBps", "stressNet", "pricePnLRef", "slippage", "pricePnL", "fees", "funding",
+                  "ambiguityLow", "ambiguityHigh", "targetFirstDelta"):
+            stats[k] = None
+    stats["exposureShare"] = stats["exposureMin"] * 60_000 / ((evaluated_until - ps) or 1)
+    evaluated = sum(1 for t in closes if halted_at is None or t <= halted_at)
     return {
-        "start": start, "end": end, "closes": len(closes), "validCloses": valid,
+        "start": start, "end": end, "coverage": coverage, "closes": len(closes), "evaluatedCloses": evaluated,
+        "notEvaluatedCloses": len(closes) - evaluated, "validCloses": valid,
         "legs": len(legs), "legsByOutcome": legs_by, "episodes": len(eps), "episodesByTermination": terminations,
         "calls": len(calls), "callsLong": sum(e.d == 1 for e in calls), "callsShort": sum(e.d == -1 for e in calls),
         "requests": {o: sum(1 for r in reqs if r["outcome"] == o) for o in ENTRY_OUTCOMES},
-        "decisionStates": states, "trades": stats, "drawdown": drawdown(led.curve, start, end),
+        "decisionStates": states, "trades": stats, "drawdown": drawdown(led.curve, start, end, halted_at),
     }
 
 
@@ -181,7 +209,10 @@ def summarize(res: dict, cand, phase: str) -> dict:
     months = {m: period_table(res, *month_bounds(m), cand) for m in months_between(*window)}
     flows = cashflow_by_month(res["ledger"].trades)
     for m, row in months.items():
-        row["cashflowByTimestamp"] = flows.get(m, {"pricePnL": 0.0, "fees": 0.0, "funding": 0.0, "missing": False, "net": 0.0})
+        cell = dict(flows.get(m, {"pricePnL": 0.0, "fees": 0.0, "funding": 0.0, "missing": False, "net": 0.0}))
+        if not row["coverage"]["complete"]:
+            cell.update(missing=True, net=None)  # mese interrotto o non valutato: non è un mese a zero
+        row["cashflowByTimestamp"] = cell
     return {"phase": phase, "periods": list(tables), "tables": tables, "months": months, "examples": examples(res),
             "reconciliation": reconcile(res, tables[phase]), "halted": res["ledger"].halted}
 
@@ -240,12 +271,20 @@ def reconcile(res: dict, total: dict) -> dict:
     if sum(1 for lg in eng.legs if lg["outcome"] == "RECOGNIZED") != len(eng.episodes):
         problems.append("gambe riconosciute != episodi")
     closed = [t for t in led.trades if t.get("exit")]
+    unresolved = [t for t in led.trades if not t.get("exit")]
     net = _sum(t["net"] for t in closed)
-    if net is not None and not led.realized_missing and abs(net - led.realized) > 1e-6:
-        problems.append("somma netti != realizzato del ledger")
+    if net is not None and abs(net - led.realized) > 1e-6:
+        problems.append("somma netti delle operazioni concluse != realizzato del ledger")
     parts = _sum(t["pricePnL"] - t["feeEntry"] - t["feeExit"] + (t["funding"]["total"] or 0.0) for t in closed)
     if net is not None and abs(parts - net) > 1e-6:
         problems.append("componenti non sommano al netto")
+    if any(t["net"] is not None for t in unresolved):
+        problems.append("operazione irrisolta con netto")
     if problems:
         raise AssertionError("; ".join(problems))
-    return {"calls": len(calls), "requests": len(led.requests), "trades": len(led.trades), "net": net, "reconciled": True}
+    complete = led.halted is None and not unresolved
+    return {"calls": len(calls), "requests": len(led.requests), "trades": len(led.trades), "closedTrades": len(closed),
+            "unresolvedTrades": len(unresolved), "knownPartNet": net, "knownPartReconciled": True,
+            "windowComplete": complete, "net": net if complete else None,
+            "haltedAt": led.halted["at"] if led.halted else None,
+            "evaluatedCloses": total["evaluatedCloses"], "notEvaluatedCloses": total["notEvaluatedCloses"]}

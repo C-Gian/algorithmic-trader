@@ -226,9 +226,11 @@ class Ledger:
     def funding_for(self, trade: dict) -> dict:
         """Cashflow di funding con regola entryTime < tau <= exitAccountingTime e proxy mark1m.
         Eventi entro 60s da ingresso/uscita, o nel minuto di un'uscita intrabar: ambigui, con intervallo."""
-        entry, acct = trade["entryTime"], trade["exit"]["accountingTime"]
+        entry = trade["entryTime"]
+        ex = trade.get("exit")
+        acct = ex["accountingTime"] if ex else trade["gap"]["at"]  # percorso irrisolto: solo fino alla lacuna
         d, q = trade["d"], trade["q"]
-        intrabar_minute = trade["exit"]["minute"] if trade["exit"]["intrabar"] else None
+        intrabar_minute = ex["minute"] if ex and ex["intrabar"] else None
         lo = bisect.bisect_left(self.funding_taus, entry - MS_MIN)
         hi = bisect.bisect_right(self.funding_taus, acct + MS_MIN)
         events, total, low, high, missing, range_incomplete = [], 0.0, 0.0, 0.0, False, False
@@ -277,12 +279,25 @@ class Ledger:
         self.curve.append((at, self.realized + pos.d * pos.q * (close - pos.e) - fee_in + fund))
 
     def halt(self, u: int, why: str) -> None:
+        """Lacuna con posizione aperta: percorso irrisolto, finestra interrotta (sezione 11).
+        Si conserva quanto era noto; nessuna uscita, prezzo o risultato inventato."""
         pos = self.position
         self.halted = {"at": u, "reason": why, "positionId": pos.id if pos else None}
         if pos is not None:
-            self.trades.append({"id": pos.id, "episodeId": pos.episode_id, "side": "LONG" if pos.d == 1 else "SHORT", "d": pos.d,
-                                "entryTime": pos.entry_time, "E": pos.e, "q": pos.q, "status": "UNRESOLVED_DATA_GAP", "net": None,
-                                "exit": None})
+            trade = {
+                "id": pos.id, "episodeId": pos.episode_id, "side": "LONG" if pos.d == 1 else "SHORT", "d": pos.d, "status": "UNRESOLVED_DATA_GAP",
+                "callTime": pos.call_time, "entryTime": pos.entry_time, "Eref": pos.eref, "E": pos.e, "q": pos.q, "N0": self.n0, "S0": pos.s0,
+                "T": pos.t, "A0": pos.a0, "R0": pos.r0, "G0": pos.g0, "stops": pos.stops, "finalStop": pos.stop,
+                "pendingStop": pos.pending_stop, "pendingExit": pos.pending_exit, "gap": {"at": u, "reason": why}, "exit": None,
+                "feeEntry": self.f * pos.q * pos.e, "pricePnL": None, "pricePnLRef": None, "slippageCost": None, "feeExit": None,
+                "net": None, "netRange": None, "netBps": None, "netOverRisk": None, "riskInitial": pos.q * pos.r0,
+                "durationUntilGapMin": (u - pos.entry_time) / MS_MIN, "durationMin": None,
+                "stress": {"fee": self.econ["stress"]["fee"], "slippage": self.econ["stress"]["slippage"], "pricePnL": None, "feeEntry": None,
+                           "feeExit": None, "net": None},
+            }
+            trade["funding"] = self.funding_for(trade)  # cashflow valutabili fino alla lacuna
+            self.trades.append(trade)
             self.realized_missing = True
+            self.curve.append((u, None))
             self.position = None
         self.notices.append(("HALT", pos.episode_id if pos else "", u, "UNRESOLVED_DATA_GAP", {}))

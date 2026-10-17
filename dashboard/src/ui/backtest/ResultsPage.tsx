@@ -8,6 +8,10 @@ import { CATEGORY_TEXT, EXIT_TEXT, bps, num, pct, usdt } from './text';
 
 const PERIOD_LABEL = (p: string) => (p === 'DEV' ? '2023–2024' : p);
 
+/** Stato di copertura di un periodo: con valutazione interrotta i conteggi descrivono solo la parte valutata. */
+const coverageText = (t: BtPeriod) =>
+  !t.coverage.evaluated ? 'non valutato' : t.coverage.complete ? 'completa' : `parziale fino al ${fmtUtc(t.coverage.evaluatedUntil)}`;
+
 function Row({ label, periods, value }: { label: string; periods: [string, BtPeriod][]; value: (t: BtPeriod) => string }) {
   return (
     <tr>
@@ -26,6 +30,8 @@ export function ResultsPage({ study, onOpen, onOpenFile }: { study: BacktestStud
   const dev = s.tables[s.phase];
   const q = b.quality;
   const headlines = study.headlines();
+  const halted = s.halted;
+  const rec = s.reconciliation;
   return (
     <main className="content" id="main-content" tabIndex={-1}>
       <section className="card table-card" aria-label="Backtest di sviluppo">
@@ -55,6 +61,15 @@ export function ResultsPage({ study, onOpen, onOpenFile }: { study: BacktestStud
         </p>
         <BacktestFilePicker onOpen={onOpenFile} label="Apri altro backtest" />
       </section>
+
+      {halted && (
+        <Notice tone="warning" title={`Finestra interrotta il ${fmtUtc(halted.at)}: risultati completi non disponibili`}>
+          Manca un minuto negoziato mentre una posizione era aperta ({halted.reason}): il percorso di quell’operazione è irrisolto e la valutazione si ferma lì. Netto,
+          stress e drawdown del periodo restano mancanti. Parte nota, dichiaratamente parziale: {rec.closedTrades} operazioni concluse con netto{' '}
+          {usdt(rec.knownPartNet)}; {rec.unresolvedTrades} irrisolte; {formatNumber(rec.evaluatedCloses, 0)} chiusure 45m valutate e{' '}
+          {formatNumber(rec.notEvaluatedCloses, 0)} solo teoriche, non valutate.
+        </Notice>
+      )}
 
       <section className="section" aria-label="Esempi">
         <div className="section-head">
@@ -102,10 +117,25 @@ export function ResultsPage({ study, onOpen, onOpenFile }: { study: BacktestStud
               <Row label="Funding storico (mark 1m)" periods={periods} value={(t) => usdt(t.trades.funding)} />
               <Row label="Netto con costi di stress (10 bp + 10 bp)" periods={periods} value={(t) => usdt(t.trades.stressNet)} />
               <Row label="Operazioni (LONG / SHORT)" periods={periods} value={(t) => `${t.trades.n} (${t.trades.long} / ${t.trades.short})`} />
+              {halted && <Row label="Operazioni irrisolte (percorso non valutabile)" periods={periods} value={(t) => String(t.trades.unresolved)} />}
+              {halted && (
+                <Row
+                  label="Parte nota: netto delle sole operazioni concluse (parziale)"
+                  periods={periods}
+                  value={(t) => `${usdt(t.trades.closedSubset.net)} su ${t.trades.closedSubset.trades}`}
+                />
+              )}
               <Row label="Quota operazioni positive" periods={periods} value={(t) => pct(t.trades.positiveShare)} />
               <Row label="Netto per operazione: mediana (P25 / P75)" periods={periods} value={(t) => `${num(t.trades.perTrade.net.p50)} (${num(t.trades.perTrade.net.p25)} / ${num(t.trades.perTrade.net.p75)})`} />
               <Row label="Rischio iniziale per operazione (mediana, % di N0)" periods={periods} value={(t) => pct(t.trades.perTrade.riskInitialOverN0.p50, 2)} />
               <Row label="Drawdown massimo (chiusure 1m)" periods={periods} value={(t) => usdt(t.drawdown.maxDrawdown)} />
+              {halted && (
+                <Row
+                  label="Drawdown della sola parte valutata (parziale)"
+                  periods={periods}
+                  value={(t) => (t.drawdown.partialUntil != null ? `${usdt(t.drawdown.partialMaxDrawdown ?? null)} fino al ${fmtUtc(t.drawdown.partialUntil)}` : '—')}
+                />
+              )}
               <Row label="Sequenza massima di perdite" periods={periods} value={(t) => String(t.trades.maxLosingStreak)} />
               <Row label="Tempo in posizione" periods={periods} value={(t) => pct(t.trades.exposureShare)} />
               <Row label="Peso dei 5 trade maggiori (|netto|)" periods={periods} value={(t) => pct(t.trades.concentration.top5AbsShare)} />
@@ -114,7 +144,9 @@ export function ResultsPage({ study, onOpen, onOpenFile }: { study: BacktestStud
         </div>
         {dev.trades.net === null && (
           <Notice tone="warning" title="Netto completo non disponibile">
-            Almeno un costo non è valutabile: il netto resta mancante, non viene sostituito con zero.
+            {halted
+              ? 'Un’operazione ha il percorso irrisolto: netto, stress e drawdown restano mancanti, non vengono sostituiti con zero né con un’uscita ipotetica.'
+              : 'Almeno un costo non è valutabile: il netto resta mancante, non viene sostituito con zero.'}
           </Notice>
         )}
       </section>
@@ -132,7 +164,12 @@ export function ResultsPage({ study, onOpen, onOpenFile }: { study: BacktestStud
               </tr>
             </thead>
             <tbody>
-              <Row label="Chiusure 45m valutate (valide)" periods={periods} value={(t) => `${t.closes} (${t.validCloses})`} />
+              <Row label="Copertura della valutazione" periods={periods} value={coverageText} />
+              <Row
+                label="Chiusure 45m valutate (valide) · solo teoriche"
+                periods={periods}
+                value={(t) => `${t.evaluatedCloses} (${t.validCloses})${t.notEvaluatedCloses ? ` · ${t.notEvaluatedCloses} non valutate` : ''}`}
+              />
               <Row label="Movimenti considerati" periods={periods} value={(t) => String(t.legs)} />
               <Row label="Movimenti riconosciuti (episodi)" periods={periods} value={(t) => String(t.episodes)} />
               <Row label="Call (richieste d’ingresso)" periods={periods} value={(t) => String(t.calls)} />
@@ -164,16 +201,28 @@ export function ResultsPage({ study, onOpen, onOpenFile }: { study: BacktestStud
             </thead>
             <tbody>
               {Object.entries(s.months).map(([m, t]) => (
-                <tr key={m} className={t.trades.n === 0 ? 'is-empty' : undefined}>
+                <tr key={m} className={t.trades.n === 0 || !t.coverage.evaluated ? 'is-empty' : undefined}>
                   <td>{m}</td>
-                  <td>{t.episodes}</td>
-                  <td>{t.calls}</td>
-                  <td>{t.trades.n}</td>
-                  <td>{t.trades.n === 0 ? 'nessuna operazione' : usdt(t.trades.net)}</td>
-                  <td>{usdt(t.cashflowByTimestamp.net)}</td>
-                  <td>
-                    {t.trades.exits.STOP} / {t.trades.exits.TARGET}
-                  </td>
+                  {!t.coverage.evaluated ? (
+                    <td colSpan={6}>non valutato: dopo l’interruzione della finestra (nessun valore, non zero)</td>
+                  ) : (
+                    <>
+                      <td>{t.episodes}</td>
+                      <td>{t.calls}</td>
+                      <td>
+                        {t.trades.n}
+                        {t.trades.unresolved ? ` (${t.trades.unresolved} irrisolta)` : ''}
+                      </td>
+                      <td>
+                        {t.trades.n === 0 ? 'nessuna operazione' : usdt(t.trades.net)}
+                        {!t.coverage.complete ? ' · parziale' : ''}
+                      </td>
+                      <td>{usdt(t.cashflowByTimestamp.net)}</td>
+                      <td>
+                        {t.trades.exits.STOP} / {t.trades.exits.TARGET}
+                      </td>
+                    </>
+                  )}
                 </tr>
               ))}
             </tbody>

@@ -146,7 +146,8 @@ export class BacktestStudy {
       if (known(tr.entryTime)) out.push({ id: 'entry', kind: 'ENTRY', label: 'INGRESSO MODELLATO', price: tr.E });
       const active = tr.stops.filter((s) => known(s.effectiveAt));
       if (active.length) out.push({ id: 'stop', kind: 'STOP', label: 'STOP CORRENTE', price: active[active.length - 1].to });
-      if (known(tr.exit.accountingTime)) out.push({ id: 'exit', kind: 'EXIT', label: 'USCITA MODELLATA', price: tr.exit.X });
+      // Percorso irrisolto: nessuna uscita da disegnare, mai un prezzo inventato.
+      if (tr.exit && known(tr.exit.accountingTime)) out.push({ id: 'exit', kind: 'EXIT', label: 'USCITA MODELLATA', price: tr.exit.X });
     }
     return out;
   }

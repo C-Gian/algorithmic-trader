@@ -24,7 +24,7 @@ from . import BUNDLE_SCHEMA, ENGINE_VERSION
 from .backtest import run_window
 from .bundle import build_bundle, results_markdown
 from .config import load_candidate
-from .data import acquire, dirs, input_hash, load_costs, load_trade, reused_identity
+from .data import FundingNotCertified, acquire, dirs, economic_inputs, input_hash, load_costs, load_trade, reused_identity
 from .metrics import summarize
 
 DEFAULT_DATA_DIR = REPO_ROOT.parent / "algorithmic-trader-data" / "CAND-001"
@@ -71,11 +71,18 @@ def cmd_acquire(cand, data_dir: Path, phase: str) -> int:
     return code
 
 
-def cmd_check(cand, data_dir: Path, phase: str):
+def cmd_check(cand, data_dir: Path, phase: str, economic: bool = False):
+    """Controllo degli input. Con economic=True usa il percorso del run: funding non certificato
+    solleva FundingNotCertified dopo aver scritto il rapporto di qualità."""
     log(f"controllo input {phase}")
     t0 = time.perf_counter()
     store, trade = load_trade(cand, data_dir, phase)
-    funding, mark, costs = load_costs(cand, data_dir, phase)
+    blocked = None
+    try:
+        funding, mark, costs = economic_inputs(cand, data_dir, phase) if economic else load_costs(cand, data_dir, phase)
+    except FundingNotCertified as e:
+        blocked, costs = e, e.report
+        funding, mark = [], {}
     totals = store.counts()
     log(f"  trade: minuti {totals}")
     for r in trade:
@@ -83,12 +90,17 @@ def cmd_check(cand, data_dir: Path, phase: str):
         if anomalies or r["coverage"]["valid"] != r["coverage"]["expected"]:
             log(f"    {r['month']}: validi {r['coverage']['valid']}/{r['coverage']['expected']} anomalie {anomalies}")
     s = costs["funding"]["series"]
-    log(f"  funding: {s['events']} eventi, intervalli {s['intervalsHours']} h, jitter max {s['jitterMaxMs']} ms, anomalie {len(s['anomalies'])}")
+    log(f"  funding: {s['events']} eventi, intervalli {s['intervalsHours']} h, jitter max {s['jitterMaxMs']} ms, anomalie {len(s['anomalies'])}, "
+        f"{'certificata' if s['certified'] else 'NON CERTIFICATA'}")
+    for a in s["anomalies"][:10]:
+        log(f"    funding: {a}")
     log(f"  mark: punti necessari {costs['mark']['pointsNeeded']}, disponibili {costs['mark']['pointsAvailable']}")
     quality = {"trade": {"months": trade, "totals": totals,
                          "initialization": store.counts(store.start, cand.window("DEV")[0]) if phase == "DEV" else None},
                "costs": costs, "identity": reused_identity(data_dir), "checkSeconds": round(time.perf_counter() - t0, 2)}
     (dirs(data_dir)["manifests"] / f"input-{phase}.json").write_text(json.dumps(quality, indent=2), encoding="utf-8")
+    if blocked is not None:
+        raise blocked
     return store, funding, mark, quality
 
 
@@ -108,7 +120,12 @@ def _slim_quality(q: dict) -> dict:
 def cmd_run(cand, data_dir: Path, phase: str, argv) -> Path | None:
     started = now_utc()
     t0 = time.perf_counter()
-    store, funding, mark, quality = cmd_check(cand, data_dir, phase)
+    try:
+        # R1-A: qualità funding vincolante, nessun ledger né netto se la serie non è certificata.
+        store, funding, mark, quality = cmd_check(cand, data_dir, phase, economic=True)
+    except FundingNotCertified as e:
+        log(f"BLOCCO: {e} Rapporto di qualità in manifests/input-{phase}.json")
+        return None
     t_check = time.perf_counter() - t0
     ih = input_hash(quality["trade"]["months"], quality["costs"])
     sw = software_ref()
