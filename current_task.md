@@ -1,171 +1,115 @@
-# Incarico corrente — CAND-001/R1, correzioni prima del confronto 2025
+# Incarico corrente — CAND-001, confronto aggiuntivo 2025 e consegna della macrofase
 
-**Stato: DELIVERED** (Claude Code, 17 ottobre 2026; assegnato READY dal Director lo stesso giorno). Consegna nello «Spazio dell'esecutore».
-Esecutore: Claude Code. Base: `ee7282f84ebade3a7daaebb15c06532da24df79e` più il commit di questo incarico. Gian sincronizza il checkout; nessun pull/fetch dell'esecutore, neppure dry-run.
+**Stato: READY.** Director, 17 ottobre 2026.
+Esecutore: Claude Code. Base tecnica accettata: **3ae7b7529f26f7aef94c9de207ce41df342590d1**, più il commit di questo incarico.
+Checkout sincronizzato da Gian; nessun pull/fetch dell'esecutore, neppure dry-run.
 
-La macrofase Astra resta autorizzata interamente. Questo è il seguito della review DEV, non una richiesta di nuovo permesso ordinario. Consegna DEV e incarico originario sono conservati nella storia di questo file a ee7282f. Specifica vincolante: **docs/research/CAND-001-v1.md**. OBS-001 resta chiuso tecnicamente; limite di comprensione Owner conservato.
+## 1. Chiusura R1 e checkpoint del Director
 
-## 1. Review indipendente del Director su ee7282f
+**CAND-001/R1 ACCEPTED TECNICAMENTE** su 3ae7b75. Incarico e consegna R1 conservati nella storia di questo file a quel commit. Review Director:
+- lettura delle modifiche a qualità funding, gate prima del ledger, operazione irrisolta, metriche/copertura, contratto/validatore, risultati e prezzo nella vista episodio;
+- nella copia isolata: **36 test Python CAND, 14 test UI Backtest/BacktestR1 e typecheck/build riusciti**;
+- i tre difetti riprodotti nella review precedente sono risolti nei controlli pertinenti: funding non certificato blocca il run economico, percorso irrisolto conserva fatti noti senza netto/uscita inventati e si apre nell'app, prezzo precedente separato dal corrente;
+- config canonica verificata invariata: aed2c4ef627617d73972778097bbab5fb702ab5064ce9e6eb68ded2170ce4edf;
+- il confronto reale DEV e1.0.0/e1.0.1, eseguito da Claude, dichiara invariati 814 episodi, 87 richieste, 78 trade e tutti i numeri comuni. Il Director ha verificato codice/test/report, **non ricalcolato autonomamente i75archivi o i78trade reali**, né effettuato browser su quel bundle;
+- compatibilità dichiarata: schema /2, app non apre i vecchi bundle /1. Vecchio run conservato come evidenza; nessuna migrazione richiesta ora;
+- difetto a390px dichiarato, fuori dal perimetro desktop di questa fase; nessun restyling richiesto;
+- esecuzione delle suite complete da parte di Claude oltre incarico annotata come deviazione di processo. Non ripeterla: controlli mirati soltanto.
 
-**Esito: correzioni richieste, non ACCEPTED.** Nessuna prova d'uso positiva Owner registrata per CAND-001.
+Nessuna prova positiva d'uso Gian registrata per CAND-001; la chiusura è tecnica. OBS-001 resta tecnicamente chiuso con il suo limite di comprensione.
 
-Controllato:
-- lettura di protocollo, config, decisioni, ledger, acquisizione, metriche, bundle e viste app;
-- confronto Git: config, decision.py, execution.py, backtest.py, metrics.py, data.py e i 28 test non sono cambiati dal commit preregistrato 81463360d57f58aadb4bad478bbfa18c5bdd522a; successivamente aggiunta la UI, modifica CLI limitata alla misura memoria;
-- nella copia isolata del Director: **28 test Python CAND superati, 8 test Backtest.test.tsx superati, typecheck/build riusciti**;
-- riproduzioni sintetiche aggiuntive dei tre difetti sotto.
+**Decisione metodologica definitiva prima del 2025:** mantenere **candidato1.0.0**, nessuna revisione metodologica in questa macrofase. Specifica vincolante **docs/research/CAND-001-v1.md**, convenzioni OBS-001/v1 intatte. Il risultato DEV negativo non identifica una modifica unica abbastanza motivata: nessun cambio di soglie, famiglie, filtri, target, stop, ritardi, costi o gruppi.
 
-Non svolto dal Director in questa review: download/ricalcolo autonomo dei 75 archivi DEV, riproduzione indipendente dei 78 trade reali, browser sui dati reali. I valori −210,59 / −85,44 e il riscontro delle 87 call / 78 operazioni restano evidenza dell'esecutore. Una verifica separata scritta dallo stesso esecutore è utile, ma non va presentata come review indipendente del Director. I test verdi non provano assenza di bug.
+La base accettata del motore è1.0.1; si ammette ora una patch tecnica per completare il supporto della finestra2025 e il prefisso previsto, non una nuova variante del candidato. Registrare patch/versione e commit prima del primo esito economico2025. Il parametro requiresDirectorCheckpoint della config può restare invariato: **il checkpoint è soddisfatto da questa disposizione**, non da una modifica del candidato/config. Rimuovere il blocco CLI incondizionato nella sola fase ora autorizzata. Nessun sistema di autorizzazioni aggiuntivo necessario.
 
-Le due interpretazioni segnalate sono confermate come coerenti: contraddizioni controllate già a t0 senza permettere il trigger; uscita esattamente sulla chiusura 45m occupa quella chiusura, senza nuova gamba alla stessa chiusura.
+## 2. Obiettivo completo, già autorizzato da Astra
 
-## 2. Decisione metodologica del checkpoint DEV
+Completare **ADDITIONAL_2025** con la v1 congelata: acquisizione dei soli input mancanti, controlli, elaborazione riproducibile, confronto separato con DEV2023–2024 e consultazione nella stessa app. Consegnare report finale e raccomandazione anche negativa.
 
-**Mantenere CAND-001 candidato 1.0.0, senza revisione metodologica in questa macrofase.** Config SHA256 canonico:
-`aed2c4ef627617d73972778097bbab5fb702ab5064ce9e6eb68ded2170ce4edf`.
+Non fermarsi dopo predisposizione sintetica, download o solo JSON per chiedere permessi ordinari. Questo task autorizza l'intero seguito operativo. Solo blocchi precisi o conflitti sostanziali vanno riportati; nessuna sostituzione di fonte, strumento o periodo.
 
-La diagnosi consegnata indica debolezza già ai prezzi di riferimento, costi sensibili e poche operazioni. Non identifica una modifica unica con una ragione abbastanza specifica da giustificare un nuovo candidato. La sola perdita non motiva cambiare profondità, target, stop o filtri per migliorare il risultato. Si conserva la v1 negativa; non si cercano parametri alternativi. Il confronto 2025 servirà a completare l'evidenza prevista, non a scegliere una variante.
+**2025 è confronto aggiuntivo già esposto, NON validazione indipendente/holdout.** Nessuna iterazione metodologica sui suoi esiti. Correggere solo bug documentati con impatto e riesecuzione; non introdurre una v2 o selezionare mesi favorevoli. L'unica revisione facoltativa su DEV non è stata scelta e non si riapre dopo aver visto2025.
 
-Sono congelati disegno e convenzioni metodologiche, **non approvata l'implementazione difettosa**. R1 è una patch tecnica, non la revisione metodologica concessa da Astra. Nessuna v2 o nuova famiglia in questo incarico.
+## 3. Dati, prefisso e finestre
 
-**2025 ancora non elaborabile in R1.** Dopo accettazione delle correzioni il Director registrerà la base tecnica e il seguito operativo 2025 già autorizzato. Non chiedere un altro permesso ad Astra/Gian; non sbloccare la CLI o anticipare download/calcoli 2025 in questo task. Il 2026 rimane protetto.
+Fonte invariata: archivio pubblico Binance Vision, BTCUSDT perpetual USDⓈ-M, klines negoziate1m; fundingRate storico e markPriceKlines1m solo per costi, secondo protocollo. Nessun account, chiave, stackOwner o altro strumento.
 
-## 3. R1-A — funding assente non equivale a costo zero
+Confini UTC:
+- **input osservativo totale [2022-10-01,2026-01-01)**;
+- DEV già valutato [2023-01-01,2025-01-01), percorso continuo2023–2024 conservato;
+- nuova finestra **ADDITIONAL_2025 [2025-01-01,2026-01-01)**;
+- all'inizio2025: FLAT, nessun episodio/ordine ereditato, osservazioni inizializzate da **tutto il prefisso dal2022-10-01**, nessun reset degli indicatori a gennaio2025. Attendere nuove gambe disponibili nella finestra;
+- ultima apertura1m2025: regola di fine segmento del protocollo, nessun dato2026 per chiudere operazioni o completare esiti.
 
-Difetto riprodotto:
-- `check_funding_series([], start, end)` restituisce `certified=True`;
-- serie sintetica con eventi alle 00:00 e 16:00, intervallo dichiarato 8h: viene segnalato INTERVAL_MISMATCH, ma `load_costs` restituisce normalmente i dati;
-- un trade fra 04:00 e 12:00 attraversa il tratto sospetto delle 08:00. `Ledger.funding_for` produce `events=[]; total=0; missing=False`. Quindi un evento assente viene trattato come assenza di costi.
+Correggere phase_months/load_trade che oggi, in ADDITIONAL_2025, partono dal2025: distinguere **file da caricare per osservare**, **file da scaricare** e **finestra che genera decisioni/operazioni**. Non rifare DEV per calcolare il prefisso: riusare prezzi e calcolare osservazioni, ma non generare o usare i suoi trade come stato2025.
 
-Comportamento richiesto:
-- la qualità del funding deve influire realmente sull'ammissibilità del risultato economico, non essere una nota ignorata;
-- soluzione proporzionata scelta dal Director: **bloccare il run economico prima del ledger** quando la serie funding è vuota, contiene righe corrotte/non finite, duplicati/conflitti, eventi fuori mese, incongruenze degli intervalli o copertura non verificabile. Dare errore preciso con fonte/intervallo/motivo e conservare il rapporto qualità;
-- controllare anche i confini della copertura, non soltanto le coppie interne. Usare gli intervalli dichiarati e la tolleranza registrata; non inventare un calendario di addebiti, tassi o prezzi. Un intervallo che non si riesce a certificare si dichiara tale e blocca il netto completo;
-- non cambiare trattamento dei singoli mark mancanti: restano MISSING per i cashflow pertinenti, come nel protocollo. Non bloccare indiscriminatamente per mark non necessari ai trade;
-- un input valido dà gli stessi funding, decisioni e risultati di prima. Nessun nuovo costo o parametro.
+Riutilizzo effettivo:
+-27archivi trade ottobre2022–dicembre2024 già CAND;
+-7archivi trade giugno–dicembre2025 già verificati da OBS, localizzati dal manifest OBS in C:\Projects\algorithmic-trader-data\OBS-001. Riuso con SHA256/provenienza, senza modificarli; lettura diretta o copia locale verificata entrambe ammesse. Non riscaricarli solo perché si trovano in un'altra cartella;
+- solo5archivi trade gennaio–maggio2025 mancanti e12funding+12mark2025 se davvero non presenti. Attesi **29ZIP nuovi**, non39trade nuovi;
+- totale osservativo39mesi trade,1.710.720minuti teorici. Finestra2025:365giorni,525.600minuti,11.680origini45m teoriche. Qualità reale da verificare, non presumere;
+- nessun bisogno di mark/funding per tutto il warmup precedente: la finestra parte senza posizione. Un mark precedente al confine iniziale mancante non diventa prezzo negoziato o zero; applicare le dipendenze effettive.
 
-Verifiche mirate: serie valida, vuota, buco interno, copertura iniziale/finale insufficiente, riga corrotta/duplicata; almeno un caso attraverso il percorso di caricamento usato dal comando run, provando che non venga prodotto un netto completo. Riutilizzare pochi esempi; niente suite generale.
+Manifest separati con file riusati/nuovi, checksum fornitore, hash locale, unità temporali, identità fonte e strumento, eventuali anomalie. Non inventare prezzi, tassi o calendari. Se il funding non è certificabile, dichiarare il blocco; non disabilitare R1-A per proseguire. Se un costo pertinente manca o un percorso diventa irrisolto, mantenere le distinzioni R1. File raw/bundle pesanti sempre fuoriGit. Nessun tail2026.
 
-## 4. R1-B — finestra interrotta, aggregati e app coerenti
+## 4. Implementazione e controlli prima degli esiti
 
-Difetto riprodotto:
-1. ingresso LONG sintetico a 100 con S0=98 e T=110;
-2. minuto successivo mancante;
-3. ledger correttamente HALT con un trade UNRESOLVED_DATA_GAP;
-4. `trade_stats` restituisce `n=1, closed=0, unresolved=1, net=0.0, stressNet=0.0, netMissing=0`.
-Con trade già chiusi il totale esclude il trade irrisolto. `reconcile` può dichiarare riconciliata la sola parte chiusa.
-In più il validatore ammette `exit=null`, ma l'apertura del suo episodio dereferenzia `tr.exit.accountingTime` e va in errore. Riprodotto con un bundle sintetico accettato dal validatore.
+Riutilizzare motore/osservatore/provider e dashboard esistenti. Nessun backend, database, piattaforma parallela o nuovo restyling.
+Prima del primo backtest economico2025:
+1. predisporre caricamento con prefisso intero, riuso OBS, selezione fase CLI e output separato;
+2. pochi controlli sintetici discriminanti: osservazioni al confine2025 coincidono con un calcolo sul medesimo prefisso continuo; finestra nuova parte FLAT senza episodio/ordine precedente; le decisioni prima della fine non usano dati successivi; nessun minuto2026 letto o richiesto;5+12+12file nuovi a cache prevista, non riscaricamento dei7OBS;
+3. conservare test funding/irrisolti/prezzo pertinenti se i loro percorsi cambiano;
+4. registrare commit/versione motore/hash candidato e pubblicare il supporto prima degli esiti. Nessuna modifica del JSON candidato per fare sparire il checkpoint.
 
-Comportamento richiesto:
-- per ogni aggregato che include un trade irrisolto, netto completo/netBps/stress sono **mancanti**, non zero o somma dei soli chiusi. Contare e mostrare gli irrisolti;
-- per la finestra interrotta, nessun risultato completo o drawdown dell'intero periodo. Eventuali valori del prefisso noto devono avere nome e copertura esplicitamente parziali. Le distribuzioni dei soli trade conclusi possono restare, dichiarando il sottoinsieme;
-- conservare quanto era già noto: ingresso, fee di ingresso, protezioni, cashflow valutabili e momento della lacuna; non inventare uscita o risultato;
-- rendere coerenti ledger, riepilogo, riconciliazione, bundle, contratto/validatore e UI. Un bundle legittimo prodotto dal motore con percorso irrisolto deve aprirsi: avviso di finestra interrotta, registro consultabile e episodio senza crash, stato “percorso irrisolto”, nessuna uscita fittizia;
-- dopo HALT distinguere dati presenti da decisioni realmente valutate. Non chiamare “chiusure valutate” tutti i tempi teorici successivi;
-- un periodo successivo non valutato non è un mese a risultato zero. Un periodo precedente completamente valutato può conservare i suoi risultati;
-- la riconciliazione distingue conti della parte nota e completezza della finestra. Non basta un flag generale verde mentre manca un trade.
+Dopo questo commit: acquisire input, elaborare ADDITIONAL_2025 e ripetere offline per verificare output identico. Conservare run DEV e precedenti; nessuna sovrascrittura. Hash input/output e comandi reali Windows nel manifest/README. Il run non include data di esecuzione o commit variabili nel contenuto deterministico.
 
-Verifiche: gap sulla prima posizione e gap dopo una posizione già conclusa, aggregati/curve coerenti; bundle realmente generato con HALT caricato e aperto tramite l'app, inclusi registro e seguito modellato. Non basta modificare a mano la sola intestazione del JSON.
+Non rilanciare suite complete per abitudine. I test mirati del percorso modificato, typecheck/build e breve prova browser del bundle reale sono sufficienti. Ulteriori controlli solo per difetti o rischi identificati. Nessun pollingCI, processoOwner terminato o nuovo servizio permanente.
 
-## 5. R1-C — ultimo prezzo noto nella nuova vista backtest
+## 5. Report finale e diagnosi
 
-Difetto riprodotto con fixture del motore:
-- aprire un episodio con call in orario non coincidente con mezzanotte, passare a 1D;
-- ultima candela completa termina prima del cursore;
-- EpisodeView passa comunque `lastPriceCurrent=true`: il grafico espone il titolo “Prezzo corrente della scala”.
-Il precedente R1-B osservativo aveva già chiarito il comportamento; va rispettato anche qui.
+Aggiornare **docs/research/CAND-001-results.md**, conservando DEV e diagnosi negativa. Aggiungere2025 separato:
+- copertura reale, costi verificabili/assunzioni invariati, conti e tempi di esecuzione;
+-2023,2024,DEV e2025 distinti, tutti i mesi anche senza operazioni; nessuna selezione dei mesi migliori;
+- episodi/call/rifiuti/trade, LONG/SHORT e motivi d'astensione/uscita;
+- lordo ai riferimenti, slippage, fee, funding, netto/stress modellati per N0=1000USDT, non rendimento personale/composto;
+- distribuzioni per trade, rischio iniziale, durata/esposizione, drawdown alla risoluzione1m, sequenze di perdite e concentrazione secondo protocollo;
+- ambiguità, dati mancanti, percorsi non valutati e differenza fra completo e parziale; costi mancanti non sono zero;
+- confronto descrittivo con DEV, casi contrari, limiti e raccomandazione motivata sul seguito. Non promuovere automaticamente v1 se2025 fosse positivo, non scartare l'intera famiglia se negativo. Nessun test di significatività o conclusione causale aggiunto.
 
-Comportamento richiesto:
-- se alla scala selezionata manca una candela completa che termina al momento consultato, nessun prezzo corrente;
-- eventuale ultimo prezzo noto della stessa scala separato, con orario e dicitura “non corrente”; nessun prezzo futuro o valore zero sostitutivo;
-- tratto senza candele complete: messaggio di indisponibilità. Preservare modalità causale/retrospettiva e simulazione;
-- coprire anche il momento di ingresso a t+60s rispetto alla griglia 45m. Passare 45m/1D cambia scala, non disponibilità dei prezzi.
+Conservare la distinzione diagnosi: bug, difformità, scelta coerente poco utile, costo/assunzione sensibile, informazione insufficiente. Nessuna nuova suddivisione o ricerca di parametri/combinazioni per migliorare2025. Le categorie di esempi già fissate si applicano anche a2025, con primi cronologici per verso e categorie vuote dichiarate.
 
-Verifica UI mirata del giorno incompleto, momento t+60s e tratto senza candele complete. Riutilizzare il comportamento/componenti pertinenti già esistenti, senza restyling.
+La frase “zero differenze” di uno script separato dell'esecutore deve precisare autore e perimetro; non equivale a verifica indipendente Director. Documentare capacità implementata, risultati ottenuti, limiti ancora aperti.
 
-## 6. Diagnosi e limiti da correggere nel report
+## 6. Risultato nell'app e prova Gian
 
-Non cambiare le tabelle per ragioni narrative.
-- “Bug: nessuno” diventa dichiarazione della consegna iniziale, seguita dai difetti della review e dal loro impatto verificato. Nessuna frase “la perdita viene sicuramente dal metodo e non dal programma”.
-- Il 33% derivato dal rapporto mediano 2,05 è solo un esempio teorico per trade identici con due sole uscite. **Non è il pareggio effettivo di questo ledger**: rischi/rapporti diversi, quantità normalizzate, protezioni e altre uscite lo impediscono. Togliere il confronto 22% contro 33% come dimostrazione del fallimento; conservare target17/78 e PnL ai riferimenti come descrizioni distinte.
-- Distinguere concentrazione osservata dalla frase assoluta “la perdita non dipende da casi sfortunati”. Nessuna conclusione causale o certezza sulla famiglia generale.
-- Resta valida la raccomandazione Director: nessuna modifica metodologica selezionata, evidenza negativa da conservare.
+Stesso ambiente «Backtest di sviluppo», distinguendo chiaramente2025 “confronto aggiuntivo già esposto” e DEV. Sono ammessi bundle separati e selettore file esistente: **nessun nuovo esploratore o import multiplo obbligatorio**. Tabelle report affiancate bastano per il confronto dei periodi; se si mostra un totale, solo somma normalizzata esplicita e mai saldo del conto.
 
-## 7. Verifiche, versione e consegna
+Nel bundle2025 devono aprirsi risultati, mesi, registro e gli esempi previsti, con informazioni note allora separate dal seguito modellato. Anche eventuale assenza di categorie deve essere comprensibile. Banner senza collegamentoexchange; nessuna call/posizione/saldo delle fixture mescolata allo storico. R1-A/B/C preservate. Vecchi bundle /1 restano conservati ma non apribili, come dichiarato; nessuna migrazione in questo task.
 
-Nessun nuovo download. Usare i file DEV già verificati. Config candidato e osservatore invariati; aggiornare versione motore patch per il comportamento tecnico corretto, con nota d'impatto. Non sovrascrivere il vecchio run.
+Istruzioni Owner brevi con percorso esatto del nuovo file:
+1. aprire «Backtest di sviluppo» e il bundle2025;
+2. «Prima operazione» oppure categoria assente spiegata; leggere movimento, reazione e condizioni d'ingresso;
+3. «Mostra seguito modellato»: ingresso, protezione, uscita, costi;
+4. «Primo caso negativo» e «Prima astensione», se presenti.
 
-Prima dimostrare le regressioni su ee7282f, poi passaggio delle correzioni. Eseguire i test CAND pertinenti, test UI backtest/R1 toccati e typecheck/build. Nessuna suite generale, polling CI o servizi aggiuntivi. Prova browser proporzionata dei nuovi casi e del bundle DEV reale; chiudere solo processi propri.
+Gian deve poter seguire decisione/esito senza scegliere date a caso né verificare formule/pivot. La prova d'uso sarà raccolta dal Director dopo la review: **non registrarla come fatta o positiva in anticipo**, né presentarla come validazione del trading. Non lasciare il lavoro incompleto perché la provaOwner non è ancora avvenuta.
 
-Rieseguire DEV **offline una volta** con la patch, perché cambia la gestione della qualità e degli aggregati. Confrontare contenuti numerici/decisioni/richieste/trade con il run precedente, escludendo le sole differenze dichiarate di versione/schema/qualità. Atteso: nessun cambiamento dei 78 trade o dei loro importi se davvero non toccati da dati mancanti. Se cambia qualcosa, identificare il bug e quantificare, senza modificare convenzioni.
+## 7. Consegna e chiusura
 
-Pubblicare commit/push su main solo di file pertinenti; nessun force push, pull, fetch, reset/stash o dati pesanti in Git. Aggiornare report, README se necessario, STATE e consegna di questo task; passare DELIVERED, mai ACCEPTED. Indicare controlli realmente svolti e file locale preciso da aprire. Non registrare una prova positiva Owner non avvenuta.
+Completare tutti i passaggi sopra e passare DELIVERED, non ACCEPTED:
+- commit pre-esiti del supporto2025, versione motore, confighash invariato;
+- file nuovi/riusati e copertura reale, manifest/run/hash e comando per rifare offline;
+- report DEV/confronto2025 e raccomandazione, anche negativa;
+- app avviabile, bundle e percorso di prova concreto;
+- test mirati, build, prova browser e limiti dichiarati;
+- eventuali bug corretti, impatto e riesecuzione documentati, nessuna iterazione metodologica;
+- aggiornare STATE, EXPOSURES con esposizione effettiva2025 e consegna di questo task; aggiornare contesto funzionale solo per capacità davvero mutate.
 
-## 8. Seguito già deciso, fuori da R1
+Commit/push pertinenti su main autorizzati, niente force push, pull/fetch, reset/stash o sovrascrittura di lavoro concorrente. Non pubblicare raw/bundle.
+La macrofase si chiude dopo review Director, prova concreta Gian e comunicazione adAstra con evidenza/limiti/raccomandazione. Non occorre un risultato favorevole.
 
-Dopo review tecnica: mantenimento v1, congelamento della base tecnica corretta, confronto ADDITIONAL_2025 senza iterazioni sui suoi esiti. Nel predisporlo occorrerà correggere la predisposizione attuale di `phase_months/load_trade`: oggi ADDITIONAL_2025 legge solo gennaio–dicembre2025. Il protocollo richiede osservazioni inizializzate da **tutto il prefisso dal 2022-10-01**, pur partendo FLAT senza episodi al 2025-01-01. Non confondere confine dei trade valutati e prefisso osservativo. Riutilizzare DEV e i sette archivi OBS del2025, solo mancanti da acquisire; nessun tail2026. Questa nota fissa il requisito, non autorizza l'esecuzione anticipata in R1.
+Esclusioni ferme:2026protetto, studi vecchiINACTIVE, conto/chiavi/ordini esterni, stackOwner, leva/reinvestimento, nuova famiglia/segnali o ottimizzazione, restyling o suite generali.
 
 ## Spazio dell'esecutore
 
-**Stato: DELIVERED** (Claude Code, 17 ottobre 2026). Non ACCEPTED: in attesa di review del Director. Nessuna prova d'uso Owner svolta o registrata.
-
-### Patch (motore 1.0.1, schema bundle `cand001.bundle/2`; candidato 1.0.0 e config `aed2c4ef…ce4edf` invariati)
-- Commit `0a46892`: R1-A, R1-B, R1-C con test e fixture.
-  - Python: `data.py` (`check_funding_series`, `FundingNotCertified`, filtro alla finestra), `cli.py` (blocco prima del ledger, manifest di qualità scritto comunque), `execution.py` (trade irrisolto conservato), `metrics.py` (copertura, parte nota, drawdown parziale, riconciliazione separata), `bundle.py`, `fixture.py`.
-  - App: contratto, validatore, risultati, registro, episodio.
-- Commit `605544b`: correzione trovata nella mia prova browser. Nei periodi interrotti le chiusure valide erano contate anche dopo l'interruzione (639 su 581 valutate). Inoltre, con irrisolte, le statistiche per operazione sono marcate «solo concluse». Nessun effetto su finestre complete.
-- Commit docs (questo): report, README, STATE, consegna.
-- Cambiamento dichiarato del contratto: il flag `reconciliation.reconciled` è sostituito da `knownPartReconciled` e `windowComplete`. Per questo `tests/test_cand001_backtest.py` è aggiornato su quel solo punto. Il bundle e1.0.0 (schema /1) non si apre più nell'app.
-
-### Riproduzioni prima / dopo
-Prima, sul codice identico a `ee7282f` (script separato, dati sintetici):
-- serie funding vuota risultava `certified=True`;
-- un buco interno era segnalato come `INTERVAL_MISMATCH` senza blocco: il trade aperto nel buco riceveva `events=[]`, `total=0`, `missing=False`;
-- con lacuna a posizione aperta: `net=0.0`, `stressNet=0.0`, `netMissing=0`, trade assente dal ledger.
-
-I nuovi test `tests/test_cand001_r1.py` (8) sul codice vecchio non passano: 4 fallimenti e 6 errori. Dopo la patch: verdi.
-
-R1-C: con la logica vecchia ripristinata temporaneamente, 2 dei test UI R1 falliscono (prezzo corrente in 1D e a t+60s); con la patch passano.
-
-### Verifiche svolte
-- Python: test CAND 36/36 (`test_cand001_*.py`). Ho eseguito anche l'intera discover `tests` (80/80): era più del richiesto, nessun effetto.
-- UI: `Backtest.test.tsx` 8/8 e nuovo `BacktestR1.test.tsx` 6/6. Coprono: bundle HALT dal selettore, mese «non valutato», registro ed episodio irrisolto senza uscita fittizia, 1D con giorno incompleto, momento t+60s, tratto senza candele complete. Ho eseguito anche l'intera suite vitest (84/84): anche questo più del richiesto.
-- `npx tsc -b` e `npm run build`: riusciti.
-- Fixture `synthetic-backtest.json` e `synthetic-backtest-halt.json` rigenerate dal motore; la rigenerazione dà file identici byte per byte.
-- Browser (Chrome headless su mia `vite preview` 127.0.0.1:4173, poi chiusa; il vite dell'Owner PID 10872 non è stato toccato).
-  - Bundle DEV reale e1.0.1: aperto in 0,15 s; nessun avviso di interruzione; copertura «completa».
-  - Primo episodio SHORT alla call 03:45: in 45m prezzo corrente presente; in 1D nessun prezzo corrente e avviso «Ultimo noto della stessa scala: 16.537,60 USDT, chiusura alle 01 gen 2023, 00:00 UTC (non corrente)».
-  - Momento d'ingresso 03:46: avviso anche in 45m, ultimo noto 16.529,40 alle 03:45.
-  - Fixture HALT: avviso con parte nota +81,70 su 2 operazioni concluse, 1 irrisolta, 581 chiusure valutate e 59 non valutate. Netto, stress e drawdown «n.d.»; drawdown parziale −2,94 fino all'interruzione. Registro con «percorso irrisolto». L'episodio si apre anche col seguito: passo «Percorso irrisolto», nessuna «Uscita modellata», fee solo d'ingresso.
-  - Nessun errore in console, nessuna richiesta esterna.
-
-### Run DEV offline e confronto
-- Nessun download. `python3.12 -m cand001 run` dal commit pulito `0a46892`: run `CAND-001-v1.0.0-e1.0.1-DEV-adaa94c502-aed2c4ef62`, bundle SHA256 `b141150237e94a807817adea2d9fb6810f6eabc220d7db5ea3602d8b79b4944a`, 22,3 s, picco 533 MB. Serie funding certificata (2.193 eventi, 0 anomalie); mark 2.189/2.193 come prima.
-- Dopo `605544b` il run è stato rieseguito una seconda volta solo per verificare che la correzione non toccasse il DEV: bundle identico, nessuna sovrascrittura. È stato aggiunto il solo manifest del secondo run.
-- Il vecchio run e1.0.0 (`53d5fdcf…`) è intatto.
-- Il manifest corrente `manifests/input-dev.json` della cartella dati è stato riscritto dal controllo (ogni run lo fa); i run conservano ciascuno il proprio `input-manifest.json`.
-- Confronto con e1.0.0 (script separato):
-  - candidato, convenzioni, finestra, fonte, nozionale e input hash: uguali;
-  - 814 episodi, 87 richieste e 360 finestre: identici;
-  - 78 trade con zero campi diversi;
-  - terminazioni identiche;
-  - sintesi: tutti i valori comuni uguali; unica differenza, la rimozione dichiarata di `reconciled`.
-- Netto −210,59, riferimenti −85,44, stress −397,80, drawdown −216,79: invariati.
-
-### Report
-`docs/research/CAND-001-results.md`:
-- nuova sezione «Correzioni R1» con difetti, prima/dopo, impatto e confronto;
-- «Bug» riscritto come dichiarazione della consegna iniziale seguita dai difetti della review;
-- tolto il confronto 22% contro 33%; target 17/78 e PnL ai riferimenti restano come descrizioni distinte;
-- concentrazione descritta senza frasi assolute;
-- tabelle sostituite con il `results.md` del nuovo run: solo righe aggiunte (copertura, chiusure valutate/teoriche, irrisolte, parte nota), nessun numero cambiato.
-
-README: percorso del nuovo bundle.
-
-### Limiti
-- Funding non certificato e percorso irrisolto sono provati solo su dati sintetici: il DEV reale non li contiene.
-- A 390 px l'intestazione dell'episodio sporge di 256 px. Il difetto c'era già prima di R1; non è corretto, perché l'incarico esclude il restyling. Le altre viste del backtest non sporgono.
-- §8 (prefisso 2022-10-01 per ADDITIONAL_2025) non toccato; nessuna elaborazione 2025.
-
-### File da aprire
-`C:\Projects\algorithmic-trader-data\CAND-001\runs\CAND-001-v1.0.0-e1.0.1-DEV-adaa94c502-aed2c4ef62\cand001-bundle.json` nell'app, ambiente «Backtest di sviluppo», pulsante «Apri backtest».
+Da compilare: avanzamento, acquisizione/riuso, run, risultati, prove, limiti e consegna.

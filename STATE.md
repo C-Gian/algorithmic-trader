@@ -2,25 +2,25 @@
 
 Aggiornato: 17 ottobre 2026. Responsabile: Director.
 
-## Chiuso
-UI simulata conclusa con prova positiva Owner. OBS-001 ACCEPTED TECNICAMENTE a bf3280e; calcoli/tabelle verificati nella review precedente. Rimane il limite di comprensione Owner, nessuna accettazione d'uso inventata o nuova macrofase UI.
+## Chiuso tecnicamente
+UI simulata conclusa con prova positiva Owner. OBS-001 ACCEPTED TECNICAMENTE a bf3280e; resta il limite di comprensione Owner, senza prova positiva inventata o nuova macrofase UI.
 
-## Attivo
-**CAND-001/R1 DELIVERED** (Claude Code, 17 ottobre; in attesa di review, non ACCEPTED): motore 1.0.1, candidato e config invariati. Le tre correzioni sono riprodotte prima e coperte da test dopo. Run DEV offline e1.0.1 (`b1411502…`): decisioni, richieste e 78 trade identici a e1.0.0, netto −210,59 invariato. Report con sezione «Correzioni R1». Dettagli nella consegna di current_task.md.
+**CAND-001/R1 ACCEPTED TECNICAMENTE su3ae7b7529f26f7aef94c9de207ce41df342590d1.**
+Review Director:36test Python CAND,14test UI Backtest/BacktestR1 e typecheck/build passati; lettura di funding, HALT/aggregati/app e prezzo. I tre difetti sono risolti nei controlli pertinenti.
+Confronto DEV offline dell'esecutore:87richieste/78trade e numeri invariati. Non è un ricalcolo autonomo Director dei75archivi/78trade, né una sua prova browser sui dati reali. Formato corrente /2; vecchio /1 conservato ma non apribile. Difetto a390px dichiarato, fuori perimetro desktop. Suite complete eseguite dall'esecutore oltre incarico: non ripetere.
 
-Review DEV su ee7282f conclusa con tre correzioni circoscritte, non ACCEPTED.
-Director ha rieseguito 28 test Python CAND, 8 test UI backtest e typecheck/build: passati. Ulteriori riproduzioni mostrano:
-- funding vuoto certificato e buco segnalato ma ignorato nel calcolo, con costo mancante trattato come zero;
-- trade interrotto da lacuna escluso dai totali; apertura episodio irrisolto in errore;
-- prezzo giornaliero precedente presentato come corrente nella nuova vista.
-Questi difetti non dimostrano un errore nei numeri DEV consegnati. R1 verifica l'impatto offline, senza nuovi dati.
+## Checkpoint e incarico attivo
+**CAND-001 — confronto ADDITIONAL_2025 READY**, incarico completo in current_task.md.
+Director mantiene candidato1.0.0 senza revisione metodologica. Config SHA256 aed2c4ef627617d73972778097bbab5fb702ab5064ce9e6eb68ded2170ce4edf verificato invariato. Base tecnica1.0.1 accettata; patch tecnica per supporto2025/prefisso ammessa prima degli esiti, senza cambiare convenzioni.
 
-## Metodo e evidenza
-Decisione Director: mantenere candidato1.0.0 e config aed2c4ef627617d73972778097bbab5fb702ab5064ce9e6eb68ded2170ce4edf, nessuna revisione metodologica in questa macrofase. Congelate regole/soglie, implementazione ancora da correggere. Diagnosi negativa non identifica una modifica unica sufficientemente motivata.
+Il checkpoint Director prima del2025 è soddisfatto. L'intero seguito è già autorizzato daAstra: supporto, soli dati mancanti, elaborazione, report finale e app. Nessun nuovo permesso ordinario; nessuna iterazione metodologica su2025 già esposto, NON validazione indipendente.
 
-Esiti riportati dall'esecutore: 78 operazioni ipotetiche 2023–2024, N0=1000USDT fisso, netto −210,59 (2023−115,87;2024−94,72), PnL reference−85,44, stress−397,80. Dati:27trade+24funding+24mark, manifest esterni. Il Director non ha ricalcolato autonomamente i75archivi/78trade reali in questa review. Il33% ricavato dal rapporto mediano non è il pareggio effettivo del ledger; report da precisare.
+## Evidenza e dati
+DEV dichiarato dall'esecutore:78operazioni ipotetiche daN0=1000USDT, netto−210,59 (2023−115,87;2024−94,72), riferimenti−85,44, stress−397,80, invariati dopoR1. Evidenza negativa conservata, nessuna efficacia dimostrata.
 
-## Seguito e confini
-Macrofase Astra già autorizzata: dopo accettazione R1, registrare base tecnica congelata e completare confronto2025 già esposto, non validazione indipendente; nessuna iterazione sui suoi esiti. Il prefisso osservativo parte dal2022-10-01 anche nella finestra2025, che riparte FLAT. In R1 nessun download o elaborazione2025, nessuno sblocco CLI.
+2025 non ancora elaborato economicamente alla consegna3ae7b75. Per il confronto:osservazioni su tutto il prefisso dal2022-10-01, valutazione[2025-01-01,2026-01-01)UTC FLAT senza episodi ereditati. Riutilizzare27tradeDEV e7tradeOBS; attesi solo5trade+12funding+12mark nuovi se mancanti. Raw/bundle fuoriGit, checksum/provenienza e qualità vincolanti.
 
-2026protetto, vecchi studiINACTIVE, niente conto/chiavi/ordini esterni/stackOwner, leva/reinvestimento, nuova famiglia, ricerca parametri, piattaforma o restyling. DESIGN-001 approvato solo nelle definizioni osservative; modello economico CAND registrato separatamente. Macrofase aperta; prova concreta Gian ancora da svolgere, poi raccomandazione adAstra anche negativa.
+## Limiti e chiusura
+Prova concreta Gian suCAND ancora da raccogliere dopo consegna finale e review; non richiedere formule/pivot. Macrofase ancora aperta: confronto separatoDEV/2025, evidenza nell'app, review/prova e raccomandazione adAstra anche negativa.
+
+2026protetto senza tail, vecchi studiINACTIVE, nessun conto/chiave/ordine esterno/stackOwner, leva/reinvestimento, nuova famiglia/segnali/ricerca parametri, piattaforma o restyling. DESIGN-001 approvato solo nelle definizioni osservative; modello economico CAND separato.

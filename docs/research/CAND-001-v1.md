@@ -232,3 +232,14 @@ Diagnosi DEV deve separare: bug, decisione non fedele al disegno, scelta coerent
 - Contabilità con fill già fissate (slippage non applicato di nuovo): E100, X102, q10, f0,0005, LONG, un funding positivo0,0001 con M101 → lordo20, fee1,01, funding-0,101, netto18,889. SHORT E100/X98,q10: lordo20, fee0,99, funding+0,101, netto19,111.
 - Uno stop proposto ma non ancora efficace non sostituisce quello attivo nel minuto di latenza. Un gap oltre stop riempie a open avverso, non a stop ideale. Entrambi i livelli nello stesso minuto producono stop-first e flag, non il trade migliore.
 Questi sono numeri di controllo sintetici, non livelli reali BTC o tariffe verificate.
+
+
+## 14. Checkpoint DEV — Director, 17 ottobre 2026, prima degli esiti2025
+
+Decisione registrata: **mantenere candidato1.0.0, nessuna revisione metodologica** in questa macrofase. Config canonica invariata SHA256 `aed2c4ef627617d73972778097bbab5fb702ab5064ce9e6eb68ded2170ce4edf`; osservatore OBS-001/v1 invariato. La perdita DEV riportata non giustifica una modifica unica sufficientemente motivata; nessuna ricerca di parametri o variante scelta sugli esiti.
+
+**R1 accettato tecnicamente sulla base3ae7b7529f26f7aef94c9de207ce41df342590d1**, motore1.0.1/schema cand001.bundle/2. Review Director:36test Python CAND,14test UI Backtest/BacktestR1 e typecheck/build passati; lettura delle patch funding, HALT/aggregati/UI e prezzo. Il confronto reale offline di Claude dichiara decisioni,87richieste,78trade e numeri DEV invariati. Questo confronto e il riscontro separato dell'esecutore non sono un ricalcolo autonomo del Director dei75archivi o78trade reali; nessuna prova positiva Owner registrata. Incarico/consegna R1 conservati in current_task.md alla base3ae7b75.
+
+Il checkpoint della sezione10 è ora soddisfatto: **procedere con ADDITIONAL_2025**, già autorizzato daAstra. Ammessa patch tecnica del supporto prima del primo esito2025:caricamento dell'intero prefisso dal2022-10-01, riuso dei file verificati, finestra2025 che riparte FLAT senza episodi ereditati, output e consultazione separati. Nessuna modifica del JSON candidato, delle regole o dei costi; versionare il motore senza creare una revisione metodologica. Pubblicare tale supporto prima degli esiti.
+
+2025 è confronto aggiuntivo già esposto, non validazione indipendente; nessuna iterazione metodologica dopo la sua lettura. Bug documentati correggibili con confronto d'impatto. Nessun dato2026 o tail. Report conserva DEV negativo e2025 distinto; la chiusura non richiede esito favorevole. Dettagli esecutivi nel task corrente.
