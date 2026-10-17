@@ -405,3 +405,16 @@ P50 [P10; P90]; categorie con conteggio e quota sulla cella. Distanze firmate d�
 | 10 | `ATT:SHORT:1735589700000:1735608600000` | 2024-12-31 01:30 | SHORT | DISCORDANT | 1 | FIRST_RIGHT_CENSORED |
 
 Categorie vuote: FIRST_LONG_UNAVAILABLE, FIRST_SHORT_UNAVAILABLE.
+
+
+## 10. Review Director su c8ac744 — correzioni R1 richieste, non ACCEPTED
+
+Review indipendente: lettura codice/report e15test Python OBS-002 +24test UI storici passati, typecheck/build riusciti; letta immagine obs002-02 dell'esecutore, nessun browser autonomo Windows o ricalcolo reale dei6.582 esiti. Cross-check completo e riproducibilità restano evidenza dell'esecutore. Sette scelte §7 confermate, con motivi nel task R1. Il40% con profondità>1 deriva dal disegno del Director, non da un errore Claude: non si modifica ora la popolazione.
+
+R1-A riprodotto: knownAtT delle timeline oscura timestamp/motivo di ritiro futuro ma conserva replacedBy/sameGroup di quel ritiro, rivelando una sostituzione futura. Richiesta proiezione causale completa e derivato corretto di examples.json, senza ricalcolare popolazione/esiti.
+
+R1-B riprodotto: il lettore accetta un esito completo con favourable=null e un F_BEFORE_A con entrambi i contatti null. Due regressioni aggiuntive falliscono sulla consegna. Richiesta validazione circoscritta dei campi/relazioni usati dal nuovo blocco e rifiuto comprensibile con studio aperto conservato.
+
+R1-C: le frasi «quasi sempre entrambi» §§4/8 sono da correggere. Tabella principale:2430/4368=55,63% entrambi,1900/4368=43,50% uno solo,38/4368=0,87% nessuno. Almeno uno99,13%. Non cambiano numeri o convenzioni; cambia la loro descrizione. Nessuna conclusione su utilità o inefficacia delle sei famiglie dedotta da questa review.
+
+Macrofase aperta, nessuna ipotesi operativa scelta. Incarico eseguibile OBS-002/R1 in current_task.md; nessuna nuova elaborazione reale richiesta.

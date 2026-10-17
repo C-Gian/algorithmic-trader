@@ -1,18 +1,20 @@
 # Stato del nuovo progetto
 
-Aggiornato: 17 ottobre 2026. Responsabile: Director.
+Aggiornato:17ottobre2026. Responsabile:Director.
 
-## Attivo — OBS-002 DELIVERED (in attesa di review Director)
-Astra accoglie CAND-001/D1 senza v2 e autorizza un'unica analisi esplorativa: dopo movimento/arretramento, quali informazioni congiunte note al primo tentativo distinguono prosecuzione ed esaurimento? Non basta la presenza di una caratteristica in casi positivi e negativi per scartarla; occorre formulare il collegamento con le altre informazioni.
+## Attivo — OBS-002/R1 READY, consegna c8ac744 non ACCEPTED
+La popolazione/esiti OBS-002 esistono: Claude riporta4372prime origini +2210ripetizioni, input27ZIP2022-10…2024-12, nessun2025/2026 o download. Config b11bad4557… invariata; metodi/convenzioni a6f1743d. Review Director:15test Python e24UI storici passati,typecheck/build riusciti,lettura codice/report e immagine dell'esecutore. Nessun ricalcolo reale indipendente di popolazione/esiti.
 
-Definizioni e incarico in current_task.md, convenzioni eseguibili config/OBS-002-v1.json già registrate dal Director prima dell'estrazione: contesti da pivot confermati, rimozione dei vincoli operativi CAND, tentativi collegati per movimento, primo tentativo principale e ripetizioni conservate, unico seguito24h. Unica rappresentazione congiunta a4contesti struttura/SMA, sei famiglie nello stesso record; nessuna ricerca di coppie/triple o soglie. Riferimenti descrittivi ±A per ordine degli eventi, non stop/target o profitto. Estrazione consegnata da Claude il 17 ottobre: 4.372 primi tentativi DEV (2.210 ripetuti dipendenti), popolazione registrata prima degli esiti, riscontro completo con il seguito OBS-001, 10 esempi consultabili nello Studio storico come pacchetti OBS-002. Report `docs/research/OBS-002-results.md`; prossimo passo: interpretazione del Director, al massimo un'ipotesi oppure un limite preciso.
+Tre rilievi nel task corrente e report §10:
+- knownAtT delle timeline conserva replacedBy/sameGroup del ritiro futuro pur azzerandone data/motivo (riprodotto su sintetico);
+- lettore accetta esiti completi con componente mancante o classi in conflitto coi contatti (due test aggiuntivi falliscono);
+- testo «quasi sempre entrambi» errato: sui4368completi,2430entrambi55,63%,1900uno43,50%,38nessuno0,87%; almeno uno99,13%.
 
-Input esistenti ottobre2022–dicembre2024, origini solo DEV2023–2024. Nessun download,2025,2026 o motore economico. Osservatore OBS-001 invariato; CAND-001 e risultati immutabili. Claude implementa/estrae e consegna, il Director formula al massimo un'ipotesi concreta con controesempi/verifica futura oppure un limite informativo preciso. Nessuna ipotesi implementata automaticamente.
+Correggere solo proiezione/derivato delle timeline, confine del nuovo lettore e descrizione aritmetica. Nessun nuovo calcolo reale di popolazione/esiti, soglie, profili o orizzonte. Sette scelte tecniche del report §7 accettate. Il40%di profondità>1 è effetto del disegno Director, non bug Claude e non autorizza esclusioni dopo gli esiti.
 
-Consultazione prezzi/osservazioni/seguito con l'ambiente storico esistente; solo adattamenti tecnici indispensabili al formato/identità del pacchetto, nessun nuovo esploratore o cantiere UI. Test mirati e verifica pertinente, nessuna suite generale/CI o backtest per abitudine. Commit/push pertinenti autorizzati, checkout a cura di Gian.
+## Obiettivo e prosecuzione
+Una sola analisi esplorativa di movimento–arretramento–ripresa sul DEV già esposto, sei famiglie lette congiuntamente. Dopo R1 il Director completa la review e conclude con al massimo una ipotesi decisionale motivata/controesempi/verifica necessaria, oppure nessuna distinzione interpretabile e limite preciso. Nessuna ipotesi implementata o v2 automatica. Macrofase aperta; ad Astra alla conclusione o conflitto sostanziale, non per questi fix ordinari.
 
-## Conservato
-CAND-001/D1 accettato a9d5df7d, chiusura accolta da Astra sulla review riportata. 78 operazioni DEV, netto−210,59USDT su1000USDT convenzionali ciascuna, non conto personale. Nessuna revisione giustificata in D1, non esclusione di tutta la famiglia. Review Director9test diagnostici e codice/report; estrazione reale/riconciliazioni evidenza dell'esecutore. V1 negativa e non promossa. APP-001 concluso, riscontro Gian positivo sul miglioramento d'uso.
-
-## Confini e chiusura
-2026protetto,2025escluso dal nuovo studio,vecchi studiINACTIVE; nessun exchange/conto/ordine o stackOwner. Raw/outputestesi fuoriGit. Un solo studio, al termine relazione ad Astra. Una scoperta sarà esplorativa su DEV già esposto, non efficacia; implementazione richiede decisione successiva. Nessun nuovo indicatore, classificatore complesso, fitting o strategia in OBS-002.
+## Conservato e confini
+CAND-001/D1 chiuso senza v2, accettato da Astra; famiglia non esclusa, una caratteristica non si scarta perché compare anche nei casi contrari. V1 negativa e non promossa. APP-001 concluso con riscontro positivo di Gian.
+Solo file locali autorizzati,2025escluso,2026protetto,vecchi studiINACTIVE; nessun exchange/conto/ordine o stackOwner. Raw/outputestesi fuoriGit. Consultazione con storico esistente, nessun nuovo esploratore o cantiereUI. Nessuna suite generale o CI. Commit/push pertinenti autorizzati, checkout a curaGian.
