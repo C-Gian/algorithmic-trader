@@ -7,6 +7,8 @@
  */
 import { Component, useRef, useState, type ReactNode } from 'react';
 import type { Ms } from '../../contract/historical';
+import { formatNumber } from '../../lib/numbers';
+import type { ChartLevel } from '../components/CandleChart';
 import { HistoricalStudy } from '../../historical/study';
 import type { ShellProps } from '../App';
 import { Shell } from '../App';
@@ -19,6 +21,7 @@ import { HistHeader } from './HistHeader';
 import { FamiliesSection } from './FamiliesSection';
 import { NotInStudy, ObservationsCard } from './ObservationsCard';
 import { OpenStudy, StudyFilePicker } from './OpenStudy';
+import { MoveCard, moveState } from './MoveCard';
 import { OutcomeCard } from './OutcomeCard';
 import { RevisionsSection } from './RevisionsSection';
 import { StudySummaryView } from './StudySummaryView';
@@ -94,9 +97,21 @@ class ViewGuard extends Component<{ children: ReactNode; onOpen: (s: HistoricalS
   }
 }
 
+/** Ancore MOVE-001 note al momento: Q/B/P0 dalla nascita, P1 dalla sua pubblicazione; nulla prima della nascita. */
+function moveLevels(study: HistoricalStudy, t: Ms): ChartLevel[] {
+  const c = study.moveCase;
+  if (!c || t < c.birthAt) return [];
+  const p1 = moveState(study.moveFactsAt(t)).P1;
+  const fmt = (x: number) => formatNumber(x, 0);
+  const lv = (id: string, kind: string, label: string, p: number): ChartLevel => ({ id, kind, origin: 'MOVE001', overlay: 'PLAN', validTo: null, label, price: { amount: p } });
+  const out = [lv('move-B', 'ENTRY', `MOVE B · ${fmt(c.B.price)}`, c.B.price), lv('move-P0', 'SUPPORT', `MOVE P0 base · ${fmt(c.P0.price)}`, c.P0.price)];
+  if (p1) out.push(lv('move-P1', c.side === 'LONG' ? 'PIVOT_HIGH' : 'PIVOT_LOW', `MOVE P1 · ${fmt(p1.price)}`, p1.price));
+  return out;
+}
+
 function StudyWorkspace({ study, onOpen, shell, moment }: { study: HistoricalStudy; onOpen: (s: HistoricalStudy) => void; shell: ShellProps; moment?: number }) {
   // Momento dall'indirizzo se è un'origine dello studio; altrimenti il caso OBS-002 o la prima origine.
-  const fallback = study.obs002Case?.t ?? study.origins[0];
+  const fallback = study.obs002Case?.t ?? study.moveCase?.birthAt ?? study.origins[0];
   const cutoff: Ms = moment !== undefined && study.indexOf(moment) >= 0 ? moment : fallback;
   const [retrospective, setRetrospective] = useState(false);
 
@@ -119,15 +134,24 @@ function StudyWorkspace({ study, onOpen, shell, moment }: { study: HistoricalStu
   }
 
   const snap = study.snapshot(cutoff);
+  const move = study.moveCase;
   return (
     <>
       <HistHeader study={study} cutoff={cutoff} onCutoff={goTo} snapshot={snap} onOpen={onOpen} />
       <main className="content" id="main-content" tabIndex={-1}>
         <div className="row-market">
-          <HistChartCard study={study} snapshot={snap} retrospective={retrospective} onRetrospective={setRetrospective} />
+          <HistChartCard
+            study={study}
+            snapshot={snap}
+            retrospective={move ? false : retrospective}
+            onRetrospective={setRetrospective}
+            allowRetrospective={!move}
+            extraLevels={move ? moveLevels(study, cutoff) : []}
+          />
           <ObservationsCard study={study} snapshot={snap} />
         </div>
-        {retrospective && <OutcomeCard row={study.retrospective(cutoff)} obs002={study.obs002Outcome(cutoff)} side={study.obs002Case?.side} onClose={() => setRetrospective(false)} />}
+        {move && <MoveCard study={study} t={cutoff} />}
+        {retrospective && !move && <OutcomeCard row={study.retrospective(cutoff)} obs002={study.obs002Outcome(cutoff)} side={study.obs002Case?.side} onClose={() => setRetrospective(false)} />}
         <FamiliesSection snapshot={snap} />
         <RevisionsSection snapshot={snap} />
         <NotInStudy />

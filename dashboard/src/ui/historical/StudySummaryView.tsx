@@ -97,16 +97,18 @@ export function StudySummaryView({ study, onOpenOrigin }: { study: HistoricalStu
   const summary = study.bundle.retrospective.summary;
   if (summary === null) {
     const c = study.obs002Case;
+    const mv = study.moveCase;
+    const back = c?.t ?? mv?.birthAt;
     return (
       <main className="content" id="main-content" tabIndex={-1}>
         <section className="card unavailable" aria-label="Studio osservativo">
-          <p className="section-title">Pacchetto di consultazione OBS-002 · nessuna tabulazione OBS-001</p>
+          <p className="section-title">Pacchetto di consultazione {study.bundle.study?.id ?? ''} · nessuna tabulazione OBS-001</p>
           <p className="t-2">{study.bundle.retrospective.summaryNote ?? 'Il riepilogo di questo studio non è contenuto nel pacchetto.'}</p>
           <p className="t-3" style={{ fontSize: 12 }}>
             Il pacchetto contiene un solo caso con le osservazioni di quei giorni: le tabelle della vecchia domanda OBS-001 (struttura 45m × relazione 1D)
-            non sono state ricalcolate perché non rispondono alla domanda OBS-002.
+            non sono state ricalcolate perché non rispondono alla domanda dello studio che ha prodotto il caso.
           </p>
-          {c && <Button onClick={() => onOpenOrigin(c.t)}>Torna al caso · {fmtUtc(c.t)}</Button>}
+          {back !== undefined && <Button onClick={() => onOpenOrigin(back)}>Torna al caso · {fmtUtc(back)}</Button>}
         </section>
       </main>
     );

@@ -401,3 +401,8 @@ details.tech[open] > summary { margin-bottom: 4px; }
   .lt-row > :nth-child(2), .lt-row > :nth-child(3) { width: 96px; }
   .horizon { flex-direction: column; gap: 12px; }
 }
+
+/* MOVE-001: elenco dei fatti noti al momento consultato (stessa tipografia delle schede storiche). */
+.move-facts { margin: 6px 0 0; padding-left: 18px; font-size: 12px; line-height: 1.55; max-height: 260px; overflow: auto; }
+.move-card .lt-row > :first-child { flex: none; width: 240px; }
+.move-card .lt-row > :nth-child(3) { flex: 1; width: auto; text-align: left; }

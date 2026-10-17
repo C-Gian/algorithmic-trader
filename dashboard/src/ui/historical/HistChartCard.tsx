@@ -29,11 +29,17 @@ export function HistChartCard({
   snapshot,
   retrospective,
   onRetrospective,
+  allowRetrospective = true,
+  extraLevels = [],
 }: {
   study: HistoricalStudy;
   snapshot: CausalSnapshot;
   retrospective: boolean;
   onRetrospective: (on: boolean) => void;
+  /** false per i pacchetti senza seguito (MOVE-001): il comando del seguito 24h non compare. */
+  allowRetrospective?: boolean;
+  /** Livelli aggiuntivi già filtrati per il momento consultato (ancore MOVE-001). */
+  extraLevels?: readonly ChartLevel[];
 }) {
   const [scale, setScale] = useState<HistScale>('45m');
   const [zoom, setZoom] = useState<Record<HistScale, number>>({ '45m': 1, '1D': 1 });
@@ -95,7 +101,7 @@ export function HistChartCard({
             + Zoom
           </Button>
         </div>
-        {retrospective ? (
+        {!allowRetrospective ? null : retrospective ? (
           <Button variant="secondary" onClick={() => onRetrospective(false)}>
             Solo informazioni al momento
           </Button>
@@ -121,7 +127,7 @@ export function HistChartCard({
         timeframe={scale}
         candles={candles}
         series={series}
-        levels={chartLevels(rec)}
+        levels={[...chartLevels(rec), ...extraLevels]}
         overlays={overlays}
         lastPrice={priceAtCutoff}
         lastPriceCurrent

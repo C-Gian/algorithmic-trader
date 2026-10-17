@@ -4,7 +4,7 @@
  * prima di sostituire lo studio aperto; nessun ripiego silenzioso sulle fixture.
  * Piccolo validatore dello schema locale: non ricalcola il motore e non verifica firme.
  */
-import { BUNDLE_KIND, BUNDLE_SCHEMA, CASE_KIND, CASE_SCHEMA, type StudyBundle } from '../contract/historical';
+import { BUNDLE_KIND, BUNDLE_SCHEMA, CASE_KIND, CASE_SCHEMA, MOVE_KIND, MOVE_SCHEMA, type StudyBundle } from '../contract/historical';
 
 export class BundleError extends Error {}
 
@@ -234,6 +234,51 @@ function validateBars(data: Obj, periods: { inputStart: number; end: number }): 
   }
 }
 
+const MOVE_EVENTS = ['BIRTH', 'SUSPENSION', 'P1_PUBLISHED', 'USABLE', 'FACT', 'ARCHIVE', 'CANDIDATE_REJECTED', 'OPEN_AT_END'];
+const MOVE_JUDGEMENTS = ['UTILIZZABILE', 'NON_SOSTIENE_PIU_LA_TESI', 'INDETERMINATO'];
+
+function moveAnchor(x: unknown, kind: string, birth: number, where: string): void {
+  if (!isObj(x) || x.kind !== kind || !isNum(x.price) || !isInt(x.candidateOpen) || !isInt(x.availableAt) || !isStr(x.id)) fail(`${where}: ancora non valida.`);
+  if (((x as Obj).availableAt as number) > birth) fail(`${where}: ancora non ancora nota alla nascita.`);
+}
+
+/**
+ * Pacchetto MOVE-001 di un riferimento: identità dello studio, nessun seguito 24h né tabulazione,
+ * ancore note alla nascita coerenti col verso, ledger datato che inizia con la nascita e non va oltre
+ * il pacchetto. Il lettore mostra al momento t solo i fatti con istante <= t.
+ */
+function validateMoveCase(data: Obj, retro: Obj, origins: unknown[], end: number): void {
+  const study = obj(data, 'study', 'Studio MOVE-001');
+  if (!isStr(study.id) || !study.id.startsWith('MOVE-001/') || !isStr(study.hash) || !isStr(study.label)) fail('Studio MOVE-001: identità assente o non riconosciuta.');
+  if (retro.summary !== null || !Array.isArray(retro.rows) || retro.rows.length !== 0 || retro.obs002 !== undefined) {
+    fail('Pacchetto MOVE-001: nessun seguito 24h, riga di esito o tabulazione deve essere presente.');
+  }
+  const c = obj(data, 'case', 'Riferimento MOVE-001');
+  const w = 'Riferimento MOVE-001';
+  if (!isStr(c.refId) || (c.side !== 'LONG' && c.side !== 'SHORT') || !isInt(c.birthAt) || !isStr(c.label)) fail(`${w}: identità incompleta.`);
+  const birth = c.birthAt as number;
+  if (!origins.includes(birth)) fail(`${w}: la nascita non è fra le origini del pacchetto.`);
+  const [base, fin] = c.side === 'LONG' ? ['LOW', 'HIGH'] : ['HIGH', 'LOW'];
+  moveAnchor(c.Q, base, birth, `${w}, Q`);
+  moveAnchor(c.B, fin, birth, `${w}, B`);
+  moveAnchor(c.P0, base, birth, `${w}, P0`);
+  if (!Array.isArray(c.categories) || !c.categories.every((x) => isObj(x) && isStr(x.category) && isInt(x.t))) fail(`${w}: categorie non valide.`);
+  const ledger = arr(c, 'ledger', w);
+  if (ledger.length === 0) fail(`${w}: ledger vuoto.`);
+  let prev = -Infinity;
+  ledger.forEach((e, i) => {
+    const we = `${w}, fatto ${i + 1}`;
+    if (!isObj(e) || !isInt(e.t) || !MOVE_EVENTS.includes(e.type as string) || e.refId !== c.refId) return fail(`${we}: tipo, istante o riferimento non validi.`);
+    if ((e.t as number) < prev) fail(`${we}: fatti non in ordine di tempo.`);
+    if ((e.t as number) < birth || (e.t as number) > end) fail(`${we}: istante fuori dalla vita del riferimento nel pacchetto.`);
+    if (i === 0 && (e.type !== 'BIRTH' || e.t !== birth)) fail(`${we}: il ledger deve iniziare con la nascita.`);
+    if ((e.type === 'ARCHIVE' || e.type === 'OPEN_AT_END') && !MOVE_JUDGEMENTS.includes(e.judgement as string)) fail(`${we}: giudizio non riconosciuto.`);
+    if (e.type === 'P1_PUBLISHED' && !(isObj(e.P1) && e.P1.kind === fin && isNum(e.P1.price) && e.P1.availableAt === e.t)) fail(`${we}: P1 non coerente con verso o pubblicazione.`);
+    prev = e.t as number;
+  });
+  if (ledger.filter((e) => (e as Obj).type === 'ARCHIVE' || (e as Obj).type === 'OPEN_AT_END').length > 1) fail(`${w}: più di una conclusione.`);
+}
+
 function validateStudy(data: Obj, periods: { studyStart: number; end: number }, kind: string): void {
   const origins = arr(data, 'origins', 'Origini');
   if (origins.length === 0) fail('Nessuna origine di studio nel bundle.');
@@ -241,6 +286,7 @@ function validateStudy(data: Obj, periods: { studyStart: number; end: number }, 
     if (t !== periods.studyStart + i * STEP['45m'] || (t as number) >= periods.end) fail(`Origini: la ${i + 1}ª non è sulla griglia 45m dello studio.`);
   });
   const retro = obj(data, 'retrospective', 'Sezione retrospettiva');
+  if (kind === MOVE_KIND) return validateMoveCase(data, retro, origins, periods.end);
   const rows = arr(retro, 'rows', 'Sezione retrospettiva');
   if (rows.length !== origins.length) fail('Sezione retrospettiva: righe non allineate alle origini.');
   rows.forEach((r, i) => {
@@ -398,8 +444,10 @@ export function parseBundle(text: string): StudyBundle {
     return fail('Il file non è un JSON valido. Scegli il file obs001-bundle.json prodotto dal comando «process».');
   }
   if (!isObj(data)) return fail('Formato inatteso: il contenuto non è un oggetto JSON.');
-  if (data.kind !== BUNDLE_KIND && data.kind !== CASE_KIND) return fail(`Non è un bundle OBS-001 né un pacchetto di caso OBS-002 (kind=${String(data.kind)}).`);
-  const expected = data.kind === CASE_KIND ? CASE_SCHEMA : BUNDLE_SCHEMA;
+  if (data.kind !== BUNDLE_KIND && data.kind !== CASE_KIND && data.kind !== MOVE_KIND) {
+    return fail(`Non è un bundle OBS-001 né un pacchetto di caso OBS-002 o MOVE-001 (kind=${String(data.kind)}).`);
+  }
+  const expected = data.kind === CASE_KIND ? CASE_SCHEMA : data.kind === MOVE_KIND ? MOVE_SCHEMA : BUNDLE_SCHEMA;
   if (data.schema !== expected) return fail(`Versione di schema non supportata: ${String(data.schema)} (attesa ${expected}).`);
   str(data, 'engineVersion', 'Bundle');
   const conv = obj(data, 'conventions', 'Convenzioni');

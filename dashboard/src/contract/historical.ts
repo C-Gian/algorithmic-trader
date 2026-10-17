@@ -14,6 +14,9 @@ export const BUNDLE_SCHEMA = 'obs001.bundle/1' as const;
 /** OBS-002: pacchetto di consultazione di un singolo caso, con osservazioni OBS-001/v1 ritagliate. */
 export const CASE_KIND = 'OBS002_CASE' as const;
 export const CASE_SCHEMA = 'obs002.case/1' as const;
+/** MOVE-001: pacchetto di consultazione di un riferimento del ciclo di vita del movimento (nessun esito 24h). */
+export const MOVE_KIND = 'MOVE001_CASE' as const;
+export const MOVE_SCHEMA = 'move001.case/1' as const;
 
 export type Ms = number;
 export type HistScale = '45m' | '1D';
@@ -232,11 +235,47 @@ export interface Obs002Case {
   readonly causal: Readonly<Record<string, unknown>>;
 }
 
+/** Ancora di un riferimento MOVE-001 (pivot accettato con la sua disponibilità). */
+export interface MoveAnchor {
+  readonly id: string;
+  readonly kind: 'HIGH' | 'LOW';
+  readonly price: number;
+  readonly candidateOpen: Ms;
+  readonly availableAt: Ms;
+}
+
+/** Fatto del ledger MOVE-001: `t` è l'istante in cui diventa noto. */
+export interface MoveLedgerEvent {
+  readonly t: Ms;
+  readonly type: string;
+  readonly refId: string;
+  readonly [key: string]: unknown;
+}
+
+/** Riferimento MOVE-001: identità e ancore note alla nascita, poi solo fatti datati del ledger. */
+export interface Move001Case {
+  readonly refId: string;
+  readonly side: 'LONG' | 'SHORT';
+  readonly categories: readonly { readonly category: string; readonly t: Ms }[];
+  readonly birthAt: Ms;
+  readonly Q: MoveAnchor;
+  readonly B: MoveAnchor;
+  readonly P0: MoveAnchor;
+  readonly predecessor: string | null;
+  readonly label: string;
+  readonly ledger: readonly MoveLedgerEvent[];
+  readonly note: string;
+}
+
 export interface StudyBundle {
-  readonly kind: typeof BUNDLE_KIND | typeof CASE_KIND;
-  readonly schema: typeof BUNDLE_SCHEMA | typeof CASE_SCHEMA;
-  /** Solo nei pacchetti OBS-002: identità dello studio che ha prodotto il caso. */
+  readonly kind: typeof BUNDLE_KIND | typeof CASE_KIND | typeof MOVE_KIND;
+  readonly schema: typeof BUNDLE_SCHEMA | typeof CASE_SCHEMA | typeof MOVE_SCHEMA;
+  /** Solo nei pacchetti OBS-002 e MOVE-001: identità dello studio che ha prodotto il caso. */
   readonly study?: { readonly id: string; readonly hash: string; readonly label: string };
+  /**
+   * Caso del pacchetto. Tipizzato come OBS-002 per i lettori esistenti; con `kind` MOVE001_CASE ha la forma
+   * `Move001Case` e va letto soltanto tramite `HistoricalStudy.moveCase`.
+   */
   readonly case?: Obs002Case;
   readonly engineVersion: string;
   readonly conventions: { readonly id: string; readonly hash: string; readonly config: Record<string, unknown> };

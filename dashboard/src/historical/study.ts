@@ -3,7 +3,7 @@
  * Nessun calcolo del motore: barre, osservazioni ed eventi sono già nel bundle. Le righe con
  * gli esiti si leggono solo tramite `retrospective()`, chiamato dalle viste a posteriori.
  */
-import type { CausalSnapshot, HistCandle, HistScale, Ms, Obs002Case, Obs002Outcome, StudyBundle, StudyEvent, StudyRow } from '../contract/historical';
+import { CASE_KIND, MOVE_KIND, type CausalSnapshot, type HistCandle, type HistScale, type Move001Case, type Ms, type Obs002Case, type Obs002Outcome, type StudyBundle, type StudyEvent, type StudyRow } from '../contract/historical';
 
 const DAY_MS = 86_400_000;
 
@@ -38,7 +38,18 @@ export class HistoricalStudy {
 
   /** Caso del pacchetto OBS-002 (informazioni note a t), assente nei bundle OBS-001. */
   get obs002Case(): Obs002Case | null {
-    return this.bundle.case ?? null;
+    return this.bundle.kind === CASE_KIND ? ((this.bundle.case as Obs002Case | undefined) ?? null) : null;
+  }
+
+  /** Riferimento del pacchetto MOVE-001 (identità e fatti datati), assente negli altri pacchetti. */
+  get moveCase(): Move001Case | null {
+    return this.bundle.kind === MOVE_KIND ? ((this.bundle.case as unknown as Move001Case | undefined) ?? null) : null;
+  }
+
+  /** Fatti MOVE-001 noti al momento t: soli eventi del ledger con istante <= t. */
+  moveFactsAt(t: Ms): Move001Case['ledger'] {
+    const c = this.moveCase;
+    return c ? c.ledger.filter((e) => e.t <= t) : [];
   }
 
   /** Esito OBS-002 a posteriori dell'origine t, solo se è l'istante del caso. Solo per viste retrospettive. */

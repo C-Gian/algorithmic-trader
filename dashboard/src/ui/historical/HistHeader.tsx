@@ -34,6 +34,7 @@ export function HistHeader({
   const quality = `${formatNumber(totals.input.valid, 0)}/${formatNumber(totals.input.expected, 0)} minuti validi`;
   const m45 = snapshot.m45;
   const c = study.obs002Case;
+  const mv = study.moveCase;
 
   const setDay = (value: string) => {
     if (!value) return;
@@ -114,6 +115,18 @@ export function HistHeader({
           onChange={(e) => onCutoff(origins[Number(e.target.value)])}
         />
       </div>
+      {mv && (
+        <Notice tone="warning" title={mv.label}>
+          Pacchetto MOVE-001 · riferimento {mv.refId} ({mv.side}), nato alla chiusura {fmtUtc(mv.birthAt)} · categorie {mv.categories.map((x) => x.category).join(', ')}. Al
+          momento scelto si vedono solo i fatti già noti; nessun seguito 24h, nessuna operazione.
+          {mv.birthAt !== cutoff && (
+            <>
+              {' '}
+              <Button onClick={() => onCutoff(mv.birthAt)}>Vai alla nascita</Button>
+            </>
+          )}
+        </Notice>
+      )}
       {c && (
         <Notice tone="accent" title={`Pacchetto OBS-002 · caso ${c.attemptId}`}>
           Tentativo di ripresa {c.side} {c.ordinal > 1 ? `n. ${c.ordinal} dello stesso movimento (riepilogo secondario)` : '(primo del movimento)'} alla chiusura {fmtUtc(c.t)} · profilo {c.profile} ·
