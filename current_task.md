@@ -1,6 +1,6 @@
 # APP-001/R1 — Completezza, progresso, ritorno e costi iniziali
 
-**Stato: DELIVERED** (Claude Code, 17 ottobre 2026; in attesa di review Director, non accettato). Incarico del Director, 17 ottobre 2026. Esecutore: Claude Code.
+**Stato: ACCEPTED** (Director, 17 ottobre 2026; accettazione tecnica di APP-001/R1 su ec19f22, codice 3dd3f66). La macrofase APP-001 resta aperta in attesa della prova pratica di Gian. Incarico del Director, 17 ottobre 2026. Esecutore: Claude Code.
 Base: **11e028407261907a0206f2b484f0445f8c712ea0** più il commit di questo incarico; checkout sincronizzato daGian. Nessun pull/fetch, neppure dry-run.
 
 La macrofase APP-001 resta aperta e autorizzata interamente daAstra. Requisiti e disegno originari conservati nella storia di current_task.md al commit7f94d4e; consegna a11e0284 e docs/research/APP-001-delivery.md. R1 corregge difetti nel perimetro già assegnato, non apre una nuova macrofase.
@@ -148,3 +148,20 @@ Consegna Claude Code, 17 ottobre 2026. Il dettaglio è in [docs/research/APP-001
 - i manifest già salvati non vengono riscritti.
 
 Prova Owner non svolta né dichiarata.
+
+
+## Review Director conclusiva — 17 ottobre 2026
+
+**APP-001/R1 accettato tecnicamente** sulla consegna ec19f222699d23a537ce3ae810c8127a66560255 (codice 3dd3f66). I quattro rilievi sono risolti nel perimetro richiesto; nessun ulteriore incarico a Claude ora.
+
+Verifiche indipendenti del Director in copia isolata della consegna:
+- lettura delle modifiche a completezza economica, pipeline, manifest/catalogo/job, progresso, router/ritorni, testi e aiuti dei costi, più gestione del corpo POST;
+- 24 test del servizio passati una volta, inclusi costo pertinente mancante, costo non pertinente, zero operazioni, compatibilità dei risultati precedenti, HALT, concorrenza, annullamento, riapertura e confini HTTP;
+- 12 test mirati CAND passati (8 R1 e 4 backtest); nessuna suite OBS o generale;
+- 43 test UI passati (backtest e router), inclusi incompletezza, 245/395, ritorni interni e browser, percentuali e spiegazioni accessibili;
+- typecheck e build riusciti;
+- esaminata l'immagine dell'esecutore app-12 a 1366 px con spiegazione della commissione aperta.
+
+Non svolti dal Director: nuova prova browser sul PC Windows, nuovo confronto reale UI/CLI, download o ricalcolo storico. L'identità del breve run gennaio dopo R1 (982ad3a6…), la prova reale e i tempi di annullamento restano evidenza dell'esecutore. I casi di costo mancante, HALT e annullamento durante la simulazione sono verifiche sintetiche, non eventi osservati nei run reali. I vecchi registri non sono riscritti.
+
+**Prossimo passo: prova pratica Owner**, non nuova implementazione o ricerca. Riavviare il comando npm run dev se già acceso, perché la parte Python è cambiata; dipendenze invariate, npm ci non richiesto. Percorso breve: Nuovo backtest → Prova di gennaio 2025 → Avvia → avanzamento → Apri risultati → Tutte le operazioni → dettaglio e seguito → ritorno al registro → risultati salvati. Gian valuta autonomia e comprensibilità, non formule o convenienza della strategia. Non registrare un esito positivo prima del suo riscontro. Alla conclusione della macrofase, relazione ad Astra; strategia v1 e finestre restano congelate, 2026 protetto.

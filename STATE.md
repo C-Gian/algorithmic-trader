@@ -2,27 +2,19 @@
 
 Aggiornato: 17 ottobre 2026. Responsabile: Director.
 
-## Attivo — APP-001/R1 DELIVERED (in attesa di review)
-R1 consegnato da Claude il 17 ottobre (3dd3f66 più documentazione). Tutti e quattro i difetti sono stati riprodotti e corretti con test che falliscono su 11e0284: completezza economica distinta dai prezzi, progresso fermo all'HALT (245/395), ritorno interno con scorrimento ritrovato, costi iniziali in percentuali con «i». Impatto numerico nullo (gennaio di nuovo 982ad3a6…). Non accettato; dettagli in docs/research/APP-001-delivery.md §6.
+## Attivo — APP-001: accettazione tecnica, prova Owner pendente
+APP-001/R1 ACCEPTED dal Director sulla consegna ec19f22 (codice 3dd3f66). Risolti: risultato incompleto con costo pertinente mancante, progresso fermo alla lacuna, ritorno al registro con scorrimento conservato, costi iniziali leggibili con aiuti. Nessuna nuova implementazione assegnata a Claude.
 
-Testo originale dell'incarico R1:
-Consegna APP-001 a11e028407261907a0206f2b484f0445f8c712ea0 revisionata: correzioni richieste, non ACCEPTED. Task completo in current_task.md; specifica originaria nella storia a7f94d4e.
-La base esiste: servizio locale, avvio/progresso/annullamento, risultati salvati e router comune. Correggere, non ricostruire.
+Review indipendente in copia isolata: 24 test servizio, 12 CAND mirati, 43 UI backtest/router passati; typecheck/build riusciti; lettura della patch e dell'immagine app-12 dell'esecutore. Nessun download o ricalcolo storico. Dettagli e limiti in current_task.md; consegna in docs/research/APP-001-delivery.md §6.
 
-Difetti riprodotti dal Director:
-- costo pertinente mancante: funding certificato e un mark necessario assente danno nettoNone, ma job/catalogo dichiarano risultato completo;
-- dopo HALT il tick finale conta640chiusure valutate contro245valutate/395nonvalutate del report;
-- ritorno interno dal dettaglio al registro riporta lo scroll a0 invece di640;
-- scheda Nuovo backtest mostra ancora5/3bp e10+10bp senza spiegazione associata.
-R1 limita la patch a completezza economica,progresso,ritorno condiviso e testi/aiuti dei costi iniziali. Nessun nuovo download o fullrunDEV/2025 richiesto.
+Equivalenza reale gennaio UI/diretto e successivo bundle invariato 982ad3a6… restano evidenza dell'esecutore, non nuova verifica indipendente. Costo mancante, HALT e annullamento durante la simulazione provati su sintetici. Nessuna prova positiva Owner APP ancora registrata.
 
-Review indipendente:18test servizio,45CAND,30OBS e38test UI pertinenti passati,typecheck/build riusciti; prove aggiuntive sintetiche dei difetti e lettura di2screenshot1366px. Non nuovo confronto autonomoUI/CLI sui datiOwner o browserWindows. Equivalenza reale gennaio UI/diretto (bundle982ad3a6…) e tempi annullamento restano evidenza dell'esecutore. ProvaOwner APP ancora da svolgere.
+Prossimo passo: Gian riavvia npm run dev (anche servizio Python aggiornato; non serve npm ci) e prova Nuovo → Avvia gennaio → avanzamento → risultati → tutte le operazioni → dettaglio/seguito → ritorno → salvati. Deve valutare autonomia e comprensione, non formule. La macrofase resta aperta fino al riscontro; poi chiusura ad Astra, salvo conflitti sostanziali.
 
 ## CAND-001 — quattro giudizi conservati
-Implementazione accettata tecnicamente su4ff5046 nei limiti reviewb9f54cc; base apprezzata daGian,uso ancora non autonomo/comprensibile; strategiav1 negativa e non promossa; efficacia generale della famiglia non risolta.
-DEV78trade netto−210,59USDT;2025 29trade−109,08, somme per dimensione1000USDT,non conto personale.2025giàesposto,non validazione indipendente. Nessuna revisione metodologica scelta.
+Implementazione accettata tecnicamente nei limiti delle review; base apprezzata da Gian, autonomia d'uso ancora da verificare dopo APP-001; strategia v1 negativa e non promossa; efficacia generale della famiglia non risolta.
+DEV: 78 operazioni, netto −210,59 USDT; 2025: 29, netto −109,08. Somme per dimensione convenzionale di 1.000 USDT, non conto personale. Il 2025 è già esposto, non validazione indipendente. Nessuna revisione metodologica scelta.
 
-## Confini e chiusura
-Motore consegnato1.0.3,schema/3,compatibilità/2. Config candidato aed2c4ef627617d73972778097bbab5fb702ab5064ce9e6eb68ded2170ce4edf,regole e costi invariati. R1 è patch tecnica senza nuovi parametri o convenzioni.
-Astra autorizza macrofase intera: Director gestisce correzioni ordinarie,torna alla chiusura o conflitto sostanziale. Ultima preparazione prima del prossimo ciclo sull'algoritmo,non piattaforma generale.
-2026protetto,vecchi studiINACTIVE,niente exchange/conto/ordini/stackOwner,nuova strategia o ricerca combinazioni. Raw/job/bundle fuoriGit. Chiusura dopo review e prova concretaGian,senza formule o accettazioni anticipate.
+## Confini
+Motore 1.0.3, schema /3 e compatibilità /2; servizio 1.0.1. Config aed2c4ef627617d73972778097bbab5fb702ab5064ce9e6eb68ded2170ce4edf, regole, costi e finestre invariati. Solo processo locale personale, un backtest alla volta, dati già disponibili e profili fissi.
+2026 protetto; vecchi studi INACTIVE; nessun exchange, conto, ordine, stack Owner, nuova strategia o ricerca di combinazioni. Raw/job/bundle fuori Git. APP-001 è l'ultima preparazione autorizzata prima del confronto sul prossimo ciclo metodologico, non una piattaforma generale.
