@@ -1,7 +1,7 @@
 # Incarico corrente — OBS-001 osservazioni calcolate e primo studio nell'app
 
-**Stato: DELIVERED — completamento R1-A consegnato da Claude Code (validazione dei campi annidati); R1-B PASS. In attesa di review del Director. Non ACCEPTED.** Macrofase completa autorizzata dalla disposizione Astra trasmessa da Gian il 16 ottobre 2026, dopo la chiusura UI al commit baa1e762703f7dfd01f870061dba2a1c691326ce.
-**Priorità esecutiva corrente:** completare soltanto la validazione annidata di R1-A secondo la seconda review in fondo; R1-B approvato. Non ripetere acquisizione, studio o gate Figma; convenzioni e tabelle rimangono congelate.
+**Stato: ACCEPTED TECNICAMENTE — chiusura OBS-001 dopo review finale R1-A. Limite di comprensione Owner registrato; nessuna ulteriore estensione UI.**
+**Priorità esecutiva corrente:** nessuna ulteriore correzione OBS-001. Mandati precedenti conservati per storia; vedi chiusura tecnica in fondo.
 
 Responsabile specifica e review: Director. Esecutore: Claude Code.
 Questo task è la registrazione ex ante delle convenzioni **OBS-001/v1**: completare tutti i microstep, dal sintetico all'acquisizione, elaborazione reale, integrazione e prima tabulazione. Nessuna ulteriore autorizzazione ordinaria fra i microstep. Non fermarsi a un motore sintetico. La consegna UI accettata resta nella storia Git a baa1e76.
@@ -531,3 +531,16 @@ Il messaggio indica sempre la sezione e l'elemento, per esempio «Riepilogo, per
 - Nessuna prova browser aggiuntiva e nessuna nuova immagine, come richiesto.
 
 **Restano da fare.** Review del Director. Il passaggio ad Astra chiesto da Gian e la sua prova d'uso non fanno parte di questo completamento.
+
+## Chiusura tecnica OBS-001 — review finale Director,17ottobre2026
+
+Base bf3280ec8c034a775c925d0b5f38223eeade9c53. **OBS-001/R1-A PASS; OBS-001 ACCEPTED TECNICAMENTE.** Nessuna ulteriore estensione dell'esploratore assegnata.
+- Diff pertinente: validazione annidata dei record/eventi/gruppi/statistiche, contenimento delle eccezioni di vista e test; motore/config/gruppi/risultati invariati.
+- Rieseguiti indipendentemente i20test storici Historical/R1, tutti passati; typecheck/build riusciti. Il caso missingFlags che aveva causato la seconda review è coperto tramite selettore file e rifiutato prima del rendering.
+- Verificate rimozione del fallback a0 nel riepilogo e protezione di vista con riapertura file. Lo stderr del test che provoca deliberatamente un errore di rendering è atteso dal caso della barriera difensiva, non un test fallito.
+- Coerente l'adeguamento del test gap: record INCOMPLETE con segmento=null come prodotto dal motore; il criterio R1-B non cambia.
+- Nessun nuovo download/calcolo storico o browser indipendente necessario per questo diff. Accettazione del bundle reale e le prove browser sono evidenze dell'esecutore; precedente review indipendente dei numeri resta valida.
+
+**Limite di comprensione Owner ancora registrato**, nessuna falsa prova positiva. Il cursore è per consultare episodi già elaborati automaticamente; Gian non deve verificare formule, pivot o tutte le origini. Astra dispone di chiudere il passaggio tecnico senza generare nuova macrofase UI. Tale chiusura non certifica usabilità piena né efficacia finanziaria.
+
+Disposizione successiva Astra ricevuta17ottobre: candidato movimento direzionale → reazione → tentativo di ripresa, ciclo storico2023–2024 e confronto2025 già esposto, input daottobre2022. Nuovo incarico separatamente registrato dal Director prima di Claude; nessuna strategia desunta dal risultato descrittivo OBS-001.
