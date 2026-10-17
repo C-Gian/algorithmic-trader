@@ -67,4 +67,6 @@ def aggregate(store: MinuteStore, width_ms: int, start: int | None = None, end: 
                 tb=sum(store.tb[i0:i1]), tq=sum(store.tq[i0:i1]),
             )
         )
+    if tick is not None:
+        tick(len(bars), total)
     return bars

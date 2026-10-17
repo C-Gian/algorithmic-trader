@@ -68,7 +68,7 @@ export function SavedPage({ onOpenFile }: { onOpenFile: (s: BacktestStudy) => vo
         {results && results.length === 0 && <p className="empty">Nessun risultato nella cartella dei run.</p>}
         {results && results.length > 0 && (
           <div className="table-scroll">
-            <table className="data-table">
+            <table className="data-table text-table">
               <thead>
                 <tr>
                   <th>Profilo</th>
@@ -90,15 +90,18 @@ export function SavedPage({ onOpenFile }: { onOpenFile: (s: BacktestStudy) => vo
                     </td>
                     <td>{r.window ? periodText(r.window.start, r.window.end) : '—'}</td>
                     <td>
-                      {r.candidate ? `${r.candidate.id} ${r.candidate.version}` : '—'} · motore {r.engineVersion ?? '—'}
+                      {r.candidate ? `${r.candidate.id} ${r.candidate.version}` : '—'}
+                      <br />
+                      <span className="t-3">motore {r.engineVersion ?? '—'}</span>
                     </td>
                     <td>
                       {when(r.finishedAt)}
-                      <span className="t-3"> · {r.via === 'APP-001' ? 'dall’app' : 'comando diretto'}</span>
+                      <br />
+                      <span className="t-3">{r.via === 'APP-001' ? 'dall’app' : 'comando diretto'}</span>
                     </td>
                     <td>{resultStatus(r)}</td>
-                    <td>{r.trades ?? '—'}</td>
-                    <td>{r.status !== 'OK' ? '—' : r.net == null && r.complete === false ? 'non calcolabile (incompleto)' : usdt(r.net)}</td>
+                    <td className="num">{r.trades ?? '—'}</td>
+                    <td className="num">{r.status !== 'OK' ? '—' : r.net == null && r.complete === false ? 'non calcolabile (incompleto)' : usdt(r.net)}</td>
                     <td>
                       {r.status === 'OK' ? (
                         <Link to={paths.result({ kind: 'saved', id: r.resultId })} ariaLabel={`Apri ${r.profile?.label ?? r.resultId}`}>
@@ -125,7 +128,7 @@ export function SavedPage({ onOpenFile }: { onOpenFile: (s: BacktestStudy) => vo
           <p className="empty">Nessuna esecuzione finora.</p>
         ) : (
           <div className="table-scroll">
-            <table className="data-table">
+            <table className="data-table text-table">
               <thead>
                 <tr>
                   <th>Avviata</th>

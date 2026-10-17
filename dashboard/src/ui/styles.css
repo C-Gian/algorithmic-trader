@@ -313,6 +313,9 @@ button.badge { border: 0; cursor: pointer; font: inherit; font-size: 11px; }
 .data-table th:first-child, .data-table td:first-child { text-align: left; font-family: var(--font); }
 .data-table tr.is-sparse td { color: var(--text-2); }
 .data-table tr.is-empty td { color: var(--text-3); }
+/* Tabelle di testo (risultati salvati, esecuzioni): leggibili a 1366 px senza scorrimento orizzontale. */
+.data-table.text-table th, .data-table.text-table td { text-align: left; font-family: var(--font); white-space: normal; vertical-align: top; }
+.data-table.text-table td.num { text-align: right; font-family: var(--mono); white-space: nowrap; }
 
 /* ------------------------------------------------------------ APP-001: backtest dall'app */
 a.btn { display: inline-flex; align-items: center; text-decoration: none; }

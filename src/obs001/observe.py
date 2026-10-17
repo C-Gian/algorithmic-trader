@@ -348,6 +348,8 @@ def observe(bars45: list[Bar], bars1d: list[Bar], conv: Conventions, tick=None) 
             if tick is not None and len(out) % TICK_BARS == 0:
                 tick(scale, len(out), len(bars))
             out.append(obs.step(b, daily_by_end.get(floor_day(b.end))))
+        if tick is not None:
+            tick(scale, len(out), len(bars))
     return {"45m": rec45, "1D": rec1d, "events": {"45m": o45.events, "1D": o1d.events}}
 
 

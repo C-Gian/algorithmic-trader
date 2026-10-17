@@ -154,14 +154,14 @@ export class BacktestStudy {
       out.push({ id: 'p0', kind: 'P0', label: `P0 · ${ep.P0.kind === 'LOW' ? 'minimo' : 'massimo'} di partenza`, price: ep.P0.price });
       out.push({ id: 'p1', kind: 'TARGET', label: 'P1 · estremo della gamba', price: ep.P1.price });
     }
-    if (ep.call && ep.call.t <= cursor) out.push({ id: 's0', kind: 'STOP', label: 'STOP ORIGINARIO', price: ep.call.S0 });
+    if (ep.call && ep.call.t <= cursor) out.push({ id: 's0', kind: 'STOP', label: 'STOP INIZIALE', price: ep.call.S0 });
     const tr = this.trade(ep.tradeId);
     if (tr) {
-      if (known(tr.entryTime)) out.push({ id: 'entry', kind: 'ENTRY', label: 'INGRESSO MODELLATO', price: tr.E });
+      if (known(tr.entryTime)) out.push({ id: 'entry', kind: 'ENTRY', label: 'INGRESSO', price: tr.E });
       const active = tr.stops.filter((s) => known(s.effectiveAt));
-      if (active.length) out.push({ id: 'stop', kind: 'STOP', label: 'STOP CORRENTE', price: active[active.length - 1].to });
+      if (active.length) out.push({ id: 'stop', kind: 'STOP', label: 'PROTEZIONE ATTUALE', price: active[active.length - 1].to });
       // Percorso irrisolto: nessuna uscita da disegnare, mai un prezzo inventato.
-      if (tr.exit && known(tr.exit.accountingTime)) out.push({ id: 'exit', kind: 'EXIT', label: 'USCITA MODELLATA', price: tr.exit.X });
+      if (tr.exit && known(tr.exit.accountingTime)) out.push({ id: 'exit', kind: 'EXIT', label: 'USCITA', price: tr.exit.X });
     }
     return out;
   }

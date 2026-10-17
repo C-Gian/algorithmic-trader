@@ -46,7 +46,11 @@ const STEP_LABEL: Record<string, string> = {
 };
 const KIND_LABEL: Record<string, string> = { trade: 'prezzi al minuto', funding: 'pagamenti periodici', mark: 'prezzi mark' };
 const n = (x: number | null | undefined) => (x == null ? 'non ancora calcolato' : formatNumber(x, 0));
-const seconds = (a: string | null, b: string | null) => (a && b ? `${formatNumber(Math.max(0, (Date.parse(b) - Date.parse(a)) / 1000), 1)} s` : null);
+const seconds = (a: string | null, b: string | null) => {
+  if (!a || !b) return null;
+  const s = Math.max(0, (Date.parse(b) - Date.parse(a)) / 1000);
+  return s < 0.1 ? 'meno di 0,1 s' : `${formatNumber(s, 1)} s`;
+};
 const clock = (iso: string) => new Date(iso).toISOString().slice(11, 19) + ' UTC';
 
 /** Solo per la fase in corso e con totale noto: una fase conclusa o fermata non mostra percentuali. */
@@ -130,7 +134,7 @@ export function Stages({ p, inputStart }: { p: Progress; inputStart?: number }) 
       </Stage>
       <Stage title="4. Riepilogo e salvataggio" st={save}>
         <p className="t-2">
-          {save.publishing ? 'Pubblicazione del risultato in corso: l’annullamento non è più possibile.' : save.step ? `Passo: ${save.step === 'summary' ? 'riepilogo calcolato' : save.step === 'bundle' ? 'file del risultato preparato' : save.step === 'staged' ? 'file pronti, in attesa di pubblicazione' : save.step}` : 'in corso'}
+          {save.status === 'DONE' ? 'Risultato pubblicato: si trova in «Risultati salvati».' : save.publishing ? 'Pubblicazione del risultato in corso: l’annullamento non è più possibile.' : save.step ? `Passo: ${save.step === 'summary' ? 'riepilogo calcolato' : save.step === 'bundle' ? 'file del risultato preparato' : save.step === 'staged' ? 'file pronti, in attesa di pubblicazione' : save.step}` : 'in corso'}
         </p>
       </Stage>
     </ol>
@@ -282,7 +286,7 @@ export function JobPage({ jobId }: { jobId: string }) {
         </div>
         <p className="t-2">
           Tempo trascorso: {seconds(job.startedAt, elapsedTo) ?? '—'} · ultimo aggiornamento del calcolo: {clock(job.updatedAt)}
-          {lastOk ? ` · stato letto dal servizio alle ${new Date(lastOk).toLocaleTimeString('it-IT')}` : ''}
+          {lastOk ? ` · stato letto dal servizio alle ${clock(new Date(lastOk).toISOString())}` : ''}
         </p>
         {problem && (
           <Notice tone="warning" title="Stato non aggiornato">

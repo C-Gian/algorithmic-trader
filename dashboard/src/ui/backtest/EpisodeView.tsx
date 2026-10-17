@@ -357,7 +357,7 @@ function Result({ tr }: { tr: BtTrade }) {
         </div>
       </div>
       <p className="footnote">
-        Movimento dei prezzi + effetto del prezzo di esecuzione − commissioni + pagamento periodico = risultato dopo i costi.{' '}
+        Le quattro voci, ciascuna con il suo segno, sommate danno il risultato dopo i costi.{' '}
         {tr.durationMin != null ? `Durata ${formatNumber(tr.durationMin, 0)} minuti.` : `In posizione per ${formatNumber(tr.durationUntilGapMin ?? 0, 0)} minuti fino alla lacuna.`}{' '}
         Non include margine, leva, liquidazioni o un conto reale.
       </p>
