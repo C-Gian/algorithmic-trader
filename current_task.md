@@ -1,8 +1,8 @@
 # OBS-002/R1 — Cronologia causale, esiti importati e lettura dei contatti
 
-**Stato: DELIVERED** (Claude Code, 17 ottobre 2026; in attesa di review del Director, non accettato). Incarico READY del Director, 17 ottobre 2026. Esecutore: Claude Code. Base consegna **c8ac744086d9617997a6519462a84ef2bf329691** più il commit di questo task; sincronizzazione checkout a cura di Gian. Nessun pull/fetch, anche dry-run. Leggere AGENTS, STATE, questo task e §§pertinenti del report OBS-002-results.md. Disegno originario in current_task.md a6f1743d e config/OBS-002-v1.json invariato.
+**Stato: ACCEPTED** (Director,17ottobre2026,su024938e12af41b45974b0c32a9e1cb7821706f1b). Macrofase OBS-002 conclusa; review/decisione in OBS-002-results.md §12. Esecutore:Claude Code.
 
-OBS-002 non è ancora ACCEPTED: sono richieste le tre correzioni circoscritte sotto. La macrofase rimane interamente autorizzata; nessuna nuova autorizzazione ordinaria o passaggio ad Astra ora. Nessuna ipotesi operativa scelta o implementata.
+Review originaria su c8ac744, superata dalla chiusura in fondo: sono richieste le tre correzioni circoscritte sotto. La macrofase rimane interamente autorizzata; nessuna nuova autorizzazione ordinaria o passaggio ad Astra ora. Nessuna ipotesi operativa scelta o implementata.
 
 ## 1. Review della consegna e scelte confermate
 Review indipendente Director in copia isolata: lettura popolazione, snapshot, esiti, tabelle, timeline e lettore; **15 test Python OBS-002 e 24 UI storici passati**, typecheck/build riusciti. Letta immagine dell'esecutore obs002-02-caso-seguito-1366. Nessun nuovo download, elaborazione reale DEV, ricalcolo dei6.582 esiti, né browser autonomo Windows. Conteggi reali, hash, cross-check con OBS-001 e riproducibilità integrale restano riscontri dell'esecutore.
@@ -81,3 +81,11 @@ Dopo la correzione il Director completerà la review e la lettura congiunta per 
   - `contact_breakdown` con test; `R1/contacts-breakdown.json` `cf5812a5…bb1c`.
 - **Invariati e verificati:** config, `population.json`, `outcomes.json`, `summary.json`, `examples.json` originale, `outputs.json`, i 10 pacchetti.
 - **Verifiche:** 21 test Python OBS-002, 46 test del lettore, typecheck e build. Nessuna nuova elaborazione reale, nessuna suite generale, CAND o CI. Nessuna ipotesi operativa.
+
+
+## Review e chiusura Director — 17 ottobre 2026
+R1 accettato su024938e, codicebc92a6d. Lettura patch/provenienza/report e21test Python+46UI storici indipendenti passati,typecheck/build riusciti. Derivazione realeR1,hash immutati ed estrazione originale degli esiti restano evidenza dell'esecutore; nessuna nuova elaborazione reale Director.
+
+OBS-002 concluso con **nessuna distinzione abbastanza interpretabile**, non una ipotesi automatica o una nuova regola. Interpretazione nel report§12: profili/coordinate ed esiti prefissati non forniscono un collegamento operativo motivato; le altre famiglie non sono escluse dalle mediane o dai controesempi. Il disegno mantiene movimenti oltreP0(1728/4372prime origini)e mescola fasi diverse: responsabilitàDirector,non bugClaude. Nessuna esclusione retrospettiva, soglia o orizzonte modificati.
+
+Registro e casi conservati; pacchetti03/07/01 consultabili nel lettore esistente,nessun run o verifica manuale aGian. Passaggio conclusivo adAstra per l'eventuale seguito; nessun ulteriore incaricoClaude o nuovo studio. CAND immutato,2025escluso,2026protetto.

@@ -1,6 +1,6 @@
 # OBS-002 — prosecuzione ed esaurimento del primo tentativo di ripresa (DEV 2023–2024)
 
-**Stato: correzioni R1 consegnate dall'esecutore (DELIVERED, in attesa di review del Director; non ACCEPTED).** Sezione 11 per R1. La sezione 1 è quella pubblicata nel commit `118f706`, prima degli esiti; il resto è stato aggiunto dopo l'estrazione. Il report descrive evidenze: non sceglie ipotesi, soglie o gruppi.
+**Stato: OBS-002 e R1 accettati dal Director su024938e; macrofase conclusa con nessuna distinzione abbastanza interpretabile. Review e interpretazione in§12.** Sezione 11 per R1. La sezione 1 è quella pubblicata nel commit `118f706`, prima degli esiti; il resto è stato aggiunto dopo l'estrazione. Il report descrive evidenze: non sceglie ipotesi, soglie o gruppi.
 
 **Licenza di questo file:** derivati aggregati di dati Binance Vision, **CC BY-NC-SA 4.0** (https://creativecommons.org/licenses/by-nc-sa/4.0/). Fonte: Binance Vision (https://data.binance.vision). Dati grezzi, registri e pacchetti non sono redistribuiti.
 
@@ -544,3 +544,43 @@ Nessuna suite generale, OBS-001 intero, CAND o CI. Nessuna nuova elaborazione di
 - I controlli del lettore verificano la coerenza interna del pacchetto, non il percorso di mercato.
 - La migrazione R1-A è verificata sui sintetici contro il generatore corretto; sui dati reali è verificata contro la popolazione registrata e con l'invarianza degli altri campi, senza ricostruire le timeline dalla catena completa.
 - Riscontri dello stesso esecutore.
+
+
+## 12. Review conclusiva e interpretazione Director — 17 ottobre 2026
+
+**OBS-002 e R1 ACCEPTED su024938e12af41b45974b0c32a9e1cb7821706f1b (codicebc92a6d). Macrofase conclusa: nessuna distinzione abbastanza interpretabile per una ipotesi decisionale concreta.** Nessuna nuova regola, v2 o analisi assegnata.
+
+### Verifiche e limiti
+In copia isolata il Director ha letto patch, proiezione/migrazione delle timeline, controlli dei derivati, validatore/test e report: **21 test Python OBS-002 e46test del lettore storico passati**, typecheck/build riusciti. Le regressioni coprono futuri diversi, migrazione, contatti aritmetici, esiti contraddittori, rifiuto dal selettore con conservazione dello studio aperto e pacchetti validi/censurati/OBS-001.
+
+R1 risolve i rilievi: metadati proiettati per disponibilità, derivato corretto separato dall'originale, coerenza dell'esito importato e descrizione any/both. La migrazione reale e gli hash invariati di§11 restano riscontri dell'esecutore. Nessuna rilettura indipendente dei27ZIP, ricalcolo reale dei6582esiti o browser autonomo Windows in questa review; immagini originali dell'esecutore già lette. Non si attribuisce a Gian una nuova prova d'uso non riferita. Nessuna modifica alla popolazione o agli esiti numerici.
+
+### Lettura del confronto prefissato
+Ora abbiamo osservato anche casi esclusi dalla ricetta v1:4372prime origini,2210ripetizioni collegate e4368esiti24h completi fra le prime. Tutte le finestre principali hanno sovrapposizioni: non4372prove indipendenti.
+
+I profili struttura/SMA non danno qui una distinzione operativa motivata. Le mediane del finale24h nelle celle sono fra−0,31 e+0,18A, con code ampie in entrambe le direzioni. Anche l'ordine dei contatti non separa chiaramente i profili. Aritmetica delle classi già tabulate, senza nuovo gruppo o test: quota dei completi in cui F è il primo contatto noto (F_ONLY+F_BEFORE_A) per CONCORDANT/OPPOSITE/DISCORDANT:
+- LONG:168/330=50,91%;178/357=49,86%;796/1540=51,69%;
+- SHORT:123/255=48,24%;215/433=49,65%;707/1453=48,66%.
+I BOTH_UNORDERED restano nel denominatore, non assegnati al lato favorevole. Non sono probabilità di trade riuscito o confronti corretti per altri fattori; non dimostrano equivalenza dei profili o assenza di ogni contributo.
+
+I contatti distinguono sia uno/entrambi/nessuno sia l'ordine:55,63%entrambi,43,50%uno solo,0,87%nessuno. Non cambiamo±A oH24 per ottenere una separazione migliore.
+
+Livelli,volume,Fibonacci e volatilità sono conservati nello stesso record. Le mediane nelle celle e gli esempi **non identificano una combinazione concreta**, ma non dimostrano l'irrilevanza di quelle famiglie. Non sono state stimate tutte le interazioni; la presenza di una caratteristica in esiti contrari non basta a scartarla. Differenze di struttura e medie fra profili sono in parte imposte dalla definizione stessa.
+
+### Limite preciso del disegno
+Il Director ha mantenuto attivo ciascun movimento durante quello opposto fino alla nuova versione dello stesso verso. **1728prime origini su4372(39,52%) hanno profondità>1**, quindi l'arretramento è già oltreP0; altre hanno ritoccatoP1 o un'origine oltreP1. Sono fatti noti a t e conservati: nessuno escluso dopo gli esiti.
+
+Questo amplia la copertura, ma mescola recuperi di un movimento geometricamente conservato e tentativi riferiti a un contesto già superato, oppure oltre il vecchio estremo. È un limite del disegnoDirector, non un bugClaude o mancanza di nuovi prezzi/indicatori. I quattro profili non codificano da soli quella fase del movimento;±A dalCt e il finaleH24 descrivono escursioni/ordine, non mantenimento della struttura o recupero diP1. Un finale favorevole può arrivare dopo una forte escursione contraria: non certifica una ripresa continua.
+
+**Ciò che lo studio non consente ancora di riconoscere in modo abbastanza interpretabile:** una condizione contemporanea che, entro una fase definita del movimento, colleghi struttura,livelli,medie,volume,volatilità e Fibonacci a una decisione precisa di attesa/ingresso/rinuncia. Non manca un numero da ottimizzare: manca un collegamento motivato fra validità/fase del movimento e interpretazione del tentativo. Non dimostriamo impossibilità di ogni distinzione con queste osservazioni, né necessità automatica di un'altra fonte o più indicatori.
+
+Non isoliamo ora depth<=1, origini prima diP1 o un mese favorevole per cercare una risposta: sarebbe una nuova analisi suggerita dai risultati, da decidere/registrare separatamente. Nessuna rielaborazione assegnata.
+
+### Esempi e chiusura
+I casi scelti con criterio prefissato rendono leggibile il limite:
+- caso03: LONG con struttura/medie contrarie, prima movimento contrario e poi favorevole; finale+3,85A;
+- caso07: LONG con struttura/medie concordi, prima favorevole e poi contrario; finale−1,02A. Coincide con il momento del primo trade positivo CAND: target/saldo di un trade e prezzo finale24h sono cose diverse;
+- caso01: «ripresaLONG» di un contesto già arretrato oltreP0, esempio del limite semantico della popolazione.
+I primi due sono controesempi illustrativi, non prove autonome di inutilità del profilo. Consultazione: Studio storico → pacchetti03/07/01 già consegnati → seguito24h. Nessun nuovo backtest o verifica manuale di formule a Gian. R1/examples.json è il derivato delle timeline; i pacchetti importabili sono invariati.
+
+**Raccomandazione ad Astra:** accogliere la chiusura con nessuna distinzione abbastanza interpretabile, registro conservato e limite del disegno esplicito. Prima di un altro studio, decidere che cosa mantiene valido il movimento di riferimento e quale osservazione ne cambia la fase. È una questione proposta alla direzione, non un nuovo incarico, filtro o studio già autorizzato. CAND immutato,2025escluso,2026protetto,nessuna nuova acquisizione. V1 negativa/non promossa; efficacia generale della famiglia irrisolta.
