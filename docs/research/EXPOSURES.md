@@ -29,3 +29,10 @@ Astra autorizza l'ampliamento pubblico gratuito della medesima fonte/strumento: 
 2023–2024 destinati alle iterazioni iniziali; non certificati mai esposti.2025 confronto aggiuntivo **già esposto**, non validazione indipendente: la preregistrazione non cancella OBS-001 né precedenti studi. CAND-001 valuta primaDEV2023–2024; eventuale unica revisione e congelamento prima degli esiti2025, nessuna iterazione metodologica su2025 in questa macrofase.
 
 Autorizzazione non equivale a dato già acquisito: l'esecutore registrerà manifest/copertura/esposizione effettiva. Il Director ha verificato solo fattibilità/campi del fundinggennaio2023 e checksum markgennaio2023, nessun esito economico del candidato. Nessuna lettura nel2026, neppure il vecchio tail1gennaio. HDP-001 eA restanoINACTIVE. Eventuali nuovi dati fuori da questi confini richiedono mandato specifico.
+
+
+## Esposizione effettiva CAND-001 DEV — consegna ee7282f, review 17 ottobre 2026
+
+Dichiarazione dell'esecutore: acquisiti il17ottobre2026,07:29–07:31UTC,27archivi trade ottobre2022–dicembre2024,24funding e24mark2023–2024; checksum verificati,1.185.120minuti negoziati validi. Elaborati DEV2023–2024:78trade/87call, risultati e diagnosi esaminati. I sette archivi OBS2025 non letti in DEV; nessun nuovo download o esito economico2025 in questa fase.
+
+Director: lettura report/codice, test sintetici e UI indipendenti; non ricalcolo autonomo dei75archivi o del ledger reale in questa review. Risultati negativi DEV ormai esposti e usati per la decisione di mantenerev1 senza revisione metodologica. R1 corregge qualità funding, percorsi irrisolti e prezzo visualizzato; non cambia soglie. Copertura dichiarata e limiti nel report CAND-001-results.md; raw/manifest/bundle restano locali fuoriGit.

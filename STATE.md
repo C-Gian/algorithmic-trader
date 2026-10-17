@@ -3,37 +3,22 @@
 Aggiornato: 17 ottobre 2026. Responsabile: Director.
 
 ## Chiuso
+UI simulata conclusa con prova positiva Owner. OBS-001 ACCEPTED TECNICAMENTE a bf3280e; calcoli/tabelle verificati nella review precedente. Rimane il limite di comprensione Owner, nessuna accettazione d'uso inventata o nuova macrofase UI.
 
-UI simulata conclusa. **OBS-001 ACCEPTED TECNICAMENTE** a bf3280ec8c034a775c925d0b5f38223eeade9c53: ultima review R1-A con20test storici indipendenti e build riusciti; R1-B giàPASS. Calcoli/tabelle reali riprodotti nella review precedente. Chiusura e dettaglio in storia current_task al commit ebf81f2e972609607572dcdf26dfcb0f64132403.
+## Attivo
+**CAND-001/R1 READY**: review DEV su ee7282f conclusa con tre correzioni circoscritte, non ACCEPTED. Incarico completo in current_task.md.
+Director ha rieseguito 28 test Python CAND, 8 test UI backtest e typecheck/build: passati. Ulteriori riproduzioni mostrano:
+- funding vuoto certificato e buco segnalato ma ignorato nel calcolo, con costo mancante trattato come zero;
+- trade interrotto da lacuna escluso dai totali; apertura episodio irrisolto in errore;
+- prezzo giornaliero precedente presentato come corrente nella nuova vista.
+Questi difetti non dimostrano un errore nei numeri DEV consegnati. R1 verifica l'impatto offline, senza nuovi dati.
 
-Limite di comprensione Owner conservato: nessuna prova positiva inventata, nessun'altra macrofase UI. Il cursore consulta episodi già elaborati, Gian non verifica formule/pivot/migliaia di origini.
+## Metodo e evidenza
+Decisione Director: mantenere candidato1.0.0 e config aed2c4ef627617d73972778097bbab5fb702ab5064ce9e6eb68ded2170ce4edf, nessuna revisione metodologica in questa macrofase. Congelate regole/soglie, implementazione ancora da correggere. Diagnosi negativa non identifica una modifica unica sufficientemente motivata.
 
-## Mandato corrente
+Esiti riportati dall'esecutore: 78 operazioni ipotetiche 2023–2024, N0=1000USDT fisso, netto −210,59 (2023−115,87;2024−94,72), PnL reference−85,44, stress−397,80. Dati:27trade+24funding+24mark, manifest esterni. Il Director non ha ricalcolato autonomamente i75archivi/78trade reali in questa review. Il33% ricavato dal rapporto mediano non è il pareggio effettivo del ledger; report da precisare.
 
-Astra autorizza **primo candidato completo e ciclo storico di sviluppo**, famiglia movimento direzionale → reazione → tentativo di ripresa. **CAND-001 — DELIVERED fase DEV (Claude, 17 ottobre), macrofase non chiusa: checkpoint Director prima del 2025.** Specifica docs/research/CAND-001-v1.md, config preregistrata (`aed2c4ef…`, commit 8146336) prima degli esiti. Backtest 2023–2024 riproducibile, risultati/diagnosi in docs/research/CAND-001-results.md, consultabile nell'ambiente app «Backtest di sviluppo».
+## Seguito e confini
+Macrofase Astra già autorizzata: dopo accettazione R1, registrare base tecnica congelata e completare confronto2025 già esposto, non validazione indipendente; nessuna iterazione sui suoi esiti. Il prefisso osservativo parte dal2022-10-01 anche nella finestra2025, che riparte FLAT. In R1 nessun download o elaborazione2025, nessuno sblocco CLI.
 
-Esito DEV (dichiarato dall'esecutore, non ancora riesaminato):
-- 78 operazioni da 1.000 USDT, netto modellato −210,59 USDT (−85,44 già ai prezzi di riferimento; fee+slippage −124,81; funding −0,34); stress −397,80.
-- 24% netti positivi, 15 mesi negativi su 24, LONG e SHORT entrambi negativi.
-- Riscontro indipendente: 0 differenze su 87 call e 78 operazioni.
-- Diagnosi: nessun bug o difformità; scelta coerente ma poco utile (target 22% contro circa 33% necessari, MFE degli stop 0,38R) e forte sensibilità ai costi (stop vicino, costi circa 28% di R). Campione piccolo.
-- 2025 non scaricato né elaborato.
-
-Ruoli sei famiglie definiti senza voti; struttura/livelli/volatilità decisionali, medie/volume/Fibonacci contestuali. Ingresso condizionato ritardato, stop e target, protezione monotona da nuovi pivot, uscita per struttura/tempo, una posizione senza incrementi/parziali. Nozionale normalizzato fisso1000USDT, non capitaleOwner; fee/slippage assunti, funding storico con mark1mproxy esplicito.
-
-## Dati e sequenza
-
-Fonte/strumento Binance Vision BTCUSDT perpetual USDⓈ-M. Input [2022-10-01,2026-01-01), inizializzazione fino2023, **DEV2023–2024**, poi confronto2025 già esposto. Riutilizzare7ZIP verificati, scaricare solo mancanti; funding/mark necessari ai costi e manifest separati, tutto fuori Git.
-
-Prima consegna: candidato/config committati prima degli esiti → controlli sintetici mirati → backtestDEV → diagnosi e risultati/esempi nella stessa app. Checkpoint Director dopoDEV decide mantenimentov1 o al più una revisione motivata prima del congelamento;2025 solo dopo quel checkpoint, nessuna iterazione sui suoi esiti. Non è un nuovo permesso ordinario adAstra/Owner.
-
-Dati DEV acquisiti e verificati (fuori Git):
-- 27 ZIP trade con 1.185.120/1.185.120 minuti validi;
-- 24 funding con 2.193 eventi a 8 h, senza anomalie;
-- 24 mark con 2.189/2.193 punti: manca un giorno a febbraio 2023 e 2 minuti ad agosto 2024, senza operazioni toccate.
-
-Nessuna efficacia dimostrata.
-
-## Vincoli
-
-2026 resta protetto, nessun tail. Vecchi studiINACTIVE. Nessun conto/chiave/ordine esterno, accesso vecchio stack, leva/reinvestimento, nuova famiglia/ricerca parametri o piattaforma parallela. DESIGN-001 resta approvato solo nelle definizioni osservative; modello CAND deciso separatamente. Prossima chiusura con evidenzaDEV/confronto2025, raccomandazione anche negativa e prova concreta Owner.
+2026protetto, vecchi studiINACTIVE, niente conto/chiavi/ordini esterni/stackOwner, leva/reinvestimento, nuova famiglia, ricerca parametri, piattaforma o restyling. DESIGN-001 approvato solo nelle definizioni osservative; modello economico CAND registrato separatamente. Macrofase aperta; prova concreta Gian ancora da svolgere, poi raccomandazione adAstra anche negativa.
