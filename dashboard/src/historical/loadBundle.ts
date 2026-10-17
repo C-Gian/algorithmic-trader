@@ -293,11 +293,82 @@ function validateStudy(data: Obj, periods: { studyStart: number; end: number }, 
 }
 
 const CLASSES = ['F_ONLY', 'A_ONLY', 'F_BEFORE_A', 'A_BEFORE_F', 'BOTH_UNORDERED', 'NEITHER'];
+const OUTCOME_FLAGS = ['RIGHT_CENSORED', 'GAP', 'MISSING_A', 'ZERO_A'];
+const MINUTE = 60_000;
+const DAY = 86_400_000;
 
-function contact(x: unknown, where: string): void {
-  if (x === null) return;
+type Contact = { minute: number; atOpen: boolean; interval: [number, number] } | null;
+
+/** Contatto tipizzato, all'apertura di un minuto della finestra [t, t+24h), intervallo coerente con atOpen. */
+function contact(x: unknown, t: number, end: number, where: string): Contact {
+  if (x === null) return null;
   if (!isObj(x) || !isInt(x.minute) || typeof x.atOpen !== 'boolean' || !Array.isArray(x.interval) || x.interval.length !== 2 || !x.interval.every(isInt)) {
-    fail(`${where}: contatto non valido.`);
+    return fail(`${where}: contatto non valido.`);
+  }
+  const m = x.minute as number;
+  if (m % MINUTE !== 0) fail(`${where}: il contatto non è all'apertura di un minuto.`);
+  if (m < t || m >= end) fail(`${where}: contatto fuori dalla finestra 24h del caso.`);
+  const [a, b] = x.interval as number[];
+  if (a !== m || b !== (x.atOpen ? m : m + MINUTE)) fail(`${where}: intervallo del contatto incoerente con minuto e apertura.`);
+  return x as Contact;
+}
+
+/** Classe implicata dai primi contatti (stessa regola del calcolo: nello stesso minuto ordina solo l'apertura). */
+function classOf(f: Contact, a: Contact): string {
+  if (f === null && a === null) return 'NEITHER';
+  if (a === null) return 'F_ONLY';
+  if (f === null) return 'A_ONLY';
+  if (f.minute !== a.minute) return f.minute < a.minute ? 'F_BEFORE_A' : 'A_BEFORE_F';
+  if (f.atOpen && a.atOpen) return 'INVALID';
+  if (f.atOpen) return 'F_BEFORE_A';
+  return a.atOpen ? 'A_BEFORE_F' : 'BOTH_UNORDERED';
+}
+
+/**
+ * Esito OBS-002 del caso: coerenza dei campi letti dal blocco a posteriori, non ricalcolo del percorso.
+ * Completo: misure finite, escursioni non negative, A positiva, riferimenti = C ± A nel verso, contatti
+ * coerenti con la classe, nessun flag. Incompleto: flag riconosciuti, nessuna classe, misura o contatto
+ * completo inventato; il prefisso parziale resta separato. Orizzonte t+24h; censura coerente col confine.
+ */
+function validateObs002Outcome(o: Obj, c: Obj, end: number): void {
+  const w = 'Esito OBS-002';
+  const t = c.t as number;
+  if (o.t !== t || typeof o.complete !== 'boolean' || !Array.isArray(o.flags)) fail(`${w}: istante o completezza non validi.`);
+  if (o.horizonEnd !== t + DAY) fail(`${w}: orizzonte diverso da t + 24h.`);
+  const flags = o.flags as unknown[];
+  for (const f of flags) if (!OUTCOME_FLAGS.includes(f as string)) fail(`${w}: flag non riconosciuto «${String(f)}».`);
+  if (new Set(flags).size !== flags.length) fail(`${w}: flag ripetuti.`);
+  if (o.complete !== (flags.length === 0)) fail(`${w}: flag incoerenti con la completezza dell'esito.`);
+  if (flags.includes('RIGHT_CENSORED') !== (o.horizonEnd as number) > end) fail(`${w}: flag di censura incoerente con il confine dei dati autorizzati.`);
+  if (!isNum(o.C)) fail(`${w}: C all'origine non valido.`);
+  const d = c.side === 'LONG' ? 1 : -1;
+  const aMissing = flags.includes('MISSING_A');
+  const aZero = flags.includes('ZERO_A');
+  if (aMissing ? o.A !== null : aZero ? o.A !== 0 : !(isNum(o.A) && (o.A as number) > 0)) fail(`${w}: A all'origine incoerente con il suo stato.`);
+  if (aMissing || aZero) {
+    if (o.markers !== null) fail(`${w}: riferimenti ±A presenti senza A valida.`);
+  } else {
+    const mk = o.markers;
+    const C = o.C as number;
+    const A = o.A as number;
+    const tol = 1e-9 * Math.max(1, Math.abs(C));
+    if (!isObj(mk) || !isNum(mk.F) || !isNum(mk.A) || Math.abs((mk.F as number) - (C + d * A)) > tol || Math.abs((mk.A as number) - (C - d * A)) > tol) {
+      fail(`${w}: riferimenti F/A diversi da C ± A nel verso del caso.`);
+    }
+  }
+  const cf = contact(o.contactF, t, o.horizonEnd as number, `${w}, contatto F`);
+  const ca = contact(o.contactA, t, o.horizonEnd as number, `${w}, contatto A`);
+  if (o.complete) {
+    for (const k of ['final', 'favourable', 'adverse']) if (!isNum(o[k])) fail(`${w}: «${k}» mancante o non finito in un esito completo.`);
+    if ((o.favourable as number) < 0 || (o.adverse as number) < 0) fail(`${w}: escursioni favorevole e contraria devono essere non negative.`);
+    if (!CLASSES.includes(o.class as string)) fail(`${w}: esito completo senza classe di contatto riconosciuta (${String(o.class)}).`);
+    if (classOf(cf, ca) !== o.class) fail(`${w}: contatti incoerenti con la classe ${String(o.class)}.`);
+    if (!(o.partial === null || o.partial === undefined)) fail(`${w}: prefisso parziale in un esito completo.`);
+  } else {
+    if (o.class !== null) fail(`${w}: esito incompleto con una classe di contatto.`);
+    for (const k of ['final', 'favourable', 'adverse']) if (o[k] !== null) fail(`${w}: misure complete presenti in un esito incompleto («${k}»).`);
+    if (cf !== null || ca !== null) fail(`${w}: contatti dell'esito completo presenti in un esito incompleto (stanno nel prefisso parziale).`);
+    if (!(o.partial === null || o.partial === undefined || (isObj(o.partial) && isStr(o.partial.label)))) fail(`${w}: prefisso parziale non etichettato.`);
   }
 }
 
@@ -316,14 +387,7 @@ function validateCase(data: Obj, retro: Obj, origins: unknown[]): void {
   obj(c, 'causal', 'Caso OBS-002');
   const o2 = obj(retro, 'obs002', 'Esito OBS-002');
   if (o2.attemptId !== c.attemptId) fail('Esito OBS-002: riferito a un altro tentativo.');
-  const o = obj(o2, 'outcome', 'Esito OBS-002');
-  const w = 'Esito OBS-002';
-  if (o.t !== c.t || !isInt(o.horizonEnd) || typeof o.complete !== 'boolean' || !Array.isArray(o.flags)) fail(`${w}: istante o completezza non validi.`);
-  for (const k of ['final', 'favourable', 'adverse']) if (!isNumOrNull(o[k])) fail(`${w}: valore «${k}» non valido.`);
-  if (!(o.class === null || CLASSES.includes(o.class as string))) fail(`${w}: classe di contatto non riconosciuta.`);
-  if (o.complete !== (o.class !== null && o.final !== null)) fail(`${w}: esito completo senza classe o valori, o viceversa.`);
-  contact(o.contactF, w);
-  contact(o.contactA, w);
+  validateObs002Outcome(obj(o2, 'outcome', 'Esito OBS-002'), c, (data.periods as Obj).end as number);
 }
 
 export function parseBundle(text: string): StudyBundle {

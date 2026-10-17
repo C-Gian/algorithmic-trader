@@ -2,7 +2,8 @@
 
 Stessa catena del pacchetto reale (osservatore OBS-001/v1, popolazione, esito, package) su cinque
 giorni di minuti casuali; contrassegnato `synthetic: true`. Il caso è il primo tentativo con esito
-completo dopo il secondo giorno. Uso: python -m obs002.fixture <percorso di uscita>
+completo dopo il secondo giorno, oppure (--censored) il primo censurato a destra.
+Uso: python -m obs002.fixture <percorso di uscita> [--censored]
 """
 
 from __future__ import annotations
@@ -25,7 +26,7 @@ from .outcomes import outcome
 from .population import Population
 
 
-def build() -> dict:
+def build(censored: bool = False) -> dict:
     base = load_study()
     study = dataclasses.replace(base, study_start=base.input_start + 2 * DAY_MS, end=base.input_start + 5 * DAY_MS)
     conv = observation_conventions(study)
@@ -45,12 +46,12 @@ def build() -> dict:
         if not a["inStudy"]:
             continue
         o = outcome(store, a["t"], a["C"], a["snapshot"]["volatility"]["A"], a["d"], study.horizon_ms, study.end, study.marker_a)
-        if o["complete"]:
+        if (not o["complete"] and o["flags"] == ["RIGHT_CENSORED"]) if censored else o["complete"]:
             break
     else:
-        raise RuntimeError("nessun tentativo completo nella fixture")
+        raise RuntimeError("nessun tentativo adatto nella fixture")
     chain = {"bars45": bars45, "bars1d": bars1d, "observed": observed}
-    case = {"categories": ["SYNTHETIC_FIXTURE"]}
+    case = {"categories": ["SYNTHETIC_FIXTURE_CENSORED" if censored else "SYNTHETIC_FIXTURE"]}
     run_ref = {"runId": "SYNTHETIC-OBS002-CASE", "inputHash": None, "engineVersion": ENGINE_VERSION, "synthetic": True}
     files = []
     return package(case, a, o, chain, store, conv, study, run_ref, files)
@@ -58,7 +59,7 @@ def build() -> dict:
 
 def main() -> int:
     out = Path(sys.argv[1])
-    out.write_text(json.dumps(build(), ensure_ascii=False, separators=(",", ":"), allow_nan=False), encoding="utf-8")
+    out.write_text(json.dumps(build("--censored" in sys.argv[2:]), ensure_ascii=False, separators=(",", ":"), allow_nan=False), encoding="utf-8")
     print(f"{out} {out.stat().st_size} byte")
     return 0
 

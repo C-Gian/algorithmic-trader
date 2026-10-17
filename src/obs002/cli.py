@@ -32,7 +32,8 @@ from .examples import select
 from .outcomes import outcome
 from .population import Population
 from .summary import summarize
-from .tables import report_tables
+from .tables import contact_breakdown, report_tables
+from .timelines import TIMELINE_R1_VERSION, migrate_examples, timeline
 
 DEFAULT_ROOT = REPO_ROOT.parent / "algorithmic-trader-data"
 
@@ -124,21 +125,6 @@ def to_csv(rows: list[dict]) -> bytes:
     for r in rows:
         w.writerow(r)
     return buf.getvalue().encode("utf-8")
-
-
-def timeline(case: dict, attempt: dict, outcome_row: dict, pop, c: dict) -> dict:
-    """Noto a t (versioni, barre chiuse, snapshot) separato dal seguito retrospettivo."""
-    g = pop.groups[attempt["groupId"]]
-    versions = [v.as_dict() for v in pop.versions if v.group_id == g.id and v.t0 <= attempt["t"]]
-    p0 = attempt["version"]["P0"]["candidateOpen"]
-    bars = [{"open": b.start, "o": b.o, "h": b.h, "l": b.l, "c": b.c} for b in c["bars45"] if p0 <= b.start and b.end <= attempt["t"]]
-    prior = [a for a in pop.attempts if a["groupId"] == g.id and a["t"] < attempt["t"]]
-    return {"attemptId": attempt["attemptId"], "categories": case["categories"],
-            "knownAtT": {"t": attempt["t"], "tIso": iso(attempt["t"]), "groupVersionsSoFar": [{**v, "retiredAt": v["retiredAt"] if v["retiredAt"] is not None and v["retiredAt"] <= attempt["t"] else None,
-                                                                                               "retireReason": v["retireReason"] if v["retiredAt"] is not None and v["retiredAt"] <= attempt["t"] else None,
-                                                                                               "attempts": [x for x in v["attempts"] if int(x.split(':')[-1]) <= attempt["t"]]} for v in versions],
-                          "priorAttemptsOfGroup": [{"attemptId": a["attemptId"], "t": a["t"]} for a in prior], "bars45SinceP0": bars, "attempt": attempt},
-            "afterT": {"label": "A POSTERIORI", "outcome": outcome_row}}
 
 
 def cmd_outcomes(study, root: Path) -> Path:
@@ -249,9 +235,59 @@ def _row_outcome(a: dict, o: dict) -> dict:
     return row
 
 
+def cmd_r1(study, root: Path) -> Path:
+    """R1: derivati dagli artefatti già registrati, originali conservati. R1-A: examples.json con la sola
+    proiezione causale delle versioni corretta. R1-C: scomposizione aritmetica delle classi di contatto.
+    Nessuna lettura di prezzi, osservazioni, popolazione o esiti ricalcolati."""
+    runs = sorted((root / "OBS-002" / "runs").glob(f"OBS-002-v{study.raw['version']}-e*-{study.hash[:10]}"))
+    if len(runs) != 1:
+        raise AssertionError(f"atteso un solo run OBS-002 per la config, trovati {len(runs)}")
+    out = runs[0]
+    reg = json.loads((out / "outputs.json").read_text(encoding="utf-8"))
+    man = json.loads((out / "population-manifest.json").read_text(encoding="utf-8"))
+    for name, expected in (("examples.json", reg["outputs"]["examples.json"]), ("population.json", man["populationSha256"])):
+        if _sha256_file(out / name) != expected:
+            raise AssertionError(f"{name} diverso dall'hash registrato")
+    original = json.loads((out / "examples.json").read_text(encoding="utf-8"))
+    population = json.loads((out / "population.json").read_text(encoding="utf-8"))
+    fixed = migrate_examples(original, population)
+    removed = []
+    for a, b in zip(original["timelines"], fixed["timelines"]):
+        if {k: v for k, v in a.items() if k != "knownAtT"} != {k: v for k, v in b.items() if k != "knownAtT"} or                 {k: v for k, v in a["knownAtT"].items() if k != "groupVersionsSoFar"} != {k: v for k, v in b["knownAtT"].items() if k != "groupVersionsSoFar"}:
+            raise AssertionError(f"{a['attemptId']}: la migrazione ha toccato campi diversi dalla proiezione delle versioni")
+        for va, vb in zip(a["knownAtT"]["groupVersionsSoFar"], b["knownAtT"]["groupVersionsSoFar"]):
+            for k in sorted(set(va) | set(vb)):
+                if va.get(k, "<assente>") != vb.get(k, "<assente>"):
+                    removed.append({"attemptId": a["attemptId"], "versionId": va["versionId"], "field": k,
+                                    "original": va.get(k, "<assente>"), "corrected": vb.get(k, "<assente>")})
+    if _sha256_file(out / "summary.json") != reg["outputs"]["summary.json"]:
+        raise AssertionError("summary.json diverso dall'hash registrato")
+    summary = json.loads((out / "summary.json").read_text(encoding="utf-8"))
+    contacts = {"kind": "OBS002_R1_CONTACTS", "derivedFrom": {"file": "../summary.json", "sha256": reg["outputs"]["summary.json"]},
+                "rule": "entrambi = F_BEFORE_A + A_BEFORE_F + BOTH_UNORDERED; uno solo = F_ONLY + A_ONLY; nessuno = NEITHER",
+                **{name: {side: {p: contact_breakdown(cellv["classes"]) for p, cellv in cells.items()} for side, cells in des.items()}
+                   for name, des in (("main", summary["main"]), ("secondary", summary["secondary"]["DEV"]))}}
+    both_sides = [summary["main"][s]["ALL"]["classes"] for s in ("LONG", "SHORT")]
+    contacts["mainBothSides"] = contact_breakdown({k: both_sides[0][k] + both_sides[1][k] for k in both_sides[0]})
+    body = dump(fixed)
+    r1 = out / "R1"
+    r1.mkdir(exist_ok=True)
+    (r1 / "examples.json").write_bytes(body)
+    manifest = {"kind": "OBS002_R1_TIMELINES", "timelineVersion": TIMELINE_R1_VERSION, "derivedFrom": {"file": "../examples.json", "sha256": reg["outputs"]["examples.json"]},
+                "populationSha256": man["populationSha256"], "examplesSha256": sha256_bytes(body), "listSha256": fixed["listSha256"],
+                "changes": removed, "unchanged": "elenco, categorie, afterT, tentativi/snapshot, barre e tentativi precedenti"}
+    cbody = dump(contacts)
+    (r1 / "contacts-breakdown.json").write_bytes(cbody)
+    manifest["contactsBreakdownSha256"] = sha256_bytes(cbody)
+    (r1 / "manifest.json").write_bytes(dump(manifest))
+    provenance(r1, "r1", {"command": "python -m obs002 r1"})
+    log(f"R1 {r1} | examples {manifest['examplesSha256']} | campi proiettati diversi {len(removed)} | contatti {contacts['mainBothSides']}")
+    return r1
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="obs002", description="OBS-002: popolazione causale, seguito 24h, tabelle ed esempi sul DEV.")
-    parser.add_argument("command", choices=["population", "outcomes", "all"])
+    parser.add_argument("command", choices=["population", "outcomes", "all", "r1"])
     parser.add_argument("--data-root", type=Path, default=DEFAULT_ROOT)
     args = parser.parse_args(argv)
     study = load_study()
@@ -261,4 +297,6 @@ def main(argv: list[str] | None = None) -> int:
         cmd_population(study, root)
     if args.command in ("outcomes", "all"):
         cmd_outcomes(study, root)
+    if args.command == "r1":
+        cmd_r1(study, root)
     return 0

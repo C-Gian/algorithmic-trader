@@ -20,6 +20,20 @@ CATS = [("structure1D", "Struttura 1D"), ("nearestAheadKind", "Tipo del livello 
         ("fibSameAsContext", "Ancore Fibonacci = contesto")]
 
 
+def contact_breakdown(classes: dict) -> dict:
+    """R1-C: scomposizione aritmetica delle classi di un insieme di esiti completi.
+    Entrambi i riferimenti = F→A + A→F + F=A; uno solo = F + A; nessuno = NEITHER. «Almeno uno» non è «entrambi»."""
+    both = classes["F_BEFORE_A"] + classes["A_BEFORE_F"] + classes["BOTH_UNORDERED"]
+    one = classes["F_ONLY"] + classes["A_ONLY"]
+    none = classes["NEITHER"]
+    total = both + one + none
+    if total != sum(classes.values()):
+        raise AssertionError("classi non riconosciute nella scomposizione dei contatti")
+    share = (lambda n: n / total) if total else (lambda n: None)  # noqa: E731
+    return {"complete": total, "both": both, "oneOnly": one, "none": none, "atLeastOne": both + one,
+            "shares": {"both": share(both), "oneOnly": share(one), "none": share(none), "atLeastOne": share(both + one)}}
+
+
 def f(x, d=2) -> str:
     return "—" if x is None else f"{x:,.{d}f}".replace(",", "X").replace(".", ",").replace("X", ".")
 
