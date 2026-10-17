@@ -32,11 +32,13 @@ const PANEL_ID = 'scenari-simulati';
 export const BANNER: Record<Environment, string> = {
   SIMULATION: 'SIMULAZIONE LOCALE — nessun collegamento exchange',
   HISTORICAL: 'STORICO REALE — studio osservativo locale — nessun collegamento exchange',
+  BACKTEST: 'BACKTEST DI SVILUPPO — esecuzioni modellate, nessun collegamento exchange',
 };
 
 const ENVIRONMENTS: { id: Environment; label: string }[] = [
   { id: 'SIMULATION', label: 'Simulazione locale' },
   { id: 'HISTORICAL', label: 'Studio storico' },
+  { id: 'BACKTEST', label: 'Backtest di sviluppo' },
 ];
 
 export function TopBar({
@@ -78,11 +80,12 @@ export function TopBar({
   const feed = controls?.feedCondition() ?? 'OK';
   const feedLabel = FEED_OPTIONS.find((o) => o.id === feed)?.label ?? feed;
   const historical = environment === 'HISTORICAL';
-  const nav = NAV.map((item) => (historical && item.id === 'research' ? { ...item, label: 'Studio osservativo' } : item));
+  const researchLabel = historical ? 'Studio osservativo' : environment === 'BACKTEST' ? 'Registro operazioni' : null;
+  const nav = NAV.map((item) => (researchLabel && item.id === 'research' ? { ...item, label: researchLabel } : item));
 
   return (
     <div className="topbar-wrap" ref={barRef}>
-      <div className={`sim-banner${historical ? ' is-historical' : ''}`} role="status">
+      <div className={`sim-banner${historical ? ' is-historical' : environment === 'BACKTEST' ? ' is-backtest' : ''}`} role="status">
         <Icon name="shieldCheck13" />
         {BANNER[environment]}
       </div>

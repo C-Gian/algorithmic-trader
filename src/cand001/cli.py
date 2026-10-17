@@ -46,7 +46,11 @@ def peak_memory_mb() -> float | None:
                         ("PagefileUsage", ctypes.c_size_t), ("PeakPagefileUsage", ctypes.c_size_t)]
         pmc = PMC()
         pmc.cb = ctypes.sizeof(PMC)
-        ctypes.windll.psapi.GetProcessMemoryInfo(ctypes.windll.kernel32.GetCurrentProcess(), ctypes.byref(pmc), pmc.cb)
+        k32 = ctypes.windll.kernel32
+        k32.GetCurrentProcess.restype = ctypes.c_void_p  # handle a 64 bit: senza restype viene troncato
+        k32.K32GetProcessMemoryInfo.argtypes = [ctypes.c_void_p, ctypes.POINTER(PMC), ctypes.c_ulong]
+        if not k32.K32GetProcessMemoryInfo(k32.GetCurrentProcess(), ctypes.byref(pmc), pmc.cb):
+            return None
         return round(pmc.PeakWorkingSetSize / 1e6, 1)
     except Exception:  # noqa: BLE001 - misura facoltativa
         return None

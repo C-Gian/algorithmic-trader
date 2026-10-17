@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import type { Environment } from '../contract/historical';
 import type { DashboardProvider, SimulationControls } from '../contract/provider';
+import type { BacktestStudy } from '../backtest/study';
 import type { HistoricalStudy } from '../historical/study';
 import { AccountSection } from './components/AccountSection';
 import { CallCard } from './components/CallCard';
@@ -11,6 +12,7 @@ import { PositionCard } from './components/PositionCard';
 import { SignalsSection } from './components/SignalsSection';
 import { TopBar, type NavTarget } from './components/TopBar';
 import { Unavailable } from './components/Unavailable';
+import { BacktestEnvironment } from './backtest/BacktestEnvironment';
 import { HistoricalEnvironment } from './historical/HistoricalEnvironment';
 import { DashboardContext, useDashboardState } from './useDashboard';
 
@@ -45,16 +47,20 @@ export function App({
   createSimulation,
   initialEnvironment = 'SIMULATION',
   initialStudy = null,
+  initialBacktest = null,
 }: {
   createSimulation: () => SimulationSource;
   initialEnvironment?: Environment;
   initialStudy?: HistoricalStudy | null;
+  initialBacktest?: BacktestStudy | null;
 }) {
   const [environment, setEnvironment] = useState<Environment>(initialEnvironment);
   const [study, setStudy] = useState<HistoricalStudy | null>(initialStudy);
   // Ogni apertura riuscita monta lo studio da capo (anche se è lo stesso file): niente stato residuo.
   const [studyLoad, setStudyLoad] = useState(0);
   const [view, setView] = useState<View>('dashboard');
+  const [backtest, setBacktest] = useState<BacktestStudy | null>(initialBacktest);
+  const [backtestLoad, setBacktestLoad] = useState(0);
 
   const navigate = useCallback((target: NavTarget) => {
     if (target === 'research' || target === 'settings') {
@@ -83,12 +89,17 @@ export function App({
     setView('dashboard');
   }, []);
 
+  const openBacktest = useCallback((b: BacktestStudy) => {
+    setBacktest(b);
+    setBacktestLoad((n) => n + 1);
+    setEnvironment('BACKTEST');
+    setView('dashboard');
+  }, []);
+
   const shell: ShellProps = { view, navigate, environment, onEnvironmentChange: changeEnvironment };
-  return environment === 'SIMULATION' ? (
-    <SimulationEnvironment create={createSimulation} shell={shell} />
-  ) : (
-    <HistoricalEnvironment study={study} studyLoad={studyLoad} onOpen={openStudy} shell={shell} />
-  );
+  if (environment === 'SIMULATION') return <SimulationEnvironment create={createSimulation} shell={shell} />;
+  if (environment === 'BACKTEST') return <BacktestEnvironment study={backtest} studyLoad={backtestLoad} onOpen={openBacktest} shell={shell} />;
+  return <HistoricalEnvironment study={study} studyLoad={studyLoad} onOpen={openStudy} shell={shell} />;
 }
 
 function SimulationEnvironment({ create, shell }: { create: () => SimulationSource; shell: ShellProps }) {

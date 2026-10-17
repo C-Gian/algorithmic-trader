@@ -6,7 +6,7 @@
  * UTC. Ogni misura è `{ v, r }`: valore noto (anche zero) oppure null con motivo.
  */
 
-export type Environment = 'SIMULATION' | 'HISTORICAL';
+export type Environment = 'SIMULATION' | 'HISTORICAL' | 'BACKTEST';
 
 export const BUNDLE_KIND = 'OBS001_BUNDLE' as const;
 export const BUNDLE_SCHEMA = 'obs001.bundle/1' as const;
