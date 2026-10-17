@@ -1,6 +1,6 @@
 # Algorithmic Trader — prodotto, decisioni e contesto completo
 
-Versione documentale: 1.4 — 16 ottobre 2026. Responsabile della sintesi: Astra.
+Versione documentale: 1.5 — 17 ottobre 2026. Responsabile della sintesi: Astra.
 
 Questo è il documento funzionale centrale del **nuovo** progetto di Gian. È scritto per poter essere consegnato da solo a una nuova chat: spiega obiettivo, organizzazione, requisiti, ragioni delle scelte, limiti e questioni ancora aperte. Non è una specifica matematica dell'algoritmo, una dichiarazione di efficacia o un'autorizzazione a operare con denaro reale.
 
@@ -20,7 +20,7 @@ Il progetto può durare anni. Gian accetta studio e sviluppo progressivi, ma vuo
 
 La repository nuova è `C-Gian/algorithmic-trader`. La precedente è `C-Gian/algorithmic-trader-archive`.
 
-Aggiornamento 16 ottobre: oltre alle tre utilità tecniche recuperate (intervalli temporali, arrotondamento e impronte), esiste la dashboard locale React/TypeScript con provider simulato separato e scenari deterministici. La macrofase UI, comprese correzioni e navigazione superiore richiesta dall'Owner, è conclusa con review Director e riscontro positivo di Gian. È stato poi consegnato OBS-001: motore osservativo causale e primo studio storico integrato nella stessa dashboard; calcoli e tabelle verificati dal Director, accettazione finale ancora pendente per correzioni UI e prova d'uso. **Non esistono ancora una strategia, un collegamento al conto o un esecutore di ordini.** Stato e incarico correnti precisano le verifiche e il difetto residuo.
+Aggiornamento 16 ottobre: oltre alle tre utilità tecniche recuperate (intervalli temporali, arrotondamento e impronte), esiste la dashboard locale React/TypeScript con provider simulato separato e scenari deterministici. La macrofase UI, comprese correzioni e navigazione superiore richiesta dall'Owner, è conclusa con review Director e riscontro positivo di Gian. È stato poi consegnato OBS-001: motore osservativo causale e primo studio storico integrato nella stessa dashboard; calcoli e tabelle verificati dal Director, ora chiuso tecnicamente dopo le correzioni R1. Il limite di comprensione Owner è conservato, senza dichiarare una prova positiva o riaprire una macrofase UI. **Non esistono ancora una strategia, un collegamento al conto o un esecutore di ordini.** Astra ha ora autorizzato il primo candidato completo e ciclo di backtest: specifica CAND-001 registrata, implementazione ancora da svolgere. Stato e incarico correnti precisano le verifiche e l'avanzamento.
 
 Il vecchio motore non viene importato implicitamente. Il nuovo progetto non è una v0.8 e non eredita le soglie, gli scenari A/B/C, i profili di costo, le scadenze o la struttura delle prove precedenti. Il nuovo nome della repository non rende però sconosciuti i dati già studiati.
 
@@ -127,7 +127,7 @@ La durata desiderata è flessibile, orientata al trading e non all'holding. Occo
 
 L'Owner propone di studiare una storia BTC ampia, indicativamente tre anni, osservando movimenti rilevanti e segnali prima, durante e alla fine. L'obiettivo è costruire conoscenza prima di scegliere un insieme definitivo di regole.
 
-La durata di tre anni è una proposta di scala, non una finestra già autorizzata. Fonte, date, strumento, copertura e separazione fra sviluppo e verifica devono ancora essere stabiliti. Anche il termine «movimento rilevante» va definito: gli esempi di 500, 1.000 o 5.000 dollari non sono soglie approvate.
+Aggiornamento 17 ottobre: Astra autorizza per CAND-001 sviluppo 2023–2025 sulla stessa fonte/strumento, con inizializzazione da ottobre 2022. 2023–2024 per le iterazioni iniziali, 2025 confronto aggiuntivo già esposto, non validazione indipendente. Copertura/varietà effettive vanno misurate; tre anni non le garantiscono. Nessuna apertura 2026. Anche il termine «movimento rilevante» va definito: gli esempi di 500, 1.000 o 5.000 dollari non sono soglie approvate.
 
 Un movimento identificato guardando il seguito è utile per studiare il mercato, ma non coincide con un trade che si sarebbe potuto aprire e chiudere in tempo reale. Il mercato non riparte ogni volta da una situazione neutra: movimenti si sovrappongono, contengono reazioni e possono continuare per molto tempo. Il criterio per delimitare gli eventi non deve produrre un ingresso perfetto con il senno di poi.
 
@@ -238,7 +238,7 @@ Per la demo Binance devono essere verificati prodotto disponibile, accesso API, 
 
 ## 22. Dati e provenienza
 
-Binance è la preferenza iniziale per l'esecuzione perché Gian conosce la demo. Il prodotto e il conto operativi che permettono LONG/SHORT restano decisioni da chiudere. Per il solo studio OBS-001 è invece autorizzata la fonte candidata Binance Vision BTCUSDT perpetual USDⓈ-M, prezzo negoziato1m e intervalli circoscritti in §31; non equivale a scelta operativa. TradingView è un possibile riferimento visivo, non automaticamente una fonte autorizzata per tutti i dati o il gestore della posizione.
+Binance è la preferenza iniziale per l'esecuzione perché Gian conosce la demo. Il prodotto e il conto operativi che permettono LONG/SHORT restano decisioni da chiudere. Per OBS-001 e CAND-001 è autorizzata Binance Vision BTCUSDT perpetual USDⓈ-M, prezzo negoziato 1m e intervalli circoscritti in §31; CAND ammette inoltre funding/mark necessari ai costi. Non equivale a scelta operativa di conto, leva o accessibilità reale. TradingView è un possibile riferimento visivo, non automaticamente una fonte autorizzata per tutti i dati o il gestore della posizione.
 
 I vecchi dati OKX restano dati OKX. Non vengono rinominati Binance e non provano le stesse condizioni di esecuzione. Dove possibile vogliamo studiare dati pertinenti alla sede e allo strumento da usare, dichiarando eventuali differenze.
 
@@ -274,7 +274,7 @@ Gian ha proposto Figma AI per il design e successiva implementazione con Claude.
 
 Aggiornamento Owner del 16 ottobre 2026 dopo il primo avvio locale: eliminare la barra di navigazione sinistra e spostare le destinazioni in una barra superiore per recuperare larghezza nel contenuto principale. Questa modifica è autorizzata rispetto al layout Figma; schede, stile e semantica operativa restano il riferimento. I controlli degli scenari locali devono restare accessibili e chiaramente separati dai comandi operativi, senza occupare una colonna laterale permanente.
 
-Riscontro Owner del17ottobre2026 su OBS-001: lo scopo di apertura JSON, data/ora, avanzamento, scale e pivot non era comprensibile dalle sole istruzioni. Non trattare la prova come accettata. Il cursore serve a ispezionare informazioni note a un momento passato; lo studio elabora già automaticamente tutte le origini. L'Owner chiede di discutere con Astra la sufficienza di pochi mesi e il passo verso il metodo decisionale. Lo studio attuale copre4mesi settembre–dicembre2025, preceduti da3mesi di inizializzazione; nessuna estensione dati è autorizzata da questa richiesta.
+Riscontro Owner del17ottobre2026 su OBS-001: lo scopo di apertura JSON, data/ora, avanzamento, scale e pivot non era comprensibile dalle sole istruzioni. Non trattare la prova come accettata. Il cursore serve a ispezionare informazioni note a un momento passato; lo studio elabora già automaticamente tutte le origini. L'Owner chiede di discutere con Astra la sufficienza di pochi mesi e il passo verso il metodo decisionale. Lo studio attuale copre4mesi settembre–dicembre2025, preceduti da3mesi di inizializzazione; quella richiesta non autorizzava da sola un'estensione. Astra l'ha poi autorizzata esplicitamente per CAND-001 come registrato in §31.
 
 ## 25. Linguaggio, colori e aggiornamenti
 
@@ -340,7 +340,7 @@ Il prompt ordinario può essere semplicemente: «Leggi AGENTS.md e current_task.
 
 L'app deve mostrare “SIMULAZIONE LOCALE — nessun collegamento exchange”. Call, ordini, eseguiti e posizione restano distinti; parametri, importi e prodotto nel mockup sono esempi. Il fornitore di dati simulati è separato dai componenti, che non deducono segnali o decisioni. Le sezioni non costruite sono dichiarate. I comandi possono produrre solo transizioni locali simulate e coerenti con i requisiti funzionali. Chiusura macrofase: dashboard avviabile sul PC, fedele al Figma, stati navigabili/coerenti, controlli comprensibili e dati sostituibili senza riscrivere la presentazione.
 
-**Mandato corrente di Astra, 16 ottobre: osservazioni calcolate e primo studio storico nell'app.** Autorizzata l'intera macrofase: specifica ex ante, calcoli sintetici discriminanti, acquisizione pubblica circoscritta, elaborazione reale, integrazione nella dashboard esistente, prima tabulazione e prova Owner. Il Director gestisce autonomamente incarichi, review e correzioni ordinarie; torna ad Astra alla conclusione o per conflitto sostanziale. Non fermarsi al solo motore sintetico.
+**Mandato OBS-001 di Astra del 16 ottobre, ora concluso tecnicamente:** osservazioni calcolate e primo studio storico nell'app. Autorizzata l'intera macrofase: specifica ex ante, calcoli sintetici discriminanti, acquisizione pubblica circoscritta, elaborazione reale, integrazione nella dashboard esistente, prima tabulazione e prova Owner. Il Director gestisce autonomamente incarichi, review e correzioni ordinarie; torna ad Astra alla conclusione o per conflitto sostanziale. Non fermarsi al solo motore sintetico.
 
 DESIGN-001 è **approvato parzialmente per le definizioni osservative §§5–6**, come versione iniziale non ottimizzata: aggregati45m/1D UTC, TR/media20TR, SMA20/50, pivot2+2 confermati, livelli, volume relativo e Fibonacci con disponibilità/versioni. Warmup per misura e dipendenze effettive, mai blocco globale54barre. Etichette UI coerenti coi calcoli. Esclusi modello economico, barriere2A, prossimità come decisione, R2/R3 e verifica protetta. Dettagli eseguibili nel task OBS-001.
 
@@ -350,7 +350,17 @@ Domanda descrittiva unica: tutte le chiusure45m, confronto entro la medesima str
 
 Stessa dashboard e provider separato, selezione temporale e avanzamento sincronizzati45m/1D; distinguere informazioni a t dal seguito retrospettivo. Nello storico nessuna call, posizione o saldo fittizi; la simulazione resta ambiente separato. Pipeline locale batch senza servizi permanenti/DB/live non necessari.
 
-Chiusura: Gian vede prezzi reali e osservazioni causali, passato immutabile, acquisizione/calcolo riproducibili, confronto previsto con limiti/casi contrari e prova d'uso. Un risultato non favorevole è accettabile. **Non autorizzati strategia di ingresso, ordini exchange, valutazione economica, apertura2026protetto o vecchi studi.** La sequenza generale seguente resta orientamento futuro, non autorizzazione addizionale.
+**Chiusura tecnica OBS-001:** motore osservativo e tabelle reali verificati, correzioni R1 concluse; limite di comprensione Owner registrato. Nessuna ulteriore estensione dell'esploratore. Le esclusioni del mandato OBS non autorizzavano strategia o valutazione economica: il mandato successivo sotto le autorizza separatamente per CAND-001, senza denaro reale.
+
+**Mandato corrente Astra del 17 ottobre — primo candidato completo e ciclo storico di sviluppo.** Famiglia scelta: movimento direzionale → reazione → tentativo di ripresa. Il Director definisce una versione completa prima degli esiti: contesto, reazione/contraddizioni, trigger/astensione, ingresso modellato, stop/target/validità, gestione dinamica, precedenze e dati mancanti. Claude implementa, non sceglie strategia. Ruoli delle sei famiglie espliciti, nessun voto/sestina obbligatoria e nessuna concordanza giornaliera obbligata dal solo OBS-001. Nessun riuso di vecchi A/RETURN/E/a2x.
+
+Storico autorizzato: stessa fonte Binance Vision BTCUSDT perpetual USDⓈ-M, inizializzazione [2022-10-01,2023-01-01), sviluppo [2023-01-01,2026-01-01) UTC. Riutilizzare file verificati, acquisire solo mancanti. 2023–2024 per iterazioni iniziali; 2025 confronto aggiuntivo già esposto. 2026 protetto e vecchi studi INACTIVE. Dati pubblici funding/mark strettamente necessari ai costi ammessi entro gli stessi confini, nessun account/stack Owner.
+
+Prima valutazione con nozionale normalizzato fisso, senza leva/reinvestimento: risultati di operazioni ipotetiche, non rendimento del conto personale. Capitale e leva dell'Owner non sono prerequisiti di questo studio. Fee/slippage/funding/ritardo/intrabar/confini registrati prima del calcolo; costi mancanti non zero e percorsi irrisolti non nascosti in un saldo completo. Il modello economico DESIGN-001 non è approvato automaticamente: riferimento completo docs/research/CAND-001-v1.md.
+
+Sequenza: specifica registrata → implementazione → controlli discriminanti → backtest DEV 2023–2024 → diagnosi Director. Bug si correggono; revisione metodologica richiede motivazione/versione/confronto sullo stesso DEV. Al più un ciclo di revisione nella famiglia, non obbligatorio, senza nuova approvazione Astra. Cambi di famiglia/nuovi segnali/ricerca automatica parametri richiedono decisione strutturale. Congelamento dopo diagnosi prima di 2025; nessuna iterazione sui suoi esiti salvo bug documentati.
+
+Nella stessa app Gian vede decisione reale del candidato, informazioni note allora, ingresso/gestione/uscita modellati, costi/risultato e astensioni/casi contrari scelti con regola cronologica prefissata. Accesso diretto agli episodi, non verifica manuale di migliaia di origini. Nessun nuovo restyling, piattaforma o conto/ordine esterno. Report separati per anno/mese con frequenza, rischio/percorso e concentrazione; non un unico saldo. Chiusura con evidenza riproducibile e raccomandazione anche negativa, non promessa di profitto o soli test verdi.
 
 1. **Fondazione funzionale e organizzativa:** rendere esplicite decisioni, limiti e ruoli. È lo scopo di questa registrazione.
 2. **Dashboard Figma con dati simulati:** realizzare e provare la UI approvata, con modelli distinti e provider sostituibile, entro la macrofase autorizzata sopra.
@@ -367,14 +377,14 @@ Non fissiamo qui una durata fittizia o una promessa di successo. Ogni macrofase 
 | Decisione aperta | Perché serve | Responsabilità |
 |---|---|---|
 | Strumento Binance preciso e fattibilità demo | LONG/SHORT, costi e protezioni dipendono dal prodotto | Director verifica fatti; Astra decide conflitti; Owner approva accessi |
-| Dati per prove successive a OBS-001 | Per OBS-001 fonte e date circoscritte sono autorizzate in §31; nessuna apertura implicita ulteriore | Director propone nel perimetro; Astra/Owner autorizzano |
+| Dati per ulteriori prove | CAND-001 ha fonte e finestre autorizzate in §31; nessuna apertura ulteriore implicita | Director propone nel perimetro; Astra/Owner autorizzano |
 | Definizione dei movimenti studiati | Separare studio retrospettivo da trade realmente riconoscibile | Astra/Director |
 | Regole concrete dei segnali e delle combinazioni | Le famiglie non sono ancora un algoritmo | Astra/Director |
 | Origine e disponibilità delle barre 45m/1D | Evitare disallineamenti e informazioni future | Director, prima dell'incarico tecnico |
 | Entry, uscita, revisione target/stop e orizzonti | Un candidato deve includere tutta la gestione | Astra/Director con vincoli dell'Owner |
 | Capitale, leva, rischio e limiti personali | Sono decisioni dell'Owner, non valori da inventare | Gian, assistito da Astra/Director |
 | Ordini pendenti, passaggio manuale/automatico e ripresa | Evitare responsabilità e stati operativi ambigui | Director specifica; Astra sui conflitti strutturali |
-| Modello dei costi ed esecuzioni ambigue | Rendere interpretabile il risultato netto | Astra/Director |
+| Modello dei costi per prove successive | CAND-001 ha convenzioni registrate; eventuali modelli ulteriori da decidere | Astra/Director |
 | Criteri di avanzamento alla demo e al reale | Un saldo isolato non è un'autorizzazione | Astra/Director; reale solo Owner |
 | Stack applicativo, test budget e installazione | Evitare di importare complessità precedente senza bisogno | Director nel mandato architetturale |
 
@@ -382,18 +392,19 @@ Non occorre rivolgere subito tutte queste domande a Gian. Quelle tecniche e meto
 
 ## 33. Istruzioni per una nuova chat che riceve solo questo documento
 
-Considera questo testo la memoria funzionale del nuovo progetto, datata 16 ottobre 2026, non una prova dello stato attuale del codice. Prima di agire sulla repository consulta lo stato corrente e l'incarico attivo. Non riattivare vecchi metodi, studi o autorizzazioni.
+Considera questo testo la memoria funzionale del nuovo progetto, aggiornata al 17 ottobre 2026, non una prova dello stato attuale del codice. Prima di agire sulla repository consulta lo stato corrente e l'incarico attivo. Non riattivare vecchi metodi, studi o autorizzazioni.
 
 Parla a Gian in modo semplice. Ricorda che vuole partecipare alla strategia, che accetta un progetto lungo, che non pretende infallibilità e che vuole vedere progressi concreti. Non ridurre il progetto a tre pattern, a una somma di indicatori o a un grafico descrittivo. Non promettere un trader professionale già ottenuto.
 
 Mantieni i ruoli: Astra direzione, Director ragionamento e gestione operativa, Claude esecuzione tecnica. Non chiedere ad Astra ogni microdecisione e non delegare all'esecutore la scelta del metodo. Non creare un nuovo documento per ogni dubbio se basta chiudere una decisione nella macrofase corrente.
 
-Il lavoro corrente segue il mandato osservativo/storico circoscritto della sezione31 e il task unico OBS-001. L'acquisizione pubblica e l'elaborazione descritte sono autorizzate; non richiedere una seconda approvazione ordinaria. Nessuna acquisizione aggiuntiva, strategia, valutazione economica o trading per implicazione. Se il testo non contiene una soglia o una regola, non significa che sia lecito inventarla.
+Il lavoro corrente segue il mandato CAND-001 della sezione 31 e il task unico: primo candidato completo e backtest di sviluppo nel perimetro esplicito. Dati e valutazione modellata autorizzati, checkpoint metodologico del Director prima del 2025. Nessuna nuova approvazione ordinaria richiesta per i microstep; nessun trading reale o accesso aggiuntivo per implicazione. Se il testo non contiene una soglia o una regola, non significa che sia lecito inventarla.
 
 ## 34. Storia delle revisioni
 
 | Versione | Data | Variazione |
 |---|---|---|
+| 1.5 | 2026-10-17 | OBS-001 chiuso tecnicamente con limite di comprensione conservato; Astra autorizza candidato completo movimento/reazione/ripresa, sviluppo 2023–2024, confronto 2025, costi modellati e unica revisione motivata |
 | 1.4 | 2026-10-17 | Motore/studio OBS-001 consegnati e calcoli verificati; accettazione finale pendente. Riscontro Owner su comprensibilità/scopo e richiesta confronto Astra su durata dati e sviluppo decisionale |
 | 1.3 | 2026-10-16 | UI conclusa; Astra autorizza motore osservativo, acquisizione pubblica giugno–dicembre2025, studio descrittivo24h e stessa app; DESIGN-001 approvato solo §§5–6 con warmup per misura, limiti operativi invariati |
 | 1.2 | 2026-10-16 | Richiesta Owner: navigazione superiore al posto della sidebar; spazio recuperato per il contenuto, controlli simulati distinti |

@@ -10,9 +10,9 @@ Provenienza del testo originale: current_task.md al commit 671d8d5176c19af13ec7b
 | §6 TR e A=media20 TR, SMA20/50, pivot 2+2, livelli, volume relativo, Fibonacci, eventi/versioni e null distinti da zero | APPROVATA come prima definizione esplicita, non ottima/validata |
 | §6 warmup globale 54 barre | SUPERATO: SMA20=20, SMA50=50, A=21, pendenza SMA20 a lag4=24, distanza medie=50, incrocio=51, rapporto volume=21 barre complete contigue; pivot/ancore dipendono dai pattern realmente confermati |
 | §6 prossimità +/-0,25A | Non autorizzata come criterio decisionale o classificazione dello studio; al più descrizione geometrica |
-| §§3–4 fonte/finestre originarie | NON ATTIVATE. Sostituite soltanto per OBS-001 dal mandato dati specifico sotto |
+| §§3–4 fonte/finestre originarie | Non attivate in blocco. Fonte e finestre operative sono autorizzate separatamente dai mandati OBS-001 e CAND-001 sotto |
 | §§7–8 barriere2A, orizzonti aggiuntivi, R2/R3, sottogruppi medie/volume/Fibonacci e coorte principale00:00 | NON ATTIVATI. Domanda e tabelle OBS-001 sono quelle registrate nel task prima degli esiti |
-| §9 modello economico | NON APPROVATO / NON ATTIVO |
+| §9 modello economico | NON attivato automaticamente. CAND-001 ha un modello economico autonomo registrato nel suo protocollo, dopo verifica di fonti/assunzioni |
 | §§10–13 vecchio incremento solo sintetico, HTML separato, fixture70giorni e gate successivi | Proposte storiche, non mandato corrente. OBS-001 usa la dashboard esistente e completa anche dati/studio autorizzati |
 | Verifica protetta e vecchi studi | NON APERTI / INACTIVE |
 
@@ -20,7 +20,10 @@ Provenienza del testo originale: current_task.md al commit 671d8d5176c19af13ec7b
 
 Studio principale: tutte le chiusure45m, struttura45m confrontata entro lo stesso verso in relazione alla struttura1D; seguito24h con variazione finale ed escursioni alto/basso normalizzate con A45m all'origine; mesi, distribuzioni, indisponibilità e censura conservate. Non è strategia, studio economico o autorizzazione operativa.
 
-**current_task.md OBS-001 è la specifica eseguibile e chiude le ambiguità prima del codice.** Le restanti sezioni originali qui sotto rimangono per tracciabilità; diciture DRAFT, richieste di approvazione e finestre originarie sono storiche, non nuove autorizzazioni né blocchi ai microstep già autorizzati.
+**OBS-001 è concluso tecnicamente; la sua specifica eseguibile è conservata nella storia del task.** Mandato corrente nel task unico e protocollo completo docs/research/CAND-001-v1.md. Le restanti sezioni originali qui sotto rimangono per tracciabilità; diciture DRAFT, richieste di approvazione e finestre originarie sono storiche, non nuove autorizzazioni né blocchi ai microstep già autorizzati.
+
+
+**Disposizione successiva Astra del17ottobre — CAND-001:** autorizzato un primo candidato completo movimento→reazione→ripresa e ciclo storico2023–2024, più confronto2025 già esposto; inizializzazione daottobre2022, nessun input2026. Ammessi costi modellati su nozionale normalizzato fisso e dati pubblici funding/mark strettamente necessari. Non si importa il modello§9 né la vecchia strategia: parametri, esecuzioni, gestione e costi sono decisi separatamente dal Director in CAND-001-v1. R2/R3 e verifica protetta restano non attivi.
 
 ---
 

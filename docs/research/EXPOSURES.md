@@ -21,3 +21,11 @@ Una repository nuova non cancella conoscenza o esposizioni pregresse. Non qualif
 Astra autorizza ora, per questo solo studio osservativo descrittivo, acquisizione pubblica e lettura Binance Vision BTCUSDT perpetual USDⓈ-M, klines negoziate1m: inizializzazione [2025-06-01,2025-09-01), studio [2025-09-01,2026-01-01) UTC. Perimetro input totale giugno–dicembre2025, senza tail nel2026. Fonte diversa non rende settembre–dicembre nuovo o indipendente dalle esposizioni già registrate.
 
 Questa è registrazione di autorizzazione, **non prova di acquisizione o copertura effettiva**: l'esecutore aggiungerà data/run/manifest alla consegna dopo i controlli. Nessun accesso al vecchio stack o riuso dei suoi dataset. Gennaio–agosto2026 rimane protetto; il precedente tail del1gennaio non è utilizzabile in OBS-001. HDP-001 e A restano INACTIVE. Nessuna estensione implicita ad altre date, simboli, fonti o studio economico.
+
+## Mandato CAND-001 — 17 ottobre 2026
+
+Astra autorizza l'ampliamento pubblico gratuito della medesima fonte/strumento: Binance Vision BTCUSDT perpetual USDⓈ-M, input negoziato1m [2022-10-01,2026-01-01) UTC; inizializzazione [2022-10-01,2023-01-01), sviluppo [2023-01-01,2026-01-01). Consentiti funding storico e mark strettamente necessari alla valutazione entro gli stessi confini; raw/bundle fuori Git, nessun accesso Owner/vecchio stack. Riutilizzare file già verificati e acquisire solo mancanti.
+
+2023–2024 destinati alle iterazioni iniziali; non certificati mai esposti.2025 confronto aggiuntivo **già esposto**, non validazione indipendente: la preregistrazione non cancella OBS-001 né precedenti studi. CAND-001 valuta primaDEV2023–2024; eventuale unica revisione e congelamento prima degli esiti2025, nessuna iterazione metodologica su2025 in questa macrofase.
+
+Autorizzazione non equivale a dato già acquisito: l'esecutore registrerà manifest/copertura/esposizione effettiva. Il Director ha verificato solo fattibilità/campi del fundinggennaio2023 e checksum markgennaio2023, nessun esito economico del candidato. Nessuna lettura nel2026, neppure il vecchio tail1gennaio. HDP-001 eA restanoINACTIVE. Eventuali nuovi dati fuori da questi confini richiedono mandato specifico.
