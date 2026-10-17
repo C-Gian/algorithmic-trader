@@ -1,6 +1,6 @@
 # MOVE-001 — applicazione descrittiva del ciclo di vita del movimento (DEV 2023–2024)
 
-**Stato: consegna dell'esecutore (DELIVERED, in attesa di review del Director; non ACCEPTED).** Rappresentazione sperimentale: nessuna strategia, operazione, esito 24h o valutazione economica. Il Director conclude se la rappresentazione permette una prossima domanda decisionale.
+**Stato: correzioni R1 consegnate dall'esecutore (DELIVERED, in attesa di review del Director; non ACCEPTED).** Sezione 10 per R1. Rappresentazione sperimentale: nessuna strategia, operazione, esito 24h o valutazione economica. Il Director conclude se la rappresentazione permette una prossima domanda decisionale.
 
 **Licenza di questo file e delle immagini in `docs/research/MOVE-001-screens/`:** derivati aggregati di dati Binance Vision, **CC BY-NC-SA 4.0** (https://creativecommons.org/licenses/by-nc-sa/4.0/). Fonte: Binance Vision (https://data.binance.vision). Dati grezzi, ledger e pacchetti non sono redistribuiti.
 
@@ -35,7 +35,7 @@ Modulo isolato `src/move001/`, che riusa minuti, aggregazione e osservatore OBS-
 
   Il ledger è append-only.
 - `summary.py`: conteggi per DEV, anni, mesi, verso e prefisso, con stock, condizioni di occupazione e strutture riconciliati. Durate con disponibili, censurate e non raggiunte separate.
-- `examples.py`: casi del §12.3. `consult.py`: un pacchetto `MOVE001_CASE` per caso. `verify.py`: riscontro indipendente dalle barre.
+- `examples.py`: casi del §12.3. `consult.py`: un pacchetto `MOVE001_CASE` per caso. `verify.py`: controllo aggiuntivo di alcuni invarianti scritto dall'autore, a partire dai riferimenti del ciclo confrontati con le barre; non una seconda ricostruzione indipendente (qualificazione R1, §10).
 - Lettore (dashboard): validatore `MOVE001_CASE` e scheda «Movimento di riferimento», che ricostruisce giudizio e ancore dai soli fatti con istante ≤ momento scelto.
   - Ancore B/P0/P1 sul grafico, solo da quando sono note.
   - Avviso «Rappresentazione sperimentale del movimento — nessuna decisione operativa».
@@ -234,7 +234,7 @@ La domanda del §12.4: il ciclo rappresenta sequenze concretamente consultabili,
   Delle 234 perdite, 137 avvengono da sospeso e 75 da utilizzabile.
 - **Strutture qualificate non adottate:** 112 su 743 (15%), cioè 57 per utilizzabile occupante, 50 per freschezza (35 delle quali con posto libero) e 5 per formazione occupante. La formazione blocca raramente, perché dura poco (mediana 3 barre).
 
-In sintesi descrittiva: la rappresentazione è consultabile e si risolve quasi sempre in poche ore. Una parte rilevante del tempo con principale passa però in sospensione persistente, e lì il prezzo spesso torna a P1 senza che la lettura venga riattivata. È in questo punto che la rappresentazione perde informazione in modo esplicito. Non ne deriva una conclusione su utilità o inefficacia: la decisione sulla prossima domanda spetta al Director.
+In sintesi descrittiva: la rappresentazione è consultabile e si risolve quasi sempre in poche ore. Una parte rilevante del tempo con principale passa però in sospensione persistente, e lì il prezzo tocca spesso P1 senza che la lettura venga riattivata (1.265 barre: non riferimenti, movimenti o continuazioni riuscite; qualificazione R1). È in questo punto che la rappresentazione perde informazione in modo esplicito. Non ne deriva una conclusione su utilità o inefficacia: la decisione sulla prossima domanda spetta al Director.
 
 ## 7. Come consultare un caso (per Gian)
 
@@ -284,3 +284,73 @@ Lettura provvisoria sui numeri riportati, non ricalcolati dal Director: la candi
 ### 9.3 Incarico R1
 
 Registrato in current_task.md: correggere soltanto importazione/coerenza del ledger e accessibilità dell'ultima chiusura; verifiche mirate e aggiornamento di questa consegna. Semantica, config, dati, popolazione, ledger e riepiloghi reali restano invariati. Nessuna nuova applicazione DEV o download. Chiusura e giudizio finale Director dopo la verifica delle correzioni.
+
+## 10. Correzioni R1 (esecutore, 17 ottobre 2026)
+
+**Base:** checkout su `e3c77f8`, senza pull/fetch. Codice e test nel commit R1 del codice, più il commit di questa consegna (report, stato). Semantica 1.0.1, config, osservatore, selezione delle categorie, ciclo e **output numerici reali invariati**: nessuna nuova applicazione DEV, nessuna lettura di prezzi reali, nessun download; `outputs.json` del run resta `10dd7fc6…03d4`.
+
+**Riproduzioni prima delle correzioni.** Le regressioni falliscono sul codice consegnato `1235e64`:
+- R1-A: 24 dei 25 rifiuti parametrizzati e la prova dal selettore. Il venticinquesimo rifiuto, tipo di fatto sconosciuto, era già respinto dal vecchio controllo e resta come regressione.
+- R1-B: in Python l'ultima origine valeva 1665443700000 contro la fine copertura 1665446400000, gli stessi valori della review; nel lettore falliscono i due test dell'ultima chiusura.
+
+### R1-A — fatti MOVE-001 validati prima di sostituire lo studio
+
+**Correzione** (`dashboard/src/historical/loadBundle.ts`, `validateMoveCase`): una piccola macchina a stati sui soli campi letti da `MoveCard`. Nessun prezzo o pivot ricalcolato.
+
+- **Ancore** (caso e fatti): id, tipo coerente col verso, prezzo finito, `candidateOpen` e `availableAt` interi. Le ancore del caso sono note entro la nascita; quelle del fatto `BIRTH` coincidono con quelle del caso.
+- **Campi richiesti per tipo:**
+  - `BIRTH`: C, Cprev e predecessore uguale al caso;
+  - `P1_PUBLISHED`: P1 completo nel verso finale, disponibile all'istante del fatto e dopo la nascita, candela non prima della barra di nascita, prezzo oltre B, `whileSuspended` coerente con le sospensioni precedenti;
+  - `SUSPENSION`: motivo riconosciuto; la sospensione alla nascita avviene solo alla chiusura di nascita, e solo lì;
+  - `FACT`: fatto riconosciuto, ammesso solo da sospeso;
+  - `CANDIDATE_REJECTED`: esito di rifiuto, verso, `candidateB` e `candidateP0`;
+  - `ARCHIVE`: motivo e giudizio coerenti (perdita → NON_SOSTIENE/ORIGINE_IN_CHIUSURA; completamento → UTILIZZABILE/P1_NOTO, solo da utilizzabile con P1 già noto; sostituzione → INDETERMINATO con il motivo della sospensione e un successore; interruzione → INDETERMINATO/DATI_INCOMPLETI);
+  - `OPEN_AT_END`: giudizio coerente con i fatti precedenti e istante uguale alla fine del pacchetto;
+  - flag eventualmente presenti solo come elenco di testi.
+- **Transizioni:**
+  - una sola nascita, pubblicazione di P1, passaggio a UTILIZZABILE, sospensione iniziale e conclusione;
+  - UTILIZZABILE solo alla pubblicazione di P1, mai senza P1 né dopo una sospensione;
+  - nessun fatto dopo la conclusione, nemmeno allo stesso istante;
+  - verso di ogni fatto uguale al caso.
+
+  Restano accettati gli ordini concorrenti del motore: nascita + sospensione alla nascita, P1 + perdita, P1 + UTILIZZABILE, sospensione + fatti alla stessa chiusura.
+
+Un file scorretto è rifiutato dal selettore con un errore preciso, e studio e momento precedenti restano aperti, senza ricorrere a `ViewGuard`. Per non modificare test esistenti, i messaggi conservano le formulazioni già attese («ancora non valida», «P1 non coerente»).
+
+**Test** (`Move001CaseR1.test.tsx`):
+- 25 rifiuti parametrizzati, cioè le tre riproduzioni del Director e i campi e le transizioni sopra;
+- ordini concorrenti validi accettati;
+- rifiuto dal selettore con studio e cutoff conservati.
+
+### R1-B — ultima chiusura disponibile selezionabile
+
+**Correzione:**
+- **Generatore** (`src/move001/consult.py`): ultima origine = min(ultimo fatto + 8 barre, fine copertura), quindi può coincidere con la fine. Versione tecnica dichiarata nel pacchetto `consultVersion: "move001.consult/2"` (la /1 è la consegna `1235e64`). Schema `move001.case/1` e versione del motore del ciclo invariati, perché il calcolo semantico non cambia.
+- **Validatore:** solo per `MOVE001_CASE`, l'ultima origine può essere uguale a `periods.end`, cioè la chiusura dell'ultima barra disponibile. Le barre restano [inputStart, end). OBS-001 e OBS-002 conservano origini strettamente prima della fine (test).
+- **Navigazione:** nessuna modifica necessaria. Snapshot, grafico e selettori esistenti gestiscono già l'ultima chiusura quando è fra le origini.
+
+**Test:**
+- Python `tests/test_move001_r1.py` (3): sulla catena della fixture, ultimo riferimento aperto: OPEN_AT_END all'ultima origine = fine, barre senza dati oltre la fine, versione di consultazione dichiarata, origini dei riferimenti precedenti invariate.
+- Lettore:
+  - la fine copertura si raggiunge avanzando e mostra «aperto a fine copertura» senza archiviazioni;
+  - una perdita costruita esattamente sull'ultima chiusura è visibile solo da quella chiusura;
+  - i pacchetti vecchi restano validi.
+
+Nuova fixture sintetica `synthetic-move001-case-final.json`; la fixture esistente `synthetic-move001-case.json` non è rigenerata, così resta un esempio di pacchetto /1, e la catena la riproduce identica byte per byte.
+
+### Impatto e compatibilità
+
+- **Pacchetti reali non rigenerati.** I 6 casi MOVE-001 registrati e i 10 casi OBS-002 passano il nuovo validatore (controllo locale col parser). Nessuno dei 6 casi MOVE-001 è toccato da R1-B: sono tutti del 2023, lontani dalla fine copertura, e nessun riferimento DEV era aperto alla fine.
+- **Prova integrata nel browser** (1366 px, Chrome headless):
+  - il caso sintetico di fine copertura avanza fino all'11 ottobre 2022 00:00, la fine, e mostra il fatto di fine copertura; immagine `MOVE-001-screens/move-r1-fine-copertura-sintetico-1366.png`, prezzi inventati;
+  - il caso reale `04-LONG-1673260200000` si apre e scorre fino alla sua ultima origine;
+  - un file con nascita senza B è rifiutato con «fatto 1 BIRTH: ancora B non valida», con studio e cutoff del caso reale intatti.
+- **Verifiche:** 22 test Python MOVE-001 (19 e 3 R1); 90 test del lettore storico (60 e 30 R1); typecheck e build. Nessuna suite generale, CI o processo dell'Owner.
+
+### Qualificazioni chieste dalla review
+
+- `verify.py` è un **controllo aggiuntivo di alcuni invarianti scritto dall'autore**: parte dai riferimenti del ciclo e li confronta con le barre. Non è una seconda ricostruzione indipendente della popolazione e delle decisioni, non certifica la completezza dei candidati e non ricalcola la conferma dei pivot. La ripetizione deterministica verifica la riproducibilità, non l'assenza di ogni errore. Testo dei §§2 e 6 qualificato di conseguenza.
+- Le 1.265 barre di contatto con P1 da sospeso non sono 1.265 riferimenti, movimenti o continuazioni riuscite.
+- Dei 112 rifiuti, 62 sono per posto occupato (57 utilizzabile e 5 in formazione) e 50 per freschezza, di cui 35 con posto già libero.
+
+I numeri del report non cambiano.

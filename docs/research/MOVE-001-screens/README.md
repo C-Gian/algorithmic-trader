@@ -5,6 +5,8 @@ Screenshot della dashboard (1366 px, Chrome headless) sul run `MOVE-001-v1.0.1-e
 - `move-02-utilizzabile-dopo-p1-1366.png`: lo stesso riferimento sei chiusure dopo, alla pubblicazione di P1. Giudizio UTILIZZABILE, ancore B, P0 e P1 sul grafico, tre fatti noti; nessun fatto successivo mostrato;
 - `move-03-secondo-caso-p1-1366.png`: riferimento `MOV:LONG:1673241300000:1673246700000:1673260200000` alla pubblicazione del suo P1.
 
+- `move-r1-fine-copertura-sintetico-1366.png` (R1-B, **fixture sintetica con prezzi inventati**, non BTC): riferimento aperto a fine copertura consultato all'ultima chiusura disponibile, ora selezionabile, con il fatto «Fine della copertura dei dati».
+
 In tutte le viste l'avviso «Rappresentazione sperimentale del movimento — nessuna decisione operativa» è presente e il comando del seguito 24h non compare.
 
 Sono derivati di dati Binance Vision. **Licenza CC BY-NC-SA 4.0** (https://creativecommons.org/licenses/by-nc-sa/4.0/), solo per queste immagini.

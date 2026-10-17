@@ -1,6 +1,6 @@
 # MOVE-001/R1 — Robustezza del lettore e ultima chiusura
 
-**Stato: READY — Director, 17 ottobre 2026.** Base da contenere nel checkout: 1235e64f03026b4b728c4c1ddc0422d0e5ea982a più il commit di questo incarico. Pubblicazione commit/push pertinenti autorizzata; sincronizzazione del PC a cura Gian, nessun pull/fetch/force.
+**Stato: DELIVERED** (Claude Code, 17 ottobre 2026; in attesa di review del Director, non accettato). Incarico READY del Director, 17 ottobre 2026. Base da contenere nel checkout: 1235e64f03026b4b728c4c1ddc0422d0e5ea982a più il commit di questo incarico. Pubblicazione commit/push pertinenti autorizzata; sincronizzazione del PC a cura Gian, nessun pull/fetch/force.
 
 ## Esito della review
 Consegna MOVE-001 non ancora accettata. Report originale e review Director in docs/research/MOVE-001-results.md §§1–9. Il Director ha rieseguito19 test Python,60 del lettore e build nella copia isolata, poi riprodotto due difetti sintetici. Nessun ricalcolo reale indipendente. Le nove scelte dichiarate sono ammesse con le qualificazioni §9.2; non cambiare semantica/convenzioni in funzione dei conteggi.
@@ -30,3 +30,11 @@ Prima riproduzioni fallenti sul codice consegnato, poi test discriminanti per le
 Aggiornare MOVE-001-results.md con correzioni, versioni, prove effettive e impatto; qualificare verify.py come controllo aggiuntivo di invarianti dell'autore, non seconda ricostruzione indipendente completa. Non cambiare i numeri del report o dedurre risultati nuovi. Non trasformare le1265 barre in numero di movimenti/occasioni né i112 rifiuti in soli blocchi del posto.
 
 Consegna a Director, stato DELIVERED/non ACCEPTED; STATE breve. Nessuna nuova ipotesi o strategia. Non chiedere un'altra autorizzazione ordinaria.
+
+## Consegna dell'esecutore — MOVE-001/R1, Claude Code, 17 ottobre 2026
+Checkout su `e3c77f8`, senza pull/fetch. Codice e test nel commit `fix(MOVE-001/R1)`; report §10 e stato nel commit di consegna. Difetti riprodotti prima: 24 rifiuti R1-A, la prova dal selettore e i test dell'ultima chiusura falliscono su `1235e64`.
+
+- **R1-A.** `validateMoveCase` controlla ancore e campi per tipo di fatto, identità e verso, ancore della nascita uguali al caso, P1 completo e qualificato, motivi e giudizi riconosciuti, transizioni ammesse, nessun fatto dopo la conclusione. Restano accettati gli ordini concorrenti del motore. Il file scorretto è rifiutato dal selettore con studio e momento intatti.
+- **R1-B.** Generatore `move001.consult/2`: ultima origine fino alla fine copertura inclusa. Solo per MOVE001_CASE l'origine può coincidere con `periods.end`; minuti [inputStart, end). OBS-001 e OBS-002 invariati.
+- **Impatto.** Semantica 1.0.1, config, ciclo e output reali invariati (`outputs.json` `10dd7fc6…03d4`). I 6 pacchetti reali MOVE-001 e i 10 OBS-002 sono compatibili e non rigenerati; nessun caso reale è toccato da R1-B.
+- **Verifiche.** 22 test Python MOVE-001, 90 test del lettore, typecheck e build; prova integrata nel browser sul caso sintetico di fine copertura, su un pacchetto reale e sul rifiuto dal selettore. `verify.py` qualificato come controllo aggiuntivo dell'autore.
