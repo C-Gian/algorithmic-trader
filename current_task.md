@@ -1,6 +1,6 @@
 # OBS-002 — Prosecuzione ed esaurimento del tentativo di ripresa
 
-**Stato: READY.** Director, 17 ottobre 2026. Esecutore: Claude Code. Base main **9d5df7d3dc8aed9feda44b624e36dddd461f8590** più il commit di questo incarico. Checkout sincronizzato da Gian, nessun pull/fetch. Leggere AGENTS, STATE, PRODUCT-CONTEXT §31 e questo task; definizioni osservatore OBS-001/v1 e config/OBS-002-v1.json. Nessun nuovo cantiere preparatorio UI.
+**Stato: IN_PROGRESS** (Claude Code, 17 ottobre 2026; incarico READY del Director, 17 ottobre 2026. Esecutore: Claude Code). Base main **9d5df7d3dc8aed9feda44b624e36dddd461f8590** più il commit di questo incarico. Checkout sincronizzato da Gian, nessun pull/fetch. Leggere AGENTS, STATE, PRODUCT-CONTEXT §31 e questo task; definizioni osservatore OBS-001/v1 e config/OBS-002-v1.json. Nessun nuovo cantiere preparatorio UI.
 
 ## 1. Domanda, responsabilità e confini
 Astra accetta il ciclo CAND-001 senza v2 e autorizza una sola analisi esplorativa: dopo movimento e arretramento, quali differenze già osservabili al primo tentativo di ripresa aiutano a distinguere prosecuzione da esaurimento? Le informazioni possono contare insieme anche quando presenti in esiti opposti. Nessun requisito di efficacia autonoma di ciascuna famiglia. Il Director non ha escluso ogni possibile modifica futura di CAND-001.
@@ -86,4 +86,4 @@ Commit/push main pertinenti autorizzati; niente forcepush/pull/fetch o chiusura 
 Il Director sceglierà al massimo una ipotesi concreta «in questa situazione, questa combinazione potrebbe motivare attesa/ingresso/rinuncia», con spiegazione, svantaggi/controesempi e verifica futura necessaria; oppure nessuna distinzione interpretabile, specificando cosa non è riconoscibile. Non è sufficiente ripetere saldi o scegliere il profilo col seguito migliore. Una scoperta esplorativa non è evidenza di efficacia o v2: nessuna sua implementazione senza decisione successiva Astra. Chiusura ad Astra al termine, senza nuova autorizzazione ordinaria per estrazione, viewer pertinente o review.
 
 ## Spazio dell'esecutore
-Da compilare; nessuna estrazione OBS-002 ancora svolta.
+**Avanzamento 1 — convenzioni eseguibili e test pubblicati prima di ogni esito reale.** Checkout verificato su `6f1743d` senza pull/fetch. Pacchetto `src/obs002/` (config, dati con mesi espliciti 2022-10…2024-12 verificati sul manifest CAND-001, popolazione causale e snapshot, seguito 24h, tabelle, esempi, pacchetti di consultazione) e 15 test sintetici in `tests/test_obs002.py`. Nessun dato reale OBS-002 ancora elaborato.
