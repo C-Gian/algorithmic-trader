@@ -1,6 +1,6 @@
 # APP-001/R1 — Completezza, progresso, ritorno e costi iniziali
 
-**Stato: ACCEPTED** (Director, 17 ottobre 2026; accettazione tecnica di APP-001/R1 su ec19f22, codice 3dd3f66). La macrofase APP-001 resta aperta in attesa della prova pratica di Gian. Incarico del Director, 17 ottobre 2026. Esecutore: Claude Code.
+**Stato: ACCEPTED** (Director, 17 ottobre 2026; accettazione tecnica di APP-001/R1 su ec19f22, codice 3dd3f66). La macrofase APP-001 è conclusa dal Director con il riscontro Owner del 17 ottobre 2026; segue passaggio ad Astra, senza nuovo incarico implementativo. Incarico del Director, 17 ottobre 2026. Esecutore: Claude Code.
 Base: **11e028407261907a0206f2b484f0445f8c712ea0** più il commit di questo incarico; checkout sincronizzato daGian. Nessun pull/fetch, neppure dry-run.
 
 La macrofase APP-001 resta aperta e autorizzata interamente daAstra. Requisiti e disegno originari conservati nella storia di current_task.md al commit7f94d4e; consegna a11e0284 e docs/research/APP-001-delivery.md. R1 corregge difetti nel perimetro già assegnato, non apre una nuova macrofase.
@@ -165,3 +165,12 @@ Verifiche indipendenti del Director in copia isolata della consegna:
 Non svolti dal Director: nuova prova browser sul PC Windows, nuovo confronto reale UI/CLI, download o ricalcolo storico. L'identità del breve run gennaio dopo R1 (982ad3a6…), la prova reale e i tempi di annullamento restano evidenza dell'esecutore. I casi di costo mancante, HALT e annullamento durante la simulazione sono verifiche sintetiche, non eventi osservati nei run reali. I vecchi registri non sono riscritti.
 
 **Prossimo passo: prova pratica Owner**, non nuova implementazione o ricerca. Riavviare il comando npm run dev se già acceso, perché la parte Python è cambiata; dipendenze invariate, npm ci non richiesto. Percorso breve: Nuovo backtest → Prova di gennaio 2025 → Avvia → avanzamento → Apri risultati → Tutte le operazioni → dettaglio e seguito → ritorno al registro → risultati salvati. Gian valuta autonomia e comprensibilità, non formule o convenienza della strategia. Non registrare un esito positivo prima del suo riscontro. Alla conclusione della macrofase, relazione ad Astra; strategia v1 e finestre restano congelate, 2026 protetto.
+
+
+## Chiusura APP-001 — riscontro Owner, 17 ottobre 2026, 19:30 Europe/Rome
+
+Gian, dopo la richiesta di prova pratica, riferisce: «ok, ora mi sembra molto meglio!». È un riscontro positivo sul miglioramento dell'esperienza, senza ulteriori difetti segnalati. Non costituisce un verbale di verifica di ogni singolo passo, né una conferma dei calcoli o della strategia.
+
+Il Director chiude la macrofase APP-001 sulla base dell'accettazione tecnica già registrata e di questo riscontro d'uso, conservandone i limiti. Non assegna ulteriori estensioni UI o collaudi storici. Avvio locale, avanzamento, risultati salvati, registro, spiegazioni e navigazione sono la capacità consegnata; equivalenza reale UI/CLI e annullamento reale restano evidenze dell'esecutore nei limiti sopra.
+
+Passaggio ad Astra per il prossimo ciclo metodologico: CAND-001/v1 rimane invariata, negativa e non promossa; nessuna revisione effettuata. DEV 2023–2024: 78 operazioni, −210,59 USDT; confronto 2025 già esposto: 29, −109,08 USDT. Lo strumento ora utilizzabile non aggiunge evidenza favorevole alla strategia. Raccomandazione Director: nessun ulteriore cantiere preparatorio UI; decidere sulla diagnosi della politica completa e sull'eventuale revisione motivata, senza adattamenti agli esiti 2025. Nessuna nuova strategia o esecuzione avviata da questa chiusura; 2026 protetto.
