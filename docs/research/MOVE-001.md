@@ -1,6 +1,6 @@
 # MOVE-001/v1 — Ciclo di vita del movimento di riferimento
 
-**Proposta completa del Director, 17 ottobre 2026. Solo design, consegnato ad Astra. Non attivata nel codice, nei dati o nel prodotto.**
+**Candidata semantica sperimentale approvata da Astra, 17 ottobre 2026. Contratto 1.0.1 completo per implementazione isolata e applicazione descrittiva DEV; non strategia approvata né efficacia dimostrata. Implementazione ancora da consegnare.**
 Base di lettura:505801131efd9f2cd6b9f8e92363c077c8b0bca9. Mandato Astra: definire quale situazione si riconosce mentre accade, senza estrazione, esclusione dei1728casi o modifica CAND-001. Non è una strategia, un segnale di esecuzione o una regola validata.
 
 ## 1. Significato e fonti
@@ -160,7 +160,7 @@ Coerenza dei vicini per questa sequenza: dopo il LOW103, low ai passi5/6=103,6/1
 |---|---|---|---|
 | 4 | 117/103,8/112 | 116,2/103/108 | Test di P0 e P1 nella stessa barra, C nell'intervallo: INDETERMINATO, ordine ignoto. Non scegliamo il contatto favorevole per primo |
 | 5 | 115/109/113 | 111/105/107 | Prezzo recuperato ma nessuna nuova tripla/rottura: ancora INDETERMINATO |
-| 6 | 114/110/112 | 110/106/108 | Il futuro non ha ancora risolto la lettura; non le assegniamo un esito inventato |
+| 6 | 114/110/112 | 110/106/108 | Questa lettura non viene riattivata per scelta del metodo; attendiamo una nuova struttura |
 
 Anche senza test di P0, due high e due low confermati decrescenti interni alla vecchia gamba LONG (per esempio high114→112 e low108→106, tutti>P0=104) sono STRUTTURA_OPPOSTA: sospensione, non perdita della base né SHORT automatico. Specchio SHORT: high112→114 e low106→108, con high<P0=116; stessa conclusione. MIXED da solo non basta.
 
@@ -172,6 +172,92 @@ Controllati manualmente: simmetria p→220−p, ordine di conoscibilità2+2, rot
 
 Limiti dichiarati: scelta della scala, ritardo dei pivot, definizione conservativa di base protetta, sospensione non reversibile del vecchio riferimento per un semplice recupero, assenza di scadenza temporale. Possono produrre attese e riferimenti non risolti o perdere alcune continuazioni; non sono qualità validate. Non sappiamo se le distinzioni aiutino a decidere. Non riqualifichiamo la popolazione OBS-002: quella domanda futura richiederebbe autorizzazione e registrazione separate.
 
-## 10. Consegna
+## 10. Consegna di design e autorizzazione successiva
 
-Una sola proposta completa, pronta per valutazione semantica Astra. Nessun cambiamento a CAND-001, OBS-002, osservatore, config, UI, dataset o esiti; nessuna esclusione dei1728casi, uso2025 o2026, acquisizione o incarico implementativo. Il passo successivo è una decisione sulla proposta, non un nuovo studio già attivo.
+Il commit 03510afe conserva la proposta originale di solo design. Astra l'ha approvata come candidata sperimentale e autorizza ora il perimetro dei §§11–12. Nessun risultato precedente viene riscritto; CAND-001 resta invariata. Le precisazioni seguenti sono chiuse dal Director prima dell'incarico implementativo.
+
+## 11. Precisazioni approvate e contratto implementativo — versione 1.0.1
+
+Astra approva la candidata semantica del commit 03510afed13732c2fc46b5bb4e95626986c95ca0 e autorizza implementazione isolata e una applicazione descrittiva DEV. Questa sezione completa le precedenze dei §§2–7 e prevale nei punti prima non espliciti. Non introduce una strategia. La versione 1.0.1 identifica queste precisazioni, non una variante scelta da esiti.
+
+### 11.1 Popolazione e significato dei giudizi
+
+È una popolazione nuova e più specifica: minimo crescente/massimo decrescente seguito dalla rottura del precedente estremo. Non ripara OBS-002, non rappresenta ogni impulso o pullback, non elimina retroattivamente i 1728 casi e non prevede un vantaggio economico.
+
+Distinguere attesa informativa FORMAZIONE_NON_CONCLUSA da sospensioni metodologiche TEST_ORIGINE e STRUTTURA_OPPOSTA. Queste ultime restano tali per scelta conservativa: **questa lettura non viene riattivata; attendiamo una nuova struttura**. Non affermare che tutta l'informazione successiva sia inconoscibile. Conservare primo motivo, istante di sospensione e fatti successivi, senza cancellare i motivi precedenti. Una chiusura successiva oltre P0 può ancora concludere per perdita della base una lettura sospesa.
+
+### 11.2 Unico riferimento e strutture candidate
+
+Alla nascita la formazione occupa subito l'unico posto principale. Una lettura INDETERMINATA soltanto perché P1 non è ancora noto non è sostituibile come una lettura sospesa per test/conflitto.
+
+Ad ogni chiusura completa considerare la tripla degli ultimi tre pivot della sequenza alternata accettata allora, con i vincoli §2. Ogni tripla qualificata viene considerata al suo primo attraversamento valido con ancore già note; identificazione tramite verso, segmento e ID/versioni causali Q/B/P0. Considerarla una volta sola anche se non adottata. Una nuova versione di pivot è una nuova tripla soltanto dal proprio availableAt. Non recuperare in seguito candidati rifiutati, né trasformare il successivo riattraversamento della stessa tripla in nuova nascita.
+
+Registrare tutte le strutture qualificate, prima del filtro del posto principale: ADOTTATA, NON_ADOTTATA_OCCUPATO_FORMAZIONE, NON_ADOTTATA_OCCUPATO_UTILIZZABILE o NON_ADOTTATA_FRESCHEZZA. I primi due rifiuti valgono anche se il candidato ha verso opposto. Nel caso sospeso, una nuova tripla può subentrare soltanto con P0 candidato strettamente successivo alla prima barra di test/conflitto; altrimenti NON_ADOTTATA_FRESCHEZZA. Dopo perdita usare la barra della perdita; dopo completamento geometrico basta P0 candidato successivo al vecchio P0, come §6. Conservare il vincolo anche se il posto è stato liberato; il primo riferimento del segmento non ha un predecessore da soddisfare.
+
+La sostituzione archivia il vecchio riferimento col suo ultimo giudizio e motivo SOSTITUITO_DA_NUOVA_STRUTTURA; la nuova identità conserva il legame. Perdita e completamento liberano il posto nella stessa chiusura: un candidato di quella chiusura può essere adottato se soddisfa i vincoli, senza riusare una rottura precedente.
+
+Distinguere questi rifiuti da triple non qualificate (geometria, base già testata, assenza di nuovo attraversamento, dati non continui). Non contarle come strutture nuove bloccate dal posto. Nessuna selezione fra più triple storiche per trovare quella più favorevole.
+
+### 11.3 Ordine della chiusura e struttura opposta alla nascita
+
+Ordine deterministico per ogni chiusura:
+1. Accertare continuità/completamento della barra; se manca, applicare §11.5.
+2. Pubblicare soltanto gli eventi dell'osservatore disponibili entro quella chiusura.
+3. Valutare il vecchio riferimento con le priorità §4.1, inclusa l'eventuale prima disponibilità di P1. Una sospensione preesistente non scompare.
+4. Considerare la nuova tripla e il suo attraversamento, registrando adozione/rifiuto §11.2.
+5. Per il riferimento appena nato valutare la struttura45m già disponibile nella stessa chiusura. Se opposta, conservare la nascita ma attribuire subito INDETERMINATO/STRUTTURA_OPPOSTA_ALLA_NASCITA, sospensione persistente. Non attendere un successivo cambiamento di struttura. MIXED/non disponibile non bastano a sospendere. La formazione resta distinta come attributo P1 non disponibile.
+
+La base di un candidato deve essere intatta dalla barra dopo P0 fino alla barra di nascita inclusa: perciò un candidato con test/perdita nella propria barra di nascita non nasce affatto. Non attribuire al neonato contatti della sua base precedenti alla nascita come eventi successivi. La sospensione per struttura può invece esistere già alla nascita: non equivale a errore del candidato o inversione.
+
+Su una lettura non sospesa, il completamento geometrico precede la nuova struttura opposta sulla stessa barra, come §4.1. Perdita/test della base prevalgono sul completamento; conservare entrambi i fatti se i due estremi sono toccati, senza inventarne l'ordine intrabar.
+
+### 11.4 Pubblicazione e formazione di P1
+
+P1 è il primo pivot accettato qualificato §2.3: evento APPEND o REPLACE, mai un KEEP non accettato. Si fissa il valore/versione disponibile allora e non si riscrive dopo una successiva revisione dell'osservatore. Gli ID/versioni sorgente restano nella provenienza.
+
+Gli eventi pubblicati alla chiusura sono già conoscibili per valutare la struttura e per nascita/sospensione. La candela candidata del pivot non può essere usata come contatto successivo del proprio P1. Alla pubblicazione di P1 si può descrivere la reazione osservata dalla barra successiva alla sua candidata fino alla pubblicazione inclusa, ma il giudizio cambia solo alla pubblicazione. Per un pivot stretto 2+2 nessuna delle due barre a destra può rivisitare P1; il primo nuovo contatto geometrico è quindi possibile dalla barra successiva alla pubblicazione. Non completare automaticamente il riferimento perché la candela che definisce P1 lo ha raggiunto per costruzione.
+
+P1 pubblicato dopo una sospensione per test/struttura può essere registrato come fatto conoscibile, se la lettura è ancora principale, ma non la rende UTILIZZABILE. Dopo archiviazione non aggiornare la vecchia lettura. Contare separatamente disponibilità di P1 e passaggi effettivi a UTILIZZABILE. Una perdita durante formazione resta una perdita con P1 mancante, non uno zero o un endpoint inventato.
+
+### 11.5 Dati interrotti, ripartenza e fine copertura
+
+Un minuto mancante/invalido rende incompleta la relativa barra45m. Al primo confine previsto in cui la continuità non è verificabile, archiviare l'eventuale principale con INDETERMINATO/DATI_INCOMPLETI e motivo CONTINUITA_INTERROTTA; non attribuire perdita della base, contatto di P1 o inversione nel tratto ignoto. Conservare ultimo istante completo e primo confine di lacuna, non un timestamp di mercato inventato.
+
+Ripartire l'osservatore in un nuovo segmento alla prima sequenza di barre complete dopo il tratto incompleto. Nessuna aggregazione o pivot può attraversare la lacuna; Q/B/P0/P1 devono appartenere al proprio segmento. Per il nuovo segmento non trasportare il prezzo precedente alla lacuna come chiusura precedente per l'attraversamento. Il primo eventuale riferimento deve qualificarsi interamente con nuove ancore e nuovo attraversamento. Non basta osservare dopo la lacuna un prezzo sotto P0 per dire che la vecchia base fu persa durante il tratto ignoto.
+
+L'assenza di un indicatore dipendente da warmup non è un gap dei prezzi e non blocca il ciclo. Un input illeggibile o una provenienza non verificabile è invece errore operativo dichiarato: non sostituirlo con dati fittizi.
+
+Fine copertura al 2025-01-01 escluso: registrare amministrativamente riferimenti ancora aperti e durate censurate, conservando l'ultimo giudizio. Nessuna perdita/completamento presunta, nessuna lettura 2025 per risolverli. Non introdurre scadenze temporali.
+
+## 12. Applicazione descrittiva preregistrata
+
+### 12.1 Input, percorso e riproducibilità
+
+Solo barre negoziate 1m BTCUSDT perpetual USDⓈ-M pubbliche già verificate: prefisso [2022-10-01,2023-01-01), DEV [2023-01-01,2025-01-01). Riutilizzare i 27 file locali e i controlli di provenienza/copertura. Nessun download, funding/mark, dato2025/2026 o nuovo indicatore. Aggregazione45m e osservatore OBS-001 invariati; wrapper per segmenti se necessario, senza alterare gli studi precedenti.
+
+Processare il prefisso per inizializzare anche il ciclo: non azzerare un riferimento il 1° gennaio 2023. Riportare stock iniziale e letture nate nel prefisso separate dalle nascite DEV, ma contare gli eventi DEV su entrambi. Identificare versione semantica/motore, config, commit, hash degli input e output e comando. Dati e output fuori Git, sotto MOVE-001.
+
+Prima di qualsiasi applicazione reale pubblicare implementazione, test discriminanti e config che traduca questo contratto. Nessuna lettura esplorativa dei percorsi reali prima di quel gate. Congelare anche schema dei conteggi e selezione casi; non scegliere metriche dopo i risultati. Un'esecuzione descrittiva completa; una ripetizione per verificare identità dei risultati è ammessa e non è una seconda variante. Correzioni di bug documentate, versionate, con confronto degli effetti; non cambiare metodo per migliorare i conteggi.
+
+### 12.2 Conteggi e durate fissati
+
+Totale DEV, separati per anno e verso; riepilogo mensile di nascite, passaggi, archiviazioni e stock finale. Contare:
+- chiusure previste/complete/incomplete; chiusure con principale assente, in formazione senza sospensione, sospeso (distinguendo con/senza P1), utilizzabile;
+- strutture qualificate e tutti gli esiti adozione/rifiuto §11.2, inclusi verso e motivo del riferimento occupante;
+- nascite, prime disponibilità P1, primo passaggio a UTILIZZABILE; sospensioni iniziali per test/struttura, distinguendo struttura opposta alla nascita e successiva; fatti ulteriori separati, senza ricontare una nascita;
+- perdite della base (anche in formazione/sospensione), completamenti geometrici, sostituzioni e interruzioni; letture aperte a fine copertura con motivo e stato;
+- durata nascita→P1, nascita→utilizzabile, permanenza nelle condizioni sopra, nascita→archiviazione o fine copertura. Unità barre45m e tempo UTC, conteggi disponibili/censurati separati, minimo/mediana/p90/massimo, quantile lineare standard dichiarato in config. Nessuna durata mancante pari a zero.
+
+Riconciliare per ogni periodo stock iniziale + nascite − archiviazioni = stock finale; strutture qualificate = adottate + rifiutate; chiusure complete = somma delle condizioni di occupazione mutuamente esclusive. Le durate dei riferimenti che attraversano confini mensili non vanno falsamente concluse al confine. Segnalare concentrazione temporale e lunghe occupazioni descrittivamente, senza soglia di successo o parametro nuovo.
+
+### 12.3 Esempi e consultazione
+
+Selezione fissata prima dell'elaborazione: primo cronologico per (1) nascita LONG, (2) nascita SHORT, (3) passaggio a UTILIZZABILE dopo P1, (4) test dell'origine, (5) perdita della base, (6) struttura opposta alla nascita, (7) struttura opposta successiva, (8) completamento geometrico, (9) sostituzione dopo sospensione, (10) struttura non adottata per formazione occupante, (11) struttura non adottata per riferimento utilizzabile, (12) continuità interrotta. Inoltre primo per data di nascita fra i riferimenti ancora aperti a fine copertura. Ordinare per availableAt dell'evento, poi ID stabile; deduplicare lo stesso riferimento mantenendo le categorie. Categoria vuota dichiarata, non sostituita con un caso più interessante. Al massimo13 riferimenti, non selezionati per andamento futuro.
+
+Usare importazione e consultazione storica esistenti con un adattatore minimo e tipo MOVE001_CASE esplicito, senza fingere che siano casi OBS-002 o risultati CAND. Grafico, ancore e timeline sincronizzati al momento scelto; “noto allora” non contiene revisioni/sostituzioni future. Segnalare chiaramente «Rappresentazione sperimentale del movimento — nessuna decisione operativa». Nessun esito24h calcolato soltanto per adattarsi al lettore: disabilitare/nascondere quel comando per questi casi. Nessun nuovo esploratore, restyling o servizio. I pacchetti storici esistenti devono restare leggibili.
+
+### 12.4 Verifica e conclusione
+
+Controlli sintetici discriminanti su LONG/SHORT speculari, pivot2+2 e loro versioni, formazione che occupa, struttura opposta alla nascita e successiva, test vs chiusura, collisioni, sostituzione/freschezza, candidati ignorati senza recupero, interruzione/ripartenza, fine copertura e invarianza dello stesso prefisso con futuri diversi. Controlli mirati del lettore se toccato; niente suite generale o polling CI.
+
+Report unico con conteggi completi, limiti, esempi e giudizio: il ciclo rappresenta sequenze concretamente consultabili oppure resta prevalentemente in formazione/sospensione/blocco? Nessuna percentuale minima, resa economica o attribuzione di efficacia. Distinguere esecuzione verificata dall'autore e successiva review indipendente Director. L'esecutore consegna risultati e limiti; il Director conclude se la rappresentazione permette una prossima domanda decisionale e dove perde informazione. Non modificare automaticamente il metodo.

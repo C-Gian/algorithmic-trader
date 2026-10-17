@@ -56,3 +56,7 @@ Dopo APP-001 Astra autorizza diagnosi della politica v1 ed eventuale unica revis
 ## Mandato OBS-002 — 17 ottobre 2026
 
 Astra autorizza una sola analisi esplorativa movimento–arretramento–ripresa, popolazione più ampia dei trade CAND-001, input esistenti [2022-10-01,2025-01-01), origini DEV [2023-01-01,2025-01-01). Nessun nuovo download, lettura2025 o2026. Osservazioni OBS-001 già definite, non nuovi indicatori. Prima dell'estrazione fissate popolazione, contesti congiunti ed esiti24h in current_task.md e config/OBS-002-v1.json. Esplorazione su dati già esposti, non validazione indipendente; nessuna modifica CAND o implementazione automatica di un'ipotesi. Questo paragrafo registra autorizzazione, non esecuzione già avvenuta.
+
+
+## Mandato MOVE-001 — 17 ottobre 2026
+Astra approva la candidata semantica sperimentale e autorizza una applicazione descrittiva sui soli input già disponibili [2022-10-01,2025-01-01), DEV [2023-01-01,2025-01-01). Popolazione nuova e specifica, non riclassificazione OBS-002. Nessun nuovo download, lettura2025/2026, trade o rendimento. Prima dell'applicazione pubblicare codice/config/test con regole e conteggi fissi in MOVE-001.md §§11–12; esempi cronologici predeterminati. Le esposizioni precedenti DEV restano tali: nessuna validazione indipendente. Questo registra autorizzazione, non applicazione già eseguita o risultato favorevole.

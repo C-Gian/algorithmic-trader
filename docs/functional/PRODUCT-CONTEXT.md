@@ -1,6 +1,6 @@
 # Algorithmic Trader — prodotto, decisioni e contesto completo
 
-Versione documentale: 1.10 — 17 ottobre 2026. Responsabile della sintesi: Astra; aggiornamento Director sui requisiti espliciti dell'Owner.
+Versione documentale: 1.11 — 17 ottobre 2026. Responsabile della sintesi: Astra; aggiornamento Director sui requisiti espliciti dell'Owner.
 
 Questo è il documento funzionale centrale del **nuovo** progetto di Gian. È scritto per poter essere consegnato da solo a una nuova chat: spiega obiettivo, organizzazione, requisiti, ragioni delle scelte, limiti e questioni ancora aperte. Non è una specifica matematica dell'algoritmo, una dichiarazione di efficacia o un'autorizzazione a operare con denaro reale.
 
@@ -449,12 +449,13 @@ Parla a Gian in modo semplice. Ricorda che vuole partecipare alla strategia, che
 
 Mantieni i ruoli: Astra direzione, Director ragionamento e gestione operativa, Claude esecuzione tecnica. Non chiedere ad Astra ogni microdecisione e non delegare all'esecutore la scelta del metodo. Non creare un nuovo documento per ogni dubbio se basta chiudere una decisione nella macrofase corrente.
 
-Il lavoro corrente è MOVE-001: proposta di solo design del ciclo di vita, consegnata dal Director in docs/research/MOVE-001.md e non attivata. OBS-002 è chiuso con i limiti del report§12;APP-001 eCAND-001/D1 già conclusi. Nessun incaricoClaude,nuova estrazione,v2,modificaUI o esclusione retrospettiva. Il passo successivo è la valutazione della proposta daAstra,non un'applicazione implicita.2025fuori incarico,2026protetto.
+Il lavoro corrente è MOVE-001: Astra approva la rappresentazione come candidata semantica sperimentale e autorizza implementazione isolata, test causali e una applicazione descrittiva sul DEV2023–2024 già disponibile (prefisso da ottobre2022). Contratto completo1.0.1 in docs/research/MOVE-001.md §§11–12. Nuova popolazione specifica, non riparazione OBS-002 o strategia. Formazione occupa l'unico riferimento, sospensione metodologica distinta dall'attesa di P1, gap senza eventi inventati; contare anche nuove strutture non adottate per posto occupato. Consultazione esistente con adattatore minimo, nessun nuovo esploratore. Nessun trade/PnL, modifica CAND, download o lettura2025/2026. Codice/config/test prima dell'applicazione, conteggi ed esempi preregistrati. Claude implementa, Director rivede e conclude sulla rappresentabilità; nessuna efficacia già dimostrata.
 
 ## 34. Storia delle revisioni
 
 | Versione | Data | Variazione |
 |---|---|---|
+| 1.11 | 2026-10-17 | Astra approva MOVE-001 candidata sperimentale; Director completa precedenze e assegna implementazione isolata/test/applicazione descrittiva DEV, conteggi di occupazione e consultazione minima; nessuna strategia o efficacia approvata |
 | 1.10 | 2026-10-17 | Astra accoglie OBS-002 e autorizza solo design MOVE-001: significato strutturale diP0,ciclo di vita,tre giudizi e sequenze manuali. PropostaDirector consegnata,non attivata;nessuna nuova estrazione o esclusione casi |
 | 1.9 | 2026-10-17 | Astra accoglie D1 senza v2 e autorizza OBS-002: riprese anche fuori dalle operazioni v1, sei famiglie congiunte, unico seguito24h sul DEV, nessuna nuova strategia/esploratore; chiusura con una ipotesi esplorativa o limite preciso |
 | 1.8 | 2026-10-17 | APP-001 chiuso; Astra autorizza diagnosi integrata v1 ed eventuale unica revisione/confronto sul solo DEV 2023–2024. Nessun uso 2025, nessun 2026; prima estrazione D1, scelta metodologica Director |
