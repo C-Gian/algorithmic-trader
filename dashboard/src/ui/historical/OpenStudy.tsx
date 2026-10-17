@@ -14,6 +14,7 @@ function readText(file: File): Promise<string> {
 }
 
 export const BUNDLE_PATH_HINT = 'C:\\Projects\\algorithmic-trader-data\\OBS-001\\runs\\<ID del run>\\obs001-bundle.json';
+export const CASE_PATH_HINT = 'C:\\Projects\\algorithmic-trader-data\\OBS-002\\runs\\<ID del run>\\cases\\<caso>.json';
 
 /** Selettore del file locale: nessun server dati e nessun prezzo mostrato senza bundle valido. */
 export function StudyFilePicker({ onOpen, label = 'Apri studio storico' }: { onOpen: (s: HistoricalStudy) => void; label?: string }) {
@@ -60,6 +61,9 @@ export function OpenStudy({ onOpen }: { onOpen: (s: HistoricalStudy) => void }) 
         </p>
         <p className="t-3" style={{ fontSize: 12 }}>
           Percorso del file: <span className="mono">{BUNDLE_PATH_HINT}</span>
+        </p>
+        <p className="t-3" style={{ fontSize: 12 }}>
+          Esempi OBS-002 (un caso per file, con le osservazioni di quei giorni): <span className="mono">{CASE_PATH_HINT}</span>
         </p>
         <StudyFilePicker onOpen={onOpen} />
       </section>

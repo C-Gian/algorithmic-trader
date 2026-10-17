@@ -3,7 +3,7 @@
  * Nessun calcolo del motore: barre, osservazioni ed eventi sono già nel bundle. Le righe con
  * gli esiti si leggono solo tramite `retrospective()`, chiamato dalle viste a posteriori.
  */
-import type { CausalSnapshot, HistCandle, HistScale, Ms, StudyBundle, StudyEvent, StudyRow } from '../contract/historical';
+import type { CausalSnapshot, HistCandle, HistScale, Ms, Obs002Case, Obs002Outcome, StudyBundle, StudyEvent, StudyRow } from '../contract/historical';
 
 const DAY_MS = 86_400_000;
 
@@ -34,6 +34,17 @@ export class HistoricalStudy {
 
   get synthetic(): boolean {
     return this.bundle.run.synthetic === true;
+  }
+
+  /** Caso del pacchetto OBS-002 (informazioni note a t), assente nei bundle OBS-001. */
+  get obs002Case(): Obs002Case | null {
+    return this.bundle.case ?? null;
+  }
+
+  /** Esito OBS-002 a posteriori dell'origine t, solo se è l'istante del caso. Solo per viste retrospettive. */
+  obs002Outcome(t: Ms): Obs002Outcome | null {
+    const o = this.bundle.retrospective.obs002;
+    return o && o.outcome.t === t ? o.outcome : null;
   }
 
   indexOf(t: Ms): number {

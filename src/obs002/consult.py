@@ -48,6 +48,7 @@ def package(case: dict, attempt: dict, outcome: dict, chain: dict, store: Minute
         row.update({"month": _month(o), "s45": s45, "s1d": s1d, "dailyRelation": daily_relation(s45, s1d),
                     "s45Reason": r45["piv"]["structure"]["r"], "s1dReason": r1d["piv"]["structure"]["r"] if r1d else "INSUFFICIENT_HISTORY"})
         rows.append(row)
+    check_against_obs001(attempt, outcome, next(r for r in rows if r["t"] == t))
     events = {s: [e for e in chain["observed"]["events"][s] if start <= e["availableAt"] < end] for s in ("45m", "1D")}
     causal = {k: v for k, v in attempt.items()}
     months = sorted({_month(x) for x in range(start, end, DAY)})
@@ -79,6 +80,20 @@ def package(case: dict, attempt: dict, outcome: dict, chain: dict, store: Minute
             "obs002": {"attemptId": attempt["attemptId"], "outcome": outcome},
         },
     }
+
+
+def check_against_obs001(attempt: dict, outcome: dict, row: dict) -> None:
+    """Riscontro fra due implementazioni: il seguito OBS-001 esistente (final/up/down nel verso del
+    prezzo) e l'esito OBS-002 dello stesso istante (nel verso del movimento) devono coincidere."""
+    if row["final"] is None or not outcome["complete"]:
+        if (row["final"] is None) != (not outcome["complete"]):
+            raise AssertionError(f"{attempt['attemptId']}: completezza diversa dal seguito OBS-001")
+        return
+    d = attempt["d"]
+    fav, adv = (row["up"], row["down"]) if d == 1 else (row["down"], row["up"])
+    for a, b in ((outcome["final"], d * row["final"]), (outcome["favourable"], fav), (outcome["adverse"], adv)):
+        if abs(a - b) > 1e-9:
+            raise AssertionError(f"{attempt['attemptId']}: esito OBS-002 diverso dal seguito OBS-001")
 
 
 def _month(t: int) -> str:

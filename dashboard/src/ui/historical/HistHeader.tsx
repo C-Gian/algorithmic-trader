@@ -33,6 +33,7 @@ export function HistHeader({
   const totals = b.inputQuality.totals;
   const quality = `${formatNumber(totals.input.valid, 0)}/${formatNumber(totals.input.expected, 0)} minuti validi`;
   const m45 = snapshot.m45;
+  const c = study.obs002Case;
 
   const setDay = (value: string) => {
     if (!value) return;
@@ -113,8 +114,21 @@ export function HistHeader({
           onChange={(e) => onCutoff(origins[Number(e.target.value)])}
         />
       </div>
+      {c && (
+        <Notice tone="accent" title={`Pacchetto OBS-002 · caso ${c.attemptId}`}>
+          Tentativo di ripresa {c.side} {c.ordinal > 1 ? `n. ${c.ordinal} dello stesso movimento (riepilogo secondario)` : '(primo del movimento)'} alla chiusura {fmtUtc(c.t)} · profilo {c.profile} ·
+          categorie {c.categories.join(', ')}. {c.t !== cutoff && 'Stai guardando un altro momento del pacchetto. '}
+          {c.note} Le origini selezionabili sono le chiusure attorno al caso.
+          {c.t !== cutoff && (
+            <>
+              {' '}
+              <Button onClick={() => onCutoff(c.t)}>Vai al caso</Button>
+            </>
+          )}
+        </Notice>
+      )}
       <p className="mode-desc">
-        Run <span className="mono">{b.run.runId}</span> · convenzioni {b.conventions.id} <span className="mono">{b.conventions.hash.slice(0, 12)}</span> · {b.source.attribution} ·
+        {b.study ? `${b.study.label} · ` : ''}Run <span className="mono">{b.run.runId}</span> · convenzioni {b.conventions.id} <span className="mono">{b.conventions.hash.slice(0, 12)}</span> · {b.source.attribution} ·
         nessun collegamento exchange, nessun dato live
       </p>
       {m45.status !== 'COMPLETE' && (

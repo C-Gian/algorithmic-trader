@@ -1,5 +1,6 @@
 /**
- * Contratto dello studio storico OBS-001 (bundle `obs001.bundle/1`).
+ * Contratto dello studio storico OBS-001 (bundle `obs001.bundle/1`) e dei pacchetti di caso OBS-002
+ * (`obs002.case/1`, stesse barre/osservazioni/eventi, senza la tabulazione OBS-001).
  *
  * Distinto dal contratto della simulazione locale (`types.ts`, `simulated: true`): l'ambiente
  * è un discriminante reale (`Environment`), non un flag forzato. Tempi in millisecondi epoch
@@ -10,6 +11,9 @@ export type Environment = 'SIMULATION' | 'HISTORICAL' | 'BACKTEST';
 
 export const BUNDLE_KIND = 'OBS001_BUNDLE' as const;
 export const BUNDLE_SCHEMA = 'obs001.bundle/1' as const;
+/** OBS-002: pacchetto di consultazione di un singolo caso, con osservazioni OBS-001/v1 ritagliate. */
+export const CASE_KIND = 'OBS002_CASE' as const;
+export const CASE_SCHEMA = 'obs002.case/1' as const;
 
 export type Ms = number;
 export type HistScale = '45m' | '1D';
@@ -194,9 +198,46 @@ export interface StudySummary {
   readonly checks: { readonly origins: number; readonly rightCensored: number; readonly partitionsReconciled: boolean };
 }
 
+/** Contatto con un riferimento ±A: minuto, apertura già oltre il riferimento, intervallo [u, u+60s) se intraminuto. */
+export interface Obs002Contact {
+  readonly minute: Ms;
+  readonly atOpen: boolean;
+  readonly interval: readonly [Ms, Ms];
+}
+
+/** Esito OBS-002 del caso (a posteriori): nel verso del movimento, in unità di A all'origine. */
+export interface Obs002Outcome {
+  readonly t: Ms;
+  readonly horizonEnd: Ms;
+  readonly flags: readonly string[];
+  readonly complete: boolean;
+  readonly final: number | null;
+  readonly favourable: number | null;
+  readonly adverse: number | null;
+  readonly markers: { readonly F: number; readonly A: number } | null;
+  readonly contactF: Obs002Contact | null;
+  readonly contactA: Obs002Contact | null;
+  readonly class: string | null;
+}
+
+/** Caso OBS-002: solo informazioni note alla chiusura t (nessuna call, ordine o operazione). */
+export interface Obs002Case {
+  readonly attemptId: string;
+  readonly t: Ms;
+  readonly side: 'LONG' | 'SHORT';
+  readonly categories: readonly string[];
+  readonly profile: string;
+  readonly ordinal: number;
+  readonly note: string;
+  readonly causal: Readonly<Record<string, unknown>>;
+}
+
 export interface StudyBundle {
-  readonly kind: typeof BUNDLE_KIND;
-  readonly schema: typeof BUNDLE_SCHEMA;
+  readonly kind: typeof BUNDLE_KIND | typeof CASE_KIND;
+  readonly schema: typeof BUNDLE_SCHEMA | typeof CASE_SCHEMA;
+  /** Solo nei pacchetti OBS-002: identità dello studio che ha prodotto il caso. */
+  readonly study?: { readonly id: string; readonly hash: string; readonly label: string };
+  readonly case?: Obs002Case;
   readonly engineVersion: string;
   readonly conventions: { readonly id: string; readonly hash: string; readonly config: Record<string, unknown> };
   readonly timeUnit: string;
@@ -222,7 +263,14 @@ export interface StudyBundle {
   readonly observations: Readonly<Record<HistScale, readonly ObservationRecord[]>>;
   readonly events: Readonly<Record<HistScale, readonly StudyEvent[]>>;
   readonly origins: readonly Ms[];
-  readonly retrospective: { readonly label: string; readonly rows: readonly StudyRow[]; readonly summary: StudySummary };
+  readonly retrospective: {
+    readonly label: string;
+    readonly rows: readonly StudyRow[];
+    /** null nei pacchetti OBS-002: la tabulazione OBS-001 non è pertinente (vedi summaryNote). */
+    readonly summary: StudySummary | null;
+    readonly summaryNote?: string;
+    readonly obs002?: { readonly attemptId: string; readonly outcome: Obs002Outcome };
+  };
 }
 
 /** Candela preparata per il grafico storico. `gap`: barra INCOMPLETE resa come buco. */

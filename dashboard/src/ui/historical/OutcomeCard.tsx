@@ -1,11 +1,43 @@
-import type { StudyRow } from '../../contract/historical';
+import type { Obs002Contact, Obs002Outcome, StudyRow } from '../../contract/historical';
 import { formatNumber } from '../../lib/numbers';
 import { Badge, Button, Notice } from '../components/primitives';
 import { fmtUtc } from '../format';
 import { RELATION_LABEL, STRUCTURE_LABEL, price, ratio, reasonText } from './fmt';
 
 /** Scheda a posteriori: compare solo dopo «Mostra seguito retrospettivo 24h». */
-export function OutcomeCard({ row, onClose }: { row: StudyRow | undefined; onClose: () => void }) {
+const CLASS_TEXT: Record<string, string> = {
+  F_ONLY: 'solo il riferimento favorevole F è stato toccato',
+  A_ONLY: 'solo il riferimento contrario A è stato toccato',
+  F_BEFORE_A: 'prima F, poi A',
+  A_BEFORE_F: 'prima A, poi F',
+  BOTH_UNORDERED: 'entrambi nello stesso minuto, ordine non ricostruibile',
+  NEITHER: 'nessuno dei due nelle 24 ore complete',
+};
+
+const contactText = (c: Obs002Contact | null) => (c === null ? 'non toccato' : c.atOpen ? `all'apertura ${fmtUtc(c.minute)}` : `nel minuto ${fmtUtc(c.minute)}`);
+
+/** Esito OBS-002 del caso: stessa finestra e stessi C_t/A, nel verso del movimento (non un trade). */
+function Obs002Block({ o, side }: { o: Obs002Outcome; side?: 'LONG' | 'SHORT' }) {
+  return (
+    <div className="retro-obs002">
+      <p className="metric-label">
+        OBS-002 · verso {side ?? '—'} · valori nel verso del movimento ({side === 'SHORT' ? 'favorevole = down, contrario = up' : 'favorevole = up, contrario = down'})
+      </p>
+      <div className="metrics">
+        <Metric label="Ordine dei primi contatti F / A" value={o.class ?? 'n.d.'} sub={o.class ? CLASS_TEXT[o.class] : `esito incompleto: ${o.flags.map(reasonText).join(' · ')}`} />
+        <Metric label="final nel verso" value={ratio(o.final)} sub="d·(C₍t+24h₎ − C_t) / A" />
+        <Metric label="favorevole / contrario" value={`${ratio(o.favourable)} / ${ratio(o.adverse)}`} sub="ampiezze massime, non prezzi eseguibili" />
+        <Metric
+          label="F favorevole / A contrario (C_t ± A)"
+          value={o.markers ? `${price(o.markers.F)} / ${price(o.markers.A)}` : '—'}
+          sub={`F ${contactText(o.contactF)} · A ${contactText(o.contactA)} · riferimenti descrittivi, non stop o target`}
+        />
+      </div>
+    </div>
+  );
+}
+
+export function OutcomeCard({ row, obs002, side, onClose }: { row: StudyRow | undefined; obs002?: Obs002Outcome | null; side?: 'LONG' | 'SHORT'; onClose: () => void }) {
   if (!row) return null;
   const complete = row.final !== null;
   const reasons = [
@@ -30,6 +62,7 @@ export function OutcomeCard({ row, onClose }: { row: StudyRow | undefined; onClo
         <Metric label="down = max(0, p − min L) / a" value={ratio(row.down)} sub={`minimo futuro ${price(row.minLow)} · ampiezza, non perdita`} />
         <Metric label="p = C_t · a = A45m a t" value={price(row.p)} sub={`a = ${row.a == null ? '—' : formatNumber(row.a, 2)} USDT (congelata all’origine)`} />
       </div>
+      {obs002 && <Obs002Block o={obs002} side={side} />}
       {!complete && (
         <Notice tone="warning" title="Esiti 24h non disponibili">
           {reasons.join(' · ')}. Minuti disponibili {row.futureMinutesValid}/{row.futureMinutesExpected} (contigui da t: {row.futureMinutesContiguous}). Nessun

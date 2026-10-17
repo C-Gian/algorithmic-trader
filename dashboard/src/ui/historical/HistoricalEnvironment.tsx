@@ -95,8 +95,9 @@ class ViewGuard extends Component<{ children: ReactNode; onOpen: (s: HistoricalS
 }
 
 function StudyWorkspace({ study, onOpen, shell, moment }: { study: HistoricalStudy; onOpen: (s: HistoricalStudy) => void; shell: ShellProps; moment?: number }) {
-  // Momento dall'indirizzo se è un'origine dello studio; altrimenti la prima origine.
-  const cutoff: Ms = moment !== undefined && study.indexOf(moment) >= 0 ? moment : study.origins[0];
+  // Momento dall'indirizzo se è un'origine dello studio; altrimenti il caso OBS-002 o la prima origine.
+  const fallback = study.obs002Case?.t ?? study.origins[0];
+  const cutoff: Ms = moment !== undefined && study.indexOf(moment) >= 0 ? moment : fallback;
   const [retrospective, setRetrospective] = useState(false);
 
   // Spostare il cutoff sostituisce la voce corrente (niente cronologia a ogni passo); il riepilogo apre una voce nuova.
@@ -126,7 +127,7 @@ function StudyWorkspace({ study, onOpen, shell, moment }: { study: HistoricalStu
           <HistChartCard study={study} snapshot={snap} retrospective={retrospective} onRetrospective={setRetrospective} />
           <ObservationsCard study={study} snapshot={snap} />
         </div>
-        {retrospective && <OutcomeCard row={study.retrospective(cutoff)} onClose={() => setRetrospective(false)} />}
+        {retrospective && <OutcomeCard row={study.retrospective(cutoff)} obs002={study.obs002Outcome(cutoff)} side={study.obs002Case?.side} onClose={() => setRetrospective(false)} />}
         <FamiliesSection snapshot={snap} />
         <RevisionsSection snapshot={snap} />
         <NotInStudy />

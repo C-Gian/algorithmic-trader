@@ -22,15 +22,17 @@ from obs001.aggregate import aggregate
 from obs001.cli import software_ref
 from obs001.conventions import REPO_ROOT, canonical_json, iso, sha256_bytes
 from obs001.observe import observe
+from obs001.outcomes import outcome_for
 
 from . import ENGINE_VERSION
 from .config import CONFIG_PATH, MONTHS, load_study, observation_conventions
-from .consult import package
+from .consult import check_against_obs001, package
 from .data import input_hash, load_minutes
 from .examples import select
 from .outcomes import outcome
 from .population import Population
 from .summary import summarize
+from .tables import report_tables
 
 DEFAULT_ROOT = REPO_ROOT.parent / "algorithmic-trader-data"
 
@@ -153,7 +155,9 @@ def cmd_outcomes(study, root: Path) -> Path:
     t1 = time.perf_counter()
     outs = {a["attemptId"]: outcome(store, a["t"], a["C"], a["snapshot"]["volatility"]["A"], a["d"], study.horizon_ms, study.end, study.marker_a)
             for a in pop.attempts if a["inStudy"]}
+    checked = cross_check(pop, outs, c)
     summary = summarize(pop, outs, study)
+    summary["checks"]["obs001FollowUpCrossCheck"] = checked
     dev = [a for a in pop.attempts if a["inStudy"]]
     sel = select(dev, outs)
     by_id = {a["attemptId"]: a for a in dev}
@@ -161,6 +165,7 @@ def cmd_outcomes(study, root: Path) -> Path:
     sel["listSha256"] = sha256_bytes(canonical_json({"cases": sel["cases"], "emptyCategories": sel["emptyCategories"]}))
     files = {
         "outcomes.json": dump(outs), "summary.json": dump(summary), "examples.json": dump({**sel, "timelines": timelines}),
+        "results-tables.md": report_tables(summary, sel).encode("utf-8"),
         "attempts-register.csv": to_csv([_row_causal(a) for a in dev]), "outcomes.csv": to_csv([_row_outcome(a, outs[a["attemptId"]]) for a in dev]),
         "versions.csv": to_csv([{k: v for k, v in vv.as_dict().items() if k not in ("P0", "P1", "attempts")} | {"P0.price": vv.p0["price"], "P0.candidateOpen": vv.p0["candidateOpen"],
                                 "P1.price": vv.p1["price"], "P1.candidateOpen": vv.p1["candidateOpen"], "attempts": len(vv.attempts)} for vv in pop.versions]),
@@ -180,6 +185,19 @@ def cmd_outcomes(study, root: Path) -> Path:
     log(f"esiti {out.name} | tentativi DEV {len(dev)} | casi {len(sel['cases'])} | vuote {sel['emptyCategories']} | listSha {sel['listSha256']}")
     log(f"  outputs.json {sha256_bytes((out / 'outputs.json').read_bytes())}")
     return out
+
+
+def cross_check(pop, outs: dict, c: dict) -> int:
+    """Ogni esito DEV confrontato con il seguito 24h OBS-001 esistente allo stesso istante."""
+    n = 0
+    for a in pop.attempts:
+        if not a["inStudy"]:
+            continue
+        a_m = a["snapshot"]["volatility"]["A"]
+        row = outcome_for(c["store"], c["conv"], a["t"], a["C"], a_m["v"], a_m["r"])
+        check_against_obs001(a, outs[a["attemptId"]], row)
+        n += 1
+    return n
 
 
 def _row_causal(a: dict) -> dict:

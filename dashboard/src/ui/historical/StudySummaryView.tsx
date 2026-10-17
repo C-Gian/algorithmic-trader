@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { GroupSummary, Ms, StructureState } from '../../contract/historical';
+import type { GroupSummary, Ms, StructureState, StudySummary } from '../../contract/historical';
 import type { HistoricalStudy } from '../../historical/study';
 import { Badge, Button, Notice } from '../components/primitives';
 import { fmtUtc } from '../format';
@@ -89,9 +89,32 @@ function StatsTable({ groups }: { groups: [string, GroupSummary][] }) {
   );
 }
 
-/** Riepilogo descrittivo mensile/totale: viste a posteriori, separate dalla vista causale. */
+/**
+ * Voce «Studio osservativo». Con un pacchetto di caso OBS-002 la tabulazione OBS-001 non è pertinente e
+ * non viene inventata: si spiega dove si trova il riepilogo OBS-002 e si torna al caso.
+ */
 export function StudySummaryView({ study, onOpenOrigin }: { study: HistoricalStudy; onOpenOrigin: (t: Ms) => void }) {
   const summary = study.bundle.retrospective.summary;
+  if (summary === null) {
+    const c = study.obs002Case;
+    return (
+      <main className="content" id="main-content" tabIndex={-1}>
+        <section className="card unavailable" aria-label="Studio osservativo">
+          <p className="section-title">Pacchetto di consultazione OBS-002 · nessuna tabulazione OBS-001</p>
+          <p className="t-2">{study.bundle.retrospective.summaryNote ?? 'Il riepilogo di questo studio non è contenuto nel pacchetto.'}</p>
+          <p className="t-3" style={{ fontSize: 12 }}>
+            Il pacchetto contiene un solo caso con le osservazioni di quei giorni: le tabelle della vecchia domanda OBS-001 (struttura 45m × relazione 1D)
+            non sono state ricalcolate perché non rispondono alla domanda OBS-002.
+          </p>
+          {c && <Button onClick={() => onOpenOrigin(c.t)}>Torna al caso · {fmtUtc(c.t)}</Button>}
+        </section>
+      </main>
+    );
+  }
+  return <Obs001Summary study={study} summary={summary} onOpenOrigin={onOpenOrigin} />;
+}
+
+function Obs001Summary({ study, summary, onOpenOrigin }: { study: HistoricalStudy; summary: StudySummary; onOpenOrigin: (t: Ms) => void }) {
   const [period, setPeriod] = useState<string>('TOTAL');
   const tables = summary.tables[period];
   const months = summary.periods;

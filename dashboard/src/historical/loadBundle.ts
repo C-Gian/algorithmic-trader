@@ -1,10 +1,10 @@
 /**
- * Import del bundle OBS-001 scelto dall'utente: validazione del contratto effettivamente usato
+ * Import del bundle OBS-001 (o del pacchetto di caso OBS-002) scelto dall'utente: validazione del contratto effettivamente usato
  * da provider e viste, con errori leggibili. Un file incompleto o incoerente viene rifiutato
  * prima di sostituire lo studio aperto; nessun ripiego silenzioso sulle fixture.
  * Piccolo validatore dello schema locale: non ricalcola il motore e non verifica firme.
  */
-import { BUNDLE_KIND, BUNDLE_SCHEMA, type StudyBundle } from '../contract/historical';
+import { BUNDLE_KIND, BUNDLE_SCHEMA, CASE_KIND, CASE_SCHEMA, type StudyBundle } from '../contract/historical';
 
 export class BundleError extends Error {}
 
@@ -234,7 +234,7 @@ function validateBars(data: Obj, periods: { inputStart: number; end: number }): 
   }
 }
 
-function validateStudy(data: Obj, periods: { studyStart: number; end: number }): void {
+function validateStudy(data: Obj, periods: { studyStart: number; end: number }, kind: string): void {
   const origins = arr(data, 'origins', 'Origini');
   if (origins.length === 0) fail('Nessuna origine di studio nel bundle.');
   origins.forEach((t, i) => {
@@ -251,6 +251,7 @@ function validateStudy(data: Obj, periods: { studyStart: number; end: number }):
     for (const k of ['p', 'a', 'close24h', 'maxHigh', 'minLow', ...MEASURES]) if (!isNumOrNull(r[k])) fail(`${w}: valore «${k}» non valido.`);
     for (const k of ['futureMinutesExpected', 'futureMinutesInRange', 'futureMinutesValid', 'futureMinutesContiguous']) if (!isInt(r[k])) fail(`${w}: conteggio «${k}» non valido.`);
   });
+  if (kind === CASE_KIND) return validateCase(data, retro, origins);
   const summary = obj(retro, 'summary', 'Riepilogo');
   const periodsList = arr(summary, 'periods', 'Riepilogo');
   const tables = obj(summary, 'tables', 'Riepilogo');
@@ -291,6 +292,40 @@ function validateStudy(data: Obj, periods: { studyStart: number; end: number }):
   obj(summary, 'checks', 'Riepilogo');
 }
 
+const CLASSES = ['F_ONLY', 'A_ONLY', 'F_BEFORE_A', 'A_BEFORE_F', 'BOTH_UNORDERED', 'NEITHER'];
+
+function contact(x: unknown, where: string): void {
+  if (x === null) return;
+  if (!isObj(x) || !isInt(x.minute) || typeof x.atOpen !== 'boolean' || !Array.isArray(x.interval) || x.interval.length !== 2 || !x.interval.every(isInt)) {
+    fail(`${where}: contatto non valido.`);
+  }
+}
+
+/**
+ * Pacchetto OBS-002 di un caso: identità dello studio, caso causale all'interno delle origini ed esito
+ * a posteriori dello stesso istante. La tabulazione OBS-001 deve essere assente (summary null), non inventata.
+ */
+function validateCase(data: Obj, retro: Obj, origins: unknown[]): void {
+  const study = obj(data, 'study', 'Studio OBS-002');
+  if (!isStr(study.id) || !study.id.startsWith('OBS-002/') || !isStr(study.hash) || !isStr(study.label)) fail('Studio OBS-002: identità assente o non riconosciuta.');
+  if (retro.summary !== null) fail('Pacchetto OBS-002: la tabulazione OBS-001 non deve essere presente (summary atteso null).');
+  const c = obj(data, 'case', 'Caso OBS-002');
+  if (!isStr(c.attemptId) || !isInt(c.t) || (c.side !== 'LONG' && c.side !== 'SHORT') || !isStr(c.profile) || !isInt(c.ordinal)) fail('Caso OBS-002: identità del tentativo incompleta.');
+  if (!origins.includes(c.t)) fail('Caso OBS-002: l’istante del caso non è fra le origini del pacchetto.');
+  if (!Array.isArray(c.categories) || !c.categories.every(isStr)) fail('Caso OBS-002: categorie non valide.');
+  obj(c, 'causal', 'Caso OBS-002');
+  const o2 = obj(retro, 'obs002', 'Esito OBS-002');
+  if (o2.attemptId !== c.attemptId) fail('Esito OBS-002: riferito a un altro tentativo.');
+  const o = obj(o2, 'outcome', 'Esito OBS-002');
+  const w = 'Esito OBS-002';
+  if (o.t !== c.t || !isInt(o.horizonEnd) || typeof o.complete !== 'boolean' || !Array.isArray(o.flags)) fail(`${w}: istante o completezza non validi.`);
+  for (const k of ['final', 'favourable', 'adverse']) if (!isNumOrNull(o[k])) fail(`${w}: valore «${k}» non valido.`);
+  if (!(o.class === null || CLASSES.includes(o.class as string))) fail(`${w}: classe di contatto non riconosciuta.`);
+  if (o.complete !== (o.class !== null && o.final !== null)) fail(`${w}: esito completo senza classe o valori, o viceversa.`);
+  contact(o.contactF, w);
+  contact(o.contactA, w);
+}
+
 export function parseBundle(text: string): StudyBundle {
   let data: unknown;
   try {
@@ -299,8 +334,9 @@ export function parseBundle(text: string): StudyBundle {
     return fail('Il file non è un JSON valido. Scegli il file obs001-bundle.json prodotto dal comando «process».');
   }
   if (!isObj(data)) return fail('Formato inatteso: il contenuto non è un oggetto JSON.');
-  if (data.kind !== BUNDLE_KIND) return fail(`Non è un bundle OBS-001 (kind=${String(data.kind)}).`);
-  if (data.schema !== BUNDLE_SCHEMA) return fail(`Versione di schema non supportata: ${String(data.schema)} (attesa ${BUNDLE_SCHEMA}).`);
+  if (data.kind !== BUNDLE_KIND && data.kind !== CASE_KIND) return fail(`Non è un bundle OBS-001 né un pacchetto di caso OBS-002 (kind=${String(data.kind)}).`);
+  const expected = data.kind === CASE_KIND ? CASE_SCHEMA : BUNDLE_SCHEMA;
+  if (data.schema !== expected) return fail(`Versione di schema non supportata: ${String(data.schema)} (attesa ${expected}).`);
   str(data, 'engineVersion', 'Bundle');
   const conv = obj(data, 'conventions', 'Convenzioni');
   if (!isStr(conv.id) || !conv.id.startsWith('OBS-001/') || !isStr(conv.hash)) fail('Convenzioni assenti o non riconosciute nel bundle.');
@@ -313,6 +349,6 @@ export function parseBundle(text: string): StudyBundle {
   validateRun(data);
   validateQuality(data);
   validateBars(data, p);
-  validateStudy(data, p);
+  validateStudy(data, p, data.kind as string);
   return data as unknown as StudyBundle;
 }
