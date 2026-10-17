@@ -253,3 +253,34 @@ Non c'è un seguito 24h né alcuna operazione. Non devi controllare formule.
 - Nessun riferimento aperto a fine copertura, quindi nessuna durata censurata nel DEV.
 - Gli esempi sono 6 riferimenti per 11 categorie, tutti nel 2023 tranne uno, per effetto della regola «primo cronologico».
 - Verifiche e riscontro sono dello stesso esecutore: non sono una review indipendente.
+
+## 9. Review del Director — 17 ottobre 2026, base 1235e64
+
+**Esito: correzioni R1 richieste prima della chiusura; nessuna modifica metodologica richiesta.**
+
+Lettura diretta di config, modulo MOVE-001, test, adattatore e diff rispetto a 9b536a2. Nella copia isolata del Director: **19/19 test Python MOVE-001 e 60/60 test del lettore storico superati; typecheck e build superati**. Nessun dato reale DEV disponibile nella copia: non ricalcolati i 701 riferimenti, non verificati indipendentemente hash/output locali, conteggi o screenshot reali dell'esecutore. Le prove seguenti sono sintetiche e sono del Director.
+
+### 9.1 Difetti riprodotti
+
+**R1-A — validazione incompleta del nuovo ledger.** In `dashboard/src/historical/loadBundle.ts:250–279`, i fatti MOVE-001 ricevono controlli generici ma non tutti quelli necessari a `MoveCard` e al suo stato:
+1. Partire dalla fixture sintetica MOVE-001 consegnata; eliminare `case.ledger[0].B`. `parseBundle` accetta; renderizzare la scheda alla nascita provoca `Cannot read properties of undefined (reading 'price')` in `MoveCard.tsx:46`.
+2. Eliminare `candidateOpen` dal P1 del fatto `P1_PUBLISHED`: importazione accettata benché il timestamp sia usato nella descrizione.
+3. Aggiungere `USABLE` dopo la conclusione, allo stesso timestamp: importazione accettata; il riduttore può sovrascrivere il giudizio conservando l'archiviazione. Non è un ledger coerente con una lettura conclusa.
+
+Tre nuove asserzioni di rifiuto falliscono sulla consegna; un controllo aggiuntivo conferma l'errore di rendering del primo caso. Il contenimento `ViewGuard` limita il danno, ma non conserva lo studio precedente come farebbe il rifiuto preventivo. Occorre validazione dei campi effettivamente letti per ogni evento e coerenza minima delle transizioni, non ricalcolo dei prezzi.
+
+**R1-B — ultima chiusura esclusa dalla consultazione.** `src/move001/consult.py:28` limita le origini a `study.end - bar`; il validatore comune vieta `origin >= periods.end`. Se il riferimento è aperto alla fine, l'evento `OPEN_AT_END` esiste a `study.end` ma non è raggiungibile dal cursore. Riguarda anche una conclusione di mercato esattamente sull'ultima chiusura disponibile.
+
+Riproduzione senza dati reali: usare la stessa catena sintetica di `move001.fixture.build`, scegliere l'ultimo riferimento invece del primo, poi `package`. L'ultimo riferimento è aperto; fine copertura **1665446400000**, ultima origine selezionabile **1665443700000**: manca una barra45m. Il pacchetto viene accettato; `HistoricalStudy.snapshot(end)` trova già l'ultima candela completa e `moveFactsAt(end)` contiene l'evento, ma `end` non è selezionabile. Il test che richiede l'ultima chiusura fallisce. Non serve alcun prezzo successivo al confine per mostrarla. I sei casi reali non risultano dimostrati affetti: nessuna riapertura del DEV per cercarne uno.
+
+### 9.2 Nove scelte dichiarate e portata dei risultati
+
+Le scelte §2 sono compatibili col contratto nei limiti seguenti: identità/versioni e freschezza seguono i fatti causali; assegnazione al mese della barra aperta, occupazione misurata dopo il trattamento della chiusura, fatti ulteriori per barra/passaggio e finestre di consultazione restano convenzioni di rendicontazione esplicite. La consultazione deve però comprendere l'ultima chiusura (R1-B). La doppia tipizzazione di `case` è debito tecnico locale accettabile se il discriminante e la validazione runtime proteggono le viste (R1-A); nessuna riscrittura generale del lettore richiesta.
+
+`verify.py` è un controllo aggiuntivo scritto dall'autore che verifica alcuni invarianti partendo dai riferimenti del ciclo, non una seconda ricostruzione indipendente di tutta la popolazione e delle decisioni. Non certifica la completezza dei candidati né ricalcola autonomamente la conferma dei pivot. La ripetizione deterministica della stessa catena verifica riproducibilità, non assenza di ogni errore. Correggere la parola «indipendente» dove usata senza questa qualificazione.
+
+Lettura provvisoria sui numeri riportati, non ricalcolati dal Director: la candidata produce sequenze consultabili e non resta soltanto in formazione. Assenza del principale nel56% delle chiusure non è automaticamente un difetto: è una popolazione specifica. Dei112 rifiuti,62 sono per posto occupato in formazione/utilizzabile e50 per freschezza (35 con posto già libero): non attribuire tutti112 al solo vincolo del posto. Le1265 barre di contatto da sospeso non sono1265 riferimenti né continuazioni riuscite; i doppi test della stessa barra sono rappresentati separatamente dai flag. I fatti non scompaiono dal ledger: la scelta conservativa rinuncia a riutilizzarli nella vecchia lettura. Nessuna prova di efficacia di P0/P1 e nessuna riattivazione o strategia autorizzata.
+
+### 9.3 Incarico R1
+
+Registrato in current_task.md: correggere soltanto importazione/coerenza del ledger e accessibilità dell'ultima chiusura; verifiche mirate e aggiornamento di questa consegna. Semantica, config, dati, popolazione, ledger e riepiloghi reali restano invariati. Nessuna nuova applicazione DEV o download. Chiusura e giudizio finale Director dopo la verifica delle correzioni.

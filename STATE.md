@@ -2,13 +2,15 @@
 
 Aggiornato: 17 ottobre 2026. Responsabile: Director.
 
-## Attivo — MOVE-001 DELIVERED (in attesa di review Director)
-Astra approva MOVE-001 come candidata semantica sperimentale, non strategia. Il Director chiude le tre precisazioni e le precedenze in docs/research/MOVE-001.md §§11–12 (contratto1.0.1), e assegna a Claude implementazione isolata, test discriminanti, una applicazione descrittiva sul DEV già disponibile e consultazione minima nell'app.
+## Attivo — MOVE-001/R1 READY
+MOVE-001 consegnato a1235e64: gate prima dei dati, applicazione descrittiva DEV e casi. Review Director:19 test Python,60 del lettore e build superati nella copia isolata; nessun ricalcolo dei dati reali. Riprodotti due difetti sintetici: ledger MOVE-001 incompleto/contraddittorio accettato, ultima chiusura non selezionabile per un riferimento aperto a fine copertura.
 
-Formazione occupa il principale; struttura già opposta alla nascita sospende subito; sospensione metodologica distinta da attesa P1. Gap chiude la continuità senza inventare eventi. Conteggi anche delle nuove strutture non adottate per posto occupato. Config/codice/test pubblicati prima dei dati; esempi e riepiloghi preregistrati. Consegnato da Claude il 17 ottobre: gate `fd09d35` prima dei dati, applicazione DEV riproducibile (631 nascite, 526 utilizzabili, 275 completamenti, 234 perdite, 122 sostituzioni; principale sospeso nel 43% delle chiusure occupate), 6 casi consultabili nello Studio storico come `MOVE001_CASE`, report `docs/research/MOVE-001-results.md`. Prossimo: review Director e conclusione ad Astra.
+Incarico R1 limitato a validazione del nuovo ledger e consultazione dell'ultima chiusura. Semantica/config e output numerici immutati; nessuna nuova elaborazione DEV o acquisizione. Consegna originale non ancora accettata. Review in docs/research/MOVE-001-results.md §9. Dopo correzioni: review e conclusione Director ad Astra, non nuova macrofase UI.
 
-## Conservato
-Proposta originale03510afe approvata nei limiti sperimentali. Nuova popolazione specifica, non riparazione OBS-002 né prova che escludere i1728 casi aiuti. OBS-002/R1 accettato con limiti; CAND-001 v1 negativa/non promossa e invariata, nessuna v2 giustificata; efficacia della famiglia irrisolta. APP-001 chiuso, uso migliorato secondo Gian.
+## Evidenza conservata
+Secondo l'esecutore:631 nascite DEV,600 P1 noti,526 utilizzabili;275 completamenti geometrici,234 perdite,122 sostituzioni.62 strutture rifiutate per posto occupato e50 per freschezza. I numeri non sono ricalcolati indipendentemente dal Director. Rappresentazione sperimentale specifica, nessuna efficacia o strategia approvata; sospensione persistente scelta del metodo, non inconoscibilità del mercato.
+
+OBS-002/R1 chiuso con limiti, nessuna riscrittura dei1728 casi. CAND-001 v1 negativa/non promossa e invariata; nessuna v2 giustificata, famiglia irrisolta. APP-001 chiuso.
 
 ## Confini
-Solo input locali [2022-10-01,2025-01-01), DEV2023–2024; nessun download o lettura2025/2026. Nessun trade, rendimento, parametro ottimizzato, modifica CAND/vecchi risultati o nuovo esploratore. Vecchi studi INACTIVE. L'applicazione valuta rappresentabilità, non efficacia. Checkout sincronizzato da Gian; commit/push pertinenti autorizzati, niente pull/fetch/force.
+Solo pacchetti già registrati e sintetici per R1; niente prezzi nuovi/download/DEV run,2025 o2026. Vecchi studi INACTIVE. Nessun trade/PnL, ottimizzazione, nuovo esploratore o operatività reale. Checkout sincronizzato da Gian, niente pull/fetch/force.
