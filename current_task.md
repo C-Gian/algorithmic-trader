@@ -1,6 +1,6 @@
 # APP-001 — Backtest autonomo locale, comprensione e navigazione
 
-**Stato: READY.** Director, 17 ottobre 2026. Esecutore: Claude Code.
+**Stato: DELIVERED** (Claude Code, 17 ottobre 2026; in attesa di review Director, non accettato). Incarico del Director, 17 ottobre 2026. Esecutore: Claude Code.
 Base: **ebd48027ce9828fbb80eddc478036b5d1ceed930**, più il commit di questo incarico. Gian sincronizza il checkout; nessun pull/fetch dell'esecutore, neppure dry-run.
 
 ## 1. Mandato e stato precedente
@@ -173,4 +173,49 @@ Questa è l'ultima preparazione richiesta prima del prossimo ciclo sull'algoritm
 
 ## Spazio dell'esecutore
 
-Da compilare: implementazione, versioni/profili, controlli, confronto realeUI/diretto, avvio e prova pratica, limiti, commit e consegna.
+Consegna Claude Code, 17 ottobre 2026. Il dettaglio di evidenze, hash e tempi è in [docs/research/APP-001-delivery.md](docs/research/APP-001-delivery.md); gli screenshot sono in [docs/research/APP-001-screens](docs/research/APP-001-screens/README.md).
+
+**Commit** su main dopo 7f94d4e:
+- c4f425b: implementazione;
+- 6079b87: provenienza git nel servizio;
+- 1c79739: tick finali, testi e tabella dei salvati;
+- 7795672: popup «i»;
+- un commit di documentazione con questa consegna.
+
+**Implementazione.**
+- Servizio `src/app001` (stdlib, 127.0.0.1:8765, un worker), con job in `<dati>/CAND-001/jobs/`.
+- Percorso comune `cand001/pipeline.py`, usato dalla CLI e dal servizio, con staging e pubblicazione atomica.
+- Tick facoltativi di avanzamento e annullamento nei loop di parsing, aggregazione, osservazione e simulazione.
+- Registro dei profili `config/APP-001-profiles.json`, separato dal candidato.
+- Motore 1.0.3 e bundle `/3` con identità del profilo; i `/2` restano apribili con profilo dedotto.
+- Launcher `npm run dev` (servizio più Vite in-process, proxy `/api`).
+- Router `#/...` comune ai tre ambienti, con Indietro/Avanti e scorrimento ritrovato.
+- Pagine Nuovo backtest, Esecuzione, Risultati salvati, Tutte le operazioni e dettaglio con ritorni espliciti; linguaggio della §7 con aiuti «i».
+
+Candidato, configurazione `aed2c4ef…`, regole e costi sono invariati.
+
+**Confronto reale UI/diretto, gennaio 2025.** Comando diretto: `$env:PYTHONPATH="src"; python3.12 -m cand001 run --phase app-check-2025-01`. I due percorsi coincidono:
+- stesso commit 6079b87, stesso inputHash `6929bd6e…`, stesso configHash, motore 1.0.3 e profilo;
+- stesse 3 richieste e 3 operazioni;
+- bundle identico SHA256 `982ad3a69f912aaa3028e867c401400b4df43ddfe9bf855afd6fcea5bd33facc`.
+
+Il job, le date e il progresso sono solo nei manifest d'esecuzione.
+
+**Controlli eseguiti** (dettagli nel documento di consegna):
+- Python: app001 18, cand001 45, obs001 30, tutti OK;
+- frontend: vitest 108, typecheck e build OK;
+- prova Chrome a 1366 px sui dati reali (avvio, progresso, risultati, registro, dettaglio, ritorni, ricaricamento, tooltip da tastiera);
+- annullamento reale in 120 ms durante il controllo e in 18 ms durante la preparazione DEV.
+
+**Deviazioni.**
+- Un ricalcolo DEV completo non voluto: l'annullamento in simulazione è arrivato dopo la fine. Il contenuto è identico al DEV 1.0.1.
+- Il primo run UI ha `commit: None` per un timeout di git nel servizio, poi corretto.
+
+Entrambe le cose sono spiegate nel documento di consegna.
+
+**Limiti.**
+- App locale e personale; nessun exchange, conto o ordine; nessuna nuova evidenza sulla strategia.
+- Non c'è ripresa automatica dopo un'interruzione.
+- File esterni e studio storico restano solo in memoria.
+
+La prova positiva dell'Owner non è stata svolta né dichiarata.

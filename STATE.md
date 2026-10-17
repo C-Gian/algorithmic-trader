@@ -2,8 +2,10 @@
 
 Aggiornato: 17 ottobre 2026. Responsabile: Director.
 
-## Attivo — APP-001 READY
-Astra autorizza l'intera macrofase: rendere Gian autonomo nel lanciare, seguire e capire un backtest dall'app. Incarico completo in current_task.md. Base ebd48027ce9828fbb80eddc478036b5d1ceed930 più commit del nuovo task. Nessuna implementazione APP-001 ancora consegnata.
+## Attivo — APP-001 DELIVERED (in attesa di review)
+Astra autorizza l'intera macrofase: rendere Gian autonomo nel lanciare, seguire e capire un backtest dall'app. Incarico in current_task.md (7f94d4e).
+
+Claude ha consegnato il 17 ottobre (c4f425b..7795672 più documentazione): `npm run dev` avvia servizio e app; Backtest → Nuovo → Avvia → progresso reale/annullamento → Risultati salvati → Tutte le operazioni → dettaglio, con indirizzi #/ e Indietro/Avanti. Il confronto UI/diretto sulla prova di gennaio 2025 dà un bundle identico (`982ad3a6…`). Non accettato: restano la review Director e la prova Owner. Evidenze e limiti in docs/research/APP-001-delivery.md, compreso un ricalcolo DEV non previsto, identico al DEV 1.0.1.
 
 Scelte Director: unico frontend esistente, piccolo servizio Python locale su loopback con un worker; un comando npm run dev avvia entrambi. Tre profili fissi su dati già presenti: prova gennaio2025, DEV2023–2024, confronto2025. Prefisso dal2022-10-01 e partenza FLAT; nessun download. Stato/progresso veritieri, annullamento, un solo attivo, nessun duplicato al refresh/doppio clic e risultati salvati riapribili. Navigazione condivisa via URL/Indietro/Avanti; linguaggio semplice, costi spiegati, importJSON secondario.
 

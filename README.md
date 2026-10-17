@@ -4,7 +4,7 @@ Nuovo progetto BTC di Gian: analisi continua, opportunità motivate e futura ges
 
 **Stato attuale:**
 - fondazione documentale e tre utilità Python isolate;
-- una dashboard locale con tre ambienti: la **simulazione locale** (UI-001/UI-002), lo **studio storico** OBS-001 su prezzi reali BTCUSDT perpetual di Binance Vision e il **backtest di sviluppo** del primo candidato CAND-001 (sviluppo 2023–2024 e confronto aggiuntivo 2025, esecuzioni modellate).
+- una dashboard locale con tre ambienti: la **simulazione locale** (UI-001/UI-002), lo **studio storico** OBS-001 su prezzi reali BTCUSDT perpetual di Binance Vision e il **Backtest** del primo candidato CAND-001, che Gian avvia, segue e riapre direttamente dall'app (APP-001: servizio Python locale su 127.0.0.1, un backtest alla volta, solo dati già scaricati).
 
 Non ci sono collegamenti exchange né ordini reali. Il candidato CAND-001 è uno studio di sviluppo, non una strategia validata. Nessuna operatività reale autorizzata.
 
@@ -36,7 +36,7 @@ Durante `npm ci`, npm 11 mostra un **avviso** non bloccante: `npm warn install-s
 
 Diverso è un **errore**: `npm ci` termina con `npm error`, oppure `npm run dev` o `npm run build` si fermano (per esempio con un messaggio su esbuild). In quel caso non approvare script a caso: copia il messaggio e segnalalo.
 
-Aprire http://127.0.0.1:5173 nel browser. Fermare con Ctrl+C. Altri comandi, sempre dalla cartella `dashboard`: `npm test` (test mirati), `npm run build` (typecheck + build), `npm run preview` (build servita su http://127.0.0.1:4173).
+Aprire http://127.0.0.1:5173 nel browser. Fermare con Ctrl+C. Da APP-001 `npm run dev` avvia anche il servizio locale dei backtest (vedi sotto); `npm run dev:ui` avvia solo la pagina. Altri comandi, sempre dalla cartella `dashboard`: `npm test` (test mirati), `npm run build` (typecheck + build), `npm run preview` (build servita su http://127.0.0.1:4173).
 
 **Dove si trova cosa (layout UI-002).** Non c'è più la barra a sinistra: la navigazione è nella barra in alto, sotto il banner di simulazione, e resta visibile anche scorrendo. Le voci sono Dashboard, Ricerca / Backtest, Storico, Conto, Impostazioni e «Guida ai segnali». Storico e Conto portano alle rispettive sezioni della dashboard; Ricerca / Backtest e Impostazioni mostrano «Non disponibile in questa versione». A destra della barra il pulsante **«Scenari simulati»** apre e chiude il pannello di simulazione, che all'avvio è chiuso. Si chiude con «Chiudi», con Esc o ripremendo il pulsante.
 
@@ -103,6 +103,29 @@ Senza bundle l'ambiente chiede di aprirne uno e non mostra prezzi. **«Simulazio
 
 Funziona davvero: acquisizione, controlli, osservazioni ed esiti su dati reali. È simulato soltanto l'ambiente demo. Non esistono strategia, segnali operativi, valutazione economica, dati successivi al 2025 o collegamenti live.
 
+## Backtest dall'app (APP-001)
+
+**Un comando** (PowerShell; servono Node.js 24, Python 3.12 e i dati già presenti in `C:\Projects\algorithmic-trader-data\CAND-001`):
+
+```powershell
+cd C:\Projects\algorithmic-trader\dashboard
+npm run dev
+```
+
+Il comando avvia insieme il servizio locale (127.0.0.1:8765) e la pagina web (127.0.0.1:5173). Aprire **http://127.0.0.1:5173/#/backtest**. Il terminale può restare aperto; Ctrl+C chiude solo i due processi avviati da questo comando (un backtest in corso risulterà «interrotto»). Se Python non viene trovato: `$env:APP001_PYTHON = "<percorso di python3.12.exe>"; npm run dev`. Cartella dati diversa: `$env:APP001_DATA_DIR = "<cartella CAND-001>"` oppure `npm run dev -- --data-dir <cartella>`. Porta occupata, dati mancanti o un secondo servizio sulla stessa cartella producono un messaggio e nessuna chiusura di altri programmi. Nessun download: l'app usa solo file già verificati.
+
+**Percorso in pochi clic.**
+1. In alto scegli **Backtest** → **Nuovo backtest**.
+2. Sulla scheda **«Prova di gennaio 2025»** premi **Avvia**. Il periodo con operazioni è il gennaio 2025; la storia dal 1 ottobre 2022 serve solo a osservare.
+3. Segui la progressione reale: controllo dei file, preparazione, simulazione chiusura per chiusura, salvataggio (circa 15 secondi). **«Annulla backtest»** ferma il calcolo; chiudere o ricaricare la pagina non lo ferma e non ne avvia un altro.
+4. Al termine premi **Apri risultati**: «Risultato dopo i costi» e da dove viene (movimento dei prezzi, prezzo di esecuzione, commissioni, pagamento periodico).
+5. **«Tutte le operazioni (3)»** → clic su una riga → dettaglio: che cosa ha riconosciuto il bot, il tentativo, se è entrato, perché ha chiuso; **«Mostra cosa è successo dopo»** per i costi.
+6. **«← Torna alle operazioni»** (o il tasto Indietro del browser), poi **Risultati salvati**: tutti i risultati, anche quelli calcolati prima dell'app, si riaprono senza ricalcolare.
+
+Le icone «i» spiegano i termini al passaggio del mouse, al clic o con il tasto Tab. Ogni vista ha un indirizzo proprio (`#/backtest/...`, `#/historical/...`, `#/simulation/...`): Indietro/Avanti e ricaricamento funzionano anche negli altri ambienti. Un file aperto da «Apri file esterno» (in Risultati salvati) o uno studio storico restano solo in memoria: dopo un ricaricamento l'app chiede di riaprirli e torna alla stessa vista.
+
+**Profili fissi** ([config/APP-001-profiles.json](config/APP-001-profiles.json), separato dalla configurazione del candidato): Prova di gennaio 2025 (collaudo del prodotto, non un nuovo studio), Sviluppo 2023–2024, Confronto 2025 (già esposto). Nessun editor di strategia, date o costi. Le esecuzioni dell'app sono in `...\CAND-001\jobs\<job>\job.json` (stato, avanzamento, provenienza); i risultati restano in `...\CAND-001\runs\`. Stesso calcolo da terminale: `python3.12 -m cand001 run --phase app-check-2025-01` (con `$env:PYTHONPATH = "src"` dalla radice). Collaudo e confronto UI/diretto in [docs/research/APP-001-delivery.md](docs/research/APP-001-delivery.md).
+
 ## Backtest di sviluppo CAND-001 (primo candidato, esecuzioni modellate)
 
 Primo candidato completo «movimento → reazione → tentativo di ripresa». Specifica in [docs/research/CAND-001-v1.md](docs/research/CAND-001-v1.md), configurazione congelata in [config/CAND-001-v1.json](config/CAND-001-v1.json), risultati e diagnosi in [docs/research/CAND-001-results.md](docs/research/CAND-001-results.md).
@@ -130,13 +153,7 @@ I dati restano fuori Git, in `C:\Projects\algorithmic-trader-data\CAND-001\` (il
 
 Il run DEV più vecchio `…-e1.0.0-…` resta nella stessa cartella `runs`, ma usa lo schema vecchio e l'app non lo apre più.
 
-**Nell'app (prova con il 2025).**
-1. Avvia la dashboard (`npm run dev` nella cartella `dashboard`). In alto scegli **«Backtest di sviluppo»**, poi **«Apri backtest»**, e seleziona il file 2025 qui sopra. Il titolo dice «confronto aggiuntivo 2025».
-2. Premi **«Prima operazione»** (5 gennaio 2025). Leggi il movimento riconosciuto, la reazione attesa e le condizioni dell'ingresso, con le sole informazioni di quel momento.
-3. **«Mostra seguito modellato»** aggiunge ingresso, uscita e costi, marcati come a posteriori.
-4. Torna ai risultati e apri **«Primo caso negativo»** (qui coincide con la prima operazione) e **«Prima astensione»** (2 gennaio 2025: reazione invalidata).
-
-«Prima protezione aggiornata» mostra una protezione alzata; «Registro operazioni» elenca tutte le 29 operazioni del 2025. Con «Apri altro backtest» si passa al file 2023–2024 (78 operazioni).
+**Nell'app.** I risultati 2023–2024 e 2025 compaiono in **Backtest → Risultati salvati** (profilo dedotto dalla fase: sono stati calcolati prima dell'app) e si aprono senza scegliere file. Gli «Esempi dal registro» (prima operazione, primo caso negativo, prima astensione…) sono scorciatoie cronologiche; tutte le operazioni sono in «Tutte le operazioni».
 
 ## Come lavoriamo
 
