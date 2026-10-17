@@ -119,7 +119,6 @@ def period_table(res: dict, start: int, end: int, cand) -> dict:
     recs = res["obs"]["observed"]["45m"]
     inp = eng.input_start
     closes = list(range(max(start, res["window"][0]), min(end, res["window"][1]), bar))
-    valid = sum(1 for t in closes if recs[(t - inp) // bar - 1]["status"] == "COMPLETE")
     legs = [lg for lg in eng.legs if start <= lg["t"] < end]
     eps = [e for e in eng.episodes if start <= e.t0 < end]
     calls = [e for e in eng.episodes if e.call and start <= e.call["t"] < end]
@@ -148,7 +147,10 @@ def period_table(res: dict, start: int, end: int, cand) -> dict:
                   "ambiguityLow", "ambiguityHigh", "targetFirstDelta"):
             stats[k] = None
     stats["exposureShare"] = stats["exposureMin"] * 60_000 / ((evaluated_until - ps) or 1)
-    evaluated = sum(1 for t in closes if halted_at is None or t <= halted_at)
+    evaluated_closes = [t for t in closes if halted_at is None or t <= halted_at]
+    evaluated = len(evaluated_closes)
+    # Dati validi contati sulle sole chiusure valutate: le chiusure teoriche dopo l'interruzione non entrano.
+    valid = sum(1 for t in evaluated_closes if recs[(t - inp) // bar - 1]["status"] == "COMPLETE")
     return {
         "start": start, "end": end, "coverage": coverage, "closes": len(closes), "evaluatedCloses": evaluated,
         "notEvaluatedCloses": len(closes) - evaluated, "validCloses": valid,

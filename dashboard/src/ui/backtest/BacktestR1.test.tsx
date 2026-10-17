@@ -48,6 +48,8 @@ describe('R1-B · bundle con finestra interrotta', () => {
     expect(within(row('Netto con costi di stress (10 bp + 10 bp)')).getAllByText('n.d.').length).toBeGreaterThan(0);
     expect(within(row('Drawdown massimo (chiusure 1m)')).getAllByText('n.d.').length).toBeGreaterThan(0);
     expect(row('Operazioni irrisolte (percorso non valutabile)').textContent).toContain('1');
+    expect(row('Quota operazioni positive').textContent).toMatch(/solo concluse/);
+    expect(row('Tempo in posizione').textContent).toMatch(/solo concluse/);
     expect(row('Parte nota: netto delle sole operazioni concluse (parziale)').textContent).toContain(`${usdt(rec.knownPartNet)} su ${rec.closedTrades}`);
     const decisions = screen.getByLabelText('Decisioni e operazioni');
     expect(within(decisions).getByText('Copertura della valutazione').closest('tr')!.textContent).toMatch(/parziale fino al/);
@@ -84,7 +86,7 @@ describe('R1-B · bundle con finestra interrotta', () => {
     expect(screen.getByText('Percorso irrisolto')).toBeTruthy();
     expect(screen.queryByText('Uscita modellata')).toBeNull();
     const result = screen.getByLabelText("Risultato modellato dell'operazione");
-    expect(within(result).getByText('A POSTERIORI · PERCORSO IRRISOLTO')).toBeTruthy();
+    expect(within(result).getByText('Percorso irrisolto: risultato non disponibile')).toBeTruthy();
     expect(within(result).getByText('Netto modellato').nextElementSibling?.textContent).toBe('n.d.');
     expect(within(result).getByText('Netto con costi di stress').nextElementSibling?.textContent).toBe('n.d.');
     expect(within(result).getByText('Fee assunte').nextElementSibling?.textContent).toBe(usdt(-tr.feeEntry));

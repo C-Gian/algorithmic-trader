@@ -249,10 +249,10 @@ function Result({ tr }: { tr: BtTrade }) {
     <section className="card card-position retro-card" aria-label="Risultato modellato dell'operazione">
       <div className="card-head">
         <p className="section-title">Risultato modellato dell’operazione</p>
-        <Badge tone="warning">{tr.exit ? 'A POSTERIORI' : 'A POSTERIORI · PERCORSO IRRISOLTO'}</Badge>
+        <Badge tone="warning">A POSTERIORI</Badge>
       </div>
       {!tr.exit && (
-        <Notice tone="warning" title="Risultato non disponibile">
+        <Notice tone="warning" title="Percorso irrisolto: risultato non disponibile">
           Lacuna nei dati alle {tr.gap ? isoMinute(tr.gap.at) : '—'} con posizione aperta: uscita, PnL e netto restano mancanti. Sono mostrati solo i fatti noti
           fino alla lacuna (ingresso, fee d’ingresso, funding valutabile).
         </Notice>

@@ -11,6 +11,8 @@ const PERIOD_LABEL = (p: string) => (p === 'DEV' ? '2023–2024' : p);
 /** Stato di copertura di un periodo: con valutazione interrotta i conteggi descrivono solo la parte valutata. */
 const coverageText = (t: BtPeriod) =>
   !t.coverage.evaluated ? 'non valutato' : t.coverage.complete ? 'completa' : `parziale fino al ${fmtUtc(t.coverage.evaluatedUntil)}`;
+/** Statistiche per operazione calcolate dal motore sulle sole concluse: con irrisolte sono parte nota, non complete. */
+const closedOnly = (t: BtPeriod, text: string) => (t.trades.unresolved ? `${text} · solo concluse` : text);
 
 function Row({ label, periods, value }: { label: string; periods: [string, BtPeriod][]; value: (t: BtPeriod) => string }) {
   return (
@@ -125,9 +127,9 @@ export function ResultsPage({ study, onOpen, onOpenFile }: { study: BacktestStud
                   value={(t) => `${usdt(t.trades.closedSubset.net)} su ${t.trades.closedSubset.trades}`}
                 />
               )}
-              <Row label="Quota operazioni positive" periods={periods} value={(t) => pct(t.trades.positiveShare)} />
-              <Row label="Netto per operazione: mediana (P25 / P75)" periods={periods} value={(t) => `${num(t.trades.perTrade.net.p50)} (${num(t.trades.perTrade.net.p25)} / ${num(t.trades.perTrade.net.p75)})`} />
-              <Row label="Rischio iniziale per operazione (mediana, % di N0)" periods={periods} value={(t) => pct(t.trades.perTrade.riskInitialOverN0.p50, 2)} />
+              <Row label="Quota operazioni positive" periods={periods} value={(t) => closedOnly(t, pct(t.trades.positiveShare))} />
+              <Row label="Netto per operazione: mediana (P25 / P75)" periods={periods} value={(t) => closedOnly(t, `${num(t.trades.perTrade.net.p50)} (${num(t.trades.perTrade.net.p25)} / ${num(t.trades.perTrade.net.p75)})`)} />
+              <Row label="Rischio iniziale per operazione (mediana, % di N0)" periods={periods} value={(t) => closedOnly(t, pct(t.trades.perTrade.riskInitialOverN0.p50, 2))} />
               <Row label="Drawdown massimo (chiusure 1m)" periods={periods} value={(t) => usdt(t.drawdown.maxDrawdown)} />
               {halted && (
                 <Row
@@ -136,9 +138,9 @@ export function ResultsPage({ study, onOpen, onOpenFile }: { study: BacktestStud
                   value={(t) => (t.drawdown.partialUntil != null ? `${usdt(t.drawdown.partialMaxDrawdown ?? null)} fino al ${fmtUtc(t.drawdown.partialUntil)}` : '—')}
                 />
               )}
-              <Row label="Sequenza massima di perdite" periods={periods} value={(t) => String(t.trades.maxLosingStreak)} />
-              <Row label="Tempo in posizione" periods={periods} value={(t) => pct(t.trades.exposureShare)} />
-              <Row label="Peso dei 5 trade maggiori (|netto|)" periods={periods} value={(t) => pct(t.trades.concentration.top5AbsShare)} />
+              <Row label="Sequenza massima di perdite" periods={periods} value={(t) => closedOnly(t, String(t.trades.maxLosingStreak))} />
+              <Row label="Tempo in posizione" periods={periods} value={(t) => closedOnly(t, pct(t.trades.exposureShare))} />
+              <Row label="Peso dei 5 trade maggiori (|netto|)" periods={periods} value={(t) => closedOnly(t, pct(t.trades.concentration.top5AbsShare))} />
             </tbody>
           </table>
         </div>

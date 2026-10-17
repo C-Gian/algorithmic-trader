@@ -146,6 +146,7 @@ class Unresolved(unittest.TestCase):
         self.assertEqual(dev["coverage"]["haltedAt"], gap_at)
         self.assertIsNone(dev["drawdown"]["maxDrawdown"])
         self.assertLess(dev["evaluatedCloses"], dev["closes"])
+        self.assertLessEqual(dev["validCloses"], dev["evaluatedCloses"])
         rec = summ["reconciliation"]
         self.assertTrue(rec["knownPartReconciled"])
         self.assertFalse(rec["windowComplete"])

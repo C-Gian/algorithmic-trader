@@ -187,7 +187,8 @@ def results_markdown(summary: dict, n0: float) -> str:
         if not t["coverage"]["evaluated"]:
             L.append(f"| {m} | non valutato (finestra interrotta) | — | — | — | — | — | — |")
             continue
-        L.append(f"| {m} | {t['validCloses']}/{t['closes']} | {t['episodes']} | {t['calls']} | {t['trades']['n']} | {_f(t['trades']['net'])} | "
+        teoriche = f" (su {t['closes']} teoriche)" if t["notEvaluatedCloses"] else ""
+        L.append(f"| {m} | {t['validCloses']}/{t['evaluatedCloses']}{teoriche} | {t['episodes']} | {t['calls']} | {t['trades']['n']} | {_f(t['trades']['net'])} | "
                  f"{_f(t['cashflowByTimestamp']['net'])} | {ex['STOP']}/{ex['TARGET']}/{ex['EXIT_STRUCTURE']}/{ex['TIME_EXIT']}/{ex['END_OF_SEGMENT']} |")
     L.append("\n### Motivi delle gambe e degli episodi (totale)\n")
     tot = tables[cols[-1]]

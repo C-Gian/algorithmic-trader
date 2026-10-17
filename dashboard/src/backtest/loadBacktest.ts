@@ -47,6 +47,7 @@ function stats(x: unknown, w: string): void {
 function period(t: unknown, w: string): void {
   if (!isObj(t)) return fail(`${w}: tabella assente.`);
   for (const k of ['start', 'end', 'closes', 'evaluatedCloses', 'notEvaluatedCloses', 'validCloses', 'legs', 'episodes', 'calls']) if (!isInt(t[k])) fail(`${w}: conteggio «${k}» non valido.`);
+  if ((t.validCloses as number) > (t.evaluatedCloses as number) || (t.evaluatedCloses as number) + (t.notEvaluatedCloses as number) !== t.closes) fail(`${w}: chiusure valutate, teoriche e valide incoerenti.`);
   const cov = obj(t, 'coverage', w);
   if (typeof cov.complete !== 'boolean' || typeof cov.evaluated !== 'boolean' || !isInt(cov.evaluatedUntil) || !(cov.haltedAt === null || isInt(cov.haltedAt)) || !isInt(cov.unresolvedTrades)) {
     fail(`${w}: copertura del periodo incompleta.`);
