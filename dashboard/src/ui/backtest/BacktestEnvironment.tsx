@@ -67,8 +67,9 @@ export function BacktestEnvironment({ study, studyLoad = 0, onOpen, shell }: { s
           <section className="card unavailable" aria-label="Apri backtest">
             <p className="section-title">Backtest di sviluppo · nessun risultato aperto</p>
             <p className="t-2">
-              Qui si consultano i risultati del primo candidato CAND-001 sul periodo di sviluppo 2023–2024: decisioni reali del programma, ingressi e uscite
-              modellati, costi e astensioni. Nessun dato è precaricato: apri il file prodotto dal comando <span className="mono">run</span>.
+              Qui si consultano i risultati del primo candidato CAND-001: sviluppo 2023–2024 oppure confronto aggiuntivo 2025, ciascuno nel proprio file.
+              Decisioni reali del programma, ingressi e uscite modellati, costi e astensioni. Nessun dato è precaricato: apri il file prodotto dal comando{' '}
+              <span className="mono">run</span>.
             </p>
             <p className="t-3" style={{ fontSize: 12 }}>
               Percorso del file: <span className="mono">{BACKTEST_PATH_HINT}</span>

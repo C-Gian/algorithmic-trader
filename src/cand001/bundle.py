@@ -1,4 +1,4 @@
-"""Bundle CAND-001 per la dashboard (schema cand001.bundle/1) e tabelle Markdown dei risultati.
+"""Bundle CAND-001 per la dashboard (schema cand001.bundle/2) e tabelle Markdown dei risultati.
 
 Il bundle non contiene orari di esecuzione né commit: dipende solo da input, configurazione e motore.
 Contiene risultati, ledger, episodi con cronologia degli stati e, per gli episodi arrivati al trigger

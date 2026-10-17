@@ -2,7 +2,9 @@
 
 PowerShell, dalla radice del checkout:
     $env:PYTHONPATH = "src"; python3.12 -m cand001 all
-La fase ADDITIONAL_2025 non si esegue da qui finché il Director non registra il congelamento.
+    $env:PYTHONPATH = "src"; python3.12 -m cand001 all --phase additional2025
+ADDITIONAL_2025 (confronto aggiuntivo già esposto, checkpoint Director registrato il 17 ottobre 2026):
+osservazioni su tutto il prefisso dal 2022-10-01, valutazione [2025-01-01, 2026-01-01) da FLAT.
 """
 
 from __future__ import annotations
@@ -24,7 +26,7 @@ from . import BUNDLE_SCHEMA, ENGINE_VERSION
 from .backtest import run_window
 from .bundle import build_bundle, results_markdown
 from .config import load_candidate
-from .data import FundingNotCertified, acquire, dirs, economic_inputs, input_hash, load_costs, load_trade, reused_identity
+from .data import FundingNotCertified, acquire, dirs, economic_inputs, input_hash, load_costs, load_trade, phase_inputs, reused_identity
 from .metrics import summarize
 
 DEFAULT_DATA_DIR = REPO_ROOT.parent / "algorithmic-trader-data" / "CAND-001"
@@ -62,9 +64,9 @@ def cmd_acquire(cand, data_dir: Path, phase: str) -> int:
     code = 0
     for kind, man in res.items():
         counts = {}
-        for f in man["files"]:
-            counts[f["cache"]] = counts.get(f["cache"], 0) + 1
-        log(f"  {kind}: {len(man['files'])} file ({counts}) | errori {len(man['errors'])}")
+        for status in (man["thisRun"].values() if "thisRun" in man else ["REUSED_OBS-001"] * len(man["files"])):
+            counts[status] = counts.get(status, 0) + 1
+        log(f"  {kind}: {len(man['files'])} file nel manifest, in questa fase {counts} | errori {len(man['errors'])}")
         for e in man["errors"]:
             log(f"    ERRORE {e['month']}: {e['error']}")
             code = 2
@@ -76,6 +78,9 @@ def cmd_check(cand, data_dir: Path, phase: str, economic: bool = False):
     solleva FundingNotCertified dopo aver scritto il rapporto di qualità."""
     log(f"controllo input {phase}")
     t0 = time.perf_counter()
+    plan = phase_inputs(cand, phase)
+    log(f"  piano: osservazione {len(plan['observe'])} mesi trade {plan['observe'][0]}..{plan['observe'][-1]} "
+        f"(di cui {len(plan['reuseObs'])} da OBS-001), funding/mark {len(plan['funding'])} mesi della finestra")
     store, trade = load_trade(cand, data_dir, phase)
     blocked = None
     try:
@@ -95,8 +100,8 @@ def cmd_check(cand, data_dir: Path, phase: str, economic: bool = False):
     for a in s["anomalies"][:10]:
         log(f"    funding: {a}")
     log(f"  mark: punti necessari {costs['mark']['pointsNeeded']}, disponibili {costs['mark']['pointsAvailable']}")
-    quality = {"trade": {"months": trade, "totals": totals,
-                         "initialization": store.counts(store.start, cand.window("DEV")[0]) if phase == "DEV" else None},
+    # Prefisso osservativo: dall'inizio dell'input all'inizio della finestra (per DEV l'inizializzazione 2022).
+    quality = {"trade": {"months": trade, "totals": totals, "initialization": store.counts(store.start, cand.window(phase)[0])},
                "costs": costs, "identity": reused_identity(data_dir), "checkSeconds": round(time.perf_counter() - t0, 2)}
     (dirs(data_dir)["manifests"] / f"input-{phase}.json").write_text(json.dumps(quality, indent=2), encoding="utf-8")
     if blocked is not None:
@@ -186,9 +191,6 @@ def main(argv: list[str] | None = None) -> int:
     cand = load_candidate()
     data_dir = args.data_dir.resolve()
     log(f"CAND-001 | candidato {cand.raw['id']} {cand.raw['candidateVersion']} hash {cand.hash} | motore {ENGINE_VERSION} | Python {platform.python_version()}")
-    if phase == "ADDITIONAL_2025":
-        log("FASE NON ESEGUITA: ADDITIONAL_2025 richiede il checkpoint del Director dopo la diagnosi DEV e la registrazione del congelamento.")
-        return 3
     try:
         if args.command == "acquire":
             return cmd_acquire(cand, data_dir, phase)

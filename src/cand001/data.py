@@ -37,14 +37,30 @@ def dirs(data_dir: Path) -> dict[str, Path]:
     return d
 
 
-def phase_months(cand: Candidate, phase: str) -> dict[str, list[str]]:
-    """Mesi necessari a una fase. DEV: trade dall'inizializzazione a fine 2024; funding/mark solo 2023-2024."""
+def obs_dir(data_dir: Path) -> Path:
+    """Cartella dati OBS-001 accanto a quella CAND-001 (archivi trade 2025-06..12 già verificati)."""
+    return data_dir.parent / "OBS-001"
+
+
+def phase_inputs(cand: Candidate, phase: str) -> dict[str, list[str]]:
+    """Piano degli input di una fase, in insiemi distinti (motore 1.0.2):
+    - observe: mesi trade da caricare per osservare, sempre dall'inizio dell'input (2022-10-01) alla fine
+      della finestra, così le osservazioni al confine usano tutto il prefisso continuo;
+    - reuseObs: mesi trade letti dagli archivi OBS-001 verificati (elenco della config congelata), mai riscaricati;
+    - trade/funding/mark: mesi da acquisire nella cartella CAND-001. Funding e mark solo nella finestra
+      valutata: la finestra parte FLAT e il prefisso non genera costi.
+    Nessun mese oltre la fine della finestra (per ADDITIONAL_2025: nessun dato 2026)."""
     start, end = cand.window(phase)
-    trade = months_between(cand.input_start, end)
-    if phase == "ADDITIONAL_2025":
-        trade = months_between(start, end)
+    observe = months_between(cand.input_start, end)
+    reuse = [m for m in observe if m in cand.raw["data"].get("reuseObsTradeMonths", [])]
     costs = months_between(start, end)
-    return {"trade": trade, "funding": costs, "mark": costs}
+    return {"observe": observe, "reuseObs": reuse, "trade": [m for m in observe if m not in reuse], "funding": costs, "mark": costs}
+
+
+def phase_months(cand: Candidate, phase: str) -> dict[str, list[str]]:
+    """Mesi da acquisire nella cartella CAND-001, per tipo."""
+    plan = phase_inputs(cand, phase)
+    return {"trade": plan["trade"], "funding": plan["funding"], "mark": plan["mark"]}
 
 
 def url_for(cand: Candidate, kind: str, month: str) -> str:
@@ -87,7 +103,18 @@ def write_manifest(folder: Path, stem: str, data: dict) -> None:
     (folder / f"{stem}.json").write_text(body, encoding="utf-8")
 
 
+def _locally_verified(target_dir: Path, entry: dict | None) -> bool:
+    """File già acquisito con checksum del fornitore registrato e hash locale ancora coincidente."""
+    if not entry or not entry.get("checksumOk") or not entry.get("sha256") or entry.get("sha256") != entry.get("providerChecksum"):
+        return False
+    path = target_dir / entry["file"]
+    return path.exists() and _sha256_file(path) == entry["sha256"]
+
+
 def acquire(cand: Candidate, data_dir: Path, phase: str) -> dict:
+    """Acquisisce solo i mesi mancanti. Un file già verificato (hash locale = checksum del fornitore
+    registrato) è riusato senza richieste di rete, con la sua voce di manifest invariata.
+    I mesi trade di OBS-001 sono riusati dalla loro cartella dopo verifica, mai riscaricati."""
     d = dirs(data_dir)
     out = {}
     for kind, months in phase_months(cand, phase).items():
@@ -95,29 +122,69 @@ def acquire(cand: Candidate, data_dir: Path, phase: str) -> dict:
         prev = json.loads(prev_path.read_text(encoding="utf-8")) if prev_path.exists() else {}
         downloaded = {f["sha256"]: f.get("downloadedAt") for f in prev.get("files", []) if f.get("sha256")}
         files = {f["month"]: f for f in prev.get("files", [])}
-        errors = []
+        errors, this_run = [], {}
         for month in months:
+            if _locally_verified(d[kind], files.get(month)):
+                this_run[month] = "VERIFIED_LOCAL"
+                continue
             try:
                 entry = acquire_file(url_for(cand, kind, month), d[kind], d, downloaded)
                 files[month] = {"month": month, "kind": kind, **entry}
+                this_run[month] = entry["cache"]
             except AcquisitionError as e:
                 errors.append({"month": month, "error": str(e)})
         manifest = {"kind": f"CAND001_ACQUISITION_{kind.upper()}", "candidate": cand.raw["id"], "configHash": cand.hash,
-                    "phase": phase, "finishedAt": now_utc(), "files": [files[m] for m in sorted(files)], "errors": errors,
-                    "blocked": bool(errors)}
+                    "phase": phase, "finishedAt": now_utc(), "files": [files[m] for m in sorted(files)], "thisRun": this_run,
+                    "errors": errors, "blocked": bool(errors)}
         write_manifest(d["manifests"], f"acquisition-{kind}", manifest)
         out[kind] = manifest
+    reuse = phase_inputs(cand, phase)["reuseObs"]
+    if reuse:
+        out["reuseObs"] = verify_obs_reuse(data_dir, reuse, write=True)
     return out
+
+
+def _obs_manifest(data_dir: Path) -> tuple[Path, dict]:
+    path = obs_dir(data_dir) / "manifests" / "acquisition.json"
+    if not path.exists():
+        raise AcquisitionError(f"manifest OBS-001 non trovato: {path}")
+    return path, json.loads(path.read_text(encoding="utf-8"))
+
+
+def verify_obs_reuse(data_dir: Path, months: list[str], write: bool = False) -> dict:
+    """Riuso degli archivi trade OBS-001: file letti dove si trovano (nessuna copia né modifica),
+    hash locale confrontato con il manifest OBS e con il checksum del fornitore registrato."""
+    mpath, man = _obs_manifest(data_dir)
+    raw = obs_dir(data_dir) / "raw"
+    files, errors = [], []
+    for month in months:
+        try:
+            path = _verified_zip_at(raw, "trade OBS-001", man, month)
+            f = next(x for x in man["files"] if x["month"] == month)
+            files.append({"month": month, "kind": "trade", "source": "OBS-001", "path": str(path), "file": f["file"], "url": f["url"],
+                          "providerChecksum": f["providerChecksum"], "checksumFetchedAt": f.get("checksumFetchedAt"),
+                          "downloadedAt": f.get("downloadedAt"), "sha256": f["sha256"], "size": f.get("size"), "localCheck": "VERIFIED"})
+        except AcquisitionError as e:
+            errors.append({"month": month, "error": str(e)})
+    manifest = {"kind": "CAND001_REUSE_TRADE_OBS001", "obsManifest": str(mpath), "obsManifestSha256": _sha256_file(mpath),
+                "verifiedAt": now_utc(), "files": files, "errors": errors, "blocked": bool(errors)}
+    if write:
+        write_manifest(dirs(data_dir)["manifests"], "reuse-trade-obs", manifest)
+    return manifest
 
 
 # ------------------------------------------------------------------- controllo
 
 
 def _verified_zip(d: dict[str, Path], kind: str, manifest: dict, month: str) -> Path:
+    return _verified_zip_at(d[kind], kind, manifest, month)
+
+
+def _verified_zip_at(folder: Path, kind: str, manifest: dict, month: str) -> Path:
     f = next((x for x in manifest.get("files", []) if x["month"] == month), None)
     if f is None:
         raise AcquisitionError(f"{kind} {month}: file non acquisito")
-    path = d[kind] / f["file"]
+    path = folder / f["file"]
     if not path.exists():
         raise AcquisitionError(f"{kind} {month}: {path} assente")
     local = _sha256_file(path)
@@ -127,19 +194,29 @@ def _verified_zip(d: dict[str, Path], kind: str, manifest: dict, month: str) -> 
 
 
 def load_trade(cand: Candidate, data_dir: Path, phase: str) -> tuple[MinuteStore, list[dict]]:
+    """Minuti negoziati dall'inizio dell'input (2022-10-01) alla fine della finestra, in ogni fase: il
+    prefisso osservativo è sempre completo e continuo (motore 1.0.2). Mesi OBS-001 letti dalla loro
+    cartella dopo verifica; righe fuori dal mese del file scartate e contate; nessun minuto oltre la fine."""
     d = dirs(data_dir)
     manifest = json.loads((d["manifests"] / "acquisition-trade.json").read_text(encoding="utf-8"))
+    plan = phase_inputs(cand, phase)
+    obs_man = _obs_manifest(data_dir)[1] if plan["reuseObs"] else None
     _, end = cand.window(phase)
-    start = cand.input_start if phase == "DEV" else cand.window(phase)[0]
-    store = MinuteStore(start, end)
+    store = MinuteStore(cand.input_start, end)
     report = []
-    for month in phase_months(cand, phase)["trade"]:
-        path = _verified_zip(d, "trade", manifest, month)
+    for month in plan["observe"]:
+        if month in plan["reuseObs"]:
+            source, man = "OBS-001", obs_man
+            path = _verified_zip_at(obs_dir(data_dir) / "raw", "trade OBS-001", man, month)
+        else:
+            source, man = "CAND-001", manifest
+            path = _verified_zip(d, "trade", manifest, month)
         lo, hi = month_bounds(month)
         stats = parse_csv_text(read_month_zip(path, path.name.replace(".zip", ".csv")), store, lo, hi, path.name)
-        f = next(x for x in manifest["files"] if x["month"] == month)
-        report.append({"month": month, "file": path.name, "url": f["url"], "sha256": f["sha256"], "downloadedAt": f.get("downloadedAt"),
-                       "cache": f.get("cache"), "timeUnit": "ms", **stats.as_dict(), "coverage": store.counts(lo, hi)})
+        f = next(x for x in man["files"] if x["month"] == month)
+        report.append({"month": month, "file": path.name, "source": source, "url": f["url"], "sha256": f["sha256"],
+                       "downloadedAt": f.get("downloadedAt"), "cache": f.get("cache"), "timeUnit": "ms", **stats.as_dict(),
+                       "coverage": store.counts(lo, hi)})
     return store, report
 
 
@@ -307,4 +384,4 @@ def reused_identity(data_dir: Path) -> dict:
             "note": "Metadati correnti riusati con provenienza; non certificano condizioni storiche."}
 
 
-__all__ = ["acquire", "load_trade", "load_costs", "input_hash", "reused_identity", "phase_months", "parse_funding", "check_funding_series", "parse_utc"]
+__all__ = ["acquire", "verify_obs_reuse", "phase_inputs", "obs_dir", "load_trade", "load_costs", "input_hash", "reused_identity", "phase_months", "parse_funding", "check_funding_series", "parse_utc"]

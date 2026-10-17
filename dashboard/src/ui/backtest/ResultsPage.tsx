@@ -6,7 +6,9 @@ import { fmtUtc } from '../format';
 import { BacktestFilePicker } from './BacktestEnvironment';
 import { CATEGORY_TEXT, EXIT_TEXT, bps, num, pct, usdt } from './text';
 
-const PERIOD_LABEL = (p: string) => (p === 'DEV' ? '2023–2024' : p);
+const PERIOD_LABEL = (p: string) => (p === 'DEV' ? '2023–2024' : p === 'ADDITIONAL_2025' ? '2025' : p);
+/** ADDITIONAL_2025: confronto aggiuntivo su dati già esposti, separato dallo sviluppo 2023–2024. */
+const isAdditional = (phase: string) => phase === 'ADDITIONAL_2025';
 
 /** Stato di copertura di un periodo: con valutazione interrotta i conteggi descrivono solo la parte valutata. */
 const coverageText = (t: BtPeriod) =>
@@ -28,7 +30,11 @@ function Row({ label, periods, value }: { label: string; periods: [string, BtPer
 export function ResultsPage({ study, onOpen, onOpenFile }: { study: BacktestStudy; onOpen: (id: string, cursor?: number) => void; onOpenFile: (s: BacktestStudy) => void }) {
   const b = study.bundle;
   const s = b.summary;
-  const periods: [string, BtPeriod][] = s.periods.map((p) => [p, s.tables[p]]);
+  // Un anno che coincide con l'intera finestra (2025) è mostrato una volta sola, come periodo della fase.
+  const periods: [string, BtPeriod][] = s.periods
+    .filter((p) => p === s.phase || s.tables[p].start !== s.tables[s.phase].start || s.tables[p].end !== s.tables[s.phase].end)
+    .map((p) => [p, s.tables[p]]);
+  const additional = isAdditional(s.phase);
   const dev = s.tables[s.phase];
   const q = b.quality;
   const headlines = study.headlines();
@@ -36,11 +42,12 @@ export function ResultsPage({ study, onOpen, onOpenFile }: { study: BacktestStud
   const rec = s.reconciliation;
   return (
     <main className="content" id="main-content" tabIndex={-1}>
-      <section className="card table-card" aria-label="Backtest di sviluppo">
+      <section className="card table-card" aria-label={additional ? 'Confronto aggiuntivo 2025' : 'Backtest di sviluppo'}>
         <div className="card-head">
           <div>
             <p className="section-title">
-              {b.candidate.id} · versione {b.candidate.version} · backtest di sviluppo {fmtUtc(b.window.start).slice(0, 11)} → {fmtUtc(b.window.end).slice(0, 11)}
+              {b.candidate.id} · versione {b.candidate.version} · {additional ? 'confronto aggiuntivo 2025' : 'backtest di sviluppo'}{' '}
+              {fmtUtc(b.window.start).slice(0, 11)} → {fmtUtc(b.window.end).slice(0, 11)}
             </p>
             <p className="card-sub">
               Binance Vision · BTCUSDT perpetual USDⓈ-M · prezzo negoziato 1m · UTC · run <span className="mono">{b.run.runId}</span> · configurazione{' '}
@@ -49,6 +56,7 @@ export function ResultsPage({ study, onOpen, onOpenFile }: { study: BacktestStud
           </div>
           <div className="actions">
             {study.synthetic && <Badge tone="warning">FIXTURE SINTETICA</Badge>}
+            {additional && <Badge tone="warning">2025 GIÀ ESPOSTO · NON VALIDAZIONE INDIPENDENTE</Badge>}
             <Badge tone="warning">ESECUZIONI MODELLATE</Badge>
           </div>
         </div>
@@ -56,9 +64,17 @@ export function ResultsPage({ study, onOpen, onOpenFile }: { study: BacktestStud
           Il programma ha già elaborato tutti gli episodi del periodo, una chiusura da 45 minuti dopo l’altra, partendo senza posizioni. Qui consulti i risultati e
           puoi aprire un episodio: vedrai che cosa sapeva al momento della decisione e, solo se lo chiedi, che cosa è successo dopo.
         </p>
+        {additional && (
+          <p className="t-2">
+            È il confronto aggiuntivo sul 2025 con la stessa versione congelata, separato dallo sviluppo 2023–2024 (che è in un altro file). Il 2025 era già stato
+            esaminato in studi precedenti: non è una prova su dati mai visti. Le osservazioni usano tutta la storia dal {fmtUtc(b.window.inputStart).slice(0, 11)};
+            decisioni e operazioni ripartono da zero il {fmtUtc(b.window.start).slice(0, 11)}, senza nulla ereditato dal 2024.
+          </p>
+        )}
         <p className="footnote">
           Ogni operazione vale {formatNumber(b.notionalUSDT, 0)} USDT di nozionale fisso: i totali sono somme di operazioni ipotetiche, non il saldo di un conto né un
-          rendimento composto. {b.economicsLabel}. Qualità input: {formatNumber(q.trade.totals.valid, 0)}/{formatNumber(q.trade.totals.expected, 0)} minuti validi, funding{' '}
+          rendimento composto. {b.economicsLabel}. Qualità input: {formatNumber(q.trade.totals.valid, 0)}/{formatNumber(q.trade.totals.expected, 0)} minuti validi dal{' '}
+          {fmtUtc(b.window.inputStart).slice(0, 11)} (storia osservata inclusa), funding{' '}
           {q.funding.series.events} eventi ({q.funding.series.anomalies.length} anomalie), mark per il funding {q.mark.pointsAvailable}/{q.mark.pointsNeeded} punti.
         </p>
         <BacktestFilePicker onOpen={onOpenFile} label="Apri altro backtest" />
@@ -230,7 +246,10 @@ export function ResultsPage({ study, onOpen, onOpenFile }: { study: BacktestStud
             </tbody>
           </table>
         </div>
-        <p className="footnote">Il percorso 2023–2024 è continuo: nessun azzeramento a fine mese o anno. Il registro completo delle operazioni è nella voce «Registro operazioni».</p>
+        <p className="footnote">
+          Il percorso {PERIOD_LABEL(s.phase)} è continuo: nessun azzeramento a fine mese{additional ? '' : ' o anno'}. Il registro completo delle operazioni è nella voce
+          «Registro operazioni».
+        </p>
       </section>
 
       <section className="card unavailable" id="conto" aria-label="Conto" style={{ scrollMarginTop: 'calc(var(--sticky-h, 96px) + 16px)' }}>

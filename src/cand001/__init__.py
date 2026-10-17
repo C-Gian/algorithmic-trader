@@ -7,5 +7,7 @@ le decisioni non ricevono esiti economici, funding o minuti futuri.
 
 # 1.0.1 (review CAND-001/R1): funding non certificato blocca il run economico; percorsi irrisolti
 # conservano i fatti noti e rendono mancanti i risultati completi. Candidato e config invariati.
-ENGINE_VERSION = "1.0.1"
+# 1.0.2 (supporto ADDITIONAL_2025): prefisso osservativo intero dal 2022-10-01 in ogni fase, riuso
+# verificato degli archivi OBS-001, acquisizione dei soli mancanti. Decisioni, ledger e config invariati.
+ENGINE_VERSION = "1.0.2"
 BUNDLE_SCHEMA = "cand001.bundle/2"
