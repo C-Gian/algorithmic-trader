@@ -1,6 +1,6 @@
 # Incarico corrente — CAND-001 primo candidato e ciclo storico di sviluppo
 
-**Stato: IN_PROGRESS — CAND-001 v1 preregistrato (config, codice, test) prima degli esiti; fase DEV in corso.**
+**Stato: DELIVERED — fase DEV completata (backtest 2023–2024, diagnosi, app); macrofase non chiusa: checkpoint del Director prima del 2025. Non ACCEPTED.**
 Macrofase intera autorizzata da Astra il17ottobre2026: primo candidato completo e primo backtest riproducibile, più eventuale unica revisione motivata e confronto2025 già esposto. Il checkpoint Director dopo la diagnosi DEV governa la scelta metodologica prima degli esiti2025; non richiede una nuova autorizzazione ordinaria di Gian/Astra.
 Responsabile disegno/diagnosi/review: Director. Esecutore: Claude Code.
 Base codice: bf3280ec8c034a775c925d0b5f38223eeade9c53 più questo READY. Sincronizzazione checkout a cura di Gian; nessun pull/fetch dell'esecutore.
@@ -152,7 +152,7 @@ Solo conflitti sostanziali ad Astra; dettagli tecnici al Director/esecutore nel 
 
 ### Preregistrazione prima di dati economici ed esiti (Claude Code, 17 ottobre 2026)
 
-**Stato: IN_PROGRESS.**
+**Stato allora: IN_PROGRESS.**
 - **Base e ambiente.** Base `0d48828` su `main`, checkout pulito, nessun pull o fetch. Python 3.12.14 già presente via `uv`; i test passano anche su 3.11.16.
 - **Configurazione.** `config/CAND-001-v1.json` trascrive `docs/research/CAND-001-v1.md` (commit `0d4882848d014f8137153848171243674759370d`, 17 ottobre 2026), senza modifiche: parametri, finestre, fonti, fee/slippage/funding, precedenze, regole degli esempi e classi di diagnosi. Candidato 1.0.0, motore `cand001` 1.0.0, schema bundle `cand001.bundle/1`.
 - **Hash.** SHA256 canonico (JSON con chiavi ordinate, indipendente dai fine riga): `aed2c4ef627617d73972778097bbab5fb702ab5064ce9e6eb68ded2170ce4edf`. Convenzioni osservative OBS-001/v1 invariate (`3c4eb884…2387`), verificate al caricamento.
@@ -169,6 +169,88 @@ Solo conflitti sostanziali ad Astra; dettagli tecnici al Director/esecutore nel 
   - esempi contabili 18,889 e 19,111, mark mancante, ambiguità ai confini, slippage non doppio, stress;
   - catena completa: stesso prefisso e futuri diversi danno decisioni, richieste e protezioni identiche; riconciliazione; nessun minuto dopo la fine.
 - **Sequenza.** Nessun download e nessun backtest reale prima del commit che contiene questa nota.
+
+Questa preregistrazione è nel commit `8146336`, pubblicato prima del primo download.
+
+### Consegna DEV (Claude Code, 17 ottobre 2026) — DELIVERED, fase DEV completata, macrofase non chiusa
+
+**Commit**
+- `8146336`: preregistrazione di config, motore e 28 test.
+- `c597a5e`: ambiente app «Backtest di sviluppo», fixture sintetica, 8 test UI, correzione della misura di memoria.
+- Il commit della consegna aggiorna questo file, STATE, README e il report.
+
+Tutti su `main`, senza pull, fetch o force push. **Il 2025 non è stato scaricato né elaborato economicamente.** La CLI rifiuta `--phase additional2025` finché il Director non registra il congelamento.
+
+**Riproduzione**
+- PowerShell: `$env:PYTHONPATH="src"; python3.12 -m cand001 all` (fase predefinita DEV); offline basta `run`.
+- Dati in `C:\Projects\algorithmic-trader-data\CAND-001\` (raw/trade, raw/funding, raw/mark, manifests con copie datate, runs).
+- Run `CAND-001-v1.0.0-e1.0.0-DEV-adaa94c502-aed2c4ef62`: input hash `adaa94c502…`, bundle 9,1 MB, SHA256 `53d5fdcfbfe1c4ef…`.
+- Rieseguito da `c597a5e`: bundle identico byte per byte. Il commit sta solo nel manifest del run.
+- Tempi: 22,3 s totali (controllo 18,4 s, backtest 1,9 s); picco di memoria 532 MB.
+
+**Dati**
+- **Nuovi**, scaricati il 17 ottobre alle 07:29–07:31 UTC con checksum del fornitore tutti verificati: 27 ZIP trade (da ottobre 2022 a dicembre 2024), 24 funding e 24 mark (2023–2024).
+- **Trade:** 1.185.120 minuti validi su 1.185.120, nessuna anomalia.
+- **Funding:** 2.193 eventi a 8 h, jitter massimo 29 ms, nessuna anomalia di serie.
+- **Mark:** 2.189 punti su 2.193. Manca un giorno nel febbraio 2023 (funding del 24–25 febbraio) e 2 minuti nell'agosto 2024; il punto del 1° gennaio 2023 alle 00:00 cadrebbe nel 2022, non acquisito e non necessario. Nessuna operazione è toccata.
+- **Riusati:** identità dello strumento e termini, dalla verifica OBS-001 con provenienza. I 7 ZIP OBS del 2025 non sono stati letti in DEV.
+- **Hash Director:** gennaio 2023 funding (`05e3df32…`) e mark (`18abe5d6…`) coincidono.
+
+**Risultato DEV** (operazioni da 1.000 USDT di nozionale, somme; report completo in `docs/research/CAND-001-results.md`)
+
+| | 2023 | 2024 | 2023–2024 |
+|---|---:|---:|---:|
+| Operazioni (LONG/SHORT) | 41 (19/22) | 37 (11/26) | 78 (30/48) |
+| PnL ai prezzi di riferimento | −49,79 | −35,65 | −85,44 |
+| Slippage / fee / funding | −24,57 / −40,95 / −0,57 | −22,23 / −37,06 / +0,23 | −46,80 / −78,01 / −0,34 |
+| **Netto modellato** | **−115,87** | **−94,72** | **−210,59** (−2.106 bp di N0) |
+| Netto stress 10+10 bp | −214,15 | −183,65 | −397,80 |
+| Quota netti positivi / profit factor | 24,4% / 0,42 | 24,3% / 0,54 | 24,4% / 0,48 |
+| Drawdown massimo (1m) / sequenza di perdite | −136,90 / 12 | −103,50 / 10 | −216,79 / 12 |
+
+- Uscite: 56 stop, 17 target, 4 struttura, 1 a 24 h.
+- Protezioni aggiornate: 31 su 23 operazioni.
+- Nessun contatto stop+target nello stesso minuto, nessun gap, nessun funding ambiguo o mancante.
+- Mesi: 15 negativi, 8 positivi, 1 senza operazioni.
+- Concentrazione: i 5 trade maggiori pesano il 14,7% della somma dei |netti|.
+
+**Diagnosi** (classi del protocollo; dettagli nel report)
+- **Bug:** nessuno. Il riscontro indipendente dai minuti grezzi (87 call e 78 operazioni: A0, ampiezza, profondità, trigger, S0, ingresso, percorso d'uscita con le precedenze, netto) dà zero differenze.
+- **Non fedele al disegno:** nessuna. Due interpretazioni tecniche da confermare: le contraddizioni sono valutate anche a t0, senza trigger; un'uscita esattamente su una chiusura 45m occupa quella chiusura.
+- **Coerente ma poco utile (principale):** il lordo ai prezzi di riferimento è già negativo. Il target viene raggiunto nel 22% dei casi, contro circa il 33% necessario con spazio/rischio mediano 2,05. Gli stop avevano un'escursione favorevole mediana di 0,38R. Le astensioni per spazio/rischio sono 271 su 814 episodi (mediana 0,68).
+- **Costi e assunzioni sensibili:** fee e slippage valgono in mediana circa il 28% del rischio iniziale (stop vicino, 0,57% di N0 in mediana) e fanno 124,81 dei 210,59 persi. Lo stress quasi raddoppia la perdita.
+- **Informazione insufficiente:** 78 operazioni in 24 mesi, 2% del tempo in posizione. LONG e SHORT sono entrambi negativi, profilo simile nei due anni.
+
+Nessuna soglia è stata cambiata. La decisione v1 / unica revisione spetta al Director.
+
+**App.** Ambiente «Backtest di sviluppo» nella stessa dashboard, con banner «BACKTEST DI SVILUPPO — esecuzioni modellate, nessun collegamento exchange».
+- Import con contratto e validatore separati da OBS-001 e dalla simulazione: tutti i campi annidati letti dalle viste sono controllati, e un file errato lascia aperto il backtest valido.
+- Pagina risultati: versione, finestra, qualità, netto con costi separati, 2023/2024/DEV, mesi, frequenza, rischio e percorso, concentrazione.
+- Cinque pulsanti: «Prima decisione», «Prima operazione», «Primo caso negativo», «Prima astensione», «Prima protezione aggiornata». Sul reale sono tutti presenti; una categoria assente è dichiarata e disattivata.
+- Vista episodio: frasi «Ha riconosciuto questo movimento / Ha atteso questa reazione / Ha chiesto un ingresso a queste condizioni / Si è astenuto», più i momenti dell'episodio.
+  - Il grafico 45m/1D mostra solo candele, linee di piano e pivot noti al momento.
+  - «Mostra seguito modellato» aggiunge ingresso, stop aggiornato, uscita e la scheda del risultato «A POSTERIORI».
+- Registro operazioni: 78 righe apribili.
+- Nessun saldo personale; i comandi della simulazione non toccano i risultati.
+
+**Verifiche dell'esecutore**
+- **Python:** 28 test sintetici CAND (anche su 3.11.16) più riscontro e diagnosi indipendenti sul run reale. I test OBS-001 non sono stati rilanciati, perché l'osservatore è riusato senza modifiche.
+- **Frontend:** 44 test UI, typecheck e build. Gli 8 nuovi riguardano import, risultati, esempi causali e a posteriori, astensione, registro e separazione dalla simulazione; le regressioni R1 e della barra superiore sono incluse perché ho toccato shell e `TopBar`.
+- **Browser:** Chrome headless sulla build con il bundle reale. Apertura in 0,15 s, i cinque esempi aperti, uscita assente prima del seguito e presente dopo, 78 righe nel registro, 1D, nessun errore e nessuna richiesta esterna.
+- **Immagini:** 3 in `docs/research/CAND-001-screens/` (CC BY-NC-SA 4.0 per i soli derivati).
+
+**Limiti**
+- Esecuzione modellata, senza order book, margine o liquidazioni. Fee e slippage sono assunzioni; il funding usa il proxy mark 1m.
+- Risoluzione 1m.
+- Campione DEV già usato per la diagnosi.
+- Ho chiuso solo il mio `vite preview` (PID 20512); il `vite` di sviluppo PID 10872 non è mio ed è rimasto acceso.
+
+**Prova di Gian** (dopo la review): seguire il paragrafo «Backtest di sviluppo CAND-001» del README.
+1. Aprire il file del run.
+2. Premere «Prima operazione», leggere le tre frasi e poi «Mostra seguito modellato».
+3. Ripetere con «Primo caso negativo» e «Prima astensione».
+
+Non serve verificare formule o pivot.
 
 ## Review del Director
 

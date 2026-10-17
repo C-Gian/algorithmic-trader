@@ -4,9 +4,9 @@ Nuovo progetto BTC di Gian: analisi continua, opportunità motivate e futura ges
 
 **Stato attuale:**
 - fondazione documentale e tre utilità Python isolate;
-- una dashboard locale con due ambienti: la **simulazione locale** (UI-001/UI-002) e lo **studio storico** OBS-001 su prezzi reali BTCUSDT perpetual di Binance Vision, con osservazioni calcolate e un confronto descrittivo.
+- una dashboard locale con tre ambienti: la **simulazione locale** (UI-001/UI-002), lo **studio storico** OBS-001 su prezzi reali BTCUSDT perpetual di Binance Vision e il **backtest di sviluppo** del primo candidato CAND-001 (2023–2024, esecuzioni modellate).
 
-Non sono presenti strategia, collegamento exchange o ordini reali. Nessuna operatività reale autorizzata.
+Non ci sono collegamenti exchange né ordini reali. Il candidato CAND-001 è uno studio di sviluppo, non una strategia validata. Nessuna operatività reale autorizzata.
 
 ## Da dove partire
 
@@ -102,6 +102,35 @@ Che cosa trovi nello storico:
 Senza bundle l'ambiente chiede di aprirne uno e non mostra prezzi. **«Simulazione locale»** riporta alla demo con un provider nuovo.
 
 Funziona davvero: acquisizione, controlli, osservazioni ed esiti su dati reali. È simulato soltanto l'ambiente demo. Non esistono strategia, segnali operativi, valutazione economica, dati successivi al 2025 o collegamenti live.
+
+## Backtest di sviluppo CAND-001 (primo candidato, esecuzioni modellate)
+
+Primo candidato completo «movimento → reazione → tentativo di ripresa». Specifica in [docs/research/CAND-001-v1.md](docs/research/CAND-001-v1.md), configurazione congelata in [config/CAND-001-v1.json](config/CAND-001-v1.json), risultati e diagnosi in [docs/research/CAND-001-results.md](docs/research/CAND-001-results.md).
+
+Sono operazioni ipotetiche su prezzi storici 2023–2024, ciascuna da 1.000 USDT di nozionale: non sono un conto, né un'autorizzazione a operare. Il 2025 non è ancora elaborato.
+
+**Comandi** (PowerShell, dalla radice del repository; serve la connessione solo la prima volta):
+
+```powershell
+cd C:\Projects\algorithmic-trader
+$env:PYTHONPATH = "src"
+python3.12 -m cand001 all      # scarica i dati mancanti (verifica checksum) ed esegue il backtest 2023–2024
+python3.12 -m cand001 run      # rifà il backtest offline con i dati già scaricati (circa 25 secondi)
+python3.12 -m unittest discover -s tests -p "test_cand001_*.py"   # test sintetici del candidato
+```
+
+I dati restano fuori Git, in `C:\Projects\algorithmic-trader-data\CAND-001\`. Il file per l'app è:
+
+`C:\Projects\algorithmic-trader-data\CAND-001\runs\CAND-001-v1.0.0-e1.0.0-DEV-adaa94c502-aed2c4ef62\cand001-bundle.json`
+
+**Nell'app.**
+1. Avvia la dashboard (`npm run dev` nella cartella `dashboard`).
+2. In alto scegli **«Backtest di sviluppo»**, poi **«Apri backtest»**, e seleziona il file qui sopra.
+3. Si apre la pagina dei risultati.
+4. Premi **«Prima operazione»**: vedi che cosa il programma ha riconosciuto, la reazione che ha atteso e l'ingresso che ha chiesto, con le sole informazioni di quel momento.
+5. **«Mostra seguito modellato»** aggiunge ingresso, protezione, uscita e costi, marcati come a posteriori.
+
+Gli altri pulsanti aprono il primo caso negativo, la prima astensione e la prima protezione aggiornata. «Registro operazioni» elenca tutte le 78 operazioni.
 
 ## Come lavoriamo
 

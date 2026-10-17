@@ -10,7 +10,14 @@ Limite di comprensione Owner conservato: nessuna prova positiva inventata, nessu
 
 ## Mandato corrente
 
-Astra autorizza **primo candidato completo e ciclo storico di sviluppo**, famiglia movimento direzionale → reazione → tentativo di ripresa. **CAND-001 — READY, faseDEV**: specifica completa docs/research/CAND-001-v1.md, esecuzione in current_task.md. Nessun risultato economico ancora prodotto dal candidato.
+Astra autorizza **primo candidato completo e ciclo storico di sviluppo**, famiglia movimento direzionale → reazione → tentativo di ripresa. **CAND-001 — DELIVERED fase DEV (Claude, 17 ottobre), macrofase non chiusa: checkpoint Director prima del 2025.** Specifica docs/research/CAND-001-v1.md, config preregistrata (`aed2c4ef…`, commit 8146336) prima degli esiti. Backtest 2023–2024 riproducibile, risultati/diagnosi in docs/research/CAND-001-results.md, consultabile nell'ambiente app «Backtest di sviluppo».
+
+Esito DEV (dichiarato dall'esecutore, non ancora riesaminato):
+- 78 operazioni da 1.000 USDT, netto modellato −210,59 USDT (−85,44 già ai prezzi di riferimento; fee+slippage −124,81; funding −0,34); stress −397,80.
+- 24% netti positivi, 15 mesi negativi su 24, LONG e SHORT entrambi negativi.
+- Riscontro indipendente: 0 differenze su 87 call e 78 operazioni.
+- Diagnosi: nessun bug o difformità; scelta coerente ma poco utile (target 22% contro circa 33% necessari, MFE degli stop 0,38R) e forte sensibilità ai costi (stop vicino, costi circa 28% di R). Campione piccolo.
+- 2025 non scaricato né elaborato.
 
 Ruoli sei famiglie definiti senza voti; struttura/livelli/volatilità decisionali, medie/volume/Fibonacci contestuali. Ingresso condizionato ritardato, stop e target, protezione monotona da nuovi pivot, uscita per struttura/tempo, una posizione senza incrementi/parziali. Nozionale normalizzato fisso1000USDT, non capitaleOwner; fee/slippage assunti, funding storico con mark1mproxy esplicito.
 
@@ -20,7 +27,12 @@ Fonte/strumento Binance Vision BTCUSDT perpetual USDⓈ-M. Input [2022-10-01,202
 
 Prima consegna: candidato/config committati prima degli esiti → controlli sintetici mirati → backtestDEV → diagnosi e risultati/esempi nella stessa app. Checkpoint Director dopoDEV decide mantenimentov1 o al più una revisione motivata prima del congelamento;2025 solo dopo quel checkpoint, nessuna iterazione sui suoi esiti. Non è un nuovo permesso ordinario adAstra/Owner.
 
-Primo riscontro tecnico fonti: fundinggennaio2023 e checksum mark disponibili; copertura completa ancora da verificare. Nessun backtestCAND-001 già svolto o efficacia dimostrata.
+Dati DEV acquisiti e verificati (fuori Git):
+- 27 ZIP trade con 1.185.120/1.185.120 minuti validi;
+- 24 funding con 2.193 eventi a 8 h, senza anomalie;
+- 24 mark con 2.189/2.193 punti: manca un giorno a febbraio 2023 e 2 minuti ad agosto 2024, senza operazioni toccate.
+
+Nessuna efficacia dimostrata.
 
 ## Vincoli
 
