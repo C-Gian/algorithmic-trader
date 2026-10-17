@@ -1,6 +1,6 @@
 # MOVE-001 — Implementazione isolata e applicazione descrittiva DEV
 
-**Stato: IN_PROGRESS** (Claude Code, 17 ottobre 2026; incarico READY del Director, 17 ottobre 2026). Base: 03510afed13732c2fc46b5bb4e95626986c95ca0 più il commit che pubblica questo incarico. Astra approva la candidata semantica e autorizza l'intera macrofase. Esecutore: Claude Code nel checkout preparato dall'Owner.
+**Stato: DELIVERED** (Claude Code, 17 ottobre 2026; in attesa di review del Director, non accettato). Incarico READY del Director, 17 ottobre 2026. Base: 03510afed13732c2fc46b5bb4e95626986c95ca0 più il commit che pubblica questo incarico. Astra approva la candidata semantica e autorizza l'intera macrofase. Esecutore: Claude Code nel checkout preparato dall'Owner.
 
 ## Obiettivo e autorità
 Implementare il ciclo causale e verificare se rappresenta concretamente movimento–reazione, senza strategia o valutazione economica. Contratto completo: **docs/research/MOVE-001.md §§1–12, versione1.0.1**; §§11–12 completano le precedenze. Leggere AGENTS, STATE, contesto funzionale e EXPOSURES; usare osservatore e acquisizione locale esistenti, senza rileggere l'intero archivio.
@@ -37,3 +37,26 @@ CAND-001/config/costi e OBS-002/output precedenti invariati. Nessun download, le
 - 18 test sintetici in `tests/test_move001.py`.
 
 Nessun dato reale MOVE-001 ancora elaborato.
+
+**Consegna MOVE-001 — Claude Code, 17 ottobre 2026.** Commit:
+- `fd09d35`: gate prima dei dati (config 1.0.1, modulo, 18 test);
+- `ad971af`: riscontro degli invarianti;
+- `a0f2b12`: adattatore del lettore, fixture, test e schermate;
+- commit di questa consegna: report e stato.
+
+Applicazione unica dal checkout pulito `fd09d35` sui 27 ZIP verificati 2022-10…2024-12:
+- run `C:/Projects/algorithmic-trader-data/MOVE-001/runs/MOVE-001-v1.0.1-e1.0.0-3b76888642-30e67d8fe2/`;
+- ripetizione identica byte per byte (`outputs.json` `10dd7fc6…03d4`);
+- riscontro degli invarianti su 701 riferimenti e 26.336 chiusure: 0 violazioni.
+
+Esiti DEV, descrittivi:
+- 631 nascite, 600 con P1 noto, 526 passate a UTILIZZABILE;
+- archiviazioni: 275 completamenti, 234 perdite, 122 sostituzioni; nessuna interruzione e nessun riferimento aperto a fine copertura;
+- principale assente nel 56% delle chiusure; sospeso con P1 nel 43% delle chiusure occupate;
+- 112 strutture qualificate non adottate su 743.
+
+Casi: 6 riferimenti per 11 categorie; vuote `CONTINUITY_INTERRUPTED` e `OPEN_AT_END_FIRST_BORN`.
+
+Lettore: `MOVE001_CASE` con avviso non operativo, senza seguito 24h, stato dai soli fatti noti. 60 test del lettore, typecheck e build; prova visiva su 2 casi reali. Python: 19 test MOVE-001.
+
+Report `docs/research/MOVE-001-results.md`: scelte tecniche §2, limiti §8. Nessuna strategia, operazione, esito 24h o modifica CAND/OBS-002.
