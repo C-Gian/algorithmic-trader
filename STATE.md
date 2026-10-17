@@ -1,22 +1,22 @@
 # Stato del nuovo progetto
 
-Aggiornato: 17 ottobre 2026. Responsabile: Director.
+Aggiornato:17ottobre2026, dopo riscontroOwner ore11:31 Europe/Rome. Responsabile:Director.
 
-## CAND-001 — ACCEPTED TECNICAMENTE
-Consegna completa DEV2023–2024 e confronto aggiuntivo2025 accettata tecnicamente sulla base **4ff5046a5f94dffc1a4bad7b339ffeb017b612ba**. Review registrata in current_task.md e CAND-001-results.md.
-Candidato1.0.0/config aed2c4ef…ce4edf invariati; motore1.0.2, schema /2. Nessuna revisione metodologica scelta. Regole decisionali/gestione invariate; supporto2025 pubblicato prima degli esiti a078d9ed.
+## CAND-001: accettato tecnicamente, riscontro d'uso con rilievi
+Base tecnica4ff5046,reviewb9f54cc. Candidato1.0.0/configaed2c4ef… invariati,motore1.0.2,schema/2. DEV78trade:netto−210,59USDT;2025 29trade:−109,08. Somme ipotetiche da1000USDT,non rendimento conto.2025giàesposto,non validazione indipendente.
+ReviewDirector:45test Python,15UI,build;riscontro CSV indipendente della sola esecuzione/costi prima LONG2025 (−4,05). Non ricalcolo integrale dei segnali/107trade. V1 non promossa all'uso operativo;nessuna variante scelta sul2025.
 
-Director:lettura codice/report,45test Python CAND,15test UI e typecheck/build superati; esaminate immagini1366px dell'esecutore. Riscontro reale autonomo di esecuzione/costi della prima LONG5gennaio2025, dai tre archivi pubblici gennaio2025 con checksum:netto−4,0492720609, coerente con−4,05. Non è verifica di tutti i segnali/astensioni,107trade o archivi; ricalcolo/riproducibilità complessivi restano evidenza dell'esecutore. Nessuna prova browser autonoma.
+**Gian ha svolto la prova e dato feedback articolato.** Apprezza decisioni/astensioni/registro come base;non è accettazione d'uso senza riserve. Comprensione parziale di proposta/ingresso/uscita e termini economici,ritorno dai dettagli non trovato. Nel codice esiste “← Risultati”,ma va verificata la fruibilità;URL/history assenti.
 
-## Evidenza e decisione
-Esiti riportati:DEV78trade,netto−210,59USDT,riferimenti−85,44,stress−397,80;2025 29trade,netto−109,08,riferimenti−62,54,stress−178,71. Somme di operazioni ipotetiche daN0=1000USDT, non conto personale o rendimento composto.
-2025giàesposto,NON validazione indipendente. Costi assunti e funding con mark1mproxy; campioni piccoli.
+## Priorità richiesta adAstra
+RequisitiOwner registrati in PRODUCT-CONTEXT v1.6 e current_task:
+- linguaggio italiano semplice,diretto,informale per non esperto;stati e cause d'uscita espliciti,risultati/costi tradotti e aiuti “i”;
+- esempi cronologici spiegati e registro completo riconoscibile;
+- ritorno evidente e Indietro/Avanti viaURL/cronologia,regola trasversale;
+- backtest avviabili manualmente dallaUI con avanzamento dettagliato. Oggi laUI consulta bundle generati viaCLI,non avvia i run;
+- app esclusivamente personale e locale perGian,nessun hosting pubblico/multiutenza richiesto.
 
-**Non promuovere v1 all'uso operativo.** Conservare evidenza negativa e strumenti storici. Non scartare tutta la famiglia; nessuna variante scelta dopo2025. Il seguito metodologico spetta adAstra, dichiarando le esposizioni; nessuna nuova acquisizione/live/ottimizzazione autorizzata qui.
+Owner chiede confrontoAstra su tutto il feedback e direzione per risolverlo. Nessun nuovo incaricoClaude assegnato;nessun nuovo run/download. CAND tecnicamente accettato,chiusura macrofase e seguito da qualificare conAstra sulla base del riscontro reale,senza richiedere prova artificialmente positiva.
 
-## Chiusura ancora pendente
-Nessun nuovo lavoroClaude assegnato. Gian deve solo provare un episodio2025:Prima operazione→Mostra seguito modellato,poi Prima astensione; non formule/pivot. Riscontro d'uso non ricevuto, nessuna accettazione inventata.
-Dopo il riscontro:comunicazione conclusiva adAstra con evidenza,limiti,raccomandazione e richiesta direzione. Macrofase non ancora dichiarata chiusa.
-
-UI simulata chiusa con provaOwner positiva;OBS-001chiuso tecnicamente con limite di comprensione conservato. Limiti noti:vecchi bundle/1 non apribili,layout390px fuori perimetrodesktop.
-2026protetto senza tail,studi vecchiINACTIVE,niente conto/chiavi/ordini esterni/stackOwner,leva/reinvestimento,nuova famiglia/segnali/ricerca parametri o restyling. Raw/bundle fuoriGit.
+## Confini
+Metodo,risultati ed esposizioni invariati;2026protetto senza tail,studi vecchiINACTIVE. Nessun conto/chiave/ordine esterno/stackOwner,nuova famiglia,ricerca parametri o dati extra. Raw/bundle fuoriGit. UI simulata già chiusa con prova positivaOwner;OBS chiuso tecnicamente con limite comprensione conservato.

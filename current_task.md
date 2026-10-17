@@ -1,6 +1,6 @@
 # Incarico corrente — CAND-001, confronto aggiuntivo 2025 e consegna della macrofase
 
-**Stato: ACCEPTED TECNICAMENTE** — Director, 17 ottobre 2026, review su4ff5046. Prova concreta Owner e chiusura della macrofase ancora pendenti; nessun nuovo incarico di codice.
+**Stato: ACCEPTED TECNICAMENTE** — Director, 17 ottobre 2026, review su4ff5046. Prova concreta Owner svolta con rilievi di comprensione/navigazione; chiusura e seguito da discutere conAstra. Nessun nuovo incarico di codice.
 Esecutore: Claude Code. Base tecnica accettata: **3ae7b7529f26f7aef94c9de207ce41df342590d1**, più il commit di questo incarico.
 Checkout sincronizzato da Gian; nessun pull/fetch dell'esecutore, neppure dry-run.
 
@@ -208,3 +208,20 @@ Gian apre il bundle2025 già consegnato, sceglie «Prima operazione», legge mov
 Non deve verificare formule/pivot o decine di trade: deve solo dire se riesce a seguire perché il programma ha chiesto l'ingresso e come è finita. Riscontro non ancora ricevuto, nessuna accettazione d'uso inventata. Nessuna nuova macrofase UI automatica se resta una difficoltà di comprensione.
 
 Dopo tale riscontro il Director comunica adAstra chiusura/evidenza/limiti/raccomandazione e chiede la direzione successiva.2026 resta protetto e i vecchi studiINACTIVE. Nessun ulteriore incaricoClaude pendente.
+
+
+## Riscontro Owner e richiesta adAstra — 17 ottobre 2026, ore11:31 Europe/Rome
+
+**Prova svolta con rilievi, non accettazione d'uso senza riserve.** Gian apprezza la base: il programma riconosce situazioni, decide se tentare un ingresso o astenersi e registra ciò che accade. Non giudica positivamente la redditività di v1. I risultati negativi, il congelamento e la review tecnica restano invariati.
+
+Feedback integrale nei requisiti pertinenti di PRODUCT-CONTEXT.md v1.6 (§§13,24–26):
+1. Non risultano chiari scopo dei pulsanti “prima…” e rapporto fra esempi e registro completo. La prima operazione è una vera entrata **della simulazione**, non un ordine reale né una fixture; gli esempi sono scorciatoie cronologiche, tutte le29operazioni2025 sono nel registro.
+2. Si comprende circa movimento→attesa, ma non la differenza fra “ha chiesto un ingresso”, “ingresso modellato” e “uscita modellata”. Semplificare distinguendo proposta/tentativo, ordine simulato eseguito o rifiutato, posizione e motivo esatto di chiusura. Non rappresentare la richiesta condizionata di v1 come un limitorder permanente: è un tentativo unico al minuto successivo, con controllo del prezzo, che può non generare ingresso.
+3. “Netto modellato”, “−40bp diN0”, “PnL ai prezzi di riferimento”, “slippage”, “funding storico”, “costi di stress”, “bp fee” sono incomprensibili senza traduzione. Importi/risultato in termini comuni e dettagli spiegati; icona “i” con popup hover accettata dall'Owner, consigliato anche focus/clic. Niente unità tecniche opache in primo piano.
+4. Navigazione: passando da risultati a dettaglio l'Owner non trova come tornare; riseleziona “Backtest di sviluppo”. Richiede URL e Indietro/Avanti del browser oltre al ritorno interno evidente, come regola di tutta l'app. Nel codice attuale esiste “← Risultati”: assenza materiale non riprodotta, verificare visibilità/trovabilità; non negare il problema d'uso.
+5. **Requisito nuovo esplicito:** Gian vuole avviare personalmente i backtest dallaUI e vedere avanzamento dettagliato, non soltanto percentuale. Non vuole aspettare al terminale o dipendere daClaude per lanciare il run. Oggi laUI apre solo risultati calcolati viaCLI; non fingere che l'importJSON soddisfi la richiesta.
+6. **Destinazione:** app esclusivamente personale e locale perGian, nessuna pubblicazione del servizio. Personalizzazione informale appropriata. La repository pubblica non implica servizio web pubblico, dati pubblicati o multiutenza.
+
+**Stato corrente:** nessuna implementazione assegnata aClaude su questo feedback. L'Owner chiede espressamente di portare tutto adAstra e ottenere direzione per risolverlo. Richiedere una disposizione completa su chiarezza/navigazione e minimo avvio/orchestrazione locale dei run, senza catena di specifiche parziali o infrastruttura sproporzionata. L'eventuale processo locale è motivato dall'avvio del motore, non da alimentare fixture. Non dedurre autorizzazione a nuovi dati,2026,strategia,ordini o cambio delle convenzioni.
+
+Accettazione tecnica CAND conservata. Non rinviare il confronto conAstra in attesa di una provaOwner artificialmente positiva; il riscontro è questo. Astra deve qualificare chiusura della macrofase con limite funzionale dichiarato e il seguito. Nessun altro run/test/download richiesto per questa registrazione.
