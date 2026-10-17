@@ -37,45 +37,53 @@ def _zip(csv_name: str, text: str) -> bytes:
     return buf.getvalue()
 
 
-def _klines(store, month: str) -> str:
+def _klines(store, month: str, drop: int | None = None) -> str:
     lo, hi = month_bounds(month)
     rows = [HEADER]
     for t in range(lo, hi, MIN):
+        if t == drop:
+            continue
         i = store.index(t)
         rows.append(f"{t},{store.o[i]!r},{store.h[i]!r},{store.l[i]!r},{store.c[i]!r},{store.v[i]!r},{t + MIN - 1},0,3,0,0,0")
     return "\n".join(rows) + "\n"
 
 
-def _funding(month: str, skip_one: bool = False) -> str:
+def _funding(month: str, skip_one: bool = False, offset: int | None = None) -> str:
+    """offset: prima scadenza a lo+offset (griglia regolare di 8 ore spostata, serie sempre certificabile)."""
     lo, hi = month_bounds(month)
-    taus = list(range(lo + 8 * 3_600_000, hi, 8 * 3_600_000))  # il mark del minuto precedente esiste nella finestra
+    taus = list(range(lo + (8 * 3_600_000 if offset is None else offset), hi, 8 * 3_600_000))  # il mark del minuto precedente esiste nella finestra
     if skip_one:
         del taus[len(taus) // 2]  # un evento mancante: serie non certificabile
     return "calc_time,funding_interval_hours,last_funding_rate\n" + "".join(f"{t + 5},8,0.0001\n" for t in taus)
 
 
-_CACHE: dict[bool, dict[str, bytes]] = {}
+_CACHE: dict[tuple, dict[str, bytes]] = {}
 
 
-def _archives(bad_funding: bool) -> dict[str, bytes]:
-    if bad_funding not in _CACHE:
+def _archives(bad_funding: bool, funding_offset: int | None = None, drop_mark: int | None = None,
+              drop_trade: int | None = None) -> dict[str, bytes]:
+    key = (bad_funding, funding_offset, drop_mark, drop_trade)
+    if key not in _CACHE:
         store = synthetic_store(CAND.input_start, WINDOW[1], seed=11)
         out = {}
         for month in ("2022-10", "2022-11"):
-            out[f"trade/BTCUSDT-1m-{month}.zip"] = _zip(f"BTCUSDT-1m-{month}.csv", _klines(store, month))
-        out["mark/BTCUSDT-1m-2022-11.zip"] = out["trade/BTCUSDT-1m-2022-11.zip"]
+            out[f"trade/BTCUSDT-1m-{month}.zip"] = _zip(f"BTCUSDT-1m-{month}.csv", _klines(store, month, drop=drop_trade))
+        out["mark/BTCUSDT-1m-2022-11.zip"] = _zip("BTCUSDT-1m-2022-11.csv", _klines(store, "2022-11", drop=drop_mark))
         name = "BTCUSDT-fundingRate-2022-11"
-        out[f"funding/{name}.zip"] = _zip(name + ".csv", _funding("2022-11", skip_one=bad_funding))
-        _CACHE[bad_funding] = out
-    return _CACHE[bad_funding]
+        out[f"funding/{name}.zip"] = _zip(name + ".csv", _funding("2022-11", skip_one=bad_funding, offset=funding_offset))
+        _CACHE[key] = out
+    return _CACHE[key]
 
 
-def make_data_dir(tmp: Path, bad_funding: bool = False, missing: str | None = None) -> Path:
-    """Cartella CAND-001 sintetica. missing='trade/2022-10' toglie quel file dal disco (manifest invariato)."""
+def make_data_dir(tmp: Path, bad_funding: bool = False, missing: str | None = None, funding_offset: int | None = None,
+                  drop_mark: int | None = None, drop_trade: int | None = None) -> Path:
+    """Cartella CAND-001 sintetica. missing='trade/2022-10' toglie quel file dal disco (manifest invariato).
+    funding_offset sposta la griglia regolare di 8 ore; drop_mark toglie un solo minuto dal file mark
+    (ZIP, hash e manifest coerenti): il prezzo di riferimento di quel pagamento periodico manca."""
     root = tmp / "CAND-001"
     d = D.dirs(root)
     manifests: dict[str, list] = {"trade": [], "funding": [], "mark": []}
-    for rel, body in _archives(bad_funding).items():
+    for rel, body in _archives(bad_funding, funding_offset, drop_mark, drop_trade).items():
         kind, name = rel.split("/")
         month = name[-11:-4]
         sha = hashlib.sha256(body).hexdigest()

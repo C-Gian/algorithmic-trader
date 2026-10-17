@@ -79,7 +79,7 @@ def _empty_progress(profile: Profile, files_expected: int | None = None) -> dict
                       "byKind": None, "current": None},
             "init": {"status": "PENDING", "startedAt": None, "finishedAt": None, "minutes": None, "prefixMinutes": None, "windowMinutes": None,
                      "steps": None, "current": None},
-            "simulate": {"status": "PENDING", "startedAt": None, "finishedAt": None, "closesTotal": None, "closes": None, "t": None,
+            "simulate": {"status": "PENDING", "startedAt": None, "finishedAt": None, "closesTotal": None, "closes": None, "notEvaluatedCloses": None, "t": None,
                          "episodes": None, "calls": None, "requests": None, "fills": None, "tradesClosed": None, "positionOpen": None,
                          "pendingEntry": None, "haltedAt": None},
             "save": {"status": "PENDING", "startedAt": None, "finishedAt": None, "step": None, "publishing": False},
@@ -149,7 +149,8 @@ class JobEvents(Events):
                 st["steps"][info["step"]] = {"done": info["done"], "total": info["total"]}
                 st["current"] = info["step"]
             elif name == "simulate":
-                for k in ("t", "closes", "closesTotal", "episodes", "calls", "requests", "fills", "tradesClosed", "positionOpen", "pendingEntry", "haltedAt"):
+                for k in ("t", "closes", "closesTotal", "notEvaluatedCloses", "episodes", "calls", "requests", "fills", "tradesClosed", "positionOpen",
+                          "pendingEntry", "haltedAt"):
                     st[k] = info[k]
             elif name == "save":
                 st["step"] = info["step"]
@@ -324,11 +325,13 @@ class JobManager:
                              error={"kind": "DATA_NOT_CERTIFIED", "message": out["message"], "qualityReport": out["qualityReport"]})
                 return
             result = {"resultId": out["runId"], "bundleSha256": out["bundleSha256"], "bundleBytes": out["bundleBytes"],
-                      "complete": out["complete"], "reusedIdenticalBundle": out["reusedIdenticalBundle"], "inputHash": out["inputHash"],
+                      "complete": out["complete"], "priceCoverageComplete": out["priceCoverageComplete"], "economic": out["economic"],
+                      "incompleteReason": out["incompleteReason"],
+                      "reusedIdenticalBundle": out["reusedIdenticalBundle"], "inputHash": out["inputHash"],
                       "configHash": out["configHash"], "engineVersion": out["engineVersion"], "counts": out["counts"],
                       "halted": out["halted"], "timings": out["timings"]}
             self._finish(job, "COMPLETED" if out["complete"] else "INCOMPLETE",
-                         None if out["complete"] else "risultato pubblicato ma incompleto (finestra interrotta o operazioni irrisolte)",
+                         None if out["complete"] else f"risultato pubblicato ma incompleto: {out['incompleteReason']}",
                          result=result)
         except Cancelled:
             with self._lock:

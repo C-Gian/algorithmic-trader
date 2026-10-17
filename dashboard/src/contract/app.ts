@@ -66,7 +66,9 @@ export interface Progress {
     };
     readonly simulate: StageBase & {
       readonly closesTotal: number | null;
+      /** Chiusure realmente valutate: dopo un'interruzione si fermano al punto valutato (R1-B). */
       readonly closes: number | null;
+      readonly notEvaluatedCloses?: number | null;
       readonly t: Ms | null;
       readonly episodes: number | null;
       readonly calls: number | null;
@@ -97,7 +99,11 @@ export interface Job {
   readonly result: {
     readonly resultId: string;
     readonly bundleSha256: string;
+    /** Risultato completo anche dopo i costi (R1-A). */
     readonly complete: boolean;
+    /** Percorso dei prezzi valutato per intero (nessuna interruzione), indipendente dai costi. */
+    readonly priceCoverageComplete?: boolean;
+    readonly incompleteReason?: string | null;
     readonly reusedIdenticalBundle: boolean;
     readonly inputHash: string;
     readonly configHash: string;
@@ -120,6 +126,8 @@ export interface SavedResult {
   readonly startedAt: string | null;
   readonly finishedAt: string | null;
   readonly complete: boolean | null;
+  readonly priceCoverageComplete?: boolean | null;
+  readonly incompleteReason?: string | null;
   readonly trades: number | null;
   readonly net: number | null;
   readonly halted: { readonly at: Ms; readonly reason: string } | null;

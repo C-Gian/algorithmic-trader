@@ -29,7 +29,7 @@ const JOB_STATE: Record<Job['state'], string> = {
 function resultStatus(r: SavedResult): string {
   if (r.status === 'UNSUPPORTED_SCHEMA') return 'formato vecchio, conservato ma non apribile';
   if (r.status === 'NOT_OPENABLE') return `non apribile: ${r.reason}`;
-  if (r.complete === false) return r.halted ? 'incompleto: periodo interrotto' : 'incompleto';
+  if (r.complete === false) return r.incompleteReason ? `incompleto: ${r.incompleteReason}` : r.halted ? 'incompleto: periodo interrotto' : 'incompleto';
   return 'completo';
 }
 

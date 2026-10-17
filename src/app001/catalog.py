@@ -17,7 +17,7 @@ from pathlib import Path
 
 from cand001.config import Candidate
 from cand001.data import obs_dir
-from cand001.pipeline import BUNDLE_FILE, RUN_MANIFEST, input_plan
+from cand001.pipeline import BUNDLE_FILE, RUN_MANIFEST, incomplete_reason, input_plan
 from cand001.profiles import Profile
 
 RESULT_ID = re.compile(r"^CAND-001-[A-Za-z0-9._-]{1,150}$")
@@ -56,7 +56,8 @@ class Catalog:
         rid = folder.name
         base = {"resultId": rid, "status": "NOT_OPENABLE", "reason": None, "profile": None, "window": None, "schema": None,
                 "engineVersion": None, "candidate": None, "startedAt": None, "finishedAt": None, "complete": None, "trades": None,
-                "net": None, "halted": None, "inputHash": None, "bundleBytes": None, "via": None, "jobId": None}
+                "net": None, "halted": None, "inputHash": None, "bundleBytes": None, "via": None, "jobId": None,
+                "priceCoverageComplete": None, "incompleteReason": None}
         mpath = folder / RUN_MANIFEST
         try:
             manifest = json.loads(mpath.read_text(encoding="utf-8"))
@@ -73,7 +74,15 @@ class Catalog:
                "trades": (manifest.get("counts") or {}).get("trades"), "halted": manifest.get("halted"),
                "via": (manifest.get("execution") or {}).get("via", "DIRECT"), "jobId": (manifest.get("execution") or {}).get("jobId")}
         rec = manifest.get("reconciliation") or {}
-        out["complete"] = rec.get("windowComplete")
+        # Copertura dei prezzi (windowComplete) e completezza economica distinte: un netto mancante con
+        # percorso completo non è un risultato completo, anche nei manifest precedenti senza «economic».
+        if "windowComplete" in rec:
+            price = bool(rec["windowComplete"])
+            economic = manifest.get("economic")
+            net_known = rec.get("net") is not None
+            out["priceCoverageComplete"] = price
+            out["complete"] = price and net_known and (economic is None or bool(economic.get("complete")))
+            out["incompleteReason"] = None if out["complete"] else incomplete_reason(price, net_known, economic)
         out["net"] = rec.get("net")
         if manifest.get("schema") not in SUPPORTED:
             return {**out, "status": "UNSUPPORTED_SCHEMA",

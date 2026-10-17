@@ -131,6 +131,41 @@ def slim_quality(q: dict) -> dict:
             "identity": q["identity"]}
 
 
+def economic_completeness(summary: dict, trades: list[dict]) -> dict:
+    """Completezza del risultato dopo i costi, distinta dalla copertura del percorso dei prezzi
+    (reconciliation.windowComplete, che resta invariata). Un costo pertinente non valorizzabile (per
+    esempio il mark che valorizza un pagamento periodico durante una posizione) rende il risultato
+    incompleto; zero operazioni con dati validi resta completo. Nessun valore viene cambiato."""
+    rec = summary["reconciliation"]
+    missing = []
+    for t in trades:
+        if not t.get("exit") or t.get("net") is not None:
+            continue  # irrisolte: già coperte dal percorso dei prezzi
+        events = [e for e in t["funding"]["events"] if e["counted"] and e["cashflow"] is None]
+        for e in events:
+            missing.append({"kind": "FUNDING_MARK_MISSING" if e["M"] is None else "FUNDING_RATE_MISSING", "tradeId": t["id"],
+                            "tau": e["tau"], "markMinute": e["markMinute"]})
+        if not events:
+            missing.append({"kind": "NET_MISSING", "tradeId": t["id"]})
+    complete = bool(rec["windowComplete"]) and rec["net"] is not None and not missing
+    return {"complete": complete, "missing": missing}
+
+
+def incomplete_reason(price_complete: bool, net_known: bool, economic: dict | None) -> str | None:
+    """Motivo leggibile di un risultato non completo; None se completo. Non inventa cause non registrate."""
+    if not price_complete:
+        return "periodo interrotto: manca un minuto di prezzo con una posizione aperta"
+    if economic is not None and economic["missing"]:
+        marks = [m for m in economic["missing"] if m["kind"] == "FUNDING_MARK_MISSING"]
+        if marks:
+            return (f"risultato dopo i costi non calcolabile: manca il prezzo mark che valorizza {len(marks)} "
+                    f"pagament{'o' if len(marks) == 1 else 'i'} periodic{'o' if len(marks) == 1 else 'i'} durante una posizione")
+        return "risultato dopo i costi non calcolabile: un costo di un'operazione non è valorizzabile"
+    if not net_known:
+        return "risultato dopo i costi non calcolabile (causa non registrata nel manifest)"
+    return None
+
+
 def run_id_for(cand: Candidate, profile: Profile, ih: str) -> str:
     return f"CAND-001-v{cand.raw['candidateVersion']}-e{ENGINE_VERSION}-{profile.id}-{ih[:10]}-{cand.hash[:10]}"
 
@@ -183,6 +218,7 @@ def execute(cand: Candidate, data_dir: Path, profile: Profile, events: Events | 
 
     ev.stage("save")
     summary = summarize(res, cand, profile.id)
+    economic = economic_completeness(summary, res["ledger"].trades)
     ev.tick("save", step="summary")
     run_ref = {"runId": run_id, "inputHash": ih, "engineVersion": ENGINE_VERSION, "candidateVersion": cand.raw["candidateVersion"],
                "configHash": cand.hash}
@@ -217,7 +253,7 @@ def execute(cand: Candidate, data_dir: Path, profile: Profile, events: Events | 
             "platform": platform.platform(), "inputHash": ih, "outputs": {"bundle": {"file": BUNDLE_FILE, "sha256": out_hash, "bytes": len(body)}},
             "counts": {"trades": len(res["ledger"].trades), "episodes": len(res["engine"].episodes), "legs": len(res["engine"].legs),
                        "decisions": len(res["engine"].decisions), "windows": len(bundle["windows"]), "requests": len(res["ledger"].requests)},
-            "reconciliation": summary["reconciliation"], "halted": summary["halted"],
+            "reconciliation": summary["reconciliation"], "halted": summary["halted"], "economic": economic,
             "timings": {"check_s": round(t_check, 2), "backtest_s": round(t_run, 2), "total_s": round(time.perf_counter() - t0, 2)},
             "peakMemoryMB": peak_memory_mb(), "startedAt": started, "command": command or " ".join(sys.argv),
             "execution": execution or {"via": "DIRECT"},
@@ -240,6 +276,10 @@ def execute(cand: Candidate, data_dir: Path, profile: Profile, events: Events | 
     ev.log(f"  bundle {run_dir / BUNDLE_FILE} | {len(body) / 1e6:.1f} MB | sha256 {out_hash[:16]}... | {manifest['timings']} | "
            f"picco memoria {manifest['peakMemoryMB']} MB")
     return {"status": "PUBLISHED", "runId": run_dir.name, "runDir": str(run_dir), "bundleSha256": out_hash, "bundleBytes": len(body),
-            "reusedIdenticalBundle": reused, "complete": bool(summary["reconciliation"]["windowComplete"]), "inputHash": ih,
+            "reusedIdenticalBundle": reused, "complete": economic["complete"],
+            "priceCoverageComplete": bool(summary["reconciliation"]["windowComplete"]), "economic": economic,
+            "incompleteReason": incomplete_reason(bool(summary["reconciliation"]["windowComplete"]),
+                                                  summary["reconciliation"]["net"] is not None, economic),
+            "inputHash": ih,
             "configHash": cand.hash, "engineVersion": ENGINE_VERSION, "profile": profile.ref(), "counts": manifest["counts"],
             "halted": summary["halted"], "net": summary["reconciliation"]["net"], "timings": manifest["timings"]}

@@ -289,6 +289,91 @@ class TestProgressAndCancel(Base):
         self.assertEqual(list((badf / "runs").iterdir()), [])
 
 
+# R1-A: una sola operazione sintetica (ingresso 1667412060000, chiusura contabile 1667413320000).
+ENTRY, EXIT_ACCT = 1667412060000, 1667413320000
+TAU = ENTRY + 5 * 60_000  # pagamento periodico durante la posizione (scadenza registrata TAU+5 ms)
+OFFSET = (TAU - PROFILE.window[0]) % (8 * 3_600_000)
+MARK_MINUTE = TAU - 60_000  # minuto mark che valorizza quel pagamento
+
+
+class TestEconomicCompleteness(Base):
+    """R1-A: copertura del percorso dei prezzi distinta dalla completezza del risultato dopo i costi."""
+
+    def run_job(self, root):
+        m = self.manager(root)
+        return wait_terminal(m, m.start(PROFILE.id, "economic-0001")[0]["jobId"])
+
+    def test_missing_relevant_mark_is_incomplete_everywhere(self):
+        root = make_data_dir(self.tmp, funding_offset=OFFSET, drop_mark=MARK_MINUTE)
+        job = self.run_job(root)
+        self.assertEqual(job["state"], "INCOMPLETE")
+        res = job["result"]
+        self.assertFalse(res["complete"])
+        self.assertTrue(res["priceCoverageComplete"])  # i prezzi ci sono tutti: manca un costo
+        self.assertFalse(res["economic"]["complete"])
+        self.assertEqual(res["economic"]["missing"][0]["kind"], "FUNDING_MARK_MISSING")
+        self.assertEqual(res["economic"]["missing"][0]["markMinute"], MARK_MINUTE)
+        bundle = json.loads((root / "runs" / res["resultId"] / "cand001-bundle.json").read_text(encoding="utf-8"))
+        tr = bundle["trades"][0]
+        self.assertIsNone(tr["net"])  # nessun valore inventato: il netto resta mancante
+        self.assertIsNotNone(tr["pricePnL"])  # componenti note conservate
+        self.assertIsNone(bundle["summary"]["reconciliation"]["net"])
+        self.assertTrue(bundle["summary"]["reconciliation"]["windowComplete"])  # significato invariato: percorso dei prezzi
+        manifest = json.loads((root / "runs" / res["resultId"] / "run-manifest.json").read_text(encoding="utf-8"))
+        self.assertFalse(manifest["economic"]["complete"])
+        entry = Catalog(CAND, PROFILES, root).get(res["resultId"])
+        self.assertFalse(entry["complete"])
+        self.assertTrue(entry["priceCoverageComplete"])
+        self.assertIn("prezzo mark", entry["incompleteReason"])
+
+    def test_valid_and_irrelevant_missing_mark_stay_complete(self):
+        root = make_data_dir(self.tmp, funding_offset=OFFSET)
+        job = self.run_job(root)
+        self.assertEqual((job["state"], job["result"]["complete"]), ("COMPLETED", True))
+        other = make_data_dir(self.tmp / "irrelevant", funding_offset=OFFSET, drop_mark=MARK_MINUTE + 8 * 3_600_000 * 3)
+        job2 = self.run_job(other)  # mark mancante per un pagamento senza posizione aperta
+        self.assertEqual((job2["state"], job2["result"]["complete"]), ("COMPLETED", True))
+        self.assertTrue(job2["result"]["economic"]["complete"])
+
+    def test_zero_trades_with_valid_data_is_complete(self):
+        from cand001.pipeline import economic_completeness
+
+        summary = {"reconciliation": {"windowComplete": True, "net": 0.0, "unresolvedTrades": 0}, "halted": None}
+        self.assertEqual(economic_completeness(summary, []), {"complete": True, "missing": []})
+        halted = {"reconciliation": {"windowComplete": False, "net": None, "unresolvedTrades": 1}, "halted": {"at": 1}}
+        self.assertFalse(economic_completeness(halted, [])["complete"])
+
+    def test_halt_progress_in_job_matches_report(self):
+        """R1-B sul percorso del servizio: il progresso salvato del job coincide con il riepilogo."""
+        root = make_data_dir(self.tmp, drop_trade=ENTRY + 5 * 60_000)
+        job = self.run_job(root)
+        self.assertEqual(job["state"], "INCOMPLETE")
+        self.assertFalse(job["result"]["priceCoverageComplete"])
+        self.assertIn("periodo interrotto", job["result"]["incompleteReason"])
+        rec = json.loads((root / "runs" / job["result"]["resultId"] / "cand001-bundle.json").read_text(encoding="utf-8"))["summary"]["reconciliation"]
+        persisted = json.loads((root / "jobs" / job["jobId"] / "job.json").read_text(encoding="utf-8"))["progress"]["stages"]["simulate"]
+        for sim in (job["progress"]["stages"]["simulate"], persisted):
+            self.assertEqual((sim["closes"], sim["notEvaluatedCloses"], sim["haltedAt"]), (rec["evaluatedCloses"], rec["notEvaluatedCloses"], rec["haltedAt"]))
+            self.assertLess(sim["closes"], sim["closesTotal"])
+            self.assertEqual(sim["t"], rec["haltedAt"])
+
+    def test_old_result_with_missing_net_is_not_complete_without_inventing_cause(self):
+        root = make_data_dir(self.tmp)
+        run = root / "runs" / "CAND-001-v1.0.0-e1.0.2-ADDITIONAL_2025-old"
+        run.mkdir(parents=True)
+        body = b'{"kind":"CAND001_BUNDLE"}'
+        (run / "cand001-bundle.json").write_bytes(body)
+        (run / "run-manifest.json").write_text(json.dumps({
+            "kind": "CAND001_RUN", "phase": "ADDITIONAL_2025", "schema": "cand001.bundle/2",
+            "reconciliation": {"windowComplete": True, "net": None},
+            "outputs": {"bundle": {"file": "cand001-bundle.json", "sha256": "0" * 64, "bytes": len(body)}}}), encoding="utf-8")
+        from cand001.profiles import load_profiles
+
+        entry = Catalog(CAND, {**PROFILES, **load_profiles(CAND)}, root).get(run.name)
+        self.assertEqual((entry["complete"], entry["priceCoverageComplete"]), (False, True))
+        self.assertIn("causa non registrata", entry["incompleteReason"])
+
+
 class TestRestartAndShutdown(Base):
     def test_restart_marks_unfinished_job_interrupted(self):
         root = make_data_dir(self.tmp)
@@ -485,6 +570,31 @@ class TestInstrumentationDoesNotChangeResults(unittest.TestCase):
             self.assertEqual(json.dumps(a, sort_keys=True), json.dumps(b, sort_keys=True))
             self.assertEqual(json.dumps(plain["ledger"].trades), json.dumps(ticked["ledger"].trades))
             self.assertEqual(len(plain["engine"].decisions), len(ticked["engine"].decisions))
+
+    def test_progress_after_halt_matches_report(self):
+        """R1-B: dopo una lacuna con posizione aperta il progresso non accredita chiusure non valutate."""
+        from cand001.backtest import run_window
+        from cand001.metrics import summarize
+        from obs001.minutes import MISSING
+
+        from cand001_helpers import DAY, MIN, T0, trend_store
+
+        start, end = T0 - 10 * DAY, T0 + 20 * DAY
+        clean = run_window(CAND, trend_store(start, end, 7), (T0, end), [], {})
+        store = trend_store(start, end, 7)
+        store.status[store.index(clean["ledger"].trades[0]["entryTime"] + 5 * MIN)] = MISSING
+        ticks = []
+        res = run_window(CAND, store, (T0, end), [], {}, tick=ticks.append)
+        rec = summarize(res, CAND, "DEV")["reconciliation"]
+        self.assertEqual((rec["haltedAt"], rec["evaluatedCloses"], rec["notEvaluatedCloses"]), (1673190360000, 245, 395))
+        last = ticks[-1]
+        self.assertEqual((last["closes"], last["notEvaluatedCloses"], last["closesTotal"]), (245, 395, 640))
+        self.assertEqual((last["t"], last["haltedAt"]), (1673190360000, 1673190360000))
+        self.assertTrue(all(x["closes"] <= 245 for x in ticks))
+        self.assertEqual([x["closes"] for x in ticks], sorted(x["closes"] for x in ticks))
+        complete = []
+        run_window(CAND, trend_store(start, end, 7), (T0, end), [], {}, tick=complete.append)
+        self.assertEqual((complete[-1]["closes"], complete[-1]["notEvaluatedCloses"], complete[-1]["t"]), (640, 0, end))
 
     def test_cancel_raised_by_tick_stops_simulation(self):
         from cand001.backtest import run_window

@@ -18,7 +18,10 @@ const month = (m: string) => {
   const [y, mm] = m.split('-');
   return `${['gen', 'feb', 'mar', 'apr', 'mag', 'giu', 'lug', 'ago', 'set', 'ott', 'nov', 'dic'][Number(mm) - 1]} ${y}`;
 };
-const bp = (x: number) => formatNumber(x * 10_000, 0);
+/** Frazione → percentuale leggibile (0,0005 → «0,05%»): stessi valori del candidato, nessun calcolo nuovo. */
+const pct = (x: number) => `${formatNumber(x * 100, 2)}%`;
+/** Esempio sulla dimensione convenzionale, non il costo esatto di ogni uscita. */
+const onSize = (x: number, n0: number) => formatNumber(x * n0, 2);
 
 export function NewBacktestPage() {
   const api = useApi();
@@ -154,15 +157,46 @@ export function NewBacktestPage() {
                 </dd>
                 <dt>Dimensione di ogni operazione</dt>
                 <dd>{formatNumber(p.notionalUSDT, 0)} USDT, fissa (non è un capitale né la perdita massima)</dd>
-                <dt>Costi</dt>
+                <dt>Costi ipotizzati (uguali per tutti i periodi, non si impostano)</dt>
                 <dd>
-                  commissioni {bp(p.costs.baseline.fee)} bp e prezzo di esecuzione {bp(p.costs.baseline.slippage)} bp per lato; pagamenti periodici storici; scenario a parte con{' '}
-                  {bp(p.costs.stress.fee)} + {bp(p.costs.stress.slippage)} bp
+                  <ul className="cost-list">
+                    <li>
+                      Commissione: {pct(p.costs.baseline.fee)} del valore dell’operazione, pagata all’apertura e alla chiusura
+                      <Info label="Commissione">
+                        Quello che si paga alla piattaforma per ogni esecuzione: una volta quando la posizione si apre e una volta quando si chiude. Per esempio, su
+                        un’operazione da {formatNumber(p.notionalUSDT, 0)} USDT sono circa {onSize(p.costs.baseline.fee, p.notionalUSDT)} USDT all’apertura e
+                        altrettanti alla chiusura (l’importo esatto dipende dal prezzo d’uscita). Un tentativo non eseguito non paga commissioni.
+                      </Info>
+                    </li>
+                    <li>
+                      Prezzo di esecuzione un po’ peggiore del grafico: {pct(p.costs.baseline.slippage)} per lato, già incluso nei prezzi usati
+                      <Info label="Prezzo di esecuzione">
+                        Si assume di comprare un po’ più caro e vendere un po’ più a buon mercato del prezzo mostrato dal grafico (slippage), {pct(p.costs.baseline.slippage)}{' '}
+                        all’ingresso e {pct(p.costs.baseline.slippage)} all’uscita: circa {onSize(p.costs.baseline.slippage, p.notionalUSDT)} USDT per lato su{' '}
+                        {formatNumber(p.notionalUSDT, 0)} USDT, solo come esempio. È già dentro i prezzi d’ingresso e d’uscita: non va sottratto una seconda volta.
+                      </Info>
+                    </li>
+                    <li>
+                      Pagamenti periodici del contratto presi dallo storico: si possono pagare o ricevere
+                      <Info label="Pagamenti periodici del contratto">
+                        Funding: ogni 8 ore circa chi punta su una salita e chi punta su una discesa si scambiano un piccolo pagamento. Si conta solo mentre una
+                        posizione è aperta, con i valori storici di Binance; se un valore manca resta mancante, non diventa zero.
+                      </Info>
+                    </li>
+                  </ul>
+                  <span className="t-3">
+                    A parte, solo come confronto: le stesse operazioni ricalcolate con costi più alti ({pct(p.costs.stress.fee)} di commissione e{' '}
+                    {pct(p.costs.stress.slippage)} di prezzo peggiore per lato). Non è un’impostazione e non si somma al risultato.
+                  </span>
                 </dd>
                 <dt>Dati richiesti</dt>
                 <dd>
                   prezzi al minuto {month(av.tradeMonths[0])} – {month(av.tradeMonths[1])} ({av.files.trade} file
-                  {av.reuseObs ? `, di cui ${av.reuseObs} dallo studio OBS-001` : ''}); pagamenti periodici e prezzi mark{' '}
+                  {av.reuseObs ? `, di cui ${av.reuseObs} dallo studio OBS-001` : ''}); pagamenti periodici e prezzi di riferimento del contratto (mark)
+                  <Info label="Prezzi mark">
+                    Il prezzo di riferimento del contratto calcolato dalla piattaforma. Qui serve solo a valorizzare i pagamenti periodici; non entra nelle decisioni
+                    del bot né nei prezzi d’ingresso e d’uscita.
+                  </Info>{' '}
                   {av.costMonths[0] === av.costMonths[1] ? month(av.costMonths[0]) : `${month(av.costMonths[0])} – ${month(av.costMonths[1])}`} ({av.files.funding} + {av.files.mark}{' '}
                   file)
                 </dd>

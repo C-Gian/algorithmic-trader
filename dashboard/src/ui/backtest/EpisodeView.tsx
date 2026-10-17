@@ -52,19 +52,19 @@ function BackRow({ source, from }: { source: ResultSource; from: From }) {
     <div className="back-row">
       {from === 'operations' ? (
         <>
-          <Link to={paths.operations(source)} className="btn btn-primary">
+          <Link to={paths.operations(source)} className="btn btn-primary" back>
             ← Torna alle operazioni
           </Link>
-          <Link to={paths.result(source)} className="btn btn-secondary">
+          <Link to={paths.result(source)} className="btn btn-secondary" back>
             Risultati
           </Link>
         </>
       ) : (
         <>
-          <Link to={paths.result(source)} className="btn btn-primary">
+          <Link to={paths.result(source)} className="btn btn-primary" back>
             ← Torna ai risultati
           </Link>
-          <Link to={paths.operations(source)} className="btn btn-secondary">
+          <Link to={paths.operations(source)} className="btn btn-secondary" back>
             Tutte le operazioni
           </Link>
         </>

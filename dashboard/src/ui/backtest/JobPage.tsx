@@ -44,7 +44,7 @@ const STEP_LABEL: Record<string, string> = {
   observe45m: 'osservazioni 45m',
   observe1D: 'osservazioni giornaliere',
 };
-const KIND_LABEL: Record<string, string> = { trade: 'prezzi al minuto', funding: 'pagamenti periodici', mark: 'prezzi mark' };
+const KIND_LABEL: Record<string, string> = { trade: 'prezzi al minuto', funding: 'pagamenti periodici', mark: 'prezzi di riferimento (mark)' };
 const n = (x: number | null | undefined) => (x == null ? 'non ancora calcolato' : formatNumber(x, 0));
 const seconds = (a: string | null, b: string | null) => {
   if (!a || !b) return null;
@@ -65,7 +65,7 @@ function Bar({ done, total, label, running }: { done: number | null; total: numb
   );
 }
 
-function Stage({ title, st, children }: { title: string; st: { status: keyof typeof STAGE_STATUS; startedAt: string | null; finishedAt: string | null }; children?: ReactNode }) {
+function Stage({ title, st, children, statusText }: { title: string; st: { status: keyof typeof STAGE_STATUS; startedAt: string | null; finishedAt: string | null }; children?: ReactNode; statusText?: string }) {
   const took = st.status === 'DONE' || st.status === 'STOPPED' ? seconds(st.startedAt, st.finishedAt) : null;
   return (
     <li className={`stage is-${st.status.toLowerCase()}`}>
@@ -73,7 +73,7 @@ function Stage({ title, st, children }: { title: string; st: { status: keyof typ
         <span className="stage-mark" aria-hidden="true">{st.status === 'DONE' ? '✓' : st.status === 'RUNNING' ? '●' : st.status === 'STOPPED' ? '■' : '○'}</span>
         <span className="stage-title">{title}</span>
         <span className="stage-status">
-          {STAGE_STATUS[st.status]}
+          {statusText ?? STAGE_STATUS[st.status]}
           {took ? ` · ${took}` : ''}
         </span>
       </div>
@@ -120,15 +120,21 @@ export function Stages({ p, inputStart }: { p: Progress; inputStart?: number }) 
             </p>
           ))}
       </Stage>
-      <Stage title="3. Simulazione chiusura per chiusura" st={simulate}>
-        <p>
-          Data raggiunta: <strong>{simulate.t != null ? fmtUtc(simulate.t) : 'non ancora calcolata'}</strong> · chiusure 45m valutate {n(simulate.closes)} di{' '}
-          {n(simulate.closesTotal)}
-        </p>
+      <Stage title="3. Simulazione chiusura per chiusura" st={simulate} statusText={simulate.haltedAt != null ? 'interrotta per dati mancanti' : undefined}>
+        {simulate.haltedAt != null ? (
+          <p className="stage-alert">
+            <strong>Valutazione interrotta il {fmtUtc(simulate.haltedAt)}</strong>: manca un minuto di prezzo mentre una posizione era aperta. Chiusure 45m valutate{' '}
+            <strong>{n(simulate.closes)}</strong> di {n(simulate.closesTotal)}; {n(simulate.notEvaluatedCloses)} non valutate dopo la lacuna (nessun valore, non zero).
+          </p>
+        ) : (
+          <p>
+            Data raggiunta: <strong>{simulate.t != null ? fmtUtc(simulate.t) : 'non ancora calcolata'}</strong> · chiusure 45m valutate {n(simulate.closes)} di{' '}
+            {n(simulate.closesTotal)}
+          </p>
+        )}
         <p className="t-2">
           Fin qui: movimenti riconosciuti {n(simulate.episodes)} · tentativi d’ingresso conclusi {n(simulate.requests)} (eseguiti {n(simulate.fills)}) · operazioni
           concluse {n(simulate.tradesClosed)} · posizione aperta adesso: {simulate.positionOpen == null ? 'non ancora calcolato' : simulate.positionOpen ? 'sì' : 'no'}
-          {simulate.haltedAt != null ? ` · periodo interrotto il ${fmtUtc(simulate.haltedAt)} per dati mancanti` : ''}
         </p>
         <Bar done={simulate.closes} total={simulate.closesTotal} label="Chiusure valutate" running={simulate.status === 'RUNNING'} />
       </Stage>
@@ -152,7 +158,13 @@ function Outcome({ job }: { job: Job }) {
         </Notice>
       );
     case 'INCOMPLETE':
-      return (
+      // Copertura dei prezzi e completezza dopo i costi sono distinte: un costo mancante non è una lacuna di prezzo.
+      return res && res.priceCoverageComplete !== false && !res.halted ? (
+        <Notice tone="warning" title="Storico elaborato, ma risultato dopo i costi non calcolabile">
+          {res.incompleteReason ? `${res.incompleteReason.charAt(0).toUpperCase()}${res.incompleteReason.slice(1)}. ` : ''}Le operazioni e le voci note restano visibili; il
+          totale non viene sostituito con zero né con una stima.
+        </Notice>
+      ) : (
         <Notice tone="warning" title="Terminato con risultato incompleto">
           Il calcolo è finito ma il periodo non è valutabile per intero{res?.halted ? ` (interrotto il ${fmtUtc(res.halted.at)}: ${res.halted.reason})` : ''}. Il risultato
           mostra soltanto i fatti noti; i valori mancanti restano mancanti.

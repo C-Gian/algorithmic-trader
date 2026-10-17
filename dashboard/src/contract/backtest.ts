@@ -114,6 +114,8 @@ export interface BtFundingEvent {
   readonly tau: Ms;
   readonly rate: number;
   readonly M: number | null;
+  /** Minuto mark [u-60s, u) che valorizza l'evento. */
+  readonly markMinute?: Ms;
   readonly cashflow: number | null;
   readonly counted: boolean;
   readonly ambiguous: boolean;

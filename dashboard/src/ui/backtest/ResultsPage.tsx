@@ -3,7 +3,7 @@ import type { BacktestStudy } from '../../backtest/study';
 import { formatNumber } from '../../lib/numbers';
 import { Info } from '../components/Info';
 import { Badge, Notice } from '../components/primitives';
-import { fmtUtc } from '../format';
+import { fmtUtc, isoMinute } from '../format';
 import { Link } from '../Link';
 import { paths, type ResultSource } from '../router';
 import { CATEGORY_TEXT, EXIT_TEXT, bps, num, pct, plainUsdt, usdt } from './text';
@@ -69,6 +69,9 @@ export function ResultsPage({ study, source }: { study: BacktestStudy; source: R
   const n0 = b.notionalUSDT;
   const tr = main.trades;
   const riskMedian = tr.perTrade.riskInitialOverN0.p50;
+  // R1-A: operazioni concluse senza risultato dopo i costi (un costo pertinente non valorizzabile).
+  const costMissing = b.trades.filter((t) => t.exit && t.net == null);
+  const markMissing = costMissing.flatMap((t) => t.funding.events.filter((e) => e.counted && e.cashflow == null && e.M == null));
   const seenExample = new Map<string, string>();
 
   return (
@@ -183,13 +186,20 @@ export function ResultsPage({ study, source }: { study: BacktestStudy; source: R
           Le quattro voci sommate danno il risultato dopo i costi. Ogni operazione vale {formatNumber(n0, 0)} USDT: i totali sono somme di operazioni simulate, non un
           rendimento di un conto.
         </p>
-        {main.trades.net === null && (
-          <Notice tone="warning" title="Risultato completo non disponibile">
-            {halted
-              ? 'Un’operazione ha il percorso irrisolto: risultato, scenario con costi più alti e perdita massima restano mancanti, non vengono sostituiti con zero né con un’uscita ipotetica.'
-              : 'Almeno un costo non è valutabile: il risultato resta mancante, non viene sostituito con zero.'}
-          </Notice>
-        )}
+        {main.trades.net === null &&
+          (halted ? (
+            <Notice tone="warning" title="Risultato completo non disponibile">
+              Un’operazione ha il percorso irrisolto: risultato, scenario con costi più alti e perdita massima restano mancanti, non vengono sostituiti con zero né con
+              un’uscita ipotetica.
+            </Notice>
+          ) : (
+            <Notice tone="warning" title="Storico elaborato, ma risultato dopo i costi non calcolabile">
+              {markMissing.length
+                ? `Per ${costMissing.length} operazion${costMissing.length === 1 ? 'e' : 'i'} manca il prezzo di riferimento (mark) che valorizza ${markMissing.length} pagament${markMissing.length === 1 ? 'o' : 'i'} periodic${markMissing.length === 1 ? 'o' : 'i'} durante la posizione (minut${markMissing.length === 1 ? 'o' : 'i'} ${markMissing.map((e) => (e.markMinute != null ? isoMinute(e.markMinute) : '—')).join(', ')}). `
+                : `${costMissing.length || 'Almeno un'} cost${costMissing.length === 1 ? 'o' : 'i'} non valorizzabil${costMissing.length === 1 ? 'e' : 'i'}. `}
+              I prezzi sono stati valutati per intero e le altre voci note restano visibili; il totale non viene sostituito con zero.
+            </Notice>
+          ))}
       </section>
 
       <section className="section" aria-label="Esempi dal registro">
@@ -256,7 +266,7 @@ export function ResultsPage({ study, source }: { study: BacktestStudy; source: R
           <table className="data-table">
             <PeriodHead periods={periods} profileLabel={profile.label} phase={s.phase} />
             <tbody>
-              <Row label="Copertura della valutazione" periods={periods} value={coverageText} />
+              <Row label="Copertura del percorso dei prezzi" periods={periods} value={coverageText} />
               <Row
                 label="Chiusure 45m valutate (con dati validi) · non valutate"
                 periods={periods}

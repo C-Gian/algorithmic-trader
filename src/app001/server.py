@@ -96,18 +96,24 @@ class Handler(BaseHTTPRequestHandler):
     def _origin_ok(self) -> bool:
         return self.headers.get("Origin") in FRONTEND_ORIGINS
 
-    def _body(self) -> dict | None:
-        ctype = (self.headers.get("Content-Type") or "").split(";")[0].strip().lower()
-        if ctype != "application/json":
-            return None
+    def _read_raw(self) -> bytes | None:
+        """Legge sempre il corpo dichiarato (entro MAX_BODY) prima di rispondere, anche a un rifiuto:
+        su Windows chiudere un socket con dati non letti interrompe la risposta al client."""
         try:
             n = int(self.headers.get("Content-Length") or "0")
         except ValueError:
-            return None
+            n = -1
         if n < 0 or n > MAX_BODY:
+            self.close_connection = True
+            return None
+        return self.rfile.read(n) if n else b""
+
+    def _body(self, raw: bytes | None) -> dict | None:
+        ctype = (self.headers.get("Content-Type") or "").split(";")[0].strip().lower()
+        if raw is None or ctype != "application/json":
             return None
         try:
-            data = json.loads(self.rfile.read(n) or b"{}")
+            data = json.loads(raw or b"{}")
         except ValueError:
             return None
         return data if isinstance(data, dict) else None
@@ -162,11 +168,12 @@ class Handler(BaseHTTPRequestHandler):
     do_HEAD = do_GET
 
     def do_POST(self):  # noqa: N802
+        raw = self._read_raw()
         if not self._host_ok():
             return self._error(403, "FORBIDDEN_HOST", "host non ammesso")
         if not self._origin_ok():
             return self._error(403, "FORBIDDEN_ORIGIN", "le modifiche sono accettate solo dal frontend locale dell'app")
-        body = self._body()
+        body = self._body(raw)
         if body is None:
             return self._error(400, "INVALID_REQUEST", "corpo JSON richiesto")
         path = urlsplit(self.path).path

@@ -56,7 +56,14 @@ def run_window(cand: Candidate, store: MinuteStore, window: tuple[int, int], fun
     total = (end - start) // conv.bar_ms
 
     def state(t: int, closes: int) -> dict:
-        return {"t": t, "closes": closes, "closesTotal": total, "episodes": len(engine.episodes),
+        # Dopo una lacuna con posizione aperta (HALT) le chiusure successive sono solo registrate come
+        # NOT_EVALUATED_AFTER_GAP: il progresso si ferma al punto valutato, coerente con metrics.period_table.
+        halted = ledger.halted["at"] if ledger.halted else None
+        not_evaluated = 0
+        if halted is not None:
+            evaluated = 0 if halted < start else min(total, (halted - start) // conv.bar_ms + 1)
+            closes, t, not_evaluated = min(closes, evaluated), halted, total - evaluated
+        return {"t": t, "closes": closes, "closesTotal": total, "notEvaluatedCloses": not_evaluated, "episodes": len(engine.episodes),
                 "calls": sum(1 for e in engine.episodes if e.call), "requests": len(ledger.requests),
                 "fills": sum(1 for r in ledger.requests if r["outcome"] == "FILLED"),
                 "tradesClosed": sum(1 for x in ledger.trades if x.get("exit")), "positionOpen": ledger.position is not None,

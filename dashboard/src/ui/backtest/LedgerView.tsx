@@ -16,7 +16,7 @@ export function LedgerView({ study, source }: { study: BacktestStudy; source: Re
   return (
     <main className="content" id="main-content" tabIndex={-1}>
       <div className="back-row">
-        <Link to={paths.result(source)} className="btn btn-secondary">
+        <Link to={paths.result(source)} className="btn btn-secondary" back>
           ← Torna ai risultati
         </Link>
         <span className="t-2">

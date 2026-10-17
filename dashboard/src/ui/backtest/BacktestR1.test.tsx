@@ -57,7 +57,7 @@ describe('R1-B · bundle con finestra interrotta', () => {
     expect(row('Quota operazioni positive', tech).textContent).toMatch(/solo concluse/);
     expect(row('Tempo in posizione', tech).textContent).toMatch(/solo concluse/);
     const decisions = screen.getByLabelText('Decisioni e operazioni');
-    expect(within(decisions).getByText('Copertura della valutazione').closest('tr')!.textContent).toMatch(/parziale fino al/);
+    expect(within(decisions).getByText('Copertura del percorso dei prezzi').closest('tr')!.textContent).toMatch(/parziale fino al/);
     expect(within(decisions).getByText(/· non valutate/).closest('tr')!.textContent).toContain(`${rec.notEvaluatedCloses} non valutate`);
   });
 

@@ -6,7 +6,8 @@
  * predefinito senza riscrivere la cronologia.
  *
  * Scorrimento: con Indietro/Avanti si ritrova la posizione registrata per quel percorso (registro
- * delle operazioni, risultati); una navigazione nuova parte dall'alto.
+ * delle operazioni, risultati); così anche con un ritorno interno («Torna alle operazioni»), che è
+ * una navigazione di tipo `return`. Una pagina nuova parte dall'alto.
  */
 import { useEffect, useLayoutEffect, useState } from 'react';
 import type { Environment } from '../contract/historical';
@@ -108,8 +109,10 @@ export const paths = {
 // ------------------------------------------------------------------ stato del browser
 
 const scrolls = new Map<string, number>();
-let lastKind: 'push' | 'pop' = 'push';
-let pendingPush: string | null = null;
+/** push: pagina nuova (in alto); pop: Indietro/Avanti; return: ritorno interno a una vista già vista. */
+type NavKind = 'push' | 'pop' | 'return';
+let lastKind: NavKind = 'push';
+let pending: { path: string; kind: NavKind } | null = null;
 let currentPath = readHash();
 const listeners = new Set<() => void>();
 
@@ -135,34 +138,39 @@ if (typeof window !== 'undefined') {
   window.addEventListener('hashchange', () => {
     const next = readHash();
     if (next === currentPath) return;
-    const push = pendingPush === next;
+    const own = pending?.path === next ? pending : null;
     // Indietro/Avanti o modifica manuale dell'indirizzo: traversata, si ritrova lo scorrimento registrato.
-    if (!push) scrolls.set(currentPath, window.scrollY);
-    lastKind = push ? 'push' : 'pop';
-    pendingPush = null;
+    if (!own) scrolls.set(currentPath, window.scrollY);
+    lastKind = own ? own.kind : 'pop';
+    pending = null;
     currentPath = next;
     listeners.forEach((l) => l());
   });
 }
 
-/** Nuova voce di cronologia (oppure sostituzione dell'attuale, senza aggiungerne). */
-export function navigate(path: string, opts: { replace?: boolean } = {}): void {
+/**
+ * Nuova voce di cronologia (oppure sostituzione dell'attuale, senza aggiungerne). Con `restore` è un
+ * ritorno interno: si ritrova la posizione già registrata per quella vista, come con Indietro; se la
+ * vista non è mai stata aperta (collegamento diretto) si parte dall'alto.
+ */
+export function navigate(path: string, opts: { replace?: boolean; restore?: boolean } = {}): void {
+  const kind: NavKind = opts.restore ? 'return' : 'push';
   if (path === currentPath) return;
   scrolls.set(currentPath, window.scrollY);
   if (opts.replace) {
     window.history.replaceState(window.history.state, '', `#${path}`);
-    lastKind = 'push';
+    lastKind = kind;
     currentPath = path;
     listeners.forEach((l) => l());
     return;
   }
-  pendingPush = path;
-  lastKind = 'push';
+  pending = { path, kind };
+  lastKind = kind;
   window.location.hash = path;
   // Alcuni ambienti (test) non emettono hashchange in modo sincrono: l'evento successivo è ignorato se già applicato.
   if (readHash() === path && currentPath !== path) {
     currentPath = path;
-    pendingPush = null;
+    pending = null;
     listeners.forEach((l) => l());
   }
 }
@@ -193,7 +201,7 @@ export function useLocationPath(): string {
 export function useScrollOnRoute(path: string, ready = true): void {
   useLayoutEffect(() => {
     if (!ready) return;
-    if (lastKind === 'pop' && scrolls.has(path)) {
+    if (lastKind !== 'push' && scrolls.has(path)) {
       const y = scrolls.get(path)!;
       safeScroll(y);
       // Il contenuto può crescere subito dopo (grafici, tabelle): un nuovo tentativo al frame successivo.
@@ -208,7 +216,7 @@ export function useScrollOnRoute(path: string, ready = true): void {
 export function resetRouterForTests(): void {
   scrolls.clear();
   lastKind = 'push';
-  pendingPush = null;
+  pending = null;
   currentPath = readHash();
 }
 
