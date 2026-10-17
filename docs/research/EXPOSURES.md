@@ -46,3 +46,8 @@ Dichiarazione dell'esecutore (Claude Code), da rivedere dal Director.
 - Nessuna lettura o richiesta di dati 2026, nessun tail.
 
 Elaborato con motore 1.0.2 (commit pre-esiti `078d9ed`), candidato 1.0.0 invariato: confronto aggiuntivo [2025-01-01, 2026-01-01) da FLAT. Esiti 2025 ora esposti: 29 operazioni modellate e 31 call, netto −109,08 USDT su N0 = 1.000 USDT; dettagli in `CAND-001-results.md`. Nessuna iterazione metodologica dopo la lettura. Il 2025 resta un periodo già esposto e non è utilizzabile come validazione indipendente per candidati futuri. Raw, manifest e bundle sono locali, fuori Git.
+
+
+## Nuovo mandato diagnostico/metodologico CAND-001 — 17 ottobre 2026
+
+Dopo APP-001 Astra autorizza diagnosi della politica v1 ed eventuale unica revisione/confronto sul DEV [2023-01-01,2025-01-01), con prefisso osservativo dal 2022-10-01 e file già conservati. Nessuna nuova acquisizione. Le precedenti esposizioni DEV e 2025 non si cancellano: non è una prova indipendente. Nel nuovo ciclo non leggere/ricalcolare il 2025 né usarne gli esiti per scegliere la revisione; nessun 2026. Primo incarico D1: estrazione/riconciliazione e casi cronologici, senza strategia alternativa. È autorizzazione, non dichiarazione di esecuzione già svolta.

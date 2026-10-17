@@ -1,6 +1,6 @@
 # Algorithmic Trader — prodotto, decisioni e contesto completo
 
-Versione documentale: 1.7 — 17 ottobre 2026. Responsabile della sintesi: Astra; aggiornamento Director sui requisiti espliciti dell'Owner.
+Versione documentale: 1.8 — 17 ottobre 2026. Responsabile della sintesi: Astra; aggiornamento Director sui requisiti espliciti dell'Owner.
 
 Questo è il documento funzionale centrale del **nuovo** progetto di Gian. È scritto per poter essere consegnato da solo a una nuova chat: spiega obiettivo, organizzazione, requisiti, ragioni delle scelte, limiti e questioni ancora aperte. Non è una specifica matematica dell'algoritmo, una dichiarazione di efficacia o un'autorizzazione a operare con denaro reale.
 
@@ -379,7 +379,7 @@ Sequenza: specifica registrata → implementazione → controlli discriminanti �
 
 Nella stessa app Gian vede decisione reale del candidato, informazioni note allora, ingresso/gestione/uscita modellati, costi/risultato e astensioni/casi contrari scelti con regola cronologica prefissata. Accesso diretto agli episodi, non verifica manuale di migliaia di origini. Nessun nuovo restyling, piattaforma o conto/ordine esterno. Report separati per anno/mese con frequenza, rischio/percorso e concentrazione; non un unico saldo. Chiusura con evidenza riproducibile e raccomandazione anche negativa, non promessa di profitto o soli test verdi.
 
-**Mandato corrente APP-001 di Astra del17ottobre2026 — Gian autonomo nel lanciare, seguire e capire un backtest.** Non è restyling: capacità d'uso necessaria al prodotto. Director gestisce l'intera macrofase, incarichi aClaude scritti prima dell'esecuzione, review/correzioni ordinarie autonome; adAstra alla chiusura o conflitto sostanziale.
+**Mandato APP-001 di Astra del17ottobre2026 — Gian autonomo nel lanciare, seguire e capire un backtest.** Non è restyling: capacità d'uso necessaria al prodotto. Director gestisce l'intera macrofase, incarichi aClaude scritti prima dell'esecuzione, review/correzioni ordinarie autonome; adAstra alla chiusura o conflitto sostanziale.
 
 CAND-001 resta distinto in quattro giudizi: implementazione accettata tecnicamente entro review/limiti; usoOwner apprezzato ma non sufficientemente comprensibile/autonomo; strategiav1 storicamente negativa e non promossa; efficacia generale della famiglia non risolta. Non inventare una provaOwner positiva né bocciare il software per la perdita del candidato.
 
@@ -394,6 +394,12 @@ Scelte tecniche Director perAPP-001: stesso frontend con piccolo servizioPython 
 Controlli mirati:duplicati,progresso,annullamento,errori,riapertura,navigazione,risultati. Confrontare una breve esecuzione realeUI col medesimo percorso diretto,riusando verifiche complete per regole immutate;non ripetere tutta la storia a ogni testo/layout. Chiusura quandoGian distingue nuovo/salvato,avvia e segue,trova tutte le operazioni,capisce entrata/nonentrata/uscita/costi e torna/riapre. Gian non verifica formule.
 
 DuranteAPP-001 v1 e convenzioni restano congelate; collaudi non selezionano regole più favorevoli. Questa è l'ultima preparazione richiesta prima del prossimo ciclo metodologico,non una piattaforma generale. Alla chiusura si torna adAstra per diagnosi della politica completa,eventuale revisione e confronto;nessuna nuova strategia/segnale/combinazione autorizzata ora,2026protetto e nessun reale.
+
+**Mandato corrente Astra — ciclo metodologico CAND-001, 17 ottobre 2026.** APP-001 chiuso e accettato nei limiti della review e del riscontro Owner. Nessun ulteriore lavoro preparatorio sull'interfaccia. Director gestisce autonomamente diagnosi della politica completa v1, scelta di al massimo un problema decisionale, eventuale unica v2 e confronto sull'intero DEV [2023-01-01,2025-01-01), con input già disponibili e inizializzazione dal 2022-10-01. Il 2025 non è ricalcolato né usato per scegliere la revisione; 2026 protetto. V1 rimane negativa e non promossa.
+
+Diagnosi integrata di ingresso, percorso/gestione, destinazione/tempo e costi; tutti i trade e conteggi delle astensioni, esempi positivi/negativi e astensioni selezionati con regola dichiarata prima dei nuovi percorsi dettagliati. Nessuna uscita al massimo dedotta dal futuro. Un problema modificabile richiede informazione disponibile allora, coerenza con la famiglia, correzione precisa e svantaggi/controesempi. Claude estrae evidenze e implementa la decisione specificata, non sceglie strategia.
+
+Prima del calcolo di eventuale v2: problema, nuova decisione/input, motivo, situazioni peggiorabili e risultato che indebolirebbe la spiegazione. Stessi dati/costi/dimensionamento/esecuzione, confronto completo anche di operazioni aggiunte/eliminate/spostate, netto, drawdown e concentrazione. Nessuna ricerca automatica, griglia di soglie, nuova famiglia/segnale o modello di rischio/esecuzione. Eventuali deroghe sostanziali ad Astra. Microstep e review ordinari senza nuove autorizzazioni. Chiusura con v2 confrontata anche se peggiore, oppure nessuna revisione giustificata e limite informativo preciso. Risultato consultabile nella stessa app con soli adattamenti indispensabili, nessun sistema generale di confronto o restyling. Primo incarico eseguibile D1 in current_task.md: estrazione offline della diagnosi, non scelta della revisione.
 
 1. **Fondazione funzionale e organizzativa:** rendere esplicite decisioni, limiti e ruoli. È lo scopo di questa registrazione.
 2. **Dashboard Figma con dati simulati:** realizzare e provare la UI approvata, con modelli distinti e provider sostituibile, entro la macrofase autorizzata sopra.
@@ -431,12 +437,13 @@ Parla a Gian in modo semplice. Ricorda che vuole partecipare alla strategia, che
 
 Mantieni i ruoli: Astra direzione, Director ragionamento e gestione operativa, Claude esecuzione tecnica. Non chiedere ad Astra ogni microdecisione e non delegare all'esecutore la scelta del metodo. Non creare un nuovo documento per ogni dubbio se basta chiudere una decisione nella macrofase corrente.
 
-Il lavoro corrente segue APP-001 della sezione31 e il task unico: autonomia personale nel backtest locale, comprensione e navigazione condivisa. CAND-001 e i suoi esiti restano congelati, v1 non promossa. Processo locale minimo autorizzato per avviare lo stesso motore, non download o trading reale. Nessuna nuova approvazione ordinaria per i microstep; nuove viste rispettano automaticamente linguaggio e navigazione §§24–25. Se manca una regola metodologica non è lecito inventarla.
+Il lavoro corrente segue il nuovo mandato metodologico CAND-001 della sezione 31 e il task unico. APP-001 è chiuso. V1 resta conservata e non promossa; il Director gestisce diagnosi ed eventuale unica revisione motivata sul DEV 2023–2024, senza usare il 2025 o aprire il 2026. Claude implementa solo la decisione specificata dal Director. Nessun altro lavoro preparatorio UI o nuova autorizzazione ordinaria per i microstep; ogni adattamento indispensabile rispetta linguaggio e navigazione §§24–25.
 
 ## 34. Storia delle revisioni
 
 | Versione | Data | Variazione |
 |---|---|---|
+| 1.8 | 2026-10-17 | APP-001 chiuso; Astra autorizza diagnosi integrata v1 ed eventuale unica revisione/confronto sul solo DEV 2023–2024. Nessun uso 2025, nessun 2026; prima estrazione D1, scelta metodologica Director |
 | 1.7 | 2026-10-17 | Astra autorizzaAPP-001: avvio backtest dallaUI,processo locale minimo,stato/progresso/annullamento reali,risultati leggibili e navigazione condivisa. V1 congelata,dati già disponibili,nessun2026/reale;ultima preparazione prima del ciclo metodologico |
 | 1.6 | 2026-10-17 | Prova Owner CAND con rilievi: linguaggio/stati/costi comprensibili e aiuti contestuali, navigazione URL/Indietro trasversale, avvio manuale backtest e avanzamento dettagliato dallaUI, uso esclusivamente personale locale. Richiesto confrontoAstra, nessuna nuova esecuzione/metodologia avviata |
 | 1.5 | 2026-10-17 | OBS-001 chiuso tecnicamente con limite di comprensione conservato; Astra autorizza candidato completo movimento/reazione/ripresa, sviluppo 2023–2024, confronto 2025, costi modellati e unica revisione motivata |

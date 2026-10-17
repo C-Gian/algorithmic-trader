@@ -1,176 +1,72 @@
-# APP-001/R1 — Completezza, progresso, ritorno e costi iniziali
+# CAND-001/D1 — Diagnosi della politica v1 e ciclo metodologico
 
-**Stato: ACCEPTED** (Director, 17 ottobre 2026; accettazione tecnica di APP-001/R1 su ec19f22, codice 3dd3f66). La macrofase APP-001 è conclusa dal Director con il riscontro Owner del 17 ottobre 2026; segue passaggio ad Astra, senza nuovo incarico implementativo. Incarico del Director, 17 ottobre 2026. Esecutore: Claude Code.
-Base: **11e028407261907a0206f2b484f0445f8c712ea0** più il commit di questo incarico; checkout sincronizzato daGian. Nessun pull/fetch, neppure dry-run.
+**Stato: READY.** Director, 17 ottobre 2026. Esecutore: Claude Code. Base main **63f2e429f0496ddc1f26c3de0cf486ca21d573aa** più il commit di questo incarico; sincronizzazione del checkout a cura di Gian. Leggere AGENTS, STATE, PRODUCT-CONTEXT §31, specifica CAND-001-v1.md e questo task. Nessun pull/fetch, anche dry-run.
 
-La macrofase APP-001 resta aperta e autorizzata interamente daAstra. Requisiti e disegno originari conservati nella storia di current_task.md al commit7f94d4e; consegna a11e0284 e docs/research/APP-001-delivery.md. R1 corregge difetti nel perimetro già assegnato, non apre una nuova macrofase.
-Leggere AGENTS.md, STATE.md, sezioni pertinenti di PRODUCT-CONTEXT.md e questo incarico. CAND-001/v1,config aed2c4ef627617d73972778097bbab5fb702ab5064ce9e6eb68ded2170ce4edf, regole/gestione/costi e finestre rimangono invariati. Nessun download o2026,nessuna nuova strategia,servizio generale o restyling.
+## Mandato e responsabilità
+Astra accetta la chiusura APP-001 e autorizza l'intero ciclo: diagnosi v1 DEV, al massimo una revisione motivata nella stessa famiglia, confronto sull'intero DEV e consultazione nella stessa app. Nessun altro lavoro preparatorio UI. Chiusura possibile anche con nessuna revisione giustificata, indicando precisamente quale decisione non è sostenibile e quale informazione manca.
 
-## 1. Review Director su11e0284 — correzioni richieste, non ACCEPTED
+Il Director sceglie il problema e specifica l'eventuale nuova decisione. Claude estrae e riconcilia le evidenze, documenta fatti e limiti; non propone implementazioni strategiche autonome, filtri o soglie. Questo incarico eseguibile riguarda la diagnosi D1. La sua review e l'eventuale specifica v2 sono microstep della macrofase già autorizzata, non nuove richieste ad Astra/Owner. Non implementare v2 sulla sola diagnosi di Claude.
 
-Verifiche indipendenti in copia isolata:
-- lettura servizio/lock/job,percorso comune,catalogo,launcher,router e viste pertinenti;
-- **18test servizio,45test CAND,30test OBS passati**: diff tocca percorso comune e callback nei loro moduli, motivo della selezione;
-- **38test UI** (backtest e router),typecheck/build passati;
-- esaminate immagini dell'esecutore «Nuovo backtest» e «Dettaglio seguito» a1366px;
-- riprodotti in più i difetti R1-A/B/C sotto, con dati sintetici e UI controllata. R1-D riscontrato nel codice e nell'immagine della prima pagina.
+## 1. Confini e identità prima dell'analisi
+Solo DEV [2023-01-01,2025-01-01) UTC, con prefisso osservativo dal 2022-10-01 dove realmente necessario. Binance Vision BTCUSDT perpetual USDⓈ-M già conservato. Nessun download, accesso rete per dati, 2025 (neppure gennaio di collaudo), 2026, stack Owner o vecchi studi. Non aprire i run ADDITIONAL_2025 per completare confronti. Eventuali dati oltre fine DEV restano esclusi, anche per completare un percorso.
 
-Non svolti dal Director in questa review: nuovo backtest reale, confronto autonomo byte-per-byteUI/CLI sui datiOwner, browser autonomoWindows. L'equivalenza gennaioUI/diretto,3trade−18,68 e i tempi di annullamento reali restano evidenza dell'esecutore, non verifica indipendente Director. Nessuna prova positivaOwner diAPP-001 ancora registrata.
+Riutilizzare il bundle DEV accettato e i relativi manifest/input già verificati. Preferire il DEV e1.0.1, schema /2, inputHash adaa94c502… e bundle SHA256 b141150237e94a807817adea2d9fb6810f6eabc220d7db5ea3602d8b79b4944a, se presente; altrimenti un DEV compatibile con uguaglianza verificata di decisioni, richieste, trade e risultati. Registrare identificatori e hash completi effettivi. Non scegliere il run sulla base del risultato. Riconciliare 78 operazioni, 87 richieste, 814 episodi e netto non arrotondato (−210,59 alla visualizzazione). Config v1 SHA256 aed2c4ef627617d73972778097bbab5fb702ab5064ce9e6eb68ded2170ce4edf invariata.
 
-Il lavoro principale esiste: orchestration locale, profili fissi, stato/progresso e navigazione sono stati implementati. Non rifarlo; correggere i punti precisi sotto. I test verdi non coprono ancora tali casi.
+La diagnosi precedente e gli esiti aggregati DEV sono già noti: questa non è preregistrazione dell'ipotesi originaria né analisi su dati nuovi. Prima di leggere nuovi percorsi individuali, pubblicare il presente piano e un piccolo elenco deterministico degli esempi selezionati con ID/tempi/categorie, senza commenti sul seguito. Conservare lista/hash anche negli output locali. Se una categoria è vuota, dichiararlo; non sostituirla con un caso scelto a vista.
 
-Deviazioni/limiti della consegna:
-- ricalcoloDEV involontario per tentare annullamento annotato come collaudo extra, non evidenza nuova o modifica metodologica. Non ripeterlo;
-- annullamento durante simulazione provato sinteticamente ma non sul mercato reale perché fase troppo rapida: limite accettabile se dichiarato, non richiede un altro fullrun;
-- suite frontend completa motivata dal router trasversale, non una nuova regola per ogni patch;
-- job di prova reali già salvati restano; nessuna pulizia automatica o rimozione per “abbellire” il catalogo;
-- provenienza mancante dei primi run dichiarata; successivo fix non rende retroattivamente completo il manifest vecchio.
+## 2. Popolazione completa e selezione degli esempi
+Un'unica diagnosi, con tutti i 78 trade e tutte le richieste/astensioni nel conteggio. Niente gruppi per SMA, volume, giornaliero o Fibonacci e nessuna ricerca di sottogruppi favorevoli.
 
-## 2. R1-A — costo pertinente mancante, risultato non completo
+Esempi dettagliati, su DEV intero, separati LONG/SHORT:
+- primo trade con netto positivo, primo negativo, primo con stop aggiornato;
+- prima astensione ABSTAIN_REWARD_RISK, prima INVALIDATED_DEPTH, prima richiesta REJECTED_PRICE.
+Aggiungere il primo EXIT_STRUCTURE e il primo TIME_EXIT complessivi, se non già presenti. Ordinamento: tempo pertinente poi ID; deduplicare conservando tutte le categorie. Categorie di risultato a posteriori dichiarate, selezione cronologica non discrezionale. Massimo 14 casi, senza sostituzioni per rendere la storia convincente.
 
-**Riproduzione indipendente sul percorso reale del servizio**, usando archivi sintetici coerenti di app001_helpers, nessun prezzo reale:
-1. un primo run individua un trade con durata>1minuto;
-2. serie funding sintetica regolare8h posizionata in modo che un evento cada durante il trade; controllo della serie certificato;
-3. si elimina soltanto il minuto mark precedente quell'evento e si aggiornano correttamente ZIP/hash/manifest sintetici;
-4. avvio da JobManager con pipeline reale: almeno un trade ha net=None e il netto complessivo èNone, come dovuto;
-5. **job.state=COMPLETED, job.result.complete=True e Catalog.complete=True**.
+Per le astensioni ricostruire le ragioni e i dati noti fino alla conclusione dell'episodio. Non attribuire un profitto o una perdita a un'operazione mai aperta e non simularne qui un ingresso alternativo. I conteggi completi mostrano anche gli altri motivi di astensione, senza aprire altre analisi.
 
-Causa: pipeline usa solo reconciliation.windowComplete, che segnala il percorso dei prezzi, non l'esistenza di tutti i costi/netto. LaUI JobPage lo traduce in “completato · risultato completo”.
+## 3. Un record diagnostico per trade
+Generare fuori Git una tabella leggibile CSV/JSON con un record per ciascuna operazione e riferimenti ai fatti sorgente. Nessuna modifica al bundle originale.
 
-Comportamento richiesto:
-- distinguere **copertura del percorso dei prezzi** da **completezza economica** del risultato. Non cambiare i prezzi,il funding o il netto per rendere vero un flag;
-- se manca un costo pertinente al netto baseline, il risultato pubblicato è INCOMPLETE con motivo concreto, nonCOMPLETED. Conservare le operazioni, i componenti noti e i valori mancanti;
-- propagare la distinzione in output del percorso comune,manifest,job,catalogo e viste(saved/job/risultati). LaUI può dire “Storico elaborato, ma risultato dopo i costi non calcolabile: manca…”; non attribuire necessariamente una lacuna ai prezzi quando manca soltanto un costo;
-- preservare significato delle riconciliazioni/flag di copertura già esistenti; aggiungere la qualificazione economica dove serve, senza presentare la parte nota come un totale;
-- gestire anche vecchi risultati supportati/2 e/3 con windowComplete=True ma nettoNone, conservando compatibilità e dichiarando la completezza economica mancante senza inventare la causa se non documentata;
-- zero operazioni con dati validi e netto0 resta un risultato completo: zero non è un costo mancante;
-- un mark mancante non pertinente a nessuna posizione non deve bloccare o rendere parziale un risultato valido. Nessuna forzatura indiscriminata su tutti i mark mancanti.
+Identità e decisione: ID episodio/richiesta/trade, verso, t0/call/ingresso, P0/P1/A0, ampiezza e durata gamba, profondità al trigger, numero di barre d'attesa, condizione effettiva di ripresa, struttura allora disponibile, stop iniziale, target, R0/G0 e rapporto, prezzo indicativo/riferimento/fill. Missing distinto da zero.
 
-Verifica mirata: file sintetici con evento regolare durante una posizione e singolo mark mancante→pipeline/job/catalogo/UI incompleti; caso valido e zero-trade completi; regressione funding non certificato ancora blocca prima del ledger. Nuovo test che fallisca su11e0284, non soltanto un runner finto che restituisce complete=False.
+Percorso e tempo:
+- istante/motivo/riferimento/fill d'uscita, durata, stop attivo all'uscita e provenienza (iniziale oppure aggiornato), decisioni e attivazioni degli aggiornamenti;
+- prezzo e movimento direzionale alla prima chiusura 45m strettamente dopo l'ingresso, solo se la posizione è ancora aperta dopo il processo di esecuzione di quel momento; altrimenti «chiusa prima», non una quotazione successiva spacciata per osservazione durante il trade;
+- massimo e minimo movimento direzionale osservato alle chiusure 1m effettivamente detenute, con tempi. Per una uscita intraminuto escludere il close e gli estremi del minuto d'uscita: il contatto non identifica l'ordine degli altri prezzi. Aggiungere come punto finale solo il riferimento d'uscita modellato, distinguendolo da una chiusura osservata. Se uscita a open, nessun prezzo successivo; includere il riferimento d'ingresso come origine zero;
+- definizione fissata: z(p)=d*(p−entryReference)/R0, R0 geometrico della v1 basato sulla fill. Riportare max(0,z), min(0,z), z al riferimento d'uscita e differenza fra massimo osservato e z d'uscita. Sono descrizioni del percorso campionato, non MFE/MAE tick esatte, profitto catturabile o suggerimenti di vendere al massimo;
+- tempo al massimo favorevole campionato, distanza iniziale dal target in R0, durata effettiva rispetto alle 24h con conteggi delle ragioni d'uscita. Nessun percorso dopo l'uscita per costruire un nuovo target o orizzonte.
 
-## 3. R1-B — progresso dopo HALT non è lavoro valutato
+Economia: pricePnLRef, effetto dei prezzi d'esecuzione, fee ingresso/uscita, funding, netto e rischio monetario iniziale. Identità da riconciliare: netto = pricePnLRef − slippageCost − feeEntry − feeExit + funding. Lo slippage è già nei prezzi fill, non sottrarlo una seconda volta. Riprendere stress e drawdown esistenti, non creare scenari di costi ulteriori.
 
-Riproduzione indipendente con stesso esempio sintetico di CAND/R1:
-- trend_store daT0−10giorni aT0+20giorni,seme7; finestra(T0,T0+20giorni);
-- si toglie il minuto5minuti dopo l'ingresso della prima operazione;
-- HALT corretto a1673190360000,riepilogo **245chiusure valutate/395non valutate**;
-- tick finale di run_window invece **t=1674259200000, closes=640,closesTotal=640**,pur conservando haltedAt.
+Nelle timeline degli esempi distinguere sempre informazione disponibile a t (barre chiuse, conferma pivot, struttura, piano, decisione) da ciò che accade dopo. Per ogni aggiornamento/uscita discrezionale riportare t di decisione ed efficacia +60s, inclusi casi in cui un evento di esecuzione lo precede. Non trattare il ritardo di conferma del pivot come un bug o una prova che l'estremo fosse utilizzabile prima.
 
-JobPage chiama closes “chiusure45m valutate” e mostra data raggiunta a fine finestra. Quindi il progresso contraddice il riepilogo e accredita lavoro dopo la lacuna.
+## 4. Riepilogo e interpretazione richiesta
+Un report sintetico docs/research/CAND-001-diagnosis.md, con un solo quadro integrato:
+- riconciliazione della popolazione e dei risultati con gli artefatti;
+- DEV, 2023, 2024, mesi già disponibili: netto, numero, drawdown alla risoluzione esistente e concentrazione top5, senza riscrivere tutta la consegna precedente;
+- sul totale: descrizioni (n e quantili P10/P50/P90) di primo movimento 45m quando disponibile, estremi campionati favorevole/contrario, restituzione del movimento favorevole, spazio iniziale/tempo; esclusioni e mancanze contate;
+- ragioni d'uscita e stop iniziali/aggiornati: numero e contributi pricePnLRef/costi/netto, non attribuzione causale. Netto delle operazioni con aggiornamento non equivale all'effetto dell'aggiornamento;
+- conteggi di episodi/richieste/astensioni e spiegazione semplice dei casi selezionati.
 
-Comportamento richiesto:
-- dopoHALT, avanzamento del periodo realmente valutato fermo al punto effettivo,contatori di valutazione e data coerenti col riepilogo;
-- se il programma percorre tempi successivi per registrare NOT_EVALUATED_AFTER_GAP, non contarli come valutati: eventuale scansione amministrativa ha nome separato, oppure nessun contatore aggiuntivo;
-- evento finale e snapshotpersistito deljob non promuovono la copertura al100% del periodo. Fine del processo di riepilogo non equivale a fine della valutazione storica;
-- UI espone l'interruzione e la copertura effettiva, non solo un piccolo avviso accanto a640/640;
-- preservare decisioni,registrazioni NOT_EVALUATED e risultati del motore: correggere osservabilità,non metodo.
+Queste sono dimensioni descrittive della stessa politica, non quattro backtest o trattamenti indipendenti. Non eseguire varianti «senza stop», «senza filtro», «target diverso», «uscita al massimo», né un benchmark sullo stesso futuro per suggerire la regola migliore. Non usare il 2025 nella motivazione, anche se risultati storici sono già pubblici.
 
-Test: evento/progresso finale del motore e job su dati sintetici congap coincidono con i conteggi del report; UI con snapshotreale/fixture derivata mostra245e395,non640valutate. Caso completo invariato. Non serve nuovo runDEV.
+Per ciascuna spiegazione plausibile distinguere: fatto osservato; informazione disponibile allora; decisione che v1 ha preso; cosa non possiamo dedurre. Classi: BUG, NOT_FAITHFUL_TO_DESIGN, COHERENT_BUT_NOT_USEFUL, COST_OR_ASSUMPTION_SENSITIVE, INSUFFICIENT_INFORMATION. Non dichiarare che il metodo è l'unica causa perché il codice passa i test. Un ingresso seguito da ribasso non prova un filtro corretto; movimento favorevole restituito non prova un'uscita anticipata disponibile.
 
-## 4. R1-C — ritorno interno conserva il posto nel registro
+Concludere con evidenze utili alla decisione del Director, anche se nessuna modifica è supportata. Non scegliere una soglia, una v2 o un nuovo indicatore. Per gli esempi indicare quale osservazione contemporanea potrebbe sostenere o contraddire una spiegazione, senza stimare il saldo di regole alternative.
 
-Riproduzione indipendente UI:
-- aprire registro di un risultato salvato,scorrere a640px;
-- aprire dettaglio di una riga;
-- premere **“← Torna alle operazioni”**;
-- torna il registro,ma window.scrollTo riceve0 invece del precedente640.
-Il test esistente copre Indietro/Avanti del browser,non il ritorno interno. Link chiama navigate come nuova navigazione e perde lo scroll salvato.
+## 5. Implementazione e verifiche proporzionate
+Un piccolo comando diagnostico offline riutilizzando parser/contratti esistenti, separato dal motore decisionale: legge artefatti e soli file autorizzati necessari. Niente dipendenze, servizio, database o nuova pagina. CSV/JSON/lista/output estesi fuori Git nella cartella dati CAND-001; script, test, report aggregato e metadati pertinenti in Git. Provenienza e istruzione unica riproducibile; input immutabili, hash prima/dopo.
 
-Comportamento richiesto:
-- il ritorno interno al registro recupera la posizione precedente,come il browserIndietro; conservare eventuali filtri/ordinamento esistenti;
-- risolvere come comportamento comune del router/link di ritorno,non con timeout o numeri fissi nella singola pagina. Non fare ogni navigazione un ripristino: aprire una pagina nuova può partire dall'alto;
-- “Torna ai risultati” dalla scorciatoia segue lo stesso principio ove un contesto esiste;
-- link aperto direttamente senza provenienza rimane utilizzabile con ritorno ragionevole. Indietro/Avanti e URL non regrediscono; nessun salto al risultato sbagliato.
+Se il bundle non conserva un'informazione, non inventarla: ricavarla dagli input autorizzati e dalle definizioni già fissate. Solo se indispensabile e motivato per iscritto prima: ammesso un passaggio diagnostico strumentato con v1 invariata su DEV, usando gli stessi dati e confrontando richieste/trade/risultati con il riferimento. Non pubblicare un nuovo backtest come evidenza strategica e non sovrascrivere i run. Se il fatto resta non ricostruibile, dichiarare il limite preciso.
 
-TestUI del vero clic sul ritorno interno e confronto640→dettaglio→640,più precedente regressioneBrowserBack. Nessuna nuova infrastruttura di navigazione o filtri appositi.
+Pochi controlli discriminanti: LONG/SHORT speculari, uscita a open/intraminuto senza prezzi posteriori, trade prima del primo close45m, latenza stop, identità costi, categoria vuota e deduplicazione/ordine. Un controllo di riconciliazione su tutti i record, nessun ricalcolo completo per ogni correzione di testo. Niente suite generale, suite UI/OBS non toccate o polling CI.
 
-## 5. R1-D — riga costi della schermata iniziale ancora opaca
+Non modificare la UI in D1. I casi già apribili si consultano coi meccanismi esistenti; riportare ID e momenti. Gli adattamenti strettamente necessari per distinguere v1/eventuale v2 e mostrare le decisioni cambiate si faranno nel relativo incarico dopo la scelta Director, senza restyling.
 
-Nella scheda “Nuovo backtest”,rigaCosti,si legge ancora in primo piano:
-“commissioni5bp e prezzo di esecuzione3bp per lato … scenario a parte con10+10bp”
-senza un aiuto associato. Anche “prezzi mark” compare fra dati richiesti senza spiegazione. Riscontrato nel codice NewBacktestPage e screenshotapp-01.
+## 6. Consegna e prosecuzione della macrofase
+Pubblicazione commit/push main autorizzata dei soli lavori pertinenti, senza force push o operazioni di sincronizzazione. Prima lista deterministica degli esempi, poi estrazione/analisi; conservare il legame tra commit e artefatti. Aggiornare questo spazio consegna e STATE; passare DELIVERED, mai ACCEPTED. Riportare comando, hash input/output, coperture/mancanze, controlli effettivi, limiti, percorso dei file locali. Non incollare migliaia di righe in chat.
 
-È il gergo esatto segnalato dall'Owner e contrario alla specificaAPP-001§7. Non rinviare al futuro la comprensione della pagina da cui deve avviare autonomamente il test.
-
-Correzione editoriale circoscritta:
-- nomi semplici,ipotesi esposte senza richiedere conoscenza dibp; valore percentuale comprensibile o dettaglio espandibile con spiegazione;
-- aiuto “i” al costo/scostamento e ai “prezzi mark” (prezzo di riferimento del contratto usato per i pagamenti periodici),riusando il componente già costruito;
-- spiegare che le commissioni si applicano sia all'apertura sia alla chiusura; lo scostamento è già incluso nei prezzi usati,non da sottrarre ancora;
-- scenario con costi più alti secondario,non parametri da impostare;
-- valori identici:5bp=0,05%,3bp=0,03%; nessuna modifica economica. Esempi inUSDT solo qualificati come esempi sulla dimensione1000,non costi esatti di tutte le uscite;
-- tooltip da clic/tastiera oltrehover,come già richiesto. Niente restyling del resto della dashboard.
-
-Un controllo UI pertinente per presenza della spiegazione accessibile è sufficiente; non rilanciare lo storico per testi.
-
-## 6. Verifiche e consegna
-
-Prima riprodurre su11e0284,poi verificare le correzioni. Controlli mirati nei moduli toccati,più regressioni servizio/UI pertinenti e typecheck/build. Niente suite generale per abitudine; non ripetere CAND/OBS interi se il diff non li richiede.
-Il confronto reale gennaioUI/diretto già documentato è riutilizzabile per regole immutate. **Nessun nuovo download e nessun nuovo fullrunDEV/2025.** Se un cambiamento al percorso numerico impone un controllo reale ulteriore,documentare il motivo e limitarsi al profilo breve; non farlo per una nuova etichetta o flag.
-
-Conservare i dati/risultati precedenti. Schema e versioni: patch pertinente dichiarata,compatibilità/2 e/3; nessun bisogno di una nuova migrazione solo per qualificare completezza. Config candidato/parametri invariati.
-Aggiornare APP-001-delivery.md con sezione R1,impatto numerico e controlli effettivi; immagini delle viste realmente cambiate solo dove servono. Per i casi sintetici indicarlo esplicitamente,non mostrarli come risultato reale.
-Aggiornare STATE e spazio consegna di questo task,passareDELIVERED,maiACCEPTED. Commit/push su main pertinenti autorizzati,no forcepush,pull/fetch,reset/stash o datiGit. Nessuna pulizia dei jobOwner o chiusura processi estranei.
-
-La macrofase continua fino a percorso usabile: reviewDirector,poi prova concretaGian suNuovo→Avvia→progresso→registro→spiegazioni→ritorno→risultati salvati. Non registrare tale prova prima che avvenga. AdAstra solo conclusione o conflitto sostanziale;non serve una nuova autorizzazione ordinaria.
+Il Director farà review delle evidenze e deciderà al massimo un problema modificabile. Prima di qualsiasi esito v2 registrerà problema, nuova decisione causale, motivazione, svantaggi/controesempi e risultato che indebolirebbe la spiegazione. Confronto eventuale su tutto DEV a dati/costi/dimensionamento/esecuzione invariati, includendo operazioni aggiunte/eliminate/spostate e concentrazione/drawdown. Nessuna iterazione su 2025; 2026 protetto. Una revisione al massimo, nessuna ricerca combinatoria. Se non giustificata, chiusura motivata senza implementarla. Nessuna nuova autorizzazione ordinaria richiesta a Gian/Astra tra questi microstep; escalation solo per cambi sostanziali indicati dal mandato.
 
 ## Spazio dell'esecutore
-
-Consegna Claude Code, 17 ottobre 2026. Il dettaglio è in [docs/research/APP-001-delivery.md §6](docs/research/APP-001-delivery.md).
-
-**Commit:** 3dd3f66 per le correzioni e i test, più un commit di documentazione. Motore 1.0.3 e schema /3 invariati; servizio 1.0.1.
-
-**Riproduzioni prima della correzione** (ogni nuovo test è stato eseguito anche sul codice 11e0284, dove fallisce):
-- **R1-A**, archivi sintetici: mark mancante sotto un pagamento durante la posizione → COMPLETED e catalogo completo.
-- **R1-B**, esempio CAND/R1: ultimo tick 640/640 contro 245/395 del riepilogo.
-- **R1-C**: «Torna alle operazioni» → `scrollTo(0)` invece di 640.
-- **R1-D**: «bp» e «prezzi mark» senza spiegazione.
-
-**Correzioni:**
-- **R1-A**: completezza economica distinta dalla copertura dei prezzi, con motivo, in pipeline, manifest, job, catalogo e viste. Nessun valore cambiato. I vecchi /2 e /3 con netto mancante non risultano completi; la causa, se non registrata, è dichiarata tale.
-- **R1-B**: il progresso si ferma all'HALT (chiusure valutate, non valutate, data) e la pagina del job mostra l'interruzione.
-- **R1-C**: navigazione `return` del router per i ritorni interni.
-- **R1-D**: costi in percentuali semplici con «i» per commissione, prezzo di esecuzione, pagamenti periodici e prezzi mark; scenario con costi più alti solo come confronto.
-- Difetto extra: il servizio legge il corpo delle POST prima di rifiutarle, correggendo un fallimento intermittente su Windows.
-
-**Controlli:**
-- servizio: 24 test, 5 volte OK;
-- CAND backtest/R1: 12 test OK;
-- UI: 79 test OK;
-- typecheck e build OK.
-
-**Impatto numerico nullo.** Il profilo breve rieseguito da comando diretto dà lo stesso bundle `982ad3a6…` con `economic.complete=true`; i risultati reali nel catalogo restano completi con gli stessi netti. Nessun download e nessun ricalcolo DEV o 2025.
-
-**Immagini:** app-01 aggiornata e app-12 (spiegazione della commissione).
-
-**Limiti:**
-- R1-A e R1-B sono verificati solo su dati sintetici;
-- l'annullamento durante la simulazione resta solo sintetico;
-- i manifest già salvati non vengono riscritti.
-
-Prova Owner non svolta né dichiarata.
-
-
-## Review Director conclusiva — 17 ottobre 2026
-
-**APP-001/R1 accettato tecnicamente** sulla consegna ec19f222699d23a537ce3ae810c8127a66560255 (codice 3dd3f66). I quattro rilievi sono risolti nel perimetro richiesto; nessun ulteriore incarico a Claude ora.
-
-Verifiche indipendenti del Director in copia isolata della consegna:
-- lettura delle modifiche a completezza economica, pipeline, manifest/catalogo/job, progresso, router/ritorni, testi e aiuti dei costi, più gestione del corpo POST;
-- 24 test del servizio passati una volta, inclusi costo pertinente mancante, costo non pertinente, zero operazioni, compatibilità dei risultati precedenti, HALT, concorrenza, annullamento, riapertura e confini HTTP;
-- 12 test mirati CAND passati (8 R1 e 4 backtest); nessuna suite OBS o generale;
-- 43 test UI passati (backtest e router), inclusi incompletezza, 245/395, ritorni interni e browser, percentuali e spiegazioni accessibili;
-- typecheck e build riusciti;
-- esaminata l'immagine dell'esecutore app-12 a 1366 px con spiegazione della commissione aperta.
-
-Non svolti dal Director: nuova prova browser sul PC Windows, nuovo confronto reale UI/CLI, download o ricalcolo storico. L'identità del breve run gennaio dopo R1 (982ad3a6…), la prova reale e i tempi di annullamento restano evidenza dell'esecutore. I casi di costo mancante, HALT e annullamento durante la simulazione sono verifiche sintetiche, non eventi osservati nei run reali. I vecchi registri non sono riscritti.
-
-**Prossimo passo: prova pratica Owner**, non nuova implementazione o ricerca. Riavviare il comando npm run dev se già acceso, perché la parte Python è cambiata; dipendenze invariate, npm ci non richiesto. Percorso breve: Nuovo backtest → Prova di gennaio 2025 → Avvia → avanzamento → Apri risultati → Tutte le operazioni → dettaglio e seguito → ritorno al registro → risultati salvati. Gian valuta autonomia e comprensibilità, non formule o convenienza della strategia. Non registrare un esito positivo prima del suo riscontro. Alla conclusione della macrofase, relazione ad Astra; strategia v1 e finestre restano congelate, 2026 protetto.
-
-
-## Chiusura APP-001 — riscontro Owner, 17 ottobre 2026, 19:30 Europe/Rome
-
-Gian, dopo la richiesta di prova pratica, riferisce: «ok, ora mi sembra molto meglio!». È un riscontro positivo sul miglioramento dell'esperienza, senza ulteriori difetti segnalati. Non costituisce un verbale di verifica di ogni singolo passo, né una conferma dei calcoli o della strategia.
-
-Il Director chiude la macrofase APP-001 sulla base dell'accettazione tecnica già registrata e di questo riscontro d'uso, conservandone i limiti. Non assegna ulteriori estensioni UI o collaudi storici. Avvio locale, avanzamento, risultati salvati, registro, spiegazioni e navigazione sono la capacità consegnata; equivalenza reale UI/CLI e annullamento reale restano evidenze dell'esecutore nei limiti sopra.
-
-Passaggio ad Astra per il prossimo ciclo metodologico: CAND-001/v1 rimane invariata, negativa e non promossa; nessuna revisione effettuata. DEV 2023–2024: 78 operazioni, −210,59 USDT; confronto 2025 già esposto: 29, −109,08 USDT. Lo strumento ora utilizzabile non aggiunge evidenza favorevole alla strategia. Raccomandazione Director: nessun ulteriore cantiere preparatorio UI; decidere sulla diagnosi della politica completa e sull'eventuale revisione motivata, senza adattamenti agli esiti 2025. Nessuna nuova strategia o esecuzione avviata da questa chiusura; 2026 protetto.
+Da compilare durante esecuzione/consegna. Nessun lavoro D1 ancora dichiarato svolto.
