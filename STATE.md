@@ -2,24 +2,24 @@
 
 Aggiornato: 17 ottobre 2026. Responsabile: Director.
 
-## Attivo — APP-001 DELIVERED (in attesa di review)
-Astra autorizza l'intera macrofase: rendere Gian autonomo nel lanciare, seguire e capire un backtest dall'app. Incarico in current_task.md (7f94d4e).
+## Attivo — APP-001/R1 READY
+Consegna APP-001 a11e028407261907a0206f2b484f0445f8c712ea0 revisionata: correzioni richieste, non ACCEPTED. Task completo in current_task.md; specifica originaria nella storia a7f94d4e.
+La base esiste: servizio locale, avvio/progresso/annullamento, risultati salvati e router comune. Correggere, non ricostruire.
 
-Claude ha consegnato il 17 ottobre (c4f425b..7795672 più documentazione): `npm run dev` avvia servizio e app; Backtest → Nuovo → Avvia → progresso reale/annullamento → Risultati salvati → Tutte le operazioni → dettaglio, con indirizzi #/ e Indietro/Avanti. Il confronto UI/diretto sulla prova di gennaio 2025 dà un bundle identico (`982ad3a6…`). Non accettato: restano la review Director e la prova Owner. Evidenze e limiti in docs/research/APP-001-delivery.md, compreso un ricalcolo DEV non previsto, identico al DEV 1.0.1.
+Difetti riprodotti dal Director:
+- costo pertinente mancante: funding certificato e un mark necessario assente danno nettoNone, ma job/catalogo dichiarano risultato completo;
+- dopo HALT il tick finale conta640chiusure valutate contro245valutate/395nonvalutate del report;
+- ritorno interno dal dettaglio al registro riporta lo scroll a0 invece di640;
+- scheda Nuovo backtest mostra ancora5/3bp e10+10bp senza spiegazione associata.
+R1 limita la patch a completezza economica,progresso,ritorno condiviso e testi/aiuti dei costi iniziali. Nessun nuovo download o fullrunDEV/2025 richiesto.
 
-Scelte Director: unico frontend esistente, piccolo servizio Python locale su loopback con un worker; un comando npm run dev avvia entrambi. Tre profili fissi su dati già presenti: prova gennaio2025, DEV2023–2024, confronto2025. Prefisso dal2022-10-01 e partenza FLAT; nessun download. Stato/progresso veritieri, annullamento, un solo attivo, nessun duplicato al refresh/doppio clic e risultati salvati riapribili. Navigazione condivisa via URL/Indietro/Avanti; linguaggio semplice, costi spiegati, importJSON secondario.
+Review indipendente:18test servizio,45CAND,30OBS e38test UI pertinenti passati,typecheck/build riusciti; prove aggiuntive sintetiche dei difetti e lettura di2screenshot1366px. Non nuovo confronto autonomoUI/CLI sui datiOwner o browserWindows. Equivalenza reale gennaio UI/diretto (bundle982ad3a6…) e tempi annullamento restano evidenza dell'esecutore. ProvaOwner APP ancora da svolgere.
 
-La prova breve gennaio2025 UI/diretto è collaudo software, non nuovo studio o ottimizzazione. Ultima preparazione richiesta daAstra prima del prossimo ciclo sull'algoritmo; nessuna piattaforma generale.
+## CAND-001 — quattro giudizi conservati
+Implementazione accettata tecnicamente su4ff5046 nei limiti reviewb9f54cc; base apprezzata daGian,uso ancora non autonomo/comprensibile; strategiav1 negativa e non promossa; efficacia generale della famiglia non risolta.
+DEV78trade netto−210,59USDT;2025 29trade−109,08, somme per dimensione1000USDT,non conto personale.2025giàesposto,non validazione indipendente. Nessuna revisione metodologica scelta.
 
-## CAND-001 — quattro giudizi distinti
-- Implementazione: accettata tecnicamente su4ff5046, reviewb9f54cc, nei limiti dichiarati.
-- Uso Gian: base apprezzata, comprensione/autonomia insufficienti; riscontro ebd4802, non accettazione globale positiva.
-- Strategia1.0.0: negativa, non promossa. DEV78trade netto−210,59USDT;2025 29trade−109,08. Somme per dimensione1000USDT, non conto personale.
-- Efficacia generale della famiglia: non risolta da questa versione.
-
-Review indipendente:45test Python,15UI,build e sola esecuzione/costi prima LONG2025 verificata sui CSV (−4,05). Non ricalcolo integrale segnali/107trade.2025giàesposto,non validazione indipendente.
-
-## Vincoli e chiusura
-Config candidato aed2c4ef627617d73972778097bbab5fb702ab5064ce9e6eb68ded2170ce4edf, osservatore, regole/costi invariati. Motore base1.0.2, patch tecniche d'instrumentazione ammesse senza cambiare metodo.2026protetto senza tail,vecchi studiINACTIVE,nessun conto/chiave/exchange/ordine reale/stackOwner,leva,reinvestimento,nuova famiglia,segnali o ricerca parametri. Raw/bundle/job fuoriGit.
-
-Claude completa il task e consegna; Director gestisce review e correzioni ordinarie. Chiusura con prova concreta Gian su avvio/progresso/registro/decisioni/costi/ritorno, senza formule. AdAstra alla chiusura o per conflitto sostanziale, non a ogni microstep. UI simulata e OBS tecnicamente chiusi con riscontri precedenti conservati.
+## Confini e chiusura
+Motore consegnato1.0.3,schema/3,compatibilità/2. Config candidato aed2c4ef627617d73972778097bbab5fb702ab5064ce9e6eb68ded2170ce4edf,regole e costi invariati. R1 è patch tecnica senza nuovi parametri o convenzioni.
+Astra autorizza macrofase intera: Director gestisce correzioni ordinarie,torna alla chiusura o conflitto sostanziale. Ultima preparazione prima del prossimo ciclo sull'algoritmo,non piattaforma generale.
+2026protetto,vecchi studiINACTIVE,niente exchange/conto/ordini/stackOwner,nuova strategia o ricerca combinazioni. Raw/job/bundle fuoriGit. Chiusura dopo review e prova concretaGian,senza formule o accettazioni anticipate.
