@@ -1,6 +1,6 @@
 # Algorithmic Trader — prodotto, decisioni e contesto completo
 
-Versione documentale: 1.3 — 16 ottobre 2026. Responsabile della sintesi: Astra.
+Versione documentale: 1.4 — 16 ottobre 2026. Responsabile della sintesi: Astra.
 
 Questo è il documento funzionale centrale del **nuovo** progetto di Gian. È scritto per poter essere consegnato da solo a una nuova chat: spiega obiettivo, organizzazione, requisiti, ragioni delle scelte, limiti e questioni ancora aperte. Non è una specifica matematica dell'algoritmo, una dichiarazione di efficacia o un'autorizzazione a operare con denaro reale.
 
@@ -20,7 +20,7 @@ Il progetto può durare anni. Gian accetta studio e sviluppo progressivi, ma vuo
 
 La repository nuova è `C-Gian/algorithmic-trader`. La precedente è `C-Gian/algorithmic-trader-archive`.
 
-Aggiornamento 16 ottobre: oltre alle tre utilità tecniche recuperate (intervalli temporali, arrotondamento e impronte), esiste la dashboard locale React/TypeScript con provider simulato separato e scenari deterministici. La macrofase UI, comprese correzioni e navigazione superiore richiesta dall'Owner, è conclusa con review Director e riscontro positivo di Gian. **Non esistono ancora un motore osservativo reale consegnato, una strategia, un collegamento al conto o un esecutore di ordini.** È ora autorizzata la costruzione del primo motore osservativo e studio storico circoscritto, non ancora una capacità implementata.
+Aggiornamento 16 ottobre: oltre alle tre utilità tecniche recuperate (intervalli temporali, arrotondamento e impronte), esiste la dashboard locale React/TypeScript con provider simulato separato e scenari deterministici. La macrofase UI, comprese correzioni e navigazione superiore richiesta dall'Owner, è conclusa con review Director e riscontro positivo di Gian. È stato poi consegnato OBS-001: motore osservativo causale e primo studio storico integrato nella stessa dashboard; calcoli e tabelle verificati dal Director, accettazione finale ancora pendente per correzioni UI e prova d'uso. **Non esistono ancora una strategia, un collegamento al conto o un esecutore di ordini.** Stato e incarico correnti precisano le verifiche e il difetto residuo.
 
 Il vecchio motore non viene importato implicitamente. Il nuovo progetto non è una v0.8 e non eredita le soglie, gli scenari A/B/C, i profili di costo, le scadenze o la struttura delle prove precedenti. Il nuovo nome della repository non rende però sconosciuti i dati già studiati.
 
@@ -274,6 +274,8 @@ Gian ha proposto Figma AI per il design e successiva implementazione con Claude.
 
 Aggiornamento Owner del 16 ottobre 2026 dopo il primo avvio locale: eliminare la barra di navigazione sinistra e spostare le destinazioni in una barra superiore per recuperare larghezza nel contenuto principale. Questa modifica è autorizzata rispetto al layout Figma; schede, stile e semantica operativa restano il riferimento. I controlli degli scenari locali devono restare accessibili e chiaramente separati dai comandi operativi, senza occupare una colonna laterale permanente.
 
+Riscontro Owner del17ottobre2026 su OBS-001: lo scopo di apertura JSON, data/ora, avanzamento, scale e pivot non era comprensibile dalle sole istruzioni. Non trattare la prova come accettata. Il cursore serve a ispezionare informazioni note a un momento passato; lo studio elabora già automaticamente tutte le origini. L'Owner chiede di discutere con Astra la sufficienza di pochi mesi e il passo verso il metodo decisionale. Lo studio attuale copre4mesi settembre–dicembre2025, preceduti da3mesi di inizializzazione; nessuna estensione dati è autorizzata da questa richiesta.
+
 ## 25. Linguaggio, colori e aggiornamenti
 
 Lingua principale: italiano semplice. Dire «il mercato osservato è in equilibrio» non equivale a prevedere lateralità. Dire «nessun ingresso» non equivale a dire che non esiste un'analisi.
@@ -392,6 +394,7 @@ Il lavoro corrente segue il mandato osservativo/storico circoscritto della sezio
 
 | Versione | Data | Variazione |
 |---|---|---|
+| 1.4 | 2026-10-17 | Motore/studio OBS-001 consegnati e calcoli verificati; accettazione finale pendente. Riscontro Owner su comprensibilità/scopo e richiesta confronto Astra su durata dati e sviluppo decisionale |
 | 1.3 | 2026-10-16 | UI conclusa; Astra autorizza motore osservativo, acquisizione pubblica giugno–dicembre2025, studio descrittivo24h e stessa app; DESIGN-001 approvato solo §§5–6 con warmup per misura, limiti operativi invariati |
 | 1.2 | 2026-10-16 | Richiesta Owner: navigazione superiore al posto della sidebar; spazio recuperato per il contenuto, controlli simulati distinti |
 | 1.1 | 2026-10-16 | Disposizione Astra: priorità alla UI Figma con provider/scenari simulati; DESIGN-001 non approvato; limiti invariati sui dati e sull'operatività |

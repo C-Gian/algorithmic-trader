@@ -4,25 +4,23 @@ Aggiornato: 2026-10-17. Responsabile: Director.
 
 ## Fatto
 
-UI simulata conclusa. OBS-001 consegnato a b43a9130bafb67ed687740b66ae4802ab3b915c5: osservazioni causali, studio descrittivo reale e ambiente storico nella stessa dashboard. Convenzioni identiche alla registrazione antecedente i dati. Nessuna strategia implementata.
+UI simulata conclusa. OBS-001 consegnato a b43a913; motore, osservazioni causali e studio descrittivo reale verificati indipendentemente dal Director. Sette ZIP e input hash identici; 308.160minuti validi, 3.904origini, 31censure e 3.873esiti completi; tutte le tabelle riprodotte. A/medie/struttura/pivot ed esiti ricalcolati con sonde separate; snapshot reale invariato troncando il futuro. Config preregistrata invariata.
 
-Review indipendente Director: 30 test Python e 27 test UI pertinenti verdi, typecheck/build riusciti. Riscaricati sette ZIP autorizzati, checksum e input hash identici; 308.160 minuti validi; 3.904 origini, 31 censure, 3.873 esiti completi. Tabelle pubblicate riprodotte esattamente. Riscontri separati su tutte le barre A/medie/struttura/pivot e su tutti gli esiti completi senza differenze; snapshot reale invariato troncando il futuro. Fonte dei derivati: Binance Vision.
-
-Limite distinto: exchangeInfo restituisce HTTP451 nell'ambiente Director, correttamente bloccato dal comando completo. Nessun aggiramento: verifica numerica sui ZIP con sonda separata; identità via REST riuscita e browser reale restano evidenze dell'esecutore. Tre screenshot esaminati, nessun browser indipendente dichiarato.
+Correzioni UI a e4d31db83c9ea8d0ed54713cca7dc061cf2ba4a2: R1-B prezzo mancante PASS. R1-A radice/griglia corretti, rimane un campo annidato delle tabelle non validato che causa crash aprendo il riepilogo. Seconda review: 33testUI e build indipendenti passati; sonda ulteriore riproduce il difetto residuo.
 
 ## Incarico corrente
 
-**OBS-001/R1 — DELIVERED da Claude (17 ottobre), in attesa di review del Director e prova di Gian.** Correzioni consegnate (dettagli nel task):
-- R1-A: validatore del contratto usato (run, inputQuality, griglia, record, eventi, origini, riepiloghi); file incoerenti rifiutati con errore leggibile, studio aperto conservato.
-- R1-B: prezzo al cutoff assente non più mostrato; ultimo noto della stessa scala qualificato a parte; tratto senza barre complete = messaggio. 6 nuovi test discriminanti, 33 test UI pertinenti, build e prova browser dell'esecutore.
+**OBS-001/R1-A completamento — READY.** Validazione dei campi annidati usati dal riepilogo, in particolare missingFlags; rifiuto leggibile prima di sostituire lo studio. Mandato e riproduzione nel task. Nessun nuovo download, ricalcolo o modifica di convenzioni/gruppi/risultati. Verifiche mirate, non suite generale.
 
-Mandato preciso in current_task.md. Non ripetere acquisizione o calcoli reali; config, popolazione, convenzioni e tabelle non cambiano. Nessuna implementazione aggiuntiva aperta. Consegna principale non ancora ACCEPTED; riscontro Owner ancora mancante.
+Consegna non ancora ACCEPTED. Prova Owner effettuata ma non conclusa positivamente: Gian chiede spiegazioni sul significato dei controlli e sull'utilità per l'algoritmo. Nessuna fase di rifinitura generale UI assegnata.
 
-## Evidenza descrittiva e seguito
+## Confronto Astra richiesto dall'Owner
 
-Differenze fra gruppi giornalieri non stabili fra mesi, dispersione ampia e celle scarse. Nessuna conclusione causale, significatività o promozione operativa. Report OBS-001-results.md. Il bundle reale valido è già esplorabile dall'Owner durante la correzione; macrofase resta aperta fino a review R1 e prova Gian.
+Input giugno–dicembre2025: 3mesi inizializzazione e **4mesi studio settembre–dicembre**. Tutte le origini elaborate automaticamente; selezione temporale per ispezione, non valutazione manuale obbligatoria.
 
-## Vincoli
+Gian considera pochi mesi insufficienti e chiede di discuterne con Astra insieme al passo concreto verso il metodo decisionale. Evidenza attuale: differenze fra gruppi giornalieri variabili fra mesi, dispersione ampia/celle scarse, nessuna promozione operativa. Il confronto metodologico può procedere mentre si completa R1-A; nessuna acquisizione extra autorizzata.
 
-Solo OBS-001: input Binance Vision BTCUSDT perpetual USDⓈ-M negoziato1m [2025-06-01,2026-01-01), inizializzazione fino a settembre; nessun tail2026. Raw/bundle fuori Git. DESIGN-001 approvato soltanto §§5–6 con chiarimenti del task.
-Nessuna strategia, ordine exchange, conto operativo, valutazione economica, nuovo periodo/fonte, stack Owner o vecchi studi. Storico distinto dalla simulazione.
+## Limiti e vincoli
+
+REST exchangeInfo HTTP451 nell'ambiente Director, senza aggiramento; verifica REST riuscita sul PC esecutore e browser sono sue evidenze. Director ha verificato ZIP, conti descrittivi e immagini, non il browser.
+Solo input negoziato Binance Vision BTCUSDT perpetual USDⓈ-M [2025-06-01,2026-01-01); raw/bundle fuori Git. Nessun tail2026, strategia, ordine exchange, conto operativo, valutazione economica, nuovo periodo/fonte o stack Owner. Vecchi studi INACTIVE. DESIGN-001 approvato solo §§5–6 nei limiti del task.

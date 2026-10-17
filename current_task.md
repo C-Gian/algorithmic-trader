@@ -1,7 +1,7 @@
 # Incarico corrente — OBS-001 osservazioni calcolate e primo studio nell'app
 
-**Stato: DELIVERED — OBS-001/R1 (R1-A import validato, R1-B prezzo mancante nel grafico) consegnato da Claude Code; in attesa di review del Director e prova di Gian. Non ACCEPTED.** Macrofase completa autorizzata dalla disposizione Astra trasmessa da Gian il 16 ottobre 2026, dopo la chiusura UI al commit baa1e762703f7dfd01f870061dba2a1c691326ce.
-**Priorità esecutiva corrente:** applicare R1-A/B nella review del Director in fondo. Non ripetere acquisizione, studio o gate Figma; convenzioni e tabelle rimangono congelate.
+**Stato: READY — completamento R1-A dopo seconda review. R1-B PASS; nessuna modifica ai calcoli richiesta. Leggere la seconda review in fondo, non rieseguire l'intero mandato.** Macrofase completa autorizzata dalla disposizione Astra trasmessa da Gian il 16 ottobre 2026, dopo la chiusura UI al commit baa1e762703f7dfd01f870061dba2a1c691326ce.
+**Priorità esecutiva corrente:** completare soltanto la validazione annidata di R1-A secondo la seconda review in fondo; R1-B approvato. Non ripetere acquisizione, studio o gate Figma; convenzioni e tabelle rimangono congelate.
 
 Responsabile specifica e review: Director. Esecutore: Claude Code.
 Questo task è la registrazione ex ante delle convenzioni **OBS-001/v1**: completare tutti i microstep, dal sintetico all'acquisizione, elaborazione reale, integrazione e prima tabulazione. Nessuna ulteriore autorizzazione ordinaria fra i microstep. Non fermarsi a un motore sintetico. La consegna UI accettata resta nella storia Git a baa1e76.
@@ -462,3 +462,37 @@ La fixture sintetica e il bundle reale sono accettati.
 Modifiche: `loadBundle.ts`, `study.ts` (`lastKnownClose`), `CandleChart.tsx`, `HistChartCard.tsx`, `App.tsx` e `HistoricalEnvironment.tsx` (rimontaggio a ogni apertura), `styles.css` (`.chart-empty`), `R1.test.tsx`, le due immagini con la nota, questo task e STATE.
 
 **Restano da fare.** Review del Director su R1 e prova di Gian. Nella prova, oltre ai passi della consegna OBS-001, si può aprire un file qualsiasi che non sia il bundle: l'app deve spiegare l'errore e restare sullo studio aperto.
+
+## Seconda review Director — 17 ottobre 2026, consegna e4d31db
+
+**R1-B PASS. R1-A parzialmente corretto: completamento READY nello stesso perimetro.**
+Base e4d31db83c9ea8d0ed54713cca7dc061cf2ba4a2. Diff confinato alla UI, validatore e test; motore/config/gruppi/risultati/bundle invariati. Rieseguiti indipendentemente tutti i 33 test UI pertinenti della consegna e typecheck/build, riusciti. Letti il validatore e le modifiche a provider/grafico; esaminate le due nuove immagini dell'esecutore. Nessun nuovo download o calcolo storico, nessuna prova browser indipendente. Le prove Chrome rimangono evidenze di Claude.
+
+R1-B: prezzo al cutoff nullable, marker assente se manca, ultimo noto della stessa scala qualificato e temporalmente <=t, nessun grafico di prezzi se nessuna candela completa. Nessuna ulteriore modifica richiesta a R1-B.
+
+### R1-A — campo annidato ancora accettato e crash del riepilogo
+
+Riproduzione con fixture sintetica pubblicata:
+1. Eliminare soltanto retrospective.summary.tables.TOTAL.s45.UP.missingFlags.
+2. parseBundle accetta e HistoricalStudy si costruisce.
+3. La dashboard temporale si apre; click su “Studio osservativo”.
+4. CountsRow esegue Object.entries(g.missingFlags): TypeError “Cannot convert undefined or null to object”; la vista va in errore.
+
+Una sonda temporanea che richiede rifiuto all'importazione fallisce; una seconda riproduce effettivamente l'eccezione del rendering del riepilogo. Non sono test di prodotto aggiunti al repository.
+Il caso rientra nel mandato R1-A già assegnato: forma dei riepiloghi e campi realmente dereferenziati dalle viste, non soltanto i campi radice.
+
+**Completamento richiesto, senza estendere lo studio:** completare la validazione dei gruppi/record annidati effettivamente letti dalle viste (in particolare missingFlags dei gruppi s45 e relation, campi su cui si invocano Object.entries, map, format o accessi annidati); tipi coerenti col contratto, null solo dove previsto. Può essere integrata con un contenimento dell'errore della vista se utile, ma un fallback non deve trasformare un campo obbligatorio mancante in zero o nascondere una corruzione come risultato valido. Nessun framework di validazione generale o nuova infrastruttura. Il file deve essere rifiutato con messaggio localizzato, preservando il precedente studio, prima che un clic successivo rompa l'app.
+
+Verifica strettamente necessaria: sonda discriminante via file picker con missingFlags mancante nel riepilogo; errore leggibile e studio precedente preservato, poi file valido e apertura del riepilogo; uno o pochi casi della stessa classe se emergono dalla lettura dei campi annidati. Test storico/import pertinenti e build. **Non ripetere tutti i33 o l'intero motore per abitudine**, niente acquisizione, ricalcolo reale, nuove convenzioni o immagini generali. R1-B non va riaperto. Commit/push ordinari autorizzati come prima; niente pull/fetch.
+
+### Riscontro Owner e passaggio ad Astra richiesto
+
+Gian ha seguito le istruzioni ma segnala forte confusione su scopo del JSON, scelta del tempo, avanzamento45m, cambio scala e conferma del pivot: non registrare questa prova come accettazione d'uso. Il Director ha spiegato i controlli; non assegnata una nuova fase di rifinitura UI.
+
+Gian chiede confronto con Astra perché considera pochi mesi insufficienti e vuole capire come il lavoro porti all'algoritmo. Precisazione: dati input giugno–dicembre2025 =7mesi, dei quali giugno–agosto inizializzazione e **settembre–dicembre4mesi di studio**, non3. Il cursore nell'app serve a ispezionare ciò che era conoscibile a t; tutte le3.904origini sono state elaborate automaticamente, l'Owner non deve valutarle una per una.
+
+Portare ad Astra la domanda sul prossimo incremento orientato al metodo decisionale e sulla durata/varietà dei dati necessarie per valutarlo. Nessuna nuova acquisizione autorizzata da questa richiesta, nessuna apertura2026 o riattivazione vecchi studi; il periodo ampliato va deciso prima dell'accesso. Lo studio descrittivo corrente può essere discusso già ora, distinguendo calcoli/evidenze verificati, R1-A residuo e prova Owner non conclusa. Non presentarlo come strategia pronta o come inutilità generale delle famiglie.
+
+## Consegna completamento R1-A
+
+Da compilare dall'esecutore. Nessun altro lavoro assegnato.
