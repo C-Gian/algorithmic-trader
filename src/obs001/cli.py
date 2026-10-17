@@ -26,14 +26,18 @@ DEFAULT_DATA_DIR = REPO_ROOT.parent / "algorithmic-trader-data" / "OBS-001"
 
 
 def software_ref() -> dict:
+    # stdin chiuso: un processo avviato con stdin a pipe (servizio APP-001) non deve far attendere git.
     def git(*args):
         try:
-            return subprocess.run(["git", *args], cwd=REPO_ROOT, capture_output=True, text=True, timeout=20).stdout.strip()
+            return subprocess.run(["git", *args], cwd=REPO_ROOT, capture_output=True, text=True, timeout=20,
+                                  stdin=subprocess.DEVNULL).stdout.strip()
         except (OSError, subprocess.SubprocessError):
             return ""
 
-    dirty = git("status", "--porcelain", "--", "src", "config")
-    return {"commit": git("rev-parse", "HEAD") or None, "dirty": bool(dirty)}
+    commit = git("rev-parse", "HEAD") or None
+    # Senza commit leggibile lo stato delle modifiche locali è sconosciuto, non «pulito».
+    dirty = bool(git("status", "--porcelain", "--", "src", "config")) if commit else None
+    return {"commit": commit, "dirty": dirty}
 
 
 def log(msg: str) -> None:
