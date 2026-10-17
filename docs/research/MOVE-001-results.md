@@ -1,6 +1,6 @@
 # MOVE-001 — applicazione descrittiva del ciclo di vita del movimento (DEV 2023–2024)
 
-**Stato: correzioni R1 consegnate dall'esecutore (DELIVERED, in attesa di review del Director; non ACCEPTED).** Sezione 10 per R1. Rappresentazione sperimentale: nessuna strategia, operazione, esito 24h o valutazione economica. Il Director conclude se la rappresentazione permette una prossima domanda decisionale.
+**Stato: ACCEPTED dal Director, 17 ottobre 2026, dopo review R1.** Consegna dell'esecutore §10; verifiche indipendenti, limiti e conclusione Director §11. Rappresentazione sperimentale: nessuna strategia, operazione, esito24h o efficacia approvata.
 
 **Licenza di questo file e delle immagini in `docs/research/MOVE-001-screens/`:** derivati aggregati di dati Binance Vision, **CC BY-NC-SA 4.0** (https://creativecommons.org/licenses/by-nc-sa/4.0/). Fonte: Binance Vision (https://data.binance.vision). Dati grezzi, ledger e pacchetti non sono redistribuiti.
 
@@ -354,3 +354,35 @@ Nuova fixture sintetica `synthetic-move001-case-final.json`; la fixture esistent
 - Dei 112 rifiuti, 62 sono per posto occupato (57 utilizzabile e 5 in formazione) e 50 per freschezza, di cui 35 con posto già libero.
 
 I numeri del report non cambiano.
+
+## 11. Review finale e chiusura del Director — 17 ottobre 2026
+
+**MOVE-001 e R1 ACCEPTED entro il perimetro descrittivo autorizzato.** Base di review finale: 2cdda77adbf4d45cff9596b5ee8bf466e2ab8f9e (codice R1:8340defea81f69fdae88239e5473210124afa118).
+
+### Verifiche indipendenti effettivamente svolte
+
+Lettura del diff R1: solo validatore, generatore/fixture di consultazione, test e documentazione; ciclo, configurazione e selezione del disegno non modificati. Nella copia isolata del Director:
+- **22/22 test Python MOVE-001**, inclusi i tre nuovi test della consultazione finale;
+- **90/90 test del lettore storico**, inclusi rifiuti dei tre casi della review, conservazione dello studio aperto, compatibilità dei formati sintetici precedenti e raggiungibilità dell'ultima chiusura;
+- **typecheck e build superati** tramite npm run build;
+- fixture finale ricostruita sinteticamente:1.207.183 byte, Git blob SHA1 **4a19b96995a72c3126a893dfe63bd384dff16f98**, identico al file pubblicato.
+
+R1-A chiusa: gli input incompleti/contraddittori della review sono rifiutati prima del rendering; gli ordini concorrenti validi restano ammessi. R1-B chiusa: cutoff finale selezionabile solo nel formato MOVE, senza estendere i minuti oltre il confine né allargare il contratto degli altri studi. Versione tecnica move001.consult/2 distinta dal ciclo e dalla semantica.
+
+**Limiti della review:** nessun ricalcolo indipendente dell'intero DEV, dei701 riferimenti o degli hash degli output locali; i dati reali non sono nella copia del Director. Compatibilità dei6 pacchetti reali MOVE e dei10 OBS-002, prova visiva reale e invarianza degli output sono verifiche dichiarate dall'esecutore, non rieseguite dal Director. Nessuna prova d'uso positiva di Gian registrata per MOVE-001. Nessuna suite generale o polling CI.
+
+### Giudizio sulla domanda autorizzata
+
+Sui conteggi riportati dall'esecutore, coerenti con il percorso e gli schemi controllati, **MOVE-001 è concretamente utilizzabile come rappresentazione sperimentale di questa specifica sequenza strutturale**. Non resta soltanto in formazione:600 dei631 riferimenti nati DEV conoscono P1 e526 diventano utilizzabili;275 completano geometricamente,234 perdono la base e122 sono sostituiti. Non sono percentuali di successo operativo né probabilità del ritorno a P1 dal momento di un ingresso.
+
+La mediana di10barre per l'archiviazione e l'assenza di riferimenti aperti al termine non cancellano i limiti: le cinque occupazioni più lunghe durano199,114,107,98,96barre e terminano per sostituzione dopo sospensione. La lettura non è quindi bloccata ovunque, ma può trattenere riferimenti per giorni. P1 noto e giudizio utilizzabile non coincidono automaticamente.
+
+Assenza del principale nel56% delle chiusure descrive il campo limitato della candidata; non è, da sola, un errore. Durante l'occupazione,4592/10288chiusure sono sospese (4426conP1 e166senza), circa44,6%. Questo è il limite rappresentativo principale: dopo test/conflitto il metodo conserva i fatti ma rinuncia a riattivare quella lettura fino a nuova struttura/perdita. Non significa che il mercato sia inconoscibile, né dimostra che riattivarla avrebbe aiutato.
+
+Il costo informativo del singolo riferimento e della freschezza è ora visibile:62rifiuti per posto occupato (5in formazione,57utilizzabile),50per freschezza (35con posto libero). Non simulati i riferimenti scartati in parallelo: non sappiamo quali seguiti avrebbero avuto o se sarebbero stati utili. Le1265barre con P1 toccato da sospeso possono appartenere ripetutamente alle stesse letture; non misurano occasioni perse o continuazioni riuscite.
+
+### Decisione e seguito
+
+Chiusa la macrofase richiesta: rappresentazione implementata, verifiche causali mirate, applicazione descrittiva e consultazione di esempi preregistrati. Conservarla **senza modificarla in funzione di questi conteggi** come possibile base per formulare la prossima domanda decisionale. L'informazione ora disponibile giustifica passare dalla sola verifica di rappresentabilità a una decisione di Astra sul prossimo obiettivo; non autorizza già una nuova estrazione, regola di ingresso, riattivazione delle sospensioni o v2.
+
+La popolazione è nuova e specifica, non riparazione di OBS-002. Nessuna riscrittura dei risultati precedenti, esclusione retrospettiva dei1728casi, modifica CAND-001 o promozione di P0/P1 a supporti/obiettivi efficaci. Nessun2025/2026 aperto o operatività reale. Consegna ad Astra della chiusura con questi limiti.

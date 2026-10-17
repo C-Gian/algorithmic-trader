@@ -60,3 +60,7 @@ Astra autorizza una sola analisi esplorativa movimento–arretramento–ripresa,
 
 ## Mandato MOVE-001 — 17 ottobre 2026
 Astra approva la candidata semantica sperimentale e autorizza una applicazione descrittiva sui soli input già disponibili [2022-10-01,2025-01-01), DEV [2023-01-01,2025-01-01). Popolazione nuova e specifica, non riclassificazione OBS-002. Nessun nuovo download, lettura2025/2026, trade o rendimento. Prima dell'applicazione pubblicare codice/config/test con regole e conteggi fissi in MOVE-001.md §§11–12; esempi cronologici predeterminati. Le esposizioni precedenti DEV restano tali: nessuna validazione indipendente. Questo registra autorizzazione, non applicazione già eseguita o risultato favorevole.
+
+
+## Applicazione MOVE-001 e chiusura — 17 ottobre 2026
+L'esecutore dichiara applicazione DEV dal gatefd09d35,27file trade1m locali2022-10…2024-12, prefisso ottobre–dicembre2022 e sviluppo2023–2024, senza acquisizioni o2025/2026. Output locale MOVE-001-v1.0.1-e1.0.0-3b76888642-30e67d8fe2; ripetizione identica,631nascite DEV. Nessun trade, rendimento o esito24h. Correzioni R1 non ricalcolano il ciclo né rigenerano i pacchetti reali. Director accetta dopo review codice/test mirati, non ricalcolo indipendente del DEV. Report MOVE-001-results.md §11; esposizione esplorativa conservata, nessuna validazione indipendente o studio successivo già autorizzato.

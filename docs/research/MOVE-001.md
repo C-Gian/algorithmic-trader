@@ -1,6 +1,6 @@
 # MOVE-001/v1 — Ciclo di vita del movimento di riferimento
 
-**Candidata semantica sperimentale approvata da Astra, 17 ottobre 2026. Contratto 1.0.1 completo per implementazione isolata e applicazione descrittiva DEV; non strategia approvata né efficacia dimostrata. Implementazione ancora da consegnare.**
+**Candidata semantica sperimentale approvata da Astra, 17 ottobre 2026. Contratto 1.0.1 completo per implementazione isolata e applicazione descrittiva DEV; non strategia approvata né efficacia dimostrata. Implementazione e macrofase descrittiva chiuse dal Director dopo R1 su2cdda77: esiti, verifiche e limiti in MOVE-001-results.md §11. Nessuna nuova strategia autorizzata.**
 Base di lettura:505801131efd9f2cd6b9f8e92363c077c8b0bca9. Mandato Astra: definire quale situazione si riconosce mentre accade, senza estrazione, esclusione dei1728casi o modifica CAND-001. Non è una strategia, un segnale di esecuzione o una regola validata.
 
 ## 1. Significato e fonti

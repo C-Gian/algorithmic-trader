@@ -1,9 +1,9 @@
 # MOVE-001/R1 — Robustezza del lettore e ultima chiusura
 
-**Stato: DELIVERED** (Claude Code, 17 ottobre 2026; in attesa di review del Director, non accettato). Incarico READY del Director, 17 ottobre 2026. Base da contenere nel checkout: 1235e64f03026b4b728c4c1ddc0422d0e5ea982a più il commit di questo incarico. Pubblicazione commit/push pertinenti autorizzata; sincronizzazione del PC a cura Gian, nessun pull/fetch/force.
+**Stato: ACCEPTED — Director, 17 ottobre 2026.** MOVE-001 e R1 chiusi nel perimetro autorizzato; nessun nuovo incarico esecutivo. Incarico READY del Director, 17 ottobre 2026. Base da contenere nel checkout: 1235e64f03026b4b728c4c1ddc0422d0e5ea982a più il commit di questo incarico. Pubblicazione commit/push pertinenti autorizzata; sincronizzazione del PC a cura Gian, nessun pull/fetch/force.
 
 ## Esito della review
-Consegna MOVE-001 non ancora accettata. Report originale e review Director in docs/research/MOVE-001-results.md §§1–9. Il Director ha rieseguito19 test Python,60 del lettore e build nella copia isolata, poi riprodotto due difetti sintetici. Nessun ricalcolo reale indipendente. Le nove scelte dichiarate sono ammesse con le qualificazioni §9.2; non cambiare semantica/convenzioni in funzione dei conteggi.
+Alla review della consegna1235e64, MOVE-001 richiedeva le correzioni sotto. Report originale e review Director in docs/research/MOVE-001-results.md §§1–9. Il Director ha rieseguito19 test Python,60 del lettore e build nella copia isolata, poi riprodotto due difetti sintetici. Nessun ricalcolo reale indipendente. Le nove scelte dichiarate sono ammesse con le qualificazioni §9.2; non cambiare semantica/convenzioni in funzione dei conteggi.
 
 ## R1-A — Importazione MOVE-001 prima della sostituzione dello studio
 Riprodurre sul codice consegnato:
@@ -38,3 +38,6 @@ Checkout su `e3c77f8`, senza pull/fetch. Codice e test nel commit `fix(MOVE-001/
 - **R1-B.** Generatore `move001.consult/2`: ultima origine fino alla fine copertura inclusa. Solo per MOVE001_CASE l'origine può coincidere con `periods.end`; minuti [inputStart, end). OBS-001 e OBS-002 invariati.
 - **Impatto.** Semantica 1.0.1, config, ciclo e output reali invariati (`outputs.json` `10dd7fc6…03d4`). I 6 pacchetti reali MOVE-001 e i 10 OBS-002 sono compatibili e non rigenerati; nessun caso reale è toccato da R1-B.
 - **Verifiche.** 22 test Python MOVE-001, 90 test del lettore, typecheck e build; prova integrata nel browser sul caso sintetico di fine copertura, su un pacchetto reale e sul rifiuto dal selettore. `verify.py` qualificato come controllo aggiuntivo dell'autore.
+
+## Chiusura Director — 17 ottobre 2026
+Review finale sulla base2cdda77:22 test Python,90 del lettore e typecheck/build superati nella copia isolata; fixture finale ricostruita identica al blob pubblicato. R1-A e R1-B chiuse. Nessun ricalcolo indipendente dei dati/output reali e nessuna accettazione d'uso Gian inventata. Report §11 registra giudizio di rappresentabilità e limiti. Consegna ad Astra; nessuna nuova strategia, studio, modifica semantica o incarico implicito.

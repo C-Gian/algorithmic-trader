@@ -2,15 +2,14 @@
 
 Aggiornato: 17 ottobre 2026. Responsabile: Director.
 
-## Attivo — MOVE-001/R1 DELIVERED (in attesa di review Director)
-MOVE-001 consegnato a1235e64: gate prima dei dati, applicazione descrittiva DEV e casi. Review Director:19 test Python,60 del lettore e build superati nella copia isolata; nessun ricalcolo dei dati reali. Riprodotti due difetti sintetici: ledger MOVE-001 incompleto/contraddittorio accettato, ultima chiusura non selezionabile per un riferimento aperto a fine copertura.
+## Chiuso — MOVE-001 e R1 ACCEPTED
+Review finale su2cdda77: il Director ha rieseguito22 test Python MOVE,90 del lettore e typecheck/build nella copia isolata; fixture finale ricostruita identica al blob pubblicato. Validazione del ledger e ultima chiusura corrette. Report docs/research/MOVE-001-results.md §11. Nessun ricalcolo indipendente dell'intero DEV o degli hash/output locali, nessuna prova positiva Gian registrata per MOVE.
 
-Incarico R1 limitato a validazione del nuovo ledger e consultazione dell'ultima chiusura. Semantica/config e output numerici immutati; nessuna nuova elaborazione DEV o acquisizione. Consegna originale non ancora accettata. Review in docs/research/MOVE-001-results.md §9. R1 consegnato da Claude il 17 ottobre (report §10): validazione completa dei fatti MOVE-001 prima di sostituire lo studio, ultima chiusura selezionabile (generatore `move001.consult/2`), output reali e pacchetti invariati e compatibili. Prossimo: review e conclusione Director ad Astra, non nuova macrofase UI.
+## Conclusione
+Rappresentazione sperimentale concretamente utilizzabile per la specifica sequenza strutturale, non strategia o efficacia. Secondo l'esecutore:631 nascite DEV,600P1 noti,526utilizzabili;275completamenti,234perdite,122sostituzioni. Principale assente nel56% delle chiusure; circa44,6% delle chiusure occupate sono sospese, limite metodologico persistente.62strutture rifiutate per posto occupato e50per freschezza. Fatti conservati, non occasioni di profitto dimostrate.
 
-## Evidenza conservata
-Secondo l'esecutore:631 nascite DEV,600 P1 noti,526 utilizzabili;275 completamenti geometrici,234 perdite,122 sostituzioni.62 strutture rifiutate per posto occupato e50 per freschezza. I numeri non sono ricalcolati indipendentemente dal Director. Rappresentazione sperimentale specifica, nessuna efficacia o strategia approvata; sospensione persistente scelta del metodo, non inconoscibilità del mercato.
+Prossimo: consegna della chiusura ad Astra per il prossimo obiettivo. Nessun nuovo incarico Claude, estrazione o modifica automatica delle regole.
 
-OBS-002/R1 chiuso con limiti, nessuna riscrittura dei1728 casi. CAND-001 v1 negativa/non promossa e invariata; nessuna v2 giustificata, famiglia irrisolta. APP-001 chiuso.
-
-## Confini
-Solo pacchetti già registrati e sintetici per R1; niente prezzi nuovi/download/DEV run,2025 o2026. Vecchi studi INACTIVE. Nessun trade/PnL, ottimizzazione, nuovo esploratore o operatività reale. Checkout sincronizzato da Gian, niente pull/fetch/force.
+## Conservato e confini
+Nuova popolazione specifica, non riparazione OBS-002 o esclusione retrospettiva dei1728casi. CAND-001 v1 negativa/non promossa e invariata, nessuna v2 giustificata; famiglia irrisolta. APP-001 chiuso.
+Input MOVE già disponibili2022-10…2024-12; nessun2025/2026 aperto. Nessun download, trade/PnL, ottimizzazione o operatività reale. Vecchi studi INACTIVE. Checkout sincronizzato da Gian; niente pull/fetch/force.
