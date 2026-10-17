@@ -121,7 +121,9 @@ python3.12 -m unittest discover -s tests -p "test_cand001_*.py"   # test sinteti
 
 I dati restano fuori Git, in `C:\Projects\algorithmic-trader-data\CAND-001\`. Il file per l'app è:
 
-`C:\Projects\algorithmic-trader-data\CAND-001\runs\CAND-001-v1.0.0-e1.0.0-DEV-adaa94c502-aed2c4ef62\cand001-bundle.json`
+`C:\Projects\algorithmic-trader-data\CAND-001\runs\CAND-001-v1.0.0-e1.0.1-DEV-adaa94c502-aed2c4ef62\cand001-bundle.json`
+
+(motore 1.0.1, correzioni R1; il run precedente `…-e1.0.0-…` resta nella stessa cartella `runs` ma usa lo schema vecchio e l'app non lo apre più).
 
 **Nell'app.**
 1. Avvia la dashboard (`npm run dev` nella cartella `dashboard`).

@@ -6,7 +6,9 @@ Aggiornato: 17 ottobre 2026. Responsabile: Director.
 UI simulata conclusa con prova positiva Owner. OBS-001 ACCEPTED TECNICAMENTE a bf3280e; calcoli/tabelle verificati nella review precedente. Rimane il limite di comprensione Owner, nessuna accettazione d'uso inventata o nuova macrofase UI.
 
 ## Attivo
-**CAND-001/R1 READY**: review DEV su ee7282f conclusa con tre correzioni circoscritte, non ACCEPTED. Incarico completo in current_task.md.
+**CAND-001/R1 DELIVERED** (Claude Code, 17 ottobre; in attesa di review, non ACCEPTED): motore 1.0.1, candidato e config invariati. Le tre correzioni sono riprodotte prima e coperte da test dopo. Run DEV offline e1.0.1 (`b1411502…`): decisioni, richieste e 78 trade identici a e1.0.0, netto −210,59 invariato. Report con sezione «Correzioni R1». Dettagli nella consegna di current_task.md.
+
+Review DEV su ee7282f conclusa con tre correzioni circoscritte, non ACCEPTED.
 Director ha rieseguito 28 test Python CAND, 8 test UI backtest e typecheck/build: passati. Ulteriori riproduzioni mostrano:
 - funding vuoto certificato e buco segnalato ma ignorato nel calcolo, con costo mancante trattato come zero;
 - trade interrotto da lacuna escluso dai totali; apertura episodio irrisolto in errore;
