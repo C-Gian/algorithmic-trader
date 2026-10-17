@@ -1,6 +1,6 @@
 # OBS-002 — Prosecuzione ed esaurimento del tentativo di ripresa
 
-**Stato: IN_PROGRESS** (Claude Code, 17 ottobre 2026; incarico READY del Director, 17 ottobre 2026. Esecutore: Claude Code). Base main **9d5df7d3dc8aed9feda44b624e36dddd461f8590** più il commit di questo incarico. Checkout sincronizzato da Gian, nessun pull/fetch. Leggere AGENTS, STATE, PRODUCT-CONTEXT §31 e questo task; definizioni osservatore OBS-001/v1 e config/OBS-002-v1.json. Nessun nuovo cantiere preparatorio UI.
+**Stato: DELIVERED** (Claude Code, 17 ottobre 2026; in attesa di review del Director, non accettato). Incarico READY del Director, 17 ottobre 2026; esecutore Claude Code. Base main **9d5df7d3dc8aed9feda44b624e36dddd461f8590** più il commit di questo incarico. Checkout sincronizzato da Gian, nessun pull/fetch. Leggere AGENTS, STATE, PRODUCT-CONTEXT §31 e questo task; definizioni osservatore OBS-001/v1 e config/OBS-002-v1.json. Nessun nuovo cantiere preparatorio UI.
 
 ## 1. Domanda, responsabilità e confini
 Astra accetta il ciclo CAND-001 senza v2 e autorizza una sola analisi esplorativa: dopo movimento e arretramento, quali differenze già osservabili al primo tentativo di ripresa aiutano a distinguere prosecuzione da esaurimento? Le informazioni possono contare insieme anche quando presenti in esiti opposti. Nessun requisito di efficacia autonoma di ciascuna famiglia. Il Director non ha escluso ogni possibile modifica futura di CAND-001.
@@ -87,3 +87,32 @@ Il Director sceglierà al massimo una ipotesi concreta «in questa situazione, q
 
 ## Spazio dell'esecutore
 **Avanzamento 1 — convenzioni eseguibili e test pubblicati prima di ogni esito reale.** Checkout verificato su `6f1743d` senza pull/fetch. Pacchetto `src/obs002/` (config, dati con mesi espliciti 2022-10…2024-12 verificati sul manifest CAND-001, popolazione causale e snapshot, seguito 24h, tabelle, esempi, pacchetti di consultazione) e 15 test sintetici in `tests/test_obs002.py`. Nessun dato reale OBS-002 ancora elaborato.
+
+**Consegna OBS-002 — Claude Code, 17 ottobre 2026.** Commit:
+- `36f6153`: convenzioni eseguibili e 15 test sintetici, prima di ogni dato reale;
+- `118f706`: hash di popolazione e identità registrati prima degli esiti;
+- `7cad393`: riscontro con il seguito OBS-001, tabelle e lettore dei casi;
+- commit di questa consegna: report, schermate, stato.
+
+File:
+- nuovi: `src/obs002/*`, `tests/obs002_helpers.py`, `tests/test_obs002.py`, `docs/research/OBS-002-results.md`, `docs/research/OBS-002-screens/`, fixture sintetica e `Obs002Case.test.tsx`;
+- modificati, adattamento tecnico del lettore storico: `dashboard/src/contract/historical.ts`, `historical/loadBundle.ts`, `historical/study.ts`, `ui/historical/{HistHeader,HistoricalEnvironment,OpenStudy,OutcomeCard,StudySummaryView}.tsx`;
+- CAND-001, osservatore OBS-001 e config invariati.
+
+Comportamento:
+- `python3.12 -m obs002 population` poi `outcomes` sui soli 27 ZIP 2022-10…2024-12 verificati;
+- popolazione causale con 4.372 primi tentativi DEV e 2.210 ripetuti dipendenti;
+- tabella unica verso × profilo, periodi e mesi, 10 esempi (vuote solo le 2 categorie UNAVAILABLE);
+- un pacchetto di consultazione per caso, aperto dallo Studio storico.
+
+Output in `C:\Projectslgorithmic-trader-data\OBS-002uns\OBS-002-v1.0.0-e1.0.0-3b76888642-b11bad4557\`.
+
+Controlli effettivi:
+- hash della popolazione riverificato prima degli esiti;
+- riconciliazioni di tutte le partizioni;
+- riscontro di tutti i 6.582 esiti con il seguito OBS-001 esistente;
+- due esecuzioni con output identici byte per byte, l'ultima da commit pulito;
+- 15 test Python, 24 test del lettore (4 nuovi), typecheck e build;
+- prova visiva su 2 pacchetti reali. Nessuna suite generale o CI.
+
+Limiti: elenco in report §8; punti tecnici da confermare in §7. Da sapere per leggere la popolazione: circa il 40% dei primi tentativi ha un arretramento oltre P0, conseguenza della coesistenza dei versi preregistrata. Nessuna ipotesi decisionale formulata o implementata.

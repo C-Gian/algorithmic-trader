@@ -2,10 +2,10 @@
 
 Aggiornato: 17 ottobre 2026. Responsabile: Director.
 
-## Attivo — OBS-002 READY
+## Attivo — OBS-002 DELIVERED (in attesa di review Director)
 Astra accoglie CAND-001/D1 senza v2 e autorizza un'unica analisi esplorativa: dopo movimento/arretramento, quali informazioni congiunte note al primo tentativo distinguono prosecuzione ed esaurimento? Non basta la presenza di una caratteristica in casi positivi e negativi per scartarla; occorre formulare il collegamento con le altre informazioni.
 
-Definizioni e incarico in current_task.md, convenzioni eseguibili config/OBS-002-v1.json già registrate dal Director prima dell'estrazione: contesti da pivot confermati, rimozione dei vincoli operativi CAND, tentativi collegati per movimento, primo tentativo principale e ripetizioni conservate, unico seguito24h. Unica rappresentazione congiunta a4contesti struttura/SMA, sei famiglie nello stesso record; nessuna ricerca di coppie/triple o soglie. Riferimenti descrittivi ±A per ordine degli eventi, non stop/target o profitto. Nessuna estrazione OBS-002 ancora dichiarata.
+Definizioni e incarico in current_task.md, convenzioni eseguibili config/OBS-002-v1.json già registrate dal Director prima dell'estrazione: contesti da pivot confermati, rimozione dei vincoli operativi CAND, tentativi collegati per movimento, primo tentativo principale e ripetizioni conservate, unico seguito24h. Unica rappresentazione congiunta a4contesti struttura/SMA, sei famiglie nello stesso record; nessuna ricerca di coppie/triple o soglie. Riferimenti descrittivi ±A per ordine degli eventi, non stop/target o profitto. Estrazione consegnata da Claude il 17 ottobre: 4.372 primi tentativi DEV (2.210 ripetuti dipendenti), popolazione registrata prima degli esiti, riscontro completo con il seguito OBS-001, 10 esempi consultabili nello Studio storico come pacchetti OBS-002. Report `docs/research/OBS-002-results.md`; prossimo passo: interpretazione del Director, al massimo un'ipotesi oppure un limite preciso.
 
 Input esistenti ottobre2022–dicembre2024, origini solo DEV2023–2024. Nessun download,2025,2026 o motore economico. Osservatore OBS-001 invariato; CAND-001 e risultati immutabili. Claude implementa/estrae e consegna, il Director formula al massimo un'ipotesi concreta con controesempi/verifica futura oppure un limite informativo preciso. Nessuna ipotesi implementata automaticamente.
 
