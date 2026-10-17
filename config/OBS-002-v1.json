@@ -1,0 +1,120 @@
+{
+  "id": "OBS-002/v1",
+  "version": "1.0.0",
+  "purpose": "Studio esplorativo movimento-arretramento-ripresa; nessuna strategia o valutazione economica",
+  "observationDefinitions": {
+    "id": "OBS-001/v1",
+    "hash": "3c4eb884d0b6752bfb31e7d9ae159a1414d75cadc90f9abcc9379d5825002387",
+    "unchanged": true
+  },
+  "source": {
+    "name": "Binance Vision",
+    "symbol": "BTCUSDT",
+    "segment": "USDS-M futures (um)",
+    "contractType": "PERPETUAL",
+    "kind": "TRADE_KLINES_1M",
+    "existingFilesOnly": true
+  },
+  "periods": {
+    "inputStart": "2022-10-01T00:00:00Z",
+    "studyStart": "2023-01-01T00:00:00Z",
+    "end": "2025-01-01T00:00:00Z"
+  },
+  "clock": {
+    "originMinutes": 45,
+    "horizonMinutes": 1440,
+    "horizonBars45m": 32
+  },
+  "population": {
+    "movementSource": "FIB_SEQUENCE APPEND/REPLACE, non-degenerate alternating pair, causal availability",
+    "activePerDirection": 1,
+    "retireOn": "new version of same direction, segment reset, or study end",
+    "groupKey": [
+      "direction",
+      "P0.candidateOpen"
+    ],
+    "versionKey": [
+      "direction",
+      "P0.candidateOpen",
+      "P1.candidateOpen",
+      "availableAt"
+    ],
+    "firstEligibleClose": "availableAt inclusive",
+    "minimumCounterClosesSinceP1": 1,
+    "repeatRearm": "new counter close strictly after preceding attempt of this group",
+    "trigger": "LONG Ck>Hprev and Ck>Ok; SHORT Ck<Lprev and Ck<Ok",
+    "primary": "ordinal 1 of movement group, origin within DEV; subsequent attempts retained and linked",
+    "stateBeforeStudy": "causal contexts and ordinals continued from initialization; no initialization origins in study"
+  },
+  "outcomes": {
+    "reference": "closed C45m at t",
+    "future": "trade minutes [t,t+1440min)",
+    "normalizer": "A45m(t), frozen",
+    "markerA": 1,
+    "markerUse": "symmetric descriptive displacement, never stop/target, no costs or fills",
+    "eventOrder": "first minute contacts; open outside a marker orders same-minute contacts, otherwise BOTH_UNORDERED",
+    "missing": "complete-window outcomes null; observed prefix explicitly partial",
+    "classes": [
+      "F_ONLY",
+      "A_ONLY",
+      "F_BEFORE_A",
+      "A_BEFORE_F",
+      "BOTH_UNORDERED",
+      "NEITHER"
+    ],
+    "missingFlags": [
+      "RIGHT_CENSORED",
+      "GAP",
+      "MISSING_A",
+      "ZERO_A"
+    ]
+  },
+  "jointContext": {
+    "inputs": [
+      "structure45m",
+      "direction*(SMA20-SMA50)",
+      "direction*SMA20_slope_lag4"
+    ],
+    "classes": [
+      "CONCORDANT",
+      "OPPOSITE",
+      "DISCORDANT",
+      "UNAVAILABLE"
+    ],
+    "concordant": "structure in direction, ordered SMA in direction, slope in direction (strict >0)",
+    "opposite": "structure opposite, ordered SMA opposite, slope opposite (strict <0)",
+    "discordant": "all required inputs available; every other combination, including zero or MIXED",
+    "unavailable": "one or more required inputs missing"
+  },
+  "families": {
+    "structure": "45m and last completed 1D",
+    "levels": "all causally available pivot/day levels and signed distances / A",
+    "averages": "SMA20/50, signed normalized distance/slope/position",
+    "volume": "existing relative volume ratio, no bins",
+    "volatility": "A and A/C; no bins",
+    "fibonacci": "actual current anchors/version/r/u and distances; direction and availability explicit"
+  },
+  "summaries": {
+    "main": "jointContext within each movement direction on primary attempts",
+    "secondary": "all linked attempts, labelled dependent, same fixed summaries",
+    "quantiles": [
+      0.1,
+      0.5,
+      0.9
+    ],
+    "method": "linear h=(n-1)*q",
+    "periods": [
+      "DEV",
+      "2023",
+      "2024",
+      "each DEV month"
+    ],
+    "noSearch": true
+  },
+  "examples": {
+    "rule": "current_task OBS-002 section 6, fixed before extraction",
+    "max": 13,
+    "order": "t then attemptId",
+    "emptyCategoriesDeclared": true
+  }
+}

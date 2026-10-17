@@ -2,18 +2,17 @@
 
 Aggiornato: 17 ottobre 2026. Responsabile: Director.
 
-## CAND-001/D1 ACCEPTED — ciclo concluso senza v2
-Consegna D1 a3b27b5d accettata dal Director: lettura report/estrazione/test e politica; 9 test diagnostici mirati rieseguiti in copia isolata, tutti passati. Nessun ricalcolo autonomo dei 27 ZIP o output reali: 78/87/814, netto −210,58825… e hash riconciliati restano evidenza dell'esecutore. Lista deterministica di 13 esempi pubblicata prima dei minuti; lettura anticipata del record del primo caso dichiarata come limite.
+## Attivo — OBS-002 READY
+Astra accoglie CAND-001/D1 senza v2 e autorizza un'unica analisi esplorativa: dopo movimento/arretramento, quali informazioni congiunte note al primo tentativo distinguono prosecuzione ed esaurimento? Non basta la presenza di una caratteristica in casi positivi e negativi per scartarla; occorre formulare il collegamento con le altre informazioni.
 
-Decisione metodologica e review in docs/research/CAND-001-diagnosis.md §9. **Nessuna revisione giustificata:** non individuata una condizione disponibile allora e sufficientemente motivata per cambiare entrata, mantenimento o uscita. Massimo futuro, mediana del seguito e saldo con stop aggiornato non identificano una regola alternativa. Non introdotti filtro MIXED, trigger più ampio, target vicino, pareggio o stop largo. Nessuna v2, nessun confronto inventato o ricerca di parametri. Interpretazioni t0/occupazione coerenti col disegno, non bug accertati.
+Definizioni e incarico in current_task.md, convenzioni eseguibili config/OBS-002-v1.json già registrate dal Director prima dell'estrazione: contesti da pivot confermati, rimozione dei vincoli operativi CAND, tentativi collegati per movimento, primo tentativo principale e ripetizioni conservate, unico seguito24h. Unica rappresentazione congiunta a4contesti struttura/SMA, sei famiglie nello stesso record; nessuna ricerca di coppie/triple o soglie. Riferimenti descrittivi ±A per ordine degli eventi, non stop/target o profitto. Nessuna estrazione OBS-002 ancora dichiarata.
 
-Misure campionate su chiusure 1m, riferimento d'uscita separato; «restituzione» differenza firmata, non profitto perso. Prima45m condizionata alle 67 operazioni detenute fino a quella chiusura, non tutte le 78. Drawdown della curva esistente con non realizzato. Precisazioni e limiti nel report, nessuna rielaborazione richiesta.
+Input esistenti ottobre2022–dicembre2024, origini solo DEV2023–2024. Nessun download,2025,2026 o motore economico. Osservatore OBS-001 invariato; CAND-001 e risultati immutabili. Claude implementa/estrae e consegna, il Director formula al massimo un'ipotesi concreta con controesempi/verifica futura oppure un limite informativo preciso. Nessuna ipotesi implementata automaticamente.
 
-Prossimo passo: relazione conclusiva ad Astra e scelta esplicita dell'eventuale prossima ipotesi. Nessun ulteriore incarico Claude, preparazione UI o nuova esecuzione in questo ciclo. Gian può vedere i casi nel DEV salvato, registro e dettagli esistenti, senza verificare formule.
+Consultazione prezzi/osservazioni/seguito con l'ambiente storico esistente; solo adattamenti tecnici indispensabili al formato/identità del pacchetto, nessun nuovo esploratore o cantiere UI. Test mirati e verifica pertinente, nessuna suite generale/CI o backtest per abitudine. Commit/push pertinenti autorizzati, checkout a cura di Gian.
 
-## Capacità e giudizi conservati
-APP-001 concluso e accettato da Astra sulla review riportata. Avvio/progresso/annullamento locale, salvati, registro e navigazione; riscontro Gian: «ok, ora mi sembra molto meglio!», non verifica analitica di ogni passo.
-CAND-001/v1 invariata, negativa e non promossa: DEV 78 operazioni, netto −210,59 USDT su dimensione convenzionale 1.000 USDT per trade, non conto personale. Efficacia generale della famiglia irrisolta. Il confronto 2025 già esposto resta archiviato, non usato nel nuovo ciclo.
+## Conservato
+CAND-001/D1 accettato a9d5df7d, chiusura accolta da Astra sulla review riportata. 78 operazioni DEV, netto−210,59USDT su1000USDT convenzionali ciascuna, non conto personale. Nessuna revisione giustificata in D1, non esclusione di tutta la famiglia. Review Director9test diagnostici e codice/report; estrazione reale/riconciliazioni evidenza dell'esecutore. V1 negativa e non promossa. APP-001 concluso, riscontro Gian positivo sul miglioramento d'uso.
 
-## Confini
-Nessuna revisione metodologica eseguita. Config v1 aed2c4ef627617d73972778097bbab5fb702ab5064ce9e6eb68ded2170ce4edf invariata; dati/costi/rischio/esecuzione invariati. Nessun download o uso 2025 in D1; 2026 protetto, vecchi studi INACTIVE. Nessun conto/exchange/ordine o stack Owner. Raw/bundle/output estesi fuori Git. Nuovi passi non autorizzati per implicazione dalla chiusura.
+## Confini e chiusura
+2026protetto,2025escluso dal nuovo studio,vecchi studiINACTIVE; nessun exchange/conto/ordine o stackOwner. Raw/outputestesi fuoriGit. Un solo studio, al termine relazione ad Astra. Una scoperta sarà esplorativa su DEV già esposto, non efficacia; implementazione richiede decisione successiva. Nessun nuovo indicatore, classificatore complesso, fitting o strategia in OBS-002.

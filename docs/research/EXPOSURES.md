@@ -51,3 +51,8 @@ Elaborato con motore 1.0.2 (commit pre-esiti `078d9ed`), candidato 1.0.0 invaria
 ## Nuovo mandato diagnostico/metodologico CAND-001 — 17 ottobre 2026
 
 Dopo APP-001 Astra autorizza diagnosi della politica v1 ed eventuale unica revisione/confronto sul DEV [2023-01-01,2025-01-01), con prefisso osservativo dal 2022-10-01 e file già conservati. Nessuna nuova acquisizione. Le precedenti esposizioni DEV e 2025 non si cancellano: non è una prova indipendente. Nel nuovo ciclo non leggere/ricalcolare il 2025 né usarne gli esiti per scegliere la revisione; nessun 2026. Primo incarico D1: estrazione/riconciliazione e casi cronologici, senza strategia alternativa. È autorizzazione, non dichiarazione di esecuzione già svolta.
+
+
+## Mandato OBS-002 — 17 ottobre 2026
+
+Astra autorizza una sola analisi esplorativa movimento–arretramento–ripresa, popolazione più ampia dei trade CAND-001, input esistenti [2022-10-01,2025-01-01), origini DEV [2023-01-01,2025-01-01). Nessun nuovo download, lettura2025 o2026. Osservazioni OBS-001 già definite, non nuovi indicatori. Prima dell'estrazione fissate popolazione, contesti congiunti ed esiti24h in current_task.md e config/OBS-002-v1.json. Esplorazione su dati già esposti, non validazione indipendente; nessuna modifica CAND o implementazione automatica di un'ipotesi. Questo paragrafo registra autorizzazione, non esecuzione già avvenuta.
