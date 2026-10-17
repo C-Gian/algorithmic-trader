@@ -4,7 +4,7 @@ Nuovo progetto BTC di Gian: analisi continua, opportunità motivate e futura ges
 
 **Stato attuale:**
 - fondazione documentale e tre utilità Python isolate;
-- una dashboard locale con tre ambienti: la **simulazione locale** (UI-001/UI-002), lo **studio storico** OBS-001 su prezzi reali BTCUSDT perpetual di Binance Vision e il **backtest di sviluppo** del primo candidato CAND-001 (2023–2024, esecuzioni modellate).
+- una dashboard locale con tre ambienti: la **simulazione locale** (UI-001/UI-002), lo **studio storico** OBS-001 su prezzi reali BTCUSDT perpetual di Binance Vision e il **backtest di sviluppo** del primo candidato CAND-001 (sviluppo 2023–2024 e confronto aggiuntivo 2025, esecuzioni modellate).
 
 Non ci sono collegamenti exchange né ordini reali. Il candidato CAND-001 è uno studio di sviluppo, non una strategia validata. Nessuna operatività reale autorizzata.
 
@@ -107,7 +107,9 @@ Funziona davvero: acquisizione, controlli, osservazioni ed esiti su dati reali. 
 
 Primo candidato completo «movimento → reazione → tentativo di ripresa». Specifica in [docs/research/CAND-001-v1.md](docs/research/CAND-001-v1.md), configurazione congelata in [config/CAND-001-v1.json](config/CAND-001-v1.json), risultati e diagnosi in [docs/research/CAND-001-results.md](docs/research/CAND-001-results.md).
 
-Sono operazioni ipotetiche su prezzi storici 2023–2024, ciascuna da 1.000 USDT di nozionale: non sono un conto, né un'autorizzazione a operare. Il 2025 non è ancora elaborato.
+Sono operazioni ipotetiche su prezzi storici, ciascuna da 1.000 USDT di nozionale: non sono un conto, né un'autorizzazione a operare. Due risultati separati, entrambi negativi:
+- **sviluppo 2023–2024** (DEV): 78 operazioni, netto modellato −210,59 USDT;
+- **confronto aggiuntivo 2025**: 29 operazioni, netto −109,08 USDT. Il 2025 era già stato esaminato in studi precedenti: non è una validazione indipendente.
 
 **Comandi** (PowerShell, dalla radice del repository; serve la connessione solo la prima volta):
 
@@ -116,23 +118,25 @@ cd C:\Projects\algorithmic-trader
 $env:PYTHONPATH = "src"
 python3.12 -m cand001 all      # scarica i dati mancanti (verifica checksum) ed esegue il backtest 2023–2024
 python3.12 -m cand001 run      # rifà il backtest offline con i dati già scaricati (circa 25 secondi)
+python3.12 -m cand001 all --phase additional2025   # 2025: acquisisce solo i file mancanti e lo elabora
+python3.12 -m cand001 run --phase additional2025   # rifà il 2025 offline (circa 25 secondi, bundle identico)
 python3.12 -m unittest discover -s tests -p "test_cand001_*.py"   # test sintetici del candidato
 ```
 
-I dati restano fuori Git, in `C:\Projects\algorithmic-trader-data\CAND-001\`. Il file per l'app è:
+I dati restano fuori Git, in `C:\Projects\algorithmic-trader-data\CAND-001\` (il 2025 rilegge anche gli archivi già verificati di `...\OBS-001\raw`, senza modificarli). I file per l'app sono:
 
-`C:\Projects\algorithmic-trader-data\CAND-001\runs\CAND-001-v1.0.0-e1.0.1-DEV-adaa94c502-aed2c4ef62\cand001-bundle.json`
+- 2025: `C:\Projects\algorithmic-trader-data\CAND-001\runs\CAND-001-v1.0.0-e1.0.2-ADDITIONAL_2025-9324c5d179-aed2c4ef62\cand001-bundle.json`
+- 2023–2024: `C:\Projects\algorithmic-trader-data\CAND-001\runs\CAND-001-v1.0.0-e1.0.1-DEV-adaa94c502-aed2c4ef62\cand001-bundle.json`
 
-(motore 1.0.1, correzioni R1; il run precedente `…-e1.0.0-…` resta nella stessa cartella `runs` ma usa lo schema vecchio e l'app non lo apre più).
+Il run DEV più vecchio `…-e1.0.0-…` resta nella stessa cartella `runs`, ma usa lo schema vecchio e l'app non lo apre più.
 
-**Nell'app.**
-1. Avvia la dashboard (`npm run dev` nella cartella `dashboard`).
-2. In alto scegli **«Backtest di sviluppo»**, poi **«Apri backtest»**, e seleziona il file qui sopra.
-3. Si apre la pagina dei risultati.
-4. Premi **«Prima operazione»**: vedi che cosa il programma ha riconosciuto, la reazione che ha atteso e l'ingresso che ha chiesto, con le sole informazioni di quel momento.
-5. **«Mostra seguito modellato»** aggiunge ingresso, protezione, uscita e costi, marcati come a posteriori.
+**Nell'app (prova con il 2025).**
+1. Avvia la dashboard (`npm run dev` nella cartella `dashboard`). In alto scegli **«Backtest di sviluppo»**, poi **«Apri backtest»**, e seleziona il file 2025 qui sopra. Il titolo dice «confronto aggiuntivo 2025».
+2. Premi **«Prima operazione»** (5 gennaio 2025). Leggi il movimento riconosciuto, la reazione attesa e le condizioni dell'ingresso, con le sole informazioni di quel momento.
+3. **«Mostra seguito modellato»** aggiunge ingresso, uscita e costi, marcati come a posteriori.
+4. Torna ai risultati e apri **«Primo caso negativo»** (qui coincide con la prima operazione) e **«Prima astensione»** (2 gennaio 2025: reazione invalidata).
 
-Gli altri pulsanti aprono il primo caso negativo, la prima astensione e la prima protezione aggiornata. «Registro operazioni» elenca tutte le 78 operazioni.
+«Prima protezione aggiornata» mostra una protezione alzata; «Registro operazioni» elenca tutte le 29 operazioni del 2025. Con «Apri altro backtest» si passa al file 2023–2024 (78 operazioni).
 
 ## Come lavoriamo
 

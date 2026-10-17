@@ -36,3 +36,13 @@ Autorizzazione non equivale a dato già acquisito: l'esecutore registrerà manif
 Dichiarazione dell'esecutore: acquisiti il17ottobre2026,07:29–07:31UTC,27archivi trade ottobre2022–dicembre2024,24funding e24mark2023–2024; checksum verificati,1.185.120minuti negoziati validi. Elaborati DEV2023–2024:78trade/87call, risultati e diagnosi esaminati. I sette archivi OBS2025 non letti in DEV; nessun nuovo download o esito economico2025 in questa fase.
 
 Director: lettura report/codice, test sintetici e UI indipendenti; non ricalcolo autonomo dei75archivi o del ledger reale in questa review. Risultati negativi DEV ormai esposti e usati per la decisione di mantenerev1 senza revisione metodologica. R1 corregge qualità funding, percorsi irrisolti e prezzo visualizzato; non cambia soglie. Copertura dichiarata e limiti nel report CAND-001-results.md; raw/manifest/bundle restano locali fuoriGit.
+
+## Esposizione effettiva CAND-001 ADDITIONAL_2025 — consegna esecutore, 17 ottobre 2026
+
+Dichiarazione dell'esecutore (Claude Code), da rivedere dal Director.
+- Acquisiti il 17 ottobre 2026, 08:35–08:36 UTC, solo i 29 archivi mancanti: trade gennaio–maggio 2025, funding e mark 2025. Checksum del fornitore verificati.
+- Riusati senza nuove richieste i 27 trade CAND ottobre 2022–dicembre 2024 e, letti dove sono, i 7 trade OBS-001 giugno–dicembre 2025, con SHA256 uguale ai manifest.
+- Input osservativo letto [2022-10-01, 2026-01-01): 1.710.720 minuti validi su 1.710.720. Funding 2025: 1.095 eventi, certificato. Mark: 1.094 punti su 1.095.
+- Nessuna lettura o richiesta di dati 2026, nessun tail.
+
+Elaborato con motore 1.0.2 (commit pre-esiti `078d9ed`), candidato 1.0.0 invariato: confronto aggiuntivo [2025-01-01, 2026-01-01) da FLAT. Esiti 2025 ora esposti: 29 operazioni modellate e 31 call, netto −109,08 USDT su N0 = 1.000 USDT; dettagli in `CAND-001-results.md`. Nessuna iterazione metodologica dopo la lettura. Il 2025 resta un periodo già esposto e non è utilizzabile come validazione indipendente per candidati futuri. Raw, manifest e bundle sono locali, fuori Git.

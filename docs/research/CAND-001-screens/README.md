@@ -1,9 +1,13 @@
-# Immagini CAND-001 (fase DEV)
+# Immagini CAND-001 (DEV e confronto 2025)
 
 Screenshot della dashboard (1366 px) sul run `CAND-001-v1.0.0-e1.0.0-DEV-adaa94c502-aed2c4ef62`:
 - **pagina dei risultati 2023–2024**;
 - **primo episodio al momento della decisione** (solo informazioni note allora);
 - **stesso episodio con il seguito modellato** visibile a posteriori.
+
+Sul run `CAND-001-v1.0.0-e1.0.2-ADDITIONAL_2025-9324c5d179-aed2c4ef62` (confronto aggiuntivo 2025, già esposto):
+- `cand-2025-01-risultati-1366.png`: **pagina dei risultati 2025**;
+- `cand-2025-03-episodio-seguito-1366.png`: **prima operazione 2025 con il seguito modellato**.
 
 Sono derivati di dati Binance Vision. **Licenza CC BY-NC-SA 4.0** (https://creativecommons.org/licenses/by-nc-sa/4.0/), solo per queste immagini.
 - Attribuzione: Fonte: Binance Vision (https://data.binance.vision).

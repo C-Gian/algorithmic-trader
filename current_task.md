@@ -1,6 +1,6 @@
 # Incarico corrente — CAND-001, confronto aggiuntivo 2025 e consegna della macrofase
 
-**Stato: READY.** Director, 17 ottobre 2026.
+**Stato: DELIVERED** (Claude Code, 17 ottobre 2026; assegnato READY dal Director lo stesso giorno). Consegna nello «Spazio dell'esecutore».
 Esecutore: Claude Code. Base tecnica accettata: **3ae7b7529f26f7aef94c9de207ce41df342590d1**, più il commit di questo incarico.
 Checkout sincronizzato da Gian; nessun pull/fetch dell'esecutore, neppure dry-run.
 
@@ -112,4 +112,73 @@ Esclusioni ferme:2026protetto, studi vecchiINACTIVE, conto/chiavi/ordini esterni
 
 ## Spazio dell'esecutore
 
-Da compilare: avanzamento, acquisizione/riuso, run, risultati, prove, limiti e consegna.
+**Stato: DELIVERED** (Claude Code, 17 ottobre 2026). Non ACCEPTED: in attesa di review del Director. La prova d'uso di Gian non è stata svolta né registrata.
+
+### Commit
+- `078d9ed` — **supporto pre-esiti** (motore 1.0.2), pubblicato prima di qualunque acquisizione o esito 2025. Candidato 1.0.0 e config `aed2c4ef627617d73972778097bbab5fb702ab5064ce9e6eb68ded2170ce4edf` invariati; nessuna modifica del JSON.
+  - `data.py`: piano degli input in tre insiemi: osservare 39 mesi dal 2022-10; riusare 7 mesi OBS, elencati in `reuseObsTradeMonths` della config; acquisire 5 trade + 12 funding + 12 mark.
+  - Acquisizione senza rete per i file già verificati, con voci di manifest invariate; manifest separato `reuse-trade-obs.json`.
+  - `load_trade` costruisce lo store dal 2022-10-01 in ogni fase.
+  - `cli.py`: tolto il blocco incondizionato di ADDITIONAL_2025; statistiche del prefisso per ogni fase.
+  - App: bundle 2025 etichettato «confronto aggiuntivo 2025 · già esposto, non validazione indipendente»; un anno uguale alla finestra non è duplicato.
+- Commit docs di questa consegna: report, README, immagini, EXPOSURES, contesto funzionale, STATE, task.
+- Cambiamento di comportamento dichiarato: anche per il DEV, `acquire` non richiede più il .CHECKSUM al fornitore per file locali già verificati contro il checksum registrato.
+
+### Acquisizione e riuso (17 ottobre 2026, 08:35–08:36 UTC)
+- Comando: `python3.12 -m cand001 acquire --phase additional2025`.
+- Esito: trade 27 VERIFIED_LOCAL + 5 DOWNLOADED; funding 12 DOWNLOADED; mark 12 DOWNLOADED; 7 OBS riusati. **29 archivi nuovi, nessun trade riscaricato.**
+- SHA256 dei 7 ZIP OBS identici prima e dopo; voci DEV dei manifest di acquisizione identiche prima e dopo.
+- Controllo: 1.710.720 minuti validi su 1.710.720, nessuna anomalia; prefisso 1.185.120.
+- Funding 2025: 1.095 eventi, 8 h, jitter ≤ 16 ms, certificato.
+- Mark: 1.094 su 1.095. Manca il solo punto 2025-01-01 00:00, irrilevante perché la finestra parte FLAT.
+- Manifest in `C:\Projects\algorithmic-trader-data\CAND-001\manifests\`: `acquisition-*.json`, `reuse-trade-obs.json`, `input-ADDITIONAL_2025.json`.
+
+### Run
+- `python3.12 -m cand001 run --phase additional2025` dal commit pulito `078d9ed`.
+- Run `CAND-001-v1.0.0-e1.0.2-ADDITIONAL_2025-9324c5d179-aed2c4ef62`.
+  - Input hash `9324c5d1795fc0a43eccf1c929f50773b1092b6c653f4627008249e0599731bb`.
+  - Bundle 4,6 MB, SHA256 `7c6ff10e2051c2576c9fd6ee790a7952d22ee22937a3e69e8dde482abce3a721`.
+  - Tempi: 22,9 s (controllo 18,7, backtest 2,8); picco 709 MB.
+- Rieseguito offline subito dopo: bundle identico, nessuna sovrascrittura. Run DEV e1.0.0/e1.0.1 intatti.
+
+### Risultati 2025 (dichiarati dall'esecutore)
+- Copertura completa, nessuna operazione irrisolta, nessun costo mancante.
+- 461 episodi, 31 call, 2 rifiuti al prezzo, 29 operazioni (13 LONG, 16 SHORT).
+- Uscite: 22 stop, 3 target, 4 struttura.
+- Netto −109,08 USDT su N0 = 1.000: riferimenti −62,54, slippage −17,41, fee −29,01, funding −0,12. Stress −178,71; drawdown −113,99.
+- Mesi: 10 negativi, 1 positivo, 1 senza operazioni.
+- Raccomandazione nel report:
+  - non promuovere v1;
+  - conservare l'evidenza negativa, senza varianti scelte sul 2025;
+  - non scartare l'intera famiglia;
+  - eventuale seguito solo con nuovo disegno preregistrato e dati non esposti con mandato specifico.
+
+### Verifiche svolte (mirate)
+- Python: `test_cand001_*.py` 45/45. I 9 nuovi test (`test_cand001_additional2025.py`) sul codice precedente danno 5 errori: piano, acquisizione e caricamento non esistevano. I 4 test sul confine e sulla partenza FLAT documentano proprietà già vere dell'osservatore e del motore.
+- DEV ricalcolato in memoria con 1.0.2: bundle uguale a e1.0.1 salvo versione del motore e ID del run, input hash uguale. Nessun run scritto.
+- Dati reali: osservazioni dello store 2025 e dello store DEV identiche sul tratto comune (26.336 barre 45m, 823 1D, 20.695 eventi). Alla prima barra 2025, A, SMA20 e SMA50 sono presenti.
+- Riscontro separato **scritto da me** (stesso script del DEV, esteso alla cartella OBS): 31 call e 29 operazioni ricalcolate dai minuti grezzi, 0 differenze.
+  - Perimetro: non cerca call mancanti fra le astensioni, non ricalcola le osservazioni e non rilegge i file funding.
+  - Non è una verifica indipendente del Director.
+- UI: `npx vitest run src/ui/backtest` 15/15, compreso il nuovo `Backtest2025.test.tsx`; `npx tsc -b` e `npm run build` riusciti. Nessuna suite generale.
+- Browser (Chrome headless su mia `vite preview` 127.0.0.1:4173, poi chiusa; vite dell'Owner PID 10872 non toccato).
+  - Bundle 2025 aperto in 0,11 s; titolo «confronto aggiuntivo 2025» con badge «2025 GIÀ ESPOSTO · NON VALIDAZIONE INDIPENDENTE»; una sola colonna 2025.
+  - 12 mesi, novembre «nessuna operazione»; cinque pulsanti presenti, ciascuno apre l'episodio con seguito su richiesta. Registro 29 righe, 2 richieste non eseguite.
+  - R1-C al momento d'ingresso (t+60s) e in 1D: prezzo «non corrente».
+  - Il bundle DEV e1.0.1 si apre ancora come «backtest di sviluppo».
+  - 0 errori di console, 0 richieste esterne.
+
+### Per la prova di Gian
+File: `C:\Projects\algorithmic-trader-data\CAND-001\runs\CAND-001-v1.0.0-e1.0.2-ADDITIONAL_2025-9324c5d179-aed2c4ef62\cand001-bundle.json`. Passi brevi nel README, sezione CAND-001:
+1. «Backtest di sviluppo», poi «Apri backtest»;
+2. «Prima operazione»;
+3. «Mostra seguito modellato»;
+4. «Primo caso negativo» e «Prima astensione».
+
+### Limiti
+- Il 2025 è già esposto, non è una validazione indipendente; 29 operazioni sono un campione piccolo.
+- Esecuzione modellata, costi assunti, funding con proxy mark 1m.
+- Le verifiche sui dati reali sono dell'esecutore.
+- Difetto a 390 px invariato, fuori perimetro.
+- I bundle /1 restano non apribili.
+- Nessun dato 2026 letto o richiesto.

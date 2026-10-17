@@ -10,7 +10,9 @@ Review Director:36test Python CAND,14test UI Backtest/BacktestR1 e typecheck/bui
 Confronto DEV offline dell'esecutore:87richieste/78trade e numeri invariati. Non è un ricalcolo autonomo Director dei75archivi/78trade, né una sua prova browser sui dati reali. Formato corrente /2; vecchio /1 conservato ma non apribile. Difetto a390px dichiarato, fuori perimetro desktop. Suite complete eseguite dall'esecutore oltre incarico: non ripetere.
 
 ## Checkpoint e incarico attivo
-**CAND-001 — confronto ADDITIONAL_2025 READY**, incarico completo in current_task.md.
+**CAND-001 — confronto ADDITIONAL_2025 DELIVERED** (Claude Code, 17 ottobre; in attesa di review, non ACCEPTED). Consegna in current_task.md.
+Esecutore: supporto 2025 (motore 1.0.2) pubblicato prima degli esiti in `078d9ed`. Acquisiti solo 29 archivi, riusati 27 trade CAND e 7 OBS. Run 2025 `7c6ff10e…` riproducibile.
+Esito dichiarato: 29 operazioni, netto −109,08, riferimenti −62,54, stress −178,71. Raccomandazione: non promuovere v1 e conservare l'evidenza negativa, senza scartare l'intera famiglia. Prova Gian non ancora svolta.
 Director mantiene candidato1.0.0 senza revisione metodologica. Config SHA256 aed2c4ef627617d73972778097bbab5fb702ab5064ce9e6eb68ded2170ce4edf verificato invariato. Base tecnica1.0.1 accettata; patch tecnica per supporto2025/prefisso ammessa prima degli esiti, senza cambiare convenzioni.
 
 Il checkpoint Director prima del2025 è soddisfatto. L'intero seguito è già autorizzato daAstra: supporto, soli dati mancanti, elaborazione, report finale e app. Nessun nuovo permesso ordinario; nessuna iterazione metodologica su2025 già esposto, NON validazione indipendente.
