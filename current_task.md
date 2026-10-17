@@ -1,6 +1,6 @@
 # CAND-001/D1 — Diagnosi della politica v1 e ciclo metodologico
 
-**Stato: READY.** Director, 17 ottobre 2026. Esecutore: Claude Code. Base main **63f2e429f0496ddc1f26c3de0cf486ca21d573aa** più il commit di questo incarico; sincronizzazione del checkout a cura di Gian. Leggere AGENTS, STATE, PRODUCT-CONTEXT §31, specifica CAND-001-v1.md e questo task. Nessun pull/fetch, anche dry-run.
+**Stato: IN_PROGRESS** (Claude Code, 17 ottobre 2026; incarico READY del Director)., 17 ottobre 2026. Esecutore: Claude Code. Base main **63f2e429f0496ddc1f26c3de0cf486ca21d573aa** più il commit di questo incarico; sincronizzazione del checkout a cura di Gian. Leggere AGENTS, STATE, PRODUCT-CONTEXT §31, specifica CAND-001-v1.md e questo task. Nessun pull/fetch, anche dry-run.
 
 ## Mandato e responsabilità
 Astra accetta la chiusura APP-001 e autorizza l'intero ciclo: diagnosi v1 DEV, al massimo una revisione motivata nella stessa famiglia, confronto sull'intero DEV e consultazione nella stessa app. Nessun altro lavoro preparatorio UI. Chiusura possibile anche con nessuna revisione giustificata, indicando precisamente quale decisione non è sostenibile e quale informazione manca.
@@ -69,4 +69,4 @@ Pubblicazione commit/push main autorizzata dei soli lavori pertinenti, senza for
 Il Director farà review delle evidenze e deciderà al massimo un problema modificabile. Prima di qualsiasi esito v2 registrerà problema, nuova decisione causale, motivazione, svantaggi/controesempi e risultato che indebolirebbe la spiegazione. Confronto eventuale su tutto DEV a dati/costi/dimensionamento/esecuzione invariati, includendo operazioni aggiunte/eliminate/spostate e concentrazione/drawdown. Nessuna iterazione su 2025; 2026 protetto. Una revisione al massimo, nessuna ricerca combinatoria. Se non giustificata, chiusura motivata senza implementarla. Nessuna nuova autorizzazione ordinaria richiesta a Gian/Astra tra questi microstep; escalation solo per cambi sostanziali indicati dal mandato.
 
 ## Spazio dell'esecutore
-Da compilare durante esecuzione/consegna. Nessun lavoro D1 ancora dichiarato svolto.
+**Avanzamento 1 — piano ed esempi pubblicati prima dei percorsi.** Checkout verificato su `12c195b` senza pull/fetch. Bundle DEV preferito presente e verificato (run `CAND-001-v1.0.0-e1.0.1-DEV-adaa94c502-aed2c4ef62`, SHA256 `b141150237e94a807817adea2d9fb6810f6eabc220d7db5ea3602d8b79b4944a`), config v1 `aed2c4ef…ce4edf`. Piano e 13 casi deterministici (nessuna categoria vuota) in `docs/research/CAND-001-diagnosis.md` §§1–2; lista locale `diagnosis/D1/examples-selection.json`, `listSha256` `7caade6984943a7e333660dc4ef702e6ed87022b58ec7c386e70ecd308a8c3be`. Comando `python3.12 -m cand001.diagnosis select` (solo bundle). Estrazione dei percorsi non ancora eseguita.
