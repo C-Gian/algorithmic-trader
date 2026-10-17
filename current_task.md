@@ -105,7 +105,7 @@ Comportamento:
 - tabella unica verso × profilo, periodi e mesi, 10 esempi (vuote solo le 2 categorie UNAVAILABLE);
 - un pacchetto di consultazione per caso, aperto dallo Studio storico.
 
-Output in `C:\Projectslgorithmic-trader-data\OBS-002uns\OBS-002-v1.0.0-e1.0.0-3b76888642-b11bad4557\`.
+Output in `C:/Projects/algorithmic-trader-data/OBS-002/runs/OBS-002-v1.0.0-e1.0.0-3b76888642-b11bad4557/`.
 
 Controlli effettivi:
 - hash della popolazione riverificato prima degli esiti;
