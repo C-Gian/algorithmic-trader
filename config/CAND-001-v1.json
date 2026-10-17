@@ -1,0 +1,134 @@
+{
+  "id": "CAND-001/v1",
+  "candidateVersion": "1.0.0",
+  "description": "Trascrizione di docs/research/CAND-001-v1.md (commit 0d4882848d014f8137153848171243674759370d, 2026-10-17). Non modificare in funzione degli esiti.",
+  "specification": {
+    "document": "docs/research/CAND-001-v1.md",
+    "commit": "0d4882848d014f8137153848171243674759370d",
+    "date": "2026-10-17",
+    "family": "movimento direzionale -> reazione -> tentativo di ripresa",
+    "symmetric": true
+  },
+  "observations": {
+    "conventions": "OBS-001/v1",
+    "conventionsFile": "config/OBS-001-v1.json",
+    "conventionsHash": "3c4eb884d0b6752bfb31e7d9ae159a1414d75cadc90f9abcc9379d5825002387",
+    "note": "Stesse definizioni osservative OBS-001/v1 con nuovi confini di input; nessun warmup globale."
+  },
+  "familyRoles": {
+    "structure45m": "DECISIONAL",
+    "levels": "DECISIONAL",
+    "volatility": "DECISIONAL",
+    "averages": "CONTEXTUAL",
+    "volume": "CONTEXTUAL",
+    "fibonacci": "CONTEXTUAL",
+    "structure1D": "CONTEXTUAL"
+  },
+  "data": {
+    "trade": {
+      "urlTemplate": "https://data.binance.vision/data/futures/um/monthly/klines/BTCUSDT/1m/BTCUSDT-1m-{month}.zip",
+      "checksumSuffix": ".CHECKSUM",
+      "kind": "TRADE_KLINES_1M"
+    },
+    "fundingRate": {
+      "urlTemplate": "https://data.binance.vision/data/futures/um/monthly/fundingRate/BTCUSDT/BTCUSDT-fundingRate-{month}.zip",
+      "checksumSuffix": ".CHECKSUM",
+      "columns": ["calc_time", "funding_interval_hours", "last_funding_rate"],
+      "rateUnit": "decimal fraction",
+      "timestampJitterToleranceMs": 60000
+    },
+    "markPrice": {
+      "urlTemplate": "https://data.binance.vision/data/futures/um/monthly/markPriceKlines/BTCUSDT/1m/BTCUSDT-1m-{month}.zip",
+      "checksumSuffix": ".CHECKSUM",
+      "kind": "MARK_PRICE_KLINES_1M",
+      "use": "close della mark1m [u-60s,u) con u=floor(tau/60s)*60s, solo per il funding"
+    },
+    "symbol": "BTCUSDT",
+    "segment": "USDS-M futures (um)",
+    "contractType": "PERPETUAL",
+    "attribution": "Fonte: Binance Vision",
+    "reuseObsTradeMonths": ["2025-06", "2025-07", "2025-08", "2025-09", "2025-10", "2025-11", "2025-12"]
+  },
+  "windows": {
+    "inputStart": "2022-10-01T00:00:00Z",
+    "inputEnd": "2026-01-01T00:00:00Z",
+    "initialization": { "start": "2022-10-01T00:00:00Z", "end": "2023-01-01T00:00:00Z" },
+    "DEV": { "start": "2023-01-01T00:00:00Z", "end": "2025-01-01T00:00:00Z", "decisionCloses": 23392 },
+    "ADDITIONAL_2025": { "start": "2025-01-01T00:00:00Z", "end": "2026-01-01T00:00:00Z", "decisionCloses": 11680, "requiresDirectorCheckpoint": true },
+    "theoreticalInputMinutes": 1710720,
+    "eachWindowStartsFlat": true,
+    "monthlyReset": false
+  },
+  "parameters": {
+    "legAmplitudeA": 3.0,
+    "legMinBars": 1,
+    "legMaxBars": 32,
+    "reactionMinBars": 2,
+    "reactionMinCounterCloses": 1,
+    "reactionDepthMin": 0.25,
+    "reactionDepthMax": 0.75,
+    "setupExpiryBars": 12,
+    "stopBufferA": 0.10,
+    "minRewardRisk": 1.5,
+    "actionDelaySeconds": 60,
+    "maxHoldingHours": 24,
+    "positions": 1,
+    "entriesPerEpisode": 1,
+    "partialsOrIncrements": false
+  },
+  "economics": {
+    "notionalUSDT": 1000,
+    "reinvestment": false,
+    "leverageModelled": false,
+    "baseline": { "fee": 0.0005, "slippage": 0.0003 },
+    "stress": { "fee": 0.001, "slippage": 0.001, "kind": "repricing dello stesso ledger" },
+    "fillPrices": "BUY=ref*(1+s); SELL=ref*(1-s)",
+    "feeFormula": "f*q*prezzo_fill per lato",
+    "allExitsTaker": true,
+    "funding": {
+      "source": "Binance Vision fundingRate storico",
+      "markProxy": "close mark1m del minuto precedente il minuto che contiene tau",
+      "cashflow": "-d*q*M*rate",
+      "holding": "entryTime < tau <= exitAccountingTime",
+      "ambiguityWindowSeconds": 60,
+      "missingIsZero": false
+    },
+    "label": "netto modellato con fee/slippage assunti e funding storico valorizzato con mark1m"
+  },
+  "precedence": {
+    "atMinuteOpen": [
+      "1 funding con timestamp nel minuto u sulla quantità detenuta prima di u",
+      "2 gap oltre stop attivo -> STOP a O_u; altrimenti gap oltre target -> TARGET a O_u",
+      "3 uscita discrezionale/scadenza/fine segmento dovuta -> O_u",
+      "4 attivazione stop aggiornato; se O_u lo viola -> uscita a O_u",
+      "5 se flat, tentativo d'ingresso in scadenza con guard"
+    ],
+    "intraminute": "stop se low<=S (LONG), target se high>=T (LONG); entrambi -> STOP_FIRST con flag BOTH_TOUCHED_SAME_MINUTE e valorizzazione alternativa TARGET_FIRST",
+    "intrabarAccounting": "uscita intrabar conclusa a u+60s",
+    "contradictionsBeforeTrigger": ["INPUT_GAP_OR_SEGMENT", "OPPOSITE_STRUCTURE", "DEPTH_OR_BEYOND_P0", "TARGET_ALREADY_REACHED", "EXPIRED"],
+    "endOfWindow": "ultima apertura u=end-60s: cancellare pendenti e chiudere a O_u; nessun ingresso con execute_at>=u",
+    "dataGapWithPosition": "UNRESOLVED_DATA_GAP: interrompere la finestra, decisioni successive NOT_EVALUATED_AFTER_GAP"
+  },
+  "examples": {
+    "perWindowAndDirection": [
+      "FIRST_CALL",
+      "FIRST_TRADE",
+      "FIRST_NEGATIVE_TRADE",
+      "FIRST_POSITIVE_TRADE",
+      "FIRST_PROTECTION_UPDATE",
+      "FIRST_ABSTAIN_REACTION_INVALIDATED",
+      "FIRST_ABSTAIN_REWARD_RISK",
+      "FIRST_ABSTAIN_MISSING_DATA"
+    ],
+    "tieBreak": "timestamp poi ID",
+    "emptyCategoryDeclared": true
+  },
+  "diagnosisClasses": ["BUG", "NOT_FAITHFUL_TO_DESIGN", "COHERENT_BUT_NOT_USEFUL", "COST_OR_ASSUMPTION_SENSITIVE", "INSUFFICIENT_INFORMATION"],
+  "metrics": {
+    "quantiles": [0.1, 0.25, 0.5, 0.75, 0.9],
+    "quantileMethod": "linear, h=(n-1)*q",
+    "bpsFormula": "netto/N0*10000",
+    "drawdownResolution": "chiusure 1m",
+    "concentrationTopN": 5
+  }
+}

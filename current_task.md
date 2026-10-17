@@ -1,6 +1,6 @@
 # Incarico corrente — CAND-001 primo candidato e ciclo storico di sviluppo
 
-**Stato: READY — fase operativa DEV: implementazione completa v1, backtest2023–2024, diagnosi e consultazione nell'app.**
+**Stato: IN_PROGRESS — CAND-001 v1 preregistrato (config, codice, test) prima degli esiti; fase DEV in corso.**
 Macrofase intera autorizzata da Astra il17ottobre2026: primo candidato completo e primo backtest riproducibile, più eventuale unica revisione motivata e confronto2025 già esposto. Il checkpoint Director dopo la diagnosi DEV governa la scelta metodologica prima degli esiti2025; non richiede una nuova autorizzazione ordinaria di Gian/Astra.
 Responsabile disegno/diagnosi/review: Director. Esecutore: Claude Code.
 Base codice: bf3280ec8c034a775c925d0b5f38223eeade9c53 più questo READY. Sincronizzazione checkout a cura di Gian; nessun pull/fetch dell'esecutore.
@@ -150,7 +150,25 @@ Solo conflitti sostanziali ad Astra; dettagli tecnici al Director/esecutore nel 
 
 ## Spazio dell'esecutore
 
-Da compilare: preregistrazione, avanzamento e consegnaDEV.
+### Preregistrazione prima di dati economici ed esiti (Claude Code, 17 ottobre 2026)
+
+**Stato: IN_PROGRESS.**
+- **Base e ambiente.** Base `0d48828` su `main`, checkout pulito, nessun pull o fetch. Python 3.12.14 già presente via `uv`; i test passano anche su 3.11.16.
+- **Configurazione.** `config/CAND-001-v1.json` trascrive `docs/research/CAND-001-v1.md` (commit `0d4882848d014f8137153848171243674759370d`, 17 ottobre 2026), senza modifiche: parametri, finestre, fonti, fee/slippage/funding, precedenze, regole degli esempi e classi di diagnosi. Candidato 1.0.0, motore `cand001` 1.0.0, schema bundle `cand001.bundle/1`.
+- **Hash.** SHA256 canonico (JSON con chiavi ordinate, indipendente dai fine riga): `aed2c4ef627617d73972778097bbab5fb702ab5064ce9e6eb68ded2170ce4edf`. Convenzioni osservative OBS-001/v1 invariate (`3c4eb884…2387`), verificate al caricamento.
+- **Codice.**
+  - `src/cand001/`: config, decision (motore decisionale), execution (ledger e costi), backtest (orchestrazione), metrics, data (acquisizione e controlli trade/funding/mark), bundle, cli.
+  - Osservatore, aggregazione e parsing sono riusati da `obs001` senza modifiche, solo con nuovi confini di input.
+- **Test sintetici.** 28 (`tests/test_cand001_*.py`):
+  - esempi LONG e SHORT del protocollo con S0, T, E*, rischio, spazio e vincolo d'ingresso;
+  - nessuna call retroattiva e 1D solo come contesto;
+  - soglia 3A, struttura, durata, occupazione;
+  - quarti della reazione e bordi, contraddizioni prima del trigger, scadenza alla barra 12, astensione per rapporto;
+  - protezione solo dopo l'ingresso e monotona, uscita per struttura;
+  - fill a open+60s con vincolo, rifiuti senza costi, gap oltre lo stop, stop-first con alternativa, ingresso e uscita nello stesso minuto, latenza dello stop aggiornato, 24h, fine finestra, gap di dati;
+  - esempi contabili 18,889 e 19,111, mark mancante, ambiguità ai confini, slippage non doppio, stress;
+  - catena completa: stesso prefisso e futuri diversi danno decisioni, richieste e protezioni identiche; riconciliazione; nessun minuto dopo la fine.
+- **Sequenza.** Nessun download e nessun backtest reale prima del commit che contiene questa nota.
 
 ## Review del Director
 
