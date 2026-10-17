@@ -1,6 +1,6 @@
 # APP-001/R1 — Completezza, progresso, ritorno e costi iniziali
 
-**Stato: READY.** Director, 17 ottobre 2026. Esecutore: Claude Code.
+**Stato: DELIVERED** (Claude Code, 17 ottobre 2026; in attesa di review Director, non accettato). Incarico del Director, 17 ottobre 2026. Esecutore: Claude Code.
 Base: **11e028407261907a0206f2b484f0445f8c712ea0** più il commit di questo incarico; checkout sincronizzato daGian. Nessun pull/fetch, neppure dry-run.
 
 La macrofase APP-001 resta aperta e autorizzata interamente daAstra. Requisiti e disegno originari conservati nella storia di current_task.md al commit7f94d4e; consegna a11e0284 e docs/research/APP-001-delivery.md. R1 corregge difetti nel perimetro già assegnato, non apre una nuova macrofase.
@@ -115,4 +115,36 @@ La macrofase continua fino a percorso usabile: reviewDirector,poi prova concreta
 
 ## Spazio dell'esecutore
 
-Da compilare: riproduzioni prima/dopo,patch,controlli,impatto,immagini pertinenti,limiti,commit e consegna.
+Consegna Claude Code, 17 ottobre 2026. Il dettaglio è in [docs/research/APP-001-delivery.md §6](docs/research/APP-001-delivery.md).
+
+**Commit:** 3dd3f66 per le correzioni e i test, più un commit di documentazione. Motore 1.0.3 e schema /3 invariati; servizio 1.0.1.
+
+**Riproduzioni prima della correzione** (ogni nuovo test è stato eseguito anche sul codice 11e0284, dove fallisce):
+- **R1-A**, archivi sintetici: mark mancante sotto un pagamento durante la posizione → COMPLETED e catalogo completo.
+- **R1-B**, esempio CAND/R1: ultimo tick 640/640 contro 245/395 del riepilogo.
+- **R1-C**: «Torna alle operazioni» → `scrollTo(0)` invece di 640.
+- **R1-D**: «bp» e «prezzi mark» senza spiegazione.
+
+**Correzioni:**
+- **R1-A**: completezza economica distinta dalla copertura dei prezzi, con motivo, in pipeline, manifest, job, catalogo e viste. Nessun valore cambiato. I vecchi /2 e /3 con netto mancante non risultano completi; la causa, se non registrata, è dichiarata tale.
+- **R1-B**: il progresso si ferma all'HALT (chiusure valutate, non valutate, data) e la pagina del job mostra l'interruzione.
+- **R1-C**: navigazione `return` del router per i ritorni interni.
+- **R1-D**: costi in percentuali semplici con «i» per commissione, prezzo di esecuzione, pagamenti periodici e prezzi mark; scenario con costi più alti solo come confronto.
+- Difetto extra: il servizio legge il corpo delle POST prima di rifiutarle, correggendo un fallimento intermittente su Windows.
+
+**Controlli:**
+- servizio: 24 test, 5 volte OK;
+- CAND backtest/R1: 12 test OK;
+- UI: 79 test OK;
+- typecheck e build OK.
+
+**Impatto numerico nullo.** Il profilo breve rieseguito da comando diretto dà lo stesso bundle `982ad3a6…` con `economic.complete=true`; i risultati reali nel catalogo restano completi con gli stessi netti. Nessun download e nessun ricalcolo DEV o 2025.
+
+**Immagini:** app-01 aggiornata e app-12 (spiegazione della commissione).
+
+**Limiti:**
+- R1-A e R1-B sono verificati solo su dati sintetici;
+- l'annullamento durante la simulazione resta solo sintetico;
+- i manifest già salvati non vengono riscritti.
+
+Prova Owner non svolta né dichiarata.

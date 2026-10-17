@@ -2,7 +2,10 @@
 
 Aggiornato: 17 ottobre 2026. Responsabile: Director.
 
-## Attivo — APP-001/R1 READY
+## Attivo — APP-001/R1 DELIVERED (in attesa di review)
+R1 consegnato da Claude il 17 ottobre (3dd3f66 più documentazione). Tutti e quattro i difetti sono stati riprodotti e corretti con test che falliscono su 11e0284: completezza economica distinta dai prezzi, progresso fermo all'HALT (245/395), ritorno interno con scorrimento ritrovato, costi iniziali in percentuali con «i». Impatto numerico nullo (gennaio di nuovo 982ad3a6…). Non accettato; dettagli in docs/research/APP-001-delivery.md §6.
+
+Testo originale dell'incarico R1:
 Consegna APP-001 a11e028407261907a0206f2b484f0445f8c712ea0 revisionata: correzioni richieste, non ACCEPTED. Task completo in current_task.md; specifica originaria nella storia a7f94d4e.
 La base esiste: servizio locale, avvio/progresso/annullamento, risultati salvati e router comune. Correggere, non ricostruire.
 

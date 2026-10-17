@@ -1,6 +1,6 @@
 # APP-001 — consegna: backtest autonomo locale dall'app
 
-Esecutore Claude Code, 17 ottobre 2026. Incarico in `current_task.md` (commit 7f94d4e). Stato: **consegnato, non accettato**.
+Esecutore Claude Code, 17 ottobre 2026. Incarico in `current_task.md` (commit 7f94d4e). Stato: **consegnato con correzioni R1, non accettato**.
 Collaudo software, non nuovo studio né verifica della strategia: candidato CAND-001/v1 1.0.0, configurazione `aed2c4ef627617d73972778097bbab5fb702ab5064ce9e6eb68ded2170ce4edf`, regole, osservazioni e costi invariati.
 
 ## 1. Che cosa è stato costruito
@@ -81,3 +81,35 @@ Risultato di gennaio 2025 (solo collaudo): 3 operazioni LONG, tutte chiuse allo 
 ## 5. Screenshot
 
 In [APP-001-screens](APP-001-screens/README.md).
+
+## 6. APP-001/R1 — correzioni (Claude Code, 17 ottobre 2026)
+
+Incarico 1eedcd4, base 11e0284; correzioni in **3dd3f66**. Candidato, configurazione `aed2c4ef…`, regole, costi, finestre, motore **1.0.3** e schema **/3** sono invariati. Nessun download e nessun ricalcolo DEV o 2025. La versione del servizio passa a 1.0.1.
+
+Riproduzioni prima della correzione. Ogni nuovo test Python e UI è stato eseguito anche sul codice 11e0284 (worktree temporaneo, poi rimosso) e lì fallisce. Tutti i casi sono **sintetici**, con prezzi inventati, salvo dove è indicato «reale».
+
+| Punto | Riproduzione su 11e0284 | Correzione | Verifica dopo |
+|---|---|---|---|
+| R1-A costo mancante | Archivi sintetici `app001_helpers`. Una scadenza funding regolare cade 5 minuti dopo l'ingresso dell'unica operazione e manca solo il minuto mark precedente: netto `None`, eppure job COMPLETED e catalogo completo. | `pipeline.economic_completeness`: un costo pertinente non valorizzabile rende il risultato INCOMPLETE con motivo. `windowComplete` resta il solo indicatore del percorso dei prezzi. Il manifest registra `economic`. Job e catalogo distinguono `priceCoverageComplete` da `complete` e indicano il motivo. Per i vecchi /2 o /3 con netto mancante il motivo risulta «causa non registrata». Le viste mostrano «Storico elaborato, ma risultato dopo i costi non calcolabile: manca…». Il bundle non cambia. | Pipeline, job, manifest e catalogo INCOMPLETE, con operazioni e componenti note conservate. Resta completo il caso valido; resta completo anche il caso con un mark mancante senza posizione aperta. Zero operazioni con netto 0 = completo. Il funding non certificato blocca ancora prima del ledger. Lato UI: job, salvati e risultati. |
+| R1-B progresso dopo HALT | Esempio CAND/R1 (trend seme 7, minuto tolto 5 minuti dopo il primo ingresso). Il riepilogo dà 245 chiusure valutate e 395 non valutate, ma l'ultimo tick riporta 640/640 con `t` a fine finestra. | Lo stato esposto da `run_window` si ferma al punto valutato (`closes` = chiusure fino all'HALT, `t` = HALT) e aggiunge `notEvaluatedCloses`. Decisioni, registrazioni NOT_EVALUATED e ledger restano invariati. La pagina del job mostra «Valutazione interrotta… 245 di 640; 395 non valutate». | L'ultimo tick del motore vale 245/395 con `t` = HALT; tutti i tick restano ≤ 245; il caso completo dà ancora 640/0. Il job reale del servizio (dati sintetici con lacuna) ha progresso in memoria e su disco uguale al riepilogo. Lato UI: 245 e 395, nessun «640 di 640». |
+| R1-C ritorno interno | Registro scorso a 640 px, apertura del dettaglio, poi «← Torna alle operazioni»: `scrollTo(0)`. | Il router ha una navigazione di tipo `return` (`Link back`): crea una nuova voce e ritrova la posizione registrata per quella vista, come Indietro. Con un collegamento diretto, senza provenienza, si parte dall'alto. Usata nei ritorni del dettaglio e del registro. | 640 → dettaglio → 640 con clic vero. Indietro del browser ritrova ancora la posizione (300). «Torna ai risultati» dalle scorciatoie: 900 → 900. Un link diretto riparte da 0. |
+| R1-D costi iniziali | La riga «Costi» mostrava ancora «5 bp… 3 bp… 10+10 bp» e «prezzi mark» senza aiuto. | Commissione 0,05% all'apertura e alla chiusura; prezzo di esecuzione 0,03% per lato, già incluso nei prezzi; pagamenti periodici; scenario con costi più alti indicato solo come confronto. Ogni voce ha la sua «i», compresi i prezzi mark (riferimento del contratto, usato solo per i pagamenti). Esempi in USDT solo sulla dimensione di 1.000. | Nessun «bp» nella scheda; spiegazioni da clic, focus ed Esc. Prova reale nel browser con clic del mouse (immagine `app-12`). |
+
+In più, un difetto trovato durante i controlli: `test_boundaries_and_contract` falliva in modo intermittente (WinError 10053) perché il servizio rifiutava alcune POST senza leggerne il corpo. Ora il corpo, entro 4 KB, viene letto prima di rispondere. Dopo la correzione la suite del servizio è passata 5 volte di fila.
+
+**Impatto numerico: nessuno.** Il profilo breve di gennaio, rieseguito con comando diretto per il cambio nel percorso di pubblicazione (motivo dichiarato, solo il profilo breve, dato reale), dà lo stesso bundle `982ad3a69f912aaa3028e867c401400b4df43ddfe9bf855afd6fcea5bd33facc` e `economic.complete=true` (commit 3dd3f66). Il catalogo reale, letto in sola lettura, mostra i quattro risultati apribili ancora completi con lo stesso netto: gennaio −18,68, DEV 1.0.3 e 1.0.1 −210,59, 2025 −109,08. Il vecchio /1 resta non supportato.
+
+**Controlli eseguiti per R1:**
+- servizio `test_app001_*`: 24 test, 5 esecuzioni consecutive OK;
+- `test_cand001_*` limitati a backtest e R1 (12 test), perché è cambiato solo lo stato esposto da `run_window`; OBS non è stato toccato e non è stato rieseguito;
+- UI `src/ui`: 79 test, compresi i 5 nuovi di `BacktestAppR1.test.tsx`;
+- typecheck e build.
+
+Non rieseguiti: suite generale e ricalcoli DEV o 2025.
+
+**Limiti residui:**
+- le immagini R1-A e R1-B non esistono su dati reali, perché nessun risultato reale ha costi mancanti o interruzioni; la verifica è sintetica e dichiarata come tale;
+- l'annullamento durante la simulazione resta provato solo sinteticamente;
+- i job e i manifest già salvati non vengono riscritti: i primi run restano con la provenienza incompleta già dichiarata.
+
+Nessuna prova dell'Owner registrata.
