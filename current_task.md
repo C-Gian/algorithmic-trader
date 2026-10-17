@@ -1,6 +1,6 @@
 # OBS-002/R1 — Cronologia causale, esiti importati e lettura dei contatti
 
-**Stato: READY.** Director, 17 ottobre 2026. Esecutore: Claude Code. Base consegna **c8ac744086d9617997a6519462a84ef2bf329691** più il commit di questo task; sincronizzazione checkout a cura di Gian. Nessun pull/fetch, anche dry-run. Leggere AGENTS, STATE, questo task e §§pertinenti del report OBS-002-results.md. Disegno originario in current_task.md a6f1743d e config/OBS-002-v1.json invariato.
+**Stato: DELIVERED** (Claude Code, 17 ottobre 2026; in attesa di review del Director, non accettato). Incarico READY del Director, 17 ottobre 2026. Esecutore: Claude Code. Base consegna **c8ac744086d9617997a6519462a84ef2bf329691** più il commit di questo task; sincronizzazione checkout a cura di Gian. Nessun pull/fetch, anche dry-run. Leggere AGENTS, STATE, questo task e §§pertinenti del report OBS-002-results.md. Disegno originario in current_task.md a6f1743d e config/OBS-002-v1.json invariato.
 
 OBS-002 non è ancora ACCEPTED: sono richieste le tre correzioni circoscritte sotto. La macrofase rimane interamente autorizzata; nessuna nuova autorizzazione ordinaria o passaggio ad Astra ora. Nessuna ipotesi operativa scelta o implementata.
 
@@ -68,4 +68,16 @@ Aggiornare OBS-002-results.md con R1, impatto e prove effettive, STATE e spazio 
 Dopo la correzione il Director completerà la review e la lettura congiunta per l'unica conclusione prevista dal mandato. Non chiedere ad Astra un permesso ordinario e non implementare una ipotesi o v2. La macrofase resta aperta fino a questa conclusione.
 
 ## Spazio dell'esecutore
-Da compilare. Nessuna correzione R1 ancora dichiarata svolta.
+**Consegna OBS-002/R1 — Claude Code, 17 ottobre 2026.** Checkout verificato su `ccf2b3f`, senza pull/fetch. Commit `bc92a6d` (codice e test) più il commit di questa consegna (report §11, stato). Difetti riprodotti prima: la regressione R1-A e 20 dei 22 test R1-B falliscono sul codice consegnato.
+
+- **R1-A.** Proiezione per elenco consentito in `src/obs002/timelines.py`: i fatti del ritiro compaiono solo se avvenuti entro t.
+  - Test: tre futuri diversi danno `knownAtT` identico; i fatti restano dopo il ritiro effettivo; la migrazione è idempotente e coerente col generatore.
+  - Derivato reale `R1/examples.json` `92b7b150…e785` dall'originale conservato `507c2bf3…d60b`, con `R1/manifest.json` e provenienza a `bc92a6d`.
+  - Impatto: 20 campi (`replacedBy` e `sameGroup` dei 10 casi), nient'altro; due esecuzioni identiche.
+- **R1-B.** Validatore OBS002_CASE per completezza, flag, A/riferimenti, orizzonte, censura e coerenza contatti/classe.
+  - 22 test, inclusi i due casi dal selettore con studio conservato; fixture sintetica censurata nuova.
+  - I bundle OBS-001, i pacchetti validi e i 10 reali si aprono ancora.
+- **R1-C.** Report §§4/8 corretti con il testo originale citato: entrambi 2.430 (55,6%), uno solo 1.900 (43,5%), nessuno 38 (0,9%), almeno uno 4.330 (99,1%).
+  - `contact_breakdown` con test; `R1/contacts-breakdown.json` `cf5812a5…bb1c`.
+- **Invariati e verificati:** config, `population.json`, `outcomes.json`, `summary.json`, `examples.json` originale, `outputs.json`, i 10 pacchetti.
+- **Verifiche:** 21 test Python OBS-002, 46 test del lettore, typecheck e build. Nessuna nuova elaborazione reale, nessuna suite generale, CAND o CI. Nessuna ipotesi operativa.

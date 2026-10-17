@@ -1,6 +1,6 @@
 # OBS-002 — prosecuzione ed esaurimento del primo tentativo di ripresa (DEV 2023–2024)
 
-**Stato: consegna dell'esecutore (DELIVERED, in attesa di review del Director).** La sezione 1 è quella pubblicata nel commit `118f706`, prima degli esiti; il resto è stato aggiunto dopo l'estrazione. Il report descrive evidenze: non sceglie ipotesi, soglie o gruppi.
+**Stato: correzioni R1 consegnate dall'esecutore (DELIVERED, in attesa di review del Director; non ACCEPTED).** Sezione 11 per R1. La sezione 1 è quella pubblicata nel commit `118f706`, prima degli esiti; il resto è stato aggiunto dopo l'estrazione. Il report descrive evidenze: non sceglie ipotesi, soglie o gruppi.
 
 **Licenza di questo file:** derivati aggregati di dati Binance Vision, **CC BY-NC-SA 4.0** (https://creativecommons.org/licenses/by-nc-sa/4.0/). Fonte: Binance Vision (https://data.binance.vision). Dati grezzi, registri e pacchetti non sono redistribuiti.
 
@@ -131,7 +131,12 @@ Tabelle complete nella sezione 9. Sono letture descrittive su DEV già esposto: 
 - **Dipendenza.**
   - Tutte le finestre 24h dei primi tentativi si sovrappongono ad almeno un'altra, con fino a 12 finestre contemporanee: le numerosità non sono prove indipendenti.
   - 1.596 gruppi hanno più di un tentativo DEV.
-- **Classi di contatto ±A.** In ogni cella le classi con contatto (F, A, F→A, A→F) sono di ordine di grandezza simile. NEITHER è raro (38 su 4.368) e BOTH_UNORDERED rarissimo (4): un'unità di A a 45m è quasi sempre raggiunta in 24 ore in entrambe le direzioni.
+- **Classi di contatto ±A** (frase corretta in R1). Sui 4.368 esiti completi dei primi tentativi:
+  - entrambi i riferimenti toccati in 2.430 casi (55,6%): F→A, A→F o F=A;
+  - uno solo in 1.900 (43,5%): F o A;
+  - nessuno in 38 (0,9%).
+
+  Quasi universale è quindi **almeno un** contatto (4.330, 99,1%), non entrambi. Le classi informano sia su uno/entrambi/nessuno, sia sull'ordine quando entrambi sono raggiunti; BOTH_UNORDERED è rarissimo (4). Scomposizione per cella nella sezione 11. *Testo consegnato a `c8ac744`, errato:* «un'unità di A a 45m è quasi sempre raggiunta in 24 ore in entrambe le direzioni».
 - **Esiti.**
   - Il final mediano è vicino a zero in tutte le celle (fra −0,31 e +0,18 A), con P10–P90 ampi (circa da −5 a +6 A).
   - Le escursioni mediane, favorevole e contraria, sono entrambe intorno a 2,2–2,6 A.
@@ -182,7 +187,7 @@ Valori: final, favorevole e contrario in A nel verso del movimento; d = distanza
 10. **Primo RIGHT_CENSORED** (`ATT:SHORT:1735589700000:1735608600000`, 2024-12-31 01:30, DISCORDANT).
     - Le 24 ore superano il 2025-01-01: nessun esito completo, solo il prefisso parziale nel JSON. Nessun dato 2025 letto.
 
-Timeline complete (versioni del gruppo note a t, tentativi precedenti, barre 45m da P0 a t, snapshot, poi esito separato) in `examples.json`.
+Timeline complete (versioni del gruppo note a t, tentativi precedenti, barre 45m da P0 a t, snapshot, poi esito separato): usare il derivato corretto `R1/examples.json` (sezione 11). L'originale `examples.json` è conservato, ma la sua sezione «noto a t» mostrava fatti futuri sulla sostituzione delle versioni.
 
 ## 6. Come consultare gli esempi
 
@@ -208,7 +213,7 @@ Ogni file pesa circa 4,3 MB: 35 giorni di osservazioni, calcolate su tutto il pr
 - Esplorazione su DEV 2023–2024 già esposto: nessuna efficacia, validazione o regola operativa. Gli esiti sono spostamenti di prezzo normalizzati, non profitti; nessun costo o esecuzione.
 - Tentativi molto dipendenti: finestre 24h sovrapposte, più tentativi per movimento, i due versi coesistenti.
 - Risoluzione 1m: l'ordine dentro il minuto non si ricostruisce (4 casi `BOTH_UNORDERED` fra i primi tentativi).
-- Con riferimenti ±1 A su 24 ore le classi di contatto distinguono soprattutto l'ordine, perché quasi tutti i casi toccano entrambi i riferimenti. Va letto insieme a final ed escursioni, come chiede il task; nessun altro livello o orizzonte è stato provato.
+- Con riferimenti ±1 A su 24 ore quasi tutti i casi toccano almeno un riferimento (99,1%), poco più della metà li tocca entrambi (55,6%). Le classi descrivono quindi sia quale riferimento è raggiunto sia, quando lo sono entrambi, l'ordine. Vanno lette insieme a final ed escursioni, come chiede il task; nessun altro livello o orizzonte è stato provato. *Corretto in R1:* la consegna diceva che «quasi tutti i casi toccano entrambi i riferimenti».
 - La popolazione include molti tentativi con arretramento oltre P0 o origine oltre P1, per la definizione preregistrata (sezione 4).
 - I prefissi parziali dei 4 casi censurati sono solo nei JSON, non nelle tabelle.
 - Lavoro e riscontri dello stesso esecutore; il riscontro con OBS-001 confronta due implementazioni nel repository, non una verifica indipendente del Director.
@@ -418,3 +423,124 @@ R1-B riprodotto: il lettore accetta un esito completo con favourable=null e un F
 R1-C: le frasi «quasi sempre entrambi» §§4/8 sono da correggere. Tabella principale:2430/4368=55,63% entrambi,1900/4368=43,50% uno solo,38/4368=0,87% nessuno. Almeno uno99,13%. Non cambiano numeri o convenzioni; cambia la loro descrizione. Nessuna conclusione su utilità o inefficacia delle sei famiglie dedotta da questa review.
 
 Macrofase aperta, nessuna ipotesi operativa scelta. Incarico eseguibile OBS-002/R1 in current_task.md; nessuna nuova elaborazione reale richiesta.
+
+## 11. Correzioni R1 (esecutore, 17 ottobre 2026)
+
+**Commit:** `bc92a6d` (codice e test), più il commit di questa consegna (report, stato).
+
+**Ordine seguito:** i difetti sono stati riprodotti prima della correzione con test che falliscono sul codice consegnato.
+- R1-A: la regressione sulla timeline falliva sul codice della consegna (`replacedBy` del REPLACE futuro presente in `knownAtT`).
+- R1-B: sul validatore consegnato falliscono 20 dei 22 nuovi test, fra cui i due casi riprodotti dal Director; i 2 verdi sono le regressioni sui pacchetti validi.
+
+### R1-A — proiezione causale delle timeline
+
+**Correzione.** `src/obs002/timelines.py` proietta i metadati di versione per elenco consentito:
+- identità, ancore e disponibilità sono note dalla creazione;
+- ritiro e tutti i suoi fatti (`retiredAt`, `retireReason`, `replacedBy`, `sameGroup` e qualsiasi altro campo del ritiro) compaiono solo se il ritiro è avvenuto entro t;
+- i tentativi della versione sono limitati a t.
+
+Un campo nuovo non previsto resta escluso finché il ritiro non è effettivo. Lo stesso codice serve al generatore e alla migrazione.
+
+**Test** (`tests/test_obs002_r1.py`):
+- stesso prefisso con tre futuri diversi (ritiro a fine studio, REPLACE con P1 alla barra 30, REPLACE alla barra 31): `knownAtT` identico;
+- dopo un ritiro effettivo i suoi fatti restano visibili;
+- la migrazione di una timeline nella forma consegnata coincide con il generatore corretto, è idempotente e rifiuta una popolazione diversa.
+
+Il test esistente sulle popolazioni con futuri alterati è conservato invariato.
+
+**Derivato reale corretto.** Comando `$env:PYTHONPATH = "src"; python3.12 -m obs002 r1`, eseguito da checkout pulito al commit `bc92a6d`:
+- legge `examples.json` e `population.json` registrati, dopo averne verificato gli hash;
+- non rilegge prezzi e non ricalcola osservazioni, popolazione o esiti;
+- scrive in `…\OBS-002-v1.0.0-e1.0.0-3b76888642-b11bad4557\R1\`.
+
+| File | SHA256 |
+|---|---|
+| `R1/examples.json` (timeline `obs002.timeline/2`) | `92b7b150ba8baaba67f04c7612c82e500df4bd4c7efd3e08d4fdb28d2affe785` |
+| derivato da `examples.json` originale (conservato) | `507c2bf3a6979174bbfe5d7d18c67a88c5d5cee71072c162b8b43a34ca0ad60b` |
+| `R1/contacts-breakdown.json` (R1-C) | `cf5812a55a58d9cbcb2acb48ab561fc8cf7b9e011b17dbe680a274131058bb1c` |
+| `R1/manifest.json` | elenco campo per campo delle differenze, hash d'origine, `listSha256` invariato `feb69ba8…f7f6` |
+
+**Impatto: 20 campi, cioè `replacedBy` e `sameGroup` della versione di ciascuno dei 10 casi.** Ogni versione viene prima o poi sostituita, quindi in tutti i casi quei fatti futuri erano presenti come «noti a t»; `retiredAt` e `retireReason` erano già nulli.
+
+Il comando verifica che nient'altro cambi:
+- elenco, categorie, `afterT`, tentativi/snapshot, barre e tentativi precedenti sono identici;
+- due esecuzioni consecutive producono file identici byte per byte.
+
+Popolazione, snapshot e 6.582 esiti non sono toccati: il difetto stava solo nella proiezione successiva delle timeline. I pacchetti dei casi non contengono quei metadati e non sono stati rigenerati.
+
+### R1-B — coerenza dell'esito OBS-002 importato
+
+**Correzione** (`dashboard/src/historical/loadBundle.ts`). Si controllano solo i campi e le relazioni usati dal blocco OBS-002; il percorso di mercato non viene ricostruito.
+
+- **Esito completo:**
+  - final, favorevole e contrario finiti, con escursioni non negative;
+  - nessun flag, classe riconosciuta e coerente con i contatti;
+  - nello stesso minuto ordina solo l'apertura;
+  - prefisso parziale assente.
+- **Esito incompleto:**
+  - flag riconosciuti, non ripetuti e non vuoti;
+  - nessuna classe, misura o contatto completo; il prefisso parziale resta separato ed etichettato, senza obbligo di mostrarlo.
+- **Contatti:** all'apertura di un minuto, dentro [t, t+24h), con intervallo coerente con `atOpen`.
+- **C, A e riferimenti:**
+  - A positiva e riferimenti = C ± A nel verso del caso;
+  - A nulla con `MISSING_A`, A = 0 con `ZERO_A`, e in entrambi i casi riferimenti assenti.
+- **Orizzonte e censura:** orizzonte = t + 24h; `RIGHT_CENSORED` se e solo se l'orizzonte supera il confine dei dati del pacchetto.
+
+**Test** (`Obs002CaseR1.test.tsx`, 22 test):
+- i due casi riprodotti, anche dal selettore: errore leggibile, studio aperto conservato, nessun blocco retrospettivo falso;
+- 17 rifiuti mirati su escursioni, flag, contatti, intervalli, classi, riferimenti, A, orizzonte e censura;
+- pacchetti validi completi e censurati e bundle OBS-001 che si aprono ancora;
+- un caso censurato consultabile senza classe inventata.
+
+Nuova fixture sintetica censurata `synthetic-obs002-case-censored.json`; la fixture esistente rigenerata risulta identica byte per byte.
+
+Il test esistente che attende «esito completo senza classe» non è stato modificato: il nuovo messaggio per quella situazione lo contiene ancora.
+
+Tutti i **10 pacchetti reali** consegnati passano il validatore più severo (controllo locale con il parser), quindi non sono stati rigenerati.
+
+### R1-C — scomposizione aritmetica dei contatti
+
+Sezioni 4 e 8 corrette, con il testo originale citato. Nuova funzione `contact_breakdown` con test sui conteggi della tabella principale (2.430 / 1.900 / 38 / 4.330 su 4.368). Il derivato `R1/contacts-breakdown.json` è calcolato dal `summary.json` registrato, dopo verifica del suo hash.
+
+Primi tentativi DEV, esiti completi:
+
+| Verso | Profilo | Completi | Entrambi | Uno solo | Nessuno | Almeno uno |
+|---|---|---:|---:|---:|---:|---:|
+| LONG | Tutti | 2.227 | 1.241 (55,7%) | 964 (43,3%) | 22 (1,0%) | 2.205 (99,0%) |
+| LONG | CONCORDANT | 330 | 195 (59,1%) | 134 (40,6%) | 1 (0,3%) | 329 (99,7%) |
+| LONG | OPPOSITE | 357 | 183 (51,3%) | 169 (47,3%) | 5 (1,4%) | 352 (98,6%) |
+| LONG | DISCORDANT | 1.540 | 863 (56,0%) | 661 (42,9%) | 16 (1,0%) | 1.524 (99,0%) |
+| SHORT | Tutti | 2.141 | 1.189 (55,5%) | 936 (43,7%) | 16 (0,7%) | 2.125 (99,3%) |
+| SHORT | CONCORDANT | 255 | 141 (55,3%) | 113 (44,3%) | 1 (0,4%) | 254 (99,6%) |
+| SHORT | OPPOSITE | 433 | 243 (56,1%) | 189 (43,6%) | 1 (0,2%) | 432 (99,8%) |
+| SHORT | DISCORDANT | 1.453 | 805 (55,4%) | 634 (43,6%) | 14 (1,0%) | 1.439 (99,0%) |
+| Entrambi i versi | Tutti | 4.368 | 2.430 (55,6%) | 1.900 (43,5%) | 38 (0,9%) | 4.330 (99,1%) |
+
+Conteggi aritmetici sui risultati conservati, non una nuova analisi: soglia, orizzonte e classi sono invariati. Il riepilogo secondario è nello stesso file.
+
+### Hash invariati dopo R1
+
+Verificati con `sha256sum` prima e dopo l'esecuzione di `r1`:
+- `config/OBS-002-v1.json` `a8449033…115d` (canonico `b11bad45…d0af`);
+- `population.json` `e0be48ab…a278`;
+- `outcomes.json` `26044415…a817`;
+- `summary.json` `db086624…813e`;
+- `examples.json` originale `507c2bf3…d60b`;
+- `outputs.json` `25e6e2da…58b`;
+- `population-manifest.json` `49693559…4a88`;
+- i 10 pacchetti dei casi.
+
+Gli hash storici della sezione 3 non sono stati modificati: il derivato corretto ha un hash proprio.
+
+### Verifiche eseguite
+
+- Python: 21 test OBS-002 (15 esistenti e 6 R1).
+- Lettore: 46 test (24 esistenti e 22 R1); typecheck e build riusciti.
+
+Nessuna suite generale, OBS-001 intero, CAND o CI. Nessuna nuova elaborazione di popolazione o esiti reali, nessun download, nessun 2025/2026. Nessuna nuova immagine: le viste dei casi validi non cambiano.
+
+### Limiti R1
+
+- I controlli del lettore verificano la coerenza interna del pacchetto, non il percorso di mercato.
+- La migrazione R1-A è verificata sui sintetici contro il generatore corretto; sui dati reali è verificata contro la popolazione registrata e con l'invarianza degli altri campi, senza ricostruire le timeline dalla catena completa.
+- Riscontri dello stesso esecutore.
