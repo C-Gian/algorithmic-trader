@@ -2,27 +2,21 @@
 
 Aggiornato: 17 ottobre 2026. Responsabile: Director.
 
-## Chiuso tecnicamente
-UI simulata conclusa con prova positiva Owner. OBS-001 ACCEPTED TECNICAMENTE a bf3280e; resta il limite di comprensione Owner, senza prova positiva inventata o nuova macrofase UI.
+## CAND-001 — ACCEPTED TECNICAMENTE
+Consegna completa DEV2023–2024 e confronto aggiuntivo2025 accettata tecnicamente sulla base **4ff5046a5f94dffc1a4bad7b339ffeb017b612ba**. Review registrata in current_task.md e CAND-001-results.md.
+Candidato1.0.0/config aed2c4ef…ce4edf invariati; motore1.0.2, schema /2. Nessuna revisione metodologica scelta. Regole decisionali/gestione invariate; supporto2025 pubblicato prima degli esiti a078d9ed.
 
-**CAND-001/R1 ACCEPTED TECNICAMENTE su3ae7b7529f26f7aef94c9de207ce41df342590d1.**
-Review Director:36test Python CAND,14test UI Backtest/BacktestR1 e typecheck/build passati; lettura di funding, HALT/aggregati/app e prezzo. I tre difetti sono risolti nei controlli pertinenti.
-Confronto DEV offline dell'esecutore:87richieste/78trade e numeri invariati. Non è un ricalcolo autonomo Director dei75archivi/78trade, né una sua prova browser sui dati reali. Formato corrente /2; vecchio /1 conservato ma non apribile. Difetto a390px dichiarato, fuori perimetro desktop. Suite complete eseguite dall'esecutore oltre incarico: non ripetere.
+Director:lettura codice/report,45test Python CAND,15test UI e typecheck/build superati; esaminate immagini1366px dell'esecutore. Riscontro reale autonomo di esecuzione/costi della prima LONG5gennaio2025, dai tre archivi pubblici gennaio2025 con checksum:netto−4,0492720609, coerente con−4,05. Non è verifica di tutti i segnali/astensioni,107trade o archivi; ricalcolo/riproducibilità complessivi restano evidenza dell'esecutore. Nessuna prova browser autonoma.
 
-## Checkpoint e incarico attivo
-**CAND-001 — confronto ADDITIONAL_2025 DELIVERED** (Claude Code, 17 ottobre; in attesa di review, non ACCEPTED). Consegna in current_task.md.
-Esecutore: supporto 2025 (motore 1.0.2) pubblicato prima degli esiti in `078d9ed`. Acquisiti solo 29 archivi, riusati 27 trade CAND e 7 OBS. Run 2025 `7c6ff10e…` riproducibile.
-Esito dichiarato: 29 operazioni, netto −109,08, riferimenti −62,54, stress −178,71. Raccomandazione: non promuovere v1 e conservare l'evidenza negativa, senza scartare l'intera famiglia. Prova Gian non ancora svolta.
-Director mantiene candidato1.0.0 senza revisione metodologica. Config SHA256 aed2c4ef627617d73972778097bbab5fb702ab5064ce9e6eb68ded2170ce4edf verificato invariato. Base tecnica1.0.1 accettata; patch tecnica per supporto2025/prefisso ammessa prima degli esiti, senza cambiare convenzioni.
+## Evidenza e decisione
+Esiti riportati:DEV78trade,netto−210,59USDT,riferimenti−85,44,stress−397,80;2025 29trade,netto−109,08,riferimenti−62,54,stress−178,71. Somme di operazioni ipotetiche daN0=1000USDT, non conto personale o rendimento composto.
+2025giàesposto,NON validazione indipendente. Costi assunti e funding con mark1mproxy; campioni piccoli.
 
-Il checkpoint Director prima del2025 è soddisfatto. L'intero seguito è già autorizzato daAstra: supporto, soli dati mancanti, elaborazione, report finale e app. Nessun nuovo permesso ordinario; nessuna iterazione metodologica su2025 già esposto, NON validazione indipendente.
+**Non promuovere v1 all'uso operativo.** Conservare evidenza negativa e strumenti storici. Non scartare tutta la famiglia; nessuna variante scelta dopo2025. Il seguito metodologico spetta adAstra, dichiarando le esposizioni; nessuna nuova acquisizione/live/ottimizzazione autorizzata qui.
 
-## Evidenza e dati
-DEV dichiarato dall'esecutore:78operazioni ipotetiche daN0=1000USDT, netto−210,59 (2023−115,87;2024−94,72), riferimenti−85,44, stress−397,80, invariati dopoR1. Evidenza negativa conservata, nessuna efficacia dimostrata.
+## Chiusura ancora pendente
+Nessun nuovo lavoroClaude assegnato. Gian deve solo provare un episodio2025:Prima operazione→Mostra seguito modellato,poi Prima astensione; non formule/pivot. Riscontro d'uso non ricevuto, nessuna accettazione inventata.
+Dopo il riscontro:comunicazione conclusiva adAstra con evidenza,limiti,raccomandazione e richiesta direzione. Macrofase non ancora dichiarata chiusa.
 
-2025 non ancora elaborato economicamente alla consegna3ae7b75. Per il confronto:osservazioni su tutto il prefisso dal2022-10-01, valutazione[2025-01-01,2026-01-01)UTC FLAT senza episodi ereditati. Riutilizzare27tradeDEV e7tradeOBS; attesi solo5trade+12funding+12mark nuovi se mancanti. Raw/bundle fuoriGit, checksum/provenienza e qualità vincolanti.
-
-## Limiti e chiusura
-Prova concreta Gian suCAND ancora da raccogliere dopo consegna finale e review; non richiedere formule/pivot. Macrofase ancora aperta: confronto separatoDEV/2025, evidenza nell'app, review/prova e raccomandazione adAstra anche negativa.
-
-2026protetto senza tail, vecchi studiINACTIVE, nessun conto/chiave/ordine esterno/stackOwner, leva/reinvestimento, nuova famiglia/segnali/ricerca parametri, piattaforma o restyling. DESIGN-001 approvato solo nelle definizioni osservative; modello economico CAND separato.
+UI simulata chiusa con provaOwner positiva;OBS-001chiuso tecnicamente con limite di comprensione conservato. Limiti noti:vecchi bundle/1 non apribili,layout390px fuori perimetrodesktop.
+2026protetto senza tail,studi vecchiINACTIVE,niente conto/chiavi/ordini esterni/stackOwner,leva/reinvestimento,nuova famiglia/segnali/ricerca parametri o restyling. Raw/bundle fuoriGit.

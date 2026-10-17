@@ -1,6 +1,6 @@
 # Incarico corrente — CAND-001, confronto aggiuntivo 2025 e consegna della macrofase
 
-**Stato: DELIVERED** (Claude Code, 17 ottobre 2026; assegnato READY dal Director lo stesso giorno). Consegna nello «Spazio dell'esecutore».
+**Stato: ACCEPTED TECNICAMENTE** — Director, 17 ottobre 2026, review su4ff5046. Prova concreta Owner e chiusura della macrofase ancora pendenti; nessun nuovo incarico di codice.
 Esecutore: Claude Code. Base tecnica accettata: **3ae7b7529f26f7aef94c9de207ce41df342590d1**, più il commit di questo incarico.
 Checkout sincronizzato da Gian; nessun pull/fetch dell'esecutore, neppure dry-run.
 
@@ -182,3 +182,29 @@ File: `C:\Projects\algorithmic-trader-data\CAND-001\runs\CAND-001-v1.0.0-e1.0.2-
 - Difetto a 390 px invariato, fuori perimetro.
 - I bundle /1 restano non apribili.
 - Nessun dato 2026 letto o richiesto.
+
+## Review finale del Director — 17 ottobre 2026
+
+**ACCEPTED TECNICAMENTE su4ff5046a5f94dffc1a4bad7b339ffeb017b612ba.** Candidato1.0.0, motore1.0.2, schema cand001.bundle/2. Nessuna revisione metodologica scelta; nessun nuovo lavoro di codice assegnato. Macrofase in attesa della prova concreta di Gian e della comunicazione conclusiva adAstra, non dichiarata chiusa per implicazione.
+
+### Verifiche indipendenti e loro limite
+- Confronto Git: il supporto2025 è nel commit078d9ed03026e5126f20482037c21ffcc79cff43; dopo di esso il diff fino alla consegna è solo documentazione/immagini. Config, motore decisionale, ledger/gestione e metriche non modificati in questa fase.
+- Lettura del piano input/riuso, caricamento dell'intero prefisso, selezione CLI e viste2025. Il riuso senza rete conserva il checksum del fornitore già registrato e ricontrolla l'hash locale: è una scelta coerente con riproducibilità e download dei soli mancanti, **non** una nuova verifica dell'eventuale revisione dell'archivio remoto.
+- Nella copia isolata Director: **45test Python CAND,15test UI backtest e typecheck/build passati**. Comprendono prefisso, FLAT al confine, piano39mesi/29nuoviZIP, cache/riusoOBS, esclusione2026, regressioniR1 e apertura2025/DEV.
+- Esaminate le due immagini2025 dell'esecutore a1366px. Non equivale a una prova browser autonoma.
+- Riscontro reale indipendente circoscritto: scaricati in area di review soltanto i tre archivi pubblici di gennaio2025 (trade1m,mark1m,fundingRate), ciascuno confrontato col .CHECKSUM del fornitore. Sulla prima operazione LONG5gennaio, **dato il piano riportato** S0=97969/T=98760,9 e il momento d'ingresso, ricalcolati da CSV open d'ingresso, primo contatto stop, prezzi con frizioni, fee e funding. Coincidono: ingresso03:01UTC ref98200, fill98229,46; stop nel minuto08:03, chiusura contabile08:04, fill97939,6093; fee0,9985246244, funding−0,0999962057, netto−4,0492720609USDT (−4,05). Nessun2026 letto.
+- Non verificati autonomamente dal Director: l'intera popolazione di segnali/astensioni, tutti i107trade DEV+2025, tutti gli archivi o la riproduzione byte per byte dei bundle reali. Tali evidenze restano dell'esecutore, con il perimetro dichiarato del suo script (non cerca call mancanti).
+- I test sui casi di funding non certificato/HALT rimangono sintetici; nessun errore riproducibile nuovo individuato nel perimetro della review.
+
+### Decisione e raccomandazione
+Non promuovere v1 all'uso operativo o a una nuova fase live/paper volta a provarne la redditività. Conservare versione, risultati negativi e consultazione storica. DEV riportato:78trade,−210,59USDT;2025:29trade,−109,08USDT, entrambi negativi già ai prezzi di riferimento e peggiori con le frizioni assunte. Sono somme per nozionale fisso, non rendimento di conto. Il2025 è già esposto, non validazione indipendente.
+
+La capacità implementata (osservazioni causali, candidato completo, percorso storico e UI) è distinta dall'utilità economica non dimostrata. Non scartare l'intera famiglia sulla base di questa sola versione; non modificare soglie dopo aver visto2025.
+
+Precisazione alla raccomandazione dell'esecutore: “nessun uso” significa nessuna promozione operativa, non cancellazione di strumenti/evidenza o divieto di consultazione. Un futuro disegno **non può cancellare l'esposizione2025** dicendo di ripartire da zero. Può dichiarare ciò che ha imparato, ma il metodo e il protocollo del seguito spettano adAstra; nessun obbligo aggiunto di inventare tutto da zero o aprire subito dati nuovi/protetti. Nessuna nuova acquisizione, ottimizzazione o versione autorizzata da questa review.
+
+### Prova concreta ancora da raccogliere
+Gian apre il bundle2025 già consegnato, sceglie «Prima operazione», legge movimento/reazione/condizioni, poi «Mostra seguito modellato» e prova «Prima astensione». «Primo caso negativo» coincide qui con la prima operazione: non è un errore, è la regola cronologica.
+Non deve verificare formule/pivot o decine di trade: deve solo dire se riesce a seguire perché il programma ha chiesto l'ingresso e come è finita. Riscontro non ancora ricevuto, nessuna accettazione d'uso inventata. Nessuna nuova macrofase UI automatica se resta una difficoltà di comprensione.
+
+Dopo tale riscontro il Director comunica adAstra chiusura/evidenza/limiti/raccomandazione e chiede la direzione successiva.2026 resta protetto e i vecchi studiINACTIVE. Nessun ulteriore incaricoClaude pendente.

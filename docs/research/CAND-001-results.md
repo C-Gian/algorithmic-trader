@@ -244,7 +244,7 @@ Esempi con la stessa regola cronologica, primi per verso; categorie vuote dichia
 
 Nell'app i cinque pulsanti del bundle 2025 aprono questi episodi.
 
-## Raccomandazione (per Director e Astra)
+## Raccomandazione dell'esecutore (per Director e Astra)
 
 - **Non promuovere CAND-001 v1** a qualunque uso, nemmeno simulato in tempo reale: negativo nel DEV (−210,59) e nel confronto 2025 (−109,08), già ai prezzi di riferimento prima dei costi, con costi assunti che pesano circa un terzo del rischio per operazione.
 - **Conservare l'evidenza negativa** com'è, senza varianti scelte guardando il 2025: il 2025 è già esposto e non può selezionare una v2.
@@ -265,7 +265,7 @@ Gli esempi sono stati scelti con la regola cronologica registrata (sezione 12 de
 - Il comportamento con funding non certificato e con percorso irrisolto è verificato su dati sintetici: il DEV reale non contiene questi casi.
 - Nell'app, a 390 px di larghezza l'intestazione dell'episodio (badge e pulsanti dei momenti) sporge di 256 px. Il difetto c'era già prima di R1 ed è fuori dal perimetro desktop di questa fase.
 - Il 2025 è già esposto e non è una validazione indipendente; 29 operazioni sono un campione piccolo.
-- Riscontro separato e verifiche dei dati sono dell'esecutore: il Director non ha ricalcolato autonomamente archivi, ledger o operazioni reali.
+- Riscontro separato complessivo e verifiche integrali dei dati restano dell'esecutore. Il riscontro autonomo Director è limitato all'esecuzione/costi della prima operazione2025, come precisato nella review finale.
 - Il bundle DEV e1.0.0 (schema /1) resta conservato ma l'app non lo apre.
 
 ## Tabelle generate dal motore
@@ -421,3 +421,25 @@ Generate con le funzioni del motore dai bundle DEV e1.0.1 e 2025 e1.0.2, affianc
 | SHORT | FIRST_ABSTAIN_REACTION_INVALIDATED | EP:SHORT:1735956900000:1735983900000 | 2025-01-04T15:45:00Z |
 | SHORT | FIRST_ABSTAIN_REWARD_RISK | EP:SHORT:1735870500000:1735894800000 | 2025-01-03T13:30:00Z |
 | SHORT | FIRST_ABSTAIN_MISSING_DATA | categoria vuota | — |
+
+
+## Review del Director — 17 ottobre 2026
+
+Consegna4ff5046 **accettata tecnicamente**. Nella copia isolata del Director:45test Python CAND,15test UI backtest e typecheck/build passati. Controllati piano degli input, prefisso osservativo completo, partenza FLAT, riuso degli archivi e separazione2025. Il diff dopo il commit pre-esiti078d9ed è documentale; configurazione e regole decisionali invariate. Esaminate le due immagini2025 dell'esecutore, non prova browser autonoma.
+
+**Riscontro reale indipendente limitato a una operazione.** Dai tre ZIP Binance Vision gennaio2025, confrontati con i checksum del fornitore, il Director ha ricalcolato l'esecuzione e i costi della prima LONG5gennaio, dato il piano riportato (stop97969,target98760,9):
+- ingresso03:01UTC, open98200, fill98229,46, q=0,0101802453154BTC;
+- primo stop nel minuto08:03UTC, chiusura contabile08:04, fill97939,6093;
+- PnL fill−2,9507512308, fee0,9985246244, funding−0,0999962057;
+- netto−4,0492720609USDT, coerente con−4,05mostrato.
+
+Provenienza del riscontro (archivi locali della review fuoriGit):
+- trade: https://data.binance.vision/data/futures/um/monthly/klines/BTCUSDT/1m/BTCUSDT-1m-2025-01.zip — SHA256 `b69ca5b2c2d1ae00d68d2790d09138cb2a44085ff19e0da5dc98b569ea7e489e`;
+- mark: https://data.binance.vision/data/futures/um/monthly/markPriceKlines/BTCUSDT/1m/BTCUSDT-1m-2025-01.zip — SHA256 `c061f32b85c72aa8e588882bfd2b884968cfdea45308b3b74f8fb3ff44d9fdc6`;
+- funding: https://data.binance.vision/data/futures/um/monthly/fundingRate/BTCUSDT/BTCUSDT-fundingRate-2025-01.zip — SHA256 `df725010d55458866eb5a47e9ee708c6796c9d7e77b14c38342cea11f381815e`.
+
+Questo riscontro **non** certifica la generazione del segnale, la completezza della popolazione o i107trade complessivi. Il ricalcolo di tutti gli archivi/ledger reali e la riproducibilità integrale restano evidenze dell'esecutore. Nessun2026usato nella review.
+
+**Raccomandazione Director:** non promuovere v1 all'uso operativo; conservare risultato negativo e strumenti di consultazione. Nessuna variante scelta sul2025, nessuna conclusione generale di inutilità della famiglia. Un nuovo disegno non cancella ciò che è già stato visto: il futuro protocollo va deciso daAstra dichiarando tutte le esposizioni. Non si prescrive di ripartire necessariamente da zero o di aprire subito dati protetti. Nessuna nuova attività di ricerca/live autorizzata qui.
+
+La prova concreta di comprensione di Gian è ancora pendente. Accettazione tecnica distinta dalla chiusura della macrofase e da qualunque validazione di trading.
