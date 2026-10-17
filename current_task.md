@@ -1,6 +1,6 @@
 # MOVE-001 — Implementazione isolata e applicazione descrittiva DEV
 
-**Stato: READY. Director, 17 ottobre 2026.** Base: 03510afed13732c2fc46b5bb4e95626986c95ca0 più il commit che pubblica questo incarico. Astra approva la candidata semantica e autorizza l'intera macrofase. Esecutore: Claude Code nel checkout preparato dall'Owner.
+**Stato: IN_PROGRESS** (Claude Code, 17 ottobre 2026; incarico READY del Director, 17 ottobre 2026). Base: 03510afed13732c2fc46b5bb4e95626986c95ca0 più il commit che pubblica questo incarico. Astra approva la candidata semantica e autorizza l'intera macrofase. Esecutore: Claude Code nel checkout preparato dall'Owner.
 
 ## Obiettivo e autorità
 Implementare il ciclo causale e verificare se rappresenta concretamente movimento–reazione, senza strategia o valutazione economica. Contratto completo: **docs/research/MOVE-001.md §§1–12, versione1.0.1**; §§11–12 completano le precedenze. Leggere AGENTS, STATE, contesto funzionale e EXPOSURES; usare osservatore e acquisizione locale esistenti, senza rileggere l'intero archivio.
@@ -31,4 +31,9 @@ Test discriminanti per simmetria, disponibilità/versioni pivot, precedenze, for
 CAND-001/config/costi e OBS-002/output precedenti invariati. Nessun download, lettura2025 o2026, simulazione di operazioni, PnL, nuovo segnale, ottimizzazione, strategia, API exchange, conto, ordine reale, nuovo frontend o restyling. Questa è una rappresentazione sperimentale, non una promozione operativa.
 
 ## Avanzamento e consegna dell'esecutore
-Da compilare senza cambiare obiettivi/convenzioni.
+**Avanzamento 1 — gate prima dei dati.** Checkout verificato su `9b536a2`, senza pull/fetch. Pubblicati prima di leggere dati reali per MOVE-001:
+- `config/MOVE-001-v1.json` (versione 1.0.1, schema dei conteggi, durate, selezione dei casi, quantile lineare);
+- modulo isolato `src/move001/` (ciclo, conteggi, casi, pacchetti, CLI);
+- 18 test sintetici in `tests/test_move001.py`.
+
+Nessun dato reale MOVE-001 ancora elaborato.

@@ -1,0 +1,91 @@
+{
+  "id": "MOVE-001/v1",
+  "version": "1.0.1",
+  "contract": "docs/research/MOVE-001.md §§1-12, versione 1.0.1 (commit 9b536a2fa2399cdc08e55f70f462cc3aee967871)",
+  "purpose": "Rappresentazione sperimentale del ciclo di vita di un movimento strutturalmente ancorato; nessuna strategia, segnale, operazione o valutazione economica",
+  "observationDefinitions": {
+    "id": "OBS-001/v1",
+    "hash": "3c4eb884d0b6752bfb31e7d9ae159a1414d75cadc90f9abcc9379d5825002387",
+    "unchanged": true,
+    "reused": "barre 45m UTC complete, pivot stretti 2+2, doppio pivot escluso, sequenza alternata APPEND/REPLACE/KEEP con availableAt, struttura 45m dagli ultimi due high e low confermati, segmenti azzerati da barre incomplete"
+  },
+  "source": {
+    "name": "Binance Vision",
+    "symbol": "BTCUSDT",
+    "segment": "USDS-M futures (um)",
+    "contractType": "PERPETUAL",
+    "kind": "TRADE_KLINES_1M",
+    "existingFilesOnly": true,
+    "manifest": "algorithmic-trader-data/CAND-001/manifests/acquisition-trade.json",
+    "months": "2022-10 … 2024-12, elencati esplicitamente nel codice (27 file)"
+  },
+  "periods": {
+    "inputStart": "2022-10-01T00:00:00Z",
+    "studyStart": "2023-01-01T00:00:00Z",
+    "end": "2025-01-01T00:00:00Z",
+    "prefix": "processato per inizializzare osservatore e ciclo; nessun azzeramento al 2023-01-01; nascite del prefisso riportate separatamente",
+    "endOfCoverage": "archiviazione amministrativa delle letture aperte, durate censurate, nessuna lettura 2025"
+  },
+  "clock": {"barMinutes": 45, "evaluation": "dopo la chiusura di ogni barra 45m completa; nessuna simulazione intrabar"},
+  "triple": {
+    "LONG": "ultimi tre pivot accettati della sequenza alternata: Q LOW, B HIGH, P0 LOW con Q.price < P0.price < B.price e candidateOpen Q < B < P0",
+    "SHORT": "Q HIGH, B LOW, P0 HIGH con Q.price > P0.price > B.price e candidateOpen Q < B < P0",
+    "identity": "verso, segmento, candidateOpen e versione Fibonacci dell'evento APPEND/REPLACE di Q, B, P0; una nuova versione è una nuova tripla dal proprio availableAt",
+    "crossing": "LONG C(k-1) <= B < C(k); SHORT C(k-1) >= B > C(k); barra k-1 completa nello stesso segmento; tripla disponibile entro la chiusura k (inclusa)",
+    "baseUntested": "LONG tutti i low delle barre dopo la candela di P0 fino alla barra di nascita inclusa > P0; SHORT tutti gli high < P0",
+    "consideredOnce": "una tripla qualificata è considerata al primo attraversamento valido; mai recuperata né rinata a un riattraversamento",
+    "notQualified": "geometria, base già testata prima dell'attraversamento, nessun attraversamento mentre corrente: contati a parte, mai come strutture bloccate"
+  },
+  "P1": "primo pivot accettato (evento APPEND o REPLACE, mai KEEP) HIGH per LONG / LOW per SHORT con candidateOpen >= barra di nascita e d*(price - B) > 0; fissato alla pubblicazione, mai riscritto; la sua candela e le due barre di conferma non contano come contatto",
+  "judgements": ["UTILIZZABILE", "NON_SOSTIENE_PIU_LA_TESI", "INDETERMINATO"],
+  "reasons": {
+    "INDETERMINATO": ["FORMAZIONE_NON_CONCLUSA", "TEST_ORIGINE", "STRUTTURA_OPPOSTA", "STRUTTURA_OPPOSTA_ALLA_NASCITA", "DATI_INCOMPLETI"],
+    "NON_SOSTIENE_PIU_LA_TESI": ["ORIGINE_IN_CHIUSURA"],
+    "UTILIZZABILE": ["P1_NOTO"]
+  },
+  "archiveReasons": ["ORIGINE_IN_CHIUSURA", "ESTREMO_RAGGIUNTO", "SOSTITUITO_DA_NUOVA_STRUTTURA", "CONTINUITA_INTERROTTA"],
+  "openAtEnd": "FINE_COPERTURA (amministrativa, ultimo giudizio conservato)",
+  "closeOrder": [
+    "1 continuità: barra incompleta -> archivia il principale INDETERMINATO/DATI_INCOMPLETI, motivo CONTINUITA_INTERROTTA; sequenza e vincolo di freschezza ripartono nel nuovo segmento",
+    "2 pubblica gli eventi dell'osservatore con availableAt = chiusura (sequenza alternata, struttura, eventuale P1)",
+    "3 valuta il riferimento esistente: (a) LONG C<=P0 / SHORT C>=P0 perdita e archiviazione, con contatto di P1 nella stessa barra registrato come ordine ignoto; (b) LONG L<=P0 / SHORT H>=P0 test: prima sospensione TEST_ORIGINE oppure fatto ulteriore, con DOPPIO_TEST_ORDINE_IGNOTO se anche P1 toccato; (c) se non sospeso e P1 noto prima di questa chiusura, LONG H>=P1 / SHORT L<=P1 completamento geometrico e archiviazione ESTREMO_RAGGIUNTO; da sospeso solo fatto, nessuna riattivazione; (d) struttura 45m opposta: prima sospensione STRUTTURA_OPPOSTA oppure fatto ulteriore al cambio; (e) P1 appena pubblicato e nessuna sospensione: primo passaggio a UTILIZZABILE",
+    "4 considera la tripla corrente e il suo attraversamento: adozione o rifiuto",
+    "5 riferimento appena nato con struttura 45m opposta nella stessa chiusura: nascita conservata, sospensione immediata STRUTTURA_OPPOSTA_ALLA_NASCITA (MIXED o non disponibile non sospendono)"
+  ],
+  "slot": {
+    "principal": "un solo riferimento principale",
+    "outcomes": ["ADOTTATA", "NON_ADOTTATA_OCCUPATO_FORMAZIONE", "NON_ADOTTATA_OCCUPATO_UTILIZZABILE", "NON_ADOTTATA_FRESCHEZZA"],
+    "formation": "principale con P1 non noto e non sospeso: non sostituibile, rifiuto anche per verso opposto",
+    "usable": "principale UTILIZZABILE: non sostituibile",
+    "suspended": "sostituibile solo se P0 candidato ha candidateOpen strettamente successivo all'apertura della prima barra di test/conflitto; altrimenti NON_ADOTTATA_FRESCHEZZA",
+    "afterArchive": "perdita: P0 dopo la barra della perdita; completamento: P0 dopo il vecchio P0; sostituzione: vincolo del nuovo principale; interruzione: nessun vincolo nel nuovo segmento",
+    "sameClose": "perdita e completamento liberano il posto nella stessa chiusura"
+  },
+  "counts": {
+    "periods": ["DEV", "2023", "2024", "ogni mese DEV"],
+    "splits": ["verso del riferimento o del candidato", "verso e stato dell'occupante per i rifiuti"],
+    "closes": ["previste", "complete", "incomplete", "principale assente", "in formazione senza sospensione", "sospeso con P1", "sospeso senza P1", "utilizzabile"],
+    "structures": ["qualificate", "esiti adozione/rifiuto", "non qualificate per motivo (separate)"],
+    "references": ["nascite", "prime disponibilità di P1 (in formazione / da sospeso)", "primo passaggio a UTILIZZABILE", "sospensioni iniziali per motivo", "fatti ulteriori da sospeso", "perdite per stato", "completamenti", "sostituzioni", "interruzioni", "aperti a fine copertura per stato"],
+    "stock": "stock iniziale + nascite - archiviazioni = stock finale per ogni periodo",
+    "reconciliation": ["qualificate = adottate + rifiutate", "chiusure complete = somma delle condizioni di occupazione"]
+  },
+  "durations": {
+    "items": ["nascita -> P1", "nascita -> UTILIZZABILE", "nascita -> archiviazione o fine copertura", "permanenza in formazione, sospeso con P1, sospeso senza P1, utilizzabile"],
+    "population": "riferimenti nati in DEV; nati nel prefisso riportati a parte",
+    "unit": "barre 45m e ore UTC",
+    "stats": ["min", "p50", "p90", "max"],
+    "quantileMethod": "lineare, h=(n-1)*q",
+    "missing": "disponibili e censurate contate separatamente; nessuna durata mancante pari a zero"
+  },
+  "examples": {
+    "categories": ["BIRTH_LONG", "BIRTH_SHORT", "USABLE_AFTER_P1", "ORIGIN_TEST", "BASE_LOST", "OPPOSITE_STRUCTURE_AT_BIRTH", "OPPOSITE_STRUCTURE_LATER", "GEOMETRIC_COMPLETION", "REPLACED_AFTER_SUSPENSION", "NOT_ADOPTED_FORMATION", "NOT_ADOPTED_USABLE", "CONTINUITY_INTERRUPTED", "OPEN_AT_END_FIRST_BORN"],
+    "scope": "eventi con istante nel DEV; per i rifiuti il caso è il riferimento occupante",
+    "order": "availableAt dell'evento, poi ID stabile; per OPEN_AT_END_FIRST_BORN data di nascita",
+    "dedup": "stesso riferimento una volta con tutte le categorie",
+    "max": 13,
+    "emptyCategoriesDeclared": true
+  },
+  "outputs": "C:/Projects/algorithmic-trader-data/MOVE-001",
+  "excluded": ["esiti 24h", "rendimento", "PnL", "operazioni simulate", "nuovi indicatori", "soglie", "scadenze temporali", "dati 2025/2026", "download"]
+}
