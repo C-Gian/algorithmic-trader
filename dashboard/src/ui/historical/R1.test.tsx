@@ -121,7 +121,7 @@ describe('R1-B · prezzo al cutoff mancante', () => {
     const k = (t - b.periods.inputStart) / (45 * 60_000) - 1;
     for (const col of ['o', 'h', 'l', 'c', 'v', 'q', 'trades']) b.bars['45m'][col][k] = null;
     b.bars['45m'].status[k] = 'INCOMPLETE';
-    Object.assign(b.observations['45m'][k], { status: 'INCOMPLETE', C: null });
+    Object.assign(b.observations['45m'][k], { status: 'INCOMPLETE', C: null, segment: null }); // come produce il motore per una barra incompleta
     const study = new HistoricalStudy(parseBundle(JSON.stringify(b)));
     render(<App createSimulation={sim} initialStudy={study} initialEnvironment="HISTORICAL" />);
     expect(lastPriceMark()).toBeNull();
@@ -149,5 +149,62 @@ describe('R1-B · prezzo al cutoff mancante', () => {
     expect(screen.getByRole('img', { name: 'Grafico 45m: nessuna barra completa nel tratto' })).toBeTruthy();
     expect(screen.getByText(/non c’è alcun prezzo da disegnare/)).toBeTruthy();
     expect(document.querySelector('svg')).toBeNull();
+  });
+});
+
+describe('R1-A completamento · campi annidati letti dalle viste', () => {
+  const nav = () => within(screen.getByRole('navigation', { name: 'Navigazione' }));
+
+  it('missingFlags mancante nel riepilogo: rifiuto via file picker, studio conservato, poi file valido e riepilogo', async () => {
+    render(<App createSimulation={sim} initialStudy={new HistoricalStudy(parseBundle(fixture))} initialEnvironment="HISTORICAL" />);
+    fireEvent.click(screen.getByRole('button', { name: 'Chiusura successiva →' }));
+    const broken = base();
+    delete broken.retrospective.summary.tables.TOTAL.s45.UP.missingFlags;
+    await upload('Apri altro studio', JSON.stringify(broken));
+    await waitFor(() => expect(screen.getByText(/Riepilogo, periodo TOTAL, gruppo s45 UP: campo «missingFlags» assente/)).toBeTruthy());
+    expect(screen.getByText(/Origine 2 di 64/)).toBeTruthy();
+    // Il riepilogo dello studio conservato si apre senza errori.
+    fireEvent.click(nav().getByRole('button', { name: 'Studio osservativo' }));
+    expect(screen.getByText(/confronto descrittivo/)).toBeTruthy();
+    expect(screen.queryByRole('alert')).toBeNull();
+    // Il file valido si apre e il suo riepilogo è consultabile.
+    fireEvent.click(nav().getByRole('button', { name: 'Dashboard' }));
+    await upload('Apri altro studio', fixture);
+    await waitFor(() => expect(screen.getByText(/Origine 1 di 64/)).toBeTruthy());
+    fireEvent.click(nav().getByRole('button', { name: 'Studio osservativo' }));
+    expect(screen.getAllByRole('table').length).toBeGreaterThan(3);
+  });
+
+  it('stessa classe: campi annidati di gruppi, disponibilità, eventi, livelli e Fibonacci', () => {
+    const cases: [string, (b: ReturnType<typeof base>) => void, RegExp][] = [
+      ['flag di una relazione', (b) => delete b.retrospective.summary.tables['2025-06'].relation.DOWN.MIXED.missingFlags.GAP, /relazione DOWN\/MIXED: motivo mancante «GAP»/],
+      ['statistica non numerica', (b) => (b.retrospective.summary.tables.TOTAL.s45.MIXED.stats.up.p50 = 'x'), /gruppo s45 MIXED: statistiche di «up» incomplete/],
+      ['disponibilità all’origine', (b) => delete b.retrospective.summary.tables.TOTAL.coverage.availabilityAtOrigin['1D']['vol.A'].missing, /disponibilità di «vol\.A» \(1D\) incompleta/],
+      ['evento pivot senza candela', (b) => delete b.events['45m'][0].candidateOpen, /Eventi 45m, evento 1: dati del pivot incompleti/],
+      ['livello senza identità', (b) => delete b.observations['45m'][12].lvl.find((l: { price: number | null }) => l.price !== null).id, /Osservazioni 45m, record 13, livello \d: prezzo, identità o disponibilità non validi/],
+      ['ritracciamento senza prezzo', (b) => delete b.observations['45m'][12].fib.retracements[0].price, /record 13: livello Fibonacci retracements\[0\] incompleto/],
+      ['misura con testo al posto del numero', (b) => (b.observations['1D'][0].vol.tr.v = '1'), /Osservazioni 1D, record 1, vol\.tr: valore non numerico/],
+    ];
+    for (const [label, mutate, message] of cases) {
+      const b = base();
+      mutate(b);
+      expect(() => parseBundle(JSON.stringify(b)), label).toThrow(message);
+    }
+  });
+
+  it('contenimento: un dato inatteso che arrivi comunque alla vista produce un errore esplicito, non uno zero', () => {
+    const corrupt = base();
+    delete corrupt.retrospective.summary.tables.TOTAL.s45.UP.missingFlags;
+    const study = new HistoricalStudy(corrupt); // costruito senza validatore, solo per provare il contenimento
+    const quiet = console.error;
+    console.error = () => {};
+    try {
+      render(<App createSimulation={sim} initialStudy={study} initialEnvironment="HISTORICAL" />);
+      fireEvent.click(nav().getByRole('button', { name: 'Studio osservativo' }));
+      expect(screen.getByRole('alert', { name: 'Errore di visualizzazione' })).toBeTruthy();
+      expect(screen.getByLabelText('Apri studio storico', { selector: 'input' })).toBeTruthy();
+    } finally {
+      console.error = quiet;
+    }
   });
 });

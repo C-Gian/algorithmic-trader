@@ -1,6 +1,6 @@
 # Incarico corrente — OBS-001 osservazioni calcolate e primo studio nell'app
 
-**Stato: READY — completamento R1-A dopo seconda review. R1-B PASS; nessuna modifica ai calcoli richiesta. Leggere la seconda review in fondo, non rieseguire l'intero mandato.** Macrofase completa autorizzata dalla disposizione Astra trasmessa da Gian il 16 ottobre 2026, dopo la chiusura UI al commit baa1e762703f7dfd01f870061dba2a1c691326ce.
+**Stato: DELIVERED — completamento R1-A consegnato da Claude Code (validazione dei campi annidati); R1-B PASS. In attesa di review del Director. Non ACCEPTED.** Macrofase completa autorizzata dalla disposizione Astra trasmessa da Gian il 16 ottobre 2026, dopo la chiusura UI al commit baa1e762703f7dfd01f870061dba2a1c691326ce.
 **Priorità esecutiva corrente:** completare soltanto la validazione annidata di R1-A secondo la seconda review in fondo; R1-B approvato. Non ripetere acquisizione, studio o gate Figma; convenzioni e tabelle rimangono congelate.
 
 Responsabile specifica e review: Director. Esecutore: Claude Code.
@@ -495,4 +495,39 @@ Portare ad Astra la domanda sul prossimo incremento orientato al metodo decision
 
 ## Consegna completamento R1-A
 
-Da compilare dall'esecutore. Nessun altro lavoro assegnato.
+Claude Code, 17 ottobre 2026. Base `e01f3c1` su `main`, checkout pulito; nessun pull o fetch. Il commit della consegna è quello che aggiorna questo file.
+
+**Perimetro.** Ho modificato solo il validatore di import, il contenimento della vista storica, il riepilogo (rimossi due `?? 0`) e i test R1. R1-B non è stato riaperto. Nessuna modifica a motore, config, convenzioni, gruppi, popolazione, risultati, bundle reale o fixture. Nessun download né ricalcolo.
+
+**Che cosa valida ora `parseBundle`** (`dashboard/src/historical/loadBundle.ts`). Ho elencato con una ricerca nel codice tutti i campi annidati che le viste leggono; il validatore li controlla per ogni elemento.
+- **Gruppi del riepilogo.** Copertura, s45 e le relazioni UP/DOWN × 4: tutti i conteggi interi e `missingFlags` con i quattro motivi interi (ORIGIN_INCOMPLETE, A_UNAVAILABLE, RIGHT_CENSORED, GAP). Per s45 e relazioni anche `stats` di final, up e down, con `n` intero e media, minimo, massimo e quantili numerici o null. Per ogni scala, `availabilityAtOrigin` con celle `{available, missing, reasons}`.
+- **Record di osservazione.**
+  - `inputRef`;
+  - `segment`: oggetto per le barre COMPLETE, null per le INCOMPLETE;
+  - misure numeriche con valore numerico o null;
+  - `cross` e `structure` in insiemi chiusi;
+  - volumi;
+  - `piv.check` con `candidateOpen`;
+  - riferimenti ai pivot in highs, lows e nelle ancore P0/P1;
+  - Fibonacci con u, r, ritracciamenti e proiezioni (ratio, prezzo, distanza);
+  - livelli di tipo noto: se il prezzo c'è servono identità, disponibilità e distanza, altrimenti il motivo;
+  - attraversamenti.
+- **Eventi, per tipo.** Pivot confermati e scartati, candele ambigue, sequenze Fibonacci, attraversamenti, incroci e azzeramenti. Per ciascuno, i campi usati nelle revisioni e nei marcatori, in particolare `candidateOpen`, che le viste convertono in data. Un tipo sconosciuto viene rifiutato.
+
+Il messaggio indica sempre la sezione e l'elemento, per esempio «Riepilogo, periodo TOTAL, gruppo s45 UP: campo «missingFlags» assente o non valido». Il file rifiutato non sostituisce lo studio aperto. Nessun campo obbligatorio viene trasformato in zero: il riepilogo non usa più `?? 0` per RIGHT_CENSORED e GAP.
+
+**Contenimento** (`HistoricalEnvironment.tsx`, `ViewGuard`). Difesa secondaria: se una vista incontrasse comunque un dato inatteso, compare un errore esplicito («Lo studio aperto contiene dati non previsti») con il selettore per aprire un altro bundle. Non ci sono valori sostitutivi. La difesa primaria resta il rifiuto all'import.
+
+**Verifiche dell'esecutore**
+- **Typecheck e build** riusciti.
+- **Nuovi test** in `src/ui/historical/R1.test.tsx` (3):
+  - caso della review, via file picker: studio aperto all'origine 2, file senza `TOTAL.s45.UP.missingFlags` rifiutato con il messaggio sopra; lo studio resta all'origine 2 e il suo riepilogo si apre senza errori; poi il file valido si apre dalla prima origine e il suo riepilogo mostra le tabelle;
+  - stessa classe (7 casi): flag di una relazione, statistica non numerica, cella di disponibilità, evento pivot senza `candidateOpen`, livello senza identità, ritracciamento senza prezzo, misura con testo al posto del numero;
+  - contenimento: uno studio corrotto costruito senza validatore porta all'errore esplicito, non a un crash.
+- **Discriminazione:** gli stessi 3 test sul codice di `e4d31db` falliscono tutti e 3.
+- **Dato di test R1-B reso coerente.** Il test della lacuna 45m modificava un record in INCOMPLETE lasciandogli un segmento attivo, cosa che il motore non produce. Ora lo imposta a `segment: null`, come il motore; ciò che il test verifica di R1-B non cambia.
+- **Test pertinenti eseguiti:** Historical (11) e R1 (9): 20/20. Come da mandato, non ho rieseguito i 33 completi né il motore.
+- **Bundle reale.** Un test temporaneo, non pubblicato e cancellato subito dopo, ha letto il bundle 1.0.1 da `C:\Projects\algorithmic-trader-data`: il validatore più severo lo accetta.
+- Nessuna prova browser aggiuntiva e nessuna nuova immagine, come richiesto.
+
+**Restano da fare.** Review del Director. Il passaggio ad Astra chiesto da Gian e la sua prova d'uso non fanno parte di questo completamento.

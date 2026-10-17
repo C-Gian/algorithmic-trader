@@ -150,8 +150,8 @@ export function StudySummaryView({ study, onOpenOrigin }: { study: HistoricalStu
                     <td>{c.originValid}</td>
                     <td>{c.aValid}</td>
                     <td>{c.futureComplete}</td>
-                    <td>{c.missingFlags.RIGHT_CENSORED ?? 0}</td>
-                    <td>{c.missingFlags.GAP ?? 0}</td>
+                    <td>{c.missingFlags.RIGHT_CENSORED}</td>
+                    <td>{c.missingFlags.GAP}</td>
                     <td>{c.measuresAvailable}</td>
                   </tr>
                 );

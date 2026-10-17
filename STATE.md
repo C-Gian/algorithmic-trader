@@ -10,7 +10,7 @@ Correzioni UI a e4d31db83c9ea8d0ed54713cca7dc061cf2ba4a2: R1-B prezzo mancante P
 
 ## Incarico corrente
 
-**OBS-001/R1-A completamento — READY.** Validazione dei campi annidati usati dal riepilogo, in particolare missingFlags; rifiuto leggibile prima di sostituire lo studio. Mandato e riproduzione nel task. Nessun nuovo download, ricalcolo o modifica di convenzioni/gruppi/risultati. Verifiche mirate, non suite generale.
+**OBS-001/R1-A completamento — DELIVERED da Claude (17 ottobre), in attesa di review del Director.** Il validatore copre i campi annidati letti dalle viste (gruppi e missingFlags del riepilogo, disponibilità, record, livelli, Fibonacci, eventi per tipo); file incoerenti rifiutati con messaggio localizzato e studio aperto conservato; contenimento esplicito della vista. 3 nuovi test discriminanti, 20 test storici, build; bundle reale accettato. Mandato e riproduzione nel task. Nessun nuovo download, ricalcolo o modifica di convenzioni/gruppi/risultati. Verifiche mirate, non suite generale.
 
 Consegna non ancora ACCEPTED. Prova Owner effettuata ma non conclusa positivamente: Gian chiede spiegazioni sul significato dei controlli e sull'utilità per l'algoritmo. Nessuna fase di rifinitura generale UI assegnata.
 

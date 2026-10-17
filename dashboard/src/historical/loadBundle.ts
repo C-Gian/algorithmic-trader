@@ -47,6 +47,128 @@ function measure(x: unknown, where: string): void {
   if (!isObj(x) || !('v' in x) || !('r' in x) || (x.v === null && !isStr(x.r))) fail(`${where}: misura non nel formato {v, r}.`);
 }
 
+/** Misura numerica: valore finito oppure null con motivo. */
+function numMeasure(x: unknown, where: string): void {
+  measure(x, where);
+  if (!isNumOrNull((x as Obj).v)) fail(`${where}: valore non numerico.`);
+}
+
+/** Misura con valore in un insieme chiuso, oppure null con motivo. */
+function enumMeasure(x: unknown, allowed: string[], where: string): void {
+  measure(x, where);
+  const v = (x as Obj).v;
+  if (v !== null && !allowed.includes(v as string)) fail(`${where}: valore «${String(v)}» non riconosciuto.`);
+}
+
+const LEVEL_KINDS = ['PIVOT_HIGH', 'PIVOT_LOW', 'DAY_HIGH', 'DAY_LOW'];
+
+function pivotRef(x: unknown, where: string): void {
+  if (!isObj(x) || (x.kind !== 'HIGH' && x.kind !== 'LOW') || !isNum(x.price) || !isInt(x.candidateOpen) || !isInt(x.eventTime) || !isInt(x.availableAt)) {
+    fail(`${where}: riferimento al pivot incompleto.`);
+  }
+}
+
+/** Campi annidati del record letti dalle viste (famiglie, grafico, osservazioni). */
+function validateRecord(r: Obj, w: string): void {
+  const ref = obj(r, 'inputRef', w);
+  if (!Array.isArray(ref.minutes) || ref.minutes.length !== 2 || !ref.minutes.every(isInt) || !['valid', 'missing', 'invalid'].every((k) => isInt(ref[k]))) {
+    fail(`${w}: riferimento agli input incompleto.`);
+  }
+  const seg = r.segment;
+  if (r.status === 'COMPLETE' ? !(isObj(seg) && isInt(seg.id) && isInt(seg.bars)) : seg !== null) fail(`${w}: segmento incoerente con lo stato.`);
+  const vol = obj(r, 'vol', w);
+  for (const k of ['tr', 'A', 'AoverC']) numMeasure(vol[k], `${w}, vol.${k}`);
+  const avg = obj(r, 'avg', w);
+  for (const k of ['sma20', 'sma50', 'dist', 'slope', 'pos']) numMeasure(avg[k], `${w}, avg.${k}`);
+  enumMeasure(avg.cross, ['UP', 'DOWN', 'NONE'], `${w}, avg.cross`);
+  const volu = obj(r, 'volu', w);
+  for (const k of ['median', 'ratio']) numMeasure(volu[k], `${w}, volu.${k}`);
+  for (const k of ['base', 'quote', 'trades', 'takerBase', 'takerQuote']) if (!isNumOrNull(volu[k])) fail(`${w}: volume «${k}» non valido.`);
+  const piv = obj(r, 'piv', w);
+  measure(piv.check, `${w}, piv.check`);
+  const check = (piv.check as Obj).v;
+  if (check !== null && !(isObj(check) && isInt(check.candidateOpen) && isStr(check.high) && isStr(check.low))) fail(`${w}: controllo del pivot incompleto.`);
+  enumMeasure(piv.structure, ['UP', 'DOWN', 'MIXED'], `${w}, piv.structure`);
+  for (const k of ['highs', 'lows']) arr(piv, k, w).forEach((p, j) => pivotRef(p, `${w}, piv.${k}[${j}]`));
+  const fib = obj(r, 'fib', w);
+  if (!isInt(fib.version)) fail(`${w}: versione Fibonacci assente.`);
+  measure(fib.anchors, `${w}, fib.anchors`);
+  const anchors = (fib.anchors as Obj).v;
+  if (anchors !== null) {
+    if (!isObj(anchors)) return fail(`${w}: ancore Fibonacci non valide.`);
+    pivotRef(anchors.P0, `${w}, fib P0`);
+    pivotRef(anchors.P1, `${w}, fib P1`);
+    if (!isNum(fib.u) || !isNum(fib.r)) fail(`${w}: u o r di Fibonacci assenti.`);
+    for (const k of ['retracements', 'projections']) {
+      arr(fib, k, w).forEach((l, j) => {
+        if (!isObj(l) || !isNum(l.ratio) || !isNum(l.price)) fail(`${w}: livello Fibonacci ${k}[${j}] incompleto.`);
+        numMeasure((l as Obj).dist, `${w}, fib ${k}[${j}].dist`);
+      });
+    }
+  }
+  arr(r, 'lvl', w).forEach((lv, j) => {
+    const lw = `${w}, livello ${j + 1}`;
+    if (!isObj(lv) || !LEVEL_KINDS.includes(lv.kind as string)) return fail(`${lw}: tipo non riconosciuto.`);
+    if (lv.price === null) {
+      if (!isStr(lv.reason)) fail(`${lw}: livello assente senza motivo.`);
+    } else if (!isNum(lv.price) || !isStr(lv.id) || !isInt(lv.availableAt)) {
+      fail(`${lw}: prezzo, identità o disponibilità non validi.`);
+    } else {
+      numMeasure(lv.dist, `${lw}, distanza`);
+    }
+  });
+  arr(r, 'crossings', w).forEach((c, j) => {
+    if (!isObj(c) || !isStr(c.levelKind) || (c.direction !== 'UP' && c.direction !== 'DOWN') || !isNum(c.price)) fail(`${w}: attraversamento ${j + 1} incompleto.`);
+  });
+}
+
+/** Campi richiesti dalla descrizione di ciascun tipo di evento (revisioni e marcatori dei pivot). */
+function validateEvent(e: Obj, w: string): void {
+  switch (e.type) {
+    case 'PIVOT_CONFIRMED':
+    case 'PIVOT_REJECTED':
+      if ((e.kind !== 'HIGH' && e.kind !== 'LOW') || !isInt(e.candidateOpen) || !isNum(e.price)) fail(`${w}: dati del pivot incompleti.`);
+      break;
+    case 'PIVOT_DUAL_AMBIGUOUS':
+      if (!isInt(e.candidateOpen)) fail(`${w}: candela ambigua senza orario.`);
+      break;
+    case 'FIB_SEQUENCE': {
+      if (!isInt(e.version) || !['APPEND', 'REPLACE', 'KEEP'].includes(e.action as string)) fail(`${w}: versione o azione Fibonacci non valide.`);
+      const after = e.after ?? e.ignored;
+      if (!isObj(after) || !isNum(after.price)) fail(`${w}: pivot della sequenza Fibonacci assente.`);
+      if (!(e.before === null || e.before === undefined || (isObj(e.before) && isNum(e.before.price)))) fail(`${w}: pivot sostituito non valido.`);
+      break;
+    }
+    case 'LEVEL_CROSS':
+      if ((e.direction !== 'UP' && e.direction !== 'DOWN') || !isStr(e.levelKind) || !isNum(e.price)) fail(`${w}: attraversamento incompleto.`);
+      break;
+    case 'SMA_CROSS':
+      if (e.direction !== 'UP' && e.direction !== 'DOWN') fail(`${w}: direzione dell’incrocio non valida.`);
+      break;
+    case 'SEGMENT_RESET':
+      if (!isInt(e.missing)) fail(`${w}: azzeramento senza conteggio dei minuti mancanti.`);
+      break;
+    default:
+      fail(`${w}: tipo di evento «${String(e.type)}» non riconosciuto.`);
+  }
+}
+
+const FLAGS = ['ORIGIN_INCOMPLETE', 'A_UNAVAILABLE', 'RIGHT_CENSORED', 'GAP'];
+const STAT_FIELDS = ['mean', 'min', 'max', 'p10', 'p25', 'p50', 'p75', 'p90'];
+
+/** Gruppo del riepilogo: conteggi, motivi (letti con Object.entries) e statistiche per misura. */
+function validateGroup(g: Obj, w: string, withStats: boolean): void {
+  for (const k of ['n', 'originValid', 'aValid', 'futureComplete', 'measuresAvailable', 'measuresMissing']) if (!isInt(g[k])) fail(`${w}: conteggio «${k}» assente o non valido.`);
+  const flags = obj(g, 'missingFlags', w);
+  for (const k of FLAGS) if (!isInt(flags[k])) fail(`${w}: motivo mancante «${k}» assente o non valido.`);
+  if (!withStats) return;
+  const stats = obj(g, 'stats', w);
+  for (const m of MEASURES) {
+    const st = obj(stats, m, w);
+    if (!isInt(st.n) || !STAT_FIELDS.every((k) => isNumOrNull(st[k]))) fail(`${w}: statistiche di «${m}» incomplete.`);
+  }
+}
+
 function counts(x: unknown, where: string): void {
   if (!isObj(x) || !['expected', 'valid', 'missing', 'invalid'].every((k) => isInt(x[k]))) fail(`${where}: conteggi dei minuti non validi.`);
 }
@@ -97,20 +219,7 @@ function validateBars(data: Obj, periods: { inputStart: number; end: number }): 
       if (r.open !== open[i] || r.end !== (open[i] as number) + step || r.availableAt !== r.end) fail(`${w}: tempi non allineati alla barra.`);
       if (r.status !== status[i]) fail(`${w}: stato diverso da quello della barra.`);
       if (!isNumOrNull(r.C) || (r.status === 'COMPLETE') !== isNum(r.C)) fail(`${w}: chiusura C incoerente.`);
-      const vol = obj(r, 'vol', w);
-      const avg = obj(r, 'avg', w);
-      const volu = obj(r, 'volu', w);
-      const piv = obj(r, 'piv', w);
-      const fib = obj(r, 'fib', w);
-      obj(r, 'inputRef', w);
-      for (const k of ['tr', 'A', 'AoverC']) measure(vol[k], `${w}, vol.${k}`);
-      for (const k of ['sma20', 'sma50', 'dist', 'slope', 'pos', 'cross']) measure(avg[k], `${w}, avg.${k}`);
-      for (const k of ['median', 'ratio']) measure(volu[k], `${w}, volu.${k}`);
-      for (const k of ['check', 'structure']) measure(piv[k], `${w}, piv.${k}`);
-      if (!Array.isArray(piv.highs) || !Array.isArray(piv.lows)) fail(`${w}: pivot di struttura assenti.`);
-      if (!isInt(fib.version)) fail(`${w}: versione Fibonacci assente.`);
-      measure(fib.anchors, `${w}, fib.anchors`);
-      if (!Array.isArray(r.lvl) || !Array.isArray(r.crossings)) fail(`${w}: livelli o attraversamenti assenti.`);
+      validateRecord(r, w);
     });
 
     let prev = -Infinity;
@@ -120,6 +229,7 @@ function validateBars(data: Obj, periods: { inputStart: number; end: number }): 
       if (e.scale !== scale) fail(`${w}: scala diversa da ${scale}.`);
       if ((e.availableAt as number) < prev || (e.eventTime as number) > (e.availableAt as number)) fail(`${w}: ordine temporale non valido.`);
       prev = e.availableAt as number;
+      validateEvent(e, w);
     });
   }
 }
@@ -149,12 +259,17 @@ function validateStudy(data: Obj, periods: { studyStart: number; end: number }):
     const w = `Riepilogo, periodo ${String(p)}`;
     const t = obj(tables, String(p), 'Riepilogo');
     const cov = obj(t, 'coverage', w);
-    if (!isInt(cov.n) || !isObj(cov.missingFlags) || !isObj(cov.availabilityAtOrigin)) fail(`${w}: copertura incompleta.`);
+    validateGroup(cov, `${w}, copertura`, false);
+    const avail = obj(cov, 'availabilityAtOrigin', `${w}, copertura`);
+    for (const scale of SCALES) {
+      for (const [key, cell] of Object.entries(obj(avail, scale, `${w}, disponibilità`))) {
+        if (!isObj(cell) || !isInt(cell.available) || !isInt(cell.missing) || !isObj(cell.reasons)) fail(`${w}: disponibilità di «${key}» (${scale}) incompleta.`);
+      }
+    }
     const s45 = obj(t, 's45', w);
     const matrix = obj(t, 'matrix', w);
     for (const s of ['UP', 'DOWN', 'MIXED', 'UNAVAILABLE']) {
-      const g = obj(s45, s, w);
-      if (!isInt(g.n) || !isObj(g.stats) || !MEASURES.every((m) => isObj((g.stats as Obj)[m]))) fail(`${w}: gruppo s45 ${s} incompleto.`);
+      validateGroup(obj(s45, s, w), `${w}, gruppo s45 ${s}`, true);
       const row = obj(matrix, s, w);
       if (!['UP', 'DOWN', 'MIXED', 'UNAVAILABLE'].every((d) => isInt(row[d]))) fail(`${w}: matrice incompleta.`);
     }
@@ -162,8 +277,7 @@ function validateStudy(data: Obj, periods: { studyStart: number; end: number }):
     for (const side of ['UP', 'DOWN']) {
       const r = obj(rel, side, w);
       for (const k of ['CONCORDANT', 'OPPOSITE', 'MIXED', 'UNAVAILABLE']) {
-        const g = obj(r, k, w);
-        if (!isInt(g.n) || !isObj(g.stats)) fail(`${w}: relazione ${side}/${k} incompleta.`);
+        validateGroup(obj(r, k, w), `${w}, relazione ${side}/${k}`, true);
       }
     }
   }
