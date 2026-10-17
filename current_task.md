@@ -1,6 +1,8 @@
 # Incarico corrente — OBS-001 osservazioni calcolate e primo studio nell'app
 
-**Stato: DELIVERED — OBS-001 consegnato da Claude Code (vedi Spazio dell'esecutore); in attesa di review del Director e prova di Gian.** Macrofase completa autorizzata dalla disposizione Astra trasmessa da Gian il 16 ottobre 2026, dopo la chiusura UI al commit baa1e762703f7dfd01f870061dba2a1c691326ce.
+**Stato: READY — OBS-001/R1, due correzioni UI circoscritte dopo review Director. Consegna principale verificata nei calcoli; non ancora ACCEPTED. Eseguire soltanto il mandato di correzione in fondo.** Macrofase completa autorizzata dalla disposizione Astra trasmessa da Gian il 16 ottobre 2026, dopo la chiusura UI al commit baa1e762703f7dfd01f870061dba2a1c691326ce.
+**Priorità esecutiva corrente:** applicare R1-A/B nella review del Director in fondo. Non ripetere acquisizione, studio o gate Figma; convenzioni e tabelle rimangono congelate.
+
 Responsabile specifica e review: Director. Esecutore: Claude Code.
 Questo task è la registrazione ex ante delle convenzioni **OBS-001/v1**: completare tutti i microstep, dal sintetico all'acquisizione, elaborazione reale, integrazione e prima tabulazione. Nessuna ulteriore autorizzazione ordinaria fra i microstep. Non fermarsi a un motore sintetico. La consegna UI accettata resta nella storia Git a baa1e76.
 
@@ -326,6 +328,70 @@ Nessun comportamento coerente emerge in quattro mesi; non è attribuita alcuna c
 5. Premere «Mostra seguito retrospettivo 24h», leggere la scheda a posteriori e tornare con «Solo informazioni al momento».
 6. Aprire «Studio osservativo», scegliere un mese e aprire un «caso contrario».
 
-## Review del Director
+## Review del Director — 17 ottobre 2026
 
-Specifica documentale ex ante, lettura di DESIGN-001, contratto UI e documenti di autorità. Fonte ufficiale consultata e checksum settembre raggiungibile; nessun download ZIP, calcolo reale o esito storico esaminato prima della registrazione. Review di codice, risultati e prova Owner da svolgere dopo consegna.
+**Esito: calcoli, causalità e tabelle descrittive verificati; OBS-001 non ancora ACCEPTED per due correzioni ordinarie UI sotto. Priorità esecutiva OBS-001/R1 — READY.** Nessun conflitto da escalare ad Astra. Prova Owner ancora da svolgere; l'Owner può già esplorare il bundle reale valido, senza confonderlo con una versione definitivamente accettata.
+
+### Evidenze indipendenti del Director
+
+Base: b43a9130bafb67ed687740b66ae4802ab3b915c5, confrontata con il READY413c6d0. Convenzioni config identiche a quelle pubblicate nel commit preregistrato cdbc474; nessun gruppo cambiato nella consegna.
+
+- Letti codice dell'osservatore, aggregazione, parsing, acquisizione, esiti, riepiloghi, contratti e provider/vista storici pertinenti.
+- In copia di review separata dal PC Owner: **30 test Python e 27 test UI pertinenti (Historical, App, ConfirmDialog, TopBar) rieseguiti e passati**, typecheck/build riusciti. Nessuna suite generale/CI.
+- Riscaricati SOLO i sette ZIP giugno–dicembre2025, verificati tutti gli SHA256 rispetto ai .CHECKSUM. Input hash identico alla consegna: 40a13e10acaa4b8de14ac9cbaef23aabdfe085c4fe6c260aa718939ef1bc351f.
+- Parsing indipendentemente rieseguito: 308.160/308.160 minuti validi, nessun minuto mancante o invalido. Catena reale rieseguita: 3.904 origini, 31 censurate, partizioni riconciliate. **Tutte le tabelle generate coincidono testualmente con quelle pubblicate nel report.**
+- Sonda indipendente, separata dalle funzioni di calcolo del motore: ricalcolati A, SMA20/50 e struttura su tutte le 6.848 barre45m e 214 giornaliere; tutti i pivot (1.81945m,531D), senza differenze. Ricalcolati separatamente dai minuti tutti i **3.873 esiti completi**, senza differenze.
+- Snapshot reale al 2025-09-02T00:45Z uguale byte per byte fra storico pieno e input troncato al cutoff. Si aggiunge ai casi sintetici con futuri diversi/mezzenotti.
+- Acquisizione automatica nella copia Director ha segnalato correttamente BLOCKED perché exchangeInfo pubblico risponde **HTTP451** da questo ambiente. I sette ZIP e i checksum sono accessibili e verificati. Nessun aggiramento o modifica ai controlli: per la verifica matematica sono stati letti direttamente i ZIP validati con una sonda di review, senza dichiarare verificata qui l'identità via REST. La risposta exchangeInfo riuscita sul PC esecutore resta sua evidenza. Il blocco ambientale Director non è un nuovo blocco dell'Owner né richiede riscaricare i dati.
+- Esaminate le tre immagini consegnate di vista causale, seguito e tabelle: ambienti distinti, cutoff evidente e retrospettiva separata. Sono immagini dell'esecutore. Nessuna prova browser indipendente dichiarata; resta il limite Chromium già noto.
+- I 61 test completi, la prova Chrome sul bundle reale e il confronto bundle1.0.0/1.0.1 sono evidenze di Claude. Il Director ha invece verificato direttamente i calcoli della versione finale.
+
+### Lettura e decisioni
+
+La descrizione del report è coerente con le tabelle. Entro la stessa struttura45m, le relazioni giornaliere mostrano differenze piccole rispetto alla dispersione e dipendenti dal mese; celle molto piccole e sovrapposizione forte impediscono di trattarle come prove indipendenti. Non ne segue né utilità operativa né inutilità generale del giornaliero. Non proporre ottimizzazioni o nuovi gruppi per far emergere una relazione favorevole.
+
+Accettata la versione1.0.1 per separare commit software e metadati variabili dal bundle deterministico: non modifica convenzioni o risultati. L'azzeramento dei livelli pivot correnti dopo un gap è coerente con il riavvio del segmento prescritto, conservando gli eventi storici; nessun effetto sui dati reali integri.
+
+### R1-A — bundle incompleto accettato, errore durante il rendering
+
+Riproduzione indipendente con la fixture sintetica pubblicata:
+1. Eliminare solo il campo radice run dal JSON.
+2. parseBundle restituisce il valore come StudyBundle; HistoricalStudy viene costruito.
+3. Al rendering HistoricalEnvironment accede a study.bundle.run.runId e solleva TypeError.
+4. Eliminando invece inputQuality, anche quel file passa il controllo preliminare e HistHeader dereferenzia un campo assente.
+
+Due sonde che richiedono rifiuto prima del rendering falliscono sulla consegna; un'ulteriore sonda riproduce effettivamente l'eccezione runId. Sono test temporanei del Director, non nuove modifiche di prodotto pubblicate.
+
+**Comportamento richiesto:** importare soltanto un bundle coerente con lo schema/contratto effettivamente usato da provider e viste. Validare i campi obbligatori dereferenziati (inclusi run e inputQuality), forma di eventi/record riepiloghi e allineamento essenziale di griglia/origini/colonne. Un JSON incompleto o incoerente produce errore comprensibile nel selettore, mantiene l'eventuale studio precedente e permette di scegliere un file corretto; mai schermata vuota o fallback alle fixture. Non basta controllare kind/schema e poi fare un cast.
+
+Perimetro proporzionato: piccolo validatore dello schema locale già esistente; niente framework generale, backend, ricalcolo del motore in UI o firma crittografica obbligatoria. Non irrigidire il formato in modo da rifiutare la fixture sintetica dichiarata per i test. Non aggiungere autorizzazioni a importare altre fonti/periodi operativi.
+
+Test discriminanti: casi run/inputQuality mancanti, un'incoerenza di record/griglia pertinente e successiva apertura del bundle valido; prova via file picker, non solo chiamata parseBundle. Conservare studio valido già aperto in caso di errore.
+
+### R1-B — ultimo prezzo precedente mostrato come attuale sul grafico di una barra incompleta
+
+Riproduzione sulla fixture sintetica esistente, senza crearne un mercato nuovo:
+- prima origine dello studio; snapshot1D è INCOMPLETE e C=null;
+- passaggio del grafico a1D;
+- HistChartCard usa come lastPrice il close del precedente giorno completo e passa sempre lastPriceCurrent=true;
+- SVG mostra 102 con l'aspetto del prezzo al cutoff, mentre quel giorno non ha una chiusura disponibile. I pannelli dichiarano correttamente la lacuna: il grafico deve essere altrettanto chiaro.
+
+Sonda Director: C giornaliero null e stato INCOMPLETE confermati; etichetta SVG del prezzo precedente ancora resa corrente. Non è un errore nei numeri reali dello studio, che non contengono buchi.
+
+**Comportamento richiesto:** prezzo al cutoff della scala scelta assente resta assente nel grafico. Si può omettere il relativo marker, oppure mostrare separatamente “ultimo noto” con tempo e qualifica esplicita. Nessun close precedente promosso silenziosamente a corrente e nessun 0 sostitutivo quando manca ogni prezzo. Con dati tutti mancanti nel tratto, messaggio leggibile anziché un prezzo inventato; candele incomplete restano buchi.
+Non alterare osservazioni, dati del bundle, formule o tabelle per risolvere il rendering. Se cambia l'API condivisa CandleChart, preservare gli stati current/lastKnown della simulazione.
+
+Test mirati: fixture1D incompleta già presente, una lacuna45m al cutoff e tratto privo di prezzi validi; controllo di un grafico valido per evitare regressioni. L'orario del prezzo eventualmente ultimo noto deve appartenere a quella scala, non essere derivato dal futuro.
+
+### Mandato di correzione e consegna OBS-001/R1
+
+- Base b43a913 più questa review. Eseguire SOLO R1-A/B e istruzioni/evidenze necessarie. Il mandato generale precedente rimane contesto, non un ordine di riacquisire tutto.
+- Non toccare config, motore, classi, popolazione, gruppi, esiti o tabelle reali. Nessun nuovo download e nessuna ricerca aggiuntiva. Il bundle valido resta utilizzabile.
+- Test mirati import/grafico/integrazione, typecheck/build e breve prova browser di bundle reale valido più file rifiutato e fixture con gap. Nessuna suite completa motore o UI per abitudine; regressioni simulazione solo per API condivise concretamente modificate.
+- Non rigenerare tutte le immagini: al massimo una prova del dato mancante e/o del messaggio di importazione se utile.
+- Commit/push ordinari dei file pertinenti su main autorizzati; nessun pull/fetch, reset/stash/force push o chiusura di processi Owner. Checkout sincronizzato da Gian al commit del task.
+- Aggiornare consegna e STATE passando a DELIVERED, mai ACCEPTED. Director rivede la correzione; prova d'uso Gian necessaria prima di chiusura macrofase. Nessun ritorno ordinario ad Astra per R1.
+
+## Consegna OBS-001/R1
+
+Da compilare dall'esecutore.

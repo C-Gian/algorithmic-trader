@@ -1,40 +1,28 @@
 # Stato del nuovo progetto
 
-Aggiornato: 2026-10-16. Responsabile: Director.
+Aggiornato: 2026-10-17. Responsabile: Director.
 
 ## Fatto
 
-Macrofase UI simulata CONCLUSA e approvata dall'Owner; chiusura a baa1e762703f7dfd01f870061dba2a1c691326ce. Dashboard React/TypeScript esistente, provider simulato separato, navbar superiore e conferme revisionate.
+UI simulata conclusa. OBS-001 consegnato a b43a9130bafb67ed687740b66ae4802ab3b915c5: osservazioni causali, studio descrittivo reale e ambiente storico nella stessa dashboard. Convenzioni identiche alla registrazione antecedente i dati. Nessuna strategia implementata.
 
-Astra ha autorizzato la macrofase completa “osservazioni calcolate e primo studio storico nell'app”. **DESIGN-001 approvato solo per definizioni osservative §§5–6**, con warmup per singola misura corretto nel task; resto non attivato.
+Review indipendente Director: 30 test Python e 27 test UI pertinenti verdi, typecheck/build riusciti. Riscaricati sette ZIP autorizzati, checksum e input hash identici; 308.160 minuti validi; 3.904 origini, 31 censure, 3.873 esiti completi. Tabelle pubblicate riprodotte esattamente. Riscontri separati su tutte le barre A/medie/struttura/pivot e su tutti gli esiti completi senza differenze; snapshot reale invariato troncando il futuro. Fonte dei derivati: Binance Vision.
+
+Limite distinto: exchangeInfo restituisce HTTP451 nell'ambiente Director, correttamente bloccato dal comando completo. Nessun aggiramento: verifica numerica sui ZIP con sonda separata; identità via REST riuscita e browser reale restano evidenze dell'esecutore. Tre screenshot esaminati, nessun browser indipendente dichiarato.
 
 ## Incarico corrente
 
-**OBS-001 — DELIVERED da Claude, in attesa di review del Director e prova di Gian.** Consegna completa nel task. Sintesi:
-- **Motore Python** a sola libreria standard (`src/obs001`). Convenzioni congelate in `config/OBS-001-v1.json` (hash `3c4eb884…2387`), registrate e pubblicate prima di dati ed esiti.
-- **Dati reali.** Sette ZIP Binance Vision, BTCUSDT perpetual klines 1m da giugno a dicembre 2025. Checksum e identità dello strumento verificati; 308.160/308.160 minuti validi, nessuna anomalia. File fuori Git in `C:\Projects\algorithmic-trader-data\OBS-001`.
-- **Run.** `OBS-001-v1-e1.0.1-40a13e10ac-3c4eb884d0`: 3.904 origini, 31 censurate, partizioni riconciliate, bundle riproducibile.
-- **Dashboard.** Ambiente «Studio storico» distinto dalla simulazione:
-  - vista causale al cutoff t;
-  - sei famiglie a 45m e 1D;
-  - revisioni per available_at;
-  - seguito 24h solo su comando;
-  - riepilogo sotto «Studio osservativo».
-  Nessun conto, call o ordine nello storico.
-- **Risultati.** Nel report `docs/research/OBS-001-results.md`. Entro lo stesso verso 45m, le differenze fra 1D concorde, contraria e mista sono piccole rispetto alla dispersione e cambiano segno fra i mesi; alcune celle sono scarse. Nessuna conclusione causale.
+**OBS-001/R1 — READY.** Due correzioni ordinarie:
+- R1-A: bundle senza run/inputQuality supera import e provoca eccezione al rendering; rifiuto leggibile prima di sostituire lo studio.
+- R1-B: su scala con barra incompleta il grafico mostra prezzo precedente come corrente; dato assente o ultimo noto deve essere qualificato, mai zero inventato.
 
-Verifiche dichiarate dall'esecutore, non ancora riesaminate:
-- 30 test sintetici del motore;
-- riscontro indipendente sul bundle reale;
-- 61 test frontend, typecheck e build;
-- prova in Chrome headless sul bundle reale.
+Mandato preciso in current_task.md. Non ripetere acquisizione o calcoli reali; config, popolazione, convenzioni e tabelle non cambiano. Nessuna implementazione aggiuntiva aperta. Consegna principale non ancora ACCEPTED; riscontro Owner ancora mancante.
 
-## Studio e chiusura
+## Evidenza descrittiva e seguito
 
-Tutte le chiusure45m: confronto entro stessa struttura45m UP/DOWN fra giornaliero concorde/contrario/misto/assente; riepilogo sola45m, mesi e distribuzioni final/up/down24h in A45m all'origine. Popolazione completa e censure, nessuna indipendenza delle righe presunta.
-
-Chiusura richiede storico reale/observe nell'app, riproducibilità/causalità, confronto previsto e prova Gian con review Director. Risultati contrari o insufficienti sono validi.
+Differenze fra gruppi giornalieri non stabili fra mesi, dispersione ampia e celle scarse. Nessuna conclusione causale, significatività o promozione operativa. Report OBS-001-results.md. Il bundle reale valido è già esplorabile dall'Owner durante la correzione; macrofase resta aperta fino a review R1 e prova Gian.
 
 ## Vincoli
 
-Nessuna strategia di ingresso, ordine exchange, valutazione economica, capitale/leva, acquisizione fuori mandato, apertura2026protetto o riattivazione vecchi studi. Nello storico niente call/posizioni/saldi fittizi. Simulazione locale separata. PRODUCT-CONTEXT aggiornato al mandato.
+Solo OBS-001: input Binance Vision BTCUSDT perpetual USDⓈ-M negoziato1m [2025-06-01,2026-01-01), inizializzazione fino a settembre; nessun tail2026. Raw/bundle fuori Git. DESIGN-001 approvato soltanto §§5–6 con chiarimenti del task.
+Nessuna strategia, ordine exchange, conto operativo, valutazione economica, nuovo periodo/fonte, stack Owner o vecchi studi. Storico distinto dalla simulazione.
