@@ -10,3 +10,9 @@ Sono derivati di dati Binance Vision. **Licenza CC BY-NC-SA 4.0** (https://creat
 - Termini: https://github.com/binance/binance-public-data/blob/master/TERMS_AND_CONDITIONS.md.
 - Uso personale di ricerca non produttiva; nessuna associazione commerciale.
 - La licenza del codice del repository non cambia.
+
+## Correzioni OBS-001/R1
+
+Due immagini, nessuna derivata da dati Binance Vision:
+- **Import rifiutato:** schermata senza studio aperto e senza prezzi, con l'errore di validazione.
+- **Prezzo mancante (1D):** grafico 1D della **fixture sintetica** di test, con prezzi inventati. Il giorno incompleto al cutoff non mostra un prezzo corrente; l'ultimo noto è qualificato a parte.

@@ -91,6 +91,19 @@ export class HistoricalStudy {
     return out;
   }
 
+  /**
+   * Ultima chiusura completa della scala terminata entro t (mai oltre il cutoff) con il suo
+   * orario di fine. Serve solo a qualificare un «ultimo noto» quando la barra al cutoff manca.
+   */
+  lastKnownClose(scale: HistScale, t: Ms): { price: number; end: Ms } | null {
+    const bars = this.bundle.bars[scale];
+    for (let i = this.lastBarIndex(scale, t); i >= 0; i--) {
+      const c = bars.c[i];
+      if (bars.status[i] === 'COMPLETE' && c !== null) return { price: c, end: bars.open[i] + this.step[scale] };
+    }
+    return null;
+  }
+
   /** Serie SMA20/SMA50 della scala per le barre mostrate, dai record già calcolati. */
   sma(scale: HistScale, candles: readonly HistCandle[]): { sma20: { time: Ms; value: number }[]; sma50: { time: Ms; value: number }[] } {
     const recs = this.bundle.observations[scale];

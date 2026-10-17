@@ -18,7 +18,18 @@ import { OutcomeCard } from './OutcomeCard';
 import { RevisionsSection } from './RevisionsSection';
 import { StudySummaryView } from './StudySummaryView';
 
-export function HistoricalEnvironment({ study, onOpen, shell }: { study: HistoricalStudy | null; onOpen: (s: HistoricalStudy) => void; shell: ShellProps }) {
+export function HistoricalEnvironment({
+  study,
+  studyLoad = 0,
+  onOpen,
+  shell,
+}: {
+  study: HistoricalStudy | null;
+  /** Numero dell'apertura corrente: rimonta lo studio a ogni bundle valido aperto. */
+  studyLoad?: number;
+  onOpen: (s: HistoricalStudy) => void;
+  shell: ShellProps;
+}) {
   const shellRef = useRef<HTMLDivElement>(null);
   return (
     <Shell shell={shell} shellRef={shellRef}>
@@ -27,7 +38,7 @@ export function HistoricalEnvironment({ study, onOpen, shell }: { study: Histori
       ) : shell.view === 'settings' ? (
         <Unavailable title="Impostazioni" onBack={() => shell.navigate('dashboard')} />
       ) : (
-        <StudyWorkspace key={study.bundle.run.runId + study.bundle.conventions.hash} study={study} onOpen={onOpen} shell={shell} />
+        <StudyWorkspace key={studyLoad} study={study} onOpen={onOpen} shell={shell} />
       )}
     </Shell>
   );

@@ -113,7 +113,11 @@ export function CandleChart({
   series: readonly ChartSeries[];
   levels: readonly ChartLevel[];
   overlays: ChartOverlays;
-  lastPrice: number;
+  /**
+   * Prezzo al cutoff della scala mostrata; null se assente (barra incompleta): nessun marker,
+   * mai un prezzo precedente promosso a corrente né uno zero sostitutivo.
+   */
+  lastPrice: number | null;
   lastPriceCurrent: boolean;
   /** Etichette temporali in UTC (studio storico) invece che nel fuso locale. */
   utc?: boolean;
@@ -153,8 +157,9 @@ export function CandleChart({
     ...drawn.flatMap((c) => [c.high, c.low]),
     ...visibleLevels.map((l) => l.price.amount),
     ...seriesPoints.flatMap((pts) => pts.map((p) => p.value)),
-    lastPrice,
+    ...(lastPrice !== null ? [lastPrice] : []),
   ];
+  const empty = drawn.length === 0;
   const rawMin = Math.min(...values);
   const rawMax = Math.max(...values);
   const pad = Math.max((rawMax - rawMin) * 0.06, 20);
@@ -180,11 +185,17 @@ export function CandleChart({
 
   return (
     <div className="chart-box" ref={boxRef}>
+      {empty ? (
+        <div className="chart-empty" role="img" aria-label={`Grafico ${timeframe}: nessuna barra completa nel tratto`}>
+          <p>Nessuna barra completa nel tratto mostrato: non c’è alcun prezzo da disegnare.</p>
+          <p className="t-3">Le barre incomplete restano buchi; nessun valore viene stimato.</p>
+        </div>
+      ) : (
       <svg width={width} height={H} role="img" aria-label={`Grafico ${timeframe} con ${candles.length} candele ${dataLabel}`}>
         {ticks.map((t) => (
           <g key={t}>
             <rect x={PAD_L} y={y(t)} width={plotRight - PAD_L} height={1} fill={COLORS.grid} />
-            {Math.abs(y(t) - y(lastPrice)) > 14 && (
+            {(lastPrice === null || Math.abs(y(t) - y(lastPrice)) > 14) && (
               <text x={plotRight + 8} y={y(t) + 4} fill={COLORS.text3} fontSize={10} fontFamily="IBM Plex Mono">
                 {formatPrice(t)}
               </text>
@@ -313,13 +324,17 @@ export function CandleChart({
           );
         })}
 
-        <g>
-          <rect x={plotRight + 1} y={y(lastPrice) - 10} width={54} height={20} rx={4} fill={COLORS.label} />
-          <text x={plotRight + 8} y={y(lastPrice) + 4} fill={lastPriceCurrent ? COLORS.up : COLORS.slow} fontSize={11} fontFamily="IBM Plex Mono">
-            {formatPrice(lastPrice)}
-          </text>
-        </g>
+        {lastPrice !== null && (
+          <g data-role="last-price">
+            <title>{lastPriceCurrent ? 'Prezzo corrente della scala' : 'Ultimo prezzo noto, non corrente'}</title>
+            <rect x={plotRight + 1} y={y(lastPrice) - 10} width={54} height={20} rx={4} fill={COLORS.label} />
+            <text x={plotRight + 8} y={y(lastPrice) + 4} fill={lastPriceCurrent ? COLORS.up : COLORS.slow} fontSize={11} fontFamily="IBM Plex Mono">
+              {formatPrice(lastPrice)}
+            </text>
+          </g>
+        )}
       </svg>
+      )}
     </div>
   );
 }

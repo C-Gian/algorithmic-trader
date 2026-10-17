@@ -12,9 +12,9 @@ Limite distinto: exchangeInfo restituisce HTTP451 nell'ambiente Director, corret
 
 ## Incarico corrente
 
-**OBS-001/R1 — READY.** Due correzioni ordinarie:
-- R1-A: bundle senza run/inputQuality supera import e provoca eccezione al rendering; rifiuto leggibile prima di sostituire lo studio.
-- R1-B: su scala con barra incompleta il grafico mostra prezzo precedente come corrente; dato assente o ultimo noto deve essere qualificato, mai zero inventato.
+**OBS-001/R1 — DELIVERED da Claude (17 ottobre), in attesa di review del Director e prova di Gian.** Correzioni consegnate (dettagli nel task):
+- R1-A: validatore del contratto usato (run, inputQuality, griglia, record, eventi, origini, riepiloghi); file incoerenti rifiutati con errore leggibile, studio aperto conservato.
+- R1-B: prezzo al cutoff assente non più mostrato; ultimo noto della stessa scala qualificato a parte; tratto senza barre complete = messaggio. 6 nuovi test discriminanti, 33 test UI pertinenti, build e prova browser dell'esecutore.
 
 Mandato preciso in current_task.md. Non ripetere acquisizione o calcoli reali; config, popolazione, convenzioni e tabelle non cambiano. Nessuna implementazione aggiuntiva aperta. Consegna principale non ancora ACCEPTED; riscontro Owner ancora mancante.
 

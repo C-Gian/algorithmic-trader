@@ -52,6 +52,8 @@ export function App({
 }) {
   const [environment, setEnvironment] = useState<Environment>(initialEnvironment);
   const [study, setStudy] = useState<HistoricalStudy | null>(initialStudy);
+  // Ogni apertura riuscita monta lo studio da capo (anche se è lo stesso file): niente stato residuo.
+  const [studyLoad, setStudyLoad] = useState(0);
   const [view, setView] = useState<View>('dashboard');
 
   const navigate = useCallback((target: NavTarget) => {
@@ -76,6 +78,7 @@ export function App({
 
   const openStudy = useCallback((s: HistoricalStudy) => {
     setStudy(s);
+    setStudyLoad((n) => n + 1);
     setEnvironment('HISTORICAL');
     setView('dashboard');
   }, []);
@@ -84,7 +87,7 @@ export function App({
   return environment === 'SIMULATION' ? (
     <SimulationEnvironment create={createSimulation} shell={shell} />
   ) : (
-    <HistoricalEnvironment study={study} onOpen={openStudy} shell={shell} />
+    <HistoricalEnvironment study={study} studyLoad={studyLoad} onOpen={openStudy} shell={shell} />
   );
 }
 

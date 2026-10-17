@@ -1,6 +1,6 @@
 # Incarico corrente — OBS-001 osservazioni calcolate e primo studio nell'app
 
-**Stato: READY — OBS-001/R1, due correzioni UI circoscritte dopo review Director. Consegna principale verificata nei calcoli; non ancora ACCEPTED. Eseguire soltanto il mandato di correzione in fondo.** Macrofase completa autorizzata dalla disposizione Astra trasmessa da Gian il 16 ottobre 2026, dopo la chiusura UI al commit baa1e762703f7dfd01f870061dba2a1c691326ce.
+**Stato: DELIVERED — OBS-001/R1 (R1-A import validato, R1-B prezzo mancante nel grafico) consegnato da Claude Code; in attesa di review del Director e prova di Gian. Non ACCEPTED.** Macrofase completa autorizzata dalla disposizione Astra trasmessa da Gian il 16 ottobre 2026, dopo la chiusura UI al commit baa1e762703f7dfd01f870061dba2a1c691326ce.
 **Priorità esecutiva corrente:** applicare R1-A/B nella review del Director in fondo. Non ripetere acquisizione, studio o gate Figma; convenzioni e tabelle rimangono congelate.
 
 Responsabile specifica e review: Director. Esecutore: Claude Code.
@@ -394,4 +394,71 @@ Test mirati: fixture1D incompleta già presente, una lacuna45m al cutoff e tratt
 
 ## Consegna OBS-001/R1
 
-Da compilare dall'esecutore.
+Claude Code, 17 ottobre 2026. Base `775bac2` su `main`, checkout pulito; nessun pull o fetch. Il commit della consegna è quello che aggiorna questo file.
+
+**Perimetro rispettato**
+- Solo UI e import.
+- Nessuna modifica a config, motore Python, convenzioni, gruppi, popolazione, esiti, tabelle o bundle reale.
+- Nessun nuovo download e nessuna nuova elaborazione.
+- Fixture sintetica invariata.
+
+**R1-A — import validato** (`dashboard/src/historical/loadBundle.ts`)
+
+`parseBundle` è ora un piccolo validatore del contratto che provider e viste usano davvero. Non fa più un semplice cast dopo il controllo di kind e schema. Verifica:
+- `engineVersion`, convenzioni, fonte e periodi ordinati;
+- `run` (`runId`, `engineVersion`, `inputHash` stringa o null, `synthetic` facoltativo);
+- `inputQuality` (totali di input, inizializzazione e studio, file con copertura);
+- barre 45m e 1D:
+  - la griglia UTC copre esattamente i periodi;
+  - tutte le colonne sono allineate;
+  - l'OHLC è coerente con lo stato COMPLETE o INCOMPLETE;
+- per ogni record di osservazione:
+  - tempi, stato e chiusura C allineati alla sua barra;
+  - presenza di vol, avg, volu, piv, fib, lvl e attraversamenti;
+  - misure nel formato {v, r};
+- eventi con identità, scala e `available_at` non decrescente, su cui si basa la ricerca binaria del provider;
+- origini sulla griglia 45m dello studio, righe allineate e con campi tipizzati;
+- riepiloghi: periodi, copertura, s45, relazioni e matrice;
+- esempi presenti fra le origini.
+
+Gli errori sono frasi leggibili che indicano la sezione e l'elemento.
+
+Comportamento dell'app:
+- un file rifiutato non sostituisce lo studio aperto (stesso cutoff) e se ne può scegliere subito un altro;
+- nessuna schermata vuota e nessun ripiego sulle fixture;
+- ogni apertura riuscita monta lo studio da capo (`studyLoad`), anche quando il file è lo stesso.
+
+La fixture sintetica e il bundle reale sono accettati.
+
+**R1-B — prezzo al cutoff mancante**
+
+`CandleChart` accetta ora `lastPrice: number | null`. Con null non disegna alcun marker di prezzo e non lo usa per la scala. Se nel tratto non c'è nessuna barra completa, mostra un messaggio leggibile invece di un grafico con valori inventati; le barre incomplete restano buchi. La simulazione continua a passare un numero, con gli stati corrente e ultimo noto invariati.
+
+`HistChartCard` passa solo la C del record della scala scelta che termina entro t, senza ripiego sul close precedente né su 0. Se la C manca, mostra un avviso «Prezzo al cutoff non disponibile sulla scala …» con l'ultimo noto della stessa scala, preso da `HistoricalStudy.lastKnownClose` (fine barra ≤ t, mai dal futuro), con prezzo, orario e la qualifica «non corrente».
+
+**Verifiche dell'esecutore**
+- **Typecheck e build** riusciti.
+- **Nuovi test** in `src/ui/historical/R1.test.tsx` (6).
+  - R1-A, via file picker:
+    - schermata vuota: rifiuto senza `run`, poi senza `inputQuality`, poi apertura del file valido;
+    - studio aperto all'origine 2: rifiuto di un record non allineato, di un'origine fuori griglia, di una colonna 1D accorciata e di un file senza `run`; lo studio resta all'origine 2; il file valido riapre dalla prima origine;
+    - accettazione della fixture e rifiuto di una misura fuori formato e di eventi in ordine invertito.
+  - R1-B:
+    - 1D incompleto della fixture alla prima origine: nessun marker; ultimo noto = chiusura del giorno precedente, con fine ≤ t. Controllo valido: lo stesso cutoff a 45m mostra il marker con C_t;
+    - lacuna 45m al cutoff, ottenuta modificando nel test la fixture caricata: nessun marker, «Lacuna all'origine», ultimo noto = barra 45m precedente;
+    - tratto senza barre complete: messaggio leggibile e nessun SVG con prezzi.
+- **Discriminazione:** gli stessi 6 test eseguiti sul codice di `b43a913` falliscono tutti e 6.
+- **Regressioni**, limitate ai test pertinenti perché `CandleChart`, App e shell sono condivisi: Historical (11), App (5), ConfirmDialog/R1 UI (6) e TopBar (5) restano verdi. Totale 33/33 con i 6 nuovi. Non ho rieseguito né il motore né l'intera suite.
+- **Browser:** Chrome headless sulla build servita da `vite preview`.
+  - File ricavato dal bundle reale togliendo `run`, tenuto solo nella cartella temporanea: rifiutato con «Identità del run: campo «run» assente o non valido», senza grafico.
+  - Il bundle reale 1.0.1 passa il nuovo validatore e si apre.
+  - Con lo studio reale all'origine 2, il file rifiutato lascia lo studio all'origine 2, con il marker 108.130.
+  - Fixture sintetica a 1D: nessun marker; avviso con ultimo noto 101,95 alle 02 giu 2025 00:00 UTC.
+  - Nessun errore in console.
+- **Immagini.** Due in `docs/research/OBS-001-screens/`, nessuna con dati reali: `r1-import-rifiutato-1366.png` e `r1-prezzo-mancante-1d.png` (fixture sintetica).
+
+**Processi e file.** Ho chiuso solo il mio `vite preview` (PID 19252), dopo averne controllato la riga di comando. Un `vite` di sviluppo (PID 10872) non era mio ed è rimasto acceso.
+
+Modifiche: `loadBundle.ts`, `study.ts` (`lastKnownClose`), `CandleChart.tsx`, `HistChartCard.tsx`, `App.tsx` e `HistoricalEnvironment.tsx` (rimontaggio a ogni apertura), `styles.css` (`.chart-empty`), `R1.test.tsx`, le due immagini con la nota, questo task e STATE.
+
+**Restano da fare.** Review del Director su R1 e prova di Gian. Nella prova, oltre ai passi della consegna OBS-001, si può aprire un file qualsiasi che non sia il bundle: l'app deve spiegare l'errore e restare sullo studio aperto.

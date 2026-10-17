@@ -3,7 +3,7 @@ import type { CausalSnapshot, HistScale, ObservationRecord } from '../../contrac
 import { formatNumber } from '../../lib/numbers';
 import type { HistoricalStudy } from '../../historical/study';
 import { CandleChart, type ChartCandle, type ChartLevel, type ChartMarker, type ChartOverlays, type ChartSeries } from '../components/CandleChart';
-import { Badge, Button } from '../components/primitives';
+import { Badge, Button, Notice } from '../components/primitives';
 import { fmtUtc, isoMinute } from '../format';
 
 const ZOOM: Record<HistScale, number[]> = { '45m': [32, 64, 96, 160], '1D': [30, 60, 90, 150] };
@@ -48,7 +48,10 @@ export function HistChartCard({
     { id: 'sma50', name: 'SMA50', points: sma.sma50.map((p) => ({ time: iso(p.time), value: p.value })) },
   ];
   const rec = scale === '45m' ? snapshot.m45 : snapshot.d1;
-  const lastPrice = rec?.C ?? raw.filter((c) => !c.retrospective && !c.gap).at(-1)?.close ?? 0;
+  // Prezzo al cutoff della scala scelta: solo la chiusura della sua barra che termina entro t.
+  // Se manca resta assente; un «ultimo noto» della stessa scala è mostrato a parte, qualificato.
+  const priceAtCutoff = rec?.C ?? null;
+  const lastKnown = priceAtCutoff === null ? study.lastKnownClose(scale, t) : null;
   // Pivot disegnati sulla candela candidata soltanto se già confermati entro t.
   const markers: ChartMarker[] = snapshot.events[scale]
     .filter((e) => e.type === 'PIVOT_CONFIRMED')
@@ -103,13 +106,24 @@ export function HistChartCard({
         )}
       </div>
 
+      {priceAtCutoff === null && (
+        <Notice tone="warning" title={`Prezzo al cutoff non disponibile sulla scala ${scale}`}>
+          {rec
+            ? `La barra ${scale} che termina alle ${fmtUtc(rec.end)} è incompleta: nessuna chiusura, nessun prezzo corrente sul grafico.`
+            : `Nessuna barra ${scale} terminata entro t.`}{' '}
+          {lastKnown
+            ? `Ultimo noto della stessa scala: ${formatNumber(lastKnown.price, 2)} USDT, chiusura alle ${fmtUtc(lastKnown.end)} (non corrente).`
+            : 'Nessun prezzo noto su questa scala entro t.'}
+        </Notice>
+      )}
+
       <CandleChart
         timeframe={scale}
         candles={candles}
         series={series}
         levels={chartLevels(rec)}
         overlays={overlays}
-        lastPrice={lastPrice}
+        lastPrice={priceAtCutoff}
         lastPriceCurrent
         utc
         markers={markers}
