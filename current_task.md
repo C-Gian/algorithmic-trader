@@ -1,6 +1,6 @@
 # CAND-001/D1 — Diagnosi della politica v1 e ciclo metodologico
 
-**Stato: IN_PROGRESS** (Claude Code, 17 ottobre 2026; incarico READY del Director)., 17 ottobre 2026. Esecutore: Claude Code. Base main **63f2e429f0496ddc1f26c3de0cf486ca21d573aa** più il commit di questo incarico; sincronizzazione del checkout a cura di Gian. Leggere AGENTS, STATE, PRODUCT-CONTEXT §31, specifica CAND-001-v1.md e questo task. Nessun pull/fetch, anche dry-run.
+**Stato: DELIVERED** (Claude Code, 17 ottobre 2026; in attesa di review del Director, non accettato)., 17 ottobre 2026. Esecutore: Claude Code. Base main **63f2e429f0496ddc1f26c3de0cf486ca21d573aa** più il commit di questo incarico; sincronizzazione del checkout a cura di Gian. Leggere AGENTS, STATE, PRODUCT-CONTEXT §31, specifica CAND-001-v1.md e questo task. Nessun pull/fetch, anche dry-run.
 
 ## Mandato e responsabilità
 Astra accetta la chiusura APP-001 e autorizza l'intero ciclo: diagnosi v1 DEV, al massimo una revisione motivata nella stessa famiglia, confronto sull'intero DEV e consultazione nella stessa app. Nessun altro lavoro preparatorio UI. Chiusura possibile anche con nessuna revisione giustificata, indicando precisamente quale decisione non è sostenibile e quale informazione manca.
@@ -70,3 +70,33 @@ Il Director farà review delle evidenze e deciderà al massimo un problema modif
 
 ## Spazio dell'esecutore
 **Avanzamento 1 — piano ed esempi pubblicati prima dei percorsi.** Checkout verificato su `12c195b` senza pull/fetch. Bundle DEV preferito presente e verificato (run `CAND-001-v1.0.0-e1.0.1-DEV-adaa94c502-aed2c4ef62`, SHA256 `b141150237e94a807817adea2d9fb6810f6eabc220d7db5ea3602d8b79b4944a`), config v1 `aed2c4ef…ce4edf`. Piano e 13 casi deterministici (nessuna categoria vuota) in `docs/research/CAND-001-diagnosis.md` §§1–2; lista locale `diagnosis/D1/examples-selection.json`, `listSha256` `7caade6984943a7e333660dc4ef702e6ed87022b58ec7c386e70ecd308a8c3be`. Comando `python3.12 -m cand001.diagnosis select` (solo bundle). Estrazione dei percorsi non ancora eseguita.
+
+**Consegna D1 — Claude Code, 17 ottobre 2026.** Commit:
+- `78f5fd8`: piano e lista degli esempi, prima dei percorsi;
+- `3c639a8`: codice e test dell'estrazione;
+- commit di questa consegna: report e stato.
+
+File modificati: `src/cand001/diagnosis.py` (nuovo), `tests/test_cand001_diagnosis.py` (nuovo), `docs/research/CAND-001-diagnosis.md` (nuovo), questo file, `STATE.md`. Nessuna modifica a motore, ledger, config, bundle o UI.
+
+Comportamento ottenuto:
+- comando offline `python3.12 -m cand001.diagnosis select|extract`, separato dal motore decisionale; legge il bundle DEV accettato e i soli 27 ZIP trade 1m 2022-10…2024-12 verificati;
+- un record per ciascuna delle 78 operazioni (decisione, percorso campionato in R0, gestione con decisioni e attivazioni, costi) in `algorithmic-trader-data/CAND-001/diagnosis/D1/trades.json` e `trades.csv`;
+- timeline dei 13 esempi, riepilogo e provenienza con hash prima/dopo di ogni input;
+- report integrato in `docs/research/CAND-001-diagnosis.md` §§3–8.
+
+Controlli effettivamente eseguiti:
+- riconciliazione nel comando su tutti i record: 78/87/814; netto `−210.58825128111891` uguale bit per bit al bundle; identità dei costi con residuo 0 su 78; motivi d'uscita; nessuna sovrapposizione; nessun contatto stop/target mancato nei minuti detenuti;
+- input invariati: bundle `b1411502…`, config, lista e 27 ZIP;
+- seconda esecuzione da commit pulito con `trades.json`, `trades.csv` e timeline identici byte per byte;
+- 9 test mirati in `tests/test_cand001_diagnosis.py`, passati. Nessuna suite generale, UI o CI.
+
+Esiti principali (descrittivi):
+- nessun bug trovato;
+- nessuna deviazione dal disegno accertata. Da confermare l'interpretazione delle contraddizioni valutate a t0 (124 `INVALIDATED_DEPTH`), il cui effetto su `SKIPPED_BUSY` non è ricostruibile dal bundle;
+- PnL ai riferimenti −85,44 prima dei costi;
+- movimento mediano nullo alla prima chiusura 45m;
+- massimo campionato mediano 0,64 R0 contro target a 2,12 R0;
+- costi assunti circa 0,28·R per operazione;
+- tutti i 31 aggiornamenti e le 4 uscite per struttura avvenuti a decisione + 60 s.
+
+Limiti: elenco in report §8. In particolare: non è una preregistrazione; prima della pubblicazione della lista ho letto il record di bundle del caso 1; si usano chiusure 1m e non tick; pivot e struttura vengono dal bundle e non sono ricalcolati; il riscontro è dello stesso esecutore. Nessuna revisione, soglia o v2 proposta.

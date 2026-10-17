@@ -2,8 +2,8 @@
 
 Aggiornato: 17 ottobre 2026. Responsabile: Director.
 
-## Attivo — CAND-001/D1 READY
-Astra accetta APP-001 e autorizza il ciclo metodologico completo: diagnosi v1, eventuale unica revisione motivata e confronto sull'intero DEV 2023–2024. Nessun altro lavoro preparatorio UI. Primo incarico in current_task.md: estrazione offline della diagnosi dagli artefatti conservati, con selezione cronologica degli esempi fissata prima dei nuovi percorsi dettagliati. Nessun D1 ancora eseguito.
+## Attivo — CAND-001/D1 DELIVERED (in attesa di review Director)
+Astra accetta APP-001 e autorizza il ciclo metodologico completo: diagnosi v1, eventuale unica revisione motivata e confronto sull'intero DEV 2023–2024. Nessun altro lavoro preparatorio UI. Primo incarico in current_task.md: estrazione offline della diagnosi dagli artefatti conservati, con selezione cronologica degli esempi fissata prima dei nuovi percorsi dettagliati. D1 consegnato da Claude il 17 ottobre: estrazione offline su bundle DEV `b1411502…`, 78/87/814 e netto riconciliati esattamente, 13 esempi cronologici pubblicati prima dei percorsi, report `docs/research/CAND-001-diagnosis.md`. Nessuna revisione proposta; prossimo passo: review Director e scelta di al massimo un problema, oppure nessuna revisione.
 
 Claude ricostruisce fatti, decisioni causali e percorso/costi; il Director sceglie al massimo un problema e specifica l'eventuale v2 prima degli esiti. Non delegata la strategia all'esecutore. Nessuna ricerca di soglie o sottogruppi, nessuna analisi economica alternativa in D1. Review ordinaria e prosecuzione entro macrofase senza nuovo permesso Astra; escalation solo sostanziale.
 
