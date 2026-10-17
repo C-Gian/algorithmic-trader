@@ -1,6 +1,6 @@
 # CAND-001/D1 — diagnosi della politica v1 sul DEV 2023–2024
 
-**Stato del documento: consegna D1 dell'esecutore (DELIVERED, in attesa di review del Director).** Le sezioni 1–2 sono quelle pubblicate nel commit `78f5fd8`, prima di leggere i percorsi; dalla sezione 3 in poi i risultati dell'estrazione. Questa diagnosi descrive la v1: non sceglie né propone una revisione.
+**Stato del documento: D1 accettato dal Director sulla consegna 3b27b5d. Ciclo concluso senza revisione giustificata; review e decisione in §9.** Le sezioni 1–2 sono quelle pubblicate nel commit `78f5fd8`, prima di leggere i percorsi; dalla sezione 3 in poi i risultati dell'estrazione. Questa diagnosi descrive la v1: non sceglie né propone una revisione.
 
 **Licenza di questo file:** derivati aggregati di dati Binance Vision, **CC BY-NC-SA 4.0** (https://creativecommons.org/licenses/by-nc-sa/4.0/). Fonte: Binance Vision (https://data.binance.vision). Dati grezzi e bundle non sono redistribuiti.
 
@@ -342,3 +342,37 @@ Quale di questi punti sia un problema modificabile, con informazione disponibile
 - Funding per operazione dal bundle: i file grezzi di funding e mark non sono stati riletti.
 - `z` e gli estremi campionati usano le chiusure 1m e sono più conservativi di massimi e minimi dentro il minuto. Non coincidono con la misura di escursione usata nella consegna precedente.
 - Riscontro dello stesso esecutore: non è una verifica indipendente del Director.
+
+
+## 9. Review e decisione del Director — 17 ottobre 2026
+
+**D1 ACCEPTED con i limiti dichiarati. Macrofase conclusa: nessuna revisione v2 giustificata da questa diagnosi.** V1 resta negativa e non promossa; l'efficacia generale della famiglia non è risolta.
+
+### Verifiche e limiti
+Il Director ha letto report, selezione, estrazione, riconciliazioni e test, confrontandoli con specifica e codice della politica. In copia isolata ha eseguito i **9 test diagnostici mirati**, tutti passati. Nessuna suite generale, UI o OBS, download, nuova elaborazione DEV o lettura di prezzi 2025/2026. Estrazione sui 27 ZIP reali, riconciliazione integrale e hash degli output estesi restano riscontri dell'esecutore, non ripetuti autonomamente dal Director.
+
+La lettura anticipata del record del primo caso è una deviazione dichiarata: non si parla di preregistrazione integra. La selezione implementata usa categorie e ordine cronologico registrati; non risultano sostituzioni discrezionali. Il limite resta nella provenienza.
+
+Precisazioni per interpretare le misure:
+- La prima chiusura 45m riguarda 67 casi detenuti fino a quella chiusura, con 11 uscite precedenti escluse. In caso di uscita all'open coincidente si usa il close appena precedente, quando la posizione era ancora detenuta: non significa che resti aperta dopo quell'open. La mediana +0,02 non descrive tutte le 78 entrate e non misura il potere predittivo isolato del trigger.
+- Gli estremi riportati sono origine e chiusure 1m detenute; il riferimento d'uscita è separato. Non sono gli estremi dell'insieme che include anche quel punto finale. «Restituzione» è qui una differenza firmata fra massimo delle chiusure e riferimento d'uscita: può essere negativa al target intraminuto e non è profitto perso o recuperabile.
+- 0,64 e 2,12 sono mediane di distribuzioni diverse: il loro rapporto non è la quota mediana del target raggiunta dai trade. Lo stop tronca il percorso osservato; il massimo prima dello stop non descrive ciò che sarebbe successo mantenendo la posizione. Non dimostra un target sbagliato.
+- Il saldo dei trade con stop aggiornato non è l'effetto economico dell'aggiornamento. Drawdown ripreso dalla curva a 1m, con non realizzato: non solo sequenza delle operazioni concluse.
+
+### Interpretazioni chiuse, nessuna patch della politica
+La verifica delle contraddizioni a t0 è coerente con §5: a t0 è vietato il trigger, non la lettura dei fatti già noti. Una profondità oltre 3/4, misurata su estremo cumulativo, non si riassorbe. Rinviare la classificazione non rende ammissibile quell'episodio; l'eventuale diverso calendario di occupazione di altre gambe è un controfattuale non ricostruito, non un bug accertato. La regola di non creare un episodio alla stessa chiusura che termina il precedente è esplicita in §7. Non cambiare le regole per queste interpretazioni.
+
+### Decisione metodologica: nessuna v2
+**Ingresso.** PnL ai riferimenti negativo e modesto seguito campionato descrivono il fallimento del candidato in DEV, ma non individuano le entrate da rifiutare usando una condizione motivata nota allora. Il primo LONG positivo ha trigger marginale e prima chiusura contraria; il primo SHORT positivo entra con struttura MIXED. Sono controesempi a spiegazioni semplicistiche, non prove che quei fattori non possano contribuire. Alzare il margine del trigger o vietare MIXED ora introdurrebbe un'ipotesi non sufficientemente motivata da D1.
+
+**Gestione.** Il movimento favorevole poi restituito non identifica una invalidazione contemporanea trascurata che giustifichi l'uscita. MIXED non equivale da solo a inversione. Le protezioni seguono le regole; il loro saldo non ne isola l'effetto. Non introduciamo pareggio o protezione del profitto a un livello scelto osservando i massimi futuri.
+
+**Destinazione e tempo.** Molte operazioni terminano a stop e una sola dura 24h: non emerge un livello causale alternativo a P1 o una scadenza motivata. Avvicinare il target per farlo somigliare ai massimi osservati sarebbe una risposta agli esiti; allargare lo stop cambierebbe il rischio senza nuova invalidazione motivata.
+
+**Costi.** Fee/slippage per 124,81 USDT aggravano il risultato, ma i riferimenti perdono già 85,44. Ridurre le assunzioni economiche non corregge la decisione. Un nuovo modello di rischio/esecuzione richiederebbe una scelta sostanziale distinta.
+
+**Limite informativo preciso:** conosciamo i fallimenti e le informazioni contemporanee usate da v1, ma non abbiamo individuato una condizione contemporanea sufficientemente motivata che distingua una ripresa ancora compatibile dall'esaurimento per cui cambiare entrata, mantenimento o uscita. Mediane e massimo futuro non forniscono quella condizione. Non si richiedono significatività, valore isolato di ogni segnale o prova causale prima di sviluppare: manca qui una proposta decisionale precisa con motivo e svantaggi che non sia soltanto una risposta al saldo negativo.
+
+Nessuna v2 implementata, nessun confronto v1/v2 inventato o prova di valori alternativi. Diagnosi e risultati negativi conservati. Il programma e l'app restano utili. I casi sono consultabili nel DEV salvato attraverso registro e dettagli esistenti: nessun nuovo run o lavoro UI. Esempi semplici: LONG 4 gennaio 2023 06:46 (target nonostante primo seguito contrario), LONG 14 gennaio 06:46 (stop), SHORT 1 gennaio 03:46 (protezione aggiornata poi stop). Nessuna verifica manuale dei calcoli richiesta a Gian.
+
+Raccomandazione ad Astra: accogliere la chiusura con nessuna revisione giustificata, mantenere v1 non promossa e scegliere esplicitamente l'eventuale prossima ipotesi decisionale prima di altre prove. Questa chiusura non autorizza altri dati, uso del 2025, apertura del 2026 o successioni di filtri. Nessun ulteriore incarico a Claude in questa macrofase.

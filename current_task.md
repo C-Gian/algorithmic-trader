@@ -1,6 +1,6 @@
 # CAND-001/D1 — Diagnosi della politica v1 e ciclo metodologico
 
-**Stato: DELIVERED** (Claude Code, 17 ottobre 2026; in attesa di review del Director, non accettato)., 17 ottobre 2026. Esecutore: Claude Code. Base main **63f2e429f0496ddc1f26c3de0cf486ca21d573aa** più il commit di questo incarico; sincronizzazione del checkout a cura di Gian. Leggere AGENTS, STATE, PRODUCT-CONTEXT §31, specifica CAND-001-v1.md e questo task. Nessun pull/fetch, anche dry-run.
+**Stato: ACCEPTED** (Director, 17 ottobre 2026, su 3b27b5d). Macrofase conclusa senza revisione giustificata; decisione in docs/research/CAND-001-diagnosis.md §9. Esecutore: Claude Code.
 
 ## Mandato e responsabilità
 Astra accetta la chiusura APP-001 e autorizza l'intero ciclo: diagnosi v1 DEV, al massimo una revisione motivata nella stessa famiglia, confronto sull'intero DEV e consultazione nella stessa app. Nessun altro lavoro preparatorio UI. Chiusura possibile anche con nessuna revisione giustificata, indicando precisamente quale decisione non è sostenibile e quale informazione manca.
@@ -100,3 +100,11 @@ Esiti principali (descrittivi):
 - tutti i 31 aggiornamenti e le 4 uscite per struttura avvenuti a decisione + 60 s.
 
 Limiti: elenco in report §8. In particolare: non è una preregistrazione; prima della pubblicazione della lista ho letto il record di bundle del caso 1; si usano chiusure 1m e non tick; pivot e struttura vengono dal bundle e non sono ricalcolati; il riscontro è dello stesso esecutore. Nessuna revisione, soglia o v2 proposta.
+
+
+## Review e chiusura Director — 17 ottobre 2026
+Consegna 3b27b5d7f498c838643d43274a535b5d50c11877 accettata con limiti e decisione in docs/research/CAND-001-diagnosis.md §9. Lettura report/codice/spec e 9 test mirati indipendenti passati; nessun ricalcolo reale o suite generale. Estrazione sui 27 ZIP e riconciliazione integrale restano evidenza dell'esecutore; deviazione sulla lettura anticipata del caso 1 conservata.
+
+**Esito: nessuna revisione giustificata.** Manca una condizione contemporanea motivata che identifichi quale ingresso, mantenimento o uscita cambiare; non soltanto un campione piccolo. Mediane del percorso, massimo favorevole e saldo dei trade aggiornati non identificano regole alternative. Nessuna v2 o confronto fittizio, nessuna ricerca di valori. Precisazioni sulle misure e interpretazioni t0/occupazione nel report §9, senza cambiare convenzioni o richiedere rielaborazioni.
+
+Casi consultabili nel DEV salvato da registro/dettaglio esistenti; nessun nuovo lavoro UI, run o verifica di formule a Gian. Passaggio conclusivo ad Astra. Nessun nuovo incarico a Claude; v1 invariata e non promossa, 2025 escluso dal ciclo, 2026 protetto.
