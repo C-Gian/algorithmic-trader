@@ -235,17 +235,38 @@ function validateBars(data: Obj, periods: { inputStart: number; end: number }): 
 }
 
 const MOVE_EVENTS = ['BIRTH', 'SUSPENSION', 'P1_PUBLISHED', 'USABLE', 'FACT', 'ARCHIVE', 'CANDIDATE_REJECTED', 'OPEN_AT_END'];
-const MOVE_JUDGEMENTS = ['UTILIZZABILE', 'NON_SOSTIENE_PIU_LA_TESI', 'INDETERMINATO'];
+const MOVE_SUSPENSIONS = ['TEST_ORIGINE', 'STRUTTURA_OPPOSTA', 'STRUTTURA_OPPOSTA_ALLA_NASCITA'];
+const MOVE_FACTS = ['TEST_ORIGINE', 'P1_TOCCATO_DA_SOSPESO', 'STRUTTURA_OPPOSTA'];
+const MOVE_REJECTIONS = ['NON_ADOTTATA_OCCUPATO_FORMAZIONE', 'NON_ADOTTATA_OCCUPATO_UTILIZZABILE', 'NON_ADOTTATA_FRESCHEZZA'];
+/** Motivo di archiviazione -> giudizio e motivo del giudizio attesi (null = motivo della sospensione in corso). */
+const MOVE_ARCHIVES: Record<string, [string, string | null]> = {
+  ORIGINE_IN_CHIUSURA: ['NON_SOSTIENE_PIU_LA_TESI', 'ORIGINE_IN_CHIUSURA'],
+  ESTREMO_RAGGIUNTO: ['UTILIZZABILE', 'P1_NOTO'],
+  SOSTITUITO_DA_NUOVA_STRUTTURA: ['INDETERMINATO', null],
+  CONTINUITA_INTERROTTA: ['INDETERMINATO', 'DATI_INCOMPLETI'],
+};
+const MOVE_BAR = 45 * 60_000;
 
-function moveAnchor(x: unknown, kind: string, birth: number, where: string): void {
-  if (!isObj(x) || x.kind !== kind || !isNum(x.price) || !isInt(x.candidateOpen) || !isInt(x.availableAt) || !isStr(x.id)) fail(`${where}: ancora non valida.`);
-  if (((x as Obj).availableAt as number) > birth) fail(`${where}: ancora non ancora nota alla nascita.`);
+/** Ancora letta dalla scheda: identità, tipo, prezzo e tempi finiti. */
+function moveAnchor(x: unknown, kind: string, where: string, name = ''): Obj {
+  if (!isObj(x) || !isStr(x.id) || x.kind !== kind || !isNum(x.price) || !isInt(x.candidateOpen) || !isInt(x.availableAt)) {
+    return fail(`${where}: ancora ${name ? `${name} ` : ''}non valida (incompleta o di tipo diverso da ${kind}).`);
+  }
+  return x;
+}
+
+const sameAnchor = (a: Obj, b: Obj) => a.id === b.id && a.price === b.price && a.candidateOpen === b.candidateOpen && a.availableAt === b.availableAt;
+
+function flags(e: Obj, where: string): void {
+  if (e.flags !== undefined && !(Array.isArray(e.flags) && e.flags.every(isStr))) fail(`${where}: flag non in forma di elenco di testi.`);
 }
 
 /**
- * Pacchetto MOVE-001 di un riferimento: identità dello studio, nessun seguito 24h né tabulazione,
- * ancore note alla nascita coerenti col verso, ledger datato che inizia con la nascita e non va oltre
- * il pacchetto. Il lettore mostra al momento t solo i fatti con istante <= t.
+ * Pacchetto MOVE-001 di un riferimento: identità dello studio, nessun seguito 24h né tabulazione, ancore
+ * note alla nascita, ledger datato coerente con il ciclo. Si controllano i campi letti dalla scheda per
+ * ogni tipo di fatto e le transizioni ammesse (una nascita, una pubblicazione di P1, un primo passaggio a
+ * UTILIZZABILE, una sospensione iniziale, nessun fatto dopo la conclusione), rispettando gli ordini
+ * concorrenti del motore alla stessa chiusura. Nessun prezzo o pivot ricalcolato.
  */
 function validateMoveCase(data: Obj, retro: Obj, origins: unknown[], end: number): void {
   const study = obj(data, 'study', 'Studio MOVE-001');
@@ -256,34 +277,107 @@ function validateMoveCase(data: Obj, retro: Obj, origins: unknown[], end: number
   const c = obj(data, 'case', 'Riferimento MOVE-001');
   const w = 'Riferimento MOVE-001';
   if (!isStr(c.refId) || (c.side !== 'LONG' && c.side !== 'SHORT') || !isInt(c.birthAt) || !isStr(c.label)) fail(`${w}: identità incompleta.`);
+  if (!(c.predecessor === null || isStr(c.predecessor))) fail(`${w}: predecessore non valido.`);
   const birth = c.birthAt as number;
+  const d = c.side === 'LONG' ? 1 : -1;
   if (!origins.includes(birth)) fail(`${w}: la nascita non è fra le origini del pacchetto.`);
   const [base, fin] = c.side === 'LONG' ? ['LOW', 'HIGH'] : ['HIGH', 'LOW'];
-  moveAnchor(c.Q, base, birth, `${w}, Q`);
-  moveAnchor(c.B, fin, birth, `${w}, B`);
-  moveAnchor(c.P0, base, birth, `${w}, P0`);
+  const anchors: Record<string, Obj> = { Q: moveAnchor(c.Q, base, `${w}, Q`), B: moveAnchor(c.B, fin, `${w}, B`), P0: moveAnchor(c.P0, base, `${w}, P0`) };
+  for (const [k, a] of Object.entries(anchors)) if ((a.availableAt as number) > birth) fail(`${w}: ancora ${k} non ancora nota alla nascita.`);
   if (!Array.isArray(c.categories) || !c.categories.every((x) => isObj(x) && isStr(x.category) && isInt(x.t))) fail(`${w}: categorie non valide.`);
   const ledger = arr(c, 'ledger', w);
   if (ledger.length === 0) fail(`${w}: ledger vuoto.`);
+  const st = { born: false, p1At: null as number | null, usable: false, suspension: null as string | null, concluded: false };
   let prev = -Infinity;
-  ledger.forEach((e, i) => {
+  ledger.forEach((raw, i) => {
     const we = `${w}, fatto ${i + 1}`;
-    if (!isObj(e) || !isInt(e.t) || !MOVE_EVENTS.includes(e.type as string) || e.refId !== c.refId) return fail(`${we}: tipo, istante o riferimento non validi.`);
-    if ((e.t as number) < prev) fail(`${we}: fatti non in ordine di tempo.`);
-    if ((e.t as number) < birth || (e.t as number) > end) fail(`${we}: istante fuori dalla vita del riferimento nel pacchetto.`);
-    if (i === 0 && (e.type !== 'BIRTH' || e.t !== birth)) fail(`${we}: il ledger deve iniziare con la nascita.`);
-    if ((e.type === 'ARCHIVE' || e.type === 'OPEN_AT_END') && !MOVE_JUDGEMENTS.includes(e.judgement as string)) fail(`${we}: giudizio non riconosciuto.`);
-    if (e.type === 'P1_PUBLISHED' && !(isObj(e.P1) && e.P1.kind === fin && isNum(e.P1.price) && e.P1.availableAt === e.t)) fail(`${we}: P1 non coerente con verso o pubblicazione.`);
-    prev = e.t as number;
+    if (!isObj(raw) || !isInt(raw.t) || !MOVE_EVENTS.includes(raw.type as string) || raw.refId !== c.refId) return fail(`${we}: tipo, istante o riferimento non validi.`);
+    const e = raw;
+    const t = e.t as number;
+    const wt = `${we} ${String(e.type)}`;
+    if (st.concluded) fail(`${wt}: fatto dopo la conclusione del riferimento.`);
+    if (e.side !== c.side) fail(`${wt}: verso diverso da quello del riferimento.`);
+    if (t < prev) fail(`${wt}: fatti non in ordine di tempo.`);
+    if (t < birth || t > end) fail(`${wt}: istante fuori dalla vita del riferimento nel pacchetto.`);
+    if (i === 0 && (e.type !== 'BIRTH' || t !== birth)) fail(`${wt}: il ledger deve iniziare con la nascita.`);
+    flags(e, wt);
+    switch (e.type) {
+      case 'BIRTH': {
+        if (st.born) fail(`${wt}: seconda nascita dello stesso riferimento.`);
+        if (!isNum(e.C) || !isNum(e.Cprev)) fail(`${wt}: C o Cprev mancanti o non numerici.`);
+        for (const [k, kind] of [['Q', base], ['B', fin], ['P0', base]] as const) {
+          if (!sameAnchor(moveAnchor(e[k], kind, wt, k), anchors[k])) fail(`${wt}: ancore della nascita diverse da quelle del riferimento (${k}).`);
+        }
+        if ((e.predecessor ?? null) !== c.predecessor) fail(`${wt}: predecessore diverso da quello del riferimento.`);
+        st.born = true;
+        break;
+      }
+      case 'P1_PUBLISHED': {
+        if (st.p1At !== null) fail(`${wt}: seconda pubblicazione di P1.`);
+        const p1 = moveAnchor(e.P1, fin, wt, 'P1');
+        if (p1.availableAt !== t || t <= birth) fail(`${wt}: P1 non coerente: non disponibile all'istante del fatto o pubblicato alla nascita.`);
+        if ((p1.candidateOpen as number) < birth - MOVE_BAR) fail(`${wt}: P1 candidato prima della nascita.`);
+        if (!(d * ((p1.price as number) - (anchors.B.price as number)) > 0)) fail(`${wt}: P1 non oltre B nel verso del riferimento.`);
+        if (e.whileSuspended !== (st.suspension !== null)) fail(`${wt}: whileSuspended incoerente con le sospensioni precedenti.`);
+        st.p1At = t;
+        break;
+      }
+      case 'USABLE':
+        if (st.usable) fail(`${wt}: secondo passaggio a UTILIZZABILE.`);
+        if (st.p1At === null) fail(`${wt}: UTILIZZABILE senza P1 pubblicato.`);
+        if (st.suspension !== null) fail(`${wt}: UTILIZZABILE dopo una sospensione.`);
+        if (st.p1At !== t) fail(`${wt}: UTILIZZABILE non alla pubblicazione di P1.`);
+        st.usable = true;
+        break;
+      case 'SUSPENSION':
+        if (st.suspension !== null) fail(`${wt}: seconda sospensione iniziale (i successivi sono fatti).`);
+        if (!MOVE_SUSPENSIONS.includes(e.reason as string)) fail(`${wt}: motivo di sospensione non riconosciuto.`);
+        // alla chiusura di nascita la base è intatta per costruzione: l'unica sospensione possibile è per struttura
+        if ((e.reason === 'STRUTTURA_OPPOSTA_ALLA_NASCITA') !== (t === birth)) fail(`${wt}: la sospensione alla nascita avviene solo alla chiusura di nascita, e solo lì.`);
+        st.suspension = e.reason as string;
+        break;
+      case 'FACT':
+        if (st.suspension === null) fail(`${wt}: fatto successivo senza sospensione.`);
+        if (!MOVE_FACTS.includes(e.fact as string)) fail(`${wt}: fatto non riconosciuto.`);
+        break;
+      case 'CANDIDATE_REJECTED':
+        if (!MOVE_REJECTIONS.includes(e.outcome as string)) fail(`${wt}: esito del rifiuto non riconosciuto.`);
+        if (e.candidateSide !== 'LONG' && e.candidateSide !== 'SHORT') fail(`${wt}: verso del candidato non valido.`);
+        if (!isNum(e.candidateB)) fail(`${wt}: candidateB mancante o non numerico.`);
+        if (!isNum(e.candidateP0)) fail(`${wt}: candidateP0 mancante o non numerico.`);
+        break;
+      case 'ARCHIVE': {
+        const exp = MOVE_ARCHIVES[e.reason as string];
+        if (!exp) return fail(`${wt}: motivo di archiviazione non riconosciuto.`);
+        const reasonExp = exp[1] ?? st.suspension;
+        if (e.judgement !== exp[0] || e.judgementReason !== reasonExp) fail(`${wt}: giudizio ${String(e.judgement)}/${String(e.judgementReason)} incoerente con ${String(e.reason)}.`);
+        if (e.reason === 'ESTREMO_RAGGIUNTO' && !(st.usable && st.suspension === null && st.p1At !== null && st.p1At < t)) fail(`${wt}: completamento senza lettura utilizzabile con P1 già noto.`);
+        if (e.reason === 'SOSTITUITO_DA_NUOVA_STRUTTURA' && (st.suspension === null || !isStr(e.replacedBy))) fail(`${wt}: sostituzione senza sospensione o senza successore.`);
+        if (e.reason === 'ORIGINE_IN_CHIUSURA' && !isNum(e.C)) fail(`${wt}: perdita senza chiusura C.`);
+        st.concluded = true;
+        break;
+      }
+      case 'OPEN_AT_END': {
+        const [j, r] = st.suspension !== null ? ['INDETERMINATO', st.suspension] : st.usable ? ['UTILIZZABILE', 'P1_NOTO'] : ['INDETERMINATO', 'FORMAZIONE_NON_CONCLUSA'];
+        if (e.judgement !== j || e.judgementReason !== r) fail(`${wt}: giudizio di fine copertura incoerente con i fatti precedenti.`);
+        if (t !== end) fail(`${wt}: fine copertura diversa dalla fine del pacchetto.`);
+        st.concluded = true;
+        break;
+      }
+    }
+    prev = t;
   });
-  if (ledger.filter((e) => (e as Obj).type === 'ARCHIVE' || (e as Obj).type === 'OPEN_AT_END').length > 1) fail(`${w}: più di una conclusione.`);
 }
 
 function validateStudy(data: Obj, periods: { studyStart: number; end: number }, kind: string): void {
   const origins = arr(data, 'origins', 'Origini');
   if (origins.length === 0) fail('Nessuna origine di studio nel bundle.');
+  // MOVE-001 (R1-B): l'ultima origine può coincidere con la fine, cioè la chiusura dell'ultima barra disponibile;
+  // i minuti restano [inputStart, end). Gli altri formati conservano origini strettamente prima della fine.
+  const last = origins.length - 1;
   origins.forEach((t, i) => {
-    if (t !== periods.studyStart + i * STEP['45m'] || (t as number) >= periods.end) fail(`Origini: la ${i + 1}ª non è sulla griglia 45m dello studio.`);
+    const beyond = kind === MOVE_KIND && i === last ? (t as number) > periods.end : (t as number) >= periods.end;
+    if (t !== periods.studyStart + i * STEP['45m'] || beyond) fail(`Origini: la ${i + 1}ª non è sulla griglia 45m dello studio.`);
   });
   const retro = obj(data, 'retrospective', 'Sezione retrospettiva');
   if (kind === MOVE_KIND) return validateMoveCase(data, retro, origins, periods.end);

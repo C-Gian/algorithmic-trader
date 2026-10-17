@@ -2,7 +2,8 @@
 
 Stessa catena del pacchetto reale (osservatore OBS-001/v1, ciclo, package) su dieci giorni di minuti
 casuali; contrassegnato `synthetic: true`. Il caso è il primo riferimento nato dopo il terzo giorno
-con almeno quattro fatti nel ledger. Uso: python -m move001.fixture <percorso di uscita>
+con almeno quattro fatti nel ledger, oppure (--final) l'ultimo riferimento, aperto a fine copertura.
+Uso: python -m move001.fixture <percorso di uscita> [--final]
 """
 
 from __future__ import annotations
@@ -24,7 +25,7 @@ from .consult import package
 from .cycle import Cycle
 
 
-def build() -> dict:
+def build(final: bool = False) -> dict:
     base = load_study()
     study = dataclasses.replace(base, study_start=base.input_start + 3 * DAY_MS, end=base.input_start + 10 * DAY_MS)
     conv = observation_conventions(study)
@@ -39,8 +40,13 @@ def build() -> dict:
     bars45, bars1d = aggregate(store, conv.bar_ms), aggregate(store, conv.day_ms)
     observed = observe(bars45, bars1d, conv)
     cy = Cycle(bars45, observed["45m"], observed["events"]["45m"], study.input_start, conv.bar_ms, study.end).run()
-    ref = next(r for r in cy.refs if r.birth_t > study.study_start and sum(1 for e in cy.ledger if e["refId"] == r.id) >= 4)
-    case = {"categories": [{"category": "SYNTHETIC_FIXTURE", "t": ref.birth_t}]}
+    if final:
+        ref = cy.refs[-1]
+        if ref.archived is not None:
+            raise RuntimeError("l'ultimo riferimento della fixture non è aperto a fine copertura")
+    else:
+        ref = next(r for r in cy.refs if r.birth_t > study.study_start and sum(1 for e in cy.ledger if e["refId"] == r.id) >= 4)
+    case = {"categories": [{"category": "SYNTHETIC_FIXTURE_FINAL" if final else "SYNTHETIC_FIXTURE", "t": ref.birth_t}]}
     run_ref = {"runId": "SYNTHETIC-MOVE001-CASE", "inputHash": None, "engineVersion": ENGINE_VERSION, "synthetic": True}
     chain = {"bars45": bars45, "bars1d": bars1d, "observed": observed}
     return package(case, ref, cy.ledger, cy.structures, chain, store, conv, study, run_ref, [])
@@ -48,7 +54,7 @@ def build() -> dict:
 
 def main() -> int:
     out = Path(sys.argv[1])
-    out.write_text(json.dumps(build(), ensure_ascii=False, separators=(",", ":"), allow_nan=False), encoding="utf-8")
+    out.write_text(json.dumps(build("--final" in sys.argv[2:]), ensure_ascii=False, separators=(",", ":"), allow_nan=False), encoding="utf-8")
     print(f"{out} {out.stat().st_size} byte")
     return 0
 

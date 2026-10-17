@@ -2,8 +2,8 @@
 
 Un file per riferimento: barre, osservazioni ed eventi OBS-001/v1 calcolati sull'intero prefisso e
 poi ritagliati; origini dalle quattro chiusure prima della nascita fino a otto dopo l'ultimo fatto
-del riferimento; ledger del riferimento con l'istante di ogni fatto, così il lettore mostra solo
-ciò che era noto al momento scelto. Nessun esito 24h, nessuna riga di seguito, nessun riepilogo
+del riferimento, al più fino alla fine copertura inclusa; ledger del riferimento con l'istante di ogni
+fatto, così il lettore mostra solo ciò che era noto al momento scelto. Nessun esito 24h, nessuna riga di seguito, nessun riepilogo
 OBS-001: kind MOVE001_CASE, non un caso OBS-002 né un risultato CAND.
 """
 
@@ -17,6 +17,9 @@ from . import CASE_SCHEMA, ENGINE_VERSION
 DAY = 86_400_000
 DAYS_BEFORE = 35
 BEFORE, AFTER = 4, 8
+# Versione tecnica del solo generatore di consultazione (ciclo e semantica 1.0.1 invariati):
+# /1 = consegna 1235e64 (ultima origine end - 45m); /2 = R1-B, ultima chiusura disponibile selezionabile.
+CONSULT_VERSION = "move001.consult/2"
 LABEL = "Rappresentazione sperimentale del movimento — nessuna decisione operativa"
 
 
@@ -25,7 +28,9 @@ def package(case: dict, ref, ledger: list[dict], structures: list[dict], chain: 
     events = [e for e in ledger if e["refId"] == ref.id]
     last = max(e["t"] for e in events)
     o_lo = max(study.input_start + bar, ref.birth_t - BEFORE * bar)
-    o_hi = min(last + AFTER * bar, study.end - bar)
+    # R1-B: l'ultima origine può essere la fine copertura, chiusura dell'ultima barra disponibile; i minuti
+    # del pacchetto restano [inputStart, end) e nessun dato successivo viene letto.
+    o_hi = min(last + AFTER * bar, study.end)
     origins = list(range(o_lo, o_hi + 1, bar))
     start = max(study.input_start, floor_day(o_lo) - DAYS_BEFORE * DAY)
     end = min(study.end, floor_day(o_hi) + DAY)
@@ -35,7 +40,7 @@ def package(case: dict, ref, ledger: list[dict], structures: list[dict], chain: 
     months = sorted({x["month"] for x in files if _overlaps(x["month"], start, end)})
     rejected = [s for s in structures if s["occupant"] and s["occupant"]["refId"] == ref.id]
     return {
-        "kind": "MOVE001_CASE", "schema": CASE_SCHEMA, "engineVersion": ENGINE_VERSION,
+        "kind": "MOVE001_CASE", "schema": CASE_SCHEMA, "engineVersion": ENGINE_VERSION, "consultVersion": CONSULT_VERSION,
         "study": {"id": study.raw["id"], "version": study.raw["version"], "hash": study.hash, "label": LABEL},
         "conventions": {"id": conv.raw["id"], "hash": conv.hash, "config": conv.raw},
         "timeUnit": "ms epoch UTC",
