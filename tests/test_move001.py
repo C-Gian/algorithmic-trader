@@ -9,6 +9,7 @@ from move001.config import load_study, observation_conventions
 from move001.cycle import Cycle
 from move001.examples import select
 from move001.summary import summarize
+from move001.verify import verify
 
 from move001_helpers import BAR, T0, Mv, base, kinds, types, with_p1
 from obs002_helpers import daily, walk_bars
@@ -204,6 +205,28 @@ class Reporting(unittest.TestCase):
         d = summarize(cy, T0, cy.end, BAR)["durationsDev"]
         self.assertEqual((d["birthToP1"]["censoredCount"], d["birthToP1"]["available"]["n"]), (1, 0))  # mai zero
         self.assertEqual(d["birthToArchiveOrEnd"]["censored"]["max"], 10)
+
+
+class Invariants(unittest.TestCase):
+    def scenarios(self):
+        a = with_p1(base())
+        a.bar(14, 113, 108, 110).bar(15, 115, 109, 114).bar(16, 116.4, 113, 115.7)
+        b = with_p1(base())
+        b.bar(14, 112, 103.8, 109.5).bar(15, 110, 108.3, 108.5)
+        b.pivot("LOW", 109, 12).pivot("HIGH", 113, 13).pivot("LOW", 107, 15).pivot("HIGH", 111, 17).bar(21, 107.5, 106.3, 106.5)
+        return [a.run(), b.run(), a.mirror().run(), with_p1(base()).run(end_k=20)]
+
+    def test_verify_passes_on_valid_cycles_and_detects_tampering(self):
+        for cy in self.scenarios():
+            self.assertEqual(verify(cy)["violations"], 0)
+        cy = self.scenarios()[0]
+        cy.refs[0].archived["t"] = t(15)  # completamento spostato su una barra che non tocca P1
+        with self.assertRaises(AssertionError):
+            verify(cy)
+        cy = self.scenarios()[0]
+        cy.refs[0].P0 = {**cy.refs[0].P0, "price": 108.5}  # base che risulterebbe testata prima della nascita
+        with self.assertRaises(AssertionError):
+            verify(cy)
 
 
 if __name__ == "__main__":

@@ -29,6 +29,7 @@ from .cycle import Cycle
 from .data import input_hash, load_minutes
 from .examples import select
 from .summary import summarize
+from .verify import verify
 
 DEFAULT_ROOT = REPO_ROOT.parent / "algorithmic-trader-data"
 
@@ -101,12 +102,33 @@ def cmd_run(study, root: Path) -> Path:
     return out
 
 
+def cmd_verify(study, root: Path) -> dict:
+    """Riscontro degli invarianti su tutti i riferimenti: ricalcola la catena, confronta gli output con
+    quelli registrati e scrive solo verify.json (fuori da outputs.json, che resta invariato)."""
+    store, report = load_minutes(study, root)
+    conv = observation_conventions(study)
+    bars45, bars1d = aggregate(store, conv.bar_ms), aggregate(store, conv.day_ms)
+    observed = observe(bars45, bars1d, conv)
+    cy = Cycle(bars45, observed["45m"], observed["events"]["45m"], study.input_start, conv.bar_ms, study.end).run()
+    out = root / "MOVE-001" / "runs" / f"MOVE-001-v{study.raw['version']}-e{ENGINE_VERSION}-{input_hash(report)[:10]}-{study.hash[:10]}"
+    reg = json.loads((out / "outputs.json").read_text(encoding="utf-8"))["outputs"]
+    if sha256_bytes(dump(cy.ledger)) != reg["ledger.json"] or sha256_bytes(dump([r.as_dict() for r in cy.refs])) != reg["references.json"]:
+        raise AssertionError("ledger o riferimenti ricalcolati diversi da quelli registrati")
+    res = {**verify(cy), "ledgerSha256": reg["ledger.json"], "referencesSha256": reg["references.json"], "software": software_ref(), "finishedAt": now_utc()}
+    (out / "verify.json").write_text(json.dumps(res, indent=2), encoding="utf-8")
+    log(f"verifica invarianti: {res['references']} riferimenti, {res['closes']} chiusure, violazioni {res['violations']}")
+    return res
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="move001", description="MOVE-001: applicazione descrittiva del ciclo sul DEV locale.")
-    parser.add_argument("command", choices=["run"])
+    parser.add_argument("command", choices=["run", "verify"])
     parser.add_argument("--data-root", type=Path, default=DEFAULT_ROOT)
     args = parser.parse_args(argv)
     study = load_study()
     log(f"MOVE-001 | config {study.hash} | motore {ENGINE_VERSION} | mesi {MONTHS[0]}..{MONTHS[-1]} | Python {platform.python_version()}")
-    cmd_run(study, args.data_root.resolve())
+    if args.command == "run":
+        cmd_run(study, args.data_root.resolve())
+    else:
+        cmd_verify(study, args.data_root.resolve())
     return 0
