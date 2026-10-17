@@ -1,4 +1,4 @@
-"""Bundle CAND-001 per la dashboard (schema cand001.bundle/2) e tabelle Markdown dei risultati.
+"""Bundle CAND-001 per la dashboard (schema cand001.bundle/3) e tabelle Markdown dei risultati.
 
 Il bundle non contiene orari di esecuzione né commit: dipende solo da input, configurazione e motore.
 Contiene risultati, ledger, episodi con cronologia degli stati e, per gli episodi arrivati al trigger
@@ -70,7 +70,8 @@ def _episode(e, trade_by_ep: dict, request_by_ep: dict) -> dict:
     }
 
 
-def build_bundle(cand, res: dict, summary: dict, quality: dict, run_ref: dict, phase: str) -> dict:
+def build_bundle(cand, res: dict, summary: dict, quality: dict, run_ref: dict, phase: str, profile: dict) -> dict:
+    """profile: identità del profilo eseguito (schema /3), distinta dalla fase del candidato che lo contiene."""
     eng, led = res["engine"], res["ledger"]
     src = cand.raw["data"]
     trade_by_ep = {t["episodeId"]: t for t in led.trades}
@@ -104,7 +105,7 @@ def build_bundle(cand, res: dict, summary: dict, quality: dict, run_ref: dict, p
         "kind": "CAND001_BUNDLE", "schema": BUNDLE_SCHEMA, "engineVersion": ENGINE_VERSION,
         "candidate": {"id": cand.raw["id"], "version": cand.raw["candidateVersion"], "hash": cand.hash, "config": cand.raw},
         "observationConventions": {"id": cand.raw["observations"]["conventions"], "hash": cand.raw["observations"]["conventionsHash"]},
-        "phase": phase, "timeUnit": "ms epoch UTC",
+        "phase": phase, "profile": profile, "timeUnit": "ms epoch UTC",
         "window": {"start": res["window"][0], "end": res["window"][1], "inputStart": res["obs"]["conv"].input_start},
         "run": run_ref,
         "source": {"name": "Binance Vision", "attribution": src["attribution"], "symbol": src["symbol"], "segment": src["segment"],

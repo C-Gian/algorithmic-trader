@@ -3,6 +3,7 @@
  * Nessun ricalcolo di decisioni o costi. Il «momento consultato» separa ciò che era noto
  * (available_at <= momento) dal seguito modellato, mostrato solo su richiesta esplicita.
  */
+import type { ProfileRef } from '../contract/app';
 import type { BacktestBundle, BtEpisode, BtLeg, BtPivot, BtSnapshot, BtTrade, BtWindow, ExampleCategory, ExampleRef, Side } from '../contract/backtest';
 import type { HistCandle, Ms } from '../contract/historical';
 
@@ -18,6 +19,13 @@ export interface PlanLevel {
   readonly label: string;
   readonly price: number;
 }
+
+/** Nomi dei profili fissi; per un bundle /2 il profilo si deduce dalla fase (dichiarato come dedotto). */
+export const PROFILE_LABEL: Record<string, string> = {
+  APP_CHECK_2025_01: 'Prova di gennaio 2025',
+  DEV: 'Sviluppo 2023–2024',
+  ADDITIONAL_2025: 'Confronto 2025',
+};
 
 const HEADLINES: [string, ExampleCategory[]][] = [
   ['Prima decisione', ['FIRST_CALL']],
@@ -42,6 +50,12 @@ export class BacktestStudy {
 
   get synthetic(): boolean {
     return this.bundle.run.synthetic === true;
+  }
+
+  get profile(): ProfileRef {
+    const b = this.bundle;
+    if (b.profile) return b.profile;
+    return { id: b.phase, label: PROFILE_LABEL[b.phase] ?? b.phase, kind: b.phase === 'DEV' ? 'DEVELOPMENT' : 'ADDITIONAL_COMPARISON', window: { start: b.window.start, end: b.window.end }, inferred: true };
   }
 
   /** I cinque pulsanti: per ciascuno il primo esempio cronologico fra LONG e SHORT (tie: tempo, poi ID). */

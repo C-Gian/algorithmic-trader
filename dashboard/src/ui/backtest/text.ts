@@ -1,4 +1,5 @@
-/** Testi semplici per stati, astensioni e uscite del candidato CAND-001 (codici del motore). */
+/** Testi semplici per stati, astensioni, tentativi e chiusure del candidato CAND-001 (codici del motore). */
+import type { Side } from '../../contract/backtest';
 import { formatNumber, formatSigned } from '../../lib/numbers';
 
 export const ABSTAIN_TEXT: Record<string, string> = {
@@ -13,48 +14,64 @@ export const ABSTAIN_TEXT: Record<string, string> = {
   INVALIDATED_STRUCTURE: 'la struttura 45m si è girata contro il movimento',
   INVALIDATED_DATA: 'mancavano dati durante l’attesa',
   EXPIRED: 'nessuna ripresa entro 12 barre (9 ore) dalla candela estrema',
-  REJECTED_PRICE: 'all’apertura del minuto d’ingresso il prezzo non rispettava più il rapporto 1,5',
-  CANCELLED_NO_QUOTE: 'nel minuto d’ingresso mancava la quotazione',
-  CANCELLED_END_OF_WINDOW: 'la finestra valutata stava finendo',
-  SKIPPED_BUSY: 'il candidato era già occupato da un altro episodio',
+  REJECTED_PRICE: 'all’apertura del minuto previsto il prezzo era già oltre il limite fissato (il guadagno possibile non era più almeno 1,5 volte il rischio)',
+  CANCELLED_NO_QUOTE: 'in quel minuto mancava il prezzo negoziato',
+  CANCELLED_END_OF_WINDOW: 'il periodo valutato stava finendo',
+  SKIPPED_BUSY: 'il bot era già impegnato con un altro episodio',
   UNRESOLVED_DATA_GAP: 'mancavano minuti mentre la posizione era aperta: percorso irrisolto',
 };
 
 export const STATE_TEXT: Record<string, string> = {
   RECOGNIZED: 'Ha riconosciuto il movimento',
-  WAIT_REACTION: 'Attende una reazione sufficiente',
-  WAIT_RESUMPTION: 'Reazione compatibile: attende la ripresa',
-  CALL: 'Ha chiesto un ingresso condizionato',
-  ENTRY_PENDING: 'Richiesta d’ingresso in attesa (60 s)',
-  FILLED: 'Ingresso modellato eseguito',
+  WAIT_REACTION: 'Aspetta una reazione',
+  WAIT_RESUMPTION: 'Reazione adatta: aspetta la ripresa',
+  CALL: 'Ha deciso di tentare l’ingresso',
+  ENTRY_PENDING: 'Tentativo d’ingresso al minuto successivo',
+  FILLED: 'Posizione simulata aperta',
   HOLD: 'Mantiene la posizione',
-  PROTECTION_UPDATE: 'Alza la protezione',
-  PROTECTION_REJECTED: 'Proposta di protezione scartata',
-  PROTECTION_PIVOT_BEFORE_ENTRY: 'Pivot precedente all’ingresso: non usato per la protezione',
-  EXIT_STRUCTURE_REQUESTED: 'Struttura opposta: chiede l’uscita',
-  CLOSED: 'Operazione chiusa',
+  PROTECTION_UPDATE: 'Aggiorna il limite di protezione',
+  PROTECTION_REJECTED: 'Nuovo limite di protezione scartato',
+  PROTECTION_PIVOT_BEFORE_ENTRY: 'Punto precedente all’ingresso: non usato per la protezione',
+  EXIT_STRUCTURE_REQUESTED: 'Cambio di direzione: chiede la chiusura',
+  CLOSED: 'Posizione chiusa',
 };
 
+/** Motivo d'uscita breve, per tabelle e registro. */
 export const EXIT_TEXT: Record<string, string> = {
-  STOP: 'stop',
-  TARGET: 'ritorno all’estremo P1 (target)',
-  EXIT_STRUCTURE: 'struttura 45m opposta',
-  TIME_EXIT: 'durata massima di 24 ore',
-  END_OF_SEGMENT: 'fine della finestra valutata',
+  STOP: 'limite di perdita (stop)',
+  TARGET: 'obiettivo raggiunto',
+  EXIT_STRUCTURE: 'cambio di direzione rilevato',
+  TIME_EXIT: 'limite di 24 ore',
+  END_OF_SEGMENT: 'fine del periodo',
+};
+
+/** «La posizione è stata chiusa perché …»: l'evento vero, nessuna «uscita» generica. */
+export const CLOSE_WHY: Record<string, string> = {
+  STOP: 'il prezzo ha raggiunto il limite di perdita (stop)',
+  TARGET: 'il prezzo ha raggiunto l’obiettivo (ritorno all’estremo P1 del movimento)',
+  EXIT_STRUCTURE: 'le regole hanno rilevato un cambiamento di direzione (struttura 45m opposta)',
+  TIME_EXIT: 'è scaduto il limite di 24 ore per operazione',
+  END_OF_SEGMENT: 'è finito il periodo valutato (chiusura prevista dal protocollo)',
 };
 
 export const CATEGORY_TEXT: Record<string, string> = {
-  FIRST_CALL: 'prima call',
+  FIRST_CALL: 'prima decisione di tentare un ingresso',
   FIRST_TRADE: 'prima operazione',
-  FIRST_NEGATIVE_TRADE: 'primo netto negativo',
-  FIRST_POSITIVE_TRADE: 'primo netto positivo',
-  FIRST_PROTECTION_UPDATE: 'prima protezione aggiornata',
-  FIRST_ABSTAIN_REACTION_INVALIDATED: 'prima astensione per reazione invalidata',
-  FIRST_ABSTAIN_REWARD_RISK: 'prima astensione per spazio/rischio',
-  FIRST_ABSTAIN_MISSING_DATA: 'prima astensione per dato mancante',
+  FIRST_NEGATIVE_TRADE: 'primo risultato negativo',
+  FIRST_POSITIVE_TRADE: 'primo risultato positivo',
+  FIRST_PROTECTION_UPDATE: 'primo aggiornamento del limite di protezione',
+  FIRST_ABSTAIN_REACTION_INVALIDATED: 'prima rinuncia per reazione non valida',
+  FIRST_ABSTAIN_REWARD_RISK: 'prima rinuncia per spazio/rischio insufficiente',
+  FIRST_ABSTAIN_MISSING_DATA: 'prima rinuncia per dato mancante',
 };
 
-export const stateText = (s: string) => STATE_TEXT[s] ?? (ABSTAIN_TEXT[s] ? `Si astiene: ${ABSTAIN_TEXT[s]}` : s);
+/** Parole per verso: LONG punta su una salita, SHORT su una discesa (non è vendere BTC posseduti). */
+export const SIDE = {
+  LONG: { move: 'salita', attempt: 'un acquisto', the: 'L’acquisto', done: 'eseguito', bet: 'puntare su una salita del prezzo', limitWord: 'massimo' },
+  SHORT: { move: 'discesa', attempt: 'una vendita', the: 'La vendita', done: 'eseguita', bet: 'puntare su una discesa del prezzo', limitWord: 'minimo' },
+} as const satisfies Record<Side, unknown>;
+
+export const stateText = (s: string) => STATE_TEXT[s] ?? (ABSTAIN_TEXT[s] ? `Rinuncia: ${ABSTAIN_TEXT[s]}` : s);
 export const usdt = (x: number | null | undefined, digits = 2) => (x == null ? 'n.d.' : `${formatSigned(x, digits)} USDT`);
 export const plainUsdt = (x: number | null | undefined, digits = 2) => (x == null ? 'n.d.' : `${formatNumber(x, digits)} USDT`);
 export const px = (x: number | null | undefined) => (x == null ? '—' : formatNumber(x, 2));

@@ -1,0 +1,31 @@
+{
+  "id": "APP-001/profiles",
+  "version": 1,
+  "description": "Profili fissi dei backtest avviabili dall'app (APP-001, Director 17 ottobre 2026). Registro dell'app, separato dalla configurazione congelata del candidato: non aggiunge finestre a config/CAND-001-v1.json e non cambia regole o costi.",
+  "candidate": "CAND-001/v1",
+  "configHash": "aed2c4ef627617d73972778097bbab5fb702ab5064ce9e6eb68ded2170ce4edf",
+  "profiles": [
+    {
+      "id": "APP_CHECK_2025_01",
+      "label": "Prova di gennaio 2025",
+      "kind": "PRODUCT_CHECK",
+      "window": { "start": "2025-01-01T00:00:00Z", "end": "2025-02-01T00:00:00Z" },
+      "withinPhase": "ADDITIONAL_2025",
+      "description": "Collaudo del prodotto: un mese breve per provare avvio, avanzamento e risultati dall'app. Non è un nuovo studio né un periodo scelto per il risultato."
+    },
+    {
+      "id": "DEV",
+      "label": "Sviluppo 2023–2024",
+      "kind": "DEVELOPMENT",
+      "phase": "DEV",
+      "description": "Finestra di sviluppo registrata del candidato, la stessa del backtest consegnato."
+    },
+    {
+      "id": "ADDITIONAL_2025",
+      "label": "Confronto 2025",
+      "kind": "ADDITIONAL_COMPARISON",
+      "phase": "ADDITIONAL_2025",
+      "description": "Confronto aggiuntivo sul 2025 con la stessa versione congelata. Il 2025 era già stato esaminato: non è una verifica indipendente."
+    }
+  ]
+}

@@ -2,13 +2,14 @@
   "name": "orbit-dashboard",
   "private": true,
   "version": "0.1.0",
-  "description": "UI-001 — dashboard locale con provider simulato. Nessun collegamento exchange.",
+  "description": "Dashboard locale: simulazione, studio storico e backtest avviabili dall'app (servizio locale APP-001). Nessun collegamento exchange.",
   "type": "module",
   "engines": {
     "node": "^20.0.0 || ^22.0.0 || >=24.0.0"
   },
   "scripts": {
-    "dev": "vite",
+    "dev": "node scripts/dev.mjs",
+    "dev:ui": "vite",
     "build": "tsc -b && vite build",
     "typecheck": "tsc -b",
     "preview": "vite preview",

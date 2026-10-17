@@ -1,13 +1,18 @@
 /**
- * Contratto del backtest di sviluppo CAND-001 (bundle `cand001.bundle/2`).
+ * Contratto del backtest CAND-001 (bundle `cand001.bundle/2` e `/3`).
  * Distinto dal bundle osservativo OBS-001 e dalla simulazione: esecuzioni modellate su prezzi
  * storici, nozionale normalizzato fisso, nessun conto o saldo personale. Tempi in ms epoch UTC.
  */
+import type { ProfileRef } from './app';
 import type { Measure, Ms } from './historical';
 
 export const BACKTEST_KIND = 'CAND001_BUNDLE' as const;
-/** /2 (motore 1.0.1, review R1): operazioni irrisolte, copertura dei periodi, riconciliazione separata. */
-export const BACKTEST_SCHEMA = 'cand001.bundle/2' as const;
+/**
+ * /2 (motore 1.0.1, review R1): operazioni irrisolte, copertura dei periodi, riconciliazione separata.
+ * /3 (motore 1.0.3, APP-001): /2 più l'identità del profilo eseguito (per esempio la prova di gennaio 2025).
+ * I risultati /2 già consegnati restano apribili: il profilo si deduce dalla fase, dichiarandolo.
+ */
+export const BACKTEST_SCHEMAS = ['cand001.bundle/2', 'cand001.bundle/3'] as const;
 
 export type Side = 'LONG' | 'SHORT';
 
@@ -291,7 +296,9 @@ export interface BtLeg {
 
 export interface BacktestBundle {
   readonly kind: typeof BACKTEST_KIND;
-  readonly schema: typeof BACKTEST_SCHEMA;
+  readonly schema: (typeof BACKTEST_SCHEMAS)[number];
+  /** Solo schema /3; per /2 vedi BacktestStudy.profile (dedotto dalla fase). */
+  readonly profile?: ProfileRef;
   readonly engineVersion: string;
   readonly candidate: { readonly id: string; readonly version: string; readonly hash: string };
   readonly observationConventions: { readonly id: string; readonly hash: string };

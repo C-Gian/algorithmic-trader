@@ -3,59 +3,46 @@
 PowerShell, dalla radice del checkout:
     $env:PYTHONPATH = "src"; python3.12 -m cand001 all
     $env:PYTHONPATH = "src"; python3.12 -m cand001 all --phase additional2025
+    $env:PYTHONPATH = "src"; python3.12 -m cand001 run --phase app-check-2025-01
 ADDITIONAL_2025 (confronto aggiuntivo già esposto, checkpoint Director registrato il 17 ottobre 2026):
 osservazioni su tutto il prefisso dal 2022-10-01, valutazione [2025-01-01, 2026-01-01) da FLAT.
+app-check-2025-01 (APP-001): profilo di collaudo [2025-01-01, 2025-02-01), solo dati già presenti;
+check/run usano lo stesso percorso del servizio locale dell'app (pipeline.py).
 """
 
 from __future__ import annotations
 
 import argparse
-import ctypes
 import json
 import platform
-import sys
-import time
 from pathlib import Path
 
 from obs001.acquire import AcquisitionError, now_utc
-from obs001.cli import software_ref
-from obs001.conventions import REPO_ROOT, sha256_bytes
+from obs001.conventions import REPO_ROOT
 from obs001.minutes import SchemaError
+from trading_primitives.file_lock import FileLock
 
-from . import BUNDLE_SCHEMA, ENGINE_VERSION
-from .backtest import run_window
-from .bundle import build_bundle, results_markdown
+from . import ENGINE_VERSION
+from .bundle import results_markdown
 from .config import load_candidate
-from .data import FundingNotCertified, acquire, dirs, economic_inputs, input_hash, load_costs, load_trade, phase_inputs, reused_identity
-from .metrics import summarize
+from .data import FundingNotCertified, acquire, dirs
+from .pipeline import Events, check_inputs, execute
+from .profiles import load_profiles
 
 DEFAULT_DATA_DIR = REPO_ROOT.parent / "algorithmic-trader-data" / "CAND-001"
-PHASES = {"dev": "DEV", "additional2025": "ADDITIONAL_2025"}
+PHASES = {"dev": "DEV", "additional2025": "ADDITIONAL_2025", "app-check-2025-01": "APP_CHECK_2025_01"}
+ACQUIRABLE = {"DEV", "ADDITIONAL_2025"}
 
 
 def log(msg: str) -> None:
     print(f"[{now_utc()}] {msg}", flush=True)
 
 
-def peak_memory_mb() -> float | None:
-    if sys.platform != "win32":
-        return None
-    try:
-        class PMC(ctypes.Structure):
-            _fields_ = [("cb", ctypes.c_ulong), ("PageFaultCount", ctypes.c_ulong), ("PeakWorkingSetSize", ctypes.c_size_t),
-                        ("WorkingSetSize", ctypes.c_size_t), ("QuotaPeakPagedPoolUsage", ctypes.c_size_t), ("QuotaPagedPoolUsage", ctypes.c_size_t),
-                        ("QuotaPeakNonPagedPoolUsage", ctypes.c_size_t), ("QuotaNonPagedPoolUsage", ctypes.c_size_t),
-                        ("PagefileUsage", ctypes.c_size_t), ("PeakPagefileUsage", ctypes.c_size_t)]
-        pmc = PMC()
-        pmc.cb = ctypes.sizeof(PMC)
-        k32 = ctypes.windll.kernel32
-        k32.GetCurrentProcess.restype = ctypes.c_void_p  # handle a 64 bit: senza restype viene troncato
-        k32.K32GetProcessMemoryInfo.argtypes = [ctypes.c_void_p, ctypes.POINTER(PMC), ctypes.c_ulong]
-        if not k32.K32GetProcessMemoryInfo(k32.GetCurrentProcess(), ctypes.byref(pmc), pmc.cb):
-            return None
-        return round(pmc.PeakWorkingSetSize / 1e6, 1)
-    except Exception:  # noqa: BLE001 - misura facoltativa
-        return None
+class LogEvents(Events):
+    """Il comando diretto non mostra l'avanzamento fine: solo i messaggi di sempre."""
+
+    def log(self, message: str) -> None:
+        log(message)
 
 
 def cmd_acquire(cand, data_dir: Path, phase: str) -> int:
@@ -73,111 +60,39 @@ def cmd_acquire(cand, data_dir: Path, phase: str) -> int:
     return code
 
 
-def cmd_check(cand, data_dir: Path, phase: str, economic: bool = False):
-    """Controllo degli input. Con economic=True usa il percorso del run: funding non certificato
-    solleva FundingNotCertified dopo aver scritto il rapporto di qualità."""
-    log(f"controllo input {phase}")
-    t0 = time.perf_counter()
-    plan = phase_inputs(cand, phase)
-    log(f"  piano: osservazione {len(plan['observe'])} mesi trade {plan['observe'][0]}..{plan['observe'][-1]} "
-        f"(di cui {len(plan['reuseObs'])} da OBS-001), funding/mark {len(plan['funding'])} mesi della finestra")
-    store, trade = load_trade(cand, data_dir, phase)
-    blocked = None
-    try:
-        funding, mark, costs = economic_inputs(cand, data_dir, phase) if economic else load_costs(cand, data_dir, phase)
-    except FundingNotCertified as e:
-        blocked, costs = e, e.report
-        funding, mark = [], {}
-    totals = store.counts()
-    log(f"  trade: minuti {totals}")
-    for r in trade:
+def cmd_check(cand, data_dir: Path, profile, economic: bool = False):
+    log(f"controllo input {profile.id}")
+    store, funding, mark, quality = check_inputs(cand, data_dir, profile, LogEvents(), economic)
+    log(f"  trade: minuti {quality['trade']['totals']}")
+    for r in quality["trade"]["months"]:
         anomalies = {k: r[k] for k in ("duplicatesIdentical", "duplicatesDiscordantMinutes", "outOfOrder", "outsideMonth", "corruptRows") if r[k]}
         if anomalies or r["coverage"]["valid"] != r["coverage"]["expected"]:
             log(f"    {r['month']}: validi {r['coverage']['valid']}/{r['coverage']['expected']} anomalie {anomalies}")
-    s = costs["funding"]["series"]
+    s = quality["costs"]["funding"]["series"]
     log(f"  funding: {s['events']} eventi, intervalli {s['intervalsHours']} h, jitter max {s['jitterMaxMs']} ms, anomalie {len(s['anomalies'])}, "
         f"{'certificata' if s['certified'] else 'NON CERTIFICATA'}")
     for a in s["anomalies"][:10]:
         log(f"    funding: {a}")
-    log(f"  mark: punti necessari {costs['mark']['pointsNeeded']}, disponibili {costs['mark']['pointsAvailable']}")
-    # Prefisso osservativo: dall'inizio dell'input all'inizio della finestra (per DEV l'inizializzazione 2022).
-    quality = {"trade": {"months": trade, "totals": totals, "initialization": store.counts(store.start, cand.window(phase)[0])},
-               "costs": costs, "identity": reused_identity(data_dir), "checkSeconds": round(time.perf_counter() - t0, 2)}
-    (dirs(data_dir)["manifests"] / f"input-{phase}.json").write_text(json.dumps(quality, indent=2), encoding="utf-8")
-    if blocked is not None:
-        raise blocked
+    log(f"  mark: punti necessari {quality['costs']['mark']['pointsNeeded']}, disponibili {quality['costs']['mark']['pointsAvailable']}")
     return store, funding, mark, quality
 
 
-def _slim_quality(q: dict) -> dict:
-    trade = [{k: r[k] for k in ("month", "file", "sha256", "rows", "coverage", "duplicatesIdentical", "duplicatesDiscordantMinutes",
-                               "outOfOrder", "outsideMonth", "corruptRows")} for r in q["trade"]["months"]]
-    costs = q["costs"]
-    return {"trade": {"months": trade, "totals": q["trade"]["totals"], "initialization": q["trade"]["initialization"]},
-            "funding": {"files": [{k: f[k] for k in ("month", "file", "sha256", "rows", "corrupt", "outsideMonth")} for f in costs["funding"]["files"]],
-                        "series": {k: v for k, v in costs["funding"]["series"].items()}},
-            "mark": {"files": [{k: f[k] for k in ("month", "file", "sha256", "rows", "coverage")} for f in costs["mark"]["files"]],
-                     "pointsNeeded": costs["mark"]["pointsNeeded"], "pointsAvailable": costs["mark"]["pointsAvailable"],
-                     "missingForTau": costs["mark"]["missingForTau"]},
-            "identity": q["identity"]}
-
-
-def cmd_run(cand, data_dir: Path, phase: str, argv) -> Path | None:
-    started = now_utc()
-    t0 = time.perf_counter()
-    try:
-        # R1-A: qualità funding vincolante, nessun ledger né netto se la serie non è certificata.
-        store, funding, mark, quality = cmd_check(cand, data_dir, phase, economic=True)
-    except FundingNotCertified as e:
-        log(f"BLOCCO: {e} Rapporto di qualità in manifests/input-{phase}.json")
+def cmd_run(cand, data_dir: Path, profile, argv) -> Path | None:
+    command = " ".join(["python -m cand001", *(argv or [])]) if argv is not None else ""
+    # Stesso lock del worker del servizio APP-001: mai due calcoli sulla stessa cartella dati.
+    (data_dir / "jobs").mkdir(parents=True, exist_ok=True)
+    lock = FileLock(data_dir / "jobs" / "worker.lock")
+    if not lock.acquire():
+        log("BLOCCO: un altro backtest usa la stessa cartella dati (servizio dell'app o altro comando); riprova quando è concluso")
         return None
-    t_check = time.perf_counter() - t0
-    ih = input_hash(quality["trade"]["months"], quality["costs"])
-    sw = software_ref()
-    run_id = f"CAND-001-v{cand.raw['candidateVersion']}-e{ENGINE_VERSION}-{phase}-{ih[:10]}-{cand.hash[:10]}"
-    log(f"backtest {run_id} (commit {sw['commit']}{' con modifiche locali' if sw['dirty'] else ''})")
-    t1 = time.perf_counter()
-    res = run_window(cand, store, cand.window(phase), funding, mark)
-    t_run = time.perf_counter() - t1
-    summary = summarize(res, cand, phase)
-    run_ref = {"runId": run_id, "inputHash": ih, "engineVersion": ENGINE_VERSION, "candidateVersion": cand.raw["candidateVersion"],
-               "configHash": cand.hash}
-    bundle = build_bundle(cand, res, summary, _slim_quality(quality), run_ref, phase)
-    body = json.dumps(bundle, ensure_ascii=False, separators=(",", ":"), allow_nan=False).encode("utf-8")
-    out_hash = sha256_bytes(body)
-    runs = dirs(data_dir)["runs"]
-    run_dir = runs / run_id
-    path = run_dir / "cand001-bundle.json"
-    if path.exists() and sha256_bytes(path.read_bytes()) != out_hash:
-        k = 2
-        while (runs / f"{run_id}-r{k}").exists():
-            k += 1
-        log(f"  ATTENZIONE: bundle esistente diverso con lo stesso ID; nuovo run separato -r{k}")
-        run_dir = runs / f"{run_id}-r{k}"
-        path = run_dir / "cand001-bundle.json"
-    run_dir.mkdir(parents=True, exist_ok=True)
-    if path.exists():
-        log(f"  bundle già presente e identico ({out_hash[:16]}...): nessuna sovrascrittura")
-    else:
-        path.write_bytes(body)
-    (run_dir / "results.md").write_text(results_markdown(summary, cand.econ["notionalUSDT"]), encoding="utf-8")
-    (run_dir / "input-manifest.json").write_text(json.dumps(quality, indent=2), encoding="utf-8")
-    manifest = {
-        "kind": "CAND001_RUN", "runId": run_dir.name, "phase": phase, "schema": BUNDLE_SCHEMA, "engineVersion": ENGINE_VERSION,
-        "candidate": {"id": cand.raw["id"], "version": cand.raw["candidateVersion"], "configHash": cand.hash},
-        "observationConventions": cand.raw["observations"]["conventionsHash"], "software": sw, "python": platform.python_version(),
-        "platform": platform.platform(), "inputHash": ih, "outputs": {"bundle": {"file": path.name, "sha256": out_hash, "bytes": len(body)}},
-        "counts": {"trades": len(res["ledger"].trades), "episodes": len(res["engine"].episodes), "legs": len(res["engine"].legs),
-                   "decisions": len(res["engine"].decisions), "windows": len(bundle["windows"])},
-        "reconciliation": summary["reconciliation"], "halted": summary["halted"],
-        "timings": {"check_s": round(t_check, 2), "backtest_s": round(t_run, 2), "total_s": round(time.perf_counter() - t0, 2)},
-        "peakMemoryMB": peak_memory_mb(), "startedAt": started, "finishedAt": now_utc(), "command": " ".join(argv or sys.argv),
-    }
-    stamp = manifest["finishedAt"].replace("-", "").replace(":", "")
-    for name in (f"run-manifest-{stamp}.json", "run-manifest.json"):
-        (run_dir / name).write_text(json.dumps(manifest, indent=2), encoding="utf-8")
-    log(f"  bundle {path} | {len(body) / 1e6:.1f} MB | sha256 {out_hash[:16]}... | {manifest['timings']} | picco memoria {manifest['peakMemoryMB']} MB")
-    return run_dir
+    try:
+        out = execute(cand, data_dir, profile, LogEvents(), command=command)
+    finally:
+        lock.release()
+    if out["status"] != "PUBLISHED":
+        return None
+    log(f"  risultato {out['runId']} | bundle sha256 {out['bundleSha256']} | inputHash {out['inputHash']} | configHash {out['configHash']}")
+    return Path(out["runDir"])
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -189,13 +104,22 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     phase = PHASES[args.phase]
     cand = load_candidate()
+    profile = load_profiles(cand)[phase]
     data_dir = args.data_dir.resolve()
-    log(f"CAND-001 | candidato {cand.raw['id']} {cand.raw['candidateVersion']} hash {cand.hash} | motore {ENGINE_VERSION} | Python {platform.python_version()}")
+    log(f"CAND-001 | candidato {cand.raw['id']} {cand.raw['candidateVersion']} hash {cand.hash} | motore {ENGINE_VERSION} | "
+        f"profilo {profile.id} | Python {platform.python_version()}")
     try:
+        if args.command in ("acquire", "all") and phase not in ACQUIRABLE:
+            log(f"BLOCCO: il profilo {profile.id} usa solo dati già presenti; nessuna acquisizione per questo profilo")
+            return 2
         if args.command == "acquire":
             return cmd_acquire(cand, data_dir, phase)
         if args.command == "check":
-            cmd_check(cand, data_dir, phase)
+            try:
+                cmd_check(cand, data_dir, profile)
+            except FundingNotCertified as e:
+                log(f"BLOCCO: {e}")
+                return 2
             return 0
         if args.command == "report":
             runs = dirs(data_dir)["runs"]
@@ -212,7 +136,7 @@ def main(argv: list[str] | None = None) -> int:
             code = cmd_acquire(cand, data_dir, phase)
             if code:
                 return code
-        return 0 if cmd_run(cand, data_dir, phase, argv) else 2
+        return 0 if cmd_run(cand, data_dir, profile, argv) else 2
     except (AcquisitionError, SchemaError) as e:
         log(f"BLOCCO: {e}")
         return 2

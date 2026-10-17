@@ -2,13 +2,18 @@
  * Ambiente «Studio storico» (OBS-001): dati reali Binance Vision da bundle locale.
  * Vista causale al cutoff t; seguito retrospettivo solo su comando esplicito; riepilogo
  * mensile nella voce «Studio osservativo». Nessuna call, posizione, saldo, ordine o comando.
+ * APP-001: vista e momento consultato nell'indirizzo (#/historical/at/<t>, #/historical/summary).
+ * Il bundle resta solo in memoria: dopo un ricaricamento si chiede di riaprirlo e si torna al momento.
  */
 import { Component, useRef, useState, type ReactNode } from 'react';
 import type { Ms } from '../../contract/historical';
 import { HistoricalStudy } from '../../historical/study';
 import type { ShellProps } from '../App';
 import { Shell } from '../App';
+import { Notice } from '../components/primitives';
 import { Unavailable } from '../components/Unavailable';
+import { fmtUtc } from '../format';
+import { navigate, paths, useScrollOnRoute } from '../router';
 import { HistChartCard } from './HistChartCard';
 import { HistHeader } from './HistHeader';
 import { FamiliesSection } from './FamiliesSection';
@@ -23,23 +28,40 @@ export function HistoricalEnvironment({
   studyLoad = 0,
   onOpen,
   shell,
+  moment,
+  path = '/historical',
 }: {
   study: HistoricalStudy | null;
   /** Numero dell'apertura corrente: rimonta lo studio a ogni bundle valido aperto. */
   studyLoad?: number;
   onOpen: (s: HistoricalStudy) => void;
   shell: ShellProps;
+  /** Momento richiesto dall'indirizzo (ms UTC), se presente. */
+  moment?: number;
+  path?: string;
 }) {
   const shellRef = useRef<HTMLDivElement>(null);
+  useScrollOnRoute(path);
+  const deep = moment !== undefined || shell.view === 'research';
   return (
     <Shell shell={shell} shellRef={shellRef}>
       {!study ? (
-        <OpenStudy onOpen={onOpen} />
+        <>
+          {deep && (
+            <div className="content" style={{ paddingBottom: 0 }}>
+              <Notice tone="warning" title="Lo studio va riaperto">
+                Lo studio storico resta solo in memoria: dopo un ricaricamento o da un collegamento diretto va riaperto dal file.
+                {moment !== undefined ? ` Dopo l’apertura tornerai al momento ${fmtUtc(moment)}.` : ' Dopo l’apertura tornerai al riepilogo.'}
+              </Notice>
+            </div>
+          )}
+          <OpenStudy onOpen={onOpen} />
+        </>
       ) : shell.view === 'settings' ? (
         <Unavailable title="Impostazioni" onBack={() => shell.navigate('dashboard')} />
       ) : (
         <ViewGuard key={studyLoad} onOpen={onOpen}>
-          <StudyWorkspace study={study} onOpen={onOpen} shell={shell} />
+          <StudyWorkspace study={study} onOpen={onOpen} shell={shell} moment={moment} />
         </ViewGuard>
       )}
     </Shell>
@@ -72,14 +94,15 @@ class ViewGuard extends Component<{ children: ReactNode; onOpen: (s: HistoricalS
   }
 }
 
-function StudyWorkspace({ study, onOpen, shell }: { study: HistoricalStudy; onOpen: (s: HistoricalStudy) => void; shell: ShellProps }) {
-  // Impostazione iniziale: prima origine dello studio.
-  const [cutoff, setCutoff] = useState<Ms>(study.origins[0]);
+function StudyWorkspace({ study, onOpen, shell, moment }: { study: HistoricalStudy; onOpen: (s: HistoricalStudy) => void; shell: ShellProps; moment?: number }) {
+  // Momento dall'indirizzo se è un'origine dello studio; altrimenti la prima origine.
+  const cutoff: Ms = moment !== undefined && study.indexOf(moment) >= 0 ? moment : study.origins[0];
   const [retrospective, setRetrospective] = useState(false);
 
+  // Spostare il cutoff sostituisce la voce corrente (niente cronologia a ogni passo); il riepilogo apre una voce nuova.
   const goTo = (t: Ms) => {
-    setCutoff(t);
     setRetrospective(false);
+    navigate(paths.historical('dashboard', t), { replace: true });
   };
 
   if (shell.view === 'research') {
@@ -87,8 +110,8 @@ function StudyWorkspace({ study, onOpen, shell }: { study: HistoricalStudy; onOp
       <StudySummaryView
         study={study}
         onOpenOrigin={(t) => {
-          goTo(t);
-          shell.navigate('dashboard');
+          setRetrospective(false);
+          navigate(paths.historical('dashboard', t));
         }}
       />
     );

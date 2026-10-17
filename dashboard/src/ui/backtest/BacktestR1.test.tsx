@@ -7,6 +7,7 @@ import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testi
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import fixture from '../../backtest/__fixtures__/synthetic-backtest.json?raw';
 import haltFixture from '../../backtest/__fixtures__/synthetic-backtest-halt.json?raw';
+import { FakeApi } from '../../backtest/__fixtures__/fakeApi';
 import { parseBacktest } from '../../backtest/loadBacktest';
 import { BacktestStudy } from '../../backtest/study';
 import { SimulatedProvider } from '../../sim/provider';
@@ -21,7 +22,7 @@ beforeEach(() => {
 afterEach(cleanup);
 
 const sim = () => new SimulatedProvider({ exitDelayMs: 0 });
-const nav = () => within(screen.getByRole('navigation', { name: 'Navigazione' }));
+const FILE = { kind: 'file' } as const;
 const lastPriceMark = () => document.querySelector('[data-role="last-price"] title')?.textContent ?? null;
 
 async function upload(label: string, text: string) {
@@ -39,21 +40,25 @@ describe('R1-B · bundle con finestra interrotta', () => {
     const rec = s.bundle.summary.reconciliation;
     expect(rec.windowComplete).toBe(false);
     expect(rec.unresolvedTrades).toBe(1);
-    render(<App createSimulation={sim} initialEnvironment="BACKTEST" />);
-    await upload('Apri backtest', haltFixture);
-    await waitFor(() => expect(screen.getByText(/Finestra interrotta il .*risultati completi non disponibili/)).toBeTruthy());
-    const table = screen.getByLabelText('Risultato modellato');
-    const row = (label: string | RegExp) => within(table).getByText(label).closest('tr')!;
-    expect(within(row('Netto modellato')).getAllByText('n.d.').length).toBeGreaterThan(0);
-    expect(within(row('Netto con costi di stress (10 bp + 10 bp)')).getAllByText('n.d.').length).toBeGreaterThan(0);
-    expect(within(row('Drawdown massimo (chiusure 1m)')).getAllByText('n.d.').length).toBeGreaterThan(0);
+    render(<App createSimulation={sim} initialEnvironment="BACKTEST" api={new FakeApi()} />);
+    fireEvent.click(screen.getByRole('link', { name: 'Risultati salvati' }));
+    await upload('Apri file esterno', haltFixture);
+    await waitFor(() => expect(screen.getByText(/Periodo interrotto il .*risultato completo non disponibile/)).toBeTruthy());
+    expect(within(screen.getByRole('region', { name: 'Risultato del backtest' })).getByText('non calcolabile')).toBeTruthy();
+    const table = screen.getByLabelText('Da dove viene il risultato');
+    const row = (label: string | RegExp, scope = table) => within(scope).getByText(label).closest('tr')!;
+    expect(within(row('Risultato dopo i costi')).getAllByText('n.d.').length).toBeGreaterThan(0);
     expect(row('Operazioni irrisolte (percorso non valutabile)').textContent).toContain('1');
-    expect(row('Quota operazioni positive').textContent).toMatch(/solo concluse/);
-    expect(row('Tempo in posizione').textContent).toMatch(/solo concluse/);
-    expect(row('Parte nota: netto delle sole operazioni concluse (parziale)').textContent).toContain(`${usdt(rec.knownPartNet)} su ${rec.closedTrades}`);
+    expect(row('Parte nota: solo operazioni concluse (parziale)').textContent).toContain(`${usdt(rec.knownPartNet)} su ${rec.closedTrades}`);
+    const stress = screen.getByLabelText('Scenario con costi più alti');
+    expect(within(row('Stesse operazioni con costi più severi', stress)).getAllByText('n.d.').length).toBeGreaterThan(0);
+    const tech = screen.getByLabelText('Dettagli tecnici');
+    expect(within(row('Drawdown massimo (chiusure 1m)', tech)).getAllByText('n.d.').length).toBeGreaterThan(0);
+    expect(row('Quota operazioni positive', tech).textContent).toMatch(/solo concluse/);
+    expect(row('Tempo in posizione', tech).textContent).toMatch(/solo concluse/);
     const decisions = screen.getByLabelText('Decisioni e operazioni');
     expect(within(decisions).getByText('Copertura della valutazione').closest('tr')!.textContent).toMatch(/parziale fino al/);
-    expect(within(decisions).getByText(/solo teoriche/).closest('tr')!.textContent).toContain(`${rec.notEvaluatedCloses} non valutate`);
+    expect(within(decisions).getByText(/· non valutate/).closest('tr')!.textContent).toContain(`${rec.notEvaluatedCloses} non valutate`);
   });
 
   it('un mese dopo la lacuna è «non valutato», non zero', () => {
@@ -64,7 +69,7 @@ describe('R1-B · bundle con finestra interrotta', () => {
     after.trades = { ...after.trades, n: 0, unresolved: 0, net: null };
     after.cashflowByTimestamp = { net: null };
     data.summary.months['2023-02'] = after;
-    render(<App createSimulation={sim} initialEnvironment="BACKTEST" initialBacktest={new BacktestStudy(parseBacktest(JSON.stringify(data)))} />);
+    render(<App createSimulation={sim} initialEnvironment="BACKTEST" initialBacktest={new BacktestStudy(parseBacktest(JSON.stringify(data)))} api={new FakeApi()} />);
     const months = screen.getByLabelText('Mesi');
     expect(within(months).getByText('2023-02').closest('tr')!.textContent).toMatch(/non valutato/);
     expect(within(months).getByText(m0).closest('tr')!.textContent).toMatch(/irrisolta.*parziale/);
@@ -73,23 +78,24 @@ describe('R1-B · bundle con finestra interrotta', () => {
   it('registro ed episodio irrisolto: nessuna uscita fittizia, nemmeno col seguito', () => {
     const s = halt();
     const tr = s.bundle.trades.find((t) => t.status === 'UNRESOLVED_DATA_GAP')!;
-    render(<App createSimulation={sim} initialEnvironment="BACKTEST" initialBacktest={s} />);
-    fireEvent.click(nav().getByRole('button', { name: 'Registro operazioni' }));
-    const ledger = screen.getByLabelText('Registro operazioni');
+    render(<App createSimulation={sim} initialEnvironment="BACKTEST" initialBacktest={s} api={new FakeApi()} />);
+    fireEvent.click(screen.getByRole('link', { name: `Tutte le operazioni (${s.bundle.trades.length})` }));
+    const ledger = screen.getByLabelText('Tutte le operazioni');
     const rows = within(ledger).getAllByRole('row').slice(1);
     const idx = s.bundle.trades.indexOf(tr);
     expect(rows[idx].textContent).toContain('percorso irrisolto');
     expect(rows[idx].textContent).toContain('n.d.');
-    fireEvent.click(within(rows[idx]).getByRole('button', { name: 'Apri episodio' }));
-    expect(screen.getByText('Ha chiesto un ingresso a queste condizioni')).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: 'Mostra seguito modellato' }));
-    expect(screen.getByText('Percorso irrisolto')).toBeTruthy();
-    expect(screen.queryByText('Uscita modellata')).toBeNull();
-    const result = screen.getByLabelText("Risultato modellato dell'operazione");
+    fireEvent.click(within(rows[idx]).getByRole('link', { name: /Apri il dettaglio/ }));
+    expect(screen.getByText(/^Ha deciso di tentare/)).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Mostra cosa è successo dopo' }));
+    expect(screen.getByText('Esito non calcolabile')).toBeTruthy();
+    expect(screen.queryByText(/La posizione è stata chiusa perché/)).toBeNull();
+    const result = screen.getByLabelText("Risultato dell'operazione");
     expect(within(result).getByText('Percorso irrisolto: risultato non disponibile')).toBeTruthy();
-    expect(within(result).getByText('Netto modellato').nextElementSibling?.textContent).toBe('n.d.');
-    expect(within(result).getByText('Netto con costi di stress').nextElementSibling?.textContent).toBe('n.d.');
-    expect(within(result).getByText('Fee assunte').nextElementSibling?.textContent).toBe(usdt(-tr.feeEntry));
+    const metric = (label: string) => within(result).getByText(label).parentElement!.querySelector('.metric-value')!.textContent;
+    expect(metric('Risultato dopo i costi')).toBe('n.d.');
+    expect(within(result).getByText(/^Con costi più alti: n\.d\./)).toBeTruthy();
+    expect(metric('Commissioni')).toBe(usdt(-tr.feeEntry));
     expect(s.levels(s.episode(tr.episodeId)!, tr.gap!.at + 86_400_000, true).some((l) => l.kind === 'EXIT')).toBe(false);
   });
 });
@@ -101,7 +107,7 @@ describe('R1-C · prezzo corrente della scala nell’episodio', () => {
 
   it('alla call (chiusura 45m) il 45m ha il prezzo corrente; il giorno incompleto in 1D no', () => {
     expect(tr.callTime % 86_400_000).not.toBe(0);
-    render(<EpisodeView study={s} id={ep.id} initialCursor={tr.callTime} onBack={() => {}} />);
+    render(<EpisodeView study={s} id={ep.id} initialCursor={tr.callTime} source={FILE} from="operations" />);
     expect(screen.queryByText(/Prezzo al momento non disponibile/)).toBeNull();
     expect(lastPriceMark()).toBe('Prezzo corrente della scala');
     fireEvent.click(screen.getByRole('button', { name: '1D' }));
@@ -109,13 +115,13 @@ describe('R1-C · prezzo corrente della scala nell’episodio', () => {
     expect(screen.getByText(/Ultimo noto della stessa scala: .* USDT, chiusura alle .* \(non corrente\)/)).toBeTruthy();
     expect(lastPriceMark()).toBeNull();
     // Il seguito non promuove una candela futura a prezzo corrente.
-    fireEvent.click(screen.getByRole('button', { name: 'Mostra seguito modellato' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Mostra cosa è successo dopo' }));
     expect(lastPriceMark()).toBeNull();
   });
 
   it('al momento d’ingresso (t+60s) nessuna scala ha un prezzo corrente', () => {
     expect(tr.entryTime - tr.callTime).toBe(60_000);
-    render(<EpisodeView study={s} id={ep.id} initialCursor={tr.entryTime} onBack={() => {}} />);
+    render(<EpisodeView study={s} id={ep.id} initialCursor={tr.entryTime} source={FILE} from="operations" />);
     expect(screen.getByText('Prezzo al momento non disponibile sulla scala 45m')).toBeTruthy();
     expect(screen.getByText(/\(non corrente\)/)).toBeTruthy();
     expect(lastPriceMark()).toBeNull();
@@ -129,7 +135,7 @@ describe('R1-C · prezzo corrente della scala nell’episodio', () => {
     const w = data.windows[ep.id];
     w.bars1d.status = w.bars1d.status.map(() => 'MISSING');
     const s2 = new BacktestStudy(parseBacktest(JSON.stringify(data)));
-    render(<EpisodeView study={s2} id={ep.id} initialCursor={tr.callTime} onBack={() => {}} />);
+    render(<EpisodeView study={s2} id={ep.id} initialCursor={tr.callTime} source={FILE} from="operations" />);
     fireEvent.click(screen.getByRole('button', { name: '1D' }));
     expect(screen.getByText(/Nessuna candela completa nel tratto entro il momento consultato: prezzo non disponibile/)).toBeTruthy();
     expect(screen.getByLabelText('Grafico 1D: nessuna barra completa nel tratto')).toBeTruthy();

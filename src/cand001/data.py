@@ -42,24 +42,25 @@ def obs_dir(data_dir: Path) -> Path:
     return data_dir.parent / "OBS-001"
 
 
-def phase_inputs(cand: Candidate, phase: str) -> dict[str, list[str]]:
+def phase_inputs(cand: Candidate, phase: str, window: tuple[int, int] | None = None) -> dict[str, list[str]]:
     """Piano degli input di una fase, in insiemi distinti (motore 1.0.2):
     - observe: mesi trade da caricare per osservare, sempre dall'inizio dell'input (2022-10-01) alla fine
       della finestra, così le osservazioni al confine usano tutto il prefisso continuo;
     - reuseObs: mesi trade letti dagli archivi OBS-001 verificati (elenco della config congelata), mai riscaricati;
     - trade/funding/mark: mesi da acquisire nella cartella CAND-001. Funding e mark solo nella finestra
       valutata: la finestra parte FLAT e il prefisso non genera costi.
-    Nessun mese oltre la fine della finestra (per ADDITIONAL_2025: nessun dato 2026)."""
-    start, end = cand.window(phase)
+    Nessun mese oltre la fine della finestra (per ADDITIONAL_2025: nessun dato 2026).
+    window sostituisce la finestra della fase (profili applicativi APP-001 come la prova di gennaio 2025)."""
+    start, end = window or cand.window(phase)
     observe = months_between(cand.input_start, end)
     reuse = [m for m in observe if m in cand.raw["data"].get("reuseObsTradeMonths", [])]
     costs = months_between(start, end)
     return {"observe": observe, "reuseObs": reuse, "trade": [m for m in observe if m not in reuse], "funding": costs, "mark": costs}
 
 
-def phase_months(cand: Candidate, phase: str) -> dict[str, list[str]]:
+def phase_months(cand: Candidate, phase: str, window: tuple[int, int] | None = None) -> dict[str, list[str]]:
     """Mesi da acquisire nella cartella CAND-001, per tipo."""
-    plan = phase_inputs(cand, phase)
+    plan = phase_inputs(cand, phase, window)
     return {"trade": plan["trade"], "funding": plan["funding"], "mark": plan["mark"]}
 
 
@@ -193,18 +194,29 @@ def _verified_zip_at(folder: Path, kind: str, manifest: dict, month: str) -> Pat
     return path
 
 
-def load_trade(cand: Candidate, data_dir: Path, phase: str) -> tuple[MinuteStore, list[dict]]:
+def _ticker(tick, kind: str, month: str):
+    """Avanzamento per righe di un file; None se non richiesto (percorso diretto invariato)."""
+    if tick is None:
+        return None
+    return lambda rows: tick("rows", kind=kind, month=month, rows=rows)
+
+
+def load_trade(cand: Candidate, data_dir: Path, phase: str, window: tuple[int, int] | None = None,
+               tick=None) -> tuple[MinuteStore, list[dict]]:
     """Minuti negoziati dall'inizio dell'input (2022-10-01) alla fine della finestra, in ogni fase: il
     prefisso osservativo è sempre completo e continuo (motore 1.0.2). Mesi OBS-001 letti dalla loro
-    cartella dopo verifica; righe fuori dal mese del file scartate e contate; nessun minuto oltre la fine."""
+    cartella dopo verifica; righe fuori dal mese del file scartate e contate; nessun minuto oltre la fine.
+    tick(event, **info) facoltativo: inizio/fine di ogni file e righe lette (solo avanzamento/annullamento)."""
     d = dirs(data_dir)
     manifest = json.loads((d["manifests"] / "acquisition-trade.json").read_text(encoding="utf-8"))
-    plan = phase_inputs(cand, phase)
+    plan = phase_inputs(cand, phase, window)
     obs_man = _obs_manifest(data_dir)[1] if plan["reuseObs"] else None
-    _, end = cand.window(phase)
+    _, end = window or cand.window(phase)
     store = MinuteStore(cand.input_start, end)
     report = []
     for month in plan["observe"]:
+        if tick is not None:
+            tick("file", kind="trade", month=month)
         if month in plan["reuseObs"]:
             source, man = "OBS-001", obs_man
             path = _verified_zip_at(obs_dir(data_dir) / "raw", "trade OBS-001", man, month)
@@ -212,11 +224,14 @@ def load_trade(cand: Candidate, data_dir: Path, phase: str) -> tuple[MinuteStore
             source, man = "CAND-001", manifest
             path = _verified_zip(d, "trade", manifest, month)
         lo, hi = month_bounds(month)
-        stats = parse_csv_text(read_month_zip(path, path.name.replace(".zip", ".csv")), store, lo, hi, path.name)
+        stats = parse_csv_text(read_month_zip(path, path.name.replace(".zip", ".csv")), store, lo, hi, path.name,
+                               tick=_ticker(tick, "trade", month))
         f = next(x for x in man["files"] if x["month"] == month)
         report.append({"month": month, "file": path.name, "source": source, "url": f["url"], "sha256": f["sha256"],
                        "downloadedAt": f.get("downloadedAt"), "cache": f.get("cache"), "timeUnit": "ms", **stats.as_dict(),
                        "coverage": store.counts(lo, hi)})
+        if tick is not None:
+            tick("done", kind="trade", month=month)
     return store, report
 
 
@@ -303,15 +318,18 @@ def check_funding_series(events: list[dict], start: int, end: int, file_stats: l
 
 
 def load_costs(cand: Candidate, data_dir: Path, phase: str, months: list[str] | None = None,
-               window: tuple[int, int] | None = None) -> tuple[list[dict], dict[int, float], dict]:
-    """Funding e mark della fase. months/window restringono il caricamento (solo test sintetici)."""
+               window: tuple[int, int] | None = None, tick=None) -> tuple[list[dict], dict[int, float], dict]:
+    """Funding e mark della fase o della finestra del profilo. months restringe il caricamento (solo
+    test sintetici). tick(event, **info) facoltativo come in load_trade."""
     d = dirs(data_dir)
     start, end = window or cand.window(phase)
-    months = {"funding": months, "mark": months} if months else phase_months(cand, phase)
+    months = {"funding": months, "mark": months} if months else phase_months(cand, phase, window)
     fman = json.loads((d["manifests"] / "acquisition-funding.json").read_text(encoding="utf-8"))
     mman = json.loads((d["manifests"] / "acquisition-mark.json").read_text(encoding="utf-8"))
     funding, freport = [], []
     for month in months["funding"]:
+        if tick is not None:
+            tick("file", kind="funding", month=month)
         path = _verified_zip(d, "funding", fman, month)
         with zipfile.ZipFile(path) as zf:
             names = zf.namelist()
@@ -326,17 +344,24 @@ def load_costs(cand: Candidate, data_dir: Path, phase: str, months: list[str] | 
         funding.extend(e for e in events if lo <= e["tau"] < hi and start <= e["tau"] < end)
         f = next(x for x in fman["files"] if x["month"] == month)
         freport.append({"month": month, "file": path.name, "sha256": f["sha256"], "downloadedAt": f.get("downloadedAt"), **stats})
+        if tick is not None:
+            tick("done", kind="funding", month=month)
     series = check_funding_series(funding, start, end, file_stats=freport)
     # Mark: stessi controlli di schema/tempi/OHLC dei minuti; si conservano solo i close necessari.
     mstore = MinuteStore(start, end)
     mreport = []
     for month in months["mark"]:
+        if tick is not None:
+            tick("file", kind="mark", month=month)
         path = _verified_zip(d, "mark", mman, month)
         lo, hi = month_bounds(month)
-        stats = parse_csv_text(read_month_zip(path, path.name.replace(".zip", ".csv")), mstore, lo, hi, path.name)
+        stats = parse_csv_text(read_month_zip(path, path.name.replace(".zip", ".csv")), mstore, lo, hi, path.name,
+                               tick=_ticker(tick, "mark", month))
         f = next(x for x in mman["files"] if x["month"] == month)
         mreport.append({"month": month, "file": path.name, "sha256": f["sha256"], "downloadedAt": f.get("downloadedAt"), **stats.as_dict(),
                         "coverage": mstore.counts(lo, hi)})
+        if tick is not None:
+            tick("done", kind="mark", month=month)
     mark, missing = {}, []
     for e in funding:
         u = e["tau"] - e["tau"] % MS_MIN
@@ -352,9 +377,9 @@ def load_costs(cand: Candidate, data_dir: Path, phase: str, months: list[str] | 
 
 
 def economic_inputs(cand: Candidate, data_dir: Path, phase: str, months: list[str] | None = None,
-                    window: tuple[int, int] | None = None) -> tuple[list[dict], dict[int, float], dict]:
+                    window: tuple[int, int] | None = None, tick=None) -> tuple[list[dict], dict[int, float], dict]:
     """Costi per il ledger, solo se la serie funding è certificata; altrimenti FundingNotCertified."""
-    funding, mark, report = load_costs(cand, data_dir, phase, months, window)
+    funding, mark, report = load_costs(cand, data_dir, phase, months, window, tick=tick)
     series = report["funding"]["series"]
     if not series["certified"]:
         kinds = ", ".join(sorted({a["kind"] for a in series["anomalies"]}))

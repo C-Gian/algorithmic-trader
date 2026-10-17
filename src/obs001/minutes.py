@@ -126,14 +126,20 @@ def _validate_values(o, h, l, c, v, q, n, tb, tq) -> str | None:
     return None
 
 
-def parse_csv_text(text: str, store: MinuteStore, month_start: int, month_end: int, name: str) -> FileStats:
-    """Interpreta un CSV mensile e popola lo store. Errori di schema sollevano SchemaError."""
+TICK_ROWS = 20_000
+
+
+def parse_csv_text(text: str, store: MinuteStore, month_start: int, month_end: int, name: str, tick=None) -> FileStats:
+    """Interpreta un CSV mensile e popola lo store. Errori di schema sollevano SchemaError.
+    tick(rows) facoltativo ogni TICK_ROWS righe: solo avanzamento/annullamento, nessun effetto sui dati."""
     stats = FileStats(name=name)
     reader = csv.reader(io.StringIO(text))
     seen: dict[int, tuple] = {}
     discordant: set[int] = set()
     prev_open: int | None = None
     for line_no, fields in enumerate(reader, start=1):
+        if tick is not None and line_no % TICK_ROWS == 0:
+            tick(line_no)
         if not fields or (len(fields) == 1 and not fields[0].strip()):
             continue
         if line_no == 1 and fields and not fields[0].strip().lstrip("-").isdigit():

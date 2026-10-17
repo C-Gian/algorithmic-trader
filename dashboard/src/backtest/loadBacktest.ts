@@ -3,7 +3,7 @@
  * (risultati, mesi, esempi, operazioni, episodi, finestre), con errori localizzati. Un file
  * incoerente non sostituisce il backtest aperto. Formato separato dal bundle osservativo OBS-001.
  */
-import { BACKTEST_KIND, BACKTEST_SCHEMA, type BacktestBundle } from '../contract/backtest';
+import { BACKTEST_KIND, BACKTEST_SCHEMAS, type BacktestBundle } from '../contract/backtest';
 
 export class BacktestBundleError extends Error {}
 
@@ -157,13 +157,26 @@ export function parseBacktest(text: string): BacktestBundle {
   if (data.kind !== BACKTEST_KIND) {
     return fail(data.kind === 'OBS001_BUNDLE' ? 'Questo è un bundle dello studio osservativo OBS-001: aprilo nell’ambiente «Studio storico».' : `Non è un bundle di backtest CAND-001 (kind=${String(data.kind)}).`);
   }
-  if (data.schema !== BACKTEST_SCHEMA) return fail(`Versione di schema non supportata: ${String(data.schema)} (attesa ${BACKTEST_SCHEMA}).`);
+  if (!(BACKTEST_SCHEMAS as readonly unknown[]).includes(data.schema)) {
+    return fail(
+      data.schema === 'cand001.bundle/1'
+        ? 'Schema cand001.bundle/1: risultato conservato ma non supportato da questa versione dell’app (nessuna migrazione).'
+        : `Versione di schema non supportata: ${String(data.schema)} (attese ${BACKTEST_SCHEMAS.join(', ')}).`,
+    );
+  }
   const cand = obj(data, 'candidate', 'Candidato');
   if (!isStr(cand.id) || !cand.id.startsWith('CAND-001/') || !isStr(cand.version) || !isStr(cand.hash)) fail('Candidato assente o non riconosciuto.');
   const run = obj(data, 'run', 'Identità del run');
   if (!isStr(run.runId) || !isStr(run.engineVersion)) fail('Identità del run incompleta.');
   const win = obj(data, 'window', 'Finestra');
   if (!isInt(win.start) || !isInt(win.end) || !isInt(win.inputStart) || !((win.inputStart as number) <= (win.start as number) && (win.start as number) < (win.end as number))) fail('Finestra valutata non valida.');
+  if (data.schema === 'cand001.bundle/3') {
+    // Identità del profilo eseguito: la prova di gennaio non si presenta come l'intero confronto 2025.
+    const pr = obj(data, 'profile', 'Profilo');
+    const pw = obj(pr, 'window', 'Profilo');
+    if (!isStr(pr.id) || !isStr(pr.label) || !isStr(pr.kind) || pr.id !== data.phase) fail('Profilo del backtest assente o incoerente con la fase.');
+    if (pw.start !== win.start || pw.end !== win.end) fail('Periodo del profilo diverso dalla finestra valutata.');
+  }
   const src = obj(data, 'source', 'Fonte');
   if (!isStr(src.attribution) || !isStr(src.symbol)) fail('Fonte dei dati non dichiarata.');
   if (!isStr(data.economicsLabel) || !isNum(data.notionalUSDT) || !isStr(data.phase)) fail('Etichetta economica, nozionale o fase assenti.');

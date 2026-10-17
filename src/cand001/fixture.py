@@ -59,7 +59,9 @@ def build(seed: int = 7, gap_in_trade: int | None = None) -> dict:
                "mark": {"files": [], "pointsNeeded": 0, "pointsAvailable": 0, "missingForTau": []}, "identity": {"ok": False, "reason": "fixture"}}
     run_ref = {"runId": "SYNTHETIC-CAND-FIXTURE" + ("-HALT" if gap_in_trade is not None else ""), "inputHash": None, "engineVersion": ENGINE_VERSION,
                "candidateVersion": cand.raw["candidateVersion"], "configHash": cand.hash, "synthetic": True}
-    return build_bundle(cand, res, summary, quality, run_ref, "DEV")
+    profile = {"id": "DEV", "label": "Fixture sintetica", "kind": "SYNTHETIC", "registry": "fixture",
+               "window": {"start": T0, "end": end}, "withinPhase": "DEV"}
+    return build_bundle(cand, res, summary, quality, run_ref, "DEV", profile)
 
 
 def main() -> int:

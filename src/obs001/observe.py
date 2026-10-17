@@ -333,13 +333,21 @@ class ScaleObserver:
         return out
 
 
-def observe(bars45: list[Bar], bars1d: list[Bar], conv: Conventions) -> dict:
+TICK_BARS = 500
+
+
+def observe(bars45: list[Bar], bars1d: list[Bar], conv: Conventions, tick=None) -> dict:
     """Elabora sequenzialmente entrambe le scale. Il giorno precedente di una chiusura t è
-    il giorno UTC [floor(t)-1g, floor(t)): a mezzanotte è quello appena terminato."""
+    il giorno UTC [floor(t)-1g, floor(t)): a mezzanotte è quello appena terminato.
+    tick(scale, done, total) facoltativo ogni TICK_BARS barre: solo avanzamento/annullamento."""
     daily_by_end = {b.end: b for b in bars1d}
     o45, o1d = ScaleObserver("45m", conv), ScaleObserver("1D", conv)
-    rec45 = [o45.step(b, daily_by_end.get(floor_day(b.end))) for b in bars45]
-    rec1d = [o1d.step(b, daily_by_end.get(floor_day(b.end))) for b in bars1d]
+    rec45, rec1d = [], []
+    for scale, obs, bars, out in (("45m", o45, bars45, rec45), ("1D", o1d, bars1d, rec1d)):
+        for b in bars:
+            if tick is not None and len(out) % TICK_BARS == 0:
+                tick(scale, len(out), len(bars))
+            out.append(obs.step(b, daily_by_end.get(floor_day(b.end))))
     return {"45m": rec45, "1D": rec1d, "events": {"45m": o45.events, "1D": o1d.events}}
 
 

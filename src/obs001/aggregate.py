@@ -37,14 +37,21 @@ class Bar:
         return self.status == COMPLETE
 
 
-def aggregate(store: MinuteStore, width_ms: int, start: int | None = None, end: int | None = None) -> list[Bar]:
+TICK_BARS = 1_000
+
+
+def aggregate(store: MinuteStore, width_ms: int, start: int | None = None, end: int | None = None, tick=None) -> list[Bar]:
+    """tick(done, total) facoltativo ogni TICK_BARS barre: solo avanzamento/annullamento."""
     start = store.start if start is None else start
     end = store.end if end is None else end
     if width_ms % MINUTE_MS or (end - start) % width_ms:
         raise ValueError("ampiezza o intervallo non allineati")
     per_bar = width_ms // MINUTE_MS
     bars: list[Bar] = []
+    total = (end - start) // width_ms
     for b_start in range(start, end, width_ms):
+        if tick is not None and len(bars) % TICK_BARS == 0:
+            tick(len(bars), total)
         i0 = store.index(b_start)
         seg = store.status[i0:i0 + per_bar]
         valid, missing, invalid = seg.count(VALID), seg.count(MISSING), seg.count(INVALID)
